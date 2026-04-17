@@ -1,0 +1,78 @@
+<h2>挿絵のビジュアルスタイル</h2>
+<p class="subtitle">FLUX Schnellで生成する絵本の挿絵スタイルを選んでください</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #FFE4B5, #FFDAB9); display:flex; align-items:center; justify-content:center; min-height:200px; border-radius:8px 8px 0 0;">
+      <div style="text-align:center; padding:20px;">
+        <div style="font-size:64px;">🎨</div>
+        <div style="font-size:14px; color:#8B6914; margin-top:8px;">
+          やわらかい水彩画風<br>
+          にじんだ色合い・あたたかみ<br>
+          <span style="font-size:12px; opacity:0.7;">例: いわさきちひろ風</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 水彩画風（Watercolor）</h3>
+      <p>やわらかい色合いとにじみが特徴。0〜3歳向けの温かみのある絵本に最適。FLUX Schnellとの相性が良く、品質が安定しやすい。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #E8F5E9, #C8E6C9); display:flex; align-items:center; justify-content:center; min-height:200px; border-radius:8px 8px 0 0;">
+      <div style="text-align:center; padding:20px;">
+        <div style="font-size:64px;">✏️</div>
+        <div style="font-size:14px; color:#2E7D32; margin-top:8px;">
+          フラットでポップなイラスト<br>
+          はっきりした輪郭・鮮やかな色<br>
+          <span style="font-size:12px; opacity:0.7;">例: ミッフィー / しろくまちゃん風</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. フラットイラスト風</h3>
+      <p>シンプルで明るい色使い。子どもの目を引くポップなスタイル。キャラクターの一貫性が比較的保ちやすい。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #F3E5F5, #E1BEE7); display:flex; align-items:center; justify-content:center; min-height:200px; border-radius:8px 8px 0 0;">
+      <div style="text-align:center; padding:20px;">
+        <div style="font-size:64px;">📖</div>
+        <div style="font-size:14px; color:#6A1B9A; margin-top:8px;">
+          絵本らしいクレヨン/パステル調<br>
+          手描き感・ぬくもり<br>
+          <span style="font-size:12px; opacity:0.7;">例: はらぺこあおむし風</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. クレヨン/パステル風</h3>
+      <p>手描き風のあたたかいタッチ。日本の絵本文化に馴染みやすい。テクスチャ感が出やすく、独特の味わいがある。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #E3F2FD, #BBDEFB); display:flex; align-items:center; justify-content:center; min-height:200px; border-radius:8px 8px 0 0;">
+      <div style="text-align:center; padding:20px;">
+        <div style="font-size:64px;">🎭</div>
+        <div style="font-size:14px; color:#1565C0; margin-top:8px;">
+          ユーザーが選べるようにする<br>
+          生成前にスタイルを選択<br>
+          <span style="font-size:12px; opacity:0.7;">3〜4スタイルから選択</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>D. ユーザー選択式</h3>
+      <p>生成時にスタイルを選べるようにする。好みに合わせたカスタマイズが可能。ただしプロンプト設計の複雑さが増す。</p>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px; padding:16px; background:rgba(255,255,255,0.05); border-radius:8px; border-left:3px solid #FFD54F;">
+  <p style="margin:0; font-size:14px; opacity:0.8;">
+    💡 <strong>補足:</strong> FLUX Schnellは水彩・フラットイラスト系のプロンプトで安定した品質を出しやすい傾向があります。MVPではスタイルを1つに絞り、品質を安定させるのがおすすめです。
+  </p>
+</div>
