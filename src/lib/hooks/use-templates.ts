@@ -1,0 +1,27 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { TemplateDoc } from "@/lib/types";
+
+interface UseTemplatesResult {
+  templates: (TemplateDoc & { id: string })[];
+  loading: boolean;
+}
+
+export function useTemplates(): UseTemplatesResult {
+  const [templates, setTemplates] = useState<(TemplateDoc & { id: string })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(collection(db, "templates"), where("active", "==", true), orderBy("order", "asc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setTemplates(snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as TemplateDoc) })));
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
+
+  return { templates, loading };
+}
