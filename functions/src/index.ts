@@ -1,1 +1,1 @@
-export {};
+export { generateBook } from "./generate-book";

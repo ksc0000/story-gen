@@ -50,7 +50,7 @@ export async function processBookGeneration(
 
     // Step 4: Build prompts
     const systemPrompt = buildSystemPrompt(template, bookData.style);
-    const userPrompt = buildUserPrompt(bookData.input, bookData.pageCount);
+    buildUserPrompt(bookData.input, bookData.pageCount);
 
     // Step 5: Generate story with LLM
     const story = await deps.llmClient.generateStory({
