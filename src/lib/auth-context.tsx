@@ -27,19 +27,47 @@ export const AuthContext = createContext<AuthContextValue>({
 
 const googleProvider = new GoogleAuthProvider();
 
+import { isDemoMode } from "@/lib/demo";
+
+const DEMO_USER = {
+  uid: "demo-user-001",
+  displayName: "デモユーザー",
+  email: "demo@ehonai.local",
+} as unknown as User;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+    if (isDemoMode) {
       setLoading(false);
-    });
-    return unsubscribe;
+      return;
+    }
+
+    try {
+      const unsubscribe = onAuthStateChanged(
+        auth,
+        (firebaseUser) => {
+          setUser(firebaseUser);
+          setLoading(false);
+        },
+        () => {
+          setLoading(false);
+        }
+      );
+      return unsubscribe;
+    } catch {
+      setLoading(false);
+    }
   }, []);
 
   const signInWithGoogle = async () => {
+    if (isDemoMode) {
+      setUser(DEMO_USER);
+      return;
+    }
+
     const result = await signInWithPopup(auth, googleProvider);
     const userRef = doc(db, "users", result.user.uid);
     const userSnap = await getDoc(userRef);
@@ -55,6 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    if (isDemoMode) {
+      setUser(null);
+      return;
+    }
     await firebaseSignOut(auth);
   };
 

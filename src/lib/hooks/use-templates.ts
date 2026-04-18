@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { isDemoMode, DEMO_TEMPLATES } from "@/lib/demo";
 import type { TemplateDoc } from "@/lib/types";
 
 interface UseTemplatesResult {
@@ -15,6 +16,12 @@ export function useTemplates(): UseTemplatesResult {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isDemoMode) {
+      setTemplates(DEMO_TEMPLATES);
+      setLoading(false);
+      return;
+    }
+
     const q = query(collection(db, "templates"), where("active", "==", true), orderBy("order", "asc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setTemplates(snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as TemplateDoc) })));

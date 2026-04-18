@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { isDemoMode } from "@/lib/demo";
 import type { UserDoc } from "@/lib/types";
 
 interface UseUserProfileResult {
@@ -15,6 +16,12 @@ export function useUserProfile(userId: string | undefined): UseUserProfileResult
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isDemoMode) {
+      setProfile({ displayName: "デモユーザー", email: "demo@ehonai.local", plan: "free", monthlyGenerationCount: 1 } as UserDoc);
+      setLoading(false);
+      return;
+    }
+
     if (!userId) { setProfile(null); setLoading(false); return; }
     const unsubscribe = onSnapshot(doc(db, "users", userId), (snap) => {
       setProfile(snap.exists() ? (snap.data() as UserDoc) : null);

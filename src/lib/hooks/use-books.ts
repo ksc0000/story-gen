@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { isDemoMode } from "@/lib/demo";
 import type { BookDoc } from "@/lib/types";
 
 interface UseBooksResult {
@@ -17,7 +18,7 @@ export function useBooks(userId: string | undefined): UseBooksResult {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!userId) { setBooks([]); setLoading(false); return; }
+    if (!userId || isDemoMode) { setBooks([]); setLoading(false); return; }
     const q = query(collection(db, "books"), where("userId", "==", userId), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q,
       (snapshot) => {
