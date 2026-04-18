@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ const PAGE_COUNT_OPTIONS = [
   { value: 12, label: "長い（12ページ）" },
 ] as const;
 
-export default function InputPage() {
+function InputPageContent() {
   const searchParams = useSearchParams();
   const theme = searchParams.get("theme") ?? "";
   const router = useRouter();
@@ -76,5 +76,13 @@ export default function InputPage() {
         <Button onClick={handleNext} disabled={!childName.trim()} className="bg-amber-600 hover:bg-amber-700 text-white px-8">次へ</Button>
       </div>
     </div>
+  );
+}
+
+export default function InputPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-gray-400">読み込み中...</div>}>
+      <InputPageContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { db } from "@/lib/firebase";
 import type { IllustrationStyle, PageCount } from "@/lib/types";
 
-export default function StyleSelectionPage() {
+function StyleSelectionPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
@@ -57,5 +57,13 @@ export default function StyleSelectionPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+export default function StyleSelectionPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-gray-400">読み込み中...</div>}>
+      <StyleSelectionPageContent />
+    </Suspense>
   );
 }
