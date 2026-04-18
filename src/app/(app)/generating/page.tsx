@@ -1,24 +1,25 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GenerationProgress } from "@/components/generation-progress";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 
-export default function GeneratingPage() {
-  const params = useParams();
-  const bookId = params.bookId as string;
+function GeneratingContent() {
+  const searchParams = useSearchParams();
+  const bookId = searchParams.get("id") ?? "";
   const router = useRouter();
   const { book, pages, loading } = useGenerationProgress(bookId);
 
   useEffect(() => {
-    if (book?.status === "completed") router.push(`/book/${bookId}`);
+    if (book?.status === "completed") router.push(`/book?id=${bookId}`);
   }, [book?.status, bookId, router]);
 
-  if (loading) return <div className="flex min-h-[60vh] items-center justify-center"><p className="text-amber-700">読み込み中...</p></div>;
+  if (!bookId || loading) return <div className="flex min-h-[60vh] items-center justify-center"><p className="text-amber-700">読み込み中...</p></div>;
 
   if (!book) return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center">
@@ -54,4 +55,8 @@ export default function GeneratingPage() {
       <div className="mt-4 text-center"><Link href="/home" className="text-sm text-amber-600 hover:underline">本棚に戻る</Link></div>
     </div>
   );
+}
+
+export default function GeneratingPage() {
+  return <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><p className="text-amber-700">読み込み中...</p></div>}><GeneratingContent /></Suspense>;
 }

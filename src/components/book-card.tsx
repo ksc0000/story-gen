@@ -19,7 +19,7 @@ function formatDate(ts: Timestamp): string {
 
 export function BookCard({ book }: BookCardProps) {
   const remaining = getRemainingDays(book.expiresAt);
-  const href = book.status === "generating" ? `/generating/${book.id}` : `/book/${book.id}`;
+  const href = book.status === "generating" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
   return (
     <Link href={href}>
       <Card className="overflow-hidden border-amber-200 transition hover:shadow-md">

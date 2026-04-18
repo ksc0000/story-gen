@@ -1,6 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateBook = void 0;
+exports.resetMonthlyQuota = exports.cleanupExpired = exports.generateBook = void 0;
+const app_1 = require("firebase-admin/app");
+if ((0, app_1.getApps)().length === 0)
+    (0, app_1.initializeApp)();
 var generate_book_1 = require("./generate-book");
 Object.defineProperty(exports, "generateBook", { enumerable: true, get: function () { return generate_book_1.generateBook; } });
+var cleanup_expired_1 = require("./cleanup-expired");
+Object.defineProperty(exports, "cleanupExpired", { enumerable: true, get: function () { return cleanup_expired_1.cleanupExpired; } });
+var reset_monthly_quota_1 = require("./reset-monthly-quota");
+Object.defineProperty(exports, "resetMonthlyQuota", { enumerable: true, get: function () { return reset_monthly_quota_1.resetMonthlyQuota; } });
 //# sourceMappingURL=index.js.map

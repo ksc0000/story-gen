@@ -1,17 +1,18 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BookViewer } from "@/components/book-viewer";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 
-export default function BookPage() {
-  const params = useParams();
-  const bookId = params.bookId as string;
+function BookContent() {
+  const searchParams = useSearchParams();
+  const bookId = searchParams.get("id") ?? "";
   const { book, pages, loading } = useGenerationProgress(bookId);
 
-  if (loading) return <div className="flex min-h-[60vh] items-center justify-center"><p className="text-amber-700">読み込み中...</p></div>;
+  if (!bookId || loading) return <div className="flex min-h-[60vh] items-center justify-center"><p className="text-amber-700">読み込み中...</p></div>;
 
   if (!book) return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center">
@@ -32,4 +33,8 @@ export default function BookPage() {
       </div>
     </div>
   );
+}
+
+export default function BookPage() {
+  return <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><p className="text-amber-700">読み込み中...</p></div>}><BookContent /></Suspense>;
 }

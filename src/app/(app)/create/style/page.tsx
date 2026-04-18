@@ -42,7 +42,7 @@ function StyleSelectionPageContent() {
         },
         createdAt: serverTimestamp(), expiresAt,
       });
-      router.push(`/generating/${bookRef.id}`);
+      router.push(`/generating?id=${bookRef.id}`);
     } catch (err) { console.error("Failed to create book:", err); setCreating(false); }
   };
 
