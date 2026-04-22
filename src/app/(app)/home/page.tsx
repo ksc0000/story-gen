@@ -1,9 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookCard } from "@/components/book-card";
+import { FloatingParticles } from "@/components/floating-particles";
+import { PageTransition } from "@/components/page-transition";
+import { StaggerContainer } from "@/components/stagger-container";
+import { StaggerItem } from "@/components/stagger-item";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useBooks } from "@/lib/hooks/use-books";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
@@ -17,25 +22,41 @@ export default function HomePage() {
   const remaining = FREE_MONTHLY_LIMIT - (profile?.monthlyGenerationCount ?? 0);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-amber-900">あなたの本棚</h1>
-        <Badge variant="outline" className="text-amber-700 border-amber-300">今月あと{Math.max(0, remaining)}冊作れます</Badge>
-      </div>
-      <div className="mt-6">
-        <Link href="/create/theme"><Button className="bg-amber-600 hover:bg-amber-700 text-white">新しい絵本を作る</Button></Link>
-      </div>
-      {loading ? <p className="mt-8 text-center text-gray-400">読み込み中...</p>
-        : books.length === 0 ? (
+    <PageTransition className="relative mx-auto max-w-4xl px-4 py-8">
+      <FloatingParticles />
+      <div className="relative z-10">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-purple-900">あなたの本棚</h1>
+          <Badge variant="outline">今月あと{Math.max(0, remaining)}冊作れます</Badge>
+        </div>
+        <div className="mt-6">
+          <Link href="/create/theme">
+            <Button size="lg" className="text-base px-6">新しい絵本を作る</Button>
+          </Link>
+        </div>
+        {loading ? (
+          <p className="mt-8 text-center text-violet-400">読み込み中...</p>
+        ) : books.length === 0 ? (
           <div className="mt-16 text-center">
-            <span className="text-6xl">📚</span>
-            <p className="mt-4 text-gray-500">まだ絵本がありません。最初の一冊を作りましょう！</p>
+            <Image
+              src="/images/illustrations/empty-shelf.webp"
+              alt="空の本棚"
+              width={200}
+              height={150}
+              className="mx-auto rounded-xl"
+            />
+            <p className="mt-4 text-violet-500">まだ絵本がありません。最初の一冊を作りましょう！</p>
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {books.map((book) => <BookCard key={book.id} book={book} />)}
-          </div>
+          <StaggerContainer className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {books.map((book) => (
+              <StaggerItem key={book.id}>
+                <BookCard book={book} />
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
         )}
-    </div>
+      </div>
+    </PageTransition>
   );
 }
