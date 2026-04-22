@@ -1,3 +1,8 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { springDefault } from "@/lib/motion";
+
 interface StepIndicatorProps {
   currentStep: 1 | 2 | 3;
 }
@@ -13,10 +18,36 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
         const isDone = stepNum < currentStep;
         return (
           <div key={label} className="flex items-center gap-2">
-            {i > 0 && <div className={`h-0.5 w-8 ${isDone ? "bg-amber-500" : "bg-gray-200"}`} />}
+            {i > 0 && (
+              <div className="relative h-0.5 w-8 bg-violet-100 overflow-hidden rounded-full">
+                {isDone && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-purple-400 to-violet-400"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={springDefault}
+                    style={{ transformOrigin: "left" }}
+                  />
+                )}
+              </div>
+            )}
             <div className="flex flex-col items-center">
-              <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${isActive ? "bg-amber-500 text-white" : isDone ? "bg-amber-200 text-amber-800" : "bg-gray-200 text-gray-400"}`}>{stepNum}</div>
-              <span className={`mt-1 text-xs ${isActive ? "text-amber-700 font-medium" : "text-gray-400"}`}>{label}</span>
+              <motion.div
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                  isActive
+                    ? "bg-gradient-to-r from-purple-400 to-violet-400 text-white shadow-[0_2px_8px_rgba(167,139,250,0.4)]"
+                    : isDone
+                    ? "bg-violet-100 text-violet-600"
+                    : "bg-gray-100 text-gray-400"
+                }`}
+                animate={isActive ? { scale: [1, 1.1, 1] } : {}}
+                transition={isActive ? { duration: 0.5, ease: "easeOut" } : {}}
+              >
+                {stepNum}
+              </motion.div>
+              <span className={`mt-1 text-xs ${isActive ? "text-purple-700 font-medium" : "text-violet-400"}`}>
+                {label}
+              </span>
             </div>
           </div>
         );
