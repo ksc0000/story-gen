@@ -6,6 +6,7 @@ import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firesto
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/components/step-indicator";
 import { StylePicker } from "@/components/style-picker";
+import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { db } from "@/lib/firebase";
 import type { IllustrationStyle, PageCount } from "@/lib/types";
@@ -47,22 +48,22 @@ function StyleSelectionPageContent() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <PageTransition className="mx-auto max-w-2xl px-4 py-8">
       <StepIndicator currentStep={3} />
-      <h1 className="mt-6 text-center text-xl font-bold text-amber-900">イラストのスタイルを選んでね</h1>
+      <h1 className="mt-6 text-center text-xl font-bold text-purple-900">イラストのスタイルを選んでね</h1>
       <div className="mt-6"><StylePicker selected={selected} onSelect={setSelected} /></div>
       <div className="mt-8 flex justify-center">
-        <Button onClick={handleCreate} disabled={!selected || creating} className="bg-amber-600 hover:bg-amber-700 text-white px-8 text-lg py-6">
+        <Button onClick={handleCreate} disabled={!selected || creating} size="lg" className="px-8 text-lg py-6">
           {creating ? "絵本を作っています..." : "絵本を作る！"}
         </Button>
       </div>
-    </div>
+    </PageTransition>
   );
 }
 
 export default function StyleSelectionPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-gray-400">読み込み中...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-violet-400">読み込み中...</div>}>
       <StyleSelectionPageContent />
     </Suspense>
   );
