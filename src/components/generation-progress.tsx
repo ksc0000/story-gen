@@ -32,6 +32,7 @@ export function GenerationProgress({ book, pages }: GenerationProgressProps) {
               animate={page?.status === "generating" ? "pulse" : undefined}
             >
               {page?.status === "completed" && page.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={page.imageUrl} alt={`ページ ${i + 1}`} className="h-full w-full object-cover" />
               ) : page?.status === "generating" ? (
                 <div className="text-center">

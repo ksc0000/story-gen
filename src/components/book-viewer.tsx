@@ -4,10 +4,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { PageDoc } from "@/lib/types";
+import type { Variants } from "framer-motion";
 
 interface BookViewerProps { pages: PageDoc[]; title: string; }
 
-const pageFlip = {
+const pageFlip: Variants = {
   initial: { opacity: 0, x: 50 },
   animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] } },
   exit: { opacity: 0, x: -50, transition: { duration: 0.3 } },
@@ -36,6 +37,7 @@ export function BookViewer({ pages, title }: BookViewerProps) {
           >
             <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
               {page.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={page.imageUrl} alt={`${title} - ページ${currentPage + 1}`} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full items-center justify-center text-violet-200">
@@ -63,6 +65,7 @@ export function BookViewer({ pages, title }: BookViewerProps) {
           >
             <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
               {page.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={page.imageUrl} alt={`${title} - ページ${currentPage + 1}`} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full items-center justify-center text-violet-200">

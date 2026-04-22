@@ -11,7 +11,6 @@ import { GenerationProgress } from "@/components/generation-progress";
 import { FloatingParticles } from "@/components/floating-particles";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
-import { springBouncy } from "@/lib/motion";
 
 function GeneratingContent() {
   const searchParams = useSearchParams();
