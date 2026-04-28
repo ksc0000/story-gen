@@ -40,6 +40,11 @@ function GeneratingContent() {
       <Image src="/images/illustrations/generating.webp" alt="失敗" width={120} height={90} className="mx-auto rounded-xl opacity-50" />
       <h2 className="mt-4 text-lg font-bold text-purple-900">絵本の生成に失敗しました</h2>
       <p className="mt-2 text-sm text-violet-500">申し訳ありません。もう一度お試しください。</p>
+      {book.errorMessage ? (
+        <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left text-sm text-red-700">
+          {book.errorMessage}
+        </p>
+      ) : null}
       <div className="mt-6 flex justify-center gap-3">
         <Link href="/create/theme"><Button>もう一度試す</Button></Link>
         <Link href="/home"><Button variant="outline">本棚に戻る</Button></Link>

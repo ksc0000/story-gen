@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/hooks/use-auth";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -18,7 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#fdf2f8] to-[#ede9fe]">
+      <div className="app-shell flex min-h-screen items-center justify-center">
         <p className="text-violet-600">読み込み中...</p>
       </div>
     );
@@ -26,14 +27,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#fdf2f8] to-[#ede9fe]">
-      <header className="border-b border-[rgba(240,171,252,0.3)] bg-white/80 backdrop-blur-sm">
+    <div className="app-shell">
+      <header className="app-header">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-          <Link href="/home" className="text-lg font-bold text-purple-900">
+          <Link href="/home" className="app-brand text-lg font-bold">
             EhoNAI
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-violet-600">{user.displayName}</span>
+            <ThemeToggle />
+            <span className="app-user text-sm">{user.displayName}</span>
             <Button variant="ghost" size="sm" onClick={signOut}>
               ログアウト
             </Button>

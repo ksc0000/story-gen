@@ -3,7 +3,19 @@ import { Timestamp } from "firebase/firestore";
 export type UserPlan = "free" | "premium";
 export type BookStatus = "generating" | "completed" | "failed";
 export type PageStatus = "pending" | "generating" | "completed" | "failed";
-export type IllustrationStyle = "watercolor" | "flat" | "crayon";
+export type IllustrationStyle =
+  | "soft_watercolor"
+  | "fluffy_pastel"
+  | "crayon"
+  | "flat_illustration"
+  | "anime_storybook"
+  | "classic_picture_book"
+  | "toy_3d"
+  | "paper_collage"
+  | "pencil_sketch"
+  | "colorful_pop"
+  | "watercolor"
+  | "flat";
 export type PageCount = 4 | 8 | 12;
 
 export interface UserDoc {
@@ -20,6 +32,9 @@ export interface BookInput {
   favorites?: string;
   lessonToTeach?: string;
   memoryToRecreate?: string;
+  characterLook?: string;
+  signatureItem?: string;
+  colorMood?: string;
 }
 
 export interface BookDoc {
@@ -30,6 +45,8 @@ export interface BookDoc {
   pageCount: PageCount;
   status: BookStatus;
   progress: number;
+  coverImageUrl?: string;
+  errorMessage?: string;
   input: BookInput;
   createdAt: Timestamp;
   expiresAt: Timestamp | null;
@@ -47,6 +64,10 @@ export interface TemplateDoc {
   name: string;
   description: string;
   icon: string;
+  genre?: string;
+  sampleImageUrl?: string;
+  sampleImageAlt?: string;
+  visualDirection?: string;
   order: number;
   systemPrompt: string;
   active: boolean;

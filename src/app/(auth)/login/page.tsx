@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { FloatingParticles } from "@/components/floating-particles";
 import { PageTransition } from "@/components/page-transition";
 import { AnimatedCard } from "@/components/animated-card";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LoginPage() {
   const { user, loading, signInWithGoogle } = useAuth();
@@ -22,15 +23,18 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#fdf2f8] via-[#ede9fe] to-[#e0f2fe]">
+      <main className="app-shell flex min-h-screen items-center justify-center">
         <p className="text-violet-600">読み込み中...</p>
       </main>
     );
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-[#fdf2f8] via-[#ede9fe] to-[#e0f2fe] px-4">
+    <main className="app-shell relative flex min-h-screen items-center justify-center px-4">
       <FloatingParticles />
+      <div className="absolute right-4 top-4 z-20">
+        <ThemeToggle />
+      </div>
       <PageTransition className="relative z-10 w-full max-w-sm">
         <AnimatedCard>
           <Card>
@@ -42,10 +46,10 @@ export default function LoginPage() {
                 height={90}
                 className="mx-auto rounded-xl"
               />
-              <CardTitle className="mt-4 text-2xl text-purple-900">
+              <CardTitle className="app-title mt-4 text-2xl">
                 EhoNAI にログイン
               </CardTitle>
-              <p className="text-sm text-violet-600">えほんAI</p>
+              <p className="app-subtitle text-sm">えほんAI</p>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <Button

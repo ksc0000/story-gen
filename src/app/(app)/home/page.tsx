@@ -17,7 +17,7 @@ const FREE_MONTHLY_LIMIT = 3;
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { books, loading } = useBooks(user?.uid);
+  const { books, loading, error } = useBooks(user?.uid);
   const { profile } = useUserProfile(user?.uid);
   const remaining = FREE_MONTHLY_LIMIT - (profile?.monthlyGenerationCount ?? 0);
 
@@ -36,6 +36,11 @@ export default function HomePage() {
         </div>
         {loading ? (
           <p className="mt-8 text-center text-violet-400">読み込み中...</p>
+        ) : error ? (
+          <div className="mt-8 rounded-2xl border border-red-200 bg-red-50/90 p-6 text-center text-red-700">
+            <p className="font-semibold">本棚の読み込みに失敗しました</p>
+            <p className="mt-2 text-sm">{error.message}</p>
+          </div>
         ) : books.length === 0 ? (
           <div className="mt-16 text-center">
             <Image

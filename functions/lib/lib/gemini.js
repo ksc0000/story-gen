@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GeminiClient = void 0;
 const generative_ai_1 = require("@google/generative-ai");
-const MODEL_NAME = "gemini-2.0-flash";
+const MODEL_NAME = "gemini-2.5-flash-lite";
 const SAFETY_SETTINGS = [
     { category: generative_ai_1.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: generative_ai_1.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
     { category: generative_ai_1.HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: generative_ai_1.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
@@ -21,13 +21,17 @@ function validateStory(data) {
     const obj = data;
     if (typeof obj.title !== "string")
         throw new Error("LLM response missing 'title' string");
+    if (typeof obj.characterBible !== "string")
+        throw new Error("LLM response missing 'characterBible' string");
+    if (typeof obj.styleBible !== "string")
+        throw new Error("LLM response missing 'styleBible' string");
     if (!Array.isArray(obj.pages) || obj.pages.length === 0)
         throw new Error("LLM response missing 'pages' array");
     for (const page of obj.pages) {
         if (typeof page.text !== "string" || typeof page.imagePrompt !== "string")
             throw new Error("Each page must have 'text' and 'imagePrompt' strings");
     }
-    return { title: obj.title, pages: obj.pages };
+    return { title: obj.title, characterBible: obj.characterBible, styleBible: obj.styleBible, pages: obj.pages };
 }
 class GeminiClient {
     genAI;
@@ -45,10 +49,17 @@ class GeminiClient {
             userParts.push(`教えたいこと: ${params.lessonToTeach}`);
         if (params.memoryToRecreate)
             userParts.push(`再現したい思い出: ${params.memoryToRecreate}`);
+        if (params.characterLook)
+            userParts.push(`主人公の見た目: ${params.characterLook}`);
+        if (params.signatureItem)
+            userParts.push(`毎ページに出したい持ち物・服装: ${params.signatureItem}`);
+        if (params.colorMood)
+            userParts.push(`色や雰囲気: ${params.colorMood}`);
         userParts.push(`ページ数: ${params.pageCount}ページ`);
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: userParts.join("\n") }] }],
-            systemInstruction: { role: "model", parts: [{ text: params.systemPrompt }] },
+            systemInstruction: { role: "system", parts: [{ text: params.systemPrompt }] },
+            generationConfig: { responseMimeType: "application/json" },
         });
         const rawText = result.response.text();
         const jsonStr = extractJSON(rawText);

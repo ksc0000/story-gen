@@ -6,6 +6,7 @@ import { FloatingParticles } from "@/components/floating-particles";
 import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
 import { AnimatedCard } from "@/components/animated-card";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const features = [
   {
@@ -30,10 +31,15 @@ const features = [
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#fdf2f8] via-[#ede9fe] to-[#e0f2fe]">
+    <main className="app-shell">
       <section className="relative flex flex-col items-center justify-center px-4 pt-20 pb-16 text-center">
         <FloatingParticles />
         <StaggerContainer className="relative z-10 flex flex-col items-center">
+          <StaggerItem>
+            <div className="mb-4">
+              <ThemeToggle />
+            </div>
+          </StaggerItem>
           <StaggerItem>
             <Image
               src="/images/illustrations/hero.webp"
@@ -45,22 +51,22 @@ export default function LandingPage() {
             />
           </StaggerItem>
           <StaggerItem>
-            <h1 className="mt-6 text-4xl font-bold tracking-tight text-purple-900 sm:text-5xl">
+            <h1 className="app-title mt-6 text-4xl font-bold tracking-tight sm:text-5xl">
               EhoNAI
             </h1>
           </StaggerItem>
           <StaggerItem>
-            <p className="mt-2 text-lg text-violet-600">えほんAI</p>
+            <p className="app-subtitle mt-2 text-lg">えほんAI</p>
           </StaggerItem>
           <StaggerItem>
-            <p className="mt-6 max-w-xl text-xl leading-relaxed text-gray-600">
+            <p className="app-copy mt-6 max-w-xl text-xl leading-relaxed">
               我が子が主人公になれる絵本を、
               <br className="hidden sm:inline" />
               誰でも5分で作れる。
             </p>
           </StaggerItem>
           <StaggerItem>
-            <p className="mt-2 text-base text-gray-400">
+            <p className="app-copy-muted mt-2 text-base">
               AIが紡ぐ物語と挿絵で、世界にひとつだけの思い出を。
             </p>
           </StaggerItem>
@@ -72,7 +78,7 @@ export default function LandingPage() {
             </Link>
           </StaggerItem>
           <StaggerItem>
-            <p className="mt-3 text-sm text-gray-400">月3冊まで無料・登録かんたん</p>
+            <p className="app-copy-muted mt-3 text-sm">月3冊まで無料・登録かんたん</p>
           </StaggerItem>
         </StaggerContainer>
       </section>

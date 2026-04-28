@@ -1,89 +1,174 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.seedTemplates = void 0;
+const https_1 = require("firebase-functions/v2/https");
 const app_1 = require("firebase-admin/app");
 const firestore_1 = require("firebase-admin/firestore");
 if ((0, app_1.getApps)().length === 0)
     (0, app_1.initializeApp)();
 const db = (0, firestore_1.getFirestore)();
-const JSON_FORMAT_INSTRUCTION = `
-
-以下のJSON形式で出力してください。JSON以外のテキストは含めないでください。
-\`\`\`json
-{
-  "title": "絵本のタイトル（日本語）",
-  "pages": [
-    {
-      "text": "ページの本文（日本語・ひらがな多め）",
-      "imagePrompt": "English description of the illustration"
-    }
-  ]
-}
-\`\`\``;
 const templates = {
-    birthday: {
-        name: "おたんじょうび", description: "主人公の誕生日パーティーの冒険", icon: "🎂", order: 1, active: true,
-        systemPrompt: `あなたは子ども向け絵本の作家です。主人公の誕生日をテーマにした心温まる物語を作ってください。
-- 誕生日パーティー、プレゼント、ケーキ、友だちや家族のお祝いなど楽しい要素を入れてください。
-- 主人公が特別な一日を過ごし、幸せな気持ちで終わる物語にしてください。
-- 子ども向けの安全な内容のみ。暴力・恐怖・悲しい結末は禁止です。${JSON_FORMAT_INSTRUCTION}`,
-    },
-    bedtime: {
-        name: "おやすみなさい", description: "眠りにつくまでの穏やかな物語", icon: "🌙", order: 2, active: true,
-        systemPrompt: `あなたは子ども向け絵本の作家です。寝かしつけにぴったりの穏やかな物語を作ってください。
-- 夜の静かな冒険、お月さまやお星さまとのやりとり、眠りの妖精など穏やかな要素を入れてください。
-- ゆっくりとしたテンポで、最後は主人公が安心して眠りにつく場面で終わってください。
-- 子ども向けの安全な内容のみ。暴力・恐怖・悲しい結末は禁止です。${JSON_FORMAT_INSTRUCTION}`,
+    animals: {
+        name: "どうぶつのおはなし",
+        description: "ふわふわ動物たちと友だちになるやさしい物語",
+        icon: "🐾",
+        genre: "Animal",
+        sampleImageUrl: "/images/templates/animals.png",
+        sampleImageAlt: "森の中でくま、うさぎ、きつね、小鳥が笑っている絵本表紙",
+        visualDirection: "Soft woodland picture-book mood with fluffy friendly animals, warm sunlight, leafy greens, cream background, rounded character shapes, gentle smiling faces, and a cozy approachable cover-like composition.",
+        order: 1,
+        active: true,
+        systemPrompt: `あなたは子ども向け絵本の作家です。犬・猫・うさぎ・くま・きつね・森の動物などが主人公または大切な友だちとして登場する物語を作ってください。
+- 動物たちの表情やしぐさをかわいく描き、やさしさや助け合いが伝わる展開にしてください。
+- 小さな子どもが安心して読める、親しみやすい森や庭、公園などの舞台を中心にしてください。`,
     },
     adventure: {
-        name: "おでかけぼうけん", description: "公園や動物園へのお出かけ冒険", icon: "🌳", order: 3, active: true,
-        systemPrompt: `あなたは子ども向け絵本の作家です。お出かけをテーマにした楽しい冒険物語を作ってください。
-- 公園、動物園、水族館、山や海など楽しいお出かけ先での冒険を描いてください。
-- 新しい発見やちょっとしたハプニングを入れて、ワクワクする展開にしてください。
-- 子ども向けの安全な内容のみ。暴力・恐怖・悲しい結末は禁止です。${JSON_FORMAT_INSTRUCTION}`,
+        name: "わくわく冒険",
+        description: "森・海・空へ出かける発見いっぱいの冒険",
+        icon: "⛰️",
+        genre: "Adventure",
+        sampleImageUrl: "/images/templates/adventure.png",
+        sampleImageAlt: "光るコンパスを持った子どもたちが広い景色へ走り出す絵本表紙",
+        visualDirection: "Bright adventurous picture-book mood with wide landscapes, sparkling compass motifs, blue sky, green hills, winding paths, dynamic running poses, clear sense of movement, discovery, and safe excitement.",
+        order: 2,
+        active: true,
+        systemPrompt: `あなたは子ども向け絵本の作家です。森・海・宇宙・宝探し・知らない町などへ出発する、わくわくする冒険物語を作ってください。
+- 危険や恐怖ではなく、発見、仲間、地図、コンパス、小さなミッションの楽しさを中心にしてください。
+- 最後は主人公が少し成長し、うれしい気持ちで帰ってくる構成にしてください。`,
     },
-    seasons: {
-        name: "きせつのおはなし", description: "春夏秋冬の季節イベント", icon: "🌸", order: 4, active: true,
-        systemPrompt: `あなたは子ども向け絵本の作家です。日本の四季をテーマにした物語を作ってください。
-- お花見、夏祭り、紅葉狩り、雪遊び、節分、七夕など季節の行事を取り入れてください。
-- 季節の美しさや楽しさが伝わる描写を入れてください。
-- 子ども向けの安全な内容のみ。暴力・恐怖・悲しい結末は禁止です。${JSON_FORMAT_INSTRUCTION}`,
+    fantasy: {
+        name: "まほうの世界",
+        description: "魔法や妖精、ドラゴンが出てくる夢の世界",
+        icon: "🪄",
+        genre: "Fantasy",
+        sampleImageUrl: "/images/templates/fantasy.png",
+        sampleImageAlt: "星空の魔法学校で魔法使いの子とドラゴンが見上げている絵本表紙",
+        visualDirection: "Dreamy magical night fantasy with starry skies, crescent moon, glowing wand, floating books, friendly baby dragon, luminous castle windows, deep navy and gold palette, ornate but child-friendly details.",
+        order: 3,
+        active: true,
+        systemPrompt: `あなたは子ども向け絵本の作家です。魔法、妖精、ドラゴン、不思議な国、魔法学校などをテーマにした夢のある物語を作ってください。
+- 魔法は人を助けたり、心を明るくしたりするために使ってください。
+- 怖い魔物や暗い戦いではなく、きらきらした不思議さ、好奇心、やさしい驚きを中心にしてください。`,
     },
-    animals: {
-        name: "どうぶつのともだち", description: "動物たちと友だちになる物語", icon: "🐰", order: 5, active: true,
-        systemPrompt: `あなたは子ども向け絵本の作家です。動物と友だちになるテーマの物語を作ってください。
-- うさぎ、くま、ねこ、いぬ、ぞうなどかわいい動物たちを登場させてください。
-- 動物たちと一緒に遊んだり助け合ったりする友情の物語にしてください。
-- 子ども向けの安全な内容のみ。暴力・恐怖・悲しい結末は禁止です。${JSON_FORMAT_INSTRUCTION}`,
+    bedtime: {
+        name: "おやすみ前のおはなし",
+        description: "月と星に包まれる静かな寝かしつけ絵本",
+        icon: "🌙",
+        genre: "Bedtime",
+        sampleImageUrl: "/images/templates/bedtime.png",
+        sampleImageAlt: "星空の部屋で子どもがぬいぐるみを抱いて眠る絵本表紙",
+        visualDirection: "Calm bedtime picture-book atmosphere with deep blue night, smiling moon, tiny warm stars, soft lamp light, cozy bedroom textiles, slow peaceful composition, muted colors, and sleepy gentle expressions.",
+        order: 4,
+        active: true,
+        systemPrompt: `あなたは子ども向け絵本の作家です。寝る前に読む静かで安心できる物語を作ってください。
+- 夜空、月、星、ぬいぐるみ、静かな部屋、やさしい夢など穏やかな要素を入れてください。
+- テンポはゆっくり、言葉はやわらかく、最後は主人公が安心して眠りにつく場面で終わってください。`,
+    },
+    "emotional-growth": {
+        name: "こころを育てる",
+        description: "勇気・やさしさ・自己肯定感を育てる物語",
+        icon: "⭐",
+        genre: "Emotional Growth",
+        sampleImageUrl: "/images/templates/emotional-growth.png",
+        sampleImageAlt: "小さな子が友だちを助け、胸の光る種が輝く絵本表紙",
+        visualDirection: "Warm emotional-growth picture-book tone with golden sunlight, expressive child faces, gentle hand-holding, small glowing seed or heart motif, garden path, soft flowers, and an encouraging tender mood.",
+        order: 5,
+        active: true,
+        systemPrompt: `あなたは子ども向け絵本の作家です。勇気、やさしさ、不安、友だち、自己肯定感など、こころの成長をテーマにした物語を作ってください。
+- 主人公が小さな気持ちの変化に気づき、自分や誰かを大切にできる展開にしてください。
+- 説教っぽくせず、場面と会話の中で自然に前向きな気づきが生まれるようにしてください。`,
+    },
+    "daily-habits": {
+        name: "生活習慣をまなぶ",
+        description: "歯みがき・片づけ・あいさつを楽しく練習",
+        icon: "🪥",
+        genre: "Daily Habits",
+        sampleImageUrl: "/images/templates/daily-habits.png",
+        sampleImageAlt: "歯ブラシ列車と子どもたちが歯みがきをする明るい絵本表紙",
+        visualDirection: "Cheerful practical daily-habit picture-book style with clean bathroom or home scenes, bright primary colors, cute anthropomorphic tools, step-by-step visual clarity, rounded shapes, and a reassuring parent-child learning mood.",
+        order: 6,
+        active: true,
+        systemPrompt: `あなたは子ども向け絵本の作家です。歯みがき、片づけ、あいさつ、トイレ、早寝、手洗いなど生活習慣を楽しく学べる物語を作ってください。
+- 主人公が失敗しても責められず、遊びや応援を通して「やってみよう」と思える展開にしてください。
+- 実用的な手順や合言葉を、絵本の物語として自然に入れてください。`,
+    },
+    educational: {
+        name: "たのしく学ぶ",
+        description: "数字・色・形・ひらがなを遊びながら学ぶ",
+        icon: "🔤",
+        genre: "Educational",
+        sampleImageUrl: "/images/templates/educational.png",
+        sampleImageAlt: "数字、色、形、文字の世界を子どもたちが冒険する絵本表紙",
+        visualDirection: "Colorful educational picture-book mood with numbers, simple shapes, hiragana-like learning motifs, rainbow accents, blocks, cheerful animal helpers, diagram-like clarity, and playful classroom-adventure composition.",
+        order: 7,
+        active: true,
+        systemPrompt: `あなたは子ども向け絵本の作家です。数字、ひらがな、色、形、英語、科学の入口などを楽しく学べる物語を作ってください。
+- 学びをテストのようにせず、発見や遊びの中で自然に触れられる構成にしてください。
+- 各ページに幼児が覚えやすい短い言葉、くり返し、見つける楽しさを入れてください。`,
     },
     food: {
-        name: "たべものだいぼうけん", description: "好き嫌い克服や食の楽しさ", icon: "🍙", order: 6, active: true,
-        systemPrompt: `あなたは子ども向け絵本の作家です。食べ物をテーマにした楽しい物語を作ってください。
-- 食べ物が擬人化されたり、料理を一緒に作ったり、新しい食べ物に挑戦する物語にしてください。
-- 食べることの楽しさや、好き嫌いを少し克服するようなポジティブな展開にしてください。
-- 子ども向けの安全な内容のみ。暴力・恐怖・悲しい結末は禁止です。${JSON_FORMAT_INSTRUCTION}`,
+        name: "おいしいおはなし",
+        description: "パンや野菜、スイーツが主役のかわいい物語",
+        icon: "🍳",
+        genre: "Food",
+        sampleImageUrl: "/images/templates/food.png",
+        sampleImageAlt: "焼きたてパンと笑顔のパンたちが並ぶあたたかい絵本表紙",
+        visualDirection: "Warm delicious food picture-book mood with cozy bakery or kitchen lighting, round cute smiling foods, golden browns, soft steam, gingham cloth, appetizing textures, and a pop yet gentle composition.",
+        order: 8,
+        active: true,
+        systemPrompt: `あなたは子ども向け絵本の作家です。おにぎり、パン、野菜、くだもの、スイーツなど食べものが登場する楽しい物語を作ってください。
+- 食べものをかわいく擬人化したり、料理を作る楽しさを描いたりしてください。
+- 好き嫌いの克服は押しつけず、「少し試してみたい」と思える前向きな雰囲気にしてください。`,
     },
-    challenge: {
-        name: "できたよ！チャレンジ", description: "トイレ・着替え・お片付けなど成長体験", icon: "💪", order: 7, active: true,
-        systemPrompt: `あなたは子ども向け絵本の作家です。子どもの成長チャレンジをテーマにした物語を作ってください。
-- トイレトレーニング、自分で着替える、お片付け、歯みがきなどの日常チャレンジを取り入れてください。
-- 最初は難しくても頑張って「できた！」と達成感を感じる物語にしてください。
-- 子ども向けの安全な内容のみ。暴力・恐怖・悲しい結末は禁止です。${JSON_FORMAT_INSTRUCTION}`,
+    seasonal: {
+        name: "季節とイベント",
+        description: "春夏秋冬、誕生日や行事を楽しむ絵本",
+        icon: "🌸",
+        genre: "Seasonal",
+        sampleImageUrl: "/images/templates/seasonal.png",
+        sampleImageAlt: "春夏秋冬と行事を一枚に描いたにぎやかな絵本表紙",
+        visualDirection: "Festive seasonal picture-book style with clearly readable spring, summer, autumn, and winter scenes, sakura, beach, autumn leaves, snow, holiday decorations, bright joyful children, and watercolor-like seasonal color blocks.",
+        order: 9,
+        active: true,
+        systemPrompt: `あなたは子ども向け絵本の作家です。春夏秋冬、クリスマス、誕生日、入園、旅行、ハロウィン、お正月など季節やイベントをテーマにした物語を作ってください。
+- 季節感が一目で分かる背景や小物を入れてください。
+- 行事の楽しさだけでなく、家族や友だちと分かち合う喜びが伝わる物語にしてください。`,
     },
-    family: {
-        name: "かぞくのおはなし", description: "家族の絆や兄弟・祖父母との物語", icon: "👨‍👩‍👧", order: 8, active: true,
-        systemPrompt: `あなたは子ども向け絵本の作家です。家族の絆をテーマにした温かい物語を作ってください。
-- お父さん、お母さん、兄弟姉妹、おじいちゃん、おばあちゃんなど家族との交流を描いてください。
-- 家族と一緒に過ごす時間の大切さや、愛情が伝わる物語にしてください。
-- 子ども向けの安全な内容のみ。暴力・恐怖・悲しい結末は禁止です。${JSON_FORMAT_INSTRUCTION}`,
+    "vehicles-robots": {
+        name: "のりもの・ロボット",
+        description: "電車・車・飛行機・ロボットの楽しい世界",
+        icon: "🤖",
+        genre: "Vehicles & Robots",
+        sampleImageUrl: "/images/templates/vehicles-robots.png",
+        sampleImageAlt: "空飛ぶロボットバスに子どもたちが乗っている絵本表紙",
+        visualDirection: "Pop and exciting vehicles-and-robots picture-book mood with blue sky, friendly robot bus or trains, clean futuristic city, rounded mechanical shapes, white clouds, orange and blue accents, smiling children, and energetic safe motion.",
+        order: 10,
+        active: true,
+        systemPrompt: `あなたは子ども向け絵本の作家です。電車、車、飛行機、ロボット、宇宙船など、のりものやメカをテーマにした楽しい物語を作ってください。
+- メカは怖くなく、丸くて親しみやすい友だちのように描いてください。
+- スピード感や発明の楽しさを入れつつ、安全で明るい冒険にしてください。`,
     },
 };
+const legacyTemplateIds = ["birthday", "seasons", "challenge", "family"];
 async function seed() {
     const batch = db.batch();
     for (const [id, data] of Object.entries(templates)) {
         batch.set(db.doc(`templates/${id}`), data);
     }
+    for (const id of legacyTemplateIds) {
+        batch.set(db.doc(`templates/${id}`), { active: false }, { merge: true });
+    }
     await batch.commit();
     console.log(`Seeded ${Object.keys(templates).length} templates.`);
 }
-seed().catch(console.error);
+exports.seedTemplates = (0, https_1.onCall)({
+    region: "asia-northeast1",
+}, async () => {
+    await seed();
+    return { message: "Templates seeded successfully" };
+});
+// For local execution
+if (require.main === module) {
+    seed().catch(console.error);
+}
 //# sourceMappingURL=seed-templates.js.map

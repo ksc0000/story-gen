@@ -5,10 +5,13 @@ import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
 const mockTemplate: TemplateData = {
   name: "おたんじょうび", description: "誕生日", icon: "🎂", order: 1,
   systemPrompt: "誕生日テーマで物語を作って", active: true,
+  sampleImageUrl: "/images/templates/animals.png",
 };
 
 const mockStory: GeneratedStory = {
   title: "ゆうたくんのたんじょうび",
+  characterBible: "A consistent boy with short black hair and blue overalls",
+  styleBible: "Soft watercolor picture book style with warm paper texture",
   pages: [
     { text: "きょうはたんじょうびです。", imagePrompt: "A birthday party" },
     { text: "ケーキをたべました。", imagePrompt: "A child eating cake" },
@@ -20,13 +23,16 @@ const mockImageBuffer = Buffer.from("fake-png-data");
 function createMockDeps() {
   return {
     getTemplate: vi.fn().mockResolvedValue(mockTemplate),
+    getUserPlan: vi.fn().mockResolvedValue("free" as const),
     llmClient: { generateStory: vi.fn().mockResolvedValue(mockStory) },
     imageClient: { generateImage: vi.fn().mockResolvedValue(mockImageBuffer) },
     uploadImage: vi.fn().mockResolvedValue("https://storage.example.com/image.png"),
     updateBookTitle: vi.fn().mockResolvedValue(undefined),
+    updateBookCoverImage: vi.fn().mockResolvedValue(undefined),
     writePage: vi.fn().mockResolvedValue(undefined),
     updateBookProgress: vi.fn().mockResolvedValue(undefined),
     updateBookStatus: vi.fn().mockResolvedValue(undefined),
+    updateBookFailure: vi.fn().mockResolvedValue(undefined),
     getUserMonthlyCount: vi.fn().mockResolvedValue(0),
     incrementMonthlyCount: vi.fn().mockResolvedValue(undefined),
   };
@@ -47,6 +53,19 @@ describe("processBookGeneration", () => {
     expect(deps.getTemplate).toHaveBeenCalledWith("birthday");
     expect(deps.llmClient.generateStory).toHaveBeenCalledOnce();
     expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
+    expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
+      expect.stringContaining("Character consistency"),
+      expect.objectContaining({
+        inputImageUrls: expect.arrayContaining([
+          "https://story-gen-8a769.web.app/images/styles/soft_watercolor.png",
+          "https://story-gen-8a769.web.app/images/templates/animals.png",
+        ]),
+      })
+    );
+    expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
+      expect.stringContaining("Style consistency"),
+      expect.any(Object)
+    );
     expect(deps.uploadImage).toHaveBeenCalledTimes(2);
     expect(deps.writePage).toHaveBeenCalledTimes(2);
     expect(deps.updateBookTitle).toHaveBeenCalledWith("book123", "ゆうたくんのたんじょうび");
@@ -77,7 +96,7 @@ describe("processBookGeneration", () => {
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book123", "completed");
   });
 
-  it("marks page as failed after 3 image generation attempts", async () => {
+  it("stops the book as soon as a page image fails after 3 attempts", async () => {
     deps.imageClient.generateImage
       .mockRejectedValueOnce(new Error("fail 1"))
       .mockRejectedValueOnce(new Error("fail 2"))
@@ -85,6 +104,10 @@ describe("processBookGeneration", () => {
       .mockResolvedValue(mockImageBuffer);
     await processBookGeneration("book123", baseBookData, deps);
     expect(deps.writePage).toHaveBeenCalledWith("book123", expect.objectContaining({ pageNumber: 0, status: "failed" }));
+    expect(deps.writePage).toHaveBeenCalledTimes(1);
+    expect(deps.uploadImage).not.toHaveBeenCalled();
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book123", "failed");
+    expect(deps.incrementMonthlyCount).not.toHaveBeenCalled();
   });
 
   it("validates input and rejects NG words", async () => {

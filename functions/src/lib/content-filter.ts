@@ -60,6 +60,9 @@ export function sanitizeInput(input: BookInput): SanitizeResult {
     input.favorites,
     input.lessonToTeach,
     input.memoryToRecreate,
+    input.characterLook,
+    input.signatureItem,
+    input.colorMood,
   ].filter((f): f is string => typeof f === "string");
 
   for (const field of fieldsToCheck) {

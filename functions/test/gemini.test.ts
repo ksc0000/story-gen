@@ -36,6 +36,8 @@ describe("GeminiClient", () => {
   it("parses valid JSON response into GeneratedStory", async () => {
     const story: GeneratedStory = {
       title: "ゆうたくんのたんじょうび",
+      characterBible: "A consistent boy with short black hair",
+      styleBible: "Soft watercolor style",
       pages: [
         { text: "きょうはゆうたくんのたんじょうびです。", imagePrompt: "A boy celebrating birthday" },
         { text: "おともだちがあつまりました。", imagePrompt: "Friends gathering at a party" },
@@ -52,7 +54,12 @@ describe("GeminiClient", () => {
   });
 
   it("handles JSON wrapped in markdown code block", async () => {
-    const story: GeneratedStory = { title: "テスト", pages: [{ text: "テスト本文", imagePrompt: "test" }] };
+    const story: GeneratedStory = {
+      title: "テスト",
+      characterBible: "A consistent child",
+      styleBible: "Flat picture book style",
+      pages: [{ text: "テスト本文", imagePrompt: "test" }],
+    };
     mockGenerateContent.mockResolvedValue({
       response: { text: () => "```json\n" + JSON.stringify(story) + "\n```" },
     });
@@ -72,7 +79,15 @@ describe("GeminiClient", () => {
   });
 
   it("throws on missing pages in response", async () => {
-    mockGenerateContent.mockResolvedValue({ response: { text: () => JSON.stringify({ title: "タイトルだけ" }) } });
+    mockGenerateContent.mockResolvedValue({
+      response: {
+        text: () => JSON.stringify({
+          title: "タイトルだけ",
+          characterBible: "A consistent child",
+          styleBible: "Flat picture book style",
+        }),
+      },
+    });
     const client = new GeminiClient("fake-api-key");
     await expect(client.generateStory({
       systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "watercolor",

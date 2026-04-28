@@ -26,8 +26,13 @@ export function BookCard({ book }: BookCardProps) {
     <Link href={href}>
       <AnimatedCard>
         <Card>
-          <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe] flex items-center justify-center">
-            {book.status === "completed" ? (
+          <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe] flex items-center justify-center">
+            {book.status === "completed" && book.coverImageUrl ? (
+              <>
+                <Image src={book.coverImageUrl} alt={book.title || "絵本の表紙"} fill className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(46,16,101,0.38)] via-transparent to-transparent" />
+              </>
+            ) : book.status === "completed" ? (
               <Image src="/images/icons/book.webp" alt="完成" width={64} height={64} />
             ) : book.status === "generating" ? (
               <div className="animate-pulse">

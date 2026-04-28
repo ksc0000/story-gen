@@ -3,7 +3,19 @@
 export type UserPlan = "free" | "premium";
 export type BookStatus = "generating" | "completed" | "failed";
 export type PageStatus = "pending" | "generating" | "completed" | "failed";
-export type IllustrationStyle = "watercolor" | "flat" | "crayon";
+export type IllustrationStyle =
+  | "soft_watercolor"
+  | "fluffy_pastel"
+  | "crayon"
+  | "flat_illustration"
+  | "anime_storybook"
+  | "classic_picture_book"
+  | "toy_3d"
+  | "paper_collage"
+  | "pencil_sketch"
+  | "colorful_pop"
+  | "watercolor"
+  | "flat";
 export type PageCount = 4 | 8 | 12;
 
 export interface BookInput {
@@ -12,6 +24,9 @@ export interface BookInput {
   favorites?: string;
   lessonToTeach?: string;
   memoryToRecreate?: string;
+  characterLook?: string;
+  signatureItem?: string;
+  colorMood?: string;
 }
 
 export interface BookData {
@@ -22,6 +37,7 @@ export interface BookData {
   pageCount: PageCount;
   status: BookStatus;
   progress: number;
+  coverImageUrl?: string;
   input: BookInput;
   createdAt: FirebaseFirestore.Timestamp;
   expiresAt: FirebaseFirestore.Timestamp | null;
@@ -39,6 +55,10 @@ export interface TemplateData {
   name: string;
   description: string;
   icon: string;
+  genre?: string;
+  sampleImageUrl?: string;
+  sampleImageAlt?: string;
+  visualDirection?: string;
   order: number;
   systemPrompt: string;
   active: boolean;
@@ -46,6 +66,8 @@ export interface TemplateData {
 
 export interface GeneratedStory {
   title: string;
+  characterBible: string;
+  styleBible: string;
   pages: Array<{ text: string; imagePrompt: string }>;
 }
 
@@ -57,11 +79,14 @@ export interface LLMClient {
     favorites?: string;
     lessonToTeach?: string;
     memoryToRecreate?: string;
+    characterLook?: string;
+    signatureItem?: string;
+    colorMood?: string;
     pageCount: PageCount;
     style: IllustrationStyle;
   }): Promise<GeneratedStory>;
 }
 
 export interface ImageClient {
-  generateImage(prompt: string): Promise<Buffer>;
+  generateImage(prompt: string, options?: { inputImageUrls?: string[] }): Promise<Buffer>;
 }

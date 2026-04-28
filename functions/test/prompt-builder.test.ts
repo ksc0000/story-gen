@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt, buildUserPrompt, buildImagePrompt } from "../src/lib/prompt-builder";
+import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
 import type { TemplateData, IllustrationStyle, PageCount } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
@@ -20,11 +20,13 @@ describe("buildSystemPrompt", () => {
     const result = buildSystemPrompt(mockTemplate, "watercolor");
     expect(result).toContain("JSON");
     expect(result).toContain("title");
+    expect(result).toContain("characterBible");
+    expect(result).toContain("styleBible");
     expect(result).toContain("pages");
     expect(result).toContain("imagePrompt");
   });
   it("includes style-specific illustration instruction", () => {
-    expect(buildSystemPrompt(mockTemplate, "watercolor")).toContain("水彩画");
+    expect(buildSystemPrompt(mockTemplate, "soft_watercolor")).toContain("水彩");
   });
 });
 
@@ -39,12 +41,16 @@ describe("buildUserPrompt", () => {
     const result = buildUserPrompt({
       childName: "さくら", childAge: 3, favorites: "うさぎ",
       lessonToTeach: "あいさつ", memoryToRecreate: "おばあちゃんの家",
+      characterLook: "短い黒髪", signatureItem: "黄色い帽子", colorMood: "星空みたいな青",
     }, 8);
     expect(result).toContain("さくら");
     expect(result).toContain("3");
     expect(result).toContain("うさぎ");
     expect(result).toContain("あいさつ");
     expect(result).toContain("おばあちゃんの家");
+    expect(result).toContain("短い黒髪");
+    expect(result).toContain("黄色い帽子");
+    expect(result).toContain("星空みたいな青");
   });
   it("omits optional fields when not provided", () => {
     const result = buildUserPrompt({ childName: "ゆうた" }, 8);
@@ -55,7 +61,13 @@ describe("buildUserPrompt", () => {
 
 describe("buildImagePrompt", () => {
   it("includes the base prompt", () => {
-    expect(buildImagePrompt("A child playing in a park", "watercolor")).toContain("A child playing in a park");
+    expect(buildImagePrompt("A child playing in a park", "watercolor")).toContain("Scene: A child playing in a park");
+  });
+  it("includes consistency bibles when provided", () => {
+    const result = buildImagePrompt("A child at a party", "watercolor", "same yellow hat", "same paper texture");
+    expect(result).toContain("same yellow hat");
+    expect(result).toContain("same paper texture");
+    expect(result).toContain("Keep the same character design");
   });
   it("appends safety keywords", () => {
     const result = buildImagePrompt("A child at a party", "flat");
@@ -73,5 +85,8 @@ describe("buildImagePrompt", () => {
   it("appends crayon style keywords", () => {
     expect(buildImagePrompt("A birthday scene", "crayon")).toContain("crayon pastel");
     expect(buildImagePrompt("A birthday scene", "crayon")).toContain("hand-drawn texture");
+  });
+  it("returns a style reference image path", () => {
+    expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.png");
   });
 });

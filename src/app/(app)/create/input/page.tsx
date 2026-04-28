@@ -25,6 +25,9 @@ function InputPageContent() {
   const [pageCount, setPageCount] = useState<number>(8);
   const [lessonToTeach, setLessonToTeach] = useState("");
   const [memoryToRecreate, setMemoryToRecreate] = useState("");
+  const [characterLook, setCharacterLook] = useState("");
+  const [signatureItem, setSignatureItem] = useState("");
+  const [colorMood, setColorMood] = useState("");
   const [showOptional, setShowOptional] = useState(false);
 
   const handleNext = () => {
@@ -36,6 +39,9 @@ function InputPageContent() {
     if (favorites) params.set("favorites", favorites);
     if (lessonToTeach) params.set("lessonToTeach", lessonToTeach);
     if (memoryToRecreate) params.set("memoryToRecreate", memoryToRecreate);
+    if (characterLook) params.set("characterLook", characterLook);
+    if (signatureItem) params.set("signatureItem", signatureItem);
+    if (colorMood) params.set("colorMood", colorMood);
     router.push(`/create/style?${params.toString()}`);
   };
 
@@ -61,6 +67,18 @@ function InputPageContent() {
               <div>
                 <Label htmlFor="favorites" className="text-purple-800">好きなもの</Label>
                 <Input id="favorites" value={favorites} onChange={(e) => setFavorites(e.target.value)} placeholder="例：きょうりゅう、でんしゃ" className="mt-1" maxLength={200} />
+              </div>
+              <div>
+                <Label htmlFor="characterLook" className="text-purple-800">主人公の見た目</Label>
+                <Input id="characterLook" value={characterLook} onChange={(e) => setCharacterLook(e.target.value)} placeholder="例：短い黒髪、丸いほっぺ、青いオーバーオール" className="mt-1" maxLength={200} />
+              </div>
+              <div>
+                <Label htmlFor="signatureItem" className="text-purple-800">毎ページに出したい持ち物・服装</Label>
+                <Input id="signatureItem" value={signatureItem} onChange={(e) => setSignatureItem(e.target.value)} placeholder="例：黄色い帽子、赤いリュック、くまのぬいぐるみ" className="mt-1" maxLength={200} />
+              </div>
+              <div>
+                <Label htmlFor="colorMood" className="text-purple-800">色や雰囲気</Label>
+                <Input id="colorMood" value={colorMood} onChange={(e) => setColorMood(e.target.value)} placeholder="例：星空みたいな青、あたたかい夕方、やさしいパステル" className="mt-1" maxLength={200} />
               </div>
               <div>
                 <Label className="text-purple-800">ページ数</Label>

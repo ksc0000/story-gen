@@ -9,11 +9,13 @@ import type { TemplateDoc } from "@/lib/types";
 interface UseTemplatesResult {
   templates: (TemplateDoc & { id: string })[];
   loading: boolean;
+  error: Error | null;
 }
 
 export function useTemplates(): UseTemplatesResult {
   const [templates, setTemplates] = useState<(TemplateDoc & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (isDemoMode) {
@@ -23,12 +25,20 @@ export function useTemplates(): UseTemplatesResult {
     }
 
     const q = query(collection(db, "templates"), where("active", "==", true), orderBy("order", "asc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setTemplates(snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as TemplateDoc) })));
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        setTemplates(snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as TemplateDoc) })));
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Failed to load templates:", err);
+        setError(err as Error);
+        setLoading(false);
+      }
+    );
     return unsubscribe;
   }, []);
 
-  return { templates, loading };
+  return { templates, loading, error };
 }

@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "story-gen-8a769",
+    "production": "story-gen-8a769"
+  },
+  "targets": {},
+  "etags": {}
+}

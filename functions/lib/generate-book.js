@@ -38,33 +38,51 @@ exports.processBookGeneration = processBookGeneration;
 const firestore_1 = require("firebase-functions/v2/firestore");
 const params_1 = require("firebase-functions/params");
 const admin = __importStar(require("firebase-admin"));
+const crypto_1 = require("crypto");
 const content_filter_1 = require("./lib/content-filter");
 const prompt_builder_1 = require("./lib/prompt-builder");
 const gemini_1 = require("./lib/gemini");
 const replicate_1 = require("./lib/replicate");
 const FREE_MONTHLY_LIMIT = 3;
 const IMAGE_RETRY_LIMIT = 3;
+const IMAGE_REQUEST_INTERVAL_MS = 11_000;
+const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
+function shouldThrottleImageRequests() {
+    return process.env.NODE_ENV !== "test";
+}
 async function processBookGeneration(bookId, bookData, deps) {
     try {
+        let lastImageAttemptAt = 0;
         // Step 1: Validate input
         const sanitizeResult = (0, content_filter_1.sanitizeInput)(bookData.input);
         if (!sanitizeResult.valid) {
             console.error(`Input validation failed for ${bookId}: ${sanitizeResult.reason}`);
+            await deps.updateBookFailure(bookId, sanitizeResult.reason ?? "Input validation failed");
             await deps.updateBookStatus(bookId, "failed");
             return;
         }
-        // Step 2: Check quota
-        const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
-        if (monthlyCount >= FREE_MONTHLY_LIMIT) {
-            console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount}/${FREE_MONTHLY_LIMIT})`);
-            await deps.updateBookStatus(bookId, "failed");
-            return;
+        // Step 2: Check quota (skip in development)
+        if (process.env.NODE_ENV !== 'development') {
+            const userPlan = await deps.getUserPlan(bookData.userId);
+            if (userPlan === "premium") {
+                console.log(`Skipping monthly quota check for premium user ${bookData.userId}`);
+            }
+            else {
+                const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
+                if (monthlyCount >= FREE_MONTHLY_LIMIT) {
+                    console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount}/${FREE_MONTHLY_LIMIT})`);
+                    await deps.updateBookFailure(bookId, "Monthly quota exceeded");
+                    await deps.updateBookStatus(bookId, "failed");
+                    return;
+                }
+            }
         }
         // Step 3: Get template
         const template = await deps.getTemplate(bookData.theme);
         // Step 4: Build prompts
         const systemPrompt = (0, prompt_builder_1.buildSystemPrompt)(template, bookData.style);
         (0, prompt_builder_1.buildUserPrompt)(bookData.input, bookData.pageCount);
+        const referenceImageUrls = buildReferenceImageUrls(bookData.style, template);
         // Step 5: Generate story with LLM
         const story = await deps.llmClient.generateStory({
             systemPrompt,
@@ -73,6 +91,9 @@ async function processBookGeneration(bookId, bookData, deps) {
             favorites: bookData.input.favorites,
             lessonToTeach: bookData.input.lessonToTeach,
             memoryToRecreate: bookData.input.memoryToRecreate,
+            characterLook: bookData.input.characterLook,
+            signatureItem: bookData.input.signatureItem,
+            colorMood: bookData.input.colorMood,
             pageCount: bookData.pageCount,
             style: bookData.style,
         });
@@ -82,23 +103,49 @@ async function processBookGeneration(bookId, bookData, deps) {
         const totalPages = story.pages.length;
         for (let i = 0; i < totalPages; i++) {
             const storyPage = story.pages[i];
-            const imagePrompt = (0, prompt_builder_1.buildImagePrompt)(storyPage.imagePrompt, bookData.style);
-            // Generate image with retries
+            const imagePrompt = (0, prompt_builder_1.buildImagePrompt)(storyPage.imagePrompt, bookData.style, story.characterBible, story.styleBible);
+            // Generate image with retries (skip in development)
             let imageBuffer = null;
             let imageUrl = "";
-            let pageStatus = "completed";
-            for (let attempt = 0; attempt < IMAGE_RETRY_LIMIT; attempt++) {
-                try {
-                    imageBuffer = await deps.imageClient.generateImage(imagePrompt);
-                    imageUrl = await deps.uploadImage(bookId, i, imageBuffer);
-                    break; // Success
-                }
-                catch (err) {
-                    console.error(`Image generation attempt ${attempt + 1}/${IMAGE_RETRY_LIMIT} failed for page ${i}:`, err);
-                    if (attempt === IMAGE_RETRY_LIMIT - 1) {
-                        // All retries exhausted
-                        pageStatus = "failed";
-                        console.error(`All ${IMAGE_RETRY_LIMIT} attempts failed for page ${i}`);
+            // Skip image generation in development to avoid API costs
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`Skipping image generation for page ${i} in development mode`);
+                imageUrl = `https://via.placeholder.com/512x512/cccccc/666666?text=Page+${i}`;
+            }
+            else {
+                for (let attempt = 0; attempt < IMAGE_RETRY_LIMIT; attempt++) {
+                    try {
+                        const now = Date.now();
+                        const waitMs = Math.max(0, IMAGE_REQUEST_INTERVAL_MS - (now - lastImageAttemptAt));
+                        if (waitMs > 0 && shouldThrottleImageRequests()) {
+                            await new Promise((resolve) => setTimeout(resolve, waitMs));
+                        }
+                        imageBuffer = await deps.imageClient.generateImage(imagePrompt, { inputImageUrls: referenceImageUrls });
+                        lastImageAttemptAt = Date.now();
+                        imageUrl = await deps.uploadImage(bookId, i, imageBuffer);
+                        break; // Success
+                    }
+                    catch (err) {
+                        lastImageAttemptAt = Date.now();
+                        console.error(`Image generation attempt ${attempt + 1}/${IMAGE_RETRY_LIMIT} failed for page ${i}:`, err);
+                        const retryAfterMs = getRetryAfterMs(err);
+                        if (retryAfterMs > 0 && attempt < IMAGE_RETRY_LIMIT - 1 && shouldThrottleImageRequests()) {
+                            await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
+                        }
+                        if (attempt === IMAGE_RETRY_LIMIT - 1) {
+                            console.error(`All ${IMAGE_RETRY_LIMIT} attempts failed for page ${i}`);
+                            const message = err instanceof Error ? err.message : "Image generation failed";
+                            await deps.writePage(bookId, {
+                                pageNumber: i,
+                                text: storyPage.text,
+                                imageUrl: "",
+                                imagePrompt,
+                                status: "failed",
+                            });
+                            await deps.updateBookFailure(bookId, `画像生成に失敗しました（${message}）`);
+                            await deps.updateBookStatus(bookId, "failed");
+                            return;
+                        }
                     }
                 }
             }
@@ -107,10 +154,13 @@ async function processBookGeneration(bookId, bookData, deps) {
                 pageNumber: i,
                 text: storyPage.text,
                 imageUrl,
-                imagePrompt: storyPage.imagePrompt,
-                status: pageStatus,
+                imagePrompt,
+                status: "completed",
             };
             await deps.writePage(bookId, pageData);
+            if (i === 0 && imageUrl) {
+                await deps.updateBookCoverImage(bookId, imageUrl);
+            }
             // Update progress
             const progress = Math.round(((i + 1) / totalPages) * 100);
             await deps.updateBookProgress(bookId, progress);
@@ -123,8 +173,39 @@ async function processBookGeneration(bookId, bookData, deps) {
     }
     catch (err) {
         console.error(`Book generation failed for ${bookId}:`, err);
+        const message = err instanceof Error ? err.message : "Unknown generation error";
+        await deps.updateBookFailure(bookId, message);
         await deps.updateBookStatus(bookId, "failed");
     }
+}
+function buildReferenceImageUrls(style, template) {
+    const urls = [
+        (0, prompt_builder_1.getStyleReferenceImagePath)(style),
+        template.sampleImageUrl,
+    ]
+        .filter((value) => Boolean(value))
+        .map(toPublicUrl);
+    return [...new Set(urls)];
+}
+function toPublicUrl(pathOrUrl) {
+    if (/^https?:\/\//i.test(pathOrUrl))
+        return pathOrUrl;
+    return `${PUBLIC_SITE_URL}${pathOrUrl.startsWith("/") ? "" : "/"}${pathOrUrl}`;
+}
+function getRetryAfterMs(err) {
+    if (!err || typeof err !== "object")
+        return 0;
+    const response = err.response;
+    const retryAfterHeader = response?.headers?.get?.("retry-after");
+    const retryAfterSeconds = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) : NaN;
+    if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) {
+        return retryAfterSeconds * 1000;
+    }
+    const fallback = err.retry_after;
+    if (typeof fallback === "number" && fallback > 0) {
+        return fallback * 1000;
+    }
+    return 0;
 }
 // Firebase Cloud Function
 const geminiApiKey = (0, params_1.defineSecret)("GEMINI_API_KEY");
@@ -157,21 +238,32 @@ exports.generateBook = (0, firestore_1.onDocumentCreated)({
                 throw new Error(`Template not found: ${theme}`);
             return templateDoc.data();
         },
+        getUserPlan: async (userId) => {
+            const userDoc = await db.collection("users").doc(userId).get();
+            return userDoc.data()?.plan ?? "free";
+        },
         llmClient: new gemini_1.GeminiClient(geminiApiKey.value()),
         imageClient: new replicate_1.ReplicateImageClient(replicateApiToken.value()),
         uploadImage: async (bookId, pageNumber, buffer) => {
-            const bucket = storage.bucket();
+            const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");
             const filename = `books/${bookId}/page-${pageNumber}.png`;
             const file = bucket.file(filename);
-            await file.save(buffer, { contentType: "image/png" });
-            const [url] = await file.getSignedUrl({
-                action: "read",
-                expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+            const downloadToken = (0, crypto_1.randomUUID)();
+            await file.save(buffer, {
+                contentType: "image/png",
+                metadata: {
+                    metadata: {
+                        firebaseStorageDownloadTokens: downloadToken,
+                    },
+                },
             });
-            return url;
+            return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
         },
         updateBookTitle: async (bookId, title) => {
             await db.collection("books").doc(bookId).update({ title });
+        },
+        updateBookCoverImage: async (bookId, imageUrl) => {
+            await db.collection("books").doc(bookId).update({ coverImageUrl: imageUrl });
         },
         writePage: async (bookId, page) => {
             await db.collection("books").doc(bookId).collection("pages").doc(`page-${page.pageNumber}`).set(page);
@@ -181,6 +273,9 @@ exports.generateBook = (0, firestore_1.onDocumentCreated)({
         },
         updateBookStatus: async (bookId, status) => {
             await db.collection("books").doc(bookId).update({ status });
+        },
+        updateBookFailure: async (bookId, message) => {
+            await db.collection("books").doc(bookId).update({ errorMessage: message.slice(0, 500) });
         },
         getUserMonthlyCount: async (userId) => {
             const now = new Date();
