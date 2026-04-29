@@ -9,29 +9,23 @@ import { StylePicker } from "@/components/style-picker";
 import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
+import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
-import type { CharacterUsage, ChildProfileSnapshot, IllustrationStyle, OutfitMode, PageCount } from "@/lib/types";
-
-const TEMPLATE_CATEGORY_GROUPS: Record<string, string> = {
-  animals: "favorite-worlds",
-  adventure: "imagination",
-  fantasy: "imagination",
-  bedtime: "bedtime",
-  "emotional-growth": "emotional-growth",
-  "daily-habits": "growth-support",
-  educational: "learning",
-  food: "favorite-worlds",
-  seasonal: "seasonal-events",
-  "vehicles-robots": "favorite-worlds",
-  memory: "memories",
-};
+import type {
+  CharacterUsage,
+  ChildProfileSnapshot,
+  IllustrationStyle,
+  OutfitMode,
+  PageCount,
+} from "@/lib/types";
 
 function StyleSelectionPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
   const { children } = useChildren(user?.uid);
+  const { templates } = useTemplates();
   const [selected, setSelected] = useState<IllustrationStyle | null>("soft_watercolor");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -39,8 +33,12 @@ function StyleSelectionPageContent() {
   const theme = searchParams.get("theme") ?? "";
   const childId = searchParams.get("childId");
   const child = children.find((item) => item.id === childId) ?? null;
+  const template = templates.find((item) => item.id === theme);
   const childName = child?.nickname || child?.displayName || "";
-  const pageCount = Number(searchParams.get("pageCount") ?? "8") as PageCount;
+  const mode = searchParams.get("mode") ?? template?.creationMode ?? "guided_ai";
+  const pageCountParam = Number(searchParams.get("pageCount") ?? "8") as PageCount;
+  const fixedPageCount = template?.fixedStory?.pages.length;
+  const pageCount = (mode === "fixed_template" && fixedPageCount ? fixedPageCount : pageCountParam) as PageCount;
   const storyRequest = searchParams.get("storyRequest");
   const lessonToTeach = searchParams.get("lessonToTeach");
   const memoryToRecreate = searchParams.get("memoryToRecreate");
@@ -52,19 +50,6 @@ function StyleSelectionPageContent() {
   const keepSignatureItem = searchParams.get("keepSignatureItem") !== "false";
 
   const simulateDemoGeneration = async (bookId: string) => {
-    const titles: Record<string, string> = {
-      animals: `${childName}くんのどうぶつのおはなし`,
-      adventure: `${childName}くんのわくわく冒険`,
-      fantasy: `${childName}くんのまほうの世界`,
-      bedtime: `${childName}くんのおやすみ前のおはなし`,
-      "emotional-growth": `${childName}くんのこころを育てるおはなし`,
-      "daily-habits": `${childName}くんの生活習慣をまなぶおはなし`,
-      educational: `${childName}くんのたのしく学ぶおはなし`,
-      food: `${childName}くんのおいしいおはなし`,
-      seasonal: `${childName}くんの季節とイベント`,
-      "vehicles-robots": `${childName}くんののりもの・ロボット`,
-    };
-
     const demoPages = [
       { text: "むかしむかし、あるところに。", imagePrompt: "A magical storybook opening" },
       { text: `${childName}がいました。`, imagePrompt: "A happy child" },
@@ -91,14 +76,14 @@ function StyleSelectionPageContent() {
     }
 
     updateDemoBook(bookId, {
-      title: titles[theme] || `${childName}の絵本`,
+      title: template?.name || `${childName}の絵本`,
       status: "completed",
       progress: 100,
     });
   };
 
   const handleCreate = async () => {
-    if (!selected || !user) return;
+    if (!selected || !user || !template) return;
     setCreating(true);
     setCreateError(null);
     try {
@@ -121,7 +106,9 @@ function StyleSelectionPageContent() {
         saveDemoBook(demoBook);
         simulateDemoGeneration(bookId).catch(console.error);
       } else {
-        const childProfileSnapshot = child ? buildChildProfileSnapshot(child) : buildLegacyChildProfileSnapshot({ childName });
+        const childProfileSnapshot = child
+          ? buildChildProfileSnapshot(child)
+          : buildLegacyChildProfileSnapshot({ childName });
         const characterUsage: CharacterUsage = {
           useRegisteredCharacter: Boolean(child),
           faceSource: "child_profile",
@@ -137,7 +124,10 @@ function StyleSelectionPageContent() {
           title: "",
           theme,
           templateId: theme,
-          categoryGroupId: TEMPLATE_CATEGORY_GROUPS[theme] ?? "favorite-worlds",
+          categoryGroupId: template.categoryGroupId ?? "favorite-worlds",
+          creationMode: template.creationMode ?? "guided_ai",
+          priceTier: template.priceTier ?? "take",
+          storyCostLevel: template.storyCostLevel ?? "standard",
           style: selected,
           pageCount,
           status: "generating",
@@ -145,7 +135,9 @@ function StyleSelectionPageContent() {
           input: {
             childName,
             ...(child?.age ? { childAge: child.age } : {}),
-            ...(child?.personality?.favoriteThings?.length ? { favorites: child.personality.favoriteThings.join("、") } : {}),
+            ...(child?.personality?.favoriteThings?.length
+              ? { favorites: child.personality.favoriteThings.join("、") }
+              : {}),
             ...(storyRequest ? { storyRequest } : {}),
             ...(lessonToTeach ? { lessonToTeach } : {}),
             ...(memoryToRecreate ? { memoryToRecreate } : {}),
@@ -153,7 +145,8 @@ function StyleSelectionPageContent() {
             ...(place ? { place } : {}),
             ...(parentMessage ? { parentMessage } : {}),
           },
-          createdAt: serverTimestamp(), expiresAt,
+          createdAt: serverTimestamp(),
+          expiresAt,
         });
         const bookRef = await addDoc(collection(db, "books"), bookPayload);
         bookId = bookRef.id;
@@ -173,7 +166,8 @@ function StyleSelectionPageContent() {
       <StepIndicator currentStep={3} />
       <h1 className="mt-6 text-center text-xl font-bold text-purple-900">絵のタッチを選んでね</h1>
       <p className="mt-2 text-center text-sm text-violet-500">
-        {childName ? `${childName}を主人公にします。` : "主人公が未選択です。"}迷ったら「やさしい水彩」のままで大丈夫です。
+        {childName ? `${childName}を主人公にします。` : "主人公が未選択です。"}
+        {template ? ` ${template.name} をこのタッチで仕上げます。` : ""}迷ったら「やさしい水彩」のままで大丈夫です。
       </p>
       <div className="mt-6"><StylePicker selected={selected} onSelect={setSelected} /></div>
       {createError ? (
@@ -183,7 +177,7 @@ function StyleSelectionPageContent() {
         </div>
       ) : null}
       <div className="mt-8 flex justify-center">
-        <Button onClick={handleCreate} disabled={!selected || creating || !childName} size="lg" className="px-8 text-lg py-6">
+        <Button onClick={handleCreate} disabled={!selected || creating || !childName || !template} size="lg" className="px-8 py-6 text-lg">
           {creating ? "絵本を作っています..." : "絵本を作る！"}
         </Button>
       </div>
@@ -205,9 +199,7 @@ function stripUndefined<T>(value: T): T {
   return value;
 }
 
-function buildLegacyChildProfileSnapshot(params: {
-  childName: string;
-}): ChildProfileSnapshot {
+function buildLegacyChildProfileSnapshot(params: { childName: string }): ChildProfileSnapshot {
   return {
     displayName: params.childName,
     personality: {},

@@ -3,6 +3,9 @@
 export type UserPlan = "free" | "premium";
 export type BookStatus = "generating" | "completed" | "failed";
 export type PageStatus = "pending" | "generating" | "completed" | "failed";
+export type CreationMode = "fixed_template" | "guided_ai" | "original_ai";
+export type PriceTier = "ume" | "take" | "matsu";
+export type StoryCostLevel = "none" | "low" | "standard";
 export type ImagePurpose =
   | "book_page"
   | "book_cover"
@@ -23,6 +26,16 @@ export type IllustrationStyle =
   | "watercolor"
   | "flat";
 export type PageCount = 4 | 8 | 12;
+
+export interface FixedStoryPageTemplate {
+  textTemplate: string;
+  imagePromptTemplate: string;
+}
+
+export interface FixedStoryTemplate {
+  titleTemplate: string;
+  pages: FixedStoryPageTemplate[];
+}
 
 export interface BookInput {
   childName: string;
@@ -122,6 +135,9 @@ export interface BookData {
   theme: string;
   categoryGroupId?: string;
   templateId?: string;
+  creationMode?: CreationMode;
+  priceTier?: PriceTier;
+  storyCostLevel?: StoryCostLevel;
   style: IllustrationStyle;
   pageCount: PageCount;
   status: BookStatus;
@@ -146,11 +162,18 @@ export interface TemplateData {
   icon: string;
   genre?: string;
   categoryGroupId?: string;
+  subcategoryId?: string;
   parentIntent?: string;
   recommendedAgeMin?: number;
   recommendedAgeMax?: number;
   requiredInputs?: string[];
   optionalInputs?: string[];
+  themeTags?: string[];
+  isOriginalEntry?: boolean;
+  creationMode?: CreationMode;
+  priceTier?: PriceTier;
+  storyCostLevel?: StoryCostLevel;
+  fixedStory?: FixedStoryTemplate;
   sampleImageUrl?: string;
   sampleImageAlt?: string;
   visualDirection?: string;

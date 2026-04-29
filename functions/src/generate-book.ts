@@ -2,7 +2,17 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
-import type { BookData, TemplateData, LLMClient, ImageClient, PageData, BookInput, ImagePurpose } from "./lib/types";
+import type {
+  BookData,
+  TemplateData,
+  LLMClient,
+  ImageClient,
+  PageData,
+  BookInput,
+  ImagePurpose,
+  FixedStoryTemplate,
+  GeneratedStory,
+} from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, buildUserPrompt, getStyleReferenceImagePath } from "./lib/prompt-builder";
 import { GeminiClient } from "./lib/gemini";
@@ -76,24 +86,30 @@ export async function processBookGeneration(
     const coverReferenceImageUrls = buildReferenceImageUrls(bookData.style, template, bookData.childProfileSnapshot);
 
     // Step 5: Generate story with LLM
-    const story = await deps.llmClient.generateStory({
-      systemPrompt,
-      childName: mergedInput.childName,
-      childAge: mergedInput.childAge,
-      favorites: mergedInput.favorites,
-      lessonToTeach: mergedInput.lessonToTeach,
-      memoryToRecreate: mergedInput.memoryToRecreate,
-      characterLook: mergedInput.characterLook,
-      signatureItem: mergedInput.signatureItem,
-      colorMood: mergedInput.colorMood,
-      place: mergedInput.place,
-      familyMembers: mergedInput.familyMembers,
-      season: mergedInput.season,
-      parentMessage: mergedInput.parentMessage,
-      storyRequest: mergedInput.storyRequest,
-      pageCount: bookData.pageCount,
-      style: bookData.style,
-    });
+    const story =
+      template.creationMode === "fixed_template" && template.fixedStory
+        ? (() => {
+            console.log(`Book ${bookId} uses fixed_template; skipping LLM story generation.`);
+            return buildStoryFromFixedTemplate(template.fixedStory, mergedInput, bookData, template);
+          })()
+        : await deps.llmClient.generateStory({
+            systemPrompt,
+            childName: mergedInput.childName,
+            childAge: mergedInput.childAge,
+            favorites: mergedInput.favorites,
+            lessonToTeach: mergedInput.lessonToTeach,
+            memoryToRecreate: mergedInput.memoryToRecreate,
+            characterLook: mergedInput.characterLook,
+            signatureItem: mergedInput.signatureItem,
+            colorMood: mergedInput.colorMood,
+            place: mergedInput.place,
+            familyMembers: mergedInput.familyMembers,
+            season: mergedInput.season,
+            parentMessage: mergedInput.parentMessage,
+            storyRequest: mergedInput.storyRequest,
+            pageCount: bookData.pageCount,
+            style: bookData.style,
+          });
 
     // Step 6: Update book title
     await deps.updateBookTitle(bookId, story.title);
@@ -209,6 +225,75 @@ function buildReferenceImageUrls(
     .map(toPublicUrl);
 
   return [...new Set(urls)];
+}
+
+function buildStoryFromFixedTemplate(
+  fixedStory: FixedStoryTemplate,
+  mergedInput: BookInput,
+  bookData: BookData,
+  template: TemplateData
+): GeneratedStory {
+  const replacements = buildFixedTemplateReplacements(mergedInput);
+  const pages = fixedStory.pages.map((page) => ({
+    text: applyTemplateReplacements(page.textTemplate, replacements),
+    imagePrompt: applyTemplateReplacements(page.imagePromptTemplate, replacements),
+  }));
+
+  return {
+    title: applyTemplateReplacements(fixedStory.titleTemplate, replacements),
+    characterBible: buildFixedCharacterBible(bookData, mergedInput),
+    styleBible: buildFixedStyleBible(bookData, template),
+    pages,
+  };
+}
+
+function buildFixedTemplateReplacements(input: BookInput): Record<string, string> {
+  const fallbackParentMessage = "またひとつ、たいせつな思い出がふえました。";
+
+  return {
+    childName: input.childName,
+    childAge: input.childAge ? String(input.childAge) : "3",
+    favorites: input.favorites || "だいすきなもの",
+    lessonToTeach: input.lessonToTeach || "やさしさ",
+    memoryToRecreate: input.memoryToRecreate || "たのしい思い出",
+    characterLook: input.characterLook || "gentle preschool child",
+    signatureItem: input.signatureItem || "a small familiar item",
+    colorMood: input.colorMood || "soft warm colors",
+    place: input.place || "たのしい場所",
+    familyMembers: input.familyMembers || "家族",
+    season: input.season || "やさしい季節",
+    parentMessage: input.parentMessage || fallbackParentMessage,
+    storyRequest: input.storyRequest || "a gentle family story",
+  };
+}
+
+function applyTemplateReplacements(template: string, replacements: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => replacements[key] ?? "");
+}
+
+function buildFixedCharacterBible(bookData: BookData, input: BookInput): string {
+  const childProfile = bookData.childProfileSnapshot;
+  const appearance = [
+    childProfile?.visualProfile.characterBible,
+    input.characterLook ? `Appearance: ${input.characterLook}.` : "",
+    input.signatureItem ? `Signature item: ${input.signatureItem}.` : "",
+    input.childAge ? `Age impression: ${input.childAge} years old.` : "",
+    `Keep the protagonist as ${input.childName}, a warm child-friendly picture book hero.`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return appearance;
+}
+
+function buildFixedStyleBible(bookData: BookData, template: TemplateData): string {
+  return [
+    `Use a consistent ${bookData.style} picture book rendering across every page.`,
+    template.visualDirection ? `Visual direction: ${template.visualDirection}` : "",
+    "Keep lighting soft, compositions clear, and the mood safe and gentle for young children.",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function getPageImagePurpose(pageIndex: number, theme: string): ImagePurpose {

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/animated-card";
-import type { TemplateDoc } from "@/lib/types";
+import type { PriceTier, StoryCostLevel, TemplateDoc } from "@/lib/types";
 
 const ICON_MAP: Record<string, string> = {
   "🎂": "🎂",
@@ -19,6 +19,18 @@ const ICON_MAP: Record<string, string> = {
 };
 
 interface ThemeCardProps { template: TemplateDoc & { id: string }; selected: boolean; onSelect: () => void; }
+
+const PRICE_TIER_LABELS: Record<PriceTier, string> = {
+  ume: "軽量",
+  take: "標準",
+  matsu: "自由度高め",
+};
+
+const STORY_COST_LABELS: Record<StoryCostLevel, string> = {
+  none: "ストーリーAI生成なし",
+  low: "AI少なめ",
+  standard: "AI生成",
+};
 
 export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
   const iconSrc = ICON_MAP[template.icon];
@@ -43,6 +55,21 @@ export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
           <div className="flex flex-1 flex-col p-3">
             <h3 className="text-sm font-semibold text-purple-900">{template.name}</h3>
             <p className="mt-1 text-xs leading-relaxed text-violet-500">{template.description}</p>
+            {template.parentIntent ? (
+              <p className="mt-2 text-[11px] leading-relaxed text-violet-400">{template.parentIntent}</p>
+            ) : null}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {template.priceTier ? (
+                <span className="rounded-full bg-violet-100 px-2 py-1 text-[11px] font-medium text-violet-700">
+                  {PRICE_TIER_LABELS[template.priceTier]}
+                </span>
+              ) : null}
+              {template.storyCostLevel ? (
+                <span className="rounded-full bg-pink-100 px-2 py-1 text-[11px] font-medium text-pink-700">
+                  {STORY_COST_LABELS[template.storyCostLevel]}
+                </span>
+              ) : null}
+            </div>
           </div>
         </CardContent>
       </Card>

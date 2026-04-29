@@ -4,8 +4,34 @@ import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
   name: "おたんじょうび", description: "誕生日", icon: "🎂", order: 1,
+  creationMode: "guided_ai", priceTier: "take", storyCostLevel: "standard",
   systemPrompt: "誕生日テーマで物語を作って", active: true,
   sampleImageUrl: "/images/templates/animals.png",
+};
+
+const fixedTemplate: TemplateData = {
+  name: "はじめてのどうぶつえん",
+  description: "固定テンプレート",
+  icon: "🦁",
+  order: 2,
+  active: true,
+  creationMode: "fixed_template",
+  priceTier: "ume",
+  storyCostLevel: "none",
+  systemPrompt: "固定テンプレート",
+  fixedStory: {
+    titleTemplate: "{childName}とはじめてのどうぶつえん",
+    pages: [
+      {
+        textTemplate: "{childName}は、{familyMembers}といっしょに{place}へでかけました。",
+        imagePromptTemplate: "A child arriving at a friendly zoo with family",
+      },
+      {
+        textTemplate: "{parentMessage}",
+        imagePromptTemplate: "A warm family memory ending scene",
+      },
+    ],
+  },
 };
 
 const mockStory: GeneratedStory = {
@@ -115,5 +141,33 @@ describe("processBookGeneration", () => {
     await processBookGeneration("book123", badBook, deps);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book123", "failed");
     expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
+  });
+
+  it("skips LLM story generation for fixed templates", async () => {
+    deps.getTemplate.mockResolvedValue(fixedTemplate);
+    const fixedBook: BookData = {
+      ...baseBookData,
+      theme: "fixed-first-zoo",
+      creationMode: "fixed_template",
+      input: {
+        childName: "ゆうた",
+        place: "上野動物園",
+        familyMembers: "ママとパパ",
+      },
+    };
+
+    await processBookGeneration("book-fixed", fixedBook, deps);
+
+    expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
+    expect(deps.updateBookTitle).toHaveBeenCalledWith("book-fixed", "ゆうたとはじめてのどうぶつえん");
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-fixed",
+      expect.objectContaining({
+        pageNumber: 0,
+        text: "ゆうたは、ママとパパといっしょに上野動物園へでかけました。",
+      })
+    );
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed", "completed");
   });
 });

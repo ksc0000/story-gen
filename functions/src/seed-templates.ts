@@ -224,6 +224,128 @@ const templates: Record<string, TemplateData> = {
 - メカは怖くなく、丸くて親しみやすい友だちのように描いてください。
 - スピード感や発明の楽しさを入れつつ、安全で明るい冒険にしてください。`,
   },
+  "fixed-first-zoo": {
+    name: "はじめてのどうぶつえん",
+    description: "はじめてのおでかけを、やさしく早く絵本に残せるテンプレート",
+    icon: "🦁",
+    categoryGroupId: "memories",
+    subcategoryId: "first-time",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName", "place", "familyMembers"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["memory", "zoo", "first outing"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/animals.png",
+    sampleImageAlt: "家族と動物園を楽しむ子どものやさしい絵本イメージ",
+    visualDirection:
+      "Gentle family memory picture-book cover with warm daylight, friendly zoo atmosphere, soft smiles, and a keepsake-photo feeling.",
+    order: 3,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、家族の思い出をやさしく残す絵本です。",
+    fixedStory: {
+      titleTemplate: "{childName}とはじめてのどうぶつえん",
+      pages: [
+        {
+          textTemplate: "{childName}は、{familyMembers}といっしょに{place}へでかけました。",
+          imagePromptTemplate:
+            "A child arriving at a friendly Japanese zoo with family, excited eyes, gentle smiles, safe storybook scene, entrance path, bright morning light",
+        },
+        {
+          textTemplate: "大きなどうぶつ、小さなどうぶつ。{childName}の目はきらきらです。",
+          imagePromptTemplate:
+            "A preschool child happily looking at cute zoo animals from a safe distance, warm family memory picture book mood, expressive eyes, soft daylight",
+        },
+        {
+          textTemplate: "いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。",
+          imagePromptTemplate:
+            "A joyful close family memory moment at the zoo, the child smiling brightly, warm emotional storytelling, gentle Japanese picture book composition",
+        },
+        {
+          textTemplate: "{parentMessage}",
+          imagePromptTemplate:
+            "A calm ending scene after the zoo visit, the child and family leaving with happy memories, soft golden light, tender picture book finale",
+        },
+      ],
+    },
+  },
+  "fixed-bedtime-good-day": {
+    name: "きょうもいい日だったね",
+    description: "寝る前に短く読める、安心感のあるおやすみテンプレート",
+    icon: "🛏️",
+    categoryGroupId: "bedtime",
+    subcategoryId: "good-night",
+    parentIntent: "今日も安心して眠ってほしい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["bedtime", "good day", "sleep"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/bedtime.png",
+    sampleImageAlt: "寝る前に安心して眠る子どものやさしい絵本イメージ",
+    visualDirection:
+      "Cozy sleepy bedtime storybook mood with moonlight, soft blankets, tiny stars, quiet room, and reassuring end-of-day warmth.",
+    order: 2,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、寝る前に安心して眠れる短い絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "きょうもいい日だったね、{childName}",
+      pages: [
+        {
+          textTemplate: "{childName}は、きょうもたのしいじかんをすごしました。",
+          imagePromptTemplate:
+            "A child at the end of a happy day, cozy home evening, soft moonlight beginning to appear, calm Japanese bedtime picture book atmosphere",
+        },
+        {
+          textTemplate: "うれしかったことを、ひとつずつこころにあつめます。",
+          imagePromptTemplate:
+            "A preschool child remembering happy moments before bed, dreamy calm room, gentle warm lamp light, soft bedtime storybook feeling",
+        },
+        {
+          textTemplate: "おふとんに入ると、こころがふわっとやわらかくなりました。",
+          imagePromptTemplate:
+            "A child snuggling into bed, peaceful sleepy expression, soft blanket, stars and moon outside the window, quiet bedtime illustration",
+        },
+        {
+          textTemplate: "{parentMessage}",
+          imagePromptTemplate:
+            "A comforting goodnight ending scene, the child sleeping peacefully, warm secure bedtime picture book finale, gentle moon and stars",
+        },
+      ],
+    },
+  },
+  "original-ai": {
+    name: "オリジナル絵本",
+    description: "自由に書いた内容から、AIが一から物語を作ります",
+    icon: "✨",
+    categoryGroupId: "imagination",
+    subcategoryId: "freeform",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName", "storyRequest"],
+    optionalInputs: ["favorites", "place", "familyMembers", "parentMessage", "lessonToTeach", "memoryToRecreate"],
+    themeTags: ["original", "freeform", "custom"],
+    isOriginalEntry: true,
+    creationMode: "original_ai",
+    priceTier: "matsu",
+    storyCostLevel: "standard",
+    sampleImageUrl: "/images/templates/fantasy.png",
+    sampleImageAlt: "自由なアイデアから広がるオリジナル絵本イメージ",
+    visualDirection:
+      "Flexible premium storybook mood that can adapt to many scenes while staying warm, child-friendly, expressive, and visually cohesive.",
+    order: 20,
+    active: true,
+    systemPrompt: `あなたは子ども向け絵本の作家です。親の自由入力を中心に、主人公の個性と家族の思いを生かしたオリジナル絵本を作ってください。
+- 内容は自由でも、幼児が安心して読めるやさしい構成にしてください。
+- 主人公の好きなもの、思い出、教えたいことを必要に応じて自然に織り込んでください。`,
+  },
 };
 
 const legacyTemplateIds = ["birthday", "seasons", "challenge", "family"];
@@ -311,13 +433,23 @@ const templateMetadata: Record<string, Partial<TemplateData>> = {
   },
 };
 
+const defaultTemplateMetadata: Partial<TemplateData> = {
+  creationMode: "guided_ai",
+  priceTier: "take",
+  storyCostLevel: "standard",
+};
+
 async function seed(): Promise<void> {
   const batch = db.batch();
   for (const [id, data] of Object.entries(categoryGroups)) {
     batch.set(db.doc(`categoryGroups/${id}`), data);
   }
   for (const [id, data] of Object.entries(templates)) {
-    batch.set(db.doc(`templates/${id}`), { ...data, ...templateMetadata[id] });
+    batch.set(db.doc(`templates/${id}`), {
+      ...defaultTemplateMetadata,
+      ...data,
+      ...templateMetadata[id],
+    });
   }
   for (const id of legacyTemplateIds) {
     batch.set(db.doc(`templates/${id}`), { active: false }, { merge: true });
