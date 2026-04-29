@@ -41,6 +41,8 @@ class GeminiClient {
     async generateStory(params) {
         const model = this.genAI.getGenerativeModel({ model: MODEL_NAME, safetySettings: SAFETY_SETTINGS });
         const userParts = [`主人公の名前: ${params.childName}`];
+        if (params.storyRequest)
+            userParts.push(`今回の絵本で描きたいこと: ${params.storyRequest}`);
         if (params.childAge !== undefined)
             userParts.push(`年齢: ${params.childAge}歳`);
         if (params.favorites)
@@ -55,6 +57,14 @@ class GeminiClient {
             userParts.push(`毎ページに出したい持ち物・服装: ${params.signatureItem}`);
         if (params.colorMood)
             userParts.push(`色や雰囲気: ${params.colorMood}`);
+        if (params.place)
+            userParts.push(`場所: ${params.place}`);
+        if (params.familyMembers)
+            userParts.push(`一緒に登場させたい人: ${params.familyMembers}`);
+        if (params.season)
+            userParts.push(`季節・時期: ${params.season}`);
+        if (params.parentMessage)
+            userParts.push(`最後に伝えたい言葉: ${params.parentMessage}`);
         userParts.push(`ページ数: ${params.pageCount}ページ`);
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: userParts.join("\n") }] }],

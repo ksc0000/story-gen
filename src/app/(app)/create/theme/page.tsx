@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/components/step-indicator";
 import { ThemeCard } from "@/components/theme-card";
@@ -10,10 +10,12 @@ import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
 import { useTemplates } from "@/lib/hooks/use-templates";
 
-export default function ThemeSelectionPage() {
+function ThemeSelectionPageContent() {
   const { templates, loading, error } = useTemplates();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const childId = searchParams.get("childId");
 
   return (
     <PageTransition className="mx-auto max-w-5xl px-4 py-8">
@@ -37,10 +39,18 @@ export default function ThemeSelectionPage() {
         </StaggerContainer>
       )}
       <div className="mt-8 flex justify-center">
-        <Button onClick={() => selectedId && router.push(`/create/input?theme=${selectedId}`)} disabled={!selectedId} className="px-8">
+        <Button onClick={() => selectedId && router.push(`/create/input?theme=${selectedId}${childId ? `&childId=${childId}` : ""}`)} disabled={!selectedId} className="px-8">
           次へ
         </Button>
       </div>
     </PageTransition>
+  );
+}
+
+export default function ThemeSelectionPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-violet-400">読み込み中...</div>}>
+      <ThemeSelectionPageContent />
+    </Suspense>
   );
 }

@@ -57,6 +57,7 @@ ${visualDirection}
 
 ## 制約
 - 子ども向けの安全な内容のみ生成してください。暴力、恐怖、悲しい結末は禁止です。
+- 親の目的: ${template.parentIntent ?? "子どもに合った絵本を作る"}
 - 挿絵のスタイル: ${STYLE_DESCRIPTIONS[style]}
 - 各ページの imagePrompt は英語で、挿絵の内容を具体的に描写してください。
 - characterBible は全ページで同じ主人公として見えるように、年齢感、髪型、服装、固定アイテム、表情の特徴を英語で具体化してください。
@@ -84,6 +85,7 @@ ${visualDirection}
 export function buildUserPrompt(input: BookInput, pageCount: PageCount): string {
   const lines: string[] = [];
   lines.push(`主人公の名前: ${input.childName}`);
+  if (input.storyRequest) lines.push(`今回の絵本で描きたいこと: ${input.storyRequest}`);
   if (input.childAge !== undefined) lines.push(`年齢: ${input.childAge}歳`);
   if (input.favorites) lines.push(`好きなもの: ${input.favorites}`);
   if (input.lessonToTeach) lines.push(`教えたいこと: ${input.lessonToTeach}`);
@@ -91,6 +93,10 @@ export function buildUserPrompt(input: BookInput, pageCount: PageCount): string 
   if (input.characterLook) lines.push(`主人公の見た目: ${input.characterLook}`);
   if (input.signatureItem) lines.push(`毎ページに出したい持ち物・服装: ${input.signatureItem}`);
   if (input.colorMood) lines.push(`色や雰囲気: ${input.colorMood}`);
+  if (input.place) lines.push(`場所: ${input.place}`);
+  if (input.familyMembers) lines.push(`一緒に登場させたい人: ${input.familyMembers}`);
+  if (input.season) lines.push(`季節・時期: ${input.season}`);
+  if (input.parentMessage) lines.push(`最後に伝えたい言葉: ${input.parentMessage}`);
   lines.push(`ページ数: ${pageCount}ページ`);
   return lines.join("\n");
 }

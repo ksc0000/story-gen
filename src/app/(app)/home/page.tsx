@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookCard } from "@/components/book-card";
@@ -12,26 +14,43 @@ import { StaggerItem } from "@/components/stagger-item";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useBooks } from "@/lib/hooks/use-books";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { useChildren } from "@/lib/hooks/use-children";
 
 const FREE_MONTHLY_LIMIT = 3;
 
 export default function HomePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const { books, loading, error } = useBooks(user?.uid);
   const { profile } = useUserProfile(user?.uid);
+  const { children, loading: childrenLoading, activeChild } = useChildren(user?.uid);
   const remaining = FREE_MONTHLY_LIMIT - (profile?.monthlyGenerationCount ?? 0);
+
+  useEffect(() => {
+    if (!childrenLoading && children.length === 0) {
+      router.replace("/onboarding/child");
+    }
+  }, [children.length, childrenLoading, router]);
 
   return (
     <PageTransition className="relative mx-auto max-w-4xl px-4 py-8">
       <FloatingParticles />
       <div className="relative z-10">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-purple-900">あなたの本棚</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-purple-900">あなたの本棚</h1>
+            {activeChild ? (
+              <p className="mt-1 text-sm text-violet-500">主人公: {activeChild.nickname || activeChild.displayName}</p>
+            ) : null}
+          </div>
           <Badge variant="outline">今月あと{Math.max(0, remaining)}冊作れます</Badge>
         </div>
-        <div className="mt-6">
-          <Link href="/create/theme">
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/create/select-child">
             <Button size="lg" className="text-base px-6">新しい絵本を作る</Button>
+          </Link>
+          <Link href="/children">
+            <Button size="lg" variant="outline" className="text-base px-6">子どもプロフィール</Button>
           </Link>
         </div>
         {loading ? (

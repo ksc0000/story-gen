@@ -40,10 +40,12 @@ export class GeminiClient implements LLMClient {
   async generateStory(params: {
     systemPrompt: string; childName: string; childAge?: number; favorites?: string;
     lessonToTeach?: string; memoryToRecreate?: string; characterLook?: string;
-    signatureItem?: string; colorMood?: string; pageCount: PageCount; style: IllustrationStyle;
+    signatureItem?: string; colorMood?: string; place?: string; familyMembers?: string;
+    season?: string; parentMessage?: string; storyRequest?: string; pageCount: PageCount; style: IllustrationStyle;
   }): Promise<GeneratedStory> {
     const model = this.genAI.getGenerativeModel({ model: MODEL_NAME, safetySettings: SAFETY_SETTINGS });
     const userParts: string[] = [`主人公の名前: ${params.childName}`];
+    if (params.storyRequest) userParts.push(`今回の絵本で描きたいこと: ${params.storyRequest}`);
     if (params.childAge !== undefined) userParts.push(`年齢: ${params.childAge}歳`);
     if (params.favorites) userParts.push(`好きなもの: ${params.favorites}`);
     if (params.lessonToTeach) userParts.push(`教えたいこと: ${params.lessonToTeach}`);
@@ -51,6 +53,10 @@ export class GeminiClient implements LLMClient {
     if (params.characterLook) userParts.push(`主人公の見た目: ${params.characterLook}`);
     if (params.signatureItem) userParts.push(`毎ページに出したい持ち物・服装: ${params.signatureItem}`);
     if (params.colorMood) userParts.push(`色や雰囲気: ${params.colorMood}`);
+    if (params.place) userParts.push(`場所: ${params.place}`);
+    if (params.familyMembers) userParts.push(`一緒に登場させたい人: ${params.familyMembers}`);
+    if (params.season) userParts.push(`季節・時期: ${params.season}`);
+    if (params.parentMessage) userParts.push(`最後に伝えたい言葉: ${params.parentMessage}`);
     userParts.push(`ページ数: ${params.pageCount}ページ`);
 
     const result = await model.generateContent({

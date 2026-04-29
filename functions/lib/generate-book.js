@@ -54,7 +54,8 @@ async function processBookGeneration(bookId, bookData, deps) {
     try {
         let lastImageAttemptAt = 0;
         // Step 1: Validate input
-        const sanitizeResult = (0, content_filter_1.sanitizeInput)(bookData.input);
+        const mergedInput = mergeInputWithChildProfile(bookData.input, bookData.childProfileSnapshot);
+        const sanitizeResult = (0, content_filter_1.sanitizeInput)(mergedInput);
         if (!sanitizeResult.valid) {
             console.error(`Input validation failed for ${bookId}: ${sanitizeResult.reason}`);
             await deps.updateBookFailure(bookId, sanitizeResult.reason ?? "Input validation failed");
@@ -82,18 +83,23 @@ async function processBookGeneration(bookId, bookData, deps) {
         // Step 4: Build prompts
         const systemPrompt = (0, prompt_builder_1.buildSystemPrompt)(template, bookData.style);
         (0, prompt_builder_1.buildUserPrompt)(bookData.input, bookData.pageCount);
-        const referenceImageUrls = buildReferenceImageUrls(bookData.style, template);
+        const referenceImageUrls = buildReferenceImageUrls(bookData.style, template, bookData.childProfileSnapshot);
         // Step 5: Generate story with LLM
         const story = await deps.llmClient.generateStory({
             systemPrompt,
-            childName: bookData.input.childName,
-            childAge: bookData.input.childAge,
-            favorites: bookData.input.favorites,
-            lessonToTeach: bookData.input.lessonToTeach,
-            memoryToRecreate: bookData.input.memoryToRecreate,
-            characterLook: bookData.input.characterLook,
-            signatureItem: bookData.input.signatureItem,
-            colorMood: bookData.input.colorMood,
+            childName: mergedInput.childName,
+            childAge: mergedInput.childAge,
+            favorites: mergedInput.favorites,
+            lessonToTeach: mergedInput.lessonToTeach,
+            memoryToRecreate: mergedInput.memoryToRecreate,
+            characterLook: mergedInput.characterLook,
+            signatureItem: mergedInput.signatureItem,
+            colorMood: mergedInput.colorMood,
+            place: mergedInput.place,
+            familyMembers: mergedInput.familyMembers,
+            season: mergedInput.season,
+            parentMessage: mergedInput.parentMessage,
+            storyRequest: mergedInput.storyRequest,
             pageCount: bookData.pageCount,
             style: bookData.style,
         });
@@ -103,7 +109,7 @@ async function processBookGeneration(bookId, bookData, deps) {
         const totalPages = story.pages.length;
         for (let i = 0; i < totalPages; i++) {
             const storyPage = story.pages[i];
-            const imagePrompt = (0, prompt_builder_1.buildImagePrompt)(storyPage.imagePrompt, bookData.style, story.characterBible, story.styleBible);
+            const imagePrompt = (0, prompt_builder_1.buildImagePrompt)(storyPage.imagePrompt, bookData.style, buildFinalCharacterBible(story.characterBible, bookData), story.styleBible);
             // Generate image with retries (skip in development)
             let imageBuffer = null;
             let imageUrl = "";
@@ -178,14 +184,60 @@ async function processBookGeneration(bookId, bookData, deps) {
         await deps.updateBookStatus(bookId, "failed");
     }
 }
-function buildReferenceImageUrls(style, template) {
+function buildReferenceImageUrls(style, template, childProfileSnapshot) {
     const urls = [
+        childProfileSnapshot?.visualProfile.referenceImageUrl,
+        childProfileSnapshot?.visualProfile.approvedImageUrl,
         (0, prompt_builder_1.getStyleReferenceImagePath)(style),
         template.sampleImageUrl,
     ]
         .filter((value) => Boolean(value))
         .map(toPublicUrl);
     return [...new Set(urls)];
+}
+function mergeInputWithChildProfile(input, snapshot) {
+    if (!snapshot)
+        return input;
+    const favoriteThings = snapshot.personality.favoriteThings?.join("、");
+    const visualProfile = snapshot.visualProfile;
+    const signatureItem = bookSignatureItem(snapshot, input);
+    return {
+        ...input,
+        childName: input.childName || snapshot.nickname || snapshot.displayName,
+        childAge: input.childAge ?? snapshot.age,
+        favorites: input.favorites || favoriteThings,
+        characterLook: input.characterLook || visualProfile.characterLook,
+        signatureItem,
+        colorMood: input.colorMood || visualProfile.colorMood,
+    };
+}
+function bookSignatureItem(snapshot, input) {
+    return input.signatureItem || snapshot.visualProfile.signatureItem;
+}
+function buildFinalCharacterBible(storyCharacterBible, bookData) {
+    const visual = bookData.childProfileSnapshot?.visualProfile;
+    const outfitRule = buildOutfitRule(bookData);
+    return [
+        visual?.characterBible ? `Approved child profile: ${visual.characterBible}` : "",
+        storyCharacterBible,
+        outfitRule,
+    ].filter(Boolean).join(" ");
+}
+function buildOutfitRule(bookData) {
+    const usage = bookData.characterUsage;
+    const visual = bookData.childProfileSnapshot?.visualProfile;
+    if (!usage)
+        return "";
+    const signatureRule = usage.keepSignatureItem && visual?.signatureItem
+        ? `Keep the signature item when appropriate: ${visual.signatureItem}.`
+        : "Do not force the signature item if it does not fit the scene.";
+    if (usage.outfitMode === "profile_default") {
+        return `Outfit rule: use the child's registered default outfit: ${visual?.outfit || "the approved profile outfit"}. ${signatureRule}`;
+    }
+    if (usage.outfitMode === "theme_auto") {
+        return `Outfit rule: keep the same face and age impression, but adapt the outfit to the story theme in a cute child-safe way. ${signatureRule}`;
+    }
+    return `Outfit rule: use this custom outfit: ${usage.customOutfit || visual?.outfit || "a cute child-safe outfit"}. ${signatureRule}`;
 }
 function toPublicUrl(pathOrUrl) {
     if (/^https?:\/\//i.test(pathOrUrl))
@@ -240,7 +292,11 @@ exports.generateBook = (0, firestore_1.onDocumentCreated)({
         },
         getUserPlan: async (userId) => {
             const userDoc = await db.collection("users").doc(userId).get();
-            return userDoc.data()?.plan ?? "free";
+            const userData = userDoc.data();
+            if (userData?.generationOverride?.bypassMonthlyLimit === true) {
+                return "premium";
+            }
+            return userData?.plan ?? "free";
         },
         llmClient: new gemini_1.GeminiClient(geminiApiKey.value()),
         imageClient: new replicate_1.ReplicateImageClient(replicateApiToken.value()),

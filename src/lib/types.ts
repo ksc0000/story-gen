@@ -22,6 +22,7 @@ export interface UserDoc {
   displayName: string;
   email: string;
   plan: UserPlan;
+  activeChildId?: string | null;
   createdAt: Timestamp;
   monthlyGenerationCount: number;
 }
@@ -35,12 +36,84 @@ export interface BookInput {
   characterLook?: string;
   signatureItem?: string;
   colorMood?: string;
+  place?: string;
+  familyMembers?: string;
+  season?: string;
+  parentMessage?: string;
+  storyRequest?: string;
+}
+
+export type GenderExpression = "boy" | "girl" | "neutral" | "unspecified";
+export type OutfitMode = "profile_default" | "theme_auto" | "user_custom";
+
+export interface ChildPersonalityProfile {
+  traits?: string[];
+  favoritePlay?: string;
+  favoriteThings?: string[];
+  dislikes?: string[];
+  strengths?: string[];
+  currentChallenge?: string;
+}
+
+export interface ChildVisualProfile {
+  characterLook?: string;
+  signatureItem?: string;
+  outfit?: string;
+  colorMood?: string;
+  approvedImageUrl?: string;
+  referenceImageUrl?: string;
+  characterBible?: string;
+  basePrompt?: string;
+  version: number;
+}
+
+export interface ChildGenerationSettings {
+  defaultStyle: IllustrationStyle;
+  defaultPageCount: PageCount;
+  avoidExpressions?: string[];
+  allowedPersonalization: boolean;
+}
+
+export interface ChildProfileDoc {
+  displayName: string;
+  nickname?: string;
+  age?: number;
+  birthYearMonth?: string;
+  genderExpression?: GenderExpression;
+  personality: ChildPersonalityProfile;
+  visualProfile: ChildVisualProfile;
+  generationSettings: ChildGenerationSettings;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  active: boolean;
+}
+
+export interface ChildProfileSnapshot {
+  displayName: string;
+  nickname?: string;
+  age?: number;
+  genderExpression?: GenderExpression;
+  personality: ChildPersonalityProfile;
+  visualProfile: ChildVisualProfile;
+}
+
+export interface CharacterUsage {
+  useRegisteredCharacter: boolean;
+  faceSource: "child_profile";
+  outfitMode: OutfitMode;
+  customOutfit?: string | null;
+  keepSignatureItem: boolean;
 }
 
 export interface BookDoc {
   userId: string;
+  childId?: string | null;
+  childProfileSnapshot?: ChildProfileSnapshot;
+  characterUsage?: CharacterUsage;
   title: string;
   theme: string;
+  categoryGroupId?: string;
+  templateId?: string;
   style: IllustrationStyle;
   pageCount: PageCount;
   status: BookStatus;
@@ -65,12 +138,33 @@ export interface TemplateDoc {
   description: string;
   icon: string;
   genre?: string;
+  categoryGroupId?: string;
+  parentIntent?: string;
+  recommendedAgeMin?: number;
+  recommendedAgeMax?: number;
+  requiredInputs?: string[];
+  optionalInputs?: string[];
   sampleImageUrl?: string;
   sampleImageAlt?: string;
   visualDirection?: string;
   order: number;
   systemPrompt: string;
   active: boolean;
+}
+
+export interface CategoryGroupDoc {
+  name: string;
+  description: string;
+  icon: string;
+  parentIntent: string;
+  order: number;
+  active: boolean;
+}
+
+export interface UsageDoc {
+  bookGenerationCount: number;
+  avatarGenerationCount: number;
+  updatedAt: Timestamp;
 }
 
 const VALID_PAGE_COUNTS: readonly number[] = [4, 8, 12];

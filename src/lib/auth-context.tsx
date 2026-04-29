@@ -76,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         displayName: result.user.displayName ?? "",
         email: result.user.email ?? "",
         plan: "free",
+        activeChildId: null,
         createdAt: serverTimestamp(),
         monthlyGenerationCount: 0,
       });

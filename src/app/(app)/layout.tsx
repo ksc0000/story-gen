@@ -34,6 +34,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             EhoNAI
           </Link>
           <div className="flex items-center gap-3">
+            <Link href="/children" className="hidden text-sm font-semibold text-violet-500 transition hover:text-purple-700 sm:inline">
+              子ども
+            </Link>
             <ThemeToggle />
             <span className="app-user text-sm">{user.displayName}</span>
             <Button variant="ghost" size="sm" onClick={signOut}>

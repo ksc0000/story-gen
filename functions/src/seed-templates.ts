@@ -1,10 +1,77 @@
 import { onCall } from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import type { TemplateData } from "./lib/types";
+import type { CategoryGroupData, TemplateData } from "./lib/types";
 
 if (getApps().length === 0) initializeApp();
 const db = getFirestore();
+
+const categoryGroups: Record<string, CategoryGroupData> = {
+  memories: {
+    name: "思い出を残す",
+    description: "この瞬間を忘れたくない日に",
+    icon: "📷",
+    parentIntent: "この瞬間を残したい",
+    order: 1,
+    active: true,
+  },
+  "growth-support": {
+    name: "成長を応援",
+    description: "できるようになってほしいことを、怒らず応援したい日に",
+    icon: "🌱",
+    parentIntent: "できるようになってほしい。でも怒らず応援したい",
+    order: 2,
+    active: true,
+  },
+  "emotional-growth": {
+    name: "こころを育てる",
+    description: "自信、勇気、やさしさを育てたい日に",
+    icon: "⭐",
+    parentIntent: "優しい子に育ってほしい。自信を持ってほしい",
+    order: 3,
+    active: true,
+  },
+  bedtime: {
+    name: "寝る前に安心する",
+    description: "今日も安心して眠ってほしい夜に",
+    icon: "🌙",
+    parentIntent: "今日も安心して眠ってほしい",
+    order: 4,
+    active: true,
+  },
+  "favorite-worlds": {
+    name: "好きな世界に入る",
+    description: "その子の好きなものを伸ばしたい日に",
+    icon: "💛",
+    parentIntent: "この子の好きなものを伸ばしたい",
+    order: 5,
+    active: true,
+  },
+  imagination: {
+    name: "想像の世界で遊ぶ",
+    description: "自由に想像してワクワクしてほしい日に",
+    icon: "🪄",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    order: 6,
+    active: true,
+  },
+  learning: {
+    name: "楽しく学ぶ",
+    description: "勉強っぽくなく、自然に学んでほしい日に",
+    icon: "🔤",
+    parentIntent: "勉強っぽくなく、自然に学んでほしい",
+    order: 7,
+    active: true,
+  },
+  "seasonal-events": {
+    name: "季節とイベント",
+    description: "季節の体験を特別な思い出にしたい日に",
+    icon: "🌸",
+    parentIntent: "季節の体験を特別な思い出にしたい",
+    order: 8,
+    active: true,
+  },
+};
 
 const templates: Record<string, TemplateData> = {
   animals: {
@@ -161,10 +228,96 @@ const templates: Record<string, TemplateData> = {
 
 const legacyTemplateIds = ["birthday", "seasons", "challenge", "family"];
 
+const templateMetadata: Record<string, Partial<TemplateData>> = {
+  animals: {
+    categoryGroupId: "favorite-worlds",
+    parentIntent: "この子の好きなものを伸ばしたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["favorites", "characterLook", "signatureItem", "colorMood"],
+  },
+  adventure: {
+    categoryGroupId: "imagination",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["favorites", "place", "parentMessage"],
+  },
+  fantasy: {
+    categoryGroupId: "imagination",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["favorites", "colorMood", "parentMessage"],
+  },
+  bedtime: {
+    categoryGroupId: "bedtime",
+    parentIntent: "今日も安心して眠ってほしい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage", "colorMood"],
+  },
+  "emotional-growth": {
+    categoryGroupId: "emotional-growth",
+    parentIntent: "優しい子に育ってほしい。自信を持ってほしい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["lessonToTeach", "parentMessage", "favorites"],
+  },
+  "daily-habits": {
+    categoryGroupId: "growth-support",
+    parentIntent: "できるようになってほしい。でも怒らず応援したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName", "lessonToTeach"],
+    optionalInputs: ["favorites", "parentMessage"],
+  },
+  educational: {
+    categoryGroupId: "learning",
+    parentIntent: "勉強っぽくなく、自然に学んでほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["favorites", "lessonToTeach"],
+  },
+  food: {
+    categoryGroupId: "favorite-worlds",
+    parentIntent: "この子の好きなものを伸ばしたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["favorites", "lessonToTeach"],
+  },
+  seasonal: {
+    categoryGroupId: "seasonal-events",
+    parentIntent: "季節の体験を特別な思い出にしたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["season", "memoryToRecreate", "familyMembers"],
+  },
+  "vehicles-robots": {
+    categoryGroupId: "favorite-worlds",
+    parentIntent: "この子の好きなものを伸ばしたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["favorites", "place"],
+  },
+};
+
 async function seed(): Promise<void> {
   const batch = db.batch();
+  for (const [id, data] of Object.entries(categoryGroups)) {
+    batch.set(db.doc(`categoryGroups/${id}`), data);
+  }
   for (const [id, data] of Object.entries(templates)) {
-    batch.set(db.doc(`templates/${id}`), data);
+    batch.set(db.doc(`templates/${id}`), { ...data, ...templateMetadata[id] });
   }
   for (const id of legacyTemplateIds) {
     batch.set(db.doc(`templates/${id}`), { active: false }, { merge: true });

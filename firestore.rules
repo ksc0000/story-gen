@@ -13,6 +13,24 @@ service cloud.firestore {
       allow create: if isOwner(userId);
       allow update: if isOwner(userId);
       allow delete: if false;
+
+      match /children/{childId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if false;
+
+        match /avatarGenerations/{generationId} {
+          allow read: if isOwner(userId);
+          allow update: if isOwner(userId);
+          allow create, delete: if false;
+        }
+      }
+
+      match /usage/{yearMonth} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
     }
 
     match /books/{bookId} {
@@ -28,6 +46,11 @@ service cloud.firestore {
     }
 
     match /templates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /categoryGroups/{groupId} {
       allow read: if isAuthenticated();
       allow write: if false;
     }

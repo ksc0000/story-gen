@@ -47,6 +47,10 @@ function sanitizeInput(input) {
         input.characterLook,
         input.signatureItem,
         input.colorMood,
+        input.place,
+        input.familyMembers,
+        input.season,
+        input.parentMessage,
     ].filter((f) => typeof f === "string");
     for (const field of fieldsToCheck) {
         if (field.length > MAX_TEXT_LENGTH) {
