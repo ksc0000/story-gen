@@ -89,16 +89,17 @@ exports.generateChildCharacter = (0, https_1.onCall)({
     const candidates = [];
     try {
         for (const variant of AVATAR_VARIANTS) {
-            const prompt = buildChildCharacterPrompt(child, variant.style, finalCorrectionText, previousPrompt);
             const styleReferenceImageUrl = toPublicUrl((0, prompt_builder_1.getStyleReferenceImagePath)(variant.style));
-            const inputImageUrls = [
+            const referenceImageRoles = buildReferenceImageRoles({
                 baseGenerationImageUrl,
-                child.visualProfile?.approvedImageUrl,
+                approvedImageUrl: child.visualProfile?.approvedImageUrl,
                 styleReferenceImageUrl,
-            ].filter((value) => Boolean(value));
+            });
+            const inputImageUrls = referenceImageRoles.map((item) => item.url);
+            const prompt = buildChildCharacterPrompt(child, variant.style, finalCorrectionText, previousPrompt, buildReferenceImageInstruction(referenceImageRoles));
             const imageBuffer = await imageClient.generateImage(prompt, {
                 purpose: structuredCorrectionText ? "child_avatar_revision" : "child_avatar",
-                inputImageUrls: [...new Set(inputImageUrls)],
+                inputImageUrls,
             });
             const generationId = db.collection("_").doc().id;
             const imageUrl = await uploadAvatarImage(storage, uid, data.childId, generationId, imageBuffer);
@@ -110,6 +111,7 @@ exports.generateChildCharacter = (0, https_1.onCall)({
                 correctionText: finalCorrectionText || null,
                 revisionRequest: data.revisionRequest || null,
                 baseGenerationId: data.baseGenerationId || null,
+                referenceImageRoles,
                 style: variant.style,
                 styleLabel: variant.label,
                 status: "draft",
@@ -164,7 +166,7 @@ async function uploadAvatarImage(storage, uid, childId, generationId, imageBuffe
     });
     return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${token}`;
 }
-function buildChildCharacterPrompt(child, style, correctionText, previousPrompt) {
+function buildChildCharacterPrompt(child, style, correctionText, previousPrompt, referenceImageInstruction) {
     const personality = [
         ...(child.personality?.traits ?? []),
         child.personality?.favoritePlay ? `favorite play: ${child.personality.favoritePlay}` : "",
@@ -177,6 +179,7 @@ function buildChildCharacterPrompt(child, style, correctionText, previousPrompt)
         "Create a non-photorealistic Japanese storybook illustration of a preschool protagonist.",
         "The image must be safe, gentle, warm, and clearly fictional.",
         fixedSandboxBackgroundPrompt(),
+        referenceImageInstruction ?? "",
         "Use a clean scene with no signs, no posters, no books, no toys with branding, no text, no letters, no numbers, no watermark, and no Chinese characters.",
         "Keep the composition simple and repeatable so the character can be reused consistently in future storybook pages.",
         `Illustration style: ${styleInstruction(style)}.`,
@@ -243,6 +246,56 @@ function fixedSandboxBackgroundPrompt() {
         "Do not include playground equipment, buildings, roads, or signs.",
         "Use a front-facing, eye-level, medium-distance, almost full-body composition.",
     ].join(" ");
+}
+function buildReferenceImageRoles(params) {
+    const descriptors = [];
+    if (params.baseGenerationImageUrl) {
+        descriptors.push({
+            role: "base_generation",
+            url: params.baseGenerationImageUrl,
+        });
+    }
+    if (params.approvedImageUrl) {
+        descriptors.push({
+            role: "approved_child",
+            url: params.approvedImageUrl,
+        });
+    }
+    if (params.styleReferenceImageUrl) {
+        descriptors.push({
+            role: "style_reference",
+            url: params.styleReferenceImageUrl,
+        });
+    }
+    const seen = new Set();
+    return descriptors.filter((descriptor) => {
+        if (seen.has(descriptor.url))
+            return false;
+        seen.add(descriptor.url);
+        return true;
+    });
+}
+function buildReferenceImageInstruction(referenceImageRoles) {
+    if (referenceImageRoles.length === 0)
+        return "";
+    const lines = [
+        "Reference image usage rules:",
+        "The input reference images are ordered and must be used with different roles.",
+    ];
+    referenceImageRoles.forEach((descriptor, index) => {
+        const imageNumber = index + 1;
+        if (descriptor.role === "base_generation") {
+            lines.push(`Reference image ${imageNumber}: use this as the primary base child character. Preserve the child's face shape, hairstyle, age impression, gentle expression, overall identity, and storybook charm. Adjust only the aspects requested by the parent.`);
+        }
+        if (descriptor.role === "approved_child") {
+            lines.push(`Reference image ${imageNumber}: use this as the approved child identity reference. Keep the same child identity, age impression, hairstyle direction, warmth, and recognizable features. Use it as secondary identity guidance if another base child image is provided.`);
+        }
+        if (descriptor.role === "style_reference") {
+            lines.push(`Reference image ${imageNumber}: use this only as the visual style reference for texture, line quality, brushwork, color mood, lighting softness, and picture book rendering. Do not copy any character, face, pose, object, background, text, letters, numbers, signs, layout, or scene content from this style reference image.`);
+        }
+    });
+    lines.push("If child identity and style reference conflict, child identity has priority for the character, and the style reference should affect only rendering style.", "Do not merge different characters from reference images. The protagonist must be the child described in the profile and identity references.");
+    return lines.join("\n");
 }
 function toPublicUrl(pathOrUrl) {
     if (!pathOrUrl)
