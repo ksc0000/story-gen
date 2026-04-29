@@ -15,7 +15,6 @@ const AVATAR_VARIANTS: Array<{ style: IllustrationStyle; label: string }> = [
 
 type GenerateChildCharacterRequest = {
   childId: string;
-  correctionText?: string;
   revisionRequest?: AvatarRevisionRequest;
 };
 
@@ -73,9 +72,7 @@ export const generateChildCharacter = onCall(
     const previousPrompt = child.visualProfile?.basePrompt;
     const imageClient = new ReplicateImageClient(replicateApiToken.value());
     const structuredCorrectionText = buildStructuredCorrectionText(data.revisionRequest);
-    const finalCorrectionText = [structuredCorrectionText, data.correctionText]
-      .filter((value): value is string => Boolean(value?.trim()))
-      .join(" ");
+    const finalCorrectionText = structuredCorrectionText;
     const characterBible = buildCharacterBible(child, finalCorrectionText);
 
     const candidates: AvatarCandidate[] = [];
@@ -83,7 +80,7 @@ export const generateChildCharacter = onCall(
       for (const variant of AVATAR_VARIANTS) {
         const prompt = buildChildCharacterPrompt(child, variant.style, finalCorrectionText, previousPrompt);
         const imageBuffer = await imageClient.generateImage(prompt, {
-          purpose: data.correctionText?.trim() || structuredCorrectionText ? "child_avatar_revision" : "child_avatar",
+          purpose: structuredCorrectionText ? "child_avatar_revision" : "child_avatar",
           inputImageUrls: child.visualProfile?.approvedImageUrl ? [child.visualProfile.approvedImageUrl] : [],
         });
         const generationId = db.collection("_").doc().id;
@@ -94,7 +91,7 @@ export const generateChildCharacter = onCall(
           attemptNumber: nextAttempt,
           imageUrl,
           prompt,
-          correctionText: data.correctionText || null,
+          correctionText: finalCorrectionText || null,
           revisionRequest: data.revisionRequest || null,
           style: variant.style,
           styleLabel: variant.label,
@@ -180,6 +177,9 @@ function buildChildCharacterPrompt(
     visual.colorMood ? `Color mood: ${visual.colorMood}` : "",
     previousPrompt ? `Keep continuity with this approved character direction: ${previousPrompt}` : "",
     correctionText ? `Latest user correction request: ${correctionText}` : "",
+    correctionText
+      ? "Preserve all aspects that were not explicitly requested to change. Do not change the child's core identity, overall face structure, default outfit, or signature item unless the user specifically requested it."
+      : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -213,6 +213,7 @@ function buildStructuredCorrectionText(revisionRequest: AvatarRevisionRequest | 
     revisionRequest.signatureItem ? `Signature item: ${mapRevisionValue("signatureItem", revisionRequest.signatureItem)}.` : "",
     revisionRequest.colorTone ? `Color tone: ${mapRevisionValue("colorTone", revisionRequest.colorTone)}.` : "",
     revisionRequest.likeness ? `Likeness: ${mapRevisionValue("likeness", revisionRequest.likeness)}.` : "",
+    revisionRequest.notes?.trim() ? `Additional parent note: ${revisionRequest.notes.trim()}.` : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -224,7 +225,11 @@ function fixedSandboxBackgroundPrompt(): string {
   return [
     "Background must always be a quiet Japanese neighborhood park.",
     "Include a square sandbox with a low wooden frame and beige sand.",
+    "The child must be inside the sandbox, not beside it.",
+    "The sandbox must occupy the lower half of the image.",
+    "The wooden sandbox border must be clearly visible.",
     "Place simple green hedges and a few plain trees in the distance.",
+    "Do not replace the sandbox with grass, pavement, classroom, indoor room, or playground.",
     "Do not include playground equipment, buildings, roads, or signs.",
     "Use a front-facing, eye-level, medium-distance, almost full-body composition.",
   ].join(" ");

@@ -47,6 +47,7 @@ function ChildAvatarPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   const selectedCandidate = candidates.find((candidate) => candidate.generationId === selectedCandidateId) ?? null;
+  const revisionSummary = useMemo(() => buildRevisionSummary(revisionRequest), [revisionRequest]);
 
   useEffect(() => {
     if (!child) return;
@@ -111,7 +112,6 @@ function ChildAvatarPageContent() {
       const request = requestOverride ?? revisionRequest;
       const result = await generateChildCharacterCallable({
         childId,
-        correctionText: request.notes?.trim() || undefined,
         revisionRequest: request,
       });
       setCandidates(result.data.candidates);
@@ -228,23 +228,27 @@ function ChildAvatarPageContent() {
             <Button type="button" onClick={() => generate()} disabled={generating || saving || remainingAttempts === 0}>
               {generating ? "生成中..." : "3パターン生成する"}
             </Button>
-            <Button type="button" onClick={approve} disabled={!selectedCandidate || generating || saving}>
-              {saving ? "保存中..." : "選んだキャラクターを保存"}
-            </Button>
+            {candidates.length > 0 ? (
+              <Button type="button" onClick={approve} disabled={!selectedCandidate || generating || saving}>
+                {saving ? "保存中..." : "選んだキャラクターを保存"}
+              </Button>
+            ) : null}
           </div>
 
-          <div className="space-y-3">
-            <AvatarRevisionForm value={revisionRequest} onChange={setRevisionRequest} />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => generate()}
-              disabled={isRevisionEmpty(revisionRequest) || generating || saving || remainingAttempts === 0}
-              className="w-full"
-            >
-              選択内容で3パターン再生成
-            </Button>
-          </div>
+          {candidates.length > 0 ? (
+            <div className="space-y-3">
+              <AvatarRevisionForm value={revisionRequest} onChange={setRevisionRequest} summary={revisionSummary} />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => generate()}
+                disabled={isRevisionEmpty(revisionRequest) || generating || saving || remainingAttempts === 0}
+                className="w-full"
+              >
+                選択内容で3パターン再生成
+              </Button>
+            </div>
+          ) : null}
 
           <button type="button" onClick={() => confirmAndNavigate("/home")} className="block w-full text-center text-sm text-violet-500 hover:underline">
             あとで設定する
@@ -257,6 +261,55 @@ function ChildAvatarPageContent() {
 
 function isRevisionEmpty(value: AvatarRevisionRequest): boolean {
   return !Object.values(value).some((entry) => typeof entry === "string" && entry.trim().length > 0);
+}
+
+function buildRevisionSummary(value: AvatarRevisionRequest): string[] {
+  const summary: string[] = [];
+
+  if (value.ageFeel === "younger") summary.push("もっと幼くする");
+  if (value.ageFeel === "slightly_younger") summary.push("少し幼くする");
+  if (value.ageFeel === "slightly_older") summary.push("少し年上に見せる");
+  if (value.ageFeel === "older") summary.push("もっと成長した印象にする");
+
+  if (value.hairStyle === "shorter") summary.push("髪を短めにする");
+  if (value.hairStyle === "longer") summary.push("髪を長めにする");
+  if (value.hairStyle === "straighter") summary.push("髪をまっすぐめにする");
+  if (value.hairStyle === "curlier") summary.push("髪をふんわりさせる");
+  if (value.hairStyle === "neater") summary.push("髪型を整える");
+
+  if (value.faceMood === "gentler") summary.push("顔立ちをやさしくする");
+  if (value.faceMood === "brighter") summary.push("顔の印象を明るくする");
+  if (value.faceMood === "calmer") summary.push("顔の印象を落ち着かせる");
+  if (value.faceMood === "more_expressive") summary.push("顔の印象を少しはっきりさせる");
+
+  if (value.expression === "bigger_smile") summary.push("笑顔を大きくする");
+  if (value.expression === "soft_smile") summary.push("やさしい笑顔にする");
+  if (value.expression === "calm_expression") summary.push("穏やかな表情にする");
+  if (value.expression === "more_playful") summary.push("元気な表情にする");
+
+  if (value.outfit === "more_casual") summary.push("服装をもっと普段着っぽくする");
+  if (value.outfit === "more_colorful") summary.push("服装の色味を少し増やす");
+  if (value.outfit === "simpler") summary.push("服装をシンプルにする");
+  if (value.outfit === "more_storybook_like") summary.push("服装を絵本らしくかわいくする");
+
+  if (value.signatureItem === "more_visible") summary.push("固定アイテムを目立たせる");
+  if (value.signatureItem === "smaller") summary.push("固定アイテムを少し小さくする");
+  if (value.signatureItem === "better_positioned") summary.push("固定アイテムを見えやすい位置にする");
+  if (value.signatureItem === "less_emphasized") summary.push("固定アイテムを控えめにする");
+
+  if (value.colorTone === "warmer") summary.push("色味をあたたかくする");
+  if (value.colorTone === "softer") summary.push("色味をやさしくする");
+  if (value.colorTone === "brighter") summary.push("色味を少し明るくする");
+  if (value.colorTone === "less_saturated") summary.push("色味を落ち着かせる");
+
+  if (value.likeness === "closer_to_child") summary.push("もっと本人らしくする");
+  if (value.likeness === "keep_storybook_but_closer") summary.push("絵本らしさを残して本人に近づける");
+  if (value.likeness === "more_distinctive_features") summary.push("特徴をもう少しはっきりさせる");
+  if (value.likeness === "more_natural_balance") summary.push("全体の自然さを優先する");
+
+  if (value.notes?.trim()) summary.push(`補足: ${value.notes.trim()}`);
+
+  return summary;
 }
 
 export default function ChildAvatarPage() {

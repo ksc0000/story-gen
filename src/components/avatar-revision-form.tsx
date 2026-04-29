@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 interface AvatarRevisionFormProps {
   value: AvatarRevisionRequest;
   onChange: (value: AvatarRevisionRequest) => void;
+  summary?: string[];
 }
 
 const REVISION_OPTIONS: Array<{
@@ -96,7 +97,7 @@ const REVISION_OPTIONS: Array<{
   },
 ];
 
-export function AvatarRevisionForm({ value, onChange }: AvatarRevisionFormProps) {
+export function AvatarRevisionForm({ value, onChange, summary = [] }: AvatarRevisionFormProps) {
   const updateField = (key: keyof AvatarRevisionRequest, nextValue: string) => {
     onChange({
       ...value,
@@ -106,6 +107,14 @@ export function AvatarRevisionForm({ value, onChange }: AvatarRevisionFormProps)
 
   return (
     <div className="space-y-5">
+      <div className="rounded-2xl bg-purple-50 p-4 text-sm text-violet-600">
+        <p className="font-semibold text-purple-900">今回の補正内容</p>
+        <ul className="mt-2 space-y-1">
+          {summary.length > 0 ? summary.map((item) => <li key={item}>- {item}</li>) : <li>- まだ補正指定はありません</li>}
+          <li>- 背景は公園の砂場のまま</li>
+        </ul>
+      </div>
+
       {REVISION_OPTIONS.map((section) => (
         <div key={section.key} className="space-y-2">
           <Label>{section.label}</Label>

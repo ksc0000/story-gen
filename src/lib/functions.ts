@@ -5,7 +5,7 @@ import type { AvatarRevisionRequest } from "@/lib/types";
 const functions = getFunctions(auth.app, "asia-northeast1");
 
 export const generateChildCharacterCallable = httpsCallable<
-  { childId: string; correctionText?: string; revisionRequest?: AvatarRevisionRequest },
+  { childId: string; revisionRequest?: AvatarRevisionRequest },
   {
     batchId: string;
     attemptNumber: number;
