@@ -104,15 +104,16 @@ function ChildAvatarPageContent() {
     router.replace(href);
   };
 
-  const generate = async (requestOverride?: AvatarRevisionRequest) => {
+  const generate = async (options?: { requestOverride?: AvatarRevisionRequest; useBaseGeneration?: boolean }) => {
     if (!childId) return;
     setGenerating(true);
     setError(null);
     try {
-      const request = requestOverride ?? revisionRequest;
+      const request = options?.requestOverride ?? revisionRequest;
       const result = await generateChildCharacterCallable({
         childId,
         revisionRequest: request,
+        ...(options?.useBaseGeneration && selectedCandidate?.generationId ? { baseGenerationId: selectedCandidate.generationId } : {}),
       });
       setCandidates(result.data.candidates);
       setSelectedCandidateId(result.data.candidates[0]?.generationId ?? null);
@@ -225,7 +226,7 @@ function ChildAvatarPageContent() {
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button type="button" onClick={() => generate()} disabled={generating || saving || remainingAttempts === 0}>
+            <Button type="button" onClick={() => generate({ useBaseGeneration: false })} disabled={generating || saving || remainingAttempts === 0}>
               {generating ? "生成中..." : "3パターン生成する"}
             </Button>
             {candidates.length > 0 ? (
@@ -237,11 +238,14 @@ function ChildAvatarPageContent() {
 
           {candidates.length > 0 ? (
             <div className="space-y-3">
+              <p className="rounded-2xl bg-purple-50 p-4 text-sm text-violet-600">
+                選択中の候補と絵本のタッチを参考に、気になるところだけ直します
+              </p>
               <AvatarRevisionForm value={revisionRequest} onChange={setRevisionRequest} summary={revisionSummary} />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => generate()}
+                onClick={() => generate({ useBaseGeneration: true })}
                 disabled={isRevisionEmpty(revisionRequest) || generating || saving || remainingAttempts === 0}
                 className="w-full"
               >

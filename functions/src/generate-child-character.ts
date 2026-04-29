@@ -3,10 +3,12 @@ import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
 import type { AvatarRevisionRequest, ChildProfileData, IllustrationStyle } from "./lib/types";
+import { getStyleReferenceImagePath } from "./lib/prompt-builder";
 import { ReplicateImageClient } from "./lib/replicate";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 const MAX_ATTEMPTS_PER_CHILD = 5;
+const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
 const AVATAR_VARIANTS: Array<{ style: IllustrationStyle; label: string }> = [
   { style: "soft_watercolor", label: "やさしい水彩" },
   { style: "fluffy_pastel", label: "ふんわりパステル" },
@@ -16,6 +18,7 @@ const AVATAR_VARIANTS: Array<{ style: IllustrationStyle; label: string }> = [
 type GenerateChildCharacterRequest = {
   childId: string;
   revisionRequest?: AvatarRevisionRequest;
+  baseGenerationId?: string;
 };
 
 type AvatarCandidate = {
@@ -74,14 +77,22 @@ export const generateChildCharacter = onCall(
     const structuredCorrectionText = buildStructuredCorrectionText(data.revisionRequest);
     const finalCorrectionText = structuredCorrectionText;
     const characterBible = buildCharacterBible(child, finalCorrectionText);
+    const baseGenerationImageUrl = await getBaseGenerationImageUrl(childRef, data.baseGenerationId);
 
     const candidates: AvatarCandidate[] = [];
     try {
       for (const variant of AVATAR_VARIANTS) {
         const prompt = buildChildCharacterPrompt(child, variant.style, finalCorrectionText, previousPrompt);
+        const styleReferenceImageUrl = toPublicUrl(getStyleReferenceImagePath(variant.style));
+        const inputImageUrls = [
+          baseGenerationImageUrl,
+          child.visualProfile?.approvedImageUrl,
+          styleReferenceImageUrl,
+        ].filter((value): value is string => Boolean(value));
+
         const imageBuffer = await imageClient.generateImage(prompt, {
           purpose: structuredCorrectionText ? "child_avatar_revision" : "child_avatar",
-          inputImageUrls: child.visualProfile?.approvedImageUrl ? [child.visualProfile.approvedImageUrl] : [],
+          inputImageUrls: [...new Set(inputImageUrls)],
         });
         const generationId = db.collection("_").doc().id;
         const imageUrl = await uploadAvatarImage(storage, uid, data.childId, generationId, imageBuffer);
@@ -93,6 +104,7 @@ export const generateChildCharacter = onCall(
           prompt,
           correctionText: finalCorrectionText || null,
           revisionRequest: data.revisionRequest || null,
+          baseGenerationId: data.baseGenerationId || null,
           style: variant.style,
           styleLabel: variant.label,
           status: "draft",
@@ -122,6 +134,25 @@ export const generateChildCharacter = onCall(
     };
   }
 );
+
+async function getBaseGenerationImageUrl(
+  childRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>,
+  baseGenerationId: string | undefined
+): Promise<string | undefined> {
+  if (!baseGenerationId) return undefined;
+
+  const generationSnap = await childRef.collection("avatarGenerations").doc(baseGenerationId).get();
+  if (!generationSnap.exists) {
+    throw new HttpsError("invalid-argument", "baseGenerationId に対応する生成履歴が見つかりません");
+  }
+
+  const imageUrl = generationSnap.data()?.imageUrl;
+  if (typeof imageUrl !== "string" || imageUrl.trim().length === 0) {
+    throw new HttpsError("invalid-argument", "baseGenerationId に有効な画像がありません");
+  }
+
+  return imageUrl;
+}
 
 async function uploadAvatarImage(
   storage: admin.storage.Storage,
@@ -233,6 +264,12 @@ function fixedSandboxBackgroundPrompt(): string {
     "Do not include playground equipment, buildings, roads, or signs.",
     "Use a front-facing, eye-level, medium-distance, almost full-body composition.",
   ].join(" ");
+}
+
+function toPublicUrl(pathOrUrl: string | undefined): string | undefined {
+  if (!pathOrUrl) return undefined;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  return `${PUBLIC_SITE_URL}${pathOrUrl.startsWith("/") ? "" : "/"}${pathOrUrl}`;
 }
 
 function styleInstruction(style: IllustrationStyle): string {
