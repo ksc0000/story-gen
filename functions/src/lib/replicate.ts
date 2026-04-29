@@ -1,8 +1,8 @@
 import Replicate from "replicate";
-import type { ImageClient } from "./types";
+import type { ImageClient, ImagePurpose } from "./types";
 
 const FLUX_SCHNELL_MODEL = "black-forest-labs/flux-schnell" as const;
-const FLUX_REFERENCE_MODEL = "black-forest-labs/flux-2-pro" as const;
+const FLUX_QUALITY_MODEL = "black-forest-labs/flux-2-pro" as const;
 
 export class ReplicateImageClient implements ImageClient {
   private replicate: Replicate;
@@ -11,14 +11,15 @@ export class ReplicateImageClient implements ImageClient {
     this.replicate = new Replicate({ auth: apiToken });
   }
 
-  async generateImage(prompt: string, options?: { inputImageUrls?: string[] }): Promise<Buffer> {
+  async generateImage(prompt: string, options?: { inputImageUrls?: string[]; purpose?: ImagePurpose }): Promise<Buffer> {
     const inputImageUrls = [...new Set(options?.inputImageUrls ?? [])].slice(0, 8);
-    const model = inputImageUrls.length > 0 ? FLUX_REFERENCE_MODEL : FLUX_SCHNELL_MODEL;
+    const model = this.getModelForPurpose(options?.purpose);
     const output = await this.replicate.run(model, {
       input: {
         prompt,
         aspect_ratio: "4:3",
         output_format: "png",
+        // We choose the model by use-case, not by whether reference images happen to exist.
         ...(model === FLUX_SCHNELL_MODEL ? { num_outputs: 1 } : {}),
         ...(inputImageUrls.length > 0 ? { input_images: inputImageUrls } : {}),
       },
@@ -89,5 +90,20 @@ export class ReplicateImageClient implements ImageClient {
     }
 
     return [];
+  }
+
+  private getModelForPurpose(
+    purpose: ImagePurpose | undefined
+  ): typeof FLUX_SCHNELL_MODEL | typeof FLUX_QUALITY_MODEL {
+    switch (purpose) {
+      case "child_avatar":
+      case "child_avatar_revision":
+      case "book_cover":
+      case "memory_key_page":
+        return FLUX_QUALITY_MODEL;
+      case "book_page":
+      default:
+        return FLUX_SCHNELL_MODEL;
+    }
   }
 }

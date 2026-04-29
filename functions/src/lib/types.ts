@@ -3,6 +3,12 @@
 export type UserPlan = "free" | "premium";
 export type BookStatus = "generating" | "completed" | "failed";
 export type PageStatus = "pending" | "generating" | "completed" | "failed";
+export type ImagePurpose =
+  | "book_page"
+  | "book_cover"
+  | "child_avatar"
+  | "child_avatar_revision"
+  | "memory_key_page";
 export type IllustrationStyle =
   | "soft_watercolor"
   | "fluffy_pastel"
@@ -36,6 +42,17 @@ export interface BookInput {
 
 export type GenderExpression = "boy" | "girl" | "neutral" | "unspecified";
 export type OutfitMode = "profile_default" | "theme_auto" | "user_custom";
+export interface AvatarRevisionRequest {
+  ageFeel?: "younger" | "slightly_younger" | "slightly_older" | "older";
+  hairStyle?: "shorter" | "longer" | "straighter" | "curlier" | "neater";
+  faceMood?: "gentler" | "brighter" | "calmer" | "more_expressive";
+  expression?: "bigger_smile" | "soft_smile" | "calm_expression" | "more_playful";
+  outfit?: "more_casual" | "more_colorful" | "simpler" | "more_storybook_like";
+  signatureItem?: "more_visible" | "smaller" | "better_positioned" | "less_emphasized";
+  colorTone?: "warmer" | "softer" | "brighter" | "less_saturated";
+  likeness?: "closer_to_child" | "keep_storybook_but_closer" | "more_distinctive_features" | "more_natural_balance";
+  notes?: string;
+}
 
 export interface ChildPersonalityProfile {
   traits?: string[];
@@ -180,5 +197,5 @@ export interface LLMClient {
 }
 
 export interface ImageClient {
-  generateImage(prompt: string, options?: { inputImageUrls?: string[] }): Promise<Buffer>;
+  generateImage(prompt: string, options?: { inputImageUrls?: string[]; purpose?: ImagePurpose }): Promise<Buffer>;
 }

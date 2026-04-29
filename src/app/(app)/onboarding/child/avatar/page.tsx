@@ -6,12 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { doc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { AvatarRevisionForm } from "@/components/avatar-revision-form";
 import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { db } from "@/lib/firebase";
 import { generateChildCharacterCallable } from "@/lib/functions";
+import type { AvatarRevisionRequest } from "@/lib/types";
 
 type Candidate = {
   generationId: string;
@@ -28,13 +29,14 @@ function ChildAvatarPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const childId = searchParams.get("childId");
+  const reason = searchParams.get("reason");
   const { children, loading } = useChildren(user?.uid);
   const child = useMemo(() => children.find((item) => item.id === childId) ?? null, [childId, children]);
 
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [characterBible, setCharacterBible] = useState<string | null>(child?.visualProfile?.characterBible ?? null);
-  const [correctionText, setCorrectionText] = useState("");
+  const [revisionRequest, setRevisionRequest] = useState<AvatarRevisionRequest>({});
   const [attemptNumber, setAttemptNumber] = useState<number | null>(null);
   const [maxAttempts, setMaxAttempts] = useState(5);
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
@@ -101,14 +103,16 @@ function ChildAvatarPageContent() {
     router.replace(href);
   };
 
-  const generate = async (correction?: string) => {
+  const generate = async (requestOverride?: AvatarRevisionRequest) => {
     if (!childId) return;
     setGenerating(true);
     setError(null);
     try {
+      const request = requestOverride ?? revisionRequest;
       const result = await generateChildCharacterCallable({
         childId,
-        correctionText: correction?.trim() || undefined,
+        correctionText: request.notes?.trim() || undefined,
+        revisionRequest: request,
       });
       setCandidates(result.data.candidates);
       setSelectedCandidateId(result.data.candidates[0]?.generationId ?? null);
@@ -118,7 +122,7 @@ function ChildAvatarPageContent() {
       setRemainingAttempts(result.data.remainingAttempts);
       setHasUnsavedGeneration(true);
       setAllowNavigation(false);
-      setCorrectionText("");
+      setRevisionRequest({});
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(`キャラクター生成に失敗しました: ${message}`);
@@ -179,6 +183,9 @@ function ChildAvatarPageContent() {
         <p className="mt-3 text-sm leading-relaxed text-violet-500">
           公園の砂場を背景に、3つのタッチで同時生成します。1人あたり最大{maxAttempts}回まで試せます。
         </p>
+        {reason === "profile_updated" ? (
+          <p className="mt-2 text-xs text-violet-500">プロフィール変更を反映したキャラクター画像の再生成です。</p>
+        ) : null}
         {attemptNumber ? (
           <p className="mt-2 text-xs text-violet-500">
             生成 {attemptNumber}/{maxAttempts} 回目{remainingAttempts !== null ? ` ・ 残り${remainingAttempts}回` : ""}
@@ -226,24 +233,16 @@ function ChildAvatarPageContent() {
             </Button>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="correction">テキストで調整</Label>
-            <textarea
-              id="correction"
-              value={correctionText}
-              onChange={(event) => setCorrectionText(event.target.value)}
-              placeholder="例：もう少し幼く、髪を短く、帽子を小さめにしてください"
-              className="min-h-24 w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
-              maxLength={300}
-            />
+          <div className="space-y-3">
+            <AvatarRevisionForm value={revisionRequest} onChange={setRevisionRequest} />
             <Button
               type="button"
               variant="outline"
-              onClick={() => generate(correctionText)}
-              disabled={!correctionText.trim() || generating || saving || remainingAttempts === 0}
+              onClick={() => generate()}
+              disabled={isRevisionEmpty(revisionRequest) || generating || saving || remainingAttempts === 0}
               className="w-full"
             >
-              調整して3パターン再生成
+              選択内容で3パターン再生成
             </Button>
           </div>
 
@@ -254,6 +253,10 @@ function ChildAvatarPageContent() {
       </Card>
     </PageTransition>
   );
+}
+
+function isRevisionEmpty(value: AvatarRevisionRequest): boolean {
+  return !Object.values(value).some((entry) => typeof entry === "string" && entry.trim().length > 0);
 }
 
 export default function ChildAvatarPage() {

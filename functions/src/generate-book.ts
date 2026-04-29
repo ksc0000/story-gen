@@ -2,7 +2,7 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
-import type { BookData, TemplateData, LLMClient, ImageClient, PageData, BookInput } from "./lib/types";
+import type { BookData, TemplateData, LLMClient, ImageClient, PageData, BookInput, ImagePurpose } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, buildUserPrompt, getStyleReferenceImagePath } from "./lib/prompt-builder";
 import { GeminiClient } from "./lib/gemini";
@@ -73,7 +73,7 @@ export async function processBookGeneration(
     // Step 4: Build prompts
     const systemPrompt = buildSystemPrompt(template, bookData.style);
     buildUserPrompt(bookData.input, bookData.pageCount);
-    const referenceImageUrls = buildReferenceImageUrls(bookData.style, template, bookData.childProfileSnapshot);
+    const coverReferenceImageUrls = buildReferenceImageUrls(bookData.style, template, bookData.childProfileSnapshot);
 
     // Step 5: Generate story with LLM
     const story = await deps.llmClient.generateStory({
@@ -126,7 +126,13 @@ export async function processBookGeneration(
               await new Promise((resolve) => setTimeout(resolve, waitMs));
             }
 
-            imageBuffer = await deps.imageClient.generateImage(imagePrompt, { inputImageUrls: referenceImageUrls });
+            const purpose = getPageImagePurpose(i, bookData.theme);
+            const inputImageUrls = purpose === "book_cover" || purpose === "memory_key_page"
+              ? coverReferenceImageUrls
+              : [];
+
+            // Page 1 is treated as the cover-quality image, while later pages stay lightweight.
+            imageBuffer = await deps.imageClient.generateImage(imagePrompt, { purpose, inputImageUrls });
             lastImageAttemptAt = Date.now();
             imageUrl = await deps.uploadImage(bookId, i, imageBuffer);
             break; // Success
@@ -203,6 +209,13 @@ function buildReferenceImageUrls(
     .map(toPublicUrl);
 
   return [...new Set(urls)];
+}
+
+function getPageImagePurpose(pageIndex: number, theme: string): ImagePurpose {
+  if (pageIndex === 0) {
+    return theme === "memory" ? "memory_key_page" : "book_cover";
+  }
+  return "book_page";
 }
 
 function mergeInputWithChildProfile(input: BookInput, snapshot: BookData["childProfileSnapshot"]): BookInput {

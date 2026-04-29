@@ -80,12 +80,17 @@ exports.generateChildCharacter = (0, https_1.onCall)({
     const batchId = db.collection("_").doc().id;
     const previousPrompt = child.visualProfile?.basePrompt;
     const imageClient = new replicate_1.ReplicateImageClient(replicateApiToken.value());
-    const characterBible = buildCharacterBible(child, data.correctionText);
+    const structuredCorrectionText = buildStructuredCorrectionText(data.revisionRequest);
+    const finalCorrectionText = [structuredCorrectionText, data.correctionText]
+        .filter((value) => Boolean(value?.trim()))
+        .join(" ");
+    const characterBible = buildCharacterBible(child, finalCorrectionText);
     const candidates = [];
     try {
         for (const variant of AVATAR_VARIANTS) {
-            const prompt = buildChildCharacterPrompt(child, variant.style, data.correctionText, previousPrompt);
+            const prompt = buildChildCharacterPrompt(child, variant.style, finalCorrectionText, previousPrompt);
             const imageBuffer = await imageClient.generateImage(prompt, {
+                purpose: data.correctionText?.trim() || structuredCorrectionText ? "child_avatar_revision" : "child_avatar",
                 inputImageUrls: child.visualProfile?.approvedImageUrl ? [child.visualProfile.approvedImageUrl] : [],
             });
             const generationId = db.collection("_").doc().id;
@@ -96,6 +101,7 @@ exports.generateChildCharacter = (0, https_1.onCall)({
                 imageUrl,
                 prompt,
                 correctionText: data.correctionText || null,
+                revisionRequest: data.revisionRequest || null,
                 style: variant.style,
                 styleLabel: variant.label,
                 status: "draft",
@@ -149,7 +155,7 @@ function buildChildCharacterPrompt(child, style, correctionText, previousPrompt)
     return [
         "Create a non-photorealistic Japanese storybook illustration of a preschool protagonist.",
         "The image must be safe, gentle, warm, and clearly fictional.",
-        "Place the child in a quiet neighborhood park sandbox with soft greenery in the background.",
+        fixedSandboxBackgroundPrompt(),
         "Use a clean scene with no signs, no posters, no books, no toys with branding, no text, no letters, no numbers, no watermark, and no Chinese characters.",
         "Keep the composition simple and repeatable so the character can be reused consistently in future storybook pages.",
         `Illustration style: ${styleInstruction(style)}.`,
@@ -183,6 +189,32 @@ function buildCharacterBible(child, correctionText) {
         .filter(Boolean)
         .join(" ");
 }
+function buildStructuredCorrectionText(revisionRequest) {
+    if (!revisionRequest)
+        return "";
+    const instructions = [
+        revisionRequest.ageFeel ? `Age impression: ${mapRevisionValue("ageFeel", revisionRequest.ageFeel)}.` : "",
+        revisionRequest.hairStyle ? `Hair: ${mapRevisionValue("hairStyle", revisionRequest.hairStyle)}.` : "",
+        revisionRequest.faceMood ? `Face mood: ${mapRevisionValue("faceMood", revisionRequest.faceMood)}.` : "",
+        revisionRequest.expression ? `Expression: ${mapRevisionValue("expression", revisionRequest.expression)}.` : "",
+        revisionRequest.outfit ? `Outfit: ${mapRevisionValue("outfit", revisionRequest.outfit)}.` : "",
+        revisionRequest.signatureItem ? `Signature item: ${mapRevisionValue("signatureItem", revisionRequest.signatureItem)}.` : "",
+        revisionRequest.colorTone ? `Color tone: ${mapRevisionValue("colorTone", revisionRequest.colorTone)}.` : "",
+        revisionRequest.likeness ? `Likeness: ${mapRevisionValue("likeness", revisionRequest.likeness)}.` : "",
+    ]
+        .filter(Boolean)
+        .join(" ");
+    return instructions;
+}
+function fixedSandboxBackgroundPrompt() {
+    return [
+        "Background must always be a quiet Japanese neighborhood park.",
+        "Include a square sandbox with a low wooden frame and beige sand.",
+        "Place simple green hedges and a few plain trees in the distance.",
+        "Do not include playground equipment, buildings, roads, or signs.",
+        "Use a front-facing, eye-level, medium-distance, almost full-body composition.",
+    ].join(" ");
+}
 function styleInstruction(style) {
     switch (style) {
         case "soft_watercolor":
@@ -201,5 +233,59 @@ function normalizeSensitiveError(err) {
         return "画像の安全判定に引っかかりました。よりやさしい表現に調整して再試行してください。";
     }
     return message;
+}
+function mapRevisionValue(field, value) {
+    const map = {
+        ageFeel: {
+            younger: "make the child look clearly younger",
+            slightly_younger: "make the child look slightly younger",
+            slightly_older: "make the child look slightly older",
+            older: "make the child look clearly older",
+        },
+        hairStyle: {
+            shorter: "shorter and tidier hair",
+            longer: "slightly longer hair",
+            straighter: "straighter hair shape",
+            curlier: "softer and curlier hair",
+            neater: "a neater overall hairstyle",
+        },
+        faceMood: {
+            gentler: "a gentler and softer face",
+            brighter: "a brighter and more lively face",
+            calmer: "a calmer and more relaxed face",
+            more_expressive: "slightly more expressive facial features",
+        },
+        expression: {
+            bigger_smile: "a bigger smile",
+            soft_smile: "a softer smile",
+            calm_expression: "a calm neutral expression",
+            more_playful: "a more playful expression",
+        },
+        outfit: {
+            more_casual: "more casual everyday clothing",
+            more_colorful: "a slightly more colorful outfit",
+            simpler: "a simpler outfit with fewer details",
+            more_storybook_like: "a cuter and more storybook-like outfit",
+        },
+        signatureItem: {
+            more_visible: "make the signature item more visible",
+            smaller: "make the signature item slightly smaller",
+            better_positioned: "place the signature item in a clearer position",
+            less_emphasized: "make the signature item more subtle",
+        },
+        colorTone: {
+            warmer: "warmer overall colors",
+            softer: "softer and gentler colors",
+            brighter: "slightly brighter colors",
+            less_saturated: "less saturated colors",
+        },
+        likeness: {
+            closer_to_child: "bring the character closer to the real child",
+            keep_storybook_but_closer: "keep the storybook charm but increase resemblance",
+            more_distinctive_features: "make the child's distinctive features clearer",
+            more_natural_balance: "aim for a more natural and balanced likeness",
+        },
+    };
+    return map[field]?.[value] ?? value;
 }
 //# sourceMappingURL=generate-child-character.js.map

@@ -83,7 +83,7 @@ async function processBookGeneration(bookId, bookData, deps) {
         // Step 4: Build prompts
         const systemPrompt = (0, prompt_builder_1.buildSystemPrompt)(template, bookData.style);
         (0, prompt_builder_1.buildUserPrompt)(bookData.input, bookData.pageCount);
-        const referenceImageUrls = buildReferenceImageUrls(bookData.style, template, bookData.childProfileSnapshot);
+        const coverReferenceImageUrls = buildReferenceImageUrls(bookData.style, template, bookData.childProfileSnapshot);
         // Step 5: Generate story with LLM
         const story = await deps.llmClient.generateStory({
             systemPrompt,
@@ -126,7 +126,12 @@ async function processBookGeneration(bookId, bookData, deps) {
                         if (waitMs > 0 && shouldThrottleImageRequests()) {
                             await new Promise((resolve) => setTimeout(resolve, waitMs));
                         }
-                        imageBuffer = await deps.imageClient.generateImage(imagePrompt, { inputImageUrls: referenceImageUrls });
+                        const purpose = getPageImagePurpose(i, bookData.theme);
+                        const inputImageUrls = purpose === "book_cover" || purpose === "memory_key_page"
+                            ? coverReferenceImageUrls
+                            : [];
+                        // Page 1 is treated as the cover-quality image, while later pages stay lightweight.
+                        imageBuffer = await deps.imageClient.generateImage(imagePrompt, { purpose, inputImageUrls });
                         lastImageAttemptAt = Date.now();
                         imageUrl = await deps.uploadImage(bookId, i, imageBuffer);
                         break; // Success
@@ -194,6 +199,12 @@ function buildReferenceImageUrls(style, template, childProfileSnapshot) {
         .filter((value) => Boolean(value))
         .map(toPublicUrl);
     return [...new Set(urls)];
+}
+function getPageImagePurpose(pageIndex, theme) {
+    if (pageIndex === 0) {
+        return theme === "memory" ? "memory_key_page" : "book_cover";
+    }
+    return "book_page";
 }
 function mergeInputWithChildProfile(input, snapshot) {
     if (!snapshot)

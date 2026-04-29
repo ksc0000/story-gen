@@ -32,13 +32,14 @@ describe("ReplicateImageClient", () => {
     expect(result).toBeInstanceOf(Buffer);
   });
 
-  it("calls FLUX reference model with input images when provided", async () => {
+  it("calls FLUX quality model when the purpose requests it", async () => {
     const fakeImageData = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
     mockRun.mockResolvedValue(["https://replicate.delivery/fake-image.png"]);
     mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(fakeImageData.buffer) });
 
     const result = await client.generateImage("A child in a meadow", {
       inputImageUrls: ["https://example.com/style.png", "https://example.com/style.png"],
+      purpose: "child_avatar",
     });
 
     expect(mockRun).toHaveBeenCalledWith("black-forest-labs/flux-2-pro", expect.objectContaining({
@@ -57,6 +58,7 @@ describe("ReplicateImageClient", () => {
 
     const result = await client.generateImage("A child in a meadow", {
       inputImageUrls: ["https://example.com/style.png"],
+      purpose: "child_avatar_revision",
     });
 
     expect(result).toBeInstanceOf(Buffer);

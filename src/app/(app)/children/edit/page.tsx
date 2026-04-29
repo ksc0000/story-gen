@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { db } from "@/lib/firebase";
 import { buildChildProfilePayload } from "@/lib/child-profile";
+import type { ChildProfileDoc } from "@/lib/types";
 
 function ChildEditPageContent() {
   const { user } = useAuth();
@@ -30,7 +31,18 @@ function ChildEditPageContent() {
     if (!user || !childId || !child) return;
     setSaving(true);
     try {
-      await updateDoc(doc(db, "users", user.uid, "children", childId), buildChildProfilePayload(values, child.visualProfile));
+      const payload = buildChildProfilePayload(values, child.visualProfile);
+      const needsAvatarRefresh = hasAvatarAffectingChanges(child, payload);
+      await updateDoc(doc(db, "users", user.uid, "children", childId), payload);
+      if (needsAvatarRefresh) {
+        const regenerate = window.confirm("この内容でキャラクター画像を生成しなおしますか？");
+        router.push(
+          regenerate
+            ? `/onboarding/child/avatar?childId=${childId}&reason=profile_updated`
+            : "/children"
+        );
+        return;
+      }
       router.push("/children");
     } finally {
       setSaving(false);
@@ -59,6 +71,35 @@ function ChildEditPageContent() {
       <ChildProfileForm initialChild={child} submitLabel="保存する" saving={saving} onSubmit={handleSubmit} />
     </PageTransition>
   );
+}
+
+function hasAvatarAffectingChanges(child: ChildProfileDoc, payload: Record<string, unknown>): boolean {
+  const personality = (payload.personality as Record<string, unknown> | undefined) ?? {};
+  const visualProfile = (payload.visualProfile as Record<string, unknown> | undefined) ?? {};
+
+  return (
+    normalizeNumber(child.age) !== normalizeNumber(payload.age) ||
+    (child.genderExpression ?? "unspecified") !== (payload.genderExpression ?? "unspecified") ||
+    normalizeStringArray(child.personality.traits) !== normalizeStringArray(personality.traits) ||
+    normalizeStringArray(child.personality.favoriteThings) !== normalizeStringArray(personality.favoriteThings) ||
+    normalizeString(child.visualProfile.characterLook) !== normalizeString(visualProfile.characterLook) ||
+    normalizeString(child.visualProfile.outfit) !== normalizeString(visualProfile.outfit) ||
+    normalizeString(child.visualProfile.signatureItem) !== normalizeString(visualProfile.signatureItem) ||
+    normalizeString(child.visualProfile.colorMood) !== normalizeString(visualProfile.colorMood)
+  );
+}
+
+function normalizeString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeStringArray(value: unknown): string {
+  if (!Array.isArray(value)) return "";
+  return value.map((item) => normalizeString(item)).filter(Boolean).join("|");
+}
+
+function normalizeNumber(value: unknown): number | null {
+  return typeof value === "number" ? value : null;
 }
 
 export default function ChildEditPage() {
