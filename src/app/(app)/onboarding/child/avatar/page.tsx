@@ -182,7 +182,7 @@ function ChildAvatarPageContent() {
         <p className="text-sm font-semibold text-violet-500">キャラクター生成</p>
         <h1 className="mt-2 text-2xl font-bold text-purple-900">{child.nickname || child.displayName}の絵本キャラクター</h1>
         <p className="mt-3 text-sm leading-relaxed text-violet-500">
-          公園の砂場を背景に、3つのタッチで同時生成します。1人あたり最大{maxAttempts}回まで試せます。
+          公園の砂場を背景に、絵本本編と同じ画風参照を使って3つのタッチで同時生成します。1人あたり最大{maxAttempts}回まで試せます。
         </p>
         {reason === "profile_updated" ? (
           <p className="mt-2 text-xs text-violet-500">プロフィール変更を反映したキャラクター画像の再生成です。</p>
@@ -239,7 +239,7 @@ function ChildAvatarPageContent() {
           {candidates.length > 0 ? (
             <div className="space-y-3">
               <p className="rounded-2xl bg-purple-50 p-4 text-sm text-violet-600">
-                選択中の候補と絵本のタッチを参考に、気になるところだけ直します
+                選択中の候補を本人らしさのベースにし、絵本のタッチを参考にしながら、気になるところだけ直します
               </p>
               <AvatarRevisionForm value={revisionRequest} onChange={setRevisionRequest} summary={revisionSummary} />
               <Button
