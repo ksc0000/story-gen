@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "clean": "node scripts/clean-build.mjs",
     "build": "next build",
+    "build:clean": "npm run clean && npm run build",
+    "deploy:hosting": "npm run build:clean && firebase deploy --only hosting",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
