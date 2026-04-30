@@ -8,6 +8,12 @@ export type PriceTier = "ume" | "take" | "matsu";
 export type StoryCostLevel = "none" | "low" | "standard";
 export type ImageQualityTier = "light" | "standard" | "premium";
 export type CharacterConsistencyMode = "cover_only" | "key_pages" | "all_pages";
+export type ImagePurpose =
+  | "book_page"
+  | "book_cover"
+  | "child_avatar"
+  | "child_avatar_revision"
+  | "memory_key_page";
 export type IllustrationStyle =
   | "soft_watercolor"
   | "fluffy_pastel"
@@ -164,7 +170,7 @@ export interface PageDoc {
   status: PageStatus;
   imageModel?: string;
   imageQualityTier?: ImageQualityTier;
-  imagePurpose?: "book_page" | "book_cover" | "child_avatar" | "child_avatar_revision" | "memory_key_page";
+  imagePurpose?: ImagePurpose;
 }
 
 export interface TemplateDoc {
