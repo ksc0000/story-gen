@@ -99,6 +99,12 @@ describe("processBookGeneration", () => {
     expect(deps.incrementMonthlyCount).toHaveBeenCalledWith("user123");
   });
 
+  it("keeps calling the LLM for guided_ai templates", async () => {
+    deps.getTemplate.mockResolvedValue(mockTemplate);
+    await processBookGeneration("book-guided", baseBookData, deps);
+    expect(deps.llmClient.generateStory).toHaveBeenCalledOnce();
+  });
+
   it("sets book status to failed when LLM fails", async () => {
     deps.llmClient.generateStory.mockRejectedValue(new Error("LLM error"));
     await processBookGeneration("book123", baseBookData, deps);
@@ -166,6 +172,12 @@ describe("processBookGeneration", () => {
         pageNumber: 0,
         text: "ゆうたは、ママとパパといっしょに上野動物園へでかけました。",
       })
+    );
+    expect(deps.writePage).toHaveBeenCalledTimes(fixedTemplate.fixedStory!.pages.length);
+    expect(deps.imageClient.generateImage).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("A child arriving at a friendly zoo with family"),
+      expect.any(Object)
     );
     expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed", "completed");

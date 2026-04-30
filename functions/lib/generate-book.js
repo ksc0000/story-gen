@@ -82,7 +82,6 @@ async function processBookGeneration(bookId, bookData, deps) {
         const template = await deps.getTemplate(bookData.theme);
         // Step 4: Build prompts
         const systemPrompt = (0, prompt_builder_1.buildSystemPrompt)(template, bookData.style);
-        (0, prompt_builder_1.buildUserPrompt)(bookData.input, bookData.pageCount);
         const coverReferenceImageUrls = buildReferenceImageUrls(bookData.style, template, bookData.childProfileSnapshot);
         // Step 5: Generate story with LLM
         const story = template.creationMode === "fixed_template" && template.fixedStory

@@ -22,15 +22,25 @@ interface ThemeCardProps { template: TemplateDoc & { id: string }; selected: boo
 
 const PRICE_TIER_LABELS: Record<PriceTier, string> = {
   ume: "軽量",
-  take: "標準",
-  matsu: "自由度高め",
+  take: "おすすめ",
+  matsu: "自由に作れる",
 };
 
 const STORY_COST_LABELS: Record<StoryCostLevel, string> = {
-  none: "ストーリーAI生成なし",
-  low: "AI少なめ",
-  standard: "AI生成",
+  none: "すぐ作れる",
+  low: "かんたん調整",
+  standard: "しっかり生成",
 };
+
+function getModeSummary(template: TemplateDoc): string {
+  if (template.creationMode === "fixed_template") {
+    return "早い・安定・迷いにくい";
+  }
+  if (template.creationMode === "original_ai") {
+    return "自由度高め";
+  }
+  return "質問に答えて作る";
+}
 
 export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
   const iconSrc = ICON_MAP[template.icon];
@@ -55,6 +65,7 @@ export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
           <div className="flex flex-1 flex-col p-3">
             <h3 className="text-sm font-semibold text-purple-900">{template.name}</h3>
             <p className="mt-1 text-xs leading-relaxed text-violet-500">{template.description}</p>
+            <p className="mt-2 text-[11px] font-medium text-purple-700">{getModeSummary(template)}</p>
             {template.parentIntent ? (
               <p className="mt-2 text-[11px] leading-relaxed text-violet-400">{template.parentIntent}</p>
             ) : null}

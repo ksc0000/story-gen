@@ -14,7 +14,7 @@ import type {
   GeneratedStory,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
-import { buildSystemPrompt, buildImagePrompt, buildUserPrompt, getStyleReferenceImagePath } from "./lib/prompt-builder";
+import { buildSystemPrompt, buildImagePrompt, getStyleReferenceImagePath } from "./lib/prompt-builder";
 import { GeminiClient } from "./lib/gemini";
 import { ReplicateImageClient } from "./lib/replicate";
 
@@ -82,7 +82,6 @@ export async function processBookGeneration(
 
     // Step 4: Build prompts
     const systemPrompt = buildSystemPrompt(template, bookData.style);
-    buildUserPrompt(bookData.input, bookData.pageCount);
     const coverReferenceImageUrls = buildReferenceImageUrls(bookData.style, template, bookData.childProfileSnapshot);
 
     // Step 5: Generate story with LLM

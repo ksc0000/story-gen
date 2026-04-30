@@ -27,6 +27,41 @@ const STORY_REQUEST_PLACEHOLDERS: Record<string, string> = {
   "seasonal-events": "例：クリスマスの日に家族で過ごした思い出",
 };
 
+const INPUT_LABELS: Record<string, string> = {
+  childName: "お子さんの名前",
+  place: "場所",
+  familyMembers: "一緒に登場する人",
+  parentMessage: "最後に伝えたい言葉",
+  lessonToTeach: "教えたいこと",
+  memoryToRecreate: "再現したい思い出",
+  storyRequest: "作りたい内容",
+};
+
+function shouldShowTemplateField(field: string, requiredInputs: string[], optionalInputs: string[]) {
+  return field === "parentMessage" || requiredInputs.includes(field) || optionalInputs.includes(field);
+}
+
+function getMissingTemplateFields(params: {
+  requiredInputs: string[];
+  place: string;
+  familyMembers: string;
+  parentMessage: string;
+  lessonToTeach: string;
+  memoryToRecreate: string;
+  storyRequest: string;
+}) {
+  const fieldValues: Record<string, string> = {
+    place: params.place,
+    familyMembers: params.familyMembers,
+    parentMessage: params.parentMessage,
+    lessonToTeach: params.lessonToTeach,
+    memoryToRecreate: params.memoryToRecreate,
+    storyRequest: params.storyRequest,
+  };
+
+  return params.requiredInputs.filter((field) => field !== "childName" && !(fieldValues[field]?.trim()));
+}
+
 function InputPageContent() {
   const searchParams = useSearchParams();
   const theme = searchParams.get("theme") ?? "";
@@ -54,6 +89,16 @@ function InputPageContent() {
   const [customOutfit, setCustomOutfit] = useState("");
   const [keepSignatureItem, setKeepSignatureItem] = useState(true);
   const [showOptional, setShowOptional] = useState(creationMode === "fixed_template");
+  const missingTemplateFields = getMissingTemplateFields({
+    requiredInputs,
+    place,
+    familyMembers,
+    parentMessage,
+    lessonToTeach,
+    memoryToRecreate,
+    storyRequest,
+  });
+  const canProceed = Boolean(childId && child && theme) && (creationMode !== "fixed_template" || missingTemplateFields.length === 0);
 
   const handleNext = () => {
     const params = new URLSearchParams();
@@ -103,9 +148,15 @@ function InputPageContent() {
               <p className="font-semibold text-purple-900">{template.name}</p>
               <p className="mt-1">{template.description}</p>
               {creationMode === "fixed_template" ? (
-                <p className="mt-2 text-xs text-violet-500">
-                  必須: {requiredInputs.join(" / ") || "childName"} | 任意: {optionalInputs.join(" / ") || "なし"}
-                </p>
+                <div className="mt-2 space-y-1 text-xs text-violet-500">
+                  <p>このテンプレートは、決まった物語にお子さんの名前や思い出を差し込んで作ります。早く・安定して作れます。</p>
+                  <p>
+                    必須: {requiredInputs.map((item) => INPUT_LABELS[item] ?? item).join(" / ") || "お子さんの名前"}
+                  </p>
+                  <p>
+                    任意: {optionalInputs.map((item) => INPUT_LABELS[item] ?? item).join(" / ") || "なし"}
+                  </p>
+                </div>
               ) : null}
             </div>
           ) : null}
@@ -130,7 +181,45 @@ function InputPageContent() {
               </p>
               <div className="rounded-2xl bg-violet-50 p-4 text-sm text-violet-600">
                 <p className="font-medium text-purple-900">{primaryFieldLabel}</p>
-                <p className="mt-1">場所、いっしょに出る家族、最後に伝えたい言葉を入れると、テンプレートに自然に差し込みます。</p>
+                <p className="mt-1">このテンプレートは、決まった物語にお子さんの名前や思い出を差し込んで作ります。早く・安定して作れます。</p>
+              </div>
+              {shouldShowTemplateField("place", requiredInputs, optionalInputs) ? (
+                <div>
+                  <Label htmlFor="place-fixed" className="text-purple-800">どこでの思い出？</Label>
+                  <Input
+                    id="place-fixed"
+                    value={place}
+                    onChange={(e) => setPlace(e.target.value)}
+                    placeholder="例：上野動物園、近所の公園"
+                    className="mt-1"
+                    maxLength={200}
+                  />
+                </div>
+              ) : null}
+              {shouldShowTemplateField("familyMembers", requiredInputs, optionalInputs) ? (
+                <div>
+                  <Label htmlFor="familyMembers-fixed" className="text-purple-800">だれと一緒だった？</Label>
+                  <Input
+                    id="familyMembers-fixed"
+                    value={familyMembers}
+                    onChange={(e) => setFamilyMembers(e.target.value)}
+                    placeholder="例：ママ、パパ、おばあちゃん"
+                    className="mt-1"
+                    maxLength={200}
+                  />
+                </div>
+              ) : null}
+              <div>
+                <Label htmlFor="parentMessage-fixed" className="text-purple-800">最後に伝えたい言葉</Label>
+                <textarea
+                  id="parentMessage-fixed"
+                  value={parentMessage}
+                  onChange={(e) => setParentMessage(e.target.value)}
+                  placeholder="例：また一緒に行こうね"
+                  className="mt-1 w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
+                  rows={3}
+                  maxLength={200}
+                />
               </div>
             </div>
           ) : (
@@ -240,29 +329,33 @@ function InputPageContent() {
                 </div>
               ) : null}
 
-              <div>
-                <Label htmlFor="place-optional" className="text-purple-800">場所</Label>
-                <Input
-                  id="place-optional"
-                  value={place}
-                  onChange={(e) => setPlace(e.target.value)}
-                  placeholder="例：上野動物園、近所の公園"
-                  className="mt-1"
-                  maxLength={200}
-                />
-              </div>
+              {creationMode !== "fixed_template" ? (
+                <>
+                  <div>
+                    <Label htmlFor="place-optional" className="text-purple-800">場所</Label>
+                    <Input
+                      id="place-optional"
+                      value={place}
+                      onChange={(e) => setPlace(e.target.value)}
+                      placeholder="例：上野動物園、近所の公園"
+                      className="mt-1"
+                      maxLength={200}
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="familyMembers" className="text-purple-800">一緒に登場させたい人</Label>
-                <Input
-                  id="familyMembers"
-                  value={familyMembers}
-                  onChange={(e) => setFamilyMembers(e.target.value)}
-                  placeholder="例：ママ、パパ、おばあちゃん"
-                  className="mt-1"
-                  maxLength={200}
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="familyMembers" className="text-purple-800">一緒に登場させたい人</Label>
+                    <Input
+                      id="familyMembers"
+                      value={familyMembers}
+                      onChange={(e) => setFamilyMembers(e.target.value)}
+                      placeholder="例：ママ、パパ、おばあちゃん"
+                      className="mt-1"
+                      maxLength={200}
+                    />
+                  </div>
+                </>
+              ) : null}
 
               {creationMode !== "fixed_template" ? (
                 <div>
@@ -279,24 +372,31 @@ function InputPageContent() {
                 </div>
               ) : null}
 
-              <div>
-                <Label htmlFor="parentMessage" className="text-purple-800">最後に伝えたい言葉</Label>
-                <textarea
-                  id="parentMessage"
-                  value={parentMessage}
-                  onChange={(e) => setParentMessage(e.target.value)}
-                  placeholder="例：これからもたくさん一緒に冒険しようね"
-                  className="mt-1 w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
-                  rows={3}
-                  maxLength={200}
-                />
-              </div>
+              {creationMode !== "fixed_template" ? (
+                <div>
+                  <Label htmlFor="parentMessage" className="text-purple-800">最後に伝えたい言葉</Label>
+                  <textarea
+                    id="parentMessage"
+                    value={parentMessage}
+                    onChange={(e) => setParentMessage(e.target.value)}
+                    placeholder="例：これからもたくさん一緒に冒険しようね"
+                    className="mt-1 w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
+                    rows={3}
+                    maxLength={200}
+                  />
+                </div>
+              ) : null}
             </div>
           )}
         </CardContent>
       </Card>
       <div className="mt-8 flex justify-center">
-        <Button onClick={handleNext} disabled={!childId || !child || !theme} className="px-8">次へ</Button>
+        <div className="flex flex-col items-center gap-2">
+          {creationMode === "fixed_template" && missingTemplateFields.length > 0 ? (
+            <p className="text-sm text-rose-600">テンプレートに必要な情報を入力してください</p>
+          ) : null}
+          <Button onClick={handleNext} disabled={!canProceed} className="px-8">次へ</Button>
+        </div>
       </div>
     </PageTransition>
   );
