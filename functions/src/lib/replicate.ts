@@ -10,6 +10,15 @@ type ReplicateModelName =
   | typeof FLUX_KLEIN_MODEL
   | typeof FLUX_QUALITY_MODEL;
 
+type ReplicateInputPayload = {
+  prompt: string;
+  aspect_ratio: "4:3";
+  output_format: "png";
+  num_outputs?: 1;
+  images?: string[];
+  input_images?: string[];
+};
+
 function isFluxKleinEnabled(): boolean {
   return String(process.env.ENABLE_FLUX_KLEIN || "").toLowerCase() === "true";
 }
@@ -38,6 +47,39 @@ export function resolveReplicateModel(params: {
   }
 }
 
+export function buildReplicateInput(params: {
+  model: ReplicateModelName;
+  prompt: string;
+  inputImageUrls?: string[];
+}): ReplicateInputPayload {
+  const dedupedInputImageUrls = [...new Set(params.inputImageUrls ?? [])];
+
+  if (params.model === FLUX_SCHNELL_MODEL) {
+    return {
+      prompt: params.prompt,
+      aspect_ratio: "4:3",
+      output_format: "png",
+      num_outputs: 1,
+    };
+  }
+
+  if (params.model === FLUX_KLEIN_MODEL) {
+    return {
+      prompt: params.prompt,
+      aspect_ratio: "4:3",
+      output_format: "png",
+      ...(dedupedInputImageUrls.length > 0 ? { images: dedupedInputImageUrls.slice(0, 5) } : {}),
+    };
+  }
+
+  return {
+    prompt: params.prompt,
+    aspect_ratio: "4:3",
+    output_format: "png",
+    ...(dedupedInputImageUrls.length > 0 ? { input_images: dedupedInputImageUrls.slice(0, 4) } : {}),
+  };
+}
+
 export class ReplicateImageClient implements ImageClient {
   private replicate: Replicate;
 
@@ -49,20 +91,17 @@ export class ReplicateImageClient implements ImageClient {
     prompt: string,
     options?: { inputImageUrls?: string[]; purpose?: ImagePurpose; imageQualityTier?: ImageQualityTier }
   ): Promise<Buffer> {
-    const inputImageUrls = [...new Set(options?.inputImageUrls ?? [])].slice(0, 8);
     const model = resolveReplicateModel({
       purpose: options?.purpose,
       imageQualityTier: options?.imageQualityTier,
     });
+    const input = buildReplicateInput({
+      model,
+      prompt,
+      inputImageUrls: options?.inputImageUrls,
+    });
     const output = await this.replicate.run(model, {
-      input: {
-        prompt,
-        aspect_ratio: "4:3",
-        output_format: "png",
-        // We choose the model by use-case and tier, not by whether reference images happen to exist.
-        ...(model === FLUX_SCHNELL_MODEL ? { num_outputs: 1 } : {}),
-        ...(inputImageUrls.length > 0 ? { input_images: inputImageUrls } : {}),
-      },
+      input,
     });
 
     const outputs = this.normalizeReplicateOutput(output);
