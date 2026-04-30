@@ -6,6 +6,8 @@ export type PageStatus = "pending" | "generating" | "completed" | "failed";
 export type CreationMode = "fixed_template" | "guided_ai" | "original_ai";
 export type PriceTier = "ume" | "take" | "matsu";
 export type StoryCostLevel = "none" | "low" | "standard";
+export type ImageQualityTier = "light" | "standard" | "premium";
+export type CharacterConsistencyMode = "cover_only" | "key_pages" | "all_pages";
 export type ImagePurpose =
   | "book_page"
   | "book_cover"
@@ -138,6 +140,7 @@ export interface BookData {
   creationMode?: CreationMode;
   priceTier?: PriceTier;
   storyCostLevel?: StoryCostLevel;
+  imageQualityTier?: ImageQualityTier;
   style: IllustrationStyle;
   pageCount: PageCount;
   status: BookStatus;
@@ -154,6 +157,9 @@ export interface PageData {
   imageUrl: string;
   imagePrompt: string;
   status: PageStatus;
+  imageModel?: string;
+  imageQualityTier?: ImageQualityTier;
+  imagePurpose?: ImagePurpose;
 }
 
 export interface TemplateData {
@@ -220,5 +226,8 @@ export interface LLMClient {
 }
 
 export interface ImageClient {
-  generateImage(prompt: string, options?: { inputImageUrls?: string[]; purpose?: ImagePurpose }): Promise<Buffer>;
+  generateImage(
+    prompt: string,
+    options?: { inputImageUrls?: string[]; purpose?: ImagePurpose; imageQualityTier?: ImageQualityTier }
+  ): Promise<Buffer>;
 }

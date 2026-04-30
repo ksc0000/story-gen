@@ -94,6 +94,22 @@ describe("processBookGeneration", () => {
     );
     expect(deps.uploadImage).toHaveBeenCalledTimes(2);
     expect(deps.writePage).toHaveBeenCalledTimes(2);
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book123",
+      expect.objectContaining({
+        imageModel: "black-forest-labs/flux-2-pro",
+        imageQualityTier: "light",
+        imagePurpose: "book_cover",
+      })
+    );
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book123",
+      expect.objectContaining({
+        imageModel: "black-forest-labs/flux-schnell",
+        imageQualityTier: "light",
+        imagePurpose: "book_page",
+      })
+    );
     expect(deps.updateBookTitle).toHaveBeenCalledWith("book123", "ゆうたくんのたんじょうび");
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book123", "completed");
     expect(deps.incrementMonthlyCount).toHaveBeenCalledWith("user123");
@@ -181,5 +197,24 @@ describe("processBookGeneration", () => {
     );
     expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed", "completed");
+  });
+
+  it("uses premium model metadata when imageQualityTier is premium", async () => {
+    const premiumBook: BookData = {
+      ...baseBookData,
+      imageQualityTier: "premium",
+    };
+
+    await processBookGeneration("book-premium", premiumBook, deps);
+
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-premium",
+      expect.objectContaining({
+        pageNumber: 1,
+        imageModel: "black-forest-labs/flux-2-pro",
+        imageQualityTier: "premium",
+        imagePurpose: "book_page",
+      })
+    );
   });
 });

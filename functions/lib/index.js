@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.seedTemplates = exports.resetMonthlyQuota = exports.cleanupExpired = exports.generateChildCharacter = exports.generateBook = void 0;
+exports.testImageModels = exports.seedTemplates = exports.resetMonthlyQuota = exports.cleanupExpired = exports.generateChildCharacter = exports.generateBook = void 0;
 const app_1 = require("firebase-admin/app");
 if ((0, app_1.getApps)().length === 0)
     (0, app_1.initializeApp)();
@@ -14,4 +14,6 @@ var reset_monthly_quota_1 = require("./reset-monthly-quota");
 Object.defineProperty(exports, "resetMonthlyQuota", { enumerable: true, get: function () { return reset_monthly_quota_1.resetMonthlyQuota; } });
 var seed_templates_1 = require("./seed-templates");
 Object.defineProperty(exports, "seedTemplates", { enumerable: true, get: function () { return seed_templates_1.seedTemplates; } });
+var test_image_models_1 = require("./test-image-models");
+Object.defineProperty(exports, "testImageModels", { enumerable: true, get: function () { return test_image_models_1.testImageModels; } });
 //# sourceMappingURL=index.js.map

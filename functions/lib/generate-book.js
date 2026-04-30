@@ -117,6 +117,12 @@ async function processBookGeneration(bookId, bookData, deps) {
             // Generate image with retries (skip in development)
             let imageBuffer = null;
             let imageUrl = "";
+            const imagePurpose = getPageImagePurpose(i, bookData.theme);
+            const imageQualityTier = bookData.imageQualityTier ?? "light";
+            const imageModel = (0, replicate_1.resolveReplicateModel)({
+                purpose: imagePurpose,
+                imageQualityTier,
+            });
             // Skip image generation in development to avoid API costs
             if (process.env.NODE_ENV === 'development') {
                 console.log(`Skipping image generation for page ${i} in development mode`);
@@ -130,12 +136,15 @@ async function processBookGeneration(bookId, bookData, deps) {
                         if (waitMs > 0 && shouldThrottleImageRequests()) {
                             await new Promise((resolve) => setTimeout(resolve, waitMs));
                         }
-                        const purpose = getPageImagePurpose(i, bookData.theme);
-                        const inputImageUrls = purpose === "book_cover" || purpose === "memory_key_page"
+                        const inputImageUrls = imagePurpose === "book_cover" || imagePurpose === "memory_key_page"
                             ? coverReferenceImageUrls
                             : [];
-                        // Page 1 is treated as the cover-quality image, while later pages stay lightweight.
-                        imageBuffer = await deps.imageClient.generateImage(imagePrompt, { purpose, inputImageUrls });
+                        // Page 1 is treated as the cover-quality image, while later pages can be tiered for model comparison.
+                        imageBuffer = await deps.imageClient.generateImage(imagePrompt, {
+                            purpose: imagePurpose,
+                            imageQualityTier,
+                            inputImageUrls,
+                        });
                         lastImageAttemptAt = Date.now();
                         imageUrl = await deps.uploadImage(bookId, i, imageBuffer);
                         break; // Success
@@ -156,6 +165,9 @@ async function processBookGeneration(bookId, bookData, deps) {
                                 imageUrl: "",
                                 imagePrompt,
                                 status: "failed",
+                                imageModel,
+                                imageQualityTier,
+                                imagePurpose,
                             });
                             await deps.updateBookFailure(bookId, `画像生成に失敗しました（${message}）`);
                             await deps.updateBookStatus(bookId, "failed");
@@ -171,6 +183,9 @@ async function processBookGeneration(bookId, bookData, deps) {
                 imageUrl,
                 imagePrompt,
                 status: "completed",
+                imageModel,
+                imageQualityTier,
+                imagePurpose,
             };
             await deps.writePage(bookId, pageData);
             if (i === 0 && imageUrl) {

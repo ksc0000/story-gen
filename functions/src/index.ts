@@ -7,3 +7,4 @@ export { generateChildCharacter } from "./generate-child-character";
 export { cleanupExpired } from "./cleanup-expired";
 export { resetMonthlyQuota } from "./reset-monthly-quota";
 export { seedTemplates } from "./seed-templates";
+export { testImageModels } from "./test-image-models";

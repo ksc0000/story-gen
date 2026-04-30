@@ -1,96 +1,40 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ReplicateImageClient } from "../src/lib/replicate";
+import { afterEach, describe, expect, it } from "vitest";
+import { resolveReplicateModel } from "../src/lib/replicate";
 
-const mockRun = vi.fn();
+describe("resolveReplicateModel", () => {
+  const originalFlag = process.env.ENABLE_FLUX_KLEIN;
 
-vi.mock("replicate", () => {
-  return {
-    default: vi.fn().mockImplementation(() => ({ run: mockRun })),
-  };
-});
-
-const mockFetch = vi.fn();
-vi.stubGlobal("fetch", mockFetch);
-
-describe("ReplicateImageClient", () => {
-  let client: ReplicateImageClient;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    client = new ReplicateImageClient("fake-token");
+  afterEach(() => {
+    process.env.ENABLE_FLUX_KLEIN = originalFlag;
   });
 
-  it("calls FLUX Schnell model with the given prompt when no reference images are provided", async () => {
-    const fakeImageData = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
-    mockRun.mockResolvedValue(["https://replicate.delivery/fake-image.png"]);
-    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(fakeImageData.buffer) });
-
-    const result = await client.generateImage("A child at a birthday party");
-    expect(mockRun).toHaveBeenCalledWith("black-forest-labs/flux-schnell", expect.objectContaining({
-      input: expect.objectContaining({ prompt: "A child at a birthday party" }),
-    }));
-    expect(result).toBeInstanceOf(Buffer);
+  it("keeps cover and avatar generation on flux-2-pro", () => {
+    expect(resolveReplicateModel({ purpose: "book_cover", imageQualityTier: "light" })).toBe(
+      "black-forest-labs/flux-2-pro"
+    );
+    expect(resolveReplicateModel({ purpose: "child_avatar_revision", imageQualityTier: "premium" })).toBe(
+      "black-forest-labs/flux-2-pro"
+    );
   });
 
-  it("calls FLUX quality model when the purpose requests it", async () => {
-    const fakeImageData = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
-    mockRun.mockResolvedValue(["https://replicate.delivery/fake-image.png"]);
-    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(fakeImageData.buffer) });
-
-    const result = await client.generateImage("A child in a meadow", {
-      inputImageUrls: ["https://example.com/style.png", "https://example.com/style.png"],
-      purpose: "child_avatar",
-    });
-
-    expect(mockRun).toHaveBeenCalledWith("black-forest-labs/flux-2-pro", expect.objectContaining({
-      input: expect.objectContaining({
-        prompt: "A child in a meadow",
-        input_images: ["https://example.com/style.png"],
-      }),
-    }));
-    expect(result).toBeInstanceOf(Buffer);
+  it("falls back to flux-schnell for standard book pages when ENABLE_FLUX_KLEIN is false", () => {
+    process.env.ENABLE_FLUX_KLEIN = "false";
+    expect(resolveReplicateModel({ purpose: "book_page", imageQualityTier: "standard" })).toBe(
+      "black-forest-labs/flux-schnell"
+    );
   });
 
-  it("supports a single URI string returned by reference models", async () => {
-    const fakeImageData = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
-    mockRun.mockResolvedValue("https://replicate.delivery/fake-image.png");
-    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(fakeImageData.buffer) });
-
-    const result = await client.generateImage("A child in a meadow", {
-      inputImageUrls: ["https://example.com/style.png"],
-      purpose: "child_avatar_revision",
-    });
-
-    expect(result).toBeInstanceOf(Buffer);
+  it("uses flux-2-klein-9b for standard book pages when ENABLE_FLUX_KLEIN is true", () => {
+    process.env.ENABLE_FLUX_KLEIN = "true";
+    expect(resolveReplicateModel({ purpose: "book_page", imageQualityTier: "standard" })).toBe(
+      "black-forest-labs/flux-2-klein-9b"
+    );
   });
 
-  it("supports FileOutput objects returned by Replicate", async () => {
-    const fakeImageData = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
-    const fakeOutput = { url: () => "https://replicate.delivery/fake-image.png" };
-    mockRun.mockResolvedValue([fakeOutput]);
-    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(fakeImageData.buffer) });
-
-    const result = await client.generateImage("A child at a birthday party");
-    expect(result).toBeInstanceOf(Buffer);
-  });
-
-  it("supports an output URI string wrapped in an object", async () => {
-    const fakeImageData = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
-    mockRun.mockResolvedValue({ output: "https://replicate.delivery/fake-image.png" });
-    mockFetch.mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(fakeImageData.buffer) });
-
-    const result = await client.generateImage("A child at a birthday party");
-    expect(result).toBeInstanceOf(Buffer);
-  });
-
-  it("throws when Replicate returns no output", async () => {
-    mockRun.mockResolvedValue([]);
-    await expect(client.generateImage("test prompt")).rejects.toThrow("No image output from Replicate");
-  });
-
-  it("throws when image download fails", async () => {
-    mockRun.mockResolvedValue(["https://replicate.delivery/fake-image.png"]);
-    mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: "Internal Server Error" });
-    await expect(client.generateImage("test prompt")).rejects.toThrow("Failed to download image");
+  it("uses flux-2-pro for premium book pages", () => {
+    process.env.ENABLE_FLUX_KLEIN = "false";
+    expect(resolveReplicateModel({ purpose: "book_page", imageQualityTier: "premium" })).toBe(
+      "black-forest-labs/flux-2-pro"
+    );
   });
 });

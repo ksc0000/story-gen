@@ -128,6 +128,7 @@ function StyleSelectionPageContent() {
           creationMode: template.creationMode ?? "guided_ai",
           priceTier: template.priceTier ?? "take",
           storyCostLevel: template.storyCostLevel ?? "standard",
+          imageQualityTier: "light",
           style: selected,
           pageCount,
           status: "generating",

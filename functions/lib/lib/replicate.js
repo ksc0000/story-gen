@@ -4,9 +4,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReplicateImageClient = void 0;
+exports.resolveReplicateModel = resolveReplicateModel;
 const replicate_1 = __importDefault(require("replicate"));
 const FLUX_SCHNELL_MODEL = "black-forest-labs/flux-schnell";
+const FLUX_KLEIN_MODEL = "black-forest-labs/flux-2-klein-9b";
 const FLUX_QUALITY_MODEL = "black-forest-labs/flux-2-pro";
+function isFluxKleinEnabled() {
+    return String(process.env.ENABLE_FLUX_KLEIN || "").toLowerCase() === "true";
+}
+function resolveReplicateModel(params) {
+    switch (params.purpose) {
+        case "child_avatar":
+        case "child_avatar_revision":
+        case "book_cover":
+        case "memory_key_page":
+            return FLUX_QUALITY_MODEL;
+        case "book_page":
+        default: {
+            const tier = params.imageQualityTier ?? "light";
+            if (tier === "premium") {
+                return FLUX_QUALITY_MODEL;
+            }
+            if (tier === "standard") {
+                return isFluxKleinEnabled() ? FLUX_KLEIN_MODEL : FLUX_SCHNELL_MODEL;
+            }
+            return FLUX_SCHNELL_MODEL;
+        }
+    }
+}
 class ReplicateImageClient {
     replicate;
     constructor(apiToken) {
@@ -14,13 +39,16 @@ class ReplicateImageClient {
     }
     async generateImage(prompt, options) {
         const inputImageUrls = [...new Set(options?.inputImageUrls ?? [])].slice(0, 8);
-        const model = this.getModelForPurpose(options?.purpose);
+        const model = resolveReplicateModel({
+            purpose: options?.purpose,
+            imageQualityTier: options?.imageQualityTier,
+        });
         const output = await this.replicate.run(model, {
             input: {
                 prompt,
                 aspect_ratio: "4:3",
                 output_format: "png",
-                // We choose the model by use-case, not by whether reference images happen to exist.
+                // We choose the model by use-case and tier, not by whether reference images happen to exist.
                 ...(model === FLUX_SCHNELL_MODEL ? { num_outputs: 1 } : {}),
                 ...(inputImageUrls.length > 0 ? { input_images: inputImageUrls } : {}),
             },
@@ -79,18 +107,6 @@ class ReplicateImageClient {
             }
         }
         return [];
-    }
-    getModelForPurpose(purpose) {
-        switch (purpose) {
-            case "child_avatar":
-            case "child_avatar_revision":
-            case "book_cover":
-            case "memory_key_page":
-                return FLUX_QUALITY_MODEL;
-            case "book_page":
-            default:
-                return FLUX_SCHNELL_MODEL;
-        }
     }
 }
 exports.ReplicateImageClient = ReplicateImageClient;
