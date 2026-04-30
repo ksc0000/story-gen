@@ -37,6 +37,50 @@ const INPUT_LABELS: Record<string, string> = {
   storyRequest: "作りたい内容",
 };
 
+const TEMPLATE_PREVIEW_PLACEHOLDERS: Record<string, string> = {
+  "{childName}": "お子さん",
+  "{childAge}": "お子さんの年齢",
+  "{favorites}": "好きなもの",
+  "{lessonToTeach}": "伝えたいこと",
+  "{memoryToRecreate}": "思い出",
+  "{characterLook}": "お子さんらしい見た目",
+  "{signatureItem}": "お気に入りのアイテム",
+  "{colorMood}": "やさしい雰囲気",
+  "{place}": "思い出の場所",
+  "{familyMembers}": "家族",
+  "{season}": "その季節",
+  "{parentMessage}": "親からのメッセージ",
+};
+
+function formatTemplatePreviewText(text: string) {
+  const replaced = Object.entries(TEMPLATE_PREVIEW_PLACEHOLDERS).reduce(
+    (current, [placeholder, label]) => current.replaceAll(placeholder, label),
+    text,
+  );
+
+  return replaced.replace(/\s+/g, " ").trim();
+}
+
+function shortenTemplatePreview(text: string, maxLength = 42) {
+  return text.length <= maxLength ? text : `${text.slice(0, maxLength).trim()}…`;
+}
+
+function getFixedPageRoleLabel(textTemplate: string, index: number, total: number) {
+  if (textTemplate.includes("{parentMessage}") || index === total - 1) {
+    return "親からのメッセージ";
+  }
+  if (index === 0) {
+    return "おはなしのはじまり";
+  }
+  if (index === 1) {
+    return "発見や体験";
+  }
+  if (index === 2) {
+    return "うれしかった瞬間";
+  }
+  return `場面 ${index + 1}`;
+}
+
 function shouldShowTemplateField(field: string, requiredInputs: string[], optionalInputs: string[]) {
   return field === "parentMessage" || requiredInputs.includes(field) || optionalInputs.includes(field);
 }
@@ -74,6 +118,7 @@ function InputPageContent() {
   const child = children.find((item) => item.id === childId) ?? null;
   const template = templates.find((item) => item.id === theme);
   const creationMode = template?.creationMode ?? mode;
+  const fixedStoryPages = template?.fixedStory?.pages ?? [];
   const storyPlaceholder = STORY_REQUEST_PLACEHOLDERS[template?.categoryGroupId ?? ""] ?? "例：うちの子らしい冒険のおはなし";
   const requiredInputs = useMemo(() => template?.requiredInputs ?? [], [template]);
   const optionalInputs = useMemo(() => template?.optionalInputs ?? [], [template]);
@@ -181,8 +226,39 @@ function InputPageContent() {
               </p>
               <div className="rounded-2xl bg-violet-50 p-4 text-sm text-violet-600">
                 <p className="font-medium text-purple-900">{primaryFieldLabel}</p>
-                <p className="mt-1">このテンプレートは、決まった物語にお子さんの名前や思い出を差し込んで作ります。早く・安定して作れます。</p>
+                <p className="mt-1">このテンプレートは、決まった物語にお子さんの名前や思い出を差し込んで作ります。4ページ構成で、ストーリー確認済み。早く・安定して作れます。</p>
               </div>
+              {fixedStoryPages.length ? (
+                <div className="rounded-2xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.95)] p-4">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-purple-700">
+                      {fixedStoryPages.length}ページ構成
+                    </span>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-violet-600">
+                      ストーリー確認済み
+                    </span>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-pink-600">
+                      早く作れる
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-sm font-medium text-purple-900">この絵本の流れ</p>
+                    <div className="mt-3 space-y-3">
+                      {fixedStoryPages.map((page, index) => {
+                        const previewText = shortenTemplatePreview(formatTemplatePreviewText(page.textTemplate));
+                        return (
+                          <div key={`${theme || "template"}-preview-${index}`} className="rounded-2xl bg-white/90 p-3">
+                            <p className="text-xs font-semibold text-purple-700">
+                              {index + 1}ページ目: {getFixedPageRoleLabel(page.textTemplate, index, fixedStoryPages.length)}
+                            </p>
+                            <p className="mt-1 text-sm leading-relaxed text-violet-600">{previewText}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
               {shouldShowTemplateField("place", requiredInputs, optionalInputs) ? (
                 <div>
                   <Label htmlFor="place-fixed" className="text-purple-800">どこでの思い出？</Label>

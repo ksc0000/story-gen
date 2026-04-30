@@ -42,6 +42,13 @@ function getModeSummary(template: TemplateDoc): string {
   return "質問に答えて作る";
 }
 
+function getModeSupportText(template: TemplateDoc): string | null {
+  if (template.creationMode === "fixed_template") {
+    return "4ページ構成 / ストーリー確認済み / 早く作れる";
+  }
+  return null;
+}
+
 export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
   const iconSrc = ICON_MAP[template.icon];
   return (
@@ -66,6 +73,9 @@ export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
             <h3 className="text-sm font-semibold text-purple-900">{template.name}</h3>
             <p className="mt-1 text-xs leading-relaxed text-violet-500">{template.description}</p>
             <p className="mt-2 text-[11px] font-medium text-purple-700">{getModeSummary(template)}</p>
+            {getModeSupportText(template) ? (
+              <p className="mt-1 text-[11px] leading-relaxed text-violet-400">{getModeSupportText(template)}</p>
+            ) : null}
             {template.parentIntent ? (
               <p className="mt-2 text-[11px] leading-relaxed text-violet-400">{template.parentIntent}</p>
             ) : null}
