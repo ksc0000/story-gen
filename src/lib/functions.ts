@@ -1,26 +1,76 @@
-import { getFunctions, httpsCallable } from "firebase/functions";
-import { auth } from "@/lib/firebase";
+import type { Functions, HttpsCallable } from "firebase/functions";
 import type { AvatarRevisionRequest, ImagePurpose, ImageQualityTier } from "@/lib/types";
 
-const functions = getFunctions(auth.app, "asia-northeast1");
+let cachedFunctions: Functions | null = null;
 
-export const generateChildCharacterCallable = httpsCallable<
-  { childId: string; revisionRequest?: AvatarRevisionRequest; baseGenerationId?: string },
-  {
-    batchId: string;
-    attemptNumber: number;
-    maxAttempts: number;
-    remainingAttempts: number;
-    characterBible: string;
-    candidates: Array<{
-      generationId: string;
-      imageUrl: string;
-      style: string;
-      styleLabel: string;
-      prompt: string;
-    }>;
+async function getClientFunctions(): Promise<Functions> {
+  if (cachedFunctions) {
+    return cachedFunctions;
   }
->(functions, "generateChildCharacter");
+
+  if (typeof window === "undefined") {
+    throw new Error("Firebase Functions is only available in the browser.");
+  }
+
+  const [{ getFunctions }, { auth }] = await Promise.all([
+    import("firebase/functions"),
+    import("@/lib/firebase"),
+  ]);
+
+  cachedFunctions = getFunctions(auth.app, "asia-northeast1");
+  return cachedFunctions;
+}
+
+async function getCallable<RequestData, ResponseData>(
+  name: string
+): Promise<HttpsCallable<RequestData, ResponseData>> {
+  const [{ httpsCallable }, functions] = await Promise.all([
+    import("firebase/functions"),
+    getClientFunctions(),
+  ]);
+
+  return httpsCallable<RequestData, ResponseData>(functions, name);
+}
+
+export async function generateChildCharacterCallable(data: {
+  childId: string;
+  revisionRequest?: AvatarRevisionRequest;
+  baseGenerationId?: string;
+}): Promise<{
+  batchId: string;
+  attemptNumber: number;
+  maxAttempts: number;
+  remainingAttempts: number;
+  characterBible: string;
+  candidates: Array<{
+    generationId: string;
+    imageUrl: string;
+    style: string;
+    styleLabel: string;
+    prompt: string;
+  }>;
+}> {
+  const callable = await getCallable<
+    { childId: string; revisionRequest?: AvatarRevisionRequest; baseGenerationId?: string },
+    {
+      batchId: string;
+      attemptNumber: number;
+      maxAttempts: number;
+      remainingAttempts: number;
+      characterBible: string;
+      candidates: Array<{
+        generationId: string;
+        imageUrl: string;
+        style: string;
+        styleLabel: string;
+        prompt: string;
+      }>;
+    }
+  >("generateChildCharacter");
+
+  const result = await callable(data);
+  return result.data;
+}
 
 export type TestImageModelsRequest = {
   prompt: string;
@@ -43,7 +93,9 @@ export type TestImageModelsResult = {
 export async function testImageModelsCallable(
   data: TestImageModelsRequest
 ): Promise<TestImageModelsResult> {
-  const callable = httpsCallable<TestImageModelsRequest, TestImageModelsResult>(functions, "testImageModels");
+  const callable = await getCallable<TestImageModelsRequest, TestImageModelsResult>(
+    "testImageModels"
+  );
   const result = await callable(data);
   return result.data as TestImageModelsResult;
 }
@@ -56,7 +108,9 @@ export type BootstrapAdminResult = {
 };
 
 export async function bootstrapAdminCallable(): Promise<BootstrapAdminResult> {
-  const callable = httpsCallable<Record<string, never>, BootstrapAdminResult>(functions, "bootstrapAdmin");
+  const callable = await getCallable<Record<string, never>, BootstrapAdminResult>(
+    "bootstrapAdmin"
+  );
   const result = await callable({});
   return result.data as BootstrapAdminResult;
 }

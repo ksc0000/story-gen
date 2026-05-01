@@ -115,12 +115,12 @@ function ChildAvatarPageContent() {
         revisionRequest: request,
         ...(options?.useBaseGeneration && selectedCandidate?.generationId ? { baseGenerationId: selectedCandidate.generationId } : {}),
       });
-      setCandidates(result.data.candidates);
-      setSelectedCandidateId(result.data.candidates[0]?.generationId ?? null);
-      setCharacterBible(result.data.characterBible);
-      setAttemptNumber(result.data.attemptNumber);
-      setMaxAttempts(result.data.maxAttempts);
-      setRemainingAttempts(result.data.remainingAttempts);
+      setCandidates(result.candidates);
+      setSelectedCandidateId(result.candidates[0]?.generationId ?? null);
+      setCharacterBible(result.characterBible);
+      setAttemptNumber(result.attemptNumber);
+      setMaxAttempts(result.maxAttempts);
+      setRemainingAttempts(result.remainingAttempts);
       setHasUnsavedGeneration(true);
       setAllowNavigation(false);
       setRevisionRequest({});
