@@ -13,6 +13,7 @@ import type {
   FixedStoryTemplate,
   GeneratedStory,
   AgeBand,
+  CharacterConsistencyMode,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, getStyleReferenceImagePath } from "./lib/prompt-builder";
@@ -175,9 +176,13 @@ export async function processBookGeneration(
               await new Promise((resolve) => setTimeout(resolve, waitMs));
             }
 
-            const inputImageUrls = imagePurpose === "book_cover" || imagePurpose === "memory_key_page"
-              ? coverReferenceImageUrls
-              : [];
+            const shouldUseReference = shouldUseCharacterReferenceForPage({
+              pageIndex: i,
+              totalPages,
+              imagePurpose,
+              characterConsistencyMode: normalizedBookData.characterConsistencyMode,
+            });
+            const inputImageUrls = shouldUseReference ? coverReferenceImageUrls : [];
 
             // Page 1 is treated as the cover-quality image, while later pages can be tiered for model comparison.
             imageBuffer = await deps.imageClient.generateImage(imagePrompt, {
@@ -402,6 +407,34 @@ function getPageImagePurpose(pageIndex: number, theme: string): ImagePurpose {
     return theme === "memory" ? "memory_key_page" : "book_cover";
   }
   return "book_page";
+}
+
+export function shouldUseCharacterReferenceForPage(params: {
+  pageIndex: number;
+  totalPages: number;
+  imagePurpose: ImagePurpose;
+  characterConsistencyMode?: CharacterConsistencyMode;
+}): boolean {
+  const mode = params.characterConsistencyMode ?? "cover_only";
+
+  if (mode === "all_pages") {
+    return true;
+  }
+
+  if (mode === "cover_only") {
+    return params.imagePurpose === "book_cover" || params.imagePurpose === "memory_key_page";
+  }
+
+  const emotionalPeakIndex = Math.min(
+    Math.max(0, Math.floor(params.totalPages * 0.6)),
+    Math.max(0, params.totalPages - 1)
+  );
+
+  return (
+    params.pageIndex === 0 ||
+    params.pageIndex === emotionalPeakIndex ||
+    params.pageIndex === params.totalPages - 1
+  );
 }
 
 function mergeInputWithChildProfile(input: BookInput, snapshot: BookData["childProfileSnapshot"]): BookInput {

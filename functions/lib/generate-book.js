@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateBook = void 0;
 exports.processBookGeneration = processBookGeneration;
+exports.shouldUseCharacterReferenceForPage = shouldUseCharacterReferenceForPage;
 const firestore_1 = require("firebase-functions/v2/firestore");
 const params_1 = require("firebase-functions/params");
 const admin = __importStar(require("firebase-admin"));
@@ -146,9 +147,13 @@ async function processBookGeneration(bookId, bookData, deps) {
                         if (waitMs > 0 && shouldThrottleImageRequests()) {
                             await new Promise((resolve) => setTimeout(resolve, waitMs));
                         }
-                        const inputImageUrls = imagePurpose === "book_cover" || imagePurpose === "memory_key_page"
-                            ? coverReferenceImageUrls
-                            : [];
+                        const shouldUseReference = shouldUseCharacterReferenceForPage({
+                            pageIndex: i,
+                            totalPages,
+                            imagePurpose,
+                            characterConsistencyMode: normalizedBookData.characterConsistencyMode,
+                        });
+                        const inputImageUrls = shouldUseReference ? coverReferenceImageUrls : [];
                         // Page 1 is treated as the cover-quality image, while later pages can be tiered for model comparison.
                         imageBuffer = await deps.imageClient.generateImage(imagePrompt, {
                             purpose: imagePurpose,
@@ -332,6 +337,19 @@ function getPageImagePurpose(pageIndex, theme) {
         return theme === "memory" ? "memory_key_page" : "book_cover";
     }
     return "book_page";
+}
+function shouldUseCharacterReferenceForPage(params) {
+    const mode = params.characterConsistencyMode ?? "cover_only";
+    if (mode === "all_pages") {
+        return true;
+    }
+    if (mode === "cover_only") {
+        return params.imagePurpose === "book_cover" || params.imagePurpose === "memory_key_page";
+    }
+    const emotionalPeakIndex = Math.min(Math.max(0, Math.floor(params.totalPages * 0.6)), Math.max(0, params.totalPages - 1));
+    return (params.pageIndex === 0 ||
+        params.pageIndex === emotionalPeakIndex ||
+        params.pageIndex === params.totalPages - 1);
 }
 function mergeInputWithChildProfile(input, snapshot) {
     if (!snapshot)

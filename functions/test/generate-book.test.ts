@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { processBookGeneration } from "../src/generate-book";
+import { processBookGeneration, shouldUseCharacterReferenceForPage } from "../src/generate-book";
 import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
@@ -420,5 +420,198 @@ describe("processBookGeneration", () => {
         imagePurpose: "book_page",
       })
     );
+  });
+
+  it("uses references only on the cover for cover_only mode", async () => {
+    const coverOnlyBook: BookData = {
+      ...baseBookData,
+      theme: "fixed-first-zoo",
+      creationMode: "fixed_template",
+      productPlan: "free",
+      childProfileSnapshot: {
+        displayName: "ゆうた",
+        personality: {},
+        visualProfile: {
+          version: 1,
+          approvedImageUrl: "https://example.com/approved.png",
+          referenceImageUrl: "https://example.com/reference.png",
+        },
+      },
+      characterConsistencyMode: "cover_only",
+      input: {
+        childName: "ゆうた",
+        place: "上野動物園",
+        familyMembers: "ママとパパ",
+      },
+    };
+    deps.getTemplate.mockResolvedValue(fixedTemplate);
+
+    await processBookGeneration("book-cover-only", coverOnlyBook, deps);
+
+    expect(deps.imageClient.generateImage).toHaveBeenNthCalledWith(
+      1,
+      expect.any(String),
+      expect.objectContaining({
+        inputImageUrls: expect.arrayContaining([
+          "https://example.com/reference.png",
+          "https://example.com/approved.png",
+        ]),
+      })
+    );
+    expect(deps.imageClient.generateImage).toHaveBeenNthCalledWith(
+      2,
+      expect.any(String),
+      expect.objectContaining({
+        inputImageUrls: [],
+      })
+    );
+  });
+
+  it("uses references on cover, emotional peak, and ending for key_pages mode", async () => {
+    deps.llmClient.generateStory.mockResolvedValue({
+      ...mockStory,
+      pages: [
+        { text: "1", imagePrompt: "page1" },
+        { text: "2", imagePrompt: "page2" },
+        { text: "3", imagePrompt: "page3" },
+        { text: "4", imagePrompt: "page4" },
+        { text: "5", imagePrompt: "page5" },
+      ],
+    });
+    const keyPagesBook: BookData = {
+      ...baseBookData,
+      childProfileSnapshot: {
+        displayName: "ゆうた",
+        personality: {},
+        visualProfile: {
+          version: 1,
+          approvedImageUrl: "https://example.com/approved.png",
+        },
+      },
+      characterConsistencyMode: "key_pages",
+    };
+
+    await processBookGeneration("book-key-pages", keyPagesBook, deps);
+
+    const calls = deps.imageClient.generateImage.mock.calls.map(([, options]) => options.inputImageUrls);
+    expect(calls[0]).toEqual(expect.arrayContaining(["https://example.com/approved.png"]));
+    expect(calls[1]).toEqual([]);
+    expect(calls[2]).toEqual([]);
+    expect(calls[3]).toEqual(expect.arrayContaining(["https://example.com/approved.png"]));
+    expect(calls[4]).toEqual(expect.arrayContaining(["https://example.com/approved.png"]));
+  });
+
+  it("uses references on every page for all_pages mode", async () => {
+    const allPagesBook: BookData = {
+      ...baseBookData,
+      childProfileSnapshot: {
+        displayName: "ゆうた",
+        personality: {},
+        visualProfile: {
+          version: 1,
+          approvedImageUrl: "https://example.com/approved.png",
+        },
+      },
+      characterConsistencyMode: "all_pages",
+    };
+
+    await processBookGeneration("book-all-pages", allPagesBook, deps);
+
+    const calls = deps.imageClient.generateImage.mock.calls.map(([, options]) => options.inputImageUrls);
+    expect(calls.every((urls) => Array.isArray(urls) && urls.length > 0)).toBe(true);
+  });
+
+  it("keeps fixed templates working with key_pages reference mode", async () => {
+    deps.getTemplate.mockResolvedValue(fixedTemplate);
+    const fixedBook: BookData = {
+      ...baseBookData,
+      theme: "fixed-first-zoo",
+      creationMode: "fixed_template",
+      childProfileSnapshot: {
+        displayName: "ゆうた",
+        personality: {},
+        visualProfile: {
+          version: 1,
+          approvedImageUrl: "https://example.com/approved.png",
+        },
+      },
+      characterConsistencyMode: "key_pages",
+      input: {
+        childName: "ゆうた",
+        place: "上野動物園",
+        familyMembers: "ママとパパ",
+      },
+    };
+
+    await processBookGeneration("book-fixed-key-pages", fixedBook, deps);
+
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed-key-pages", "completed");
+  });
+});
+
+describe("shouldUseCharacterReferenceForPage", () => {
+  it("uses references only for cover types in cover_only mode", () => {
+    expect(
+      shouldUseCharacterReferenceForPage({
+        pageIndex: 0,
+        totalPages: 4,
+        imagePurpose: "book_cover",
+        characterConsistencyMode: "cover_only",
+      })
+    ).toBe(true);
+    expect(
+      shouldUseCharacterReferenceForPage({
+        pageIndex: 1,
+        totalPages: 4,
+        imagePurpose: "book_page",
+        characterConsistencyMode: "cover_only",
+      })
+    ).toBe(false);
+  });
+
+  it("uses references on cover, emotional peak, and final page in key_pages mode", () => {
+    expect(
+      shouldUseCharacterReferenceForPage({
+        pageIndex: 0,
+        totalPages: 5,
+        imagePurpose: "book_cover",
+        characterConsistencyMode: "key_pages",
+      })
+    ).toBe(true);
+    expect(
+      shouldUseCharacterReferenceForPage({
+        pageIndex: 3,
+        totalPages: 5,
+        imagePurpose: "book_page",
+        characterConsistencyMode: "key_pages",
+      })
+    ).toBe(true);
+    expect(
+      shouldUseCharacterReferenceForPage({
+        pageIndex: 4,
+        totalPages: 5,
+        imagePurpose: "book_page",
+        characterConsistencyMode: "key_pages",
+      })
+    ).toBe(true);
+    expect(
+      shouldUseCharacterReferenceForPage({
+        pageIndex: 1,
+        totalPages: 5,
+        imagePurpose: "book_page",
+        characterConsistencyMode: "key_pages",
+      })
+    ).toBe(false);
+  });
+
+  it("uses references on every page in all_pages mode", () => {
+    expect(
+      shouldUseCharacterReferenceForPage({
+        pageIndex: 2,
+        totalPages: 5,
+        imagePurpose: "book_page",
+        characterConsistencyMode: "all_pages",
+      })
+    ).toBe(true);
   });
 });

@@ -73,7 +73,7 @@ describe("buildImagePrompt", () => {
     const result = buildImagePrompt("A child at a party", "watercolor", "same yellow hat", "same paper texture");
     expect(result).toContain("same yellow hat");
     expect(result).toContain("same paper texture");
-    expect(result).toContain("Keep the protagonist recognizable across pages");
+    expect(result).toContain("same child character across all pages");
   });
   it("includes visual storytelling rules", () => {
     const result = buildImagePrompt("A child at a party", "watercolor");

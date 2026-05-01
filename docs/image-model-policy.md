@@ -10,3 +10,7 @@
 
 - 管理者向け比較画面では `light` と `standard` が同じモデルになるため、主比較は `light or standard` と `premium` です。
 - `flux-schnell` の入力 schema は緊急時の legacy fallback としてコード上に残していますが、通常ルートでは選択されません。
+- ページ間の見た目の揺れを減らすため、参照画像を渡すページは `characterConsistencyMode` で制御します。
+  - `cover_only`: 表紙または key image のみ
+  - `key_pages`: 表紙、中盤〜後半の感情ピーク、最終ページ
+  - `all_pages`: 全ページ
