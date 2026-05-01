@@ -15,6 +15,7 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useBooks } from "@/lib/hooks/use-books";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
+import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 
 const FREE_MONTHLY_LIMIT = 3;
 
@@ -24,6 +25,7 @@ export default function HomePage() {
   const { books, loading, error } = useBooks(user?.uid);
   const { profile } = useUserProfile(user?.uid);
   const { children, loading: childrenLoading, activeChild } = useChildren(user?.uid);
+  const { isAdmin } = useAdminClaim();
   const remaining = FREE_MONTHLY_LIMIT - (profile?.monthlyGenerationCount ?? 0);
 
   useEffect(() => {
@@ -52,7 +54,17 @@ export default function HomePage() {
           <Link href="/children">
             <Button size="lg" variant="outline" className="text-base px-6">子どもプロフィール</Button>
           </Link>
+          {isAdmin ? (
+            <Link href="/admin/image-model-tests/">
+              <Button size="lg" variant="outline" className="text-base px-6">画像モデル比較</Button>
+            </Link>
+          ) : null}
         </div>
+        {isAdmin ? (
+          <p className="mt-2 text-sm text-violet-500">
+            管理者向け: light / standard / premium の生成結果を比較
+          </p>
+        ) : null}
         {loading ? (
           <p className="mt-8 text-center text-violet-400">読み込み中...</p>
         ) : error ? (

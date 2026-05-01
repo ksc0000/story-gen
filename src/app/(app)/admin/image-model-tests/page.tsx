@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import { PageTransition } from "@/components/page-transition";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import {
   testImageModelsCallable,
   type TestImageModelsResult,
@@ -57,8 +59,7 @@ function sortResults(results: TestImageModelsResult["results"]) {
 
 export default function AdminImageModelTestsPage() {
   const { user, loading } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { checkingAdmin, isAdmin } = useAdminClaim();
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
   const [purpose, setPurpose] = useState<ImagePurpose>("book_page");
   const [inputImageUrlsText, setInputImageUrlsText] = useState("");
@@ -77,39 +78,6 @@ export default function AdminImageModelTestsPage() {
     standard: "",
     premium: "",
   });
-
-  useEffect(() => {
-    let active = true;
-
-    async function checkAdmin() {
-      if (!user) {
-        if (!active) return;
-        setIsAdmin(false);
-        setCheckingAdmin(false);
-        return;
-      }
-
-      try {
-        const tokenResult = await user.getIdTokenResult();
-        if (!active) return;
-        setIsAdmin(tokenResult.claims.admin === true);
-      } catch (err) {
-        console.error("Failed to check admin claim:", err);
-        if (!active) return;
-        setIsAdmin(false);
-      } finally {
-        if (active) setCheckingAdmin(false);
-      }
-    }
-
-    if (loading) return;
-    setCheckingAdmin(true);
-    checkAdmin();
-
-    return () => {
-      active = false;
-    };
-  }, [loading, user]);
 
   const inputImageUrls = useMemo(
     () =>
@@ -187,13 +155,23 @@ export default function AdminImageModelTestsPage() {
           {loading || checkingAdmin ? (
             <p className="text-sm text-violet-500">権限を確認中...</p>
           ) : !user ? (
-            <p className="text-sm text-rose-600">ログインが必要です</p>
+            <div className="space-y-3">
+              <p className="text-sm text-rose-600">ログインが必要です</p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/login/">
+                  <Button>ログインへ</Button>
+                </Link>
+                <Link href="/admin/login/">
+                  <Button variant="outline">管理者ログインへ</Button>
+                </Link>
+              </div>
+            </div>
           ) : !isAdmin ? (
-            <div className="space-y-2 text-sm text-rose-600">
-              <p>管理者のみ利用できます</p>
-              <p className="text-xs text-violet-500">
-                admin権限を付与した直後は、再ログインまたはトークン更新が必要です。
-              </p>
+            <div className="space-y-3 text-sm text-rose-600">
+              <p>管理者権限が必要です。管理者ログイン画面で権限状態を確認してください。</p>
+              <Link href="/admin/login/">
+                <Button>管理者ログインへ</Button>
+              </Link>
             </div>
           ) : (
             <>

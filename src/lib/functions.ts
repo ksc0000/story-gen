@@ -47,3 +47,16 @@ export async function testImageModelsCallable(
   const result = await callable(data);
   return result.data as TestImageModelsResult;
 }
+
+export type BootstrapAdminResult = {
+  ok: boolean;
+  admin: boolean;
+  alreadyAdmin?: boolean;
+  message?: string;
+};
+
+export async function bootstrapAdminCallable(): Promise<BootstrapAdminResult> {
+  const callable = httpsCallable<Record<string, never>, BootstrapAdminResult>(functions, "bootstrapAdmin");
+  const result = await callable({});
+  return result.data as BootstrapAdminResult;
+}
