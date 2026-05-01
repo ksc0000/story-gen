@@ -28,6 +28,12 @@ describe("buildSystemPrompt", () => {
   it("includes style-specific illustration instruction", () => {
     expect(buildSystemPrompt(mockTemplate, "soft_watercolor")).toContain("水彩");
   });
+  it("includes image prompt variety guidance", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("wide shot / medium shot / close-up / detail shot / bird's-eye view");
+    expect(result).toContain("背景、物、家族、友だち、動物、サブキャラクター");
+    expect(result).toContain("そのページで何を一番見せたいか");
+  });
 });
 
 describe("buildUserPrompt", () => {
@@ -67,7 +73,15 @@ describe("buildImagePrompt", () => {
     const result = buildImagePrompt("A child at a party", "watercolor", "same yellow hat", "same paper texture");
     expect(result).toContain("same yellow hat");
     expect(result).toContain("same paper texture");
-    expect(result).toContain("Keep the same character design");
+    expect(result).toContain("Keep the protagonist recognizable across pages");
+  });
+  it("includes visual storytelling rules", () => {
+    const result = buildImagePrompt("A child at a party", "watercolor");
+    expect(result).toContain("not a character portrait");
+    expect(result).toContain("Do not center the protagonist on every page");
+    expect(result).toContain("wide shots");
+    expect(result).toContain("bird's-eye views");
+    expect(result).toContain("secondary characters");
   });
   it("appends safety keywords", () => {
     const result = buildImagePrompt("A child at a party", "flat");
