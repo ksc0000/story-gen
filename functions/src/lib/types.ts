@@ -6,6 +6,7 @@ export type PageStatus = "pending" | "generating" | "completed" | "failed";
 export type CreationMode = "fixed_template" | "guided_ai" | "original_ai";
 export type PriceTier = "ume" | "take" | "matsu";
 export type StoryCostLevel = "none" | "low" | "standard";
+export type ProductPlan = "free" | "light_paid" | "standard_paid" | "premium_paid";
 export type ImageQualityTier = "light" | "standard" | "premium";
 export type CharacterConsistencyMode = "cover_only" | "key_pages" | "all_pages";
 export type ImagePurpose =
@@ -140,7 +141,9 @@ export interface BookData {
   creationMode?: CreationMode;
   priceTier?: PriceTier;
   storyCostLevel?: StoryCostLevel;
+  productPlan?: ProductPlan;
   imageQualityTier?: ImageQualityTier;
+  characterConsistencyMode?: CharacterConsistencyMode;
   style: IllustrationStyle;
   pageCount: PageCount;
   status: BookStatus;
@@ -181,6 +184,11 @@ export interface TemplateData {
   storyCostLevel?: StoryCostLevel;
   fixedStory?: FixedStoryTemplate;
   sampleImageUrl?: string;
+  sampleImages?: {
+    light?: string;
+    standard?: string;
+    premium?: string;
+  };
   sampleImageAlt?: string;
   visualDirection?: string;
   order: number;

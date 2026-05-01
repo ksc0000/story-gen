@@ -8,9 +8,9 @@ describe("resolveReplicateModel", () => {
     process.env.ENABLE_FLUX_KLEIN = originalFlag;
   });
 
-  it("keeps cover and avatar generation on flux-2-pro", () => {
+  it("keeps child avatar generation on flux-2-pro and lets light covers use schnell", () => {
     expect(resolveReplicateModel({ purpose: "book_cover", imageQualityTier: "light" })).toBe(
-      "black-forest-labs/flux-2-pro"
+      "black-forest-labs/flux-schnell"
     );
     expect(resolveReplicateModel({ purpose: "child_avatar_revision", imageQualityTier: "premium" })).toBe(
       "black-forest-labs/flux-2-pro"
@@ -34,6 +34,13 @@ describe("resolveReplicateModel", () => {
   it("uses flux-2-pro for premium book pages", () => {
     process.env.ENABLE_FLUX_KLEIN = "false";
     expect(resolveReplicateModel({ purpose: "book_page", imageQualityTier: "premium" })).toBe(
+      "black-forest-labs/flux-2-pro"
+    );
+  });
+
+  it("uses premium cover quality when requested", () => {
+    process.env.ENABLE_FLUX_KLEIN = "false";
+    expect(resolveReplicateModel({ purpose: "book_cover", imageQualityTier: "premium" })).toBe(
       "black-forest-labs/flux-2-pro"
     );
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StepIndicator } from "@/components/step-indicator";
 import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
-import type { CreationMode, OutfitMode } from "@/lib/types";
+import {
+  getCompatiblePlanConfigs,
+  getDefaultProductPlanForCreationMode,
+  IMAGE_QUALITY_LABELS,
+  PLAN_CONFIGS,
+} from "@/lib/plans";
+import type { CreationMode, OutfitMode, ProductPlan } from "@/lib/types";
 
 const PAGE_COUNT_OPTIONS = [
   { value: 4, label: "短い（4ページ）" },
@@ -113,6 +120,7 @@ function InputPageContent() {
   const mode = (searchParams.get("mode") as CreationMode | null) ?? "guided_ai";
   const router = useRouter();
   const { user } = useAuth();
+  const { isAdmin } = useAdminClaim();
   const { children, loading: childrenLoading } = useChildren(user?.uid);
   const { templates, loading: templatesLoading } = useTemplates();
   const child = children.find((item) => item.id === childId) ?? null;
@@ -122,8 +130,20 @@ function InputPageContent() {
   const storyPlaceholder = STORY_REQUEST_PLACEHOLDERS[template?.categoryGroupId ?? ""] ?? "例：うちの子らしい冒険のおはなし";
   const requiredInputs = useMemo(() => template?.requiredInputs ?? [], [template]);
   const optionalInputs = useMemo(() => template?.optionalInputs ?? [], [template]);
+  const compatiblePlans = useMemo(
+    () => getCompatiblePlanConfigs(creationMode),
+    [creationMode]
+  );
+  const allowUpcomingPlans = isAdmin || process.env.NODE_ENV === "development";
+  const defaultProductPlan = useMemo(() => {
+    const fallback = getDefaultProductPlanForCreationMode(creationMode);
+    return compatiblePlans.find((plan) => plan.productPlan === fallback)?.productPlan
+      ?? compatiblePlans[0]?.productPlan
+      ?? fallback;
+  }, [compatiblePlans, creationMode]);
 
   const [pageCount, setPageCount] = useState<number>(8);
+  const [productPlan, setProductPlan] = useState<ProductPlan>(defaultProductPlan);
   const [storyRequest, setStoryRequest] = useState("");
   const [lessonToTeach, setLessonToTeach] = useState("");
   const [memoryToRecreate, setMemoryToRecreate] = useState("");
@@ -134,6 +154,11 @@ function InputPageContent() {
   const [customOutfit, setCustomOutfit] = useState("");
   const [keepSignatureItem, setKeepSignatureItem] = useState(true);
   const [showOptional, setShowOptional] = useState(creationMode === "fixed_template");
+  const selectedPlanConfig = PLAN_CONFIGS[productPlan] ?? PLAN_CONFIGS.free;
+  const planPageCountOptions = PAGE_COUNT_OPTIONS.filter((option) =>
+    selectedPlanConfig.allowedPageCounts.includes(option.value)
+  );
+  const allCompatiblePlansLocked = compatiblePlans.length > 0 && compatiblePlans.every((plan) => !plan.enabled);
   const missingTemplateFields = getMissingTemplateFields({
     requiredInputs,
     place,
@@ -145,11 +170,25 @@ function InputPageContent() {
   });
   const canProceed = Boolean(childId && child && theme) && (creationMode !== "fixed_template" || missingTemplateFields.length === 0);
 
+  useEffect(() => {
+    if (!compatiblePlans.some((plan) => plan.productPlan === productPlan)) {
+      setProductPlan(defaultProductPlan);
+    }
+  }, [compatiblePlans, defaultProductPlan, productPlan]);
+
+  useEffect(() => {
+    if (creationMode === "fixed_template") return;
+    if (!selectedPlanConfig.allowedPageCounts.includes(pageCount as 4 | 8 | 12)) {
+      setPageCount(selectedPlanConfig.defaultPageCount);
+    }
+  }, [creationMode, pageCount, selectedPlanConfig]);
+
   const handleNext = () => {
     const params = new URLSearchParams();
     params.set("theme", theme);
     params.set("mode", creationMode);
     params.set("childId", childId);
+    params.set("productPlan", productPlan);
     params.set("outfitMode", outfitMode);
     params.set("keepSignatureItem", String(keepSignatureItem));
     if (creationMode !== "fixed_template") {
@@ -205,6 +244,67 @@ function InputPageContent() {
               ) : null}
             </div>
           ) : null}
+
+          <div className="space-y-3 rounded-3xl border border-[rgba(240,171,252,0.3)] bg-[rgba(250,245,255,0.8)] p-4">
+            <div>
+              <p className="text-base font-semibold text-purple-900">どんな絵本にしますか？</p>
+              <p className="mt-1 text-sm text-violet-600">
+                ページ数と画質を選べます。まずは短く試すことも、きれいに残すこともできます。
+              </p>
+            </div>
+            <div className="grid gap-3">
+              {compatiblePlans.map((plan) => {
+                const locked = !plan.enabled && !allowUpcomingPlans;
+                const selectedPlan = productPlan === plan.productPlan;
+                return (
+                  <button
+                    key={plan.productPlan}
+                    type="button"
+                    onClick={() => {
+                      if (locked) return;
+                      setProductPlan(plan.productPlan);
+                    }}
+                    className={`rounded-3xl border p-4 text-left transition ${
+                      selectedPlan
+                        ? "border-purple-400 bg-white shadow-sm"
+                        : "border-[rgba(240,171,252,0.3)] bg-white/80"
+                    } ${locked ? "cursor-not-allowed opacity-65" : "hover:border-purple-300"}`}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-purple-900">{plan.label}</p>
+                      {plan.badgeLabels.map((badge) => (
+                        <span
+                          key={`${plan.productPlan}-${badge}`}
+                          className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-medium text-violet-700"
+                        >
+                          {badge}
+                        </span>
+                      ))}
+                      {!plan.enabled ? (
+                        <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-medium text-amber-700">
+                          準備中
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-violet-600">{plan.description}</p>
+                    <div className="mt-3 space-y-1 text-xs text-violet-500">
+                      <p>ページ数: {plan.allowedPageCounts.join(" / ")}ページ</p>
+                      <p>
+                        画質: {IMAGE_QUALITY_LABELS[plan.imageQualityTier].label}
+                        {" ・ "}
+                        {IMAGE_QUALITY_LABELS[plan.imageQualityTier].description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {!allowUpcomingPlans && allCompatiblePlansLocked ? (
+              <p className="text-xs leading-relaxed text-violet-500">
+                この作り方の有料プランは準備中です。現在は内部の標準設定で作成フローを進めます。
+              </p>
+            ) : null}
+          </div>
 
           {creationMode === "original_ai" ? (
             <div>
@@ -367,13 +467,13 @@ function InputPageContent() {
 
               {creationMode === "fixed_template" ? (
                 <div className="rounded-2xl bg-violet-50 p-3 text-sm text-violet-600">
-                  ページ数: テンプレートに合わせます
+                  このテンプレートは{fixedStoryPages.length || selectedPlanConfig.defaultPageCount}ページ構成です
                 </div>
               ) : (
                 <div>
                   <Label className="text-purple-800">ページ数</Label>
                   <div className="mt-1 flex gap-2">
-                    {PAGE_COUNT_OPTIONS.map((opt) => (
+                    {planPageCountOptions.map((opt) => (
                       <button
                         key={opt.value}
                         type="button"

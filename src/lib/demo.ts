@@ -3,7 +3,7 @@ export const isDemoMode =
   (process.env.NEXT_PUBLIC_EHONAI_DEMO_MODE === "true" ||
     (process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.includes("Dummy") ?? false));
 
-import type { TemplateDoc } from "@/lib/types";
+import type { CharacterConsistencyMode, ImageQualityTier, ProductPlan, TemplateDoc } from "@/lib/types";
 
 export const DEMO_TEMPLATES: (TemplateDoc & { id: string })[] = [
   { id: "animals", name: "どうぶつのおはなし", description: "ふわふわ動物たちと友だちになるやさしい物語", icon: "🐾", genre: "Animal", categoryGroupId: "favorite-worlds", creationMode: "guided_ai", priceTier: "take", storyCostLevel: "standard", sampleImageUrl: "/images/templates/animals.png", order: 1, systemPrompt: "", active: true },
@@ -38,6 +38,9 @@ export type DemoBook = {
   theme: string;
   style: string;
   pageCount: number;
+  productPlan?: ProductPlan;
+  imageQualityTier?: ImageQualityTier;
+  characterConsistencyMode?: CharacterConsistencyMode;
   status: "generating" | "completed" | "failed";
   progress: number;
   pages: DemoBookPage[];

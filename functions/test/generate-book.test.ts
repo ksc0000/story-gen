@@ -97,8 +97,8 @@ describe("processBookGeneration", () => {
     expect(deps.writePage).toHaveBeenCalledWith(
       "book123",
       expect.objectContaining({
-        imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "light",
+        imageModel: "black-forest-labs/flux-schnell",
+        imageQualityTier: "standard",
         imagePurpose: "book_cover",
       })
     );
@@ -106,7 +106,7 @@ describe("processBookGeneration", () => {
       "book123",
       expect.objectContaining({
         imageModel: "black-forest-labs/flux-schnell",
-        imageQualityTier: "light",
+        imageQualityTier: "standard",
         imagePurpose: "book_page",
       })
     );
@@ -202,6 +202,7 @@ describe("processBookGeneration", () => {
   it("uses premium model metadata when imageQualityTier is premium", async () => {
     const premiumBook: BookData = {
       ...baseBookData,
+      productPlan: "premium_paid",
       imageQualityTier: "premium",
     };
 
@@ -209,6 +210,103 @@ describe("processBookGeneration", () => {
 
     expect(deps.writePage).toHaveBeenCalledWith(
       "book-premium",
+      expect.objectContaining({
+        pageNumber: 1,
+        imageModel: "black-forest-labs/flux-2-pro",
+        imageQualityTier: "premium",
+        imagePurpose: "book_page",
+      })
+    );
+  });
+
+  it("normalizes free fixed-template books back to light quality even if premium was sent", async () => {
+    deps.getTemplate.mockResolvedValue(fixedTemplate);
+    const freeBook: BookData = {
+      ...baseBookData,
+      theme: "fixed-first-zoo",
+      creationMode: "fixed_template",
+      productPlan: "free",
+      imageQualityTier: "premium",
+      pageCount: 12,
+      input: {
+        childName: "ゆうた",
+        place: "上野動物園",
+        familyMembers: "ママとパパ",
+      },
+    };
+
+    await processBookGeneration("book-free", freeBook, deps);
+
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-free",
+      expect.objectContaining({
+        pageNumber: 0,
+        imageModel: "black-forest-labs/flux-schnell",
+        imageQualityTier: "light",
+        imagePurpose: "book_cover",
+      })
+    );
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-free",
+      expect.objectContaining({
+        pageNumber: 1,
+        imageModel: "black-forest-labs/flux-schnell",
+        imageQualityTier: "light",
+        imagePurpose: "book_page",
+      })
+    );
+  });
+
+  it("keeps light_paid books on schnell for both cover and pages", async () => {
+    const lightPaidBook: BookData = {
+      ...baseBookData,
+      productPlan: "light_paid",
+      imageQualityTier: "premium",
+      pageCount: 8,
+    };
+
+    await processBookGeneration("book-light-paid", lightPaidBook, deps);
+
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-light-paid",
+      expect.objectContaining({
+        pageNumber: 0,
+        imageModel: "black-forest-labs/flux-schnell",
+        imageQualityTier: "light",
+        imagePurpose: "book_cover",
+      })
+    );
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-light-paid",
+      expect.objectContaining({
+        pageNumber: 1,
+        imageModel: "black-forest-labs/flux-schnell",
+        imageQualityTier: "light",
+        imagePurpose: "book_page",
+      })
+    );
+  });
+
+  it("keeps premium_paid books on pro for both cover and pages", async () => {
+    const premiumPaidBook: BookData = {
+      ...baseBookData,
+      productPlan: "premium_paid",
+      pageCount: 4,
+    };
+
+    await processBookGeneration("book-premium-paid", premiumPaidBook, deps);
+
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-premium-paid",
+      expect.objectContaining({
+        pageNumber: 0,
+        imageModel: "black-forest-labs/flux-2-pro",
+        imageQualityTier: "premium",
+        imagePurpose: "book_cover",
+      })
+    );
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-premium-paid",
       expect.objectContaining({
         pageNumber: 1,
         imageModel: "black-forest-labs/flux-2-pro",

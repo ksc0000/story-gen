@@ -17,6 +17,7 @@ import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, getStyleReferenceImagePath } from "./lib/prompt-builder";
 import { GeminiClient } from "./lib/gemini";
 import { ReplicateImageClient, resolveReplicateModel } from "./lib/replicate";
+import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
 
 const FREE_MONTHLY_LIMIT = 3;
 const IMAGE_RETRY_LIMIT = 3;
@@ -79,10 +80,15 @@ export async function processBookGeneration(
 
     // Step 3: Get template
     const template = await deps.getTemplate(bookData.theme);
+    const normalizedBookData = normalizeBookForGeneration(bookData, template);
 
     // Step 4: Build prompts
-    const systemPrompt = buildSystemPrompt(template, bookData.style);
-    const coverReferenceImageUrls = buildReferenceImageUrls(bookData.style, template, bookData.childProfileSnapshot);
+    const systemPrompt = buildSystemPrompt(template, normalizedBookData.style);
+    const coverReferenceImageUrls = buildReferenceImageUrls(
+      normalizedBookData.style,
+      template,
+      normalizedBookData.childProfileSnapshot
+    );
 
     // Step 5: Generate story with LLM
     const story =
@@ -106,8 +112,8 @@ export async function processBookGeneration(
             season: mergedInput.season,
             parentMessage: mergedInput.parentMessage,
             storyRequest: mergedInput.storyRequest,
-            pageCount: bookData.pageCount,
-            style: bookData.style,
+            pageCount: normalizedBookData.pageCount,
+            style: normalizedBookData.style,
           });
 
     // Step 6: Update book title
@@ -119,16 +125,16 @@ export async function processBookGeneration(
       const storyPage = story.pages[i];
       const imagePrompt = buildImagePrompt(
         storyPage.imagePrompt,
-        bookData.style,
-        buildFinalCharacterBible(story.characterBible, bookData),
+        normalizedBookData.style,
+        buildFinalCharacterBible(story.characterBible, normalizedBookData),
         story.styleBible
       );
 
       // Generate image with retries (skip in development)
       let imageBuffer: Buffer | null = null;
       let imageUrl = "";
-      const imagePurpose = getPageImagePurpose(i, bookData.theme);
-      const imageQualityTier = bookData.imageQualityTier ?? "light";
+      const imagePurpose = getPageImagePurpose(i, normalizedBookData.theme);
+      const imageQualityTier = normalizedBookData.imageQualityTier ?? "light";
       const imageModel = resolveReplicateModel({
         purpose: imagePurpose,
         imageQualityTier,
@@ -222,6 +228,37 @@ export async function processBookGeneration(
     await deps.updateBookFailure(bookId, message);
     await deps.updateBookStatus(bookId, "failed");
   }
+}
+
+function normalizeBookForGeneration(bookData: BookData, template: TemplateData): BookData {
+  const creationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
+  const requestedProductPlan = bookData.productPlan ?? getDefaultProductPlanForCreationMode(creationMode);
+  const requestedPlanConfig = getPlanConfig(requestedProductPlan);
+  const normalizedPlan =
+    requestedPlanConfig.allowedCreationModes.includes(creationMode)
+      ? requestedProductPlan
+      : getDefaultProductPlanForCreationMode(creationMode);
+  const normalizedPlanConfig = getPlanConfig(normalizedPlan);
+  const fixedTemplatePageCount = template.fixedStory?.pages.length;
+  const normalizedPageCount =
+    creationMode === "fixed_template" && isValidPageCount(fixedTemplatePageCount)
+      ? fixedTemplatePageCount
+      : normalizedPlanConfig.allowedPageCounts.includes(bookData.pageCount)
+        ? bookData.pageCount
+        : normalizedPlanConfig.defaultPageCount;
+
+  return {
+    ...bookData,
+    creationMode,
+    productPlan: normalizedPlan,
+    imageQualityTier: normalizedPlanConfig.imageQualityTier,
+    characterConsistencyMode: normalizedPlanConfig.characterConsistencyMode,
+    pageCount: normalizedPageCount,
+  };
+}
+
+function isValidPageCount(value: number | undefined): value is BookData["pageCount"] {
+  return value === 4 || value === 8 || value === 12;
 }
 
 function buildReferenceImageUrls(

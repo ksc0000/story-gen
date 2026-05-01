@@ -12,12 +12,15 @@ import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
+import { getDefaultProductPlanForCreationMode, PLAN_CONFIGS } from "@/lib/plans";
 import type {
   CharacterUsage,
+  CharacterConsistencyMode,
   ChildProfileSnapshot,
   IllustrationStyle,
   OutfitMode,
   PageCount,
+  ProductPlan,
 } from "@/lib/types";
 
 function StyleSelectionPageContent() {
@@ -35,10 +38,22 @@ function StyleSelectionPageContent() {
   const child = children.find((item) => item.id === childId) ?? null;
   const template = templates.find((item) => item.id === theme);
   const childName = child?.nickname || child?.displayName || "";
-  const mode = searchParams.get("mode") ?? template?.creationMode ?? "guided_ai";
+  const mode = (searchParams.get("mode") ?? template?.creationMode ?? "guided_ai") as
+    | "fixed_template"
+    | "guided_ai"
+    | "original_ai";
+  const productPlanParam = (searchParams.get("productPlan") as ProductPlan | null)
+    ?? getDefaultProductPlanForCreationMode(mode);
+  const selectedPlanConfig = PLAN_CONFIGS[productPlanParam] ?? PLAN_CONFIGS.free;
   const pageCountParam = Number(searchParams.get("pageCount") ?? "8") as PageCount;
   const fixedPageCount = template?.fixedStory?.pages.length;
-  const pageCount = (mode === "fixed_template" && fixedPageCount ? fixedPageCount : pageCountParam) as PageCount;
+  const pageCount = (
+    mode === "fixed_template" && fixedPageCount
+      ? fixedPageCount
+      : selectedPlanConfig.allowedPageCounts.includes(pageCountParam)
+        ? pageCountParam
+        : selectedPlanConfig.defaultPageCount
+  ) as PageCount;
   const storyRequest = searchParams.get("storyRequest");
   const lessonToTeach = searchParams.get("lessonToTeach");
   const memoryToRecreate = searchParams.get("memoryToRecreate");
@@ -99,6 +114,9 @@ function StyleSelectionPageContent() {
           theme,
           style: selected,
           pageCount,
+          productPlan: selectedPlanConfig.productPlan,
+          imageQualityTier: selectedPlanConfig.imageQualityTier,
+          characterConsistencyMode: selectedPlanConfig.characterConsistencyMode,
           status: "generating",
           progress: 0,
           pages: [],
@@ -128,7 +146,9 @@ function StyleSelectionPageContent() {
           creationMode: template.creationMode ?? "guided_ai",
           priceTier: template.priceTier ?? "take",
           storyCostLevel: template.storyCostLevel ?? "standard",
-          imageQualityTier: "light",
+          productPlan: selectedPlanConfig.productPlan,
+          imageQualityTier: selectedPlanConfig.imageQualityTier,
+          characterConsistencyMode: selectedPlanConfig.characterConsistencyMode as CharacterConsistencyMode,
           style: selected,
           pageCount,
           status: "generating",

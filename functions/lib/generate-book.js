@@ -43,6 +43,7 @@ const content_filter_1 = require("./lib/content-filter");
 const prompt_builder_1 = require("./lib/prompt-builder");
 const gemini_1 = require("./lib/gemini");
 const replicate_1 = require("./lib/replicate");
+const plans_1 = require("./lib/plans");
 const FREE_MONTHLY_LIMIT = 3;
 const IMAGE_RETRY_LIMIT = 3;
 const IMAGE_REQUEST_INTERVAL_MS = 11_000;
@@ -80,9 +81,10 @@ async function processBookGeneration(bookId, bookData, deps) {
         }
         // Step 3: Get template
         const template = await deps.getTemplate(bookData.theme);
+        const normalizedBookData = normalizeBookForGeneration(bookData, template);
         // Step 4: Build prompts
-        const systemPrompt = (0, prompt_builder_1.buildSystemPrompt)(template, bookData.style);
-        const coverReferenceImageUrls = buildReferenceImageUrls(bookData.style, template, bookData.childProfileSnapshot);
+        const systemPrompt = (0, prompt_builder_1.buildSystemPrompt)(template, normalizedBookData.style);
+        const coverReferenceImageUrls = buildReferenceImageUrls(normalizedBookData.style, template, normalizedBookData.childProfileSnapshot);
         // Step 5: Generate story with LLM
         const story = template.creationMode === "fixed_template" && template.fixedStory
             ? (() => {
@@ -104,8 +106,8 @@ async function processBookGeneration(bookId, bookData, deps) {
                 season: mergedInput.season,
                 parentMessage: mergedInput.parentMessage,
                 storyRequest: mergedInput.storyRequest,
-                pageCount: bookData.pageCount,
-                style: bookData.style,
+                pageCount: normalizedBookData.pageCount,
+                style: normalizedBookData.style,
             });
         // Step 6: Update book title
         await deps.updateBookTitle(bookId, story.title);
@@ -113,12 +115,12 @@ async function processBookGeneration(bookId, bookData, deps) {
         const totalPages = story.pages.length;
         for (let i = 0; i < totalPages; i++) {
             const storyPage = story.pages[i];
-            const imagePrompt = (0, prompt_builder_1.buildImagePrompt)(storyPage.imagePrompt, bookData.style, buildFinalCharacterBible(story.characterBible, bookData), story.styleBible);
+            const imagePrompt = (0, prompt_builder_1.buildImagePrompt)(storyPage.imagePrompt, normalizedBookData.style, buildFinalCharacterBible(story.characterBible, normalizedBookData), story.styleBible);
             // Generate image with retries (skip in development)
             let imageBuffer = null;
             let imageUrl = "";
-            const imagePurpose = getPageImagePurpose(i, bookData.theme);
-            const imageQualityTier = bookData.imageQualityTier ?? "light";
+            const imagePurpose = getPageImagePurpose(i, normalizedBookData.theme);
+            const imageQualityTier = normalizedBookData.imageQualityTier ?? "light";
             const imageModel = (0, replicate_1.resolveReplicateModel)({
                 purpose: imagePurpose,
                 imageQualityTier,
@@ -207,6 +209,32 @@ async function processBookGeneration(bookId, bookData, deps) {
         await deps.updateBookFailure(bookId, message);
         await deps.updateBookStatus(bookId, "failed");
     }
+}
+function normalizeBookForGeneration(bookData, template) {
+    const creationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
+    const requestedProductPlan = bookData.productPlan ?? (0, plans_1.getDefaultProductPlanForCreationMode)(creationMode);
+    const requestedPlanConfig = (0, plans_1.getPlanConfig)(requestedProductPlan);
+    const normalizedPlan = requestedPlanConfig.allowedCreationModes.includes(creationMode)
+        ? requestedProductPlan
+        : (0, plans_1.getDefaultProductPlanForCreationMode)(creationMode);
+    const normalizedPlanConfig = (0, plans_1.getPlanConfig)(normalizedPlan);
+    const fixedTemplatePageCount = template.fixedStory?.pages.length;
+    const normalizedPageCount = creationMode === "fixed_template" && isValidPageCount(fixedTemplatePageCount)
+        ? fixedTemplatePageCount
+        : normalizedPlanConfig.allowedPageCounts.includes(bookData.pageCount)
+            ? bookData.pageCount
+            : normalizedPlanConfig.defaultPageCount;
+    return {
+        ...bookData,
+        creationMode,
+        productPlan: normalizedPlan,
+        imageQualityTier: normalizedPlanConfig.imageQualityTier,
+        characterConsistencyMode: normalizedPlanConfig.characterConsistencyMode,
+        pageCount: normalizedPageCount,
+    };
+}
+function isValidPageCount(value) {
+    return value === 4 || value === 8 || value === 12;
 }
 function buildReferenceImageUrls(style, template, childProfileSnapshot) {
     const urls = [

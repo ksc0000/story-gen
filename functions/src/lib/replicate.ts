@@ -23,6 +23,17 @@ function isFluxKleinEnabled(): boolean {
   return String(process.env.ENABLE_FLUX_KLEIN || "").toLowerCase() === "true";
 }
 
+function resolveBookModelByTier(imageQualityTier: ImageQualityTier | undefined): ReplicateModelName {
+  const tier = imageQualityTier ?? "light";
+  if (tier === "premium") {
+    return FLUX_QUALITY_MODEL;
+  }
+  if (tier === "standard") {
+    return isFluxKleinEnabled() ? FLUX_KLEIN_MODEL : FLUX_SCHNELL_MODEL;
+  }
+  return FLUX_SCHNELL_MODEL;
+}
+
 export function resolveReplicateModel(params: {
   purpose?: ImagePurpose;
   imageQualityTier?: ImageQualityTier;
@@ -30,19 +41,13 @@ export function resolveReplicateModel(params: {
   switch (params.purpose) {
     case "child_avatar":
     case "child_avatar_revision":
+      return FLUX_QUALITY_MODEL;
     case "book_cover":
     case "memory_key_page":
-      return FLUX_QUALITY_MODEL;
     case "book_page":
+      return resolveBookModelByTier(params.imageQualityTier);
     default: {
-      const tier = params.imageQualityTier ?? "light";
-      if (tier === "premium") {
-        return FLUX_QUALITY_MODEL;
-      }
-      if (tier === "standard") {
-        return isFluxKleinEnabled() ? FLUX_KLEIN_MODEL : FLUX_SCHNELL_MODEL;
-      }
-      return FLUX_SCHNELL_MODEL;
+      return resolveBookModelByTier(params.imageQualityTier);
     }
   }
 }
