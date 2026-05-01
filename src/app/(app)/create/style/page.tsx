@@ -12,7 +12,15 @@ import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
-import { getDefaultProductPlanForCreationMode, PLAN_CONFIGS } from "@/lib/plans";
+import {
+  CHARACTER_CONSISTENCY_LABELS,
+  CREATION_MODE_LABELS,
+  getDefaultProductPlanForCreationMode,
+  IMAGE_QUALITY_LABELS,
+  OUTFIT_MODE_LABELS,
+  PLAN_CONFIGS,
+} from "@/lib/plans";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import type {
   CharacterUsage,
   CharacterConsistencyMode,
@@ -63,6 +71,10 @@ function StyleSelectionPageContent() {
   const outfitMode = (searchParams.get("outfitMode") ?? "profile_default") as OutfitMode;
   const customOutfit = searchParams.get("customOutfit");
   const keepSignatureItem = searchParams.get("keepSignatureItem") !== "false";
+  const qualityLabel = IMAGE_QUALITY_LABELS[selectedPlanConfig.imageQualityTier];
+  const consistencyLabel = CHARACTER_CONSISTENCY_LABELS[selectedPlanConfig.characterConsistencyMode];
+  const creationModeLabel = CREATION_MODE_LABELS[mode];
+  const outfitModeLabel = OUTFIT_MODE_LABELS[outfitMode];
 
   const simulateDemoGeneration = async (bookId: string) => {
     const demoPages = [
@@ -173,6 +185,14 @@ function StyleSelectionPageContent() {
         bookId = bookRef.id;
       }
 
+      trackAnalyticsEvent("start_book_generation", {
+        productPlan: selectedPlanConfig.productPlan,
+        imageQualityTier: selectedPlanConfig.imageQualityTier,
+        pageCount,
+        creationMode: mode,
+        templateId: template.id,
+      });
+
       router.push(`/generating?id=${bookId}`);
     } catch (err) {
       console.error("Failed to create book:", err);
@@ -191,6 +211,32 @@ function StyleSelectionPageContent() {
         {template ? ` ${template.name} をこのタッチで仕上げます。` : ""}迷ったら「やさしい水彩」のままで大丈夫です。
       </p>
       <div className="mt-6"><StylePicker selected={selected} onSelect={setSelected} /></div>
+      <div className="mx-auto mt-6 max-w-3xl rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-5">
+        <h2 className="text-base font-semibold text-purple-900">作成内容を確認</h2>
+        <p className="mt-1 text-sm text-violet-600">
+          この内容で絵本を作ります。あとから本棚で確認できます。
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <SummaryItem label="プラン名" value={selectedPlanConfig.label} />
+          <SummaryItem label="ページ数" value={`${pageCount}ページ`} />
+          <SummaryItem
+            label="画質"
+            value={`${qualityLabel.label} / ${qualityLabel.description}`}
+          />
+          <SummaryItem
+            label="一貫性"
+            value={`${consistencyLabel.label} / ${consistencyLabel.description}`}
+          />
+          <SummaryItem label="作成モード" value={creationModeLabel} />
+          <SummaryItem label="主人公名" value={childName || "未設定"} />
+          <SummaryItem label="テーマ名" value={template?.name ?? "未設定"} />
+          <SummaryItem label="服装モード" value={outfitModeLabel} />
+          <SummaryItem
+            label="固定アイテム"
+            value={keepSignatureItem ? "できるだけ出す" : "必要な場面だけにする"}
+          />
+        </div>
+      </div>
       {createError ? (
         <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <p className="font-semibold">生成を開始できませんでした</p>
@@ -203,6 +249,15 @@ function StyleSelectionPageContent() {
         </Button>
       </div>
     </PageTransition>
+  );
+}
+
+function SummaryItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-white/90 p-3">
+      <p className="text-xs font-medium text-violet-500">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-purple-900">{value}</p>
+    </div>
   );
 }
 

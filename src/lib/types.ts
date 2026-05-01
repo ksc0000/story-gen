@@ -176,6 +176,19 @@ export interface PageDoc {
   imagePurpose?: ImagePurpose;
 }
 
+export interface BookFeedbackDoc {
+  userId: string;
+  bookId: string;
+  rating: "great" | "okay" | "redo";
+  childLikenessRating: number;
+  illustrationRating: number;
+  storyRating: number;
+  consistencyRating: number;
+  wantToCreateAgain: number;
+  comment?: string;
+  createdAt: Timestamp;
+}
+
 export interface TemplateDoc {
   name: string;
   description: string;

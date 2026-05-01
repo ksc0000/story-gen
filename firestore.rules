@@ -43,6 +43,12 @@ service cloud.firestore {
         allow read: if isAuthenticated() && get(/databases/$(database)/documents/books/$(bookId)).data.userId == request.auth.uid;
         allow write: if false;
       }
+
+      match /feedback/{feedbackId} {
+        allow read: if isAuthenticated() && get(/databases/$(database)/documents/books/$(bookId)).data.userId == request.auth.uid;
+        allow create, update: if isAuthenticated() && get(/databases/$(database)/documents/books/$(bookId)).data.userId == request.auth.uid;
+        allow delete: if false;
+      }
     }
 
     match /templates/{templateId} {

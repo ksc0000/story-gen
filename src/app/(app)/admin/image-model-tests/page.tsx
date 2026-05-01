@@ -228,7 +228,7 @@ export default function AdminImageModelTestsPage() {
                   ))}
                 </select>
                 <p className="text-xs leading-relaxed text-violet-500">
-                  book_page のときだけ light / standard / premium の違いが出やすいです。book_cover や child_avatar は現在すべて flux-2-pro になります。
+                  book_page / book_cover / memory_key_page は quality tier に応じて flux-2-klein-9b または flux-2-pro を使います。child_avatar 系は常に flux-2-pro です。
                 </p>
               </div>
 
@@ -281,7 +281,7 @@ export default function AdminImageModelTestsPage() {
                 </Button>
                 <div className="space-y-1 text-xs leading-relaxed text-violet-500">
                   <p>この画面は管理者向けの検証用です。実行すると実際にReplicate APIを呼び出し、画像生成コストが発生します。</p>
-                  <p>現在、light と standard はどちらも flux-2-klein-9b を使用します。品質差の主比較は light / standard と premium の比較です。</p>
+                  <p>現在、light と standard はどちらも flux-2-klein-9b を使用します。premium は flux-2-pro を使用します。</p>
                 </div>
               </div>
             </>

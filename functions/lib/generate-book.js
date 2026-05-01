@@ -44,7 +44,8 @@ const prompt_builder_1 = require("./lib/prompt-builder");
 const gemini_1 = require("./lib/gemini");
 const replicate_1 = require("./lib/replicate");
 const plans_1 = require("./lib/plans");
-const FREE_MONTHLY_LIMIT = 3;
+const entitlements_1 = require("./lib/entitlements");
+const usage_1 = require("./lib/usage");
 const IMAGE_RETRY_LIMIT = 3;
 const IMAGE_REQUEST_INTERVAL_MS = 11_000;
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
@@ -63,25 +64,23 @@ async function processBookGeneration(bookId, bookData, deps) {
             await deps.updateBookStatus(bookId, "failed");
             return;
         }
-        // Step 2: Check quota (skip in development)
-        if (process.env.NODE_ENV !== 'development') {
-            const userPlan = await deps.getUserPlan(bookData.userId);
-            if (userPlan === "premium") {
-                console.log(`Skipping monthly quota check for premium user ${bookData.userId}`);
-            }
-            else {
-                const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
-                if (monthlyCount >= FREE_MONTHLY_LIMIT) {
-                    console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount}/${FREE_MONTHLY_LIMIT})`);
-                    await deps.updateBookFailure(bookId, "Monthly quota exceeded");
-                    await deps.updateBookStatus(bookId, "failed");
-                    return;
-                }
+        // Step 2: Get template and normalize plan settings
+        const template = await deps.getTemplate(bookData.theme);
+        const userPlan = await deps.getUserPlan(bookData.userId);
+        const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
+        // Step 3: Check quota (skip in development)
+        if (process.env.NODE_ENV !== "development") {
+            const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
+            if (!(0, usage_1.canGenerateBookThisMonth)({ userPlan, currentCount: monthlyCount })) {
+                const message = userPlan === "premium"
+                    ? "今月の生成回数に達しました。来月またご利用ください。"
+                    : "今月の無料生成回数に達しました。来月またお試しください。";
+                console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount})`);
+                await deps.updateBookFailure(bookId, message);
+                await deps.updateBookStatus(bookId, "failed");
+                return;
             }
         }
-        // Step 3: Get template
-        const template = await deps.getTemplate(bookData.theme);
-        const normalizedBookData = normalizeBookForGeneration(bookData, template);
         // Step 4: Build prompts
         const systemPrompt = (0, prompt_builder_1.buildSystemPrompt)(template, normalizedBookData.style);
         const coverReferenceImageUrls = buildReferenceImageUrls(normalizedBookData.style, template, normalizedBookData.childProfileSnapshot);
@@ -210,13 +209,25 @@ async function processBookGeneration(bookId, bookData, deps) {
         await deps.updateBookStatus(bookId, "failed");
     }
 }
-function normalizeBookForGeneration(bookData, template) {
+function normalizeBookForGeneration(bookData, template, userPlan) {
     const creationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
     const requestedProductPlan = bookData.productPlan ?? (0, plans_1.getDefaultProductPlanForCreationMode)(creationMode);
-    const requestedPlanConfig = (0, plans_1.getPlanConfig)(requestedProductPlan);
-    const normalizedPlan = requestedPlanConfig.allowedCreationModes.includes(creationMode)
-        ? requestedProductPlan
-        : (0, plans_1.getDefaultProductPlanForCreationMode)(creationMode);
+    let normalizedPlan = requestedProductPlan;
+    if (!(0, entitlements_1.canUseProductPlan)({ userPlan, productPlan: requestedProductPlan })) {
+        if (creationMode === "fixed_template") {
+            normalizedPlan = "free";
+            console.log(`Paid plan normalized to free for book generation. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`);
+        }
+        else {
+            // TODO: Tighten paid-plan entitlement enforcement for guided_ai / original_ai after billing rollout.
+            console.log(`Paid plan requested without entitlement, but kept for compatibility. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`);
+        }
+    }
+    const requestedPlanConfig = (0, plans_1.getPlanConfig)(normalizedPlan);
+    normalizedPlan =
+        requestedPlanConfig.allowedCreationModes.includes(creationMode)
+            ? normalizedPlan
+            : (0, plans_1.getDefaultProductPlanForCreationMode)(creationMode);
     const normalizedPlanConfig = (0, plans_1.getPlanConfig)(normalizedPlan);
     const fixedTemplatePageCount = template.fixedStory?.pages.length;
     const normalizedPageCount = creationMode === "fixed_template" && isValidPageCount(fixedTemplatePageCount)

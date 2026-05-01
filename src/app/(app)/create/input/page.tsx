@@ -18,6 +18,7 @@ import {
   IMAGE_QUALITY_LABELS,
   PLAN_CONFIGS,
 } from "@/lib/plans";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import type { CreationMode, OutfitMode, ProductPlan } from "@/lib/types";
 
 const PAGE_COUNT_OPTIONS = [
@@ -263,6 +264,11 @@ function InputPageContent() {
                     onClick={() => {
                       if (locked) return;
                       setProductPlan(plan.productPlan);
+                      trackAnalyticsEvent("select_product_plan", {
+                        productPlan: plan.productPlan,
+                        imageQualityTier: plan.imageQualityTier,
+                        creationMode,
+                      });
                     }}
                     className={`rounded-3xl border p-4 text-left transition ${
                       selectedPlan

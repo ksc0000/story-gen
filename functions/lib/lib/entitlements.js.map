@@ -1,0 +1,1 @@
+{"version":3,"file":"entitlements.js","sourceRoot":"","sources":["../../src/lib/entitlements.ts"],"names":[],"mappings":";;AAEA,8CAcC;AAdD,SAAgB,iBAAiB,CAAC,MAIjC;IACC,IAAI,MAAM,CAAC,WAAW,KAAK,MAAM,EAAE,CAAC;QAClC,OAAO,IAAI,CAAC;IACd,CAAC;IAED,IAAI,MAAM,CAAC,OAAO,KAAK,IAAI,EAAE,CAAC;QAC5B,OAAO,IAAI,CAAC;IACd,CAAC;IAED,OAAO,MAAM,CAAC,QAAQ,KAAK,SAAS,CAAC;AACvC,CAAC"}

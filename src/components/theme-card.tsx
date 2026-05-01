@@ -1,6 +1,11 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/animated-card";
+import { Button } from "@/components/ui/button";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import type { PriceTier, StoryCostLevel, TemplateDoc } from "@/lib/types";
 
 const ICON_MAP: Record<string, string> = {
@@ -51,6 +56,9 @@ function getModeSupportText(template: TemplateDoc): string | null {
 
 export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
   const iconSrc = ICON_MAP[template.icon];
+  const [showSamples, setShowSamples] = useState(false);
+  const hasQualitySamples = Boolean(template.sampleImages?.light || template.sampleImages?.premium);
+
   return (
     <AnimatedCard onClick={onSelect}>
       <Card className={`h-full cursor-pointer overflow-hidden transition ${selected ? "ring-2 ring-purple-500 border-purple-400" : ""}`}>
@@ -91,9 +99,79 @@ export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
                 </span>
               ) : null}
             </div>
+            {hasQualitySamples ? (
+              <div className="mt-4 rounded-2xl bg-violet-50/80 p-3 text-left">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    const next = !showSamples;
+                    setShowSamples(next);
+                    if (next) {
+                      trackAnalyticsEvent("view_quality_sample", {
+                        templateId: template.id,
+                        creationMode: template.creationMode ?? "guided_ai",
+                      });
+                    }
+                  }}
+                >
+                  {showSamples ? "サンプルを閉じる" : "仕上がりサンプルを見る"}
+                </Button>
+                {showSamples ? (
+                  <div className="mt-3 space-y-3">
+                    <p className="text-[11px] leading-relaxed text-violet-500">
+                      高精細生成では、色や質感がよりきれいに仕上がります。
+                    </p>
+                    <div
+                      className={`grid gap-3 ${
+                        template.sampleImages?.light && template.sampleImages?.premium
+                          ? "grid-cols-2"
+                          : "grid-cols-1"
+                      }`}
+                    >
+                      {template.sampleImages?.light ? (
+                        <SampleImageCard
+                          label="標準生成"
+                          imageUrl={template.sampleImages.light}
+                          alt={template.sampleImageAlt ?? `${template.name} 標準生成サンプル`}
+                        />
+                      ) : null}
+                      {template.sampleImages?.premium ? (
+                        <SampleImageCard
+                          label="高精細生成"
+                          imageUrl={template.sampleImages.premium}
+                          alt={template.sampleImageAlt ?? `${template.name} 高精細生成サンプル`}
+                        />
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </CardContent>
       </Card>
     </AnimatedCard>
+  );
+}
+
+function SampleImageCard({
+  label,
+  imageUrl,
+  alt,
+}: {
+  label: string;
+  imageUrl: string;
+  alt: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[rgba(240,171,252,0.25)] bg-white">
+      <div className="relative aspect-[3/4] w-full">
+        <Image src={imageUrl} alt={alt} fill sizes="(min-width: 640px) 180px, 45vw" className="object-cover" />
+      </div>
+      <p className="px-3 py-2 text-center text-[11px] font-medium text-purple-700">{label}</p>
+    </div>
   );
 }

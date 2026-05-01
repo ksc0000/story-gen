@@ -10,6 +10,7 @@ import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCategoryGroups } from "@/lib/hooks/use-category-groups";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import type { CreationMode } from "@/lib/types";
 
 const MODE_OPTIONS: Array<{
@@ -142,12 +143,16 @@ function ThemeSelectionPageContent() {
 
       <div className="mt-8 flex justify-center">
         <Button
-          onClick={() =>
-            selectedId &&
+          onClick={() => {
+            if (!selectedId) return;
+            trackAnalyticsEvent("select_story_theme", {
+              templateId: selectedId,
+              creationMode: selectedMode,
+            });
             router.push(
               `/create/input?theme=${selectedId}&mode=${selectedMode}${childId ? `&childId=${childId}` : ""}`
-            )
-          }
+            );
+          }}
           disabled={!selectedId}
           className="px-8"
         >

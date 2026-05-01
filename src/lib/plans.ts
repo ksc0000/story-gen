@@ -22,6 +22,39 @@ export type PlanConfig = {
   sampleCtaLabel?: string;
 };
 
+export const CREATION_MODE_LABELS: Record<CreationMode, string> = {
+  fixed_template: "テンプレート",
+  guided_ai: "かんたんカスタム",
+  original_ai: "オリジナル",
+};
+
+export const CHARACTER_CONSISTENCY_LABELS: Record<
+  CharacterConsistencyMode,
+  { label: string; description: string }
+> = {
+  cover_only: {
+    label: "表紙・主要イメージ中心",
+    description: "まずは短く自然に仕上げたい方向けです。",
+  },
+  key_pages: {
+    label: "重要ページで雰囲気をそろえる",
+    description: "思い出の見せ場をきれいに残しやすくなります。",
+  },
+  all_pages: {
+    label: "全体の一貫性を重視",
+    description: "1冊を通したまとまりを大切にします。",
+  },
+};
+
+export const OUTFIT_MODE_LABELS: Record<
+  "profile_default" | "theme_auto" | "user_custom",
+  string
+> = {
+  profile_default: "いつもの服装",
+  theme_auto: "テーマに合わせる",
+  user_custom: "自分で指定した服装",
+};
+
 export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
   free: {
     productPlan: "free",
@@ -120,4 +153,8 @@ export function getDefaultProductPlanForCreationMode(creationMode: CreationMode)
     default:
       return "free";
   }
+}
+
+export function getPlanDisplayLabel(productPlan: ProductPlan): string {
+  return PLAN_CONFIGS[productPlan]?.label ?? PLAN_CONFIGS.free.label;
 }

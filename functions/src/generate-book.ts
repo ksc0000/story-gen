@@ -18,8 +18,9 @@ import { buildSystemPrompt, buildImagePrompt, getStyleReferenceImagePath } from 
 import { GeminiClient } from "./lib/gemini";
 import { ReplicateImageClient, resolveReplicateModel } from "./lib/replicate";
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
+import { canUseProductPlan } from "./lib/entitlements";
+import { canGenerateBookThisMonth } from "./lib/usage";
 
-const FREE_MONTHLY_LIMIT = 3;
 const IMAGE_RETRY_LIMIT = 3;
 const IMAGE_REQUEST_INTERVAL_MS = 11_000;
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
@@ -62,25 +63,25 @@ export async function processBookGeneration(
       return;
     }
 
-    // Step 2: Check quota (skip in development)
-    if (process.env.NODE_ENV !== 'development') {
-      const userPlan = await deps.getUserPlan(bookData.userId);
-      if (userPlan === "premium") {
-        console.log(`Skipping monthly quota check for premium user ${bookData.userId}`);
-      } else {
-        const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
-        if (monthlyCount >= FREE_MONTHLY_LIMIT) {
-          console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount}/${FREE_MONTHLY_LIMIT})`);
-          await deps.updateBookFailure(bookId, "Monthly quota exceeded");
-          await deps.updateBookStatus(bookId, "failed");
-          return;
-        }
+    // Step 2: Get template and normalize plan settings
+    const template = await deps.getTemplate(bookData.theme);
+    const userPlan = await deps.getUserPlan(bookData.userId);
+    const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
+
+    // Step 3: Check quota (skip in development)
+    if (process.env.NODE_ENV !== "development") {
+      const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
+      if (!canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount })) {
+        const message =
+          userPlan === "premium"
+            ? "今月の生成回数に達しました。来月またご利用ください。"
+            : "今月の無料生成回数に達しました。来月またお試しください。";
+        console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount})`);
+        await deps.updateBookFailure(bookId, message);
+        await deps.updateBookStatus(bookId, "failed");
+        return;
       }
     }
-
-    // Step 3: Get template
-    const template = await deps.getTemplate(bookData.theme);
-    const normalizedBookData = normalizeBookForGeneration(bookData, template);
 
     // Step 4: Build prompts
     const systemPrompt = buildSystemPrompt(template, normalizedBookData.style);
@@ -230,13 +231,33 @@ export async function processBookGeneration(
   }
 }
 
-function normalizeBookForGeneration(bookData: BookData, template: TemplateData): BookData {
+function normalizeBookForGeneration(
+  bookData: BookData,
+  template: TemplateData,
+  userPlan: "free" | "premium"
+): BookData {
   const creationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
   const requestedProductPlan = bookData.productPlan ?? getDefaultProductPlanForCreationMode(creationMode);
-  const requestedPlanConfig = getPlanConfig(requestedProductPlan);
-  const normalizedPlan =
+  let normalizedPlan = requestedProductPlan;
+
+  if (!canUseProductPlan({ userPlan, productPlan: requestedProductPlan })) {
+    if (creationMode === "fixed_template") {
+      normalizedPlan = "free";
+      console.log(
+        `Paid plan normalized to free for book generation. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
+      );
+    } else {
+      // TODO: Tighten paid-plan entitlement enforcement for guided_ai / original_ai after billing rollout.
+      console.log(
+        `Paid plan requested without entitlement, but kept for compatibility. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
+      );
+    }
+  }
+
+  const requestedPlanConfig = getPlanConfig(normalizedPlan);
+  normalizedPlan =
     requestedPlanConfig.allowedCreationModes.includes(creationMode)
-      ? requestedProductPlan
+      ? normalizedPlan
       : getDefaultProductPlanForCreationMode(creationMode);
   const normalizedPlanConfig = getPlanConfig(normalizedPlan);
   const fixedTemplatePageCount = template.fixedStory?.pages.length;

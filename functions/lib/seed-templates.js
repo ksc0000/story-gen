@@ -108,6 +108,9 @@ const templates = {
         icon: "🪄",
         genre: "Fantasy",
         sampleImageUrl: "/images/templates/fantasy.png",
+        sampleImages: {
+            premium: "/images/templates/fantasy.png",
+        },
         sampleImageAlt: "星空の魔法学校で魔法使いの子とドラゴンが見上げている絵本表紙",
         visualDirection: "Dreamy magical night fantasy with starry skies, crescent moon, glowing wand, floating books, friendly baby dragon, luminous castle windows, deep navy and gold palette, ornate but child-friendly details.",
         order: 3,
@@ -122,6 +125,9 @@ const templates = {
         icon: "🌙",
         genre: "Bedtime",
         sampleImageUrl: "/images/templates/bedtime.png",
+        sampleImages: {
+            premium: "/images/templates/bedtime.png",
+        },
         sampleImageAlt: "星空の部屋で子どもがぬいぐるみを抱いて眠る絵本表紙",
         visualDirection: "Calm bedtime picture-book atmosphere with deep blue night, smiling moon, tiny warm stars, soft lamp light, cozy bedroom textiles, slow peaceful composition, muted colors, and sleepy gentle expressions.",
         order: 4,
