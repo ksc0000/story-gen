@@ -182,7 +182,7 @@ function ChildAvatarPageContent() {
         <p className="text-sm font-semibold text-violet-500">キャラクター生成</p>
         <h1 className="mt-2 text-2xl font-bold text-purple-900">{child.nickname || child.displayName}の絵本キャラクター</h1>
         <p className="mt-3 text-sm leading-relaxed text-violet-500">
-          公園の砂場を背景に、絵本本編と同じ画風参照を使って3つのタッチで同時生成します。1人あたり最大{maxAttempts}回まで試せます。
+          公園の砂場を背景に、絵本本編と同じ画風参照を使って候補を生成します。1人あたり最大{maxAttempts}回まで試せます。
         </p>
         {reason === "profile_updated" ? (
           <p className="mt-2 text-xs text-violet-500">プロフィール変更を反映したキャラクター画像の再生成です。</p>
@@ -221,13 +221,13 @@ function ChildAvatarPageContent() {
             </div>
           ) : (
             <div className="flex min-h-80 items-center justify-center rounded-[28px] border border-[rgba(240,171,252,0.35)] bg-purple-50/50 px-6 text-center text-sm text-violet-500">
-              まだキャラクター画像がありません。「3パターン生成する」を押してください。
+              まだキャラクター画像がありません。「候補を生成する」を押してください。
             </div>
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Button type="button" onClick={() => generate({ useBaseGeneration: false })} disabled={generating || saving || remainingAttempts === 0}>
-              {generating ? "生成中..." : "3パターン生成する"}
+              {generating ? "生成中..." : "候補を生成する"}
             </Button>
             {candidates.length > 0 ? (
               <Button type="button" onClick={approve} disabled={!selectedCandidate || generating || saving}>
@@ -249,7 +249,7 @@ function ChildAvatarPageContent() {
                 disabled={isRevisionEmpty(revisionRequest) || generating || saving || remainingAttempts === 0}
                 className="w-full"
               >
-                選択内容で3パターン再生成
+                選択内容で再生成
               </Button>
             </div>
           ) : null}

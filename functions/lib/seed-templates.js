@@ -332,14 +332,35 @@ const templates = {
             pages: [
                 {
                     textTemplate: "{childName}は、きょうもおくちをあーん。",
+                    textTemplatesByAge: {
+                        baby_toddler: "{childName}、あーん。",
+                        preschool_3_4: "{childName}は、きょうもおくちをあーん。",
+                        early_reader_5_6: "{childName}は、きょうもおくちをあーん。じぶんで はぶらしを もって、やってみるきもちになりました。",
+                        early_elementary_7_8: "{childName}は、きょうもおくちをあーん。きれいな はにするために、じぶんで はぶらしをにぎって はじめてみます。",
+                        general_child: "{childName}は、きょうもおくちをあーん。",
+                    },
                     imagePromptTemplate: "A preschool child getting ready to brush teeth in a bright safe bathroom, gentle picture book mood, clean cheerful composition",
                 },
                 {
                     textTemplate: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
+                    textTemplatesByAge: {
+                        baby_toddler: "しゃかしゃか。ぴかぴか。",
+                        preschool_3_4: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
+                        early_reader_5_6: "しゃかしゃか、こしこし。みがきにくい ところも、ゆっくり うごかすと すこしずつ きれいになります。",
+                        early_elementary_7_8: "しゃかしゃか、こしこし。おくばや はのうらも わすれないように、かがみを見ながら ていねいに みがいていきます。",
+                        general_child: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
+                    },
                     imagePromptTemplate: "A child brushing teeth carefully, soft foam, cute child-safe bathroom scene, supportive and playful storybook atmosphere",
                 },
                 {
                     textTemplate: "おわったあと、{childName}はちょっぴりうれしそうでした。",
+                    textTemplatesByAge: {
+                        baby_toddler: "{childName}、にこっ。",
+                        preschool_3_4: "おわったあと、{childName}はちょっぴりうれしそうでした。",
+                        early_reader_5_6: "おわったあと、{childName}は にっこり。じぶんで できたことが うれしくて、むねが ぽっと あたたかくなりました。",
+                        early_elementary_7_8: "みがきおわると、{childName}は にっこりしました。すこし むずかしくても さいごまでできたことが、自信につながったのです。",
+                        general_child: "おわったあと、{childName}はちょっぴりうれしそうでした。",
+                    },
                     imagePromptTemplate: "A child smiling with pride after brushing teeth, warm daily routine success, gentle Japanese picture book illustration",
                 },
                 {
@@ -375,14 +396,35 @@ const templates = {
             pages: [
                 {
                     textTemplate: "{childName}は、{familyMembers}といっしょに、きらきらのクリスマスをむかえました。",
+                    textTemplatesByAge: {
+                        baby_toddler: "{childName}、きらきら クリスマス。",
+                        preschool_3_4: "{childName}は、{familyMembers}といっしょに、きらきらのクリスマスをむかえました。",
+                        early_reader_5_6: "{childName}は、{familyMembers}といっしょに クリスマスをむかえました。おへやの ひかりが きらきらして、こころまで あたたかくなります。",
+                        early_elementary_7_8: "{childName}は、{familyMembers}といっしょに クリスマスをむかえました。やわらかな ひかりに つつまれたへやで、いつもより とくべつな夜が はじまります。",
+                        general_child: "{childName}は、{familyMembers}といっしょに、きらきらのクリスマスをむかえました。",
+                    },
                     imagePromptTemplate: "A preschool child celebrating Christmas with family, warm lights, cozy home, child-safe festive storybook scene",
                 },
                 {
                     textTemplate: "おへやには、やさしいひかりと、うれしいきもちがいっぱいです。",
+                    textTemplatesByAge: {
+                        baby_toddler: "ぴかぴか。うれしいね。",
+                        preschool_3_4: "おへやには、やさしいひかりと、うれしいきもちがいっぱいです。",
+                        early_reader_5_6: "おへやには やさしいひかりが ゆれていて、みんなの えがおも なんだか いつもより まぶしく見えました。",
+                        early_elementary_7_8: "おへやには やさしいひかりが ひろがり、みんなの たのしい声が そっと かさなります。クリスマスの あたたかさが へやじゅうに ひろがっていました。",
+                        general_child: "おへやには、やさしいひかりと、うれしいきもちがいっぱいです。",
+                    },
                     imagePromptTemplate: "A gentle Christmas room full of soft lights and festive warmth, cozy family picture book atmosphere, safe and magical",
                 },
                 {
                     textTemplate: "{childName}のにこにこえがおを見て、みんなもにっこりしました。",
+                    textTemplatesByAge: {
+                        baby_toddler: "{childName}、にこにこ。",
+                        preschool_3_4: "{childName}のにこにこえがおを見て、みんなもにっこりしました。",
+                        early_reader_5_6: "{childName}の にこにこえがおを 見て、みんなも にっこり。うれしいきもちが、ひとつの テーブルに ふわっと あつまりました。",
+                        early_elementary_7_8: "{childName}の うれしそうな えがおを見て、みんなも にっこりしました。たのしい気持ちは、そばにいる人へ ひろがっていくのだと分かるような時間でした。",
+                        general_child: "{childName}のにこにこえがおを見て、みんなもにっこりしました。",
+                    },
                     imagePromptTemplate: "A happy child smiling during Christmas celebration, family sharing warm joy, tender seasonal picture book composition",
                 },
                 {

@@ -1,5 +1,5 @@
 import type { Functions, HttpsCallable } from "firebase/functions";
-import type { AvatarRevisionRequest, ImagePurpose, ImageQualityTier } from "@/lib/types";
+import type { AvatarRevisionRequest, IllustrationStyle, ImagePurpose, ImageQualityTier } from "@/lib/types";
 
 let cachedFunctions: Functions | null = null;
 
@@ -36,6 +36,7 @@ export async function generateChildCharacterCallable(data: {
   childId: string;
   revisionRequest?: AvatarRevisionRequest;
   baseGenerationId?: string;
+  variantStyle?: IllustrationStyle;
 }): Promise<{
   batchId: string;
   attemptNumber: number;
@@ -51,7 +52,7 @@ export async function generateChildCharacterCallable(data: {
   }>;
 }> {
   const callable = await getCallable<
-    { childId: string; revisionRequest?: AvatarRevisionRequest; baseGenerationId?: string },
+    { childId: string; revisionRequest?: AvatarRevisionRequest; baseGenerationId?: string; variantStyle?: IllustrationStyle },
     {
       batchId: string;
       attemptNumber: number;

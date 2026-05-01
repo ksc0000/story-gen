@@ -60,7 +60,7 @@ const AGE_READING_PROFILES = {
 };
 function getAgeReadingProfile(age) {
     if (age === undefined || age === null || Number.isNaN(age)) {
-        return AGE_READING_PROFILES.preschool_3_4;
+        return AGE_READING_PROFILES.general_child;
     }
     if (age <= 2) {
         return AGE_READING_PROFILES.baby_toddler;

@@ -34,6 +34,8 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateChildCharacter = void 0;
+exports.selectAvatarVariant = selectAvatarVariant;
+exports.normalizeSensitiveError = normalizeSensitiveError;
 const https_1 = require("firebase-functions/v2/https");
 const params_1 = require("firebase-functions/params");
 const admin = __importStar(require("firebase-admin"));
@@ -86,45 +88,48 @@ exports.generateChildCharacter = (0, https_1.onCall)({
     const finalCorrectionText = structuredCorrectionText;
     const characterBible = buildCharacterBible(child, finalCorrectionText);
     const baseGenerationImageUrl = await getBaseGenerationImageUrl(childRef, data.baseGenerationId);
+    const selectedVariant = selectAvatarVariant(data.variantStyle);
     const candidates = [];
     try {
-        for (const variant of AVATAR_VARIANTS) {
-            const styleReferenceImageUrl = toPublicUrl((0, prompt_builder_1.getStyleReferenceImagePath)(variant.style));
-            const referenceImageRoles = buildReferenceImageRoles({
-                baseGenerationImageUrl,
-                approvedImageUrl: child.visualProfile?.approvedImageUrl,
-                styleReferenceImageUrl,
-            });
-            const inputImageUrls = referenceImageRoles.map((item) => item.url);
-            const prompt = buildChildCharacterPrompt(child, variant.style, finalCorrectionText, previousPrompt, buildReferenceImageInstruction(referenceImageRoles));
-            const imageBuffer = await imageClient.generateImage(prompt, {
-                purpose: structuredCorrectionText ? "child_avatar_revision" : "child_avatar",
-                inputImageUrls,
-            });
-            const generationId = db.collection("_").doc().id;
-            const imageUrl = await uploadAvatarImage(storage, uid, data.childId, generationId, imageBuffer);
-            await childRef.collection("avatarGenerations").doc(generationId).set({
-                batchId,
-                attemptNumber: nextAttempt,
-                imageUrl,
-                prompt,
-                correctionText: finalCorrectionText || null,
-                revisionRequest: data.revisionRequest || null,
-                baseGenerationId: data.baseGenerationId || null,
-                referenceImageRoles,
-                style: variant.style,
-                styleLabel: variant.label,
-                status: "draft",
-                createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
-            candidates.push({
-                generationId,
-                imageUrl,
-                style: variant.style,
-                styleLabel: variant.label,
-                prompt,
-            });
-        }
+        // TODO: Move avatar generation to an async childAvatarGenerationJobs flow.
+        // The callable should return a jobId quickly, then the frontend can watch
+        // status/progress/candidates with onSnapshot. Store Replicate prediction IDs
+        // to support delayed completion, retries, and later webhook or polling-based recovery.
+        const styleReferenceImageUrl = toPublicUrl((0, prompt_builder_1.getStyleReferenceImagePath)(selectedVariant.style));
+        const referenceImageRoles = buildReferenceImageRoles({
+            baseGenerationImageUrl,
+            approvedImageUrl: child.visualProfile?.approvedImageUrl,
+            styleReferenceImageUrl,
+        });
+        const inputImageUrls = referenceImageRoles.map((item) => item.url);
+        const prompt = buildChildCharacterPrompt(child, selectedVariant.style, finalCorrectionText, previousPrompt, buildReferenceImageInstruction(referenceImageRoles));
+        const imageBuffer = await imageClient.generateImage(prompt, {
+            purpose: structuredCorrectionText ? "child_avatar_revision" : "child_avatar",
+            inputImageUrls,
+        });
+        const generationId = db.collection("_").doc().id;
+        const imageUrl = await uploadAvatarImage(storage, uid, data.childId, generationId, imageBuffer);
+        await childRef.collection("avatarGenerations").doc(generationId).set({
+            batchId,
+            attemptNumber: nextAttempt,
+            imageUrl,
+            prompt,
+            correctionText: finalCorrectionText || null,
+            revisionRequest: data.revisionRequest || null,
+            baseGenerationId: data.baseGenerationId || null,
+            referenceImageRoles,
+            style: selectedVariant.style,
+            styleLabel: selectedVariant.label,
+            status: "draft",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        candidates.push({
+            generationId,
+            imageUrl,
+            style: selectedVariant.style,
+            styleLabel: selectedVariant.label,
+            prompt,
+        });
     }
     catch (err) {
         const message = normalizeSensitiveError(err);
@@ -151,6 +156,9 @@ async function getBaseGenerationImageUrl(childRef, baseGenerationId) {
         throw new https_1.HttpsError("invalid-argument", "baseGenerationId に有効な画像がありません");
     }
     return imageUrl;
+}
+function selectAvatarVariant(variantStyle) {
+    return AVATAR_VARIANTS.find((variant) => variant.style === variantStyle) ?? AVATAR_VARIANTS[0];
 }
 async function uploadAvatarImage(storage, uid, childId, generationId, imageBuffer) {
     const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");
@@ -320,6 +328,9 @@ function normalizeSensitiveError(err) {
     const message = err instanceof Error ? err.message : "Replicate image generation failed";
     if (/flagged as sensitive|E005/i.test(message)) {
         return "画像の安全判定に引っかかりました。よりやさしい表現に調整して再試行してください。";
+    }
+    if (/deadline-exceeded|deadline exceeded|timeout|timed out|ETIMEDOUT|ESOCKETTIMEDOUT/i.test(message)) {
+        return "画像生成に時間がかかっています。生成結果が保存されている場合があります。少し待ってから候補一覧を再読み込みしてください。";
     }
     return message;
 }
