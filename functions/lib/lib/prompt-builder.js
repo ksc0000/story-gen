@@ -47,6 +47,16 @@ const STYLE_REFERENCE_IMAGE_PATHS = {
     flat: "/images/styles/flat_illustration.png",
 };
 const SAFETY_KEYWORDS = "safe for children, family friendly, wholesome, gentle";
+const VISUAL_STORYTELLING_RULES = [
+    "This is a narrative picture book scene, not a character portrait.",
+    "Do not center the protagonist on every page.",
+    "The protagonist does not need to be large or fully visible in every image.",
+    "Vary the composition across pages: wide shots, medium shots, close-ups, detail shots, over-the-shoulder views, and bird's-eye views.",
+    "Some pages may focus on the environment, objects, family members, animals, or secondary characters when it helps the story.",
+    "Show what is happening around the protagonist, not only the protagonist's face.",
+    "Use background details to tell part of the story.",
+    "Keep the protagonist recognizable when present, but allow the scene itself to be the main focus.",
+].join(" ");
 function buildSystemPrompt(template, style) {
     const visualDirection = template.visualDirection
         ? `\n## カテゴリのビジュアル方向\n${template.visualDirection}\n`
@@ -62,6 +72,12 @@ ${visualDirection}
 - characterBible は全ページで同じ主人公として見えるように、年齢感、髪型、服装、固定アイテム、表情の特徴を英語で具体化してください。
 - styleBible は全ページで同じ画風として見えるように、カテゴリのビジュアル方向、線、色、質感、光、構図のルールを英語で具体化してください。
 - imagePrompt にはページ固有の場面だけを書き、characterBible と styleBible の内容を重複させすぎないでください。
+- 各ページの imagePrompt は、主人公の見た目だけでなく、場面・背景・周囲の出来事・画面の焦点を具体的に書いてください。
+- すべてのページで主人公を中央に大きく描く構図は禁止です。
+- ページごとに wide shot / medium shot / close-up / detail shot / bird's-eye view などの視点を変えてください。
+- ときには背景、物、家族、友だち、動物、サブキャラクターが絵の主役になっても構いません。
+- imagePrompt には、そのページで何を一番見せたいかを明確に含めてください。
+- imagePrompt では "wide establishing shot of...", "small child seen from behind...", "focus on the sandbox toys in the foreground...", "family members in the background...", "bird's-eye view of the park...", "close-up of tiny hands holding..." のように、視点や焦点が伝わる表現を歓迎します。
 
 ## 出力形式
 以下のJSON形式で出力してください。JSON以外のテキストは含めないでください。
@@ -114,7 +130,8 @@ function buildImagePrompt(basePrompt, style, characterBible, styleBible) {
     const consistency = [
         characterBible ? `Character consistency: ${characterBible}` : "",
         styleBible ? `Style consistency: ${styleBible}` : "",
-        "Keep the same character design, outfit, colors, line quality, and illustration style across all pages.",
+        "Keep the protagonist recognizable across pages when they appear, while allowing varied poses, scale, camera angles, and scene focus.",
+        `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
     ].filter(Boolean).join(" ");
     return [
         consistency,

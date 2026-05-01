@@ -20,6 +20,7 @@ import { ReplicateImageClient, resolveReplicateModel } from "./lib/replicate";
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
 import { canUseProductPlan } from "./lib/entitlements";
 import { canGenerateBookThisMonth } from "./lib/usage";
+import { getAgeReadingProfile } from "./lib/age-reading-profile";
 
 const IMAGE_RETRY_LIMIT = 3;
 const IMAGE_REQUEST_INTERVAL_MS = 11_000;
@@ -67,6 +68,7 @@ export async function processBookGeneration(
     const template = await deps.getTemplate(bookData.theme);
     const userPlan = await deps.getUserPlan(bookData.userId);
     const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
+    const readingProfile = getAgeReadingProfile(mergedInput.childAge);
 
     // Step 3: Check quota (skip in development)
     if (process.env.NODE_ENV !== "development") {
@@ -84,7 +86,11 @@ export async function processBookGeneration(
     }
 
     // Step 4: Build prompts
-    const systemPrompt = buildSystemPrompt(template, normalizedBookData.style);
+    const systemPrompt = buildSystemPrompt(
+      template,
+      normalizedBookData.style,
+      readingProfile
+    );
     const coverReferenceImageUrls = buildReferenceImageUrls(
       normalizedBookData.style,
       template,
@@ -305,6 +311,8 @@ function buildStoryFromFixedTemplate(
   bookData: BookData,
   template: TemplateData
 ): GeneratedStory {
+  // TODO: Support age-specific fixed template variants such as textTemplatesByAge
+  // so fixed_template books can also adapt wording by child age without using the LLM.
   const replacements = buildFixedTemplateReplacements(mergedInput);
   const pages = fixedStory.pages.map((page) => ({
     text: applyTemplateReplacements(page.textTemplate, replacements),

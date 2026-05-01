@@ -1,4 +1,5 @@
 import type { TemplateData, IllustrationStyle, BookInput, PageCount } from "./types";
+import type { AgeReadingProfile } from "./age-reading-profile";
 
 const STYLE_DESCRIPTIONS: Record<IllustrationStyle, string> = {
   soft_watercolor: "やさしい水彩（淡い色、にじみ、手描き感のある柔らかなタッチ）",
@@ -58,13 +59,32 @@ const VISUAL_STORYTELLING_RULES = [
   "Keep the protagonist recognizable when present, but allow the scene itself to be the main focus.",
 ].join(" ");
 
-export function buildSystemPrompt(template: TemplateData, style: IllustrationStyle): string {
+export function buildSystemPrompt(
+  template: TemplateData,
+  style: IllustrationStyle,
+  readingProfile?: AgeReadingProfile
+): string {
   const visualDirection = template.visualDirection
     ? `\n## カテゴリのビジュアル方向\n${template.visualDirection}\n`
+    : "";
+  const resolvedReadingProfile = readingProfile;
+  const ageReadingGuidance = resolvedReadingProfile
+    ? `
+## 年齢に合わせた文章レベル
+- 対象年齢: ${resolvedReadingProfile.label}
+- 1ページあたりの本文量: ${resolvedReadingProfile.targetCharsPerPage}
+- 文数: ${resolvedReadingProfile.sentenceCountPerPage}
+- 語彙: ${resolvedReadingProfile.vocabularyLevel}
+- 表記: ${resolvedReadingProfile.kanjiPolicy}
+- 物語の複雑さ: ${resolvedReadingProfile.storyComplexity}
+- 会話: ${resolvedReadingProfile.dialoguePolicy}
+- 感情表現: ${resolvedReadingProfile.emotionalDepth}
+`
     : "";
 
   return `${template.systemPrompt}
 ${visualDirection}
+${ageReadingGuidance}
 
 ## 制約
 - 子ども向けの安全な内容のみ生成してください。暴力、恐怖、悲しい結末は禁止です。
@@ -80,6 +100,10 @@ ${visualDirection}
 - ときには背景、物、家族、友だち、動物、サブキャラクターが絵の主役になっても構いません。
 - imagePrompt には、そのページで何を一番見せたいかを明確に含めてください。
 - imagePrompt では "wide establishing shot of...", "small child seen from behind...", "focus on the sandbox toys in the foreground...", "family members in the background...", "bird's-eye view of the park...", "close-up of tiny hands holding..." のように、視点や焦点が伝わる表現を歓迎します。
+- 年齢が低い場合は、短く、音やリズムが心地よい文章にしてください。
+- 年齢が高い場合は、少しだけ理由、選択、気持ちの変化を含めてください。
+- ただし、どの年齢でも説教臭くせず、絵本として自然な文章にしてください。
+- 各ページの本文量は対象年齢の目安を大きく超えないでください。
 
 ## 出力形式
 以下のJSON形式で出力してください。JSON以外のテキストは含めないでください。
@@ -103,7 +127,10 @@ export function buildUserPrompt(input: BookInput, pageCount: PageCount): string 
   const lines: string[] = [];
   lines.push(`主人公の名前: ${input.childName}`);
   if (input.storyRequest) lines.push(`今回の絵本で描きたいこと: ${input.storyRequest}`);
-  if (input.childAge !== undefined) lines.push(`年齢: ${input.childAge}歳`);
+  if (input.childAge !== undefined) {
+    lines.push(`年齢: ${input.childAge}歳`);
+    lines.push(`対象年齢に合わせた文章レベルにしてください: ${input.childAge}歳`);
+  }
   if (input.favorites) lines.push(`好きなもの: ${input.favorites}`);
   if (input.lessonToTeach) lines.push(`教えたいこと: ${input.lessonToTeach}`);
   if (input.memoryToRecreate) lines.push(`再現したい思い出: ${input.memoryToRecreate}`);
