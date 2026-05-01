@@ -7,6 +7,22 @@ const firestore_1 = require("firebase-admin/firestore");
 if ((0, app_1.getApps)().length === 0)
     (0, app_1.initializeApp)();
 const db = (0, firestore_1.getFirestore)();
+function buildAgeSpecificPage(params) {
+    const textTemplatesByAge = {
+        baby_toddler: params.baby_toddler,
+        preschool_3_4: params.preschool_3_4,
+        early_reader_5_6: params.early_reader_5_6,
+        early_elementary_7_8: params.early_elementary_7_8,
+        general_child: params.general_child,
+    };
+    return {
+        textTemplate: params.textTemplate,
+        textTemplatesByAge: Object.values(textTemplatesByAge).some(Boolean)
+            ? textTemplatesByAge
+            : undefined,
+        imagePromptTemplate: params.imagePromptTemplate,
+    };
+}
 const categoryGroups = {
     memories: {
         name: "思い出を残す",
@@ -244,22 +260,42 @@ const templates = {
         fixedStory: {
             titleTemplate: "{childName}とはじめてのどうぶつえん",
             pages: [
-                {
+                buildAgeSpecificPage({
                     textTemplate: "{childName}は、{familyMembers}といっしょに{place}へでかけました。",
-                    imagePromptTemplate: "A child arriving at a friendly Japanese zoo with family, excited eyes, gentle smiles, safe storybook scene, entrance path, bright morning light",
-                },
-                {
+                    baby_toddler: "{childName}、{place}へ しゅっぱつ。わくわく。",
+                    preschool_3_4: "{childName}は、{familyMembers}といっしょに{place}へでかけました。どんな どうぶつに あえるかな。",
+                    early_reader_5_6: "{childName}は、{familyMembers}といっしょに{place}へでかけました。いりぐちの ちずを見ながら、つぎは どこへいこうかと うれしそうに そうぞうします。",
+                    early_elementary_7_8: "{childName}は、{familyMembers}といっしょに{place}へでかけました。いりぐちに あった きいろい ほしの しるしを見つけて、きょうの ぼうけんには ひみつがありそうだと 感じます。",
+                    general_child: "{childName}は、{familyMembers}といっしょに{place}へでかけました。どんな どうぶつに あえるかな。",
+                    imagePromptTemplate: "Establishing wide shot of a young child arriving at a friendly Japanese zoo with family, entrance path and map visible, a small yellow star motif near the sign, rich but not cluttered background details, child-safe picture book illustration, no text, no letters, no readable signs, no watermark",
+                }),
+                buildAgeSpecificPage({
                     textTemplate: "大きなどうぶつ、小さなどうぶつ。{childName}の目はきらきらです。",
-                    imagePromptTemplate: "A preschool child happily looking at cute zoo animals from a safe distance, warm family memory picture book mood, expressive eyes, soft daylight",
-                },
-                {
+                    baby_toddler: "ぞうさん。ことりさん。きらきら。",
+                    preschool_3_4: "大きなどうぶつ、小さなどうぶつ。{childName}の目はきらきらです。みみをすますと、たのしい こえが きこえます。",
+                    early_reader_5_6: "大きなどうぶつ、小さなどうぶつ。{childName}の目は きらきらです。とおくで ゆれる しっぽや、ちいさな あしあとまで 見つけて、つぎつぎに しらせてくれました。",
+                    early_elementary_7_8: "大きなどうぶつ、小さなどうぶつ。{childName}は、うごきかたや くらしかたの ちがいに きづいて 夢中になります。さっき見つけた きいろい ほしの しるしが、ここにも そっと かくれていました。",
+                    general_child: "大きなどうぶつ、小さなどうぶつ。{childName}の目はきらきらです。つぎは どこを見ようかと こころが はずみます。",
+                    imagePromptTemplate: "Medium action shot of a child safely watching friendly zoo animals, focus on curious eyes and nearby animal footprints, family members in the background, recurring yellow star motif hidden in the scene, rich but not cluttered environment details, child-safe picture book illustration, no text, no letters, no readable signs, no watermark",
+                }),
+                buildAgeSpecificPage({
                     textTemplate: "いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。",
-                    imagePromptTemplate: "A joyful close family memory moment at the zoo, the child smiling brightly, warm emotional storytelling, gentle Japanese picture book composition",
-                },
-                {
+                    baby_toddler: "{childName}、にこっ。うれしいね。",
+                    preschool_3_4: "いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。みんなの こころも ぽかぽかに なります。",
+                    early_reader_5_6: "いちばんうれしかったのは、{childName}が にっこり笑った そのしゅんかんでした。さっき ちょっぴり こわかった どうぶつにも、もう一ど あってみたいと 言えたのです。",
+                    early_elementary_7_8: "いちばんうれしかったのは、{childName}が にっこり笑った そのしゅんかんでした。はじめは どきどきしていたけれど、よく見てみると どうぶつたちにも それぞれの やさしい しぐさが あると 分かったのでした。",
+                    general_child: "いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。みんなの こころも ぽかぽかに なります。",
+                    imagePromptTemplate: "Close-up emotional moment of the child smiling after a meaningful zoo discovery, focus on face and small hands holding a zoo keepsake, warm family reactions in the background, recurring yellow star motif, rich but not cluttered picture book scene, no text, no letters, no readable signs, no watermark",
+                }),
+                buildAgeSpecificPage({
                     textTemplate: "{parentMessage}",
-                    imagePromptTemplate: "A calm ending scene after the zoo visit, the child and family leaving with happy memories, soft golden light, tender picture book finale",
-                },
+                    baby_toddler: "{parentMessage}",
+                    preschool_3_4: "{parentMessage}",
+                    early_reader_5_6: "{parentMessage}",
+                    early_elementary_7_8: "{parentMessage}",
+                    general_child: "{parentMessage}",
+                    imagePromptTemplate: "Warm ending back-view shot of the child and family leaving the zoo at golden hour, beautiful scenery, gentle path, recurring yellow star motif softly visible, rich but not cluttered, child-safe picture book finale, no text, no letters, no readable signs, no watermark",
+                }),
             ],
         },
     },
@@ -287,22 +323,42 @@ const templates = {
         fixedStory: {
             titleTemplate: "きょうもいい日だったね、{childName}",
             pages: [
-                {
+                buildAgeSpecificPage({
                     textTemplate: "{childName}は、きょうもたのしいじかんをすごしました。",
-                    imagePromptTemplate: "A child at the end of a happy day, cozy home evening, soft moonlight beginning to appear, calm Japanese bedtime picture book atmosphere",
-                },
-                {
+                    baby_toddler: "{childName}、きょうも たのしかったね。",
+                    preschool_3_4: "{childName}は、きょうもたのしいじかんをすごしました。おへやには やさしい よるが やってきます。",
+                    early_reader_5_6: "{childName}は、きょうもたのしいじかんを すごしました。おもちゃを みわたしながら、どんなことが いちばん うれしかったかなと そっと 思いだします。",
+                    early_elementary_7_8: "{childName}は、きょうもたのしいじかんを すごしました。ゆっくり くらくなる まどのそとを見ながら、きょうの できごとを ひとつずつ こころの本だなへ しまっていきます。",
+                    general_child: "{childName}は、きょうもたのしいじかんをすごしました。おへやには やさしい よるが やってきます。",
+                    imagePromptTemplate: "Establishing wide shot of a cozy child bedroom at the end of a happy day, toys and books softly visible, moonlight beginning outside the window, a small star motif tucked into the room, rich but not cluttered, child-safe picture book illustration, no text, no letters, no readable signs, no watermark",
+                }),
+                buildAgeSpecificPage({
                     textTemplate: "うれしかったことを、ひとつずつこころにあつめます。",
-                    imagePromptTemplate: "A preschool child remembering happy moments before bed, dreamy calm room, gentle warm lamp light, soft bedtime storybook feeling",
-                },
-                {
+                    baby_toddler: "うれしいね。ぽかぽか。",
+                    preschool_3_4: "うれしかったことを、ひとつずつ こころに あつめます。にこにこした ことが、まだ きらきらしています。",
+                    early_reader_5_6: "うれしかったことを、ひとつずつ こころに あつめます。いちばん たのしかった しゅんかんを 思いだすと、むねのなかで ほしが ひとつ 光るようでした。",
+                    early_elementary_7_8: "うれしかったことを、ひとつずつ こころに あつめます。ちいさな できごとにも それぞれの いろがあり、いちばん だいじにしたい しゅんかんが はっきりしてきました。",
+                    general_child: "うれしかったことを、ひとつずつ こころに あつめます。にこにこした ことが、まだ きらきらしています。",
+                    imagePromptTemplate: "Medium shot of a child quietly remembering the day, warm lamp glow, small objects from the day visible in the room, focus on a star-shaped motif or keepsake, rich but not cluttered background, child-safe bedtime picture book scene, no text, no letters, no readable signs, no watermark",
+                }),
+                buildAgeSpecificPage({
                     textTemplate: "おふとんに入ると、こころがふわっとやわらかくなりました。",
-                    imagePromptTemplate: "A child snuggling into bed, peaceful sleepy expression, soft blanket, stars and moon outside the window, quiet bedtime illustration",
-                },
-                {
+                    baby_toddler: "おふとん ふわっ。おやすみ。",
+                    preschool_3_4: "おふとんに入ると、こころが ふわっと やわらかくなりました。もう だいじょうぶ、おやすみの じかんです。",
+                    early_reader_5_6: "おふとんに入ると、こころが ふわっと やわらかくなりました。きょうの ちいさな できたことが、あしたも がんばれる ひかりに かわっていきます。",
+                    early_elementary_7_8: "おふとんに入ると、こころが ふわっと やわらかくなりました。きょうの うれしさも ちょっぴりの くやしさも、あしたへ つながる だいじな きおくとして しずかに おさまっていきます。",
+                    general_child: "おふとんに入ると、こころが ふわっと やわらかくなりました。もう だいじょうぶ、おやすみの じかんです。",
+                    imagePromptTemplate: "Close-up of a child snuggling into bed, focus on small hands holding a favorite stuffed toy, moon and stars outside, recurring star motif, rich but not cluttered bedtime details, child-safe illustration, no text, no letters, no readable signs, no watermark",
+                }),
+                buildAgeSpecificPage({
                     textTemplate: "{parentMessage}",
-                    imagePromptTemplate: "A comforting goodnight ending scene, the child sleeping peacefully, warm secure bedtime picture book finale, gentle moon and stars",
-                },
+                    baby_toddler: "{parentMessage}",
+                    preschool_3_4: "{parentMessage}",
+                    early_reader_5_6: "{parentMessage}",
+                    early_elementary_7_8: "{parentMessage}",
+                    general_child: "{parentMessage}",
+                    imagePromptTemplate: "Warm ending back-view or peaceful sleeping scene, gentle moonlight, calm room full of soft meaningful objects, recurring star motif near the window, rich but not cluttered, child-safe picture book finale, no text, no letters, no readable signs, no watermark",
+                }),
             ],
         },
     },
@@ -339,7 +395,7 @@ const templates = {
                         early_elementary_7_8: "{childName}は、きょうもおくちをあーん。きれいな はにするために、じぶんで はぶらしをにぎって はじめてみます。",
                         general_child: "{childName}は、きょうもおくちをあーん。",
                     },
-                    imagePromptTemplate: "A preschool child getting ready to brush teeth in a bright safe bathroom, gentle picture book mood, clean cheerful composition",
+                    imagePromptTemplate: "Establishing wide shot of a preschool child getting ready to brush teeth in a bright safe bathroom, toothbrush and cup visible, recurring shining star motif, rich but not cluttered background details, child-safe picture book mood, no text, no letters, no readable signs, no watermark",
                 },
                 {
                     textTemplate: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
@@ -350,7 +406,7 @@ const templates = {
                         early_elementary_7_8: "しゃかしゃか、こしこし。おくばや はのうらも わすれないように、かがみを見ながら ていねいに みがいていきます。",
                         general_child: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
                     },
-                    imagePromptTemplate: "A child brushing teeth carefully, soft foam, cute child-safe bathroom scene, supportive and playful storybook atmosphere",
+                    imagePromptTemplate: "Medium action shot of a child brushing teeth carefully, soft foam, focus on hand movement and mirror reflection, recurring shining star motif, rich but not cluttered child-safe bathroom details, no text, no letters, no readable signs, no watermark",
                 },
                 {
                     textTemplate: "おわったあと、{childName}はちょっぴりうれしそうでした。",
@@ -361,11 +417,11 @@ const templates = {
                         early_elementary_7_8: "みがきおわると、{childName}は にっこりしました。すこし むずかしくても さいごまでできたことが、自信につながったのです。",
                         general_child: "おわったあと、{childName}はちょっぴりうれしそうでした。",
                     },
-                    imagePromptTemplate: "A child smiling with pride after brushing teeth, warm daily routine success, gentle Japanese picture book illustration",
+                    imagePromptTemplate: "Close-up emotional moment of a child smiling with pride after brushing teeth, focus on expression and tiny toothbrush, warm daily routine success, recurring shining star motif, rich but not cluttered picture book illustration, no text, no letters, no readable signs, no watermark",
                 },
                 {
                     textTemplate: "{parentMessage}",
-                    imagePromptTemplate: "A comforting bedtime routine ending after brushing teeth, parent and child calm happy mood, soft reassuring picture book finale",
+                    imagePromptTemplate: "Warm ending shot after brushing teeth, parent and child together in a calm bathroom doorway or bedtime hall, back view or side view, recurring shining star motif, child-safe rich but not cluttered picture book finale, no text, no letters, no readable signs, no watermark",
                 },
             ],
         },
@@ -403,7 +459,7 @@ const templates = {
                         early_elementary_7_8: "{childName}は、{familyMembers}といっしょに クリスマスをむかえました。やわらかな ひかりに つつまれたへやで、いつもより とくべつな夜が はじまります。",
                         general_child: "{childName}は、{familyMembers}といっしょに、きらきらのクリスマスをむかえました。",
                     },
-                    imagePromptTemplate: "A preschool child celebrating Christmas with family, warm lights, cozy home, child-safe festive storybook scene",
+                    imagePromptTemplate: "Establishing wide shot of a preschool child celebrating Christmas with family in a cozy home, warm lights, tree, small golden bell motif, rich but not cluttered child-safe festive picture book scene, no text, no letters, no readable signs, no watermark",
                 },
                 {
                     textTemplate: "おへやには、やさしいひかりと、うれしいきもちがいっぱいです。",
@@ -414,7 +470,7 @@ const templates = {
                         early_elementary_7_8: "おへやには やさしいひかりが ひろがり、みんなの たのしい声が そっと かさなります。クリスマスの あたたかさが へやじゅうに ひろがっていました。",
                         general_child: "おへやには、やさしいひかりと、うれしいきもちがいっぱいです。",
                     },
-                    imagePromptTemplate: "A gentle Christmas room full of soft lights and festive warmth, cozy family picture book atmosphere, safe and magical",
+                    imagePromptTemplate: "Medium shot of a gentle Christmas room full of soft lights and festive warmth, focus on decorations and family objects, small golden bell motif hidden in the background, rich but not cluttered, safe magical picture book atmosphere, no text, no letters, no readable signs, no watermark",
                 },
                 {
                     textTemplate: "{childName}のにこにこえがおを見て、みんなもにっこりしました。",
@@ -425,11 +481,11 @@ const templates = {
                         early_elementary_7_8: "{childName}の うれしそうな えがおを見て、みんなも にっこりしました。たのしい気持ちは、そばにいる人へ ひろがっていくのだと分かるような時間でした。",
                         general_child: "{childName}のにこにこえがおを見て、みんなもにっこりしました。",
                     },
-                    imagePromptTemplate: "A happy child smiling during Christmas celebration, family sharing warm joy, tender seasonal picture book composition",
+                    imagePromptTemplate: "Close-up emotional moment of a happy child smiling during Christmas celebration, focus on expression and hands near a small gift or ornament, family sharing warm joy, golden bell motif, rich but not cluttered tender picture book composition, no text, no letters, no readable signs, no watermark",
                 },
                 {
                     textTemplate: "{parentMessage}",
-                    imagePromptTemplate: "A peaceful Christmas ending scene with family warmth, soft winter glow, memorable and gentle picture book finale",
+                    imagePromptTemplate: "Warm ending back-view or scenic Christmas night shot with family warmth, soft winter glow, golden bell motif, memorable gentle picture book finale, rich but not cluttered, no text, no letters, no readable signs, no watermark",
                 },
             ],
         },

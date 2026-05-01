@@ -212,11 +212,28 @@ export interface CategoryGroupData {
   active: boolean;
 }
 
+export interface GeneratedStoryNarrativeDevice {
+  repeatedPhrase?: string;
+  visualMotif?: string;
+  setup?: string;
+  payoff?: string;
+  hiddenDetails?: string[];
+}
+
+export interface GeneratedStoryPage {
+  text: string;
+  imagePrompt: string;
+  compositionHint?: string;
+  visualMotifUsage?: string;
+  hiddenDetail?: string;
+}
+
 export interface GeneratedStory {
   title: string;
   characterBible: string;
   styleBible: string;
-  pages: Array<{ text: string; imagePrompt: string }>;
+  narrativeDevice?: GeneratedStoryNarrativeDevice;
+  pages: GeneratedStoryPage[];
 }
 
 export interface LLMClient {

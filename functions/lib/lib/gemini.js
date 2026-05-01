@@ -28,10 +28,53 @@ function validateStory(data) {
     if (!Array.isArray(obj.pages) || obj.pages.length === 0)
         throw new Error("LLM response missing 'pages' array");
     for (const page of obj.pages) {
-        if (typeof page.text !== "string" || typeof page.imagePrompt !== "string")
+        if (typeof page !== "object" || page === null) {
+            throw new Error("Each page must be an object");
+        }
+        const pageObj = page;
+        if (typeof pageObj.text !== "string" || typeof pageObj.imagePrompt !== "string")
             throw new Error("Each page must have 'text' and 'imagePrompt' strings");
+        if (pageObj.compositionHint !== undefined && typeof pageObj.compositionHint !== "string") {
+            throw new Error("Page 'compositionHint' must be a string when provided");
+        }
+        if (pageObj.visualMotifUsage !== undefined && typeof pageObj.visualMotifUsage !== "string") {
+            throw new Error("Page 'visualMotifUsage' must be a string when provided");
+        }
+        if (pageObj.hiddenDetail !== undefined && typeof pageObj.hiddenDetail !== "string") {
+            throw new Error("Page 'hiddenDetail' must be a string when provided");
+        }
     }
-    return { title: obj.title, characterBible: obj.characterBible, styleBible: obj.styleBible, pages: obj.pages };
+    let narrativeDevice = undefined;
+    if (obj.narrativeDevice !== undefined) {
+        if (typeof obj.narrativeDevice !== "object" || obj.narrativeDevice === null) {
+            throw new Error("'narrativeDevice' must be an object when provided");
+        }
+        const device = obj.narrativeDevice;
+        if (device.repeatedPhrase !== undefined && typeof device.repeatedPhrase !== "string") {
+            throw new Error("'narrativeDevice.repeatedPhrase' must be a string when provided");
+        }
+        if (device.visualMotif !== undefined && typeof device.visualMotif !== "string") {
+            throw new Error("'narrativeDevice.visualMotif' must be a string when provided");
+        }
+        if (device.setup !== undefined && typeof device.setup !== "string") {
+            throw new Error("'narrativeDevice.setup' must be a string when provided");
+        }
+        if (device.payoff !== undefined && typeof device.payoff !== "string") {
+            throw new Error("'narrativeDevice.payoff' must be a string when provided");
+        }
+        if (device.hiddenDetails !== undefined &&
+            (!Array.isArray(device.hiddenDetails) || !device.hiddenDetails.every((value) => typeof value === "string"))) {
+            throw new Error("'narrativeDevice.hiddenDetails' must be a string array when provided");
+        }
+        narrativeDevice = device;
+    }
+    return {
+        title: obj.title,
+        characterBible: obj.characterBible,
+        styleBible: obj.styleBible,
+        narrativeDevice: narrativeDevice,
+        pages: obj.pages,
+    };
 }
 class GeminiClient {
     genAI;

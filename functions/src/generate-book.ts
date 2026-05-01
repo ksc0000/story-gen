@@ -141,7 +141,15 @@ export async function processBookGeneration(
         storyPage.imagePrompt,
         normalizedBookData.style,
         buildFinalCharacterBible(story.characterBible, normalizedBookData),
-        story.styleBible
+        story.styleBible,
+        {
+          pageNumber: i,
+          compositionHint: storyPage.compositionHint,
+          visualMotif: story.narrativeDevice?.visualMotif,
+          visualMotifUsage: storyPage.visualMotifUsage,
+          hiddenDetail: storyPage.hiddenDetail ?? story.narrativeDevice?.hiddenDetails?.[i],
+          ageBand: readingProfile.ageBand,
+        }
       );
 
       // Generate image with retries (skip in development)
@@ -334,6 +342,7 @@ function buildStoryFromFixedTemplate(
     title: applyTemplateReplacements(fixedStory.titleTemplate, replacements),
     characterBible: buildFixedCharacterBible(bookData, mergedInput),
     styleBible: buildFixedStyleBible(bookData, template),
+    narrativeDevice: undefined,
     pages,
   };
 }
@@ -370,6 +379,7 @@ function buildFixedCharacterBible(bookData: BookData, input: BookInput): string 
     input.signatureItem ? `Signature item: ${input.signatureItem}.` : "",
     input.childAge ? `Age impression: ${input.childAge} years old.` : "",
     `Keep the protagonist as ${input.childName}, a warm child-friendly picture book hero.`,
+    buildCharacterConsistencyRules(bookData),
   ]
     .filter(Boolean)
     .join(" ");
@@ -422,8 +432,31 @@ function buildFinalCharacterBible(storyCharacterBible: string, bookData: BookDat
   return [
     visual?.characterBible ? `Approved child profile: ${visual.characterBible}` : "",
     storyCharacterBible,
+    buildCharacterConsistencyRules(bookData),
     outfitRule,
   ].filter(Boolean).join(" ");
+}
+
+function buildCharacterConsistencyRules(bookData: BookData): string {
+  const visual = bookData.childProfileSnapshot?.visualProfile;
+  const age = bookData.childProfileSnapshot?.age ?? bookData.input.childAge;
+
+  return [
+    "Character consistency rules:",
+    "The protagonist must be the same child on every page.",
+    age ? `Keep the same age impression: around ${age} years old.` : "",
+    "Do not change hairstyle, hair length, face shape, age impression, or body proportions.",
+    visual?.outfit
+      ? `Keep the same outfit unless the outfit mode explicitly allows adaptation: ${visual.outfit}.`
+      : "Keep the same outfit unless the outfit mode explicitly allows adaptation.",
+    visual?.signatureItem
+      ? `Keep the same signature item when appropriate: ${visual.signatureItem}.`
+      : "Keep the same signature item when appropriate.",
+    "If the child is seen from behind, from the side, or far away, preserve hairstyle, silhouette, outfit logic, and recognizable body proportions.",
+    "Do not redesign the protagonist between pages.",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function buildOutfitRule(bookData: BookData): string {

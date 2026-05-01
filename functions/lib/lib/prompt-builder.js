@@ -57,6 +57,54 @@ const VISUAL_STORYTELLING_RULES = [
     "Use background details to tell part of the story.",
     "Keep the protagonist recognizable when present, but allow the scene itself to be the main focus.",
 ].join(" ");
+const STORY_QUALITY_RULES = [
+    "Do not generate overly thin pages.",
+    "Each page should contain enough story substance for the target age.",
+    "Use age-appropriate sentence count on every page.",
+    "Include a repeated phrase or visual motif when appropriate.",
+    "Include at least one small setup and payoff across the book.",
+    "Make each page visually distinct.",
+    "Avoid making every image a front-facing portrait.",
+    "Use varied compositions: wide, medium, close-up, back view, object detail.",
+    "Include meaningful background details children can notice.",
+    "Use gentle humor, discovery, or emotional change.",
+    "Keep the child protagonist visually consistent.",
+].join(" ");
+function getDefaultCompositionHint(pageNumber) {
+    switch (pageNumber) {
+        case 0:
+            return "establishing wide shot";
+        case 1:
+            return "medium shot with action";
+        case 2:
+            return "close-up or emotional detail shot";
+        case 3:
+            return "warm ending shot, back view, or scenic emotional wide shot";
+        default:
+            return "varied storybook composition with a clear focal point";
+    }
+}
+function getBackgroundRichnessGuidance(ageBand) {
+    if (ageBand === "baby_toddler") {
+        return "Background should stay soft and simple, with only a few clear supporting details.";
+    }
+    if (ageBand === "preschool_3_4") {
+        return "Include cozy place details, simple toys, seasonal clues, or gentle nature elements children can easily notice.";
+    }
+    return "Include rich but not cluttered background details such as cozy room objects, books, small toys, family items, seasonal decorations, nature details, tiny animals, or a repeated visual motif.";
+}
+function getEmotionalExpressionGuidance(ageBand) {
+    if (ageBand === "baby_toddler") {
+        return "Use clear, simple, comforting emotions with easy-to-read expressions.";
+    }
+    if (ageBand === "preschool_3_4") {
+        return "Show warm, readable emotions such as delight, surprise, relief, and gentle curiosity.";
+    }
+    if (ageBand === "early_reader_5_6") {
+        return "Show a little more emotional nuance, such as trying again, feeling proud, sharing, or noticing someone else.";
+    }
+    return "Show age-appropriate emotional nuance, including thinking, deciding, noticing others, and a small sense of growth.";
+}
 function buildSystemPrompt(template, style, readingProfile) {
     const visualDirection = template.visualDirection
         ? `\n## カテゴリのビジュアル方向\n${template.visualDirection}\n`
@@ -67,12 +115,16 @@ function buildSystemPrompt(template, style, readingProfile) {
 ## 年齢に合わせた文章レベル
 - 対象年齢: ${resolvedReadingProfile.label}
 - 1ページあたりの本文量: ${resolvedReadingProfile.targetCharsPerPage}
-- 文数: ${resolvedReadingProfile.sentenceCountPerPage}
+- 文数: ${resolvedReadingProfile.targetSentencesPerPage}
 - 語彙: ${resolvedReadingProfile.vocabularyLevel}
 - 表記: ${resolvedReadingProfile.kanjiPolicy}
 - 物語の複雑さ: ${resolvedReadingProfile.storyComplexity}
+- 文章の深さ: ${resolvedReadingProfile.narrativeComplexity}
 - 会話: ${resolvedReadingProfile.dialoguePolicy}
 - 感情表現: ${resolvedReadingProfile.emotionalDepth}
+- 背景描写: ${resolvedReadingProfile.backgroundDetailLevel}
+- くり返しやしかけ: ${resolvedReadingProfile.repetitionPolicy}
+- 絵本らしい工夫: ${resolvedReadingProfile.recommendedDevices}
 `
         : "";
     return `${template.systemPrompt}
@@ -93,6 +145,12 @@ ${ageReadingGuidance}
 - ときには背景、物、家族、友だち、動物、サブキャラクターが絵の主役になっても構いません。
 - imagePrompt には、そのページで何を一番見せたいかを明確に含めてください。
 - imagePrompt では "wide establishing shot of...", "small child seen from behind...", "focus on the sandbox toys in the foreground...", "family members in the background...", "bird's-eye view of the park...", "close-up of tiny hands holding..." のように、視点や焦点が伝わる表現を歓迎します。
+- Story quality rules: ${STORY_QUALITY_RULES}
+- 3歳以上では、文字数が少なすぎる「薄いページ」にならないようにしてください。行動、気持ち、場面描写のうち少なくとも2つ以上を自然に含めてください。
+- 5歳以上では、小さな原因と結果、短い会話、場面の具体物を入れてください。
+- 7歳以上では、小さな伏線、最後の回収、理由や気持ちの変化を入れてください。
+- repeatedPhrase が自然な場合は短く覚えやすいものにしてください。
+- visualMotif は小物、色、動物、光、模様など、絵でも文章でも繰り返し感じられるものにしてください。
 - 年齢が低い場合は、短く、音やリズムが心地よい文章にしてください。
 - 年齢が高い場合は、少しだけ理由、選択、気持ちの変化を含めてください。
 - ただし、どの年齢でも説教臭くせず、絵本として自然な文章にしてください。
@@ -106,10 +164,20 @@ ${ageReadingGuidance}
   "title": "絵本のタイトル",
   "characterBible": "Consistent English character design description used for every illustration",
   "styleBible": "Consistent English visual style guide used for every illustration",
+  "narrativeDevice": {
+    "repeatedPhrase": "A short memorable repeated phrase",
+    "visualMotif": "A recurring visual motif such as a yellow star or red backpack",
+    "setup": "A small early setup that can pay off later",
+    "payoff": "A gentle payoff in the ending",
+    "hiddenDetails": ["A small bird in the background", "A cloud shaped like a heart"]
+  },
   "pages": [
     {
       "text": "ページの本文（日本語・ひらがな多め・幼児が理解できる表現）",
-      "imagePrompt": "English description of the illustration for this page"
+      "imagePrompt": "English description of the illustration for this page",
+      "compositionHint": "wide establishing shot / medium action shot / close-up / back view / object-focused shot",
+      "visualMotifUsage": "How the recurring visual motif appears on this page",
+      "hiddenDetail": "One small background detail children can notice"
     }
   ]
 }
@@ -147,19 +215,46 @@ function buildUserPrompt(input, pageCount) {
     lines.push(`ページ数: ${pageCount}ページ`);
     return lines.join("\n");
 }
-function buildImagePrompt(basePrompt, style, characterBible, styleBible) {
+function buildImagePrompt(basePrompt, style, characterBible, styleBible, options) {
+    const compositionHint = options?.compositionHint || getDefaultCompositionHint(options?.pageNumber);
+    const visualMotif = options?.visualMotifUsage || options?.visualMotif;
+    const hiddenDetail = options?.hiddenDetail;
+    const ageBand = options?.ageBand;
     const consistency = [
         characterBible ? `Character consistency: ${characterBible}` : "",
+        "Character consistency rules: same child character across all pages, same age impression, same hairstyle, same face shape, same body proportions, same outfit unless the outfit rule says otherwise, keep the signature item when appropriate.",
+        "If the child is seen from behind, in side view, or far away, preserve the same hairstyle, silhouette, outfit logic, and recognizable age impression.",
         styleBible ? `Style consistency: ${styleBible}` : "",
-        "Keep the protagonist recognizable across pages when they appear, while allowing varied poses, scale, camera angles, and scene focus.",
-        `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
     ].filter(Boolean).join(" ");
+    const compositionGuidance = [
+        `Composition variety: ${compositionHint}.`,
+        "Avoid front-facing portrait composition unless the page genuinely needs it.",
+        "Use a clear focal point with cinematic picture-book framing.",
+    ].join(" ");
+    const backgroundGuidance = [
+        `Background richness: ${getBackgroundRichnessGuidance(ageBand)}`,
+        "Show meaningful surroundings, not just the protagonist.",
+        "Keep the scene rich but not cluttered.",
+    ].join(" ");
+    const motifGuidance = visualMotif
+        ? `Visual motif: include ${visualMotif} in a natural way on this page.`
+        : "Visual motif: if the story includes a recurring small motif, place it naturally in the scene.";
+    const hiddenDetailGuidance = hiddenDetail
+        ? `Hidden detail: include this subtle background detail for children to notice: ${hiddenDetail}.`
+        : "Hidden detail: include one small child-friendly background detail that rewards careful looking.";
+    const emotionGuidance = `Age-appropriate emotional expression: ${getEmotionalExpressionGuidance(ageBand)}`;
     return [
         consistency,
+        compositionGuidance,
+        backgroundGuidance,
+        motifGuidance,
+        hiddenDetailGuidance,
+        emotionGuidance,
+        `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
         `Scene: ${basePrompt}`,
         IMAGE_STYLE_KEYWORDS[style],
         SAFETY_KEYWORDS,
-        "no text, no letters, no watermark",
+        "no text, no letters, no captions, no watermark, no readable signs",
     ].join(", ");
 }
 function getStyleReferenceImagePath(style) {
