@@ -46,6 +46,7 @@ const replicate_1 = require("./lib/replicate");
 const plans_1 = require("./lib/plans");
 const entitlements_1 = require("./lib/entitlements");
 const usage_1 = require("./lib/usage");
+const age_reading_profile_1 = require("./lib/age-reading-profile");
 const IMAGE_RETRY_LIMIT = 3;
 const IMAGE_REQUEST_INTERVAL_MS = 11_000;
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
@@ -68,6 +69,7 @@ async function processBookGeneration(bookId, bookData, deps) {
         const template = await deps.getTemplate(bookData.theme);
         const userPlan = await deps.getUserPlan(bookData.userId);
         const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
+        const readingProfile = (0, age_reading_profile_1.getAgeReadingProfile)(mergedInput.childAge);
         // Step 3: Check quota (skip in development)
         if (process.env.NODE_ENV !== "development") {
             const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
@@ -82,7 +84,7 @@ async function processBookGeneration(bookId, bookData, deps) {
             }
         }
         // Step 4: Build prompts
-        const systemPrompt = (0, prompt_builder_1.buildSystemPrompt)(template, normalizedBookData.style);
+        const systemPrompt = (0, prompt_builder_1.buildSystemPrompt)(template, normalizedBookData.style, readingProfile);
         const coverReferenceImageUrls = buildReferenceImageUrls(normalizedBookData.style, template, normalizedBookData.childProfileSnapshot);
         // Step 5: Generate story with LLM
         const story = template.creationMode === "fixed_template" && template.fixedStory
@@ -259,6 +261,8 @@ function buildReferenceImageUrls(style, template, childProfileSnapshot) {
     return [...new Set(urls)];
 }
 function buildStoryFromFixedTemplate(fixedStory, mergedInput, bookData, template) {
+    // TODO: Support age-specific fixed template variants such as textTemplatesByAge
+    // so fixed_template books can also adapt wording by child age without using the LLM.
     const replacements = buildFixedTemplateReplacements(mergedInput);
     const pages = fixedStory.pages.map((page) => ({
         text: applyTemplateReplacements(page.textTemplate, replacements),

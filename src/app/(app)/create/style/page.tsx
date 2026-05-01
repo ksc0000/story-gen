@@ -12,6 +12,7 @@ import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
+import { getAgeReadingDisplayProfile } from "@/lib/age-reading-profile";
 import {
   CHARACTER_CONSISTENCY_LABELS,
   CREATION_MODE_LABELS,
@@ -75,6 +76,8 @@ function StyleSelectionPageContent() {
   const consistencyLabel = CHARACTER_CONSISTENCY_LABELS[selectedPlanConfig.characterConsistencyMode];
   const creationModeLabel = CREATION_MODE_LABELS[mode];
   const outfitModeLabel = OUTFIT_MODE_LABELS[outfitMode];
+  const ageReadingProfile = getAgeReadingDisplayProfile(child?.age);
+  const hasChildAge = typeof child?.age === "number";
 
   const simulateDemoGeneration = async (bookId: string) => {
     const demoPages = [
@@ -216,6 +219,22 @@ function StyleSelectionPageContent() {
         <p className="mt-1 text-sm text-violet-600">
           この内容で絵本を作ります。あとから本棚で確認できます。
         </p>
+        <div className="mt-3 rounded-2xl bg-violet-50 p-4 text-sm text-violet-600">
+          <p className="font-medium text-purple-900">年齢に合わせた文章レベル</p>
+          <p className="mt-1">
+            登録された年齢に合わせて、文章量や言葉のむずかしさを調整します。
+          </p>
+          {!hasChildAge ? (
+            <p className="mt-2 text-xs leading-relaxed text-violet-500">
+              年齢が未登録のため、3〜4歳向けの標準設定で作成します。年齢を登録すると、より合った文章量に調整できます。
+            </p>
+          ) : null}
+          {mode === "fixed_template" ? (
+            <p className="mt-2 text-xs leading-relaxed text-violet-500">
+              AI生成のお話では、年齢に合わせて文章量を調整します。テンプレート絵本では、今後さらに細かく対応予定です。
+            </p>
+          ) : null}
+        </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <SummaryItem label="プラン名" value={selectedPlanConfig.label} />
           <SummaryItem label="ページ数" value={`${pageCount}ページ`} />
@@ -230,11 +249,15 @@ function StyleSelectionPageContent() {
           <SummaryItem label="作成モード" value={creationModeLabel} />
           <SummaryItem label="主人公名" value={childName || "未設定"} />
           <SummaryItem label="テーマ名" value={template?.name ?? "未設定"} />
+          <SummaryItem label="文章レベル" value={hasChildAge ? ageReadingProfile.label : "3〜4歳向けの標準設定"} />
+          <SummaryItem label="本文量" value={ageReadingProfile.targetCharsPerPage} />
+          <SummaryItem label="お話の深さ" value={ageReadingProfile.storyLevelSummary} />
           <SummaryItem label="服装モード" value={outfitModeLabel} />
           <SummaryItem
             label="固定アイテム"
             value={keepSignatureItem ? "できるだけ出す" : "必要な場面だけにする"}
           />
+          <SummaryItem label="文章の雰囲気" value={ageReadingProfile.uiDescription} />
         </div>
       </div>
       {createError ? (
