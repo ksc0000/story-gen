@@ -14,8 +14,8 @@ const mockTemplate: TemplateData = {
 };
 
 describe("getAgeReadingProfile", () => {
-  it("defaults to preschool_3_4 when age is undefined", () => {
-    expect(getAgeReadingProfile(undefined).ageBand).toBe("preschool_3_4");
+  it("defaults to general_child when age is undefined", () => {
+    expect(getAgeReadingProfile(undefined).ageBand).toBe("general_child");
   });
 
   it("maps age 2 to baby_toddler", () => {

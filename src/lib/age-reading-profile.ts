@@ -1,9 +1,4 @@
-export type AgeBand =
-  | "baby_toddler"
-  | "preschool_3_4"
-  | "early_reader_5_6"
-  | "early_elementary_7_8"
-  | "general_child";
+import type { AgeBand } from "@/lib/types";
 
 export type AgeReadingDisplayProfile = {
   ageBand: AgeBand;
@@ -53,7 +48,7 @@ const AGE_READING_DISPLAY_PROFILES: Record<AgeBand, AgeReadingDisplayProfile> = 
 
 export function getAgeReadingDisplayProfile(age?: number): AgeReadingDisplayProfile {
   if (age === undefined || age === null || Number.isNaN(age)) {
-    return AGE_READING_DISPLAY_PROFILES.preschool_3_4;
+    return AGE_READING_DISPLAY_PROFILES.general_child;
   }
 
   if (age <= 2) {

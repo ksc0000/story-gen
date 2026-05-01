@@ -24,6 +24,13 @@ const fixedTemplate: TemplateData = {
     pages: [
       {
         textTemplate: "{childName}は、{familyMembers}といっしょに{place}へでかけました。",
+        textTemplatesByAge: {
+          baby_toddler: "{childName}、{place}へ しゅっぱつ。",
+          preschool_3_4: "{childName}は、{familyMembers}といっしょに{place}へでかけました。",
+          early_reader_5_6:
+            "{childName}は、{familyMembers}といっしょに{place}へでかけました。どんな どうぶつに あえるのか、わくわくしています。",
+          general_child: "{childName}は、{familyMembers}といっしょに{place}へでかけました。",
+        },
         imagePromptTemplate: "A child arriving at a friendly zoo with family",
       },
       {
@@ -197,6 +204,105 @@ describe("processBookGeneration", () => {
     );
     expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed", "completed");
+  });
+
+  it("uses age-specific fixed template text when the age band matches", async () => {
+    deps.getTemplate.mockResolvedValue(fixedTemplate);
+    const ageSpecificBook: BookData = {
+      ...baseBookData,
+      theme: "fixed-first-zoo",
+      creationMode: "fixed_template",
+      input: {
+        childName: "ゆうた",
+        childAge: 2,
+        place: "上野動物園",
+        familyMembers: "ママとパパ",
+      },
+    };
+
+    await processBookGeneration("book-fixed-age", ageSpecificBook, deps);
+
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-fixed-age",
+      expect.objectContaining({
+        pageNumber: 0,
+        text: "ゆうた、上野動物園へ しゅっぱつ。",
+      })
+    );
+  });
+
+  it("falls back to general_child fixed template text when the age band is missing", async () => {
+    deps.getTemplate.mockResolvedValue({
+      ...fixedTemplate,
+      fixedStory: {
+        titleTemplate: fixedTemplate.fixedStory!.titleTemplate,
+        pages: [
+          {
+            textTemplate: "{childName}は{place}へいきました。",
+            textTemplatesByAge: {
+              general_child: "{childName}は、みんなで{place}へでかけました。",
+            },
+            imagePromptTemplate: "A child arriving at a friendly zoo with family",
+          },
+        ],
+      },
+    });
+    const generalFallbackBook: BookData = {
+      ...baseBookData,
+      theme: "fixed-first-zoo",
+      creationMode: "fixed_template",
+      input: {
+        childName: "ゆうた",
+        childAge: 8,
+        place: "上野動物園",
+        familyMembers: "ママとパパ",
+      },
+    };
+
+    await processBookGeneration("book-fixed-general", generalFallbackBook, deps);
+
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-fixed-general",
+      expect.objectContaining({
+        pageNumber: 0,
+        text: "ゆうたは、みんなで上野動物園へでかけました。",
+      })
+    );
+  });
+
+  it("falls back to the original textTemplate when age-specific text is unavailable", async () => {
+    deps.getTemplate.mockResolvedValue({
+      ...fixedTemplate,
+      fixedStory: {
+        titleTemplate: fixedTemplate.fixedStory!.titleTemplate,
+        pages: [
+          {
+            textTemplate: "{childName}は、{place}へいきました。",
+            imagePromptTemplate: "A child arriving at a friendly zoo with family",
+          },
+        ],
+      },
+    });
+    const defaultFallbackBook: BookData = {
+      ...baseBookData,
+      theme: "fixed-first-zoo",
+      creationMode: "fixed_template",
+      input: {
+        childName: "ゆうた",
+        childAge: 8,
+        place: "上野動物園",
+      },
+    };
+
+    await processBookGeneration("book-fixed-default", defaultFallbackBook, deps);
+
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-fixed-default",
+      expect.objectContaining({
+        pageNumber: 0,
+        text: "ゆうたは、上野動物園へいきました。",
+      })
+    );
   });
 
   it("uses premium model metadata when imageQualityTier is premium", async () => {

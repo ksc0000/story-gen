@@ -12,6 +12,7 @@ import type {
   ImagePurpose,
   FixedStoryTemplate,
   GeneratedStory,
+  AgeBand,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, getStyleReferenceImagePath } from "./lib/prompt-builder";
@@ -102,7 +103,13 @@ export async function processBookGeneration(
       template.creationMode === "fixed_template" && template.fixedStory
         ? (() => {
             console.log(`Book ${bookId} uses fixed_template; skipping LLM story generation.`);
-            return buildStoryFromFixedTemplate(template.fixedStory, mergedInput, bookData, template);
+            return buildStoryFromFixedTemplate(
+              template.fixedStory,
+              mergedInput,
+              bookData,
+              template,
+              readingProfile
+            );
           })()
         : await deps.llmClient.generateStory({
             systemPrompt,
@@ -309,13 +316,17 @@ function buildStoryFromFixedTemplate(
   fixedStory: FixedStoryTemplate,
   mergedInput: BookInput,
   bookData: BookData,
-  template: TemplateData
+  template: TemplateData,
+  readingProfile: { ageBand: AgeBand }
 ): GeneratedStory {
-  // TODO: Support age-specific fixed template variants such as textTemplatesByAge
-  // so fixed_template books can also adapt wording by child age without using the LLM.
   const replacements = buildFixedTemplateReplacements(mergedInput);
   const pages = fixedStory.pages.map((page) => ({
-    text: applyTemplateReplacements(page.textTemplate, replacements),
+    text: applyTemplateReplacements(
+      page.textTemplatesByAge?.[readingProfile.ageBand]
+        ?? page.textTemplatesByAge?.general_child
+        ?? page.textTemplate,
+      replacements
+    ),
     imagePrompt: applyTemplateReplacements(page.imagePromptTemplate, replacements),
   }));
 

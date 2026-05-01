@@ -9,6 +9,12 @@ export type StoryCostLevel = "none" | "low" | "standard";
 export type ProductPlan = "free" | "light_paid" | "standard_paid" | "premium_paid";
 export type ImageQualityTier = "light" | "standard" | "premium";
 export type CharacterConsistencyMode = "cover_only" | "key_pages" | "all_pages";
+export type AgeBand =
+  | "baby_toddler"
+  | "preschool_3_4"
+  | "early_reader_5_6"
+  | "early_elementary_7_8"
+  | "general_child";
 export type ImagePurpose =
   | "book_page"
   | "book_cover"
@@ -32,6 +38,7 @@ export type PageCount = 4 | 8 | 12;
 
 export interface FixedStoryPageTemplate {
   textTemplate: string;
+  textTemplatesByAge?: Partial<Record<AgeBand, string>>;
   imagePromptTemplate: string;
 }
 

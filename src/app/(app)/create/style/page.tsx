@@ -226,7 +226,7 @@ function StyleSelectionPageContent() {
           </p>
           {!hasChildAge ? (
             <p className="mt-2 text-xs leading-relaxed text-violet-500">
-              年齢が未登録のため、3〜4歳向けの標準設定で作成します。年齢を登録すると、より合った文章量に調整できます。
+              年齢が未登録のため、3〜6歳向けの標準設定で作成します。年齢を登録すると、より合った文章量に調整できます。
             </p>
           ) : null}
           {mode === "fixed_template" ? (
@@ -249,7 +249,7 @@ function StyleSelectionPageContent() {
           <SummaryItem label="作成モード" value={creationModeLabel} />
           <SummaryItem label="主人公名" value={childName || "未設定"} />
           <SummaryItem label="テーマ名" value={template?.name ?? "未設定"} />
-          <SummaryItem label="文章レベル" value={hasChildAge ? ageReadingProfile.label : "3〜4歳向けの標準設定"} />
+          <SummaryItem label="文章レベル" value={hasChildAge ? ageReadingProfile.label : "3〜6歳向けの標準設定"} />
           <SummaryItem label="本文量" value={ageReadingProfile.targetCharsPerPage} />
           <SummaryItem label="お話の深さ" value={ageReadingProfile.storyLevelSummary} />
           <SummaryItem label="服装モード" value={outfitModeLabel} />
