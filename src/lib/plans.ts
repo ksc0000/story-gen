@@ -43,7 +43,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     label: "ライト",
     shortLabel: "ライト",
     description:
-      "ページ数やテーマを少し広げて、手軽に作りたい方向け。高品質よりも、早さと作りやすさを重視します。",
+      "ページ数やテーマを少し広げて、手軽に作りたい方向け。画質と作りやすさのバランスを重視します。",
     badgeLabels: ["有料", "高速", "手軽"],
     allowedPageCounts: [4, 8],
     defaultPageCount: 4,
@@ -91,12 +91,12 @@ export const IMAGE_QUALITY_LABELS: Record<
   { label: string; description: string }
 > = {
   light: {
-    label: "高速生成",
-    description: "早く・手軽に作れます",
+    label: "標準生成",
+    description: "手軽さとかわいさのバランス",
   },
   standard: {
     label: "高品質生成",
-    description: "きれいさと作成時間のバランス",
+    description: "よりきれいに残したい方向け",
   },
   premium: {
     label: "高精細生成",

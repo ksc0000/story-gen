@@ -7,21 +7,16 @@ exports.ReplicateImageClient = void 0;
 exports.resolveReplicateModel = resolveReplicateModel;
 exports.buildReplicateInput = buildReplicateInput;
 const replicate_1 = __importDefault(require("replicate"));
-const FLUX_SCHNELL_MODEL = "black-forest-labs/flux-schnell";
+// Legacy fallback only. Not used in normal generation.
+const LEGACY_FLUX_SCHNELL_MODEL = "black-forest-labs/flux-schnell";
 const FLUX_KLEIN_MODEL = "black-forest-labs/flux-2-klein-9b";
 const FLUX_QUALITY_MODEL = "black-forest-labs/flux-2-pro";
-function isFluxKleinEnabled() {
-    return String(process.env.ENABLE_FLUX_KLEIN || "").toLowerCase() === "true";
-}
 function resolveBookModelByTier(imageQualityTier) {
     const tier = imageQualityTier ?? "light";
     if (tier === "premium") {
         return FLUX_QUALITY_MODEL;
     }
-    if (tier === "standard") {
-        return isFluxKleinEnabled() ? FLUX_KLEIN_MODEL : FLUX_SCHNELL_MODEL;
-    }
-    return FLUX_SCHNELL_MODEL;
+    return FLUX_KLEIN_MODEL;
 }
 function resolveReplicateModel(params) {
     switch (params.purpose) {
@@ -39,7 +34,7 @@ function resolveReplicateModel(params) {
 }
 function buildReplicateInput(params) {
     const dedupedInputImageUrls = [...new Set(params.inputImageUrls ?? [])];
-    if (params.model === FLUX_SCHNELL_MODEL) {
+    if (params.model === LEGACY_FLUX_SCHNELL_MODEL) {
         return {
             prompt: params.prompt,
             aspect_ratio: "4:3",

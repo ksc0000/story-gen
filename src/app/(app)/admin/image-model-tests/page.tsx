@@ -281,7 +281,7 @@ export default function AdminImageModelTestsPage() {
                 </Button>
                 <div className="space-y-1 text-xs leading-relaxed text-violet-500">
                   <p>この画面は管理者向けの検証用です。実行すると実際にReplicate APIを呼び出し、画像生成コストが発生します。</p>
-                  <p>standard は ENABLE_FLUX_KLEIN=true が設定されていない環境では light と同じ flux-schnell にフォールバックします。</p>
+                  <p>現在、light と standard はどちらも flux-2-klein-9b を使用します。品質差の主比較は light / standard と premium の比較です。</p>
                 </div>
               </div>
             </>

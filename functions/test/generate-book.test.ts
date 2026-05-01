@@ -97,7 +97,7 @@ describe("processBookGeneration", () => {
     expect(deps.writePage).toHaveBeenCalledWith(
       "book123",
       expect.objectContaining({
-        imageModel: "black-forest-labs/flux-schnell",
+        imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "standard",
         imagePurpose: "book_cover",
       })
@@ -105,7 +105,7 @@ describe("processBookGeneration", () => {
     expect(deps.writePage).toHaveBeenCalledWith(
       "book123",
       expect.objectContaining({
-        imageModel: "black-forest-labs/flux-schnell",
+        imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "standard",
         imagePurpose: "book_page",
       })
@@ -241,7 +241,7 @@ describe("processBookGeneration", () => {
       "book-free",
       expect.objectContaining({
         pageNumber: 0,
-        imageModel: "black-forest-labs/flux-schnell",
+        imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "light",
         imagePurpose: "book_cover",
       })
@@ -250,14 +250,14 @@ describe("processBookGeneration", () => {
       "book-free",
       expect.objectContaining({
         pageNumber: 1,
-        imageModel: "black-forest-labs/flux-schnell",
+        imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "light",
         imagePurpose: "book_page",
       })
     );
   });
 
-  it("keeps light_paid books on schnell for both cover and pages", async () => {
+  it("keeps light_paid books on klein for both cover and pages", async () => {
     const lightPaidBook: BookData = {
       ...baseBookData,
       productPlan: "light_paid",
@@ -271,7 +271,7 @@ describe("processBookGeneration", () => {
       "book-light-paid",
       expect.objectContaining({
         pageNumber: 0,
-        imageModel: "black-forest-labs/flux-schnell",
+        imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "light",
         imagePurpose: "book_cover",
       })
@@ -280,7 +280,7 @@ describe("processBookGeneration", () => {
       "book-light-paid",
       expect.objectContaining({
         pageNumber: 1,
-        imageModel: "black-forest-labs/flux-schnell",
+        imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "light",
         imagePurpose: "book_page",
       })

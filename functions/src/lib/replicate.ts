@@ -1,12 +1,13 @@
 import Replicate from "replicate";
 import type { ImageClient, ImagePurpose, ImageQualityTier } from "./types";
 
-const FLUX_SCHNELL_MODEL = "black-forest-labs/flux-schnell" as const;
+// Legacy fallback only. Not used in normal generation.
+const LEGACY_FLUX_SCHNELL_MODEL = "black-forest-labs/flux-schnell" as const;
 const FLUX_KLEIN_MODEL = "black-forest-labs/flux-2-klein-9b" as const;
 const FLUX_QUALITY_MODEL = "black-forest-labs/flux-2-pro" as const;
 
 type ReplicateModelName =
-  | typeof FLUX_SCHNELL_MODEL
+  | typeof LEGACY_FLUX_SCHNELL_MODEL
   | typeof FLUX_KLEIN_MODEL
   | typeof FLUX_QUALITY_MODEL;
 
@@ -19,19 +20,12 @@ type ReplicateInputPayload = {
   input_images?: string[];
 };
 
-function isFluxKleinEnabled(): boolean {
-  return String(process.env.ENABLE_FLUX_KLEIN || "").toLowerCase() === "true";
-}
-
 function resolveBookModelByTier(imageQualityTier: ImageQualityTier | undefined): ReplicateModelName {
   const tier = imageQualityTier ?? "light";
   if (tier === "premium") {
     return FLUX_QUALITY_MODEL;
   }
-  if (tier === "standard") {
-    return isFluxKleinEnabled() ? FLUX_KLEIN_MODEL : FLUX_SCHNELL_MODEL;
-  }
-  return FLUX_SCHNELL_MODEL;
+  return FLUX_KLEIN_MODEL;
 }
 
 export function resolveReplicateModel(params: {
@@ -59,7 +53,7 @@ export function buildReplicateInput(params: {
 }): ReplicateInputPayload {
   const dedupedInputImageUrls = [...new Set(params.inputImageUrls ?? [])];
 
-  if (params.model === FLUX_SCHNELL_MODEL) {
+  if (params.model === LEGACY_FLUX_SCHNELL_MODEL) {
     return {
       prompt: params.prompt,
       aspect_ratio: "4:3",
