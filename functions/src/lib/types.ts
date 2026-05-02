@@ -29,6 +29,16 @@ export type PageVisualRole =
   | "setback_or_question"
   | "payoff"
   | "quiet_ending";
+export const PAGE_VISUAL_ROLES = [
+  "opening_establishing",
+  "discovery",
+  "action",
+  "emotional_closeup",
+  "object_detail",
+  "setback_or_question",
+  "payoff",
+  "quiet_ending",
+] as const;
 export type ImagePurpose =
   | "book_page"
   | "book_cover"
@@ -166,6 +176,15 @@ export interface BookData {
   imageQualityTier?: ImageQualityTier;
   characterConsistencyMode?: CharacterConsistencyMode;
   imageModelProfile?: ImageModelProfile;
+  storyModel?: string;
+  storyModelFallbackUsed?: boolean;
+  storyGenerationAttempts?: number;
+  failureStage?: "story_generation" | "schema_validation" | "image_generation" | "validation";
+  failureProvider?: "gemini" | "replicate" | "system";
+  failureReason?: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
+  retryable?: boolean;
+  technicalErrorMessage?: string;
+  failedAt?: FirebaseFirestore.Timestamp;
   style: IllustrationStyle;
   pageCount: PageCount;
   status: BookStatus;
@@ -275,6 +294,9 @@ export interface GeneratedStory {
   characterBible: string;
   styleBible: string;
   narrativeDevice?: GeneratedStoryNarrativeDevice;
+  storyModel?: string;
+  storyModelFallbackUsed?: boolean;
+  storyGenerationAttempts?: number;
   pages: GeneratedStoryPage[];
 }
 

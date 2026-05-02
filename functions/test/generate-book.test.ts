@@ -45,6 +45,9 @@ const mockStory: GeneratedStory = {
   title: "ゆうたくんのたんじょうび",
   characterBible: "A consistent boy with short black hair and blue overalls",
   styleBible: "Soft watercolor picture book style with warm paper texture",
+  storyModel: "gemini-2.5-flash-lite",
+  storyModelFallbackUsed: false,
+  storyGenerationAttempts: 1,
   narrativeDevice: {
     repeatedPhrase: "だいじょうぶ、いっしょにいるよ",
     visualMotif: "yellow star",
@@ -87,7 +90,9 @@ function createMockDeps() {
     updateBookProgress: vi.fn().mockResolvedValue(undefined),
     updateBookStatus: vi.fn().mockResolvedValue(undefined),
     updateBookFailure: vi.fn().mockResolvedValue(undefined),
+    updateBookFailureMetadata: vi.fn().mockResolvedValue(undefined),
     updateBookStoryQualityReport: vi.fn().mockResolvedValue(undefined),
+    updateBookStoryGenerationMetadata: vi.fn().mockResolvedValue(undefined),
     getUserMonthlyCount: vi.fn().mockResolvedValue(0),
     incrementMonthlyCount: vi.fn().mockResolvedValue(undefined),
   };
@@ -111,7 +116,7 @@ describe("processBookGeneration", () => {
     expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
       expect.stringContaining("Character consistency"),
       expect.objectContaining({
-        imageModelProfile: "klein_fast",
+        imageModelProfile: "pro_consistent",
         inputImageUrls: expect.arrayContaining([
           "https://story-gen-8a769.web.app/images/styles/soft_watercolor.png",
           "https://story-gen-8a769.web.app/images/templates/animals.png",
@@ -127,10 +132,10 @@ describe("processBookGeneration", () => {
     expect(deps.writePage).toHaveBeenCalledWith(
       "book123",
       expect.objectContaining({
-        imageModel: "black-forest-labs/flux-2-klein-9b",
+        imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "standard",
         imagePurpose: "book_cover",
-        imageModelProfile: "klein_fast",
+        imageModelProfile: "pro_consistent",
         inputImageUrlsCount: expect.any(Number),
         inputReferenceCount: expect.any(Number),
         usedCharacterReference: true,
@@ -141,14 +146,20 @@ describe("processBookGeneration", () => {
     expect(deps.writePage).toHaveBeenCalledWith(
       "book123",
       expect.objectContaining({
-        imageModel: "black-forest-labs/flux-2-klein-9b",
+        imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "standard",
         imagePurpose: "book_page",
-        imageModelProfile: "klein_fast",
+        imageModelProfile: "pro_consistent",
         inputImageUrlsCount: expect.any(Number),
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
         pageVisualRole: "action",
+      })
+    );
+    expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
+      "book123",
+      expect.objectContaining({
+        storyModel: expect.any(String),
       })
     );
     expect(deps.updateBookTitle).toHaveBeenCalledWith("book123", "ゆうたくんのたんじょうび");
@@ -210,6 +221,29 @@ describe("processBookGeneration", () => {
     deps.llmClient.generateStory.mockRejectedValue(new Error("LLM error"));
     await processBookGeneration("book123", baseBookData, deps);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book123", "failed");
+  });
+
+  it("stores retryable Gemini failure metadata when story generation service is unavailable", async () => {
+    const retryableError = new Error(
+      "[503 Service Unavailable] This model is currently experiencing high demand."
+    );
+    deps.llmClient.generateStory.mockRejectedValue(retryableError);
+
+    await processBookGeneration("book-gemini-503", baseBookData, deps);
+
+    expect(deps.updateBookFailure).toHaveBeenCalledWith(
+      "book-gemini-503",
+      "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。"
+    );
+    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
+      "book-gemini-503",
+      expect.objectContaining({
+        failureStage: "story_generation",
+        failureProvider: "gemini",
+        retryable: true,
+      })
+    );
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-gemini-503", "failed");
   });
 
   it("rejects when free user exceeds monthly quota", async () => {
@@ -426,25 +460,25 @@ describe("processBookGeneration", () => {
       "book-free",
       expect.objectContaining({
         pageNumber: 0,
-        imageModel: "black-forest-labs/flux-2-klein-9b",
-        imageQualityTier: "light",
+        imageModel: "black-forest-labs/flux-2-pro",
+        imageQualityTier: "standard",
         imagePurpose: "book_cover",
-        imageModelProfile: "klein_fast",
+        imageModelProfile: "pro_consistent",
       })
     );
     expect(deps.writePage).toHaveBeenCalledWith(
       "book-free",
       expect.objectContaining({
         pageNumber: 1,
-        imageModel: "black-forest-labs/flux-2-klein-9b",
-        imageQualityTier: "light",
+        imageModel: "black-forest-labs/flux-2-pro",
+        imageQualityTier: "standard",
         imagePurpose: "book_page",
-        imageModelProfile: "klein_fast",
+        imageModelProfile: "pro_consistent",
       })
     );
   });
 
-  it("keeps light_paid books on klein for both cover and pages", async () => {
+  it("keeps light_paid books on pro_consistent for both cover and pages", async () => {
     const lightPaidBook: BookData = {
       ...baseBookData,
       productPlan: "light_paid",
@@ -458,20 +492,20 @@ describe("processBookGeneration", () => {
       "book-light-paid",
       expect.objectContaining({
         pageNumber: 0,
-        imageModel: "black-forest-labs/flux-2-klein-9b",
-        imageQualityTier: "light",
+        imageModel: "black-forest-labs/flux-2-pro",
+        imageQualityTier: "standard",
         imagePurpose: "book_cover",
-        imageModelProfile: "klein_fast",
+        imageModelProfile: "pro_consistent",
       })
     );
     expect(deps.writePage).toHaveBeenCalledWith(
       "book-light-paid",
       expect.objectContaining({
         pageNumber: 1,
-        imageModel: "black-forest-labs/flux-2-klein-9b",
-        imageQualityTier: "light",
+        imageModel: "black-forest-labs/flux-2-pro",
+        imageQualityTier: "standard",
         imagePurpose: "book_page",
-        imageModelProfile: "klein_fast",
+        imageModelProfile: "pro_consistent",
       })
     );
   });
@@ -646,7 +680,7 @@ describe("processBookGeneration", () => {
     expect(pageWrites[0]).toEqual(
       expect.objectContaining({
         pageVisualRole: "opening_establishing",
-        imageModelProfile: "klein_fast",
+        imageModelProfile: "pro_consistent",
         inputImageUrlsCount: expect.any(Number),
         inputReferenceCount: expect.any(Number),
         usedCharacterReference: true,
@@ -656,7 +690,7 @@ describe("processBookGeneration", () => {
     expect(pageWrites[1]).toEqual(
       expect.objectContaining({
         pageVisualRole: "action",
-        imageModelProfile: "klein_fast",
+        imageModelProfile: "pro_consistent",
         inputImageUrlsCount: expect.any(Number),
         inputReferenceCount: expect.any(Number),
         usedCharacterReference: true,

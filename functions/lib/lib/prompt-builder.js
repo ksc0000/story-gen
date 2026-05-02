@@ -191,6 +191,17 @@ ${ageReadingGuidance}
 - imagePrompt には、そのページで何を一番見せたいかを明確に含めてください。
 - imagePrompt では "wide establishing shot of...", "small child seen from behind...", "focus on the sandbox toys in the foreground...", "family members in the background...", "bird's-eye view of the park...", "close-up of tiny hands holding..." のように、視点や焦点が伝わる表現を歓迎します。
 - Important: pages[].text is for the readable story text shown by the app. pages[].imagePrompt is only for generating a wordless illustration. Never ask the image model to render the story text, repeated phrase, labels, signs, books with readable titles, speech bubbles, captions, or any written characters inside the image.
+- For each page, pageVisualRole must be exactly one of:
+  - opening_establishing
+  - discovery
+  - action
+  - emotional_closeup
+  - object_detail
+  - setback_or_question
+  - payoff
+  - quiet_ending
+- Do not invent other pageVisualRole values.
+- Use snake_case exactly.
 - Story quality rules: ${STORY_QUALITY_RULES}
 - 3歳以上では、文字数が少なすぎる「薄いページ」にならないようにしてください。行動、気持ち、場面描写のうち少なくとも2つ以上を自然に含めてください。
 - 5歳以上では、小さな原因と結果、短い会話、場面の具体物を入れてください。

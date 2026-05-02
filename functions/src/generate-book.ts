@@ -18,7 +18,7 @@ import type {
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, getStyleReferenceImagePath, appendQualityRetryInstruction } from "./lib/prompt-builder";
-import { GeminiClient } from "./lib/gemini";
+import { GeminiClient, GeminiServiceUnavailableError } from "./lib/gemini";
 import {
   ReplicateImageClient,
   resolveImageModelProfile,
@@ -37,9 +37,46 @@ import {
 const IMAGE_RETRY_LIMIT = 3;
 const IMAGE_REQUEST_INTERVAL_MS = 11_000;
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
+const GEMINI_RETRYABLE_USER_MESSAGE =
+  "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。";
+const STORY_SCHEMA_FAILURE_USER_MESSAGE =
+  "絵本の構成データを整える途中で失敗しました。入力内容が原因ではない可能性があります。もう一度お試しください。";
 
 function shouldThrottleImageRequests(): boolean {
   return process.env.NODE_ENV !== "test";
+}
+
+function isStorySchemaValidationError(err: unknown): boolean {
+  if (!(err instanceof Error)) {
+    return false;
+  }
+
+  return (
+    err.message.includes("Failed to parse LLM JSON response") ||
+    err.message.includes("LLM response") ||
+    err.message.includes("Each page must") ||
+    err.message.includes("narrativeDevice") ||
+    err.message.includes("pageVisualRole")
+  );
+}
+
+function isRetryableGeminiFailure(err: unknown): boolean {
+  if (!(err instanceof Error)) {
+    return false;
+  }
+
+  const message = err.message.toLowerCase();
+  return (
+    message.includes("[429") ||
+    message.includes("[500") ||
+    message.includes("[502") ||
+    message.includes("[503") ||
+    message.includes("[504") ||
+    message.includes("overloaded") ||
+    message.includes("high demand") ||
+    message.includes("service unavailable") ||
+    message.includes("unavailable")
+  );
 }
 
 export interface GenerationDeps {
@@ -54,7 +91,25 @@ export interface GenerationDeps {
   updateBookProgress: (bookId: string, progress: number) => Promise<void>;
   updateBookStatus: (bookId: string, status: "completed" | "failed") => Promise<void>;
   updateBookFailure: (bookId: string, message: string) => Promise<void>;
+  updateBookFailureMetadata: (
+    bookId: string,
+    data: Partial<
+      Pick<
+        BookData,
+        | "failureStage"
+        | "failureProvider"
+        | "failureReason"
+        | "retryable"
+        | "technicalErrorMessage"
+        | "failedAt"
+      >
+    >
+  ) => Promise<void>;
   updateBookStoryQualityReport: (bookId: string, report: BookData["storyQualityReport"]) => Promise<void>;
+  updateBookStoryGenerationMetadata: (
+    bookId: string,
+    data: Pick<BookData, "storyModel" | "storyModelFallbackUsed" | "storyGenerationAttempts">
+  ) => Promise<void>;
   getUserMonthlyCount: (userId: string) => Promise<number>;
   incrementMonthlyCount: (userId: string) => Promise<void>;
 }
@@ -73,6 +128,14 @@ export async function processBookGeneration(
     if (!sanitizeResult.valid) {
       console.error(`Input validation failed for ${bookId}: ${sanitizeResult.reason}`);
       await deps.updateBookFailure(bookId, sanitizeResult.reason ?? "Input validation failed");
+      await deps.updateBookFailureMetadata(bookId, {
+        failureStage: "validation",
+        failureProvider: "system",
+        failureReason: "unknown",
+        retryable: false,
+        technicalErrorMessage: sanitizeResult.reason ?? "Input validation failed",
+        failedAt: admin.firestore.Timestamp.now(),
+      });
       await deps.updateBookStatus(bookId, "failed");
       return;
     }
@@ -93,6 +156,14 @@ export async function processBookGeneration(
             : "今月の無料生成回数に達しました。来月またお試しください。";
         console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount})`);
         await deps.updateBookFailure(bookId, message);
+        await deps.updateBookFailureMetadata(bookId, {
+          failureStage: "validation",
+          failureProvider: "system",
+          failureReason: "unknown",
+          retryable: false,
+          technicalErrorMessage: `Monthly quota exceeded: ${monthlyCount}`,
+          failedAt: admin.firestore.Timestamp.now(),
+        });
         await deps.updateBookStatus(bookId, "failed");
         return;
       }
@@ -105,26 +176,77 @@ export async function processBookGeneration(
       normalizedBookData.childProfileSnapshot
     );
 
-    // Step 5: Generate story with quality gate
-    const { story, qualityReport } =
-      template.creationMode === "fixed_template" && template.fixedStory
-        ? (() => {
-            console.log(`Book ${bookId} uses fixed_template; skipping LLM story generation.`);
-            return generateFixedTemplateStoryWithQualityReport(
-              template.fixedStory,
-              mergedInput,
-              normalizedBookData,
+    // Step 5: Generate the whole-book story JSON once with Gemini and validate it.
+    // Gemini is not called per page. After this step, Replicate is invoked page by page for illustrations.
+    let storyResult: { story: GeneratedStory; qualityReport: StoryQualityReport };
+    try {
+      storyResult =
+        template.creationMode === "fixed_template" && template.fixedStory
+          ? (() => {
+              console.log(`Book ${bookId} uses fixed_template; skipping LLM story generation.`);
+              return generateFixedTemplateStoryWithQualityReport(
+                template.fixedStory,
+                mergedInput,
+                normalizedBookData,
+                template,
+                readingProfile
+              );
+            })()
+          : await generateStoryWithQualityGate({
+              llmClient: deps.llmClient,
               template,
-              readingProfile
-            );
-          })()
-        : await generateStoryWithQualityGate({
-            llmClient: deps.llmClient,
-            template,
-            normalizedBookData,
-            mergedInput,
-            readingProfile,
-          });
+              normalizedBookData,
+              mergedInput,
+              readingProfile,
+            });
+    } catch (err) {
+      if (err instanceof GeminiServiceUnavailableError || isRetryableGeminiFailure(err)) {
+        const technicalMessage =
+          err instanceof GeminiServiceUnavailableError
+            ? `${err.technicalMessage} | models=${err.modelNamesTried.join(",")} | attempts=${err.totalAttempts}`
+            : err instanceof Error
+              ? err.message
+              : "Unknown Gemini retryable error";
+        await deps.updateBookFailure(bookId, GEMINI_RETRYABLE_USER_MESSAGE);
+        await deps.updateBookFailureMetadata(bookId, {
+          failureStage: "story_generation",
+          failureProvider: "gemini",
+          failureReason:
+            err instanceof GeminiServiceUnavailableError ? err.reason : "service_unavailable",
+          retryable: true,
+          technicalErrorMessage: technicalMessage,
+          failedAt: admin.firestore.Timestamp.now(),
+        });
+        await deps.updateBookStatus(bookId, "failed");
+        return;
+      }
+
+      if (isStorySchemaValidationError(err)) {
+        const technicalMessage = err instanceof Error ? err.message : "Unknown schema validation error";
+        await deps.updateBookFailure(bookId, STORY_SCHEMA_FAILURE_USER_MESSAGE);
+        await deps.updateBookFailureMetadata(bookId, {
+          failureStage: "schema_validation",
+          failureProvider: "gemini",
+          failureReason: "unknown",
+          retryable: false,
+          technicalErrorMessage: technicalMessage,
+          failedAt: admin.firestore.Timestamp.now(),
+        });
+        await deps.updateBookStatus(bookId, "failed");
+        return;
+      }
+
+      throw err;
+    }
+
+    const { story, qualityReport } = storyResult;
+    if (story.storyModel || story.storyModelFallbackUsed !== undefined || story.storyGenerationAttempts !== undefined) {
+      await deps.updateBookStoryGenerationMetadata(bookId, {
+        storyModel: story.storyModel,
+        storyModelFallbackUsed: story.storyModelFallbackUsed,
+        storyGenerationAttempts: story.storyGenerationAttempts,
+      });
+    }
 
     await deps.updateBookStoryQualityReport(bookId, toFirestoreStoryQualityReport(qualityReport));
 
@@ -251,6 +373,14 @@ export async function processBookGeneration(
                 pageVisualRole: storyPage.pageVisualRole,
               });
               await deps.updateBookFailure(bookId, `画像生成に失敗しました（${message}）`);
+              await deps.updateBookFailureMetadata(bookId, {
+                failureStage: "image_generation",
+                failureProvider: "replicate",
+                failureReason: "unknown",
+                retryable: true,
+                technicalErrorMessage: message,
+                failedAt: admin.firestore.Timestamp.now(),
+              });
               await deps.updateBookStatus(bookId, "failed");
               return;
             }
@@ -296,6 +426,14 @@ export async function processBookGeneration(
     console.error(`Book generation failed for ${bookId}:`, err);
     const message = err instanceof Error ? err.message : "Unknown generation error";
     await deps.updateBookFailure(bookId, message);
+    await deps.updateBookFailureMetadata(bookId, {
+      failureStage: "validation",
+      failureProvider: "system",
+      failureReason: "unknown",
+      retryable: false,
+      technicalErrorMessage: message,
+      failedAt: admin.firestore.Timestamp.now(),
+    });
     await deps.updateBookStatus(bookId, "failed");
   }
 }
@@ -344,7 +482,10 @@ function normalizeBookForGeneration(
     imageQualityTier: normalizedPlanConfig.imageQualityTier,
     characterConsistencyMode:
       bookData.characterConsistencyMode ?? normalizedPlanConfig.characterConsistencyMode,
-    imageModelProfile: bookData.imageModelProfile,
+    imageModelProfile:
+      userPlan === "premium"
+        ? bookData.imageModelProfile ?? normalizedPlanConfig.imageModelProfile
+        : normalizedPlanConfig.imageModelProfile ?? bookData.imageModelProfile,
     pageCount: normalizedPageCount,
   };
 }
@@ -762,8 +903,16 @@ export const generateBook = onDocumentCreated(
         await db.collection("books").doc(bookId).update({ errorMessage: message.slice(0, 500) });
       },
 
+      updateBookFailureMetadata: async (bookId: string, data) => {
+        await db.collection("books").doc(bookId).update(data);
+      },
+
       updateBookStoryQualityReport: async (bookId: string, report) => {
         await db.collection("books").doc(bookId).update({ storyQualityReport: report });
+      },
+
+      updateBookStoryGenerationMetadata: async (bookId: string, data) => {
+        await db.collection("books").doc(bookId).update(data);
       },
 
       getUserMonthlyCount: async (userId: string) => {

@@ -1,7 +1,18 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import type { LLMClient, GeneratedStory, PageCount, IllustrationStyle } from "./types";
+import type {
+  GeneratedStory,
+  LLMClient,
+  PageCount,
+  IllustrationStyle,
+  PageVisualRole,
+} from "./types";
+import { PAGE_VISUAL_ROLES } from "./types";
 
-const MODEL_NAME = "gemini-2.5-flash-lite";
+const DEFAULT_STORY_MODEL_PRIMARY = "gemini-2.5-flash-lite";
+const DEFAULT_STORY_MODEL_FALLBACKS = ["gemini-2.5-flash", "gemini-2.0-flash"];
+const GEMINI_MAX_RETRIES = 3;
+const GEMINI_BASE_DELAY_MS = 1_000;
+const GEMINI_JITTER_MS = 500;
 
 const SAFETY_SETTINGS = [
   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
@@ -9,21 +20,171 @@ const SAFETY_SETTINGS = [
   { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
 ];
-const ALLOWED_PAGE_VISUAL_ROLES = new Set([
-  "opening_establishing",
-  "discovery",
-  "action",
-  "emotional_closeup",
-  "object_detail",
-  "setback_or_question",
-  "payoff",
-  "quiet_ending",
-]);
+
+export class GeminiServiceUnavailableError extends Error {
+  retryable = true;
+  reason: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
+  modelNamesTried: string[];
+  totalAttempts: number;
+  technicalMessage: string;
+
+  constructor(params: {
+    message: string;
+    reason: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
+    modelNamesTried: string[];
+    totalAttempts: number;
+    technicalMessage: string;
+  }) {
+    super(params.message);
+    this.name = "GeminiServiceUnavailableError";
+    this.reason = params.reason;
+    this.modelNamesTried = params.modelNamesTried;
+    this.totalAttempts = params.totalAttempts;
+    this.technicalMessage = params.technicalMessage;
+  }
+}
 
 function extractJSON(text: string): string {
   const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
   if (codeBlockMatch) return codeBlockMatch[1].trim();
   return text.trim();
+}
+
+function shouldDelayGeminiRetries(): boolean {
+  return process.env.NODE_ENV !== "test";
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getStoryModelCandidates(): string[] {
+  const primary = process.env.GEMINI_STORY_MODEL_PRIMARY?.trim() || DEFAULT_STORY_MODEL_PRIMARY;
+  const fallbackCsv = process.env.GEMINI_STORY_MODEL_FALLBACKS?.trim();
+  const fallbacks = fallbackCsv
+    ? fallbackCsv.split(",").map((value) => value.trim()).filter(Boolean)
+    : DEFAULT_STORY_MODEL_FALLBACKS;
+  return [...new Set([primary, ...fallbacks])];
+}
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) {
+    return err.message;
+  }
+
+  if (typeof err === "string") {
+    return err;
+  }
+
+  return JSON.stringify(err);
+}
+
+function getRetryableGeminiReason(
+  err: unknown
+): "service_unavailable" | "rate_limited" | "overloaded" | "unknown" | null {
+  const message = getErrorMessage(err).toLowerCase();
+  const status = typeof err === "object" && err !== null ? String((err as { status?: unknown }).status ?? "") : "";
+
+  if (
+    status === "429" ||
+    message.includes("[429") ||
+    message.includes("rate limit") ||
+    message.includes("too many requests")
+  ) {
+    return "rate_limited";
+  }
+
+  if (
+    status === "503" ||
+    message.includes("[503") ||
+    message.includes("service unavailable") ||
+    message.includes("high demand") ||
+    message.includes("unavailable")
+  ) {
+    return message.includes("high demand") || message.includes("overloaded")
+      ? "overloaded"
+      : "service_unavailable";
+  }
+
+  if (
+    ["500", "502", "504"].includes(status) ||
+    message.includes("[500") ||
+    message.includes("[502") ||
+    message.includes("[504")
+  ) {
+    return "service_unavailable";
+  }
+
+  if (message.includes("overloaded")) {
+    return "overloaded";
+  }
+
+  return null;
+}
+
+export function defaultPageVisualRole(
+  pageIndex: number,
+  totalPages: number
+): PageVisualRole {
+  if (pageIndex === 0) return "opening_establishing";
+  if (pageIndex === totalPages - 1) return "quiet_ending";
+  if (totalPages >= 4 && pageIndex === totalPages - 2) return "payoff";
+  if (pageIndex === 1) return "discovery";
+  return "action";
+}
+
+export function normalizePageVisualRole(
+  value: unknown,
+  pageIndex: number,
+  totalPages: number
+): PageVisualRole {
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+
+    if (PAGE_VISUAL_ROLES.includes(normalized as PageVisualRole)) {
+      return normalized as PageVisualRole;
+    }
+
+    const aliasMap: Record<string, PageVisualRole> = {
+      opening: "opening_establishing",
+      establishing: "opening_establishing",
+      establishing_shot: "opening_establishing",
+      wide_shot: "opening_establishing",
+      wide: "opening_establishing",
+      intro: "opening_establishing",
+      discover: "discovery",
+      finding: "discovery",
+      find: "discovery",
+      action_scene: "action",
+      movement: "action",
+      play: "action",
+      closeup: "emotional_closeup",
+      close_up: "emotional_closeup",
+      emotional: "emotional_closeup",
+      emotion_closeup: "emotional_closeup",
+      object: "object_detail",
+      detail: "object_detail",
+      detail_shot: "object_detail",
+      hands: "object_detail",
+      question: "setback_or_question",
+      setback: "setback_or_question",
+      conflict: "setback_or_question",
+      challenge: "setback_or_question",
+      ending: "quiet_ending",
+      quiet_end: "quiet_ending",
+      final: "quiet_ending",
+      resolution: "payoff",
+      payoff_scene: "payoff",
+    };
+
+    if (aliasMap[normalized]) {
+      return aliasMap[normalized];
+    }
+
+    console.warn(`Unknown pageVisualRole '${value}' on page ${pageIndex + 1}; using default.`);
+  }
+
+  return defaultPageVisualRole(pageIndex, totalPages);
 }
 
 function validateStory(data: unknown): GeneratedStory {
@@ -33,13 +194,17 @@ function validateStory(data: unknown): GeneratedStory {
   if (typeof obj.characterBible !== "string") throw new Error("LLM response missing 'characterBible' string");
   if (typeof obj.styleBible !== "string") throw new Error("LLM response missing 'styleBible' string");
   if (!Array.isArray(obj.pages) || obj.pages.length === 0) throw new Error("LLM response missing 'pages' array");
-  for (const page of obj.pages) {
+
+  const pages = obj.pages as unknown[];
+  const normalizedPages = pages.map((page, index) => {
     if (typeof page !== "object" || page === null) {
       throw new Error("Each page must be an object");
     }
+
     const pageObj = page as Record<string, unknown>;
-    if (typeof pageObj.text !== "string" || typeof pageObj.imagePrompt !== "string")
+    if (typeof pageObj.text !== "string" || typeof pageObj.imagePrompt !== "string") {
       throw new Error("Each page must have 'text' and 'imagePrompt' strings");
+    }
     if (pageObj.compositionHint !== undefined && typeof pageObj.compositionHint !== "string") {
       throw new Error("Page 'compositionHint' must be a string when provided");
     }
@@ -49,15 +214,19 @@ function validateStory(data: unknown): GeneratedStory {
     if (pageObj.hiddenDetail !== undefined && typeof pageObj.hiddenDetail !== "string") {
       throw new Error("Page 'hiddenDetail' must be a string when provided");
     }
-    if (pageObj.pageVisualRole !== undefined) {
-      if (typeof pageObj.pageVisualRole !== "string") {
-        throw new Error("Page 'pageVisualRole' must be a string when provided");
-      }
-      if (!ALLOWED_PAGE_VISUAL_ROLES.has(pageObj.pageVisualRole)) {
-        throw new Error("Page 'pageVisualRole' must be one of the allowed visual roles");
-      }
+    if (pageObj.pageVisualRole !== undefined && typeof pageObj.pageVisualRole !== "string") {
+      throw new Error("Page 'pageVisualRole' must be a string when provided");
     }
-  }
+
+    return {
+      text: pageObj.text,
+      imagePrompt: pageObj.imagePrompt,
+      compositionHint: pageObj.compositionHint,
+      visualMotifUsage: pageObj.visualMotifUsage,
+      hiddenDetail: pageObj.hiddenDetail,
+      pageVisualRole: normalizePageVisualRole(pageObj.pageVisualRole, index, pages.length),
+    };
+  });
 
   let narrativeDevice = undefined;
   if (obj.narrativeDevice !== undefined) {
@@ -79,7 +248,7 @@ function validateStory(data: unknown): GeneratedStory {
     }
     if (
       device.hiddenDetails !== undefined &&
-      (!Array.isArray(device.hiddenDetails) || !device.hiddenDetails.every((value) => typeof value === "string"))
+      (!Array.isArray(device.hiddenDetails) || !device.hiddenDetails.every((item) => typeof item === "string"))
     ) {
       throw new Error("'narrativeDevice.hiddenDetails' must be a string array when provided");
     }
@@ -91,8 +260,60 @@ function validateStory(data: unknown): GeneratedStory {
     characterBible: obj.characterBible,
     styleBible: obj.styleBible,
     narrativeDevice: narrativeDevice as GeneratedStory["narrativeDevice"],
-    pages: obj.pages as GeneratedStory["pages"],
+    storyModel: typeof obj.storyModel === "string" ? obj.storyModel : undefined,
+    storyModelFallbackUsed:
+      typeof obj.storyModelFallbackUsed === "boolean" ? obj.storyModelFallbackUsed : undefined,
+    storyGenerationAttempts:
+      typeof obj.storyGenerationAttempts === "number" ? obj.storyGenerationAttempts : undefined,
+    pages: normalizedPages,
   };
+}
+
+async function generateContentWithRetry(params: {
+  generateContent: (request: {
+    contents: Array<{ role: "user"; parts: Array<{ text: string }> }>;
+    systemInstruction: { role: "system"; parts: Array<{ text: string }> };
+    generationConfig: { responseMimeType: "application/json" };
+  }) => Promise<{ response: { text: () => string } }>;
+  request: {
+    contents: Array<{ role: "user"; parts: Array<{ text: string }> }>;
+    systemInstruction: { role: "system"; parts: Array<{ text: string }> };
+    generationConfig: { responseMimeType: "application/json" };
+  };
+  modelName: string;
+}): Promise<{ response: { text: () => string }; attempts: number }> {
+  let attempt = 0;
+
+  while (true) {
+    attempt += 1;
+    try {
+      const result = await params.generateContent(params.request);
+      return {
+        response: result.response,
+        attempts: attempt,
+      };
+    } catch (err) {
+      const retryReason = getRetryableGeminiReason(err);
+      const canRetry = retryReason !== null && attempt <= GEMINI_MAX_RETRIES;
+
+      console.warn("Gemini story generation attempt failed", {
+        model: params.modelName,
+        attempt,
+        retryable: retryReason !== null,
+        error: getErrorMessage(err),
+      });
+
+      if (!canRetry) {
+        throw err;
+      }
+
+      if (shouldDelayGeminiRetries()) {
+        const jitter = Math.floor(Math.random() * GEMINI_JITTER_MS);
+        const delayMs = GEMINI_BASE_DELAY_MS * 2 ** (attempt - 1) + jitter;
+        await sleep(delayMs);
+      }
+    }
+  }
 }
 
 export class GeminiClient implements LLMClient {
@@ -108,7 +329,6 @@ export class GeminiClient implements LLMClient {
     signatureItem?: string; colorMood?: string; place?: string; familyMembers?: string;
     season?: string; parentMessage?: string; storyRequest?: string; pageCount: PageCount; style: IllustrationStyle;
   }): Promise<GeneratedStory> {
-    const model = this.genAI.getGenerativeModel({ model: MODEL_NAME, safetySettings: SAFETY_SETTINGS });
     const userParts: string[] = [`主人公の名前: ${params.childName}`];
     if (params.storyRequest) userParts.push(`今回の絵本で描きたいこと: ${params.storyRequest}`);
     if (params.childAge !== undefined) userParts.push(`年齢: ${params.childAge}歳`);
@@ -124,16 +344,87 @@ export class GeminiClient implements LLMClient {
     if (params.parentMessage) userParts.push(`最後に伝えたい言葉: ${params.parentMessage}`);
     userParts.push(`ページ数: ${params.pageCount}ページ`);
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: userParts.join("\n") }] }],
-      systemInstruction: { role: "system", parts: [{ text: params.systemPrompt }] },
-      generationConfig: { responseMimeType: "application/json" },
-    });
+    const request = {
+      contents: [{ role: "user" as const, parts: [{ text: userParts.join("\n") }] }],
+      systemInstruction: { role: "system" as const, parts: [{ text: params.systemPrompt }] },
+      generationConfig: { responseMimeType: "application/json" as const },
+    };
 
-    const rawText = result.response.text();
-    const jsonStr = extractJSON(rawText);
-    let parsed: unknown;
-    try { parsed = JSON.parse(jsonStr); } catch { throw new Error(`Failed to parse LLM JSON response: ${rawText.slice(0, 200)}`); }
-    return validateStory(parsed);
+    const modelCandidates = getStoryModelCandidates();
+    const modelNamesTried: string[] = [];
+    let totalAttempts = 0;
+    let lastRetryableReason: "service_unavailable" | "rate_limited" | "overloaded" | "unknown" =
+      "unknown";
+    let lastRetryableMessage = "";
+
+    for (const [index, modelName] of modelCandidates.entries()) {
+      modelNamesTried.push(modelName);
+      const model = this.genAI.getGenerativeModel({ model: modelName, safetySettings: SAFETY_SETTINGS });
+
+      try {
+        const result = await generateContentWithRetry({
+          generateContent: model.generateContent.bind(model),
+          request,
+          modelName,
+        });
+
+        totalAttempts += result.attempts;
+        const rawText = result.response.text();
+        const jsonStr = extractJSON(rawText);
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(jsonStr);
+        } catch {
+          throw new Error(`Failed to parse LLM JSON response: ${rawText.slice(0, 200)}`);
+        }
+
+        const validated = validateStory(parsed);
+        return {
+          ...validated,
+          storyModel: modelName,
+          storyModelFallbackUsed: index > 0,
+          storyGenerationAttempts: totalAttempts,
+        };
+      } catch (err) {
+        const retryReason = getRetryableGeminiReason(err);
+        const message = getErrorMessage(err);
+        const lastAttemptCount = retryReason !== null ? GEMINI_MAX_RETRIES + 1 : 1;
+        totalAttempts += lastAttemptCount;
+
+        if (retryReason !== null) {
+          lastRetryableReason = retryReason;
+          lastRetryableMessage = message;
+          if (index < modelCandidates.length - 1) {
+            console.warn("Switching Gemini story model after retryable failure", {
+              fromModel: modelName,
+              nextModel: modelCandidates[index + 1],
+              reason: retryReason,
+              error: message,
+            });
+            continue;
+          }
+
+          throw new GeminiServiceUnavailableError({
+            message:
+              "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。",
+            reason: lastRetryableReason,
+            modelNamesTried,
+            totalAttempts,
+            technicalMessage: lastRetryableMessage,
+          });
+        }
+
+        throw err;
+      }
+    }
+
+    throw new GeminiServiceUnavailableError({
+      message:
+        "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。",
+      reason: lastRetryableReason,
+      modelNamesTried,
+      totalAttempts,
+      technicalMessage: lastRetryableMessage || "Unknown Gemini story generation failure",
+    });
   }
 }

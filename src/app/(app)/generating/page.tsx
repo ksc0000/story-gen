@@ -45,6 +45,26 @@ function getGeneratingSummary(book: BookDoc, completedPages: number, totalPages:
   };
 }
 
+function getFailureMessage(book: BookDoc): string {
+  if (book.failureStage === "story_generation" && book.failureProvider === "gemini" && book.retryable) {
+    return "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成できます。";
+  }
+
+  if (book.failureStage === "schema_validation") {
+    return "絵本の構成データを整える途中で失敗しました。入力内容が原因ではない可能性があります。もう一度お試しください。";
+  }
+
+  if (book.failureStage === "image_generation" && book.failureProvider === "replicate") {
+    return "画像生成AIの処理に時間がかかっています。少し時間をおいて再試行してください。";
+  }
+
+  if (book.failureStage === "validation") {
+    return "入力内容を確認してください。";
+  }
+
+  return "途中で生成処理に失敗しました。少し時間をおいて、もう一度お試しください。すぐ作りたい場合は、テンプレート絵本なら短時間で作成できます。";
+}
+
 function GeneratingContent() {
   const searchParams = useSearchParams();
   const bookId = searchParams.get("id") ?? "";
@@ -96,7 +116,7 @@ function GeneratingContent() {
       <Image src="/images/illustrations/generating.webp" alt="失敗" width={120} height={90} className="mx-auto rounded-xl opacity-50" />
       <h2 className="mt-4 text-lg font-bold text-purple-900">絵本の生成に失敗しました</h2>
       <p className="mt-2 text-sm text-violet-500">
-        途中で画像生成が止まったか、生成条件のどこかで失敗しました。内容は本棚に残らないので、条件を少し変えてもう一度お試しください。
+        {getFailureMessage(book)}
       </p>
       {book.errorMessage ? (
         <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left text-sm text-red-700">

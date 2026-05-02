@@ -94,8 +94,6 @@ export default function AdminImageModelTestsPage() {
     "qualityTiers"
   );
   const [selectedModelProfiles, setSelectedModelProfiles] = useState<ImageModelProfile[]>([
-    "klein_fast",
-    "klein_base",
     "pro_consistent",
   ]);
   const [submitting, setSubmitting] = useState(false);
@@ -293,6 +291,9 @@ export default function AdminImageModelTestsPage() {
                     model profiles
                   </label>
                 </div>
+                <p className="text-xs leading-relaxed text-violet-500">
+                  klein_fast / klein_base は Starting が長時間続く場合があります。まず pro_consistent 単独で確認してください。
+                </p>
               </div>
 
               <div className="space-y-2">

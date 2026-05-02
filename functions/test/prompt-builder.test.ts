@@ -39,6 +39,9 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("pages[].imagePrompt is only for generating a wordless illustration");
     expect(result).toContain("Never ask the image model to render the story text");
     expect(result).toContain('"pageVisualRole": "opening_establishing"');
+    expect(result).toContain("pageVisualRole must be exactly one of");
+    expect(result).toContain("Do not invent other pageVisualRole values");
+    expect(result).toContain("Use snake_case exactly");
   });
 });
 

@@ -1,6 +1,7 @@
 import type {
   CharacterConsistencyMode,
   CreationMode,
+  ImageModelProfile,
   ImageQualityTier,
   PageCount,
   ProductPlan,
@@ -11,6 +12,7 @@ export type ServerPlanConfig = {
   allowedPageCounts: PageCount[];
   defaultPageCount: PageCount;
   imageQualityTier: ImageQualityTier;
+  imageModelProfile?: ImageModelProfile;
   characterConsistencyMode: CharacterConsistencyMode;
   allowedCreationModes: CreationMode[];
   enabled: boolean;
@@ -21,7 +23,8 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     productPlan: "free",
     allowedPageCounts: [4],
     defaultPageCount: 4,
-    imageQualityTier: "light",
+    imageQualityTier: "standard",
+    imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
     enabled: true,
@@ -30,7 +33,8 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     productPlan: "light_paid",
     allowedPageCounts: [4, 8],
     defaultPageCount: 4,
-    imageQualityTier: "light",
+    imageQualityTier: "standard",
+    imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     enabled: false,
@@ -40,6 +44,7 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     allowedPageCounts: [4, 8, 12],
     defaultPageCount: 8,
     imageQualityTier: "standard",
+    imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
     enabled: false,
@@ -49,6 +54,7 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     allowedPageCounts: [4, 8, 12],
     defaultPageCount: 8,
     imageQualityTier: "premium",
+    imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
     enabled: false,

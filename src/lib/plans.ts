@@ -1,6 +1,7 @@
 import type {
   CharacterConsistencyMode,
   CreationMode,
+  ImageModelProfile,
   ImageQualityTier,
   PageCount,
   ProductPlan,
@@ -15,6 +16,7 @@ export type PlanConfig = {
   allowedPageCounts: PageCount[];
   defaultPageCount: PageCount;
   imageQualityTier: ImageQualityTier;
+  imageModelProfile?: ImageModelProfile;
   characterConsistencyMode: CharacterConsistencyMode;
   allowedCreationModes: CreationMode[];
   isPaid: boolean;
@@ -65,7 +67,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     badgeLabels: ["無料", "4ページ", "すぐ作れる"],
     allowedPageCounts: [4],
     defaultPageCount: 4,
-    imageQualityTier: "light",
+    imageQualityTier: "standard",
+    imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
     isPaid: false,
@@ -80,7 +83,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     badgeLabels: ["有料", "高速", "手軽"],
     allowedPageCounts: [4, 8],
     defaultPageCount: 4,
-    imageQualityTier: "light",
+    imageQualityTier: "standard",
+    imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     isPaid: true,
@@ -96,6 +100,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     allowedPageCounts: [4, 8, 12],
     defaultPageCount: 8,
     imageQualityTier: "standard",
+    imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
     isPaid: true,
@@ -111,6 +116,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     allowedPageCounts: [4, 8, 12],
     defaultPageCount: 8,
     imageQualityTier: "premium",
+    imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
     isPaid: true,

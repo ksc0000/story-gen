@@ -837,6 +837,18 @@ PDF
 - consistencyMode
 ```
 
+今後は子ども主人公と同様に、オリジナル相棒キャラクターにも以下の consistency rules を共通適用できる形に寄せる。
+
+```text
+- same character identity across all pages
+- keep age/species impression consistent
+- keep hairstyle / silhouette / face logic / body proportions consistent
+- keep outfit or signature item when appropriate
+- if shown from behind or far away, preserve silhouette and signature cues
+```
+
+また、将来的には `approvedImageUrl` / `referenceImageUrl` を全ページ参照する `all_pages` 運用を、子ども主人公とオリジナル相棒の両方で検証できるようにする。
+
 必要なUI:
 
 ```text
