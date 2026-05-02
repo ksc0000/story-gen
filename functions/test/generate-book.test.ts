@@ -3,6 +3,7 @@ import {
   processBookGeneration,
   shouldUseCharacterReferenceForPage,
   normalizeStoryCastWithChildProfile,
+  shouldFailBookForQuality,
 } from "../src/generate-book";
 import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
 
@@ -471,9 +472,104 @@ describe("processBookGeneration", () => {
     expect(deps.imageClient.generateImage).not.toHaveBeenCalled();
     expect(deps.updateBookFailure).toHaveBeenCalledWith(
       "book-retry-fail",
-      "本文の品質基準を満たす絵本を作れませんでした。もう一度お試しください。"
+      "絵本の内容を整えきれませんでした。もう一度作成すると、別の構成で成功する場合があります。"
+    );
+    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
+      "book-retry-fail",
+      expect.objectContaining({
+        failureStage: "quality_gate",
+      })
     );
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-retry-fail", "failed");
+  });
+
+  it("continues generation when premium quality report only has warnings", async () => {
+    const premiumBook: BookData = {
+      ...baseBookData,
+      productPlan: "premium_paid",
+      input: { childName: "ゆうた", childAge: 4 },
+    };
+    deps.llmClient.generateStory.mockResolvedValueOnce({
+      ...createPremiumPassingStory(),
+      pages: createPremiumPassingStory().pages.map((page, index) =>
+        index === 1
+          ? {
+              ...page,
+              text: "すなの うえで、ほしのこが ふるえながら ひかっていました。なくした ほしのかけらを さがしていると きいて、たっくんは びっくりしながらも うなずきました。いっしょに さがそうと こえを かけました。",
+            }
+          : page
+      ),
+    });
+    deps.llmClient.rewriteStoryText.mockResolvedValueOnce({
+      pages: createPremiumPassingStory().pages.map((page) => ({ text: page.text })),
+      storyTextRewriteModel: "gemini-2.5-pro",
+      storyTextRewriteAttempts: 1,
+    });
+
+    await processBookGeneration("book-premium-warning", premiumBook, deps);
+
+    expect(deps.imageClient.generateImage).toHaveBeenCalled();
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-premium-warning", "completed");
+  });
+
+  it("saves generated text preview when quality gate fails", async () => {
+    const premiumBook: BookData = {
+      ...baseBookData,
+      productPlan: "premium_paid",
+      input: { childName: "ゆうた", childAge: 4 },
+    };
+    const driftingStory: GeneratedStory = {
+      ...createPremiumPassingStory(),
+      pages: [
+        {
+          ...createPremiumPassingStory().pages[0],
+          text: "たっくんは すなばで あそんでいました。すいかは どこかな、と つぶやいて いました。すなばの はしを みまわしました。",
+        },
+        {
+          ...createPremiumPassingStory().pages[1],
+          text: "ほしのこも すいかを さがそうと いいました。たっくんは すなの やまを くずしながら、すいかの ありかを たずねました。ふたりの めは すいかだけを おっていました。",
+        },
+        createPremiumPassingStory().pages[2],
+        {
+          ...createPremiumPassingStory().pages[3],
+          text: "よるに なっても、おそらが きれいでした。たっくんと ほしのこは しずかに みあげていました。",
+        },
+      ],
+    };
+    deps.llmClient.generateStory
+      .mockResolvedValueOnce(driftingStory)
+      .mockResolvedValueOnce(driftingStory);
+    deps.llmClient.rewriteStoryText
+      .mockResolvedValueOnce({
+        pages: driftingStory.pages.map((page) => ({ text: page.text })),
+        storyTextRewriteModel: "gemini-2.5-pro",
+        storyTextRewriteAttempts: 1,
+      })
+      .mockResolvedValueOnce({
+        pages: driftingStory.pages.map((page) => ({ text: page.text })),
+        storyTextRewriteModel: "gemini-2.5-pro",
+        storyTextRewriteAttempts: 1,
+      });
+
+    await processBookGeneration("book-quality-fail-preview", premiumBook, deps);
+
+    const metadata = deps.updateBookStoryGenerationMetadata.mock.calls.at(-1)?.[1];
+    expect(metadata).toEqual(
+      expect.objectContaining({
+        storyTitleCandidate: driftingStory.title,
+        storyGoal: driftingStory.storyGoal,
+        mainQuestObject: driftingStory.mainQuestObject,
+        forbiddenQuestObjects: driftingStory.forbiddenQuestObjects,
+        generatedTextPreview: driftingStory.pages.map((page) => page.text),
+      })
+    );
+    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
+      "book-quality-fail-preview",
+      expect.objectContaining({
+        failureStage: "quality_gate",
+        technicalErrorMessage: expect.stringContaining("forbidden_object_became_goal_persistent"),
+      })
+    );
   });
 
   it("keeps calling the LLM for guided_ai templates", async () => {
@@ -1211,6 +1307,52 @@ describe("shouldUseCharacterReferenceForPage", () => {
         imagePurpose: "book_page",
         characterConsistencyMode: "all_pages",
       })
+    ).toBe(true);
+  });
+});
+
+describe("shouldFailBookForQuality", () => {
+  it("does not fail for warnings only", () => {
+    expect(
+      shouldFailBookForQuality(
+        {
+          ok: true,
+          issues: [{ severity: "warning", code: "missing_scene_detail", message: "warn" }],
+          summary: {
+            pageCount: 4,
+            averageCharsPerPage: 90,
+            averageSentencesPerPage: 3,
+            minCharsPerPage: 70,
+            minSentencesPerPage: 3,
+          },
+        },
+        "premium_paid"
+      )
+    ).toBe(false);
+  });
+
+  it("fails for fatal premium quality issues", () => {
+    expect(
+      shouldFailBookForQuality(
+        {
+          ok: false,
+          issues: [
+            {
+              severity: "error",
+              code: "main_quest_drift_persistent",
+              message: "fatal",
+            },
+          ],
+          summary: {
+            pageCount: 4,
+            averageCharsPerPage: 40,
+            averageSentencesPerPage: 2,
+            minCharsPerPage: 24,
+            minSentencesPerPage: 2,
+          },
+        },
+        "premium_paid"
+      )
     ).toBe(true);
   });
 });

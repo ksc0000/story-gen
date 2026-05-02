@@ -195,7 +195,9 @@ export interface BookData {
   storyGoal?: string;
   mainQuestObject?: string;
   forbiddenQuestObjects?: string[];
-  failureStage?: "story_generation" | "schema_validation" | "image_generation" | "validation";
+  storyTitleCandidate?: string;
+  generatedTextPreview?: string[];
+  failureStage?: "story_generation" | "schema_validation" | "image_generation" | "validation" | "quality_gate";
   failureProvider?: "gemini" | "replicate" | "system";
   failureReason?: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
   retryable?: boolean;

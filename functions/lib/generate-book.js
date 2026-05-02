@@ -37,6 +37,7 @@ exports.generateBook = void 0;
 exports.sanitizeStoryCastForFirestore = sanitizeStoryCastForFirestore;
 exports.normalizeStoryCastWithChildProfile = normalizeStoryCastWithChildProfile;
 exports.processBookGeneration = processBookGeneration;
+exports.shouldFailBookForQuality = shouldFailBookForQuality;
 exports.shouldUseCharacterReferenceForPage = shouldUseCharacterReferenceForPage;
 const firestore_1 = require("firebase-functions/v2/firestore");
 const params_1 = require("firebase-functions/params");
@@ -58,6 +59,7 @@ const IMAGE_REQUEST_INTERVAL_MS = 11_000;
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
 const GEMINI_RETRYABLE_USER_MESSAGE = "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。";
 const STORY_SCHEMA_FAILURE_USER_MESSAGE = "絵本の構成データを整える途中で失敗しました。入力内容が原因ではない可能性があります。もう一度お試しください。";
+const STORY_QUALITY_FAILURE_USER_MESSAGE = "絵本の内容を整えきれませんでした。もう一度作成すると、別の構成で成功する場合があります。";
 function sanitizeStoryCastForFirestore(cast) {
     if (!cast?.length) {
         return undefined;
@@ -307,10 +309,12 @@ async function processBookGeneration(bookId, bookData, deps) {
             storyTextRewriteUsed: storyResult.rewriteMetadata?.storyTextRewriteUsed,
             storyTextRewriteModel: storyResult.rewriteMetadata?.storyTextRewriteModel,
             storyTextRewriteAttempts: storyResult.rewriteMetadata?.storyTextRewriteAttempts,
+            storyTitleCandidate: story.title,
             storyCast: sanitizeStoryCastForFirestore(story.cast),
             storyGoal: story.storyGoal,
             mainQuestObject: story.mainQuestObject,
             forbiddenQuestObjects: story.forbiddenQuestObjects,
+            generatedTextPreview: story.pages.map((page) => page.text),
         });
         if (Object.keys(storyGenerationMetadata).length > 0) {
             await deps.updateBookStoryGenerationMetadata(bookId, storyGenerationMetadata);
@@ -323,13 +327,21 @@ async function processBookGeneration(bookId, bookData, deps) {
                 summary: qualityReport.summary,
             });
         }
-        if (template.creationMode !== "fixed_template" && !qualityReport.ok) {
+        if (template.creationMode !== "fixed_template" && shouldFailBookForQuality(qualityReport, normalizedBookData.productPlan)) {
             logger.warn("Story quality gate failed after retry", {
                 bookId,
                 issues: qualityReport.issues,
                 summary: qualityReport.summary,
             });
-            await deps.updateBookFailure(bookId, "本文の品質基準を満たす絵本を作れませんでした。もう一度お試しください。");
+            await deps.updateBookFailure(bookId, STORY_QUALITY_FAILURE_USER_MESSAGE);
+            await deps.updateBookFailureMetadata(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)({
+                failureStage: "quality_gate",
+                failureProvider: "system",
+                failureReason: "unknown",
+                retryable: false,
+                technicalErrorMessage: buildStoryQualityTechnicalMessage(qualityReport),
+                failedAt: admin.firestore.Timestamp.now(),
+            }));
             await deps.updateBookStatus(bookId, "failed");
             return;
         }
@@ -585,6 +597,30 @@ function shouldRewriteStoryText(bookData, report) {
         "hidden_detail_used_as_main_goal",
         "page_text_not_connected_to_story_goal",
     ].includes(issue.code));
+}
+const FATAL_QUALITY_ERROR_CODES = new Set([
+    "pages.empty",
+    "text.empty",
+    "missing_quest_object_resolution",
+    "main_quest_drift_persistent",
+    "forbidden_object_became_goal_persistent",
+]);
+function shouldFailBookForQuality(report, productPlan) {
+    if (productPlan !== "premium_paid") {
+        return report.issues.some((issue) => issue.severity === "error");
+    }
+    return report.issues.some((issue) => issue.severity === "error" && FATAL_QUALITY_ERROR_CODES.has(issue.code));
+}
+function buildStoryQualityTechnicalMessage(report) {
+    return report.issues
+        .map((issue) => {
+        const page = issue.pageIndex !== undefined ? `page=${issue.pageIndex + 1}` : "";
+        const actual = issue.actual !== undefined ? `actual=${issue.actual}` : "";
+        const expected = issue.expected !== undefined ? `expected=${issue.expected}` : "";
+        return [issue.code, page, actual, expected].filter(Boolean).join(" ");
+    })
+        .join(" | ")
+        .slice(0, 1000);
 }
 async function generateStoryWithQualityGate(params) {
     const baseSystemPrompt = (0, prompt_builder_1.buildSystemPrompt)(params.template, params.normalizedBookData.style, params.readingProfile);

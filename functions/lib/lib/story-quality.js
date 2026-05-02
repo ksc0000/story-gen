@@ -55,6 +55,12 @@ function countSentences(text) {
         return 1;
     return matches.length;
 }
+function normalizeJapanese(text) {
+    return text
+        .toLowerCase()
+        .replace(/\s+/g, "")
+        .replace(/[「」『』、】【。,.!！?？]/g, "");
+}
 function validateGeneratedStoryQuality(params) {
     const { story, readingProfile } = params;
     const creationMode = params.creationMode ?? "guided_ai";
@@ -367,7 +373,7 @@ function hasImagePromptTextRisk(imagePrompt) {
 function analyzeJapaneseTextHeuristics(text) {
     const normalized = text.replace(/\s+/g, "");
     const commonSoundWords = normalized.match(/(ころころ|わくわく|どきどき|きらきら|ふわふわ|さらさら|ぴかぴか|ぐるぐる|ごろごろ|ぺたぺた|しゃかしゃか|こしこし|にこにこ)/g) ?? [];
-    const placeWords = /(おへや|へや|まど|そら|こうえん|もり|みち|すなば|うみ|かわ|やま|にわ|キッチン|テーブル|ベッド|どうぶつえん|みずうみ|くも)/;
+    const placeWords = /(おへや|へや|まど|そら|こうえん|もり|みち|すなば|すなのなか|すなのうえ|てのなか|てのひら|ゆびさき|うみ|かわ|やま|にわ|キッチン|テーブル|ベッド|どうぶつえん|みずうみ|くも)/;
     const actionWords = /(ある|はし|みつけ|あつめ|つく|のぼ|すべ|ひろ|みつめ|さわ|のぞ|えら|あけ|もっ|ぎゅっ|ふり|わら|みた|きい|のった|とんだ|ひらいた|ひろが|ならべ|おいた|みせた|つたえ|かんがえ|みつめた)/;
     const emotionOrDiscoveryWords = /(うれ|かなし|ほっ|びっくり|わくわく|どきどき|にっこり|わら|えがお|みつけ|きづ|ふしぎ|あんしん|こわ|たのし)/;
     const coinedPatterns = /(こりころ|ふわりん|ころころこりころ|まきまきまきば|ぴかりん|きらりん)/;
@@ -385,6 +391,39 @@ function analyzeJapaneseTextHeuristics(text) {
             (!actionWords.test(text) || !emotionOrDiscoveryWords.test(text)),
         sentenceTooShortForAge: countJapaneseTextChars(text) < 40 || countSentences(text) <= 2,
     };
+}
+function isStarLikeQuest(value) {
+    if (!value)
+        return false;
+    return /(星|ほし|ひかり|光|キラキラ|きらきら)/.test(value);
+}
+function isForbiddenObjectUsedAsGoal(text, forbiddenToken) {
+    const normalized = normalizeJapanese(text);
+    const escaped = escapeRegExp(normalizeJapanese(forbiddenToken));
+    if (!escaped)
+        return false;
+    return (new RegExp(`${escaped}.{0,6}(どこ|さが|探|見つ|みつ|あった|なくし|ほしい|たいせつ)`).test(normalized) ||
+        new RegExp(`(どこ|さが|探|見つ|みつ|あった|なくし|ほしい|たいせつ).{0,6}${escaped}`).test(normalized));
+}
+function hasPersistentPageSequence(pageIndexes) {
+    if (pageIndexes.length < 2)
+        return false;
+    const sorted = [...new Set(pageIndexes)].sort((a, b) => a - b);
+    let consecutive = 1;
+    for (let index = 1; index < sorted.length; index += 1) {
+        if (sorted[index] === sorted[index - 1] + 1) {
+            consecutive += 1;
+            if (consecutive >= 2)
+                return true;
+        }
+        else {
+            consecutive = 1;
+        }
+    }
+    return false;
+}
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function addStoryGoalConsistencyIssues(params) {
     const { story, readingProfile, issues } = params;
@@ -408,7 +447,9 @@ function addStoryGoalConsistencyIssues(params) {
         });
         return;
     }
-    const mainQuestTokens = buildQuestTokens([story.mainQuestObject], { includeStarAliases: false });
+    const mainQuestAliasTokens = buildQuestTokens([story.mainQuestObject], {
+        includeStarAliases: isStarLikeQuest(story.mainQuestObject),
+    });
     const storyGoalTokens = buildQuestTokens([story.storyGoal]);
     const forbiddenTokens = (story.forbiddenQuestObjects ?? []).flatMap((value) => buildQuestTokens([value], { includeStarAliases: false }));
     const hiddenDetailTokens = [
@@ -420,40 +461,57 @@ function addStoryGoalConsistencyIssues(params) {
         story.narrativeDevice?.repeatedPhrase,
         story.storyGoal,
     ]);
+    const forbiddenGoalPages = [];
+    const driftPages = [];
     story.pages.forEach((page, pageIndex) => {
         const text = page.text ?? "";
-        const normalized = text.replace(/\s+/g, "");
-        const hasMainQuestSignal = mainQuestTokens.length === 0 || mainQuestTokens.some((token) => normalized.includes(token));
-        const hasStoryGoalSignal = storyGoalTokens.length === 0 || storyGoalTokens.some((token) => normalized.includes(token));
-        const forbiddenHits = forbiddenTokens.filter((token) => token && normalized.includes(token));
-        const hiddenHits = hiddenDetailTokens.filter((token) => token && normalized.includes(token));
-        const motifHits = visualMotifTokens.filter((token) => token && normalized.includes(token));
+        const normalized = normalizeJapanese(text);
+        const hasMainQuestSignal = mainQuestAliasTokens.length === 0 ||
+            mainQuestAliasTokens.some((token) => normalized.includes(normalizeJapanese(token)));
+        const hasStoryGoalSignal = storyGoalTokens.length === 0 ||
+            storyGoalTokens.some((token) => normalized.includes(normalizeJapanese(token)));
+        const forbiddenHits = forbiddenTokens.filter((token) => token && normalized.includes(normalizeJapanese(token)));
+        const forbiddenGoalHits = forbiddenTokens.filter((token) => token ? isForbiddenObjectUsedAsGoal(text, token) : false);
+        const hiddenHits = hiddenDetailTokens.filter((token) => token && normalized.includes(normalizeJapanese(token)));
+        const motifHits = visualMotifTokens.filter((token) => token && normalized.includes(normalizeJapanese(token)));
         if (!hasMainQuestSignal && !hasStoryGoalSignal && countJapaneseTextChars(text) >= 20) {
             issues.push({
-                severity: pageIndex === 0 && !isPremium ? "warning" : "error",
+                severity: "warning",
                 code: "page_text_not_connected_to_story_goal",
                 message: "本文が storyGoal や mainQuestObject につながっていない可能性があります。",
                 pageIndex,
             });
         }
-        if (forbiddenHits.length > 0) {
+        if (forbiddenGoalHits.length > 0) {
             issues.push({
-                severity: "error",
+                severity: "warning",
                 code: "forbidden_object_became_goal",
                 message: "除外対象の小物や背景要素が、本文の主目的として扱われています。",
+                pageIndex,
+                actual: forbiddenGoalHits.join(", "),
+            });
+            forbiddenGoalPages.push(pageIndex);
+        }
+        else if (forbiddenHits.length > 0) {
+            issues.push({
+                severity: "warning",
+                code: "forbidden_object_mentioned",
+                message: "forbiddenQuestObjects が本文に登場していますが、主目的化はしていません。",
                 pageIndex,
                 actual: forbiddenHits.join(", "),
             });
         }
-        if (!hasMainQuestSignal && forbiddenHits.length > 0) {
+        if (!hasMainQuestSignal && !hasStoryGoalSignal && forbiddenGoalHits.length > 0) {
             issues.push({
-                severity: "error",
+                severity: "warning",
                 code: "main_quest_drift",
                 message: "物語の主目的が途中で別の対象にずれている可能性があります。",
                 pageIndex,
             });
+            driftPages.push(pageIndex);
         }
-        if ((hiddenHits.length > 0 || (forbiddenHits.length > 0 && Boolean(page.hiddenDetail?.trim()))) && !hasMainQuestSignal) {
+        if ((hiddenHits.length > 0 || (forbiddenGoalHits.length > 0 && Boolean(page.hiddenDetail?.trim()))) &&
+            !hasMainQuestSignal) {
             issues.push({
                 severity: "warning",
                 code: "hidden_detail_used_as_main_goal",
@@ -486,9 +544,19 @@ function addStoryGoalConsistencyIssues(params) {
         }
         if (isPremium &&
             pageIndex === story.pages.length - 1 &&
-            (!hasMainQuestSignal || !/(みつか|見つか|あった|戻っ|とどい|ありがとう|安心|ほっと|解決)/.test(text))) {
+            !hasFinalPageResolution({
+                page,
+                text,
+                mainQuestTokens: mainQuestAliasTokens,
+                visualMotifTokens,
+            })) {
+            const promptHasQuestSignal = mainQuestAliasTokens.some((token) => normalizeJapanese(page.imagePrompt ?? "").includes(normalizeJapanese(token))) ||
+                visualMotifTokens.some((token) => normalizeJapanese(page.imagePrompt ?? "").includes(normalizeJapanese(token)));
             issues.push({
-                severity: "error",
+                severity: promptHasQuestSignal &&
+                    (page.pageVisualRole === "payoff" || page.pageVisualRole === "quiet_ending")
+                    ? "warning"
+                    : "error",
                 code: !hasMainQuestSignal ? "missing_quest_object_resolution" : "missing_story_resolution",
                 message: !hasMainQuestSignal
                     ? "最終ページで mainQuestObject の解決が明示されていません。"
@@ -497,6 +565,30 @@ function addStoryGoalConsistencyIssues(params) {
             });
         }
     });
+    if (hasPersistentPageSequence(forbiddenGoalPages)) {
+        issues.push({
+            severity: "error",
+            code: "forbidden_object_became_goal_persistent",
+            message: "forbiddenQuestObjects が複数ページで主目的化しています。",
+            actual: forbiddenGoalPages.map((pageIndex) => pageIndex + 1).join(", "),
+        });
+    }
+    if (hasPersistentPageSequence(driftPages)) {
+        issues.push({
+            severity: "error",
+            code: "main_quest_drift_persistent",
+            message: "物語の主目的が複数ページ連続でずれています。",
+            actual: driftPages.map((pageIndex) => pageIndex + 1).join(", "),
+        });
+    }
+}
+function hasFinalPageResolution(params) {
+    const normalizedText = normalizeJapanese(params.text);
+    const hasMainQuestSignal = params.mainQuestTokens.length === 0 ||
+        params.mainQuestTokens.some((token) => normalizedText.includes(normalizeJapanese(token)));
+    const hasMotifSignal = params.visualMotifTokens.some((token) => normalizedText.includes(normalizeJapanese(token)));
+    const hasResolutionVerb = /(あった|みつかった|見つかった|ありがとう|にっこり|ほっと|あんしん|うれしく|もどった|ひかった|かがやいた)/.test(params.text);
+    return (hasMainQuestSignal || hasMotifSignal) && hasResolutionVerb;
 }
 function buildQuestTokens(values, options) {
     const tokens = new Set();
@@ -516,7 +608,7 @@ function buildQuestTokens(values, options) {
             }
         }
         if ((options?.includeStarAliases ?? true) && value.includes("星")) {
-            ["星", "ほし", "ほしのこ", "ひかり", "キラキラ", "きらきら", "星のかけら"].forEach((token) => tokens.add(token));
+            ["星", "ほし", "ほしのこ", "ひかり", "光", "キラキラ", "きらきら", "星のかけら", "ほしのかけら", "かけら"].forEach((token) => tokens.add(token));
         }
     }
     return [...tokens];

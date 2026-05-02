@@ -54,6 +54,10 @@ function getFailureMessage(book: BookDoc): string {
     return "絵本の構成データを整える途中で失敗しました。入力内容が原因ではない可能性があります。もう一度お試しください。";
   }
 
+  if (book.failureStage === "quality_gate") {
+    return "絵本の内容を整えきれませんでした。もう一度作成すると、別の構成で成功する場合があります。";
+  }
+
   if (book.failureStage === "image_generation" && book.failureProvider === "replicate") {
     return "画像生成AIの処理に時間がかかっています。少し時間をおいて再試行してください。";
   }
