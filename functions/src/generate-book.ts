@@ -81,6 +81,12 @@ function isRetryableGeminiFailure(err: unknown): boolean {
   );
 }
 
+function stripUndefinedFields<T extends Record<string, unknown>>(value: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, entry]) => entry !== undefined)
+  ) as Partial<T>;
+}
+
 export interface GenerationDeps {
   getTemplate: (theme: string) => Promise<TemplateData>;
   getUserPlan: (userId: string) => Promise<"free" | "premium">;
@@ -260,14 +266,7 @@ export async function processBookGeneration(
     }
 
     const { story, qualityReport } = storyResult;
-    if (
-      story.storyModel ||
-      story.storyModelFallbackUsed !== undefined ||
-      story.storyGenerationAttempts !== undefined ||
-      storyResult.rewriteMetadata ||
-      story.cast
-    ) {
-      await deps.updateBookStoryGenerationMetadata(bookId, {
+    const storyGenerationMetadata = stripUndefinedFields({
         storyModel: story.storyModel,
         storyModelFallbackUsed: story.storyModelFallbackUsed,
         storyGenerationAttempts: story.storyGenerationAttempts,
@@ -279,6 +278,8 @@ export async function processBookGeneration(
         mainQuestObject: story.mainQuestObject,
         forbiddenQuestObjects: story.forbiddenQuestObjects,
       });
+    if (Object.keys(storyGenerationMetadata).length > 0) {
+      await deps.updateBookStoryGenerationMetadata(bookId, storyGenerationMetadata);
     }
 
     await deps.updateBookStoryQualityReport(bookId, toFirestoreStoryQualityReport(qualityReport));
@@ -595,6 +596,11 @@ function shouldRewriteStoryText(
       "unnatural_japanese_risk",
       "text_too_generic",
       "sentence_too_short_for_age",
+      "premium_text_too_short",
+      "missing_story_resolution",
+      "missing_quest_object_resolution",
+      "missing_opening_hook",
+      "missing_appearing_character_ids",
       "missing_story_goal",
       "missing_main_quest_object",
       "main_quest_drift",
@@ -656,6 +662,7 @@ async function generateStoryWithQualityGate(params: {
     story,
     readingProfile: params.readingProfile,
     creationMode: params.normalizedBookData.creationMode,
+    productPlan: params.normalizedBookData.productPlan,
   });
   let rewriteMetadata:
     | Pick<BookData, "storyTextRewriteUsed" | "storyTextRewriteModel" | "storyTextRewriteAttempts">
@@ -702,6 +709,7 @@ async function generateStoryWithQualityGate(params: {
       story,
       readingProfile: params.readingProfile,
       creationMode: params.normalizedBookData.creationMode,
+      productPlan: params.normalizedBookData.productPlan,
     });
 
     if (!forceRewrite && !shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
@@ -774,6 +782,7 @@ async function generateStoryWithQualityGate(params: {
       story,
       readingProfile: params.readingProfile,
       creationMode: params.normalizedBookData.creationMode,
+      productPlan: params.normalizedBookData.productPlan,
     });
     if (!forceRewrite && !shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
       break;
@@ -787,6 +796,7 @@ async function generateStoryWithQualityGate(params: {
     story,
     readingProfile: params.readingProfile,
     creationMode: params.normalizedBookData.creationMode,
+    productPlan: params.normalizedBookData.productPlan,
   });
 
   return { story, qualityReport, rewriteMetadata };
@@ -812,6 +822,7 @@ function generateFixedTemplateStoryWithQualityReport(
       story,
       readingProfile,
       creationMode: "fixed_template",
+      productPlan: bookData.productPlan,
     }),
   };
 }

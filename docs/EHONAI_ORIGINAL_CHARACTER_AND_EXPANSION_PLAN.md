@@ -1360,3 +1360,8 @@ EhonAIで目指すべき方向性は、単なるAI絵本生成ではなく、以
 ```
 
 これは単発のAI絵本ではなく、**子どもごとの小さなIPを育てるサービス** である。
+# Recurring buddy linkage notes
+
+- `ほしのこ` のような相棒キャラ、魔法の友だち、動物キャラが 2 ページ以上登場する場合は、必ず `storyCast` に入れる。
+- 各ページでは `appearingCharacterIds` と `focusCharacterId` を保存し、どのページに誰が出たかを Firestore 上で追跡できるようにする。
+- 相棒キャラも child protagonist と同様に、`visualBible` / `signatureItems` / `doNotChange` を持つ。

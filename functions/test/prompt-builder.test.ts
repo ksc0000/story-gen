@@ -57,9 +57,13 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("mainQuestObject");
     expect(result).toContain("forbiddenQuestObjects");
     expect(result).toContain("hiddenDetail や背景小物を、物語の主目的にしてはいけません");
+    expect(result).toContain("2ページ以上出る存在は必ず cast に入れてください");
+    expect(result).toContain("「ほしのこ」「魔法の友だち」「star-child」「star-creature」「動物」「相棒」は、再登場するなら必ず cast に入れてください");
+    expect(result).toContain("cast を省略してはいけません");
     expect(result).toContain("opening_establishing:");
     expect(result).toContain("action:");
     expect(result).toContain("quiet_ending:");
+    expect(result).toContain("page3=mainQuestObject の解決と安心感");
   });
 });
 

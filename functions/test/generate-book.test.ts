@@ -93,6 +93,53 @@ const mockStory: GeneratedStory = {
   ],
 };
 
+const premiumReadyStory: GeneratedStory = {
+  ...mockStory,
+  storyModel: "gemini-2.5-pro",
+  pages: [
+    {
+      text: "たっくんは、すなばで みどりの きょうりゅうを すべらせて あそんでいました。すると、すなの なかで 小さな ひかりが きらりと ゆれました。なんだろうと おもって、たっくんは そっと すなを よけました。",
+      imagePrompt: "A warm wide sandbox scene with a child, a glowing tiny star shard, family-friendly park details, and a small yellow star motif",
+      pageVisualRole: "opening_establishing",
+      compositionHint: "wide establishing shot",
+      visualMotifUsage: "yellow star glow near the sand",
+      hiddenDetail: "small bird near the hedge",
+      appearingCharacterIds: ["child_protagonist"],
+      focusCharacterId: "child_protagonist",
+    },
+    {
+      text: "すなの なかから、ちいさな ほしのこが ふるえながら あらわれました。『星のかけらを なくしちゃったの』と きいて、たっくんは びっくりしながらも うなずきました。いっしょに さがそう、と やさしく てを のばしました。",
+      imagePrompt: "A medium storybook shot of a child meeting a magical glowing friend in a sandbox, following a tiny star trail with rich but not cluttered park details",
+      pageVisualRole: "discovery",
+      compositionHint: "medium shot with action",
+      visualMotifUsage: "yellow star trail on the sand",
+      hiddenDetail: "tiny blue cup near the sandbox edge",
+      appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+      focusCharacterId: "magic_friend_01",
+    },
+    {
+      text: "ほしのこは たっくんの ゆびに ちょこんと のって、すなの うえに ひかりの みちを てらしました。たっくんは きょうりゅうの しっぽで すなを そっと ならしながら、星のかけらを さがしました。もう すこしで みつかりそうだね、と ふたりの かおが あかるく なりました。",
+      imagePrompt: "Action scene in the sandbox with a glowing path, child-safe motion, and a recurring yellow star motif",
+      pageVisualRole: "action",
+      compositionHint: "action shot",
+      visualMotifUsage: "glowing trail in the sand",
+      hiddenDetail: "small shell near the sandbox edge",
+      appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+      focusCharacterId: "child_protagonist",
+    },
+    {
+      text: "ひかりの みちの さきで、なくしていた 星のかけらが きらりと ひかりました。ほしのこは ほっとしたように わらって、たっくんに ありがとうと いいました。すなばの うえには、やさしい ひかりが いつまでも のこっていました。",
+      imagePrompt: "Quiet ending scene with the found star shard, warm sandbox glow, and a gentle magical friend saying thanks",
+      pageVisualRole: "quiet_ending",
+      compositionHint: "quiet ending shot",
+      visualMotifUsage: "yellow star glow returns around the found shard",
+      hiddenDetail: "tiny paper boat near the sandbox border",
+      appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+      focusCharacterId: "magic_friend_01",
+    },
+  ],
+};
+
 const mockImageBuffer = Buffer.from("fake-png-data");
 
 function createMockDeps() {
@@ -235,14 +282,16 @@ describe("processBookGeneration", () => {
       input: { childName: "ゆうた", childAge: 4 },
     };
     deps.llmClient.generateStory.mockResolvedValueOnce({
-      ...mockStory,
+      ...premiumReadyStory,
       pages: [
-        { ...mockStory.pages[0], text: "ころころ こりころ。" },
-        { ...mockStory.pages[1], text: "ふわふわ ふわりん。" },
+        { ...premiumReadyStory.pages[0], text: "ころころ こりころ。" },
+        { ...premiumReadyStory.pages[1], text: "ふわふわ ふわりん。" },
+        premiumReadyStory.pages[2],
+        premiumReadyStory.pages[3],
       ],
     });
     deps.llmClient.rewriteStoryText.mockResolvedValue({
-      pages: mockStory.pages.map((page) => ({ text: page.text })),
+      pages: premiumReadyStory.pages.map((page) => ({ text: page.text })),
       storyTextRewriteModel: "gemini-2.5-pro",
       storyTextRewriteAttempts: 1,
     });
@@ -250,12 +299,47 @@ describe("processBookGeneration", () => {
     await processBookGeneration("book-rewrite", premiumBook, deps);
 
     expect(deps.llmClient.rewriteStoryText).toHaveBeenCalled();
+    expect(deps.llmClient.generateStory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        storyModelCandidates: ["gemini-2.5-pro", "gemini-2.5-flash"],
+      })
+    );
     expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
       "book-rewrite",
       expect.objectContaining({
         storyTextRewriteUsed: true,
         storyTextRewriteModel: "gemini-2.5-pro",
         storyTextRewriteAttempts: 1,
+      })
+    );
+  });
+
+  it("always runs rewrite for premium_paid even when the initial story already passes", async () => {
+    const premiumBook: BookData = {
+      ...baseBookData,
+      productPlan: "premium_paid",
+      input: { childName: "ゆうた", childAge: 4, storyRequest: "なくした星をさがす" },
+    };
+    deps.llmClient.generateStory.mockResolvedValueOnce(premiumReadyStory);
+    deps.llmClient.rewriteStoryText.mockResolvedValueOnce({
+      pages: premiumReadyStory.pages.map((page) => ({ text: page.text })),
+      storyTextRewriteModel: "gemini-2.5-pro",
+      storyTextRewriteAttempts: 1,
+    });
+
+    await processBookGeneration("book-rewrite-always", premiumBook, deps);
+
+    expect(deps.llmClient.rewriteStoryText).toHaveBeenCalledTimes(1);
+    expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
+      "book-rewrite-always",
+      expect.objectContaining({
+        storyTextRewriteUsed: true,
+        storyTextRewriteModel: "gemini-2.5-pro",
+        storyTextRewriteAttempts: 1,
+        storyGoal: premiumReadyStory.storyGoal,
+        mainQuestObject: premiumReadyStory.mainQuestObject,
+        forbiddenQuestObjects: premiumReadyStory.forbiddenQuestObjects,
+        storyCast: premiumReadyStory.cast,
       })
     );
   });
@@ -267,10 +351,12 @@ describe("processBookGeneration", () => {
       input: { childName: "ゆうた", childAge: 4, storyRequest: "なくした星をさがす" },
     };
     deps.llmClient.generateStory.mockResolvedValueOnce({
-      ...mockStory,
+      ...premiumReadyStory,
       pages: [
-        { ...mockStory.pages[0], text: "たのしいね。" },
-        { ...mockStory.pages[1], text: "すいかを さがしたよ。" },
+        { ...premiumReadyStory.pages[0], text: "たのしいね。" },
+        { ...premiumReadyStory.pages[1], text: "すいかを さがしたよ。" },
+        premiumReadyStory.pages[2],
+        premiumReadyStory.pages[3],
       ],
     });
     deps.llmClient.rewriteStoryText
@@ -278,12 +364,14 @@ describe("processBookGeneration", () => {
         pages: [
           { text: "すなばで ひかりが きらり。ゆうたは ふしぎそうに みつめました。" },
           { text: "でも ふたりは、まだ すいかを さがしているようでした。" },
+          { text: premiumReadyStory.pages[2].text },
+          { text: premiumReadyStory.pages[3].text },
         ],
         storyTextRewriteModel: "gemini-2.5-pro",
         storyTextRewriteAttempts: 1,
       })
       .mockResolvedValueOnce({
-        pages: mockStory.pages.map((page) => ({ text: page.text })),
+        pages: premiumReadyStory.pages.map((page) => ({ text: page.text })),
         storyTextRewriteModel: "gemini-2.5-pro",
         storyTextRewriteAttempts: 1,
       });
@@ -535,6 +623,12 @@ describe("processBookGeneration", () => {
       productPlan: "premium_paid",
       imageQualityTier: "premium",
     };
+    deps.llmClient.generateStory.mockResolvedValueOnce(premiumReadyStory);
+    deps.llmClient.rewriteStoryText.mockResolvedValueOnce({
+      pages: premiumReadyStory.pages.map((page) => ({ text: page.text })),
+      storyTextRewriteModel: "gemini-2.5-pro",
+      storyTextRewriteAttempts: 1,
+    });
 
     await processBookGeneration("book-premium", premiumBook, deps);
 
@@ -628,6 +722,12 @@ describe("processBookGeneration", () => {
       productPlan: "premium_paid",
       pageCount: 4,
     };
+    deps.llmClient.generateStory.mockResolvedValueOnce(premiumReadyStory);
+    deps.llmClient.rewriteStoryText.mockResolvedValueOnce({
+      pages: premiumReadyStory.pages.map((page) => ({ text: page.text })),
+      storyTextRewriteModel: "gemini-2.5-pro",
+      storyTextRewriteAttempts: 1,
+    });
 
     await processBookGeneration("book-premium-paid", premiumPaidBook, deps);
 

@@ -257,16 +257,20 @@ ${ageReadingGuidance}
 - Japanese story text rules: ${JAPANESE_STORY_TEXT_RULES}
 - Story goal consistency rules: ${STORY_GOAL_CONSISTENCY_RULES}
 - pageVisualRole ごとの本文設計ルール: ${PAGE_TEXT_ROLE_RULES}
+- 4ページ構成では、page0=発見の入口、page1=困りごとの提示、page2=探す/助ける行動、page3=mainQuestObject の解決と安心感、という流れを明確にしてください。
 - 悪い例: 「${BAD_TEXT_EXAMPLE}」
 - 理由: 意味が通りにくく、情景や行動が不足している。
 - 良い例:
 ${GOOD_TEXT_EXAMPLE}
 - 主要な登場人物は cast に定義してください。
 - 子ども主人公以外に、相棒、魔法キャラ、動物キャラ、第三者キャラが出る場合は必ず cast に入れてください。
+- 子ども主人公以外に、2ページ以上出る存在は必ず cast に入れてください。
+- 「ほしのこ」「魔法の友だち」「star-child」「star-creature」「動物」「相棒」は、再登場するなら必ず cast に入れてください。
 - 同じ存在として再登場するキャラクターは、毎ページ新しく作らず、同じ characterId を使ってください。
 - 各キャラクターには visualBible / signatureItems / doNotChange を持たせてください。
 - pages[].appearingCharacterIds には、そのページに出る characterId を入れてください。
 - pages[].focusCharacterId には、そのページの主役になる characterId を入れてください。
+- cast を省略してはいけません。ただし完全に主人公だけの話なら空配列は可です。
 
 ## 出力形式
 以下のJSON形式で出力してください。JSON以外のテキストは含めないでください。

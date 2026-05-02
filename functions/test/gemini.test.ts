@@ -50,6 +50,7 @@ describe("GeminiClient", () => {
       "gemini-2.5-pro",
       "gemini-2.5-flash",
     ]);
+    expect(resolveStoryModelCandidates({ productPlan: "premium_paid" })).not.toContain("gemini-2.5-flash-lite");
     expect(resolveStoryModelCandidates({ creationMode: "original_ai" })).toEqual([
       "gemini-2.5-pro",
       "gemini-2.5-flash",
@@ -329,6 +330,10 @@ describe("GeminiClient", () => {
     expect(rewritten?.pages).toHaveLength(1);
     expect(rewritten?.pages[0].text).toContain("あかい スコップ");
     expect(rewritten?.storyTextRewriteModel).toBe("gemini-2.5-pro");
+    const request = handlers["gemini-2.5-pro"].mock.calls[0][0];
+    const systemInstruction = request.systemInstruction.parts[0].text as string;
+    expect(systemInstruction).toContain("On the final page, explicitly show that the mainQuestObject was found, resolved, or safely returned");
+    expect(systemInstruction).toContain("cast must not be empty");
   });
 
   it("throws on invalid JSON response", async () => {

@@ -156,13 +156,16 @@ describe("validateGeneratedStoryQuality", () => {
       },
       readingProfile: getAgeReadingProfile(4),
       creationMode: "guided_ai",
+      productPlan: "premium_paid",
     });
 
     expect(report.issues.some((issue) => issue.code === "text_too_generic")).toBe(true);
     expect(report.issues.some((issue) => issue.code === "sentence_too_short_for_age")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "premium_text_too_short")).toBe(true);
     expect(report.issues.some((issue) => issue.code === "main_quest_drift")).toBe(true);
     expect(report.issues.some((issue) => issue.code === "forbidden_object_became_goal")).toBe(true);
     expect(report.issues.some((issue) => issue.code === "hidden_detail_used_as_main_goal")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "missing_quest_object_resolution")).toBe(true);
   });
 
   it("accepts richer quest-consistent preschool text", () => {
@@ -218,10 +221,53 @@ describe("validateGeneratedStoryQuality", () => {
       },
       readingProfile: getAgeReadingProfile(4),
       creationMode: "guided_ai",
+      productPlan: "premium_paid",
     });
 
     expect(report.ok).toBe(true);
     expect(report.issues.some((issue) => issue.severity === "error")).toBe(false);
+  });
+
+  it("treats unnatural premium preschool text as an error", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        storyGoal: "たっくんが ほしのこと いっしょに 星のかけらを さがす",
+        mainQuestObject: "星のかけら",
+        pages: [
+          {
+            text: "たっくんは すなばで あそんでいました。あれ、と しゃがむと、すなの したで 星のかけらが きらりと ひかりました。ふしぎに おもって、そっと てを のばしました。",
+            imagePrompt: "wide establishing shot of a sandbox with a tiny star glow and child-safe park details",
+            compositionHint: "wide establishing shot",
+            pageVisualRole: "opening_establishing",
+          },
+          {
+            text: "それは、ちいさな ほしのこでした。キラキラ、ふわふわ、こえをだしました。たっくんは びっくりしました。",
+            imagePrompt: "discovery scene with a star child appearing from the sand",
+            compositionHint: "medium shot",
+            pageVisualRole: "discovery",
+          },
+          {
+            text: "たっくんは ほしのこの なくした 星のかけらを さがしました。すなの みちを たどると、ひかりが ほそく のびていました。もうすこしで みつかりそうで、こころが どきどき しました。",
+            imagePrompt: "action scene following a glowing path in the sandbox",
+            compositionHint: "action shot",
+            pageVisualRole: "action",
+          },
+          {
+            text: "さいごに、星のかけらが きらりと 見つかりました。ほしのこは ありがとうと わらって、たっくんも うれしく なりました。やさしい ひかりが、すなばに のこりました。",
+            imagePrompt: "quiet ending with the found star shard and a warm glow",
+            compositionHint: "quiet ending shot",
+            pageVisualRole: "quiet_ending",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+      productPlan: "premium_paid",
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues.some((issue) => issue.code === "unnatural_japanese_risk" && issue.severity === "error")).toBe(true);
   });
 
   it("warns when scene detail or action/emotion is missing", () => {
