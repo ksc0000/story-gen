@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { processBookGeneration, shouldUseCharacterReferenceForPage } from "../src/generate-book";
+import {
+  processBookGeneration,
+  shouldUseCharacterReferenceForPage,
+  normalizeStoryCastWithChildProfile,
+} from "../src/generate-book";
 import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
 
 function hasUndefinedDeep(value: unknown): boolean {
@@ -103,6 +107,46 @@ const mockStory: GeneratedStory = {
 };
 
 const mockImageBuffer = Buffer.from("fake-png-data");
+
+function createPremiumPassingStory(): GeneratedStory {
+  return {
+    ...mockStory,
+    pages: [
+      {
+        text: "たっくんは、すなばで みどりの きょうりゅうを あそばせていました。すると、すなの なかで 小さな ひかりが きらりと ゆれて、たっくんは ふしぎそうに てを のばしました。つぎに なにが でてくるのか、どきどきして しゃがみこみました。",
+        imagePrompt: "wide establishing shot of a sandbox with a tiny star glow and a child-safe park background",
+        pageVisualRole: "opening_establishing",
+        compositionHint: "wide establishing shot",
+        appearingCharacterIds: ["child_protagonist"],
+        focusCharacterId: "child_protagonist",
+      },
+      {
+        text: "すなの うえで、ちいさな ほしのこが ふるえながら ひかっていました。『星のかけらを なくしちゃったの』と きくと、たっくんは びっくりしながらも そっと うなずきました。すなばの まんなかで、ふたりの ぼうけんが はじまりました。",
+        imagePrompt: "discovery scene with a small star child glowing on the sand and a gentle park setting",
+        pageVisualRole: "discovery",
+        compositionHint: "medium shot with discovery",
+        appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+        focusCharacterId: "magic_friend_01",
+      },
+      {
+        text: "ほしのこは たっくんの てのひらで、あかるく みちを てらしました。たっくんは すなの やまを そっと くずしながら、星のかけらの ありかを さがしました。『キラキラ、こっちかな』と つぶやくと、ふたりの めが ぱっと かがやきました。",
+        imagePrompt: "action scene in a sandbox with a glowing path, child hands, and clear gentle background details",
+        pageVisualRole: "action",
+        compositionHint: "action shot with hand detail",
+        appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+        focusCharacterId: "child_protagonist",
+      },
+      {
+        text: "ひかりの みちの さきで、星のかけらが きらりと みつかりました。ほしのこは ほっとしたように わらって、『ありがとう』と たっくんの まわりを くるりと とびました。やさしい よぞらの したで、たっくんも うれしく なりました。",
+        imagePrompt: "quiet ending under a gentle night sky with the found star shard glowing softly beside the child and star friend",
+        pageVisualRole: "quiet_ending",
+        compositionHint: "quiet ending shot",
+        appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+        focusCharacterId: "magic_friend_01",
+      },
+    ],
+  };
+}
 
 function createMockDeps() {
   return {
@@ -259,14 +303,68 @@ describe("processBookGeneration", () => {
     await processBookGeneration("book-rewrite", premiumBook, deps);
 
     expect(deps.llmClient.rewriteStoryText).toHaveBeenCalled();
-    expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
-      "book-rewrite",
+    const metadata = deps.updateBookStoryGenerationMetadata.mock.calls.at(-1)?.[1];
+    expect(metadata).toEqual(
       expect.objectContaining({
         storyTextRewriteUsed: true,
         storyTextRewriteModel: "gemini-2.5-pro",
-        storyTextRewriteAttempts: 1,
       })
     );
+    expect(metadata.storyTextRewriteAttempts).toBeGreaterThanOrEqual(1);
+  });
+
+  it("normalizes protagonist cast with child profile values", () => {
+    const normalized = normalizeStoryCastWithChildProfile(
+      {
+        ...mockStory,
+        characterBible: "A boy wearing yellow t-shirt and blue shorts",
+        cast: [
+          {
+            characterId: "tatchan",
+            displayName: "たっちゃん",
+            role: "protagonist",
+            visualBible: "boy with yellow t-shirt and blue shorts",
+            signatureItems: ["yellow shirt"],
+            doNotChange: ["Do not change the yellow shirt"],
+          },
+          ...(mockStory.cast ?? []),
+        ],
+        pages: mockStory.pages.map((page) => ({
+          ...page,
+          appearingCharacterIds: ["tatchan", "magic_friend_01"],
+          focusCharacterId: "tatchan",
+        })),
+      },
+      {
+        displayName: "たっちゃん",
+        nickname: "たっちゃん",
+        age: 4,
+        personality: {},
+        visualProfile: {
+          version: 1,
+          characterLook: "short black hair and gentle round face",
+          outfit: "青空が描かれたTシャツ",
+          signatureItem: "みどりのきょうりゅう",
+          characterBible: "same child with short black hair, gentle round face, blue sky t-shirt, green dinosaur toy",
+          referenceImageUrl: "https://example.com/child-ref.png",
+          approvedImageUrl: "https://example.com/child-approved.png",
+        },
+      }
+    );
+
+    expect(normalized.characterBible).toContain("blue sky t-shirt");
+    expect(normalized.cast?.[0]).toEqual(
+      expect.objectContaining({
+        characterId: "tatchan",
+        role: "protagonist",
+        referenceImageUrl: "https://example.com/child-ref.png",
+        approvedImageUrl: "https://example.com/child-approved.png",
+      })
+    );
+    expect(normalized.cast?.[0].doNotChange?.join(" ")).toContain("青空が描かれたTシャツ");
+    expect(normalized.cast?.[0].doNotChange?.join(" ")).toContain("short black hair and gentle round face");
+    expect(normalized.cast?.[0].doNotChange?.join(" ")).toContain("みどりのきょうりゅう");
+    expect(normalized.pages[0].appearingCharacterIds).toEqual(["tatchan", "magic_friend_01"]);
   });
 
   it("sanitizes story metadata and page data before Firestore writes", async () => {
@@ -589,7 +687,14 @@ describe("processBookGeneration", () => {
       ...baseBookData,
       productPlan: "premium_paid",
       imageQualityTier: "premium",
+      input: { childName: "ゆうた", childAge: 4 },
     };
+    deps.llmClient.generateStory.mockResolvedValueOnce(createPremiumPassingStory());
+    deps.llmClient.rewriteStoryText.mockResolvedValue({
+      pages: createPremiumPassingStory().pages.map((page) => ({ text: page.text })),
+      storyTextRewriteModel: "gemini-2.5-pro",
+      storyTextRewriteAttempts: 1,
+    });
 
     await processBookGeneration("book-premium", premiumBook, deps);
 
@@ -682,7 +787,14 @@ describe("processBookGeneration", () => {
       ...baseBookData,
       productPlan: "premium_paid",
       pageCount: 4,
+      input: { childName: "ゆうた", childAge: 4 },
     };
+    deps.llmClient.generateStory.mockResolvedValueOnce(createPremiumPassingStory());
+    deps.llmClient.rewriteStoryText.mockResolvedValue({
+      pages: createPremiumPassingStory().pages.map((page) => ({ text: page.text })),
+      storyTextRewriteModel: "gemini-2.5-pro",
+      storyTextRewriteAttempts: 1,
+    });
 
     await processBookGeneration("book-premium-paid", premiumPaidBook, deps);
 
@@ -894,6 +1006,81 @@ describe("processBookGeneration", () => {
         characterConsistencyMode: "all_pages",
       })
     );
+  });
+
+  it("saves the final rewritten quality report summary instead of the pre-rewrite threshold summary", async () => {
+    const premiumBook: BookData = {
+      ...baseBookData,
+      productPlan: "premium_paid",
+      input: { childName: "ゆうた", childAge: 4 },
+    };
+    deps.llmClient.generateStory.mockResolvedValueOnce({
+      ...mockStory,
+      pages: [
+        { ...mockStory.pages[0], text: "たのしいね。" },
+        { ...mockStory.pages[1], text: "みつけたよ。" },
+      ],
+    });
+    deps.llmClient.rewriteStoryText
+      .mockResolvedValueOnce({
+        pages: [
+          {
+            text: "たっくんは、すなばで みどりの きょうりゅうを あそばせていました。すると、すなの なかで 小さな ひかりが きらりと ゆれて、たっくんは そっと てを のばしました。",
+          },
+          {
+            text: "すなの うえで、ほしのこが こまった かおを していました。なくした 星のかけらを さがしていると きいて、たっくんは いっしょに さがそうと うなずきました。",
+          },
+        ],
+        storyTextRewriteModel: "gemini-2.5-pro",
+        storyTextRewriteAttempts: 1,
+      });
+
+    await processBookGeneration("book-final-report", premiumBook, deps);
+
+    const savedReport = deps.updateBookStoryQualityReport.mock.calls.at(-1)?.[1];
+    expect(savedReport.summary.minCharsPerPage).toBeGreaterThanOrEqual(70);
+  });
+
+  it("uses child profile constraints in final image prompt and avoids conflicting protagonist outfit text", async () => {
+    deps.llmClient.generateStory.mockResolvedValueOnce({
+      ...mockStory,
+      characterBible: "A boy wearing yellow t-shirt and blue shorts",
+      pages: [
+        {
+          ...mockStory.pages[0],
+          imagePrompt: "A child near a red slide in a sandbox scene",
+        },
+        mockStory.pages[1],
+      ],
+    });
+
+    const constrainedBook: BookData = {
+      ...baseBookData,
+      childProfileSnapshot: {
+        displayName: "たっちゃん",
+        nickname: "たっちゃん",
+        age: 4,
+        personality: {},
+        visualProfile: {
+          version: 1,
+          outfit: "青空が描かれたTシャツ",
+          signatureItem: "みどりのきょうりゅう",
+          characterLook: "short black hair and gentle round face",
+          characterBible:
+            "same child with short black hair, gentle round face, blue sky t-shirt, green dinosaur toy",
+          basePrompt:
+            "Background must always be quiet Japanese neighborhood park. Include square sandbox. Do not include playground equipment. Do not include buildings, roads, signs.",
+        },
+      },
+    };
+
+    await processBookGeneration("book-child-constraints", constrainedBook, deps);
+
+    const firstPrompt = deps.imageClient.generateImage.mock.calls[0]?.[0];
+    expect(firstPrompt).toContain("blue sky t-shirt");
+    expect(firstPrompt).not.toContain("yellow t-shirt and blue shorts");
+    expect(firstPrompt).toContain("Respect the child profile background constraints");
+    expect(firstPrompt).not.toContain("red slide");
   });
 
   it("keeps fixed templates working with key_pages reference mode", async () => {

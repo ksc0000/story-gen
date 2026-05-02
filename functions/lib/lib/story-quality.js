@@ -58,7 +58,7 @@ function countSentences(text) {
 function validateGeneratedStoryQuality(params) {
     const { story, readingProfile } = params;
     const creationMode = params.creationMode ?? "guided_ai";
-    const threshold = STORY_QUALITY_THRESHOLDS[readingProfile.ageBand];
+    const threshold = getEffectiveThreshold(readingProfile.ageBand, params.productPlan);
     const issues = [];
     const pageCount = story.pages.length;
     const recurringCastIds = new Map();
@@ -205,9 +205,12 @@ function validateGeneratedStoryQuality(params) {
         story: params.story,
         readingProfile,
         issues,
+        productPlan: params.productPlan,
     });
     const averageCharsPerPage = Math.round(perPageStats.reduce((sum, stats) => sum + stats.chars, 0) / pageCount);
     const averageSentencesPerPage = Number((perPageStats.reduce((sum, stats) => sum + stats.sentences, 0) / pageCount).toFixed(2));
+    const actualMinCharsPerPage = Math.min(...perPageStats.map((stats) => stats.chars));
+    const actualMinSentencesPerPage = Math.min(...perPageStats.map((stats) => stats.sentences));
     if (averageCharsPerPage < threshold.minCharsPerPage) {
         issues.push({
             severity: "error",
@@ -322,10 +325,24 @@ function validateGeneratedStoryQuality(params) {
             pageCount,
             averageCharsPerPage,
             averageSentencesPerPage,
-            minCharsPerPage: threshold.minCharsPerPage,
-            minSentencesPerPage: threshold.minSentencesPerPage,
+            minCharsPerPage: actualMinCharsPerPage,
+            minSentencesPerPage: actualMinSentencesPerPage,
         },
     };
+}
+function getEffectiveThreshold(ageBand, productPlan) {
+    const base = STORY_QUALITY_THRESHOLDS[ageBand];
+    if (productPlan !== "premium_paid") {
+        return base;
+    }
+    if (ageBand === "preschool_3_4" || ageBand === "general_child") {
+        return {
+            ...base,
+            minCharsPerPage: Math.max(base.minCharsPerPage, 70),
+            minSentencesPerPage: Math.max(base.minSentencesPerPage, 3),
+        };
+    }
+    return base;
 }
 function hasImagePromptTextRisk(imagePrompt) {
     const normalized = imagePrompt.toLowerCase();
@@ -372,6 +389,7 @@ function analyzeJapaneseTextHeuristics(text) {
 function addStoryGoalConsistencyIssues(params) {
     const { story, readingProfile, issues } = params;
     const isThreePlus = readingProfile.ageBand !== "baby_toddler";
+    const isPremium = params.productPlan === "premium_paid";
     if (!isThreePlus) {
         return;
     }
@@ -412,7 +430,7 @@ function addStoryGoalConsistencyIssues(params) {
         const motifHits = visualMotifTokens.filter((token) => token && normalized.includes(token));
         if (!hasMainQuestSignal && !hasStoryGoalSignal && countJapaneseTextChars(text) >= 20) {
             issues.push({
-                severity: pageIndex === 0 ? "warning" : "error",
+                severity: pageIndex === 0 && !isPremium ? "warning" : "error",
                 code: "page_text_not_connected_to_story_goal",
                 message: "本文が storyGoal や mainQuestObject につながっていない可能性があります。",
                 pageIndex,
@@ -452,6 +470,29 @@ function addStoryGoalConsistencyIssues(params) {
                 severity: "warning",
                 code: "missing_visual_motif_in_text",
                 message: "本文に visualMotif や主目的の手がかりが十分反映されていない可能性があります。",
+                pageIndex,
+            });
+        }
+        if (isPremium &&
+            page.pageVisualRole === "opening_establishing" &&
+            !hasMainQuestSignal &&
+            !hasStoryGoalSignal) {
+            issues.push({
+                severity: "error",
+                code: "missing_opening_hook",
+                message: "冒頭ページに storyGoal へつながる発見や導入フックが不足しています。",
+                pageIndex,
+            });
+        }
+        if (isPremium &&
+            pageIndex === story.pages.length - 1 &&
+            (!hasMainQuestSignal || !/(みつか|見つか|あった|戻っ|とどい|ありがとう|安心|ほっと|解決)/.test(text))) {
+            issues.push({
+                severity: "error",
+                code: !hasMainQuestSignal ? "missing_quest_object_resolution" : "missing_story_resolution",
+                message: !hasMainQuestSignal
+                    ? "最終ページで mainQuestObject の解決が明示されていません。"
+                    : "最終ページで解決や安心感が十分に書かれていません。",
                 pageIndex,
             });
         }
@@ -497,7 +538,7 @@ function addCastConsistencyIssues(params) {
         if (pagesWithoutAppearingIds > 0) {
             params.issues.push({
                 severity: "warning",
-                code: "cast_missing_page_linkage",
+                code: "missing_appearing_character_ids",
                 message: "cast はあるのに pages[].appearingCharacterIds が不足しているページがあります。",
                 actual: pagesWithoutAppearingIds,
             });

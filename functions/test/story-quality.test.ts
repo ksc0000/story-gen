@@ -156,6 +156,7 @@ describe("validateGeneratedStoryQuality", () => {
       },
       readingProfile: getAgeReadingProfile(4),
       creationMode: "guided_ai",
+      productPlan: "premium_paid",
     });
 
     expect(report.issues.some((issue) => issue.code === "text_too_generic")).toBe(true);
@@ -163,6 +164,50 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "main_quest_drift")).toBe(true);
     expect(report.issues.some((issue) => issue.code === "forbidden_object_became_goal")).toBe(true);
     expect(report.issues.some((issue) => issue.code === "hidden_detail_used_as_main_goal")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "missing_quest_object_resolution")).toBe(true);
+  });
+
+  it("treats thin premium preschool text as not ok even if the free threshold would pass", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        storyGoal: "たっくんが ほしのこと いっしょに 星のかけらを さがす",
+        mainQuestObject: "星のかけら",
+        pages: [
+          {
+            text: "たっくんは、すなばであそんでいました。あれ？ ちいさな ひかりを 見つけました。",
+            imagePrompt: "wide establishing shot of a sandbox with a tiny glow",
+            compositionHint: "wide establishing shot",
+            pageVisualRole: "opening_establishing",
+          },
+          {
+            text: "それは、ちいさな ほしのこでした。こんにちは、と こえが しました。たっくんは びっくりしました。",
+            imagePrompt: "discovery scene with a small star child in the sand",
+            compositionHint: "medium shot",
+            pageVisualRole: "discovery",
+          },
+          {
+            text: "たっくんは いっしょに さがそうと いいました。ほしのこを そっと もちあげました。だいじょうぶだよ。",
+            imagePrompt: "action scene in a sandbox",
+            compositionHint: "action shot",
+            pageVisualRole: "action",
+          },
+          {
+            text: "よるになりました。たっくんと ほしのこは おそらを 見ていました。わあ、きれい！",
+            imagePrompt: "quiet ending under the night sky",
+            compositionHint: "quiet ending shot",
+            pageVisualRole: "quiet_ending",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+      productPlan: "premium_paid",
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.summary.minCharsPerPage).toBeLessThan(70);
+    expect(report.issues.some((issue) => issue.code === "text.too_short_chars")).toBe(true);
   });
 
   it("accepts richer quest-consistent preschool text", () => {
@@ -218,6 +263,7 @@ describe("validateGeneratedStoryQuality", () => {
       },
       readingProfile: getAgeReadingProfile(4),
       creationMode: "guided_ai",
+      productPlan: "premium_paid",
     });
 
     expect(report.ok).toBe(true);

@@ -168,6 +168,22 @@ describe("buildImagePrompt", () => {
     expect(result).toContain("tiny purple top hat");
     expect(result).not.toContain("small blue bird");
   });
+  it("respects child profile sandbox constraints and strips conflicting playground equipment from the scene", () => {
+    const result = buildImagePrompt(
+      "A child near a red slide in a sandbox park scene",
+      "watercolor",
+      "Approved child profile: same child with a blue sky t-shirt.",
+      undefined,
+      {
+        childProfileBasePrompt:
+          "Background must always be quiet Japanese neighborhood park. Include square sandbox. Do not include playground equipment. Do not include buildings, roads, signs.",
+      }
+    );
+
+    expect(result).toContain("Respect the child profile background constraints");
+    expect(result).toContain("do not add slides, swings, playground equipment");
+    expect(result).not.toContain("red slide");
+  });
   it("appends safety keywords", () => {
     const result = buildImagePrompt("A child at a party", "flat");
     expect(result).toContain("safe for children");

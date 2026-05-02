@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateBook = void 0;
 exports.sanitizeStoryCastForFirestore = sanitizeStoryCastForFirestore;
+exports.normalizeStoryCastWithChildProfile = normalizeStoryCastWithChildProfile;
 exports.processBookGeneration = processBookGeneration;
 exports.shouldUseCharacterReferenceForPage = shouldUseCharacterReferenceForPage;
 const firestore_1 = require("firebase-functions/v2/firestore");
@@ -80,6 +81,94 @@ function sanitizeStoryCastForFirestore(cast) {
         approvedImageUrl: character.approvedImageUrl,
     }));
     return sanitized.length > 0 ? sanitized : undefined;
+}
+function normalizeStoryCastWithChildProfile(story, childProfileSnapshot) {
+    if (!childProfileSnapshot) {
+        return story;
+    }
+    const protagonistId = resolveProtagonistCharacterId(story, childProfileSnapshot);
+    const protagonistDisplayName = childProfileSnapshot.nickname || childProfileSnapshot.displayName || "主人公";
+    const visualProfile = childProfileSnapshot.visualProfile;
+    const signatureItems = [
+        visualProfile.signatureItem,
+        ...(story.cast ?? [])
+            .filter((character) => character.characterId === protagonistId || character.role === "protagonist")
+            .flatMap((character) => character.signatureItems ?? []),
+    ].filter((value, index, array) => Boolean(value) && array.indexOf(value) === index);
+    const doNotChange = [
+        visualProfile.characterLook ? `Do not change the child's look: ${visualProfile.characterLook}.` : undefined,
+        visualProfile.outfit ? `Do not change the outfit: ${visualProfile.outfit}.` : undefined,
+        visualProfile.signatureItem ? `Do not remove the signature item: ${visualProfile.signatureItem}.` : undefined,
+        ...(story.cast ?? [])
+            .filter((character) => character.characterId === protagonistId || character.role === "protagonist")
+            .flatMap((character) => character.doNotChange ?? []),
+    ].filter((value, index, array) => Boolean(value) && array.indexOf(value) === index);
+    const existingProtagonist = story.cast?.find((character) => character.characterId === protagonistId) ??
+        story.cast?.find((character) => character.role === "protagonist");
+    const protagonistCast = (0, firestore_sanitize_1.removeUndefinedDeep)({
+        characterId: protagonistId,
+        displayName: protagonistDisplayName,
+        role: "protagonist",
+        visualBible: visualProfile.characterBible ||
+            existingProtagonist?.visualBible ||
+            story.characterBible,
+        silhouette: existingProtagonist?.silhouette,
+        colorPalette: existingProtagonist?.colorPalette,
+        signatureItems: signatureItems.length > 0 ? signatureItems : undefined,
+        doNotChange: doNotChange.length > 0 ? doNotChange : undefined,
+        canChangeByScene: existingProtagonist?.canChangeByScene,
+        referenceImageUrl: visualProfile.referenceImageUrl,
+        approvedImageUrl: visualProfile.approvedImageUrl,
+    });
+    const otherCast = (story.cast ?? []).filter((character) => character.characterId !== protagonistId &&
+        character.role !== "protagonist");
+    const normalizedPages = story.pages.map((page) => ({
+        ...page,
+        appearingCharacterIds: page.appearingCharacterIds?.map((characterId) => isGeneratedProtagonistId(characterId, childProfileSnapshot) ? protagonistId : characterId),
+        focusCharacterId: page.focusCharacterId && isGeneratedProtagonistId(page.focusCharacterId, childProfileSnapshot)
+            ? protagonistId
+            : page.focusCharacterId,
+    }));
+    return {
+        ...story,
+        characterBible: visualProfile.characterBible || story.characterBible,
+        cast: [protagonistCast, ...otherCast],
+        pages: normalizedPages,
+    };
+}
+function resolveProtagonistCharacterId(story, childProfileSnapshot) {
+    const explicitProtagonistId = story.cast?.find((character) => character.role === "protagonist")?.characterId;
+    if (explicitProtagonistId) {
+        return explicitProtagonistId;
+    }
+    const candidateIds = new Set();
+    for (const page of story.pages) {
+        for (const characterId of page.appearingCharacterIds ?? []) {
+            if (isGeneratedProtagonistId(characterId, childProfileSnapshot)) {
+                candidateIds.add(characterId);
+            }
+        }
+        if (page.focusCharacterId && isGeneratedProtagonistId(page.focusCharacterId, childProfileSnapshot)) {
+            candidateIds.add(page.focusCharacterId);
+        }
+    }
+    return candidateIds.values().next().value ?? "child_protagonist";
+}
+function isGeneratedProtagonistId(value, childProfileSnapshot) {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) {
+        return false;
+    }
+    if (normalized === "child_protagonist" || normalized === "protagonist") {
+        return true;
+    }
+    const nameCandidates = [
+        childProfileSnapshot.nickname,
+        childProfileSnapshot.displayName,
+    ]
+        .filter(Boolean)
+        .map((name) => name.replace(/\s+/g, "").toLowerCase());
+    return nameCandidates.includes(normalized.replace(/\s+/g, ""));
 }
 function shouldThrottleImageRequests() {
     return process.env.NODE_ENV !== "test";
@@ -270,6 +359,7 @@ async function processBookGeneration(bookId, bookData, deps) {
                 cast: story.cast,
                 appearingCharacterIds: storyPage.appearingCharacterIds,
                 focusCharacterId: storyPage.focusCharacterId,
+                childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
             });
             // Generate image with retries (skip in development)
             let imageBuffer = null;
@@ -504,7 +594,7 @@ async function generateStoryWithQualityGate(params) {
         theme: params.normalizedBookData.theme,
         categoryGroupId: params.template.categoryGroupId,
     });
-    let story = await params.llmClient.generateStory({
+    let story = normalizeStoryCastWithChildProfile(await params.llmClient.generateStory({
         systemPrompt: baseSystemPrompt,
         childName: params.mergedInput.childName,
         childAge: params.mergedInput.childAge,
@@ -526,11 +616,12 @@ async function generateStoryWithQualityGate(params) {
         theme: params.normalizedBookData.theme,
         categoryGroupId: params.template.categoryGroupId,
         storyModelCandidates,
-    });
+    }), params.normalizedBookData.childProfileSnapshot);
     let qualityReport = (0, story_quality_1.validateGeneratedStoryQuality)({
         story,
         readingProfile: params.readingProfile,
         creationMode: params.normalizedBookData.creationMode,
+        productPlan: params.normalizedBookData.productPlan,
     });
     let rewriteMetadata;
     const forceRewrite = params.normalizedBookData.productPlan === "premium_paid" ||
@@ -569,6 +660,7 @@ async function generateStoryWithQualityGate(params) {
             story,
             readingProfile: params.readingProfile,
             creationMode: params.normalizedBookData.creationMode,
+            productPlan: params.normalizedBookData.productPlan,
         });
         if (!forceRewrite && !shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
             break;
@@ -580,7 +672,7 @@ async function generateStoryWithQualityGate(params) {
     if (qualityReport.ok) {
         return { story, qualityReport, rewriteMetadata };
     }
-    story = await params.llmClient.generateStory({
+    story = normalizeStoryCastWithChildProfile(await params.llmClient.generateStory({
         systemPrompt: (0, prompt_builder_1.appendQualityRetryInstruction)(baseSystemPrompt, qualityReport),
         childName: params.mergedInput.childName,
         childAge: params.mergedInput.childAge,
@@ -602,7 +694,7 @@ async function generateStoryWithQualityGate(params) {
         theme: params.normalizedBookData.theme,
         categoryGroupId: params.template.categoryGroupId,
         storyModelCandidates,
-    });
+    }), params.normalizedBookData.childProfileSnapshot);
     rewritePassCount = rewriteMetadata?.storyTextRewriteAttempts ?? 0;
     while (params.llmClient.rewriteStoryText &&
         rewritePassCount < maxRewritePasses &&
@@ -635,6 +727,7 @@ async function generateStoryWithQualityGate(params) {
             story,
             readingProfile: params.readingProfile,
             creationMode: params.normalizedBookData.creationMode,
+            productPlan: params.normalizedBookData.productPlan,
         });
         if (!forceRewrite && !shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
             break;
@@ -647,6 +740,7 @@ async function generateStoryWithQualityGate(params) {
         story,
         readingProfile: params.readingProfile,
         creationMode: params.normalizedBookData.creationMode,
+        productPlan: params.normalizedBookData.productPlan,
     });
     return { story, qualityReport, rewriteMetadata };
 }
@@ -658,6 +752,7 @@ function generateFixedTemplateStoryWithQualityReport(fixedStory, mergedInput, bo
             story,
             readingProfile,
             creationMode: "fixed_template",
+            productPlan: bookData.productPlan,
         }),
     };
 }

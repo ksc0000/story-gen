@@ -15,6 +15,8 @@ import type {
   GeneratedStory,
   AgeBand,
   CharacterConsistencyMode,
+  StoryCharacter,
+  StoryCharacterRole,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, getStyleReferenceImagePath, appendQualityRetryInstruction } from "./lib/prompt-builder";
@@ -75,6 +77,123 @@ export function sanitizeStoryCastForFirestore(cast?: GeneratedStory["cast"]): Ge
     );
 
   return sanitized.length > 0 ? sanitized : undefined;
+}
+
+export function normalizeStoryCastWithChildProfile(
+  story: GeneratedStory,
+  childProfileSnapshot?: BookData["childProfileSnapshot"]
+): GeneratedStory {
+  if (!childProfileSnapshot) {
+    return story;
+  }
+
+  const protagonistId = resolveProtagonistCharacterId(story, childProfileSnapshot);
+  const protagonistDisplayName =
+    childProfileSnapshot.nickname || childProfileSnapshot.displayName || "主人公";
+  const visualProfile = childProfileSnapshot.visualProfile;
+  const signatureItems = [
+    visualProfile.signatureItem,
+    ...(story.cast ?? [])
+      .filter((character) => character.characterId === protagonistId || character.role === "protagonist")
+      .flatMap((character) => character.signatureItems ?? []),
+  ].filter((value, index, array): value is string => Boolean(value) && array.indexOf(value) === index);
+  const doNotChange = [
+    visualProfile.characterLook ? `Do not change the child's look: ${visualProfile.characterLook}.` : undefined,
+    visualProfile.outfit ? `Do not change the outfit: ${visualProfile.outfit}.` : undefined,
+    visualProfile.signatureItem ? `Do not remove the signature item: ${visualProfile.signatureItem}.` : undefined,
+    ...(story.cast ?? [])
+      .filter((character) => character.characterId === protagonistId || character.role === "protagonist")
+      .flatMap((character) => character.doNotChange ?? []),
+  ].filter((value, index, array): value is string => Boolean(value) && array.indexOf(value) === index);
+  const existingProtagonist =
+    story.cast?.find((character) => character.characterId === protagonistId) ??
+    story.cast?.find((character) => character.role === "protagonist");
+
+  const protagonistCast: StoryCharacter = removeUndefinedDeep({
+    characterId: protagonistId,
+    displayName: protagonistDisplayName,
+    role: "protagonist" satisfies StoryCharacterRole,
+    visualBible:
+      visualProfile.characterBible ||
+      existingProtagonist?.visualBible ||
+      story.characterBible,
+    silhouette: existingProtagonist?.silhouette,
+    colorPalette: existingProtagonist?.colorPalette,
+    signatureItems: signatureItems.length > 0 ? signatureItems : undefined,
+    doNotChange: doNotChange.length > 0 ? doNotChange : undefined,
+    canChangeByScene: existingProtagonist?.canChangeByScene,
+    referenceImageUrl: visualProfile.referenceImageUrl,
+    approvedImageUrl: visualProfile.approvedImageUrl,
+  });
+
+  const otherCast = (story.cast ?? []).filter(
+    (character) =>
+      character.characterId !== protagonistId &&
+      character.role !== "protagonist"
+  );
+  const normalizedPages = story.pages.map((page) => ({
+    ...page,
+    appearingCharacterIds: page.appearingCharacterIds?.map((characterId) =>
+      isGeneratedProtagonistId(characterId, childProfileSnapshot) ? protagonistId : characterId
+    ),
+    focusCharacterId:
+      page.focusCharacterId && isGeneratedProtagonistId(page.focusCharacterId, childProfileSnapshot)
+        ? protagonistId
+        : page.focusCharacterId,
+  }));
+
+  return {
+    ...story,
+    characterBible: visualProfile.characterBible || story.characterBible,
+    cast: [protagonistCast, ...otherCast],
+    pages: normalizedPages,
+  };
+}
+
+function resolveProtagonistCharacterId(
+  story: GeneratedStory,
+  childProfileSnapshot: NonNullable<BookData["childProfileSnapshot"]>
+): string {
+  const explicitProtagonistId = story.cast?.find((character) => character.role === "protagonist")?.characterId;
+  if (explicitProtagonistId) {
+    return explicitProtagonistId;
+  }
+
+  const candidateIds = new Set<string>();
+  for (const page of story.pages) {
+    for (const characterId of page.appearingCharacterIds ?? []) {
+      if (isGeneratedProtagonistId(characterId, childProfileSnapshot)) {
+        candidateIds.add(characterId);
+      }
+    }
+    if (page.focusCharacterId && isGeneratedProtagonistId(page.focusCharacterId, childProfileSnapshot)) {
+      candidateIds.add(page.focusCharacterId);
+    }
+  }
+
+  return candidateIds.values().next().value ?? "child_protagonist";
+}
+
+function isGeneratedProtagonistId(
+  value: string,
+  childProfileSnapshot: NonNullable<BookData["childProfileSnapshot"]>
+): boolean {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  if (normalized === "child_protagonist" || normalized === "protagonist") {
+    return true;
+  }
+
+  const nameCandidates = [
+    childProfileSnapshot.nickname,
+    childProfileSnapshot.displayName,
+  ]
+    .filter(Boolean)
+    .map((name) => name!.replace(/\s+/g, "").toLowerCase());
+
+  return nameCandidates.includes(normalized.replace(/\s+/g, ""));
 }
 
 function shouldThrottleImageRequests(): boolean {
@@ -363,6 +482,7 @@ export async function processBookGeneration(
           cast: story.cast,
           appearingCharacterIds: storyPage.appearingCharacterIds,
           focusCharacterId: storyPage.focusCharacterId,
+          childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
         }
       );
 
@@ -656,7 +776,7 @@ async function generateStoryWithQualityGate(params: {
     categoryGroupId: params.template.categoryGroupId,
   });
 
-  let story = await params.llmClient.generateStory({
+  let story = normalizeStoryCastWithChildProfile(await params.llmClient.generateStory({
     systemPrompt: baseSystemPrompt,
     childName: params.mergedInput.childName,
     childAge: params.mergedInput.childAge,
@@ -678,12 +798,13 @@ async function generateStoryWithQualityGate(params: {
     theme: params.normalizedBookData.theme,
     categoryGroupId: params.template.categoryGroupId,
     storyModelCandidates,
-  });
+  }), params.normalizedBookData.childProfileSnapshot);
 
   let qualityReport = validateGeneratedStoryQuality({
     story,
     readingProfile: params.readingProfile,
     creationMode: params.normalizedBookData.creationMode,
+    productPlan: params.normalizedBookData.productPlan,
   });
   let rewriteMetadata:
     | Pick<BookData, "storyTextRewriteUsed" | "storyTextRewriteModel" | "storyTextRewriteAttempts">
@@ -730,6 +851,7 @@ async function generateStoryWithQualityGate(params: {
       story,
       readingProfile: params.readingProfile,
       creationMode: params.normalizedBookData.creationMode,
+      productPlan: params.normalizedBookData.productPlan,
     });
 
     if (!forceRewrite && !shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
@@ -744,7 +866,7 @@ async function generateStoryWithQualityGate(params: {
     return { story, qualityReport, rewriteMetadata };
   }
 
-  story = await params.llmClient.generateStory({
+  story = normalizeStoryCastWithChildProfile(await params.llmClient.generateStory({
     systemPrompt: appendQualityRetryInstruction(baseSystemPrompt, qualityReport),
     childName: params.mergedInput.childName,
     childAge: params.mergedInput.childAge,
@@ -766,7 +888,7 @@ async function generateStoryWithQualityGate(params: {
     theme: params.normalizedBookData.theme,
     categoryGroupId: params.template.categoryGroupId,
     storyModelCandidates,
-  });
+  }), params.normalizedBookData.childProfileSnapshot);
 
   rewritePassCount = rewriteMetadata?.storyTextRewriteAttempts ?? 0;
   while (
@@ -802,6 +924,7 @@ async function generateStoryWithQualityGate(params: {
       story,
       readingProfile: params.readingProfile,
       creationMode: params.normalizedBookData.creationMode,
+      productPlan: params.normalizedBookData.productPlan,
     });
     if (!forceRewrite && !shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
       break;
@@ -815,6 +938,7 @@ async function generateStoryWithQualityGate(params: {
     story,
     readingProfile: params.readingProfile,
     creationMode: params.normalizedBookData.creationMode,
+    productPlan: params.normalizedBookData.productPlan,
   });
 
   return { story, qualityReport, rewriteMetadata };
@@ -840,6 +964,7 @@ function generateFixedTemplateStoryWithQualityReport(
       story,
       readingProfile,
       creationMode: "fixed_template",
+      productPlan: bookData.productPlan,
     }),
   };
 }

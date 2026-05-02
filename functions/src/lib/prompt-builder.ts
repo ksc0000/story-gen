@@ -113,7 +113,7 @@ const STORY_GOAL_CONSISTENCY_RULES = [
 
 const PAGE_TEXT_ROLE_RULES = [
   "opening_establishing: 場所、主人公の行動、storyGoal につながる小さな異変や発見、次ページへの予感を入れる。",
-  "discovery: 見つけたもの、それがなぜ不思議か、何に困っているか、主人公の反応を入れる。",
+  "discovery: 見つけたもの、それがなぜ不思議か、何に困っているか、主人公の反応を入れる。場所や手元の状況も1文入れる。",
   "action: mainQuestObject を探すための行動、探す場所、小さな手がかり、同じ目的に向かっていることを明確にする。",
   "emotional_closeup: 表情、手元、気持ち、何を感じて何を決めたかを自然に描く。",
   "object_detail: 小物の見た目と、その小物が storyGoal にどう関係するかを書く。",
@@ -191,6 +191,49 @@ function sanitizeImagePromptText(value: string): string {
     .replace(/\b(repeated phrase|phrase|text|letters?|caption|speech bubbles?|labels?|signboards?|signage|written|writing|title on|words?|quotes?)\b/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
+}
+
+function sanitizeSceneAgainstChildConstraints(scene: string, childProfileBasePrompt?: string): string {
+  if (!childProfileBasePrompt) {
+    return scene;
+  }
+
+  let sanitized = scene;
+  const normalizedConstraints = childProfileBasePrompt.toLowerCase();
+
+  if (normalizedConstraints.includes("do not include playground equipment")) {
+    sanitized = sanitized
+      .replace(/\bred slide\b/gi, "")
+      .replace(/\bslides?\b/gi, "")
+      .replace(/\bswings?\b/gi, "")
+      .replace(/\bplayground equipment\b/gi, "")
+      .replace(/\bjungle gym\b/gi, "")
+      .replace(/\bclimbing frame\b/gi, "");
+  }
+
+  if (normalizedConstraints.includes("do not include buildings")) {
+    sanitized = sanitized.replace(/\bbuildings?\b/gi, "");
+  }
+  if (normalizedConstraints.includes("do not include roads")) {
+    sanitized = sanitized.replace(/\broads?\b/gi, "");
+  }
+  if (normalizedConstraints.includes("do not include signs")) {
+    sanitized = sanitized.replace(/\bsigns?\b/gi, "");
+  }
+
+  return sanitized.replace(/\s{2,}/g, " ").replace(/\s+,/g, ",").trim();
+}
+
+function buildChildProfileConstraintGuidance(childProfileBasePrompt?: string): string {
+  if (!childProfileBasePrompt?.trim()) {
+    return "";
+  }
+
+  return [
+    `Child profile scene constraints: ${childProfileBasePrompt.trim()}`,
+    "Respect the child profile background constraints.",
+    "If the child profile says sandbox or quiet neighborhood park only, do not add slides, swings, playground equipment, buildings, roads, signs, or indoor spaces.",
+  ].join(" ");
 }
 
 function getBackgroundRichnessGuidance(ageBand?: AgeBand): string {
@@ -292,10 +335,13 @@ ${ageReadingGuidance}
 ${GOOD_TEXT_EXAMPLE}
 - 主要な登場人物は cast に定義してください。
 - 子ども主人公以外に、相棒、魔法キャラ、動物キャラ、第三者キャラが出る場合は必ず cast に入れてください。
+- 子ども主人公以外に、2ページ以上登場する存在は必ず cast に入れてください。
+- 「ほしのこ」「魔法の友だち」「star-child」「star-creature」「動物」「相棒」は必ず cast に入れてください。
 - 同じ存在として再登場するキャラクターは、毎ページ新しく作らず、同じ characterId を使ってください。
 - 各キャラクターには visualBible / signatureItems / doNotChange を持たせてください。
 - pages[].appearingCharacterIds には、そのページに出る characterId を入れてください。
 - pages[].focusCharacterId には、そのページの主役になる characterId を入れてください。
+- cast を省略してはいけません。ただし完全に主人公だけの話なら空配列は可です。
 
 ## 出力形式
 以下のJSON形式で出力してください。JSON以外のテキストは含めないでください。
@@ -388,6 +434,7 @@ export function buildImagePrompt(
     cast?: StoryCharacter[];
     appearingCharacterIds?: string[];
     focusCharacterId?: string;
+    childProfileBasePrompt?: string;
   }
 ): string {
   const compositionHint = sanitizeImagePromptText(
@@ -398,9 +445,14 @@ export function buildImagePrompt(
   const hiddenDetail = sanitizeImagePromptText(options?.hiddenDetail || "");
   const ageBand = options?.ageBand;
   const imageModelProfile = options?.imageModelProfile;
-  const sanitizedBasePrompt = sanitizeImagePromptText(basePrompt);
+  const sanitizedBasePrompt = sanitizeSceneAgainstChildConstraints(
+    sanitizeImagePromptText(basePrompt),
+    options?.childProfileBasePrompt
+  );
   const appearingCharacters = (options?.cast ?? []).filter((character) =>
-    options?.appearingCharacterIds?.includes(character.characterId)
+    options?.appearingCharacterIds?.includes(character.characterId) &&
+    character.role !== "protagonist" &&
+    character.characterId !== "child_protagonist"
   );
   const consistency = [
     characterBible ? `Character consistency: ${characterBible}` : "",
@@ -423,6 +475,7 @@ export function buildImagePrompt(
     `Background richness: ${getBackgroundRichnessGuidance(ageBand)}`,
     "Show meaningful surroundings, not just the protagonist.",
     "Keep the scene rich but not cluttered.",
+    buildChildProfileConstraintGuidance(options?.childProfileBasePrompt),
   ].join(" ");
 
   const motifGuidance = visualMotif
