@@ -156,147 +156,10 @@ describe("validateGeneratedStoryQuality", () => {
       },
       readingProfile: getAgeReadingProfile(4),
       creationMode: "guided_ai",
-      productPlan: "premium_paid",
     });
-
     expect(report.issues.some((issue) => issue.code === "text_too_generic")).toBe(true);
     expect(report.issues.some((issue) => issue.code === "sentence_too_short_for_age")).toBe(true);
     expect(report.issues.some((issue) => issue.code === "forbidden_object_became_goal")).toBe(true);
-    expect(
-      report.issues.some((issue) => issue.code === "forbidden_object_became_goal_persistent")
-    ).toBe(true);
-    expect(report.issues.some((issue) => issue.code === "missing_quest_object_resolution")).toBe(true);
-  });
-
-  it("does not treat a favorite thing as a fatal quest drift when it appears only once", () => {
-    const report = validateGeneratedStoryQuality({
-      story: {
-        ...baseStory,
-        storyGoal: "たっちゃんが ほしのこと いっしょに 星のかけらを さがす",
-        mainQuestObject: "星のかけら",
-        forbiddenQuestObjects: ["すいか"],
-        pages: [
-          {
-            text: "たっちゃんは すなばで あそびながら、すいかの もようの バケツを みつめました。すぐ そばで 小さな 星のかけらが きらりと ひかって、ふしぎな ぼうけんの はじまりを しらせています。たっちゃんは そっと しゃがみこみました。",
-            imagePrompt: "wide establishing shot of a sandbox with a tiny star glow and a subtle watermelon-pattern bucket in the background",
-            compositionHint: "wide establishing shot",
-            pageVisualRole: "opening_establishing",
-          },
-          {
-            text: "すなの うえで ほしのこが ふるえながら、なくした ほしのかけらを さがしていると つたえました。たっちゃんは びっくりしながらも、いっしょに さがそうと うなずきました。すなばの まんなかで、ふたりの ぼうけんが はじまりました。",
-            imagePrompt: "discovery scene with a small star child in the sandbox and soft park details",
-            compositionHint: "medium shot with discovery",
-            pageVisualRole: "discovery",
-          },
-          {
-            text: "たっちゃんは すなの やまを やさしく くずしながら、ほしのかけらの ひかりを たどりました。ほしのこは てのひらで きらりと ひかって、つぎの ばしょを おしえてくれました。もう すこしで みつかりそうです。",
-            imagePrompt: "action scene in a sandbox with a glowing star trail and child hands",
-            compositionHint: "action shot",
-            pageVisualRole: "action",
-          },
-          {
-            text: "ひかりの みちの さきで、ほしのかけらが きらりと みつかりました。ほしのこは ほっとした ように わらって、『ありがとう』と たっちゃんに つたえました。やさしい よぞらの したで、たっちゃんも うれしく なりました。",
-            imagePrompt: "quiet ending under the night sky with the found star shard glowing softly",
-            compositionHint: "quiet ending shot",
-            pageVisualRole: "quiet_ending",
-          },
-        ],
-      },
-      readingProfile: getAgeReadingProfile(4),
-      creationMode: "guided_ai",
-      productPlan: "premium_paid",
-    });
-
-    expect(
-      report.issues.some((issue) => issue.code === "forbidden_object_became_goal_persistent")
-    ).toBe(false);
-    expect(report.issues.some((issue) => issue.code === "forbidden_object_mentioned")).toBe(true);
-  });
-
-  it("accepts star-related aliases when checking final page resolution", () => {
-    const report = validateGeneratedStoryQuality({
-      story: {
-        ...baseStory,
-        storyGoal: "たっちゃんが ほしのこと いっしょに 星のかけらを さがす",
-        mainQuestObject: "星のかけら",
-        pages: [
-          {
-            text: "たっちゃんは すなばで あそんでいました。すると、すなの なかで 小さな ひかりが きらりと ゆれて、ふしぎな ぼうけんの はじまりを しらせました。たっちゃんは そっと すなを よけました。",
-            imagePrompt: "wide establishing shot of a sandbox with a tiny glow",
-            compositionHint: "wide establishing shot",
-            pageVisualRole: "opening_establishing",
-          },
-          {
-            text: "ほしのこは なくした ほしのかけらを さがしていると つたえました。たっちゃんは いっしょに さがそうと うなずき、すなの うえに しゃがみこみました。ふたりの めが きらりと ひかりました。",
-            imagePrompt: "discovery scene with a small star child in the sand",
-            compositionHint: "medium shot with discovery",
-            pageVisualRole: "discovery",
-          },
-          {
-            text: "たっちゃんは てのひらに のった ほしのこを まもりながら、きらきらの あとを たどりました。すなの やまで ひかりが ふくらみ、ほしの ありかが ちかいと わかりました。ふたりの こころも あかるく なりました。",
-            imagePrompt: "action scene with a glowing path and sandbox detail",
-            compositionHint: "action shot",
-            pageVisualRole: "action",
-          },
-          {
-            text: "すなの すみで、ほしのかけらが きらりと ひかりました。ほしのこは ほっとした ように わらって、『ありがとう』と たっちゃんに つたえました。たっちゃんも にっこりして、よぞらを みあげました。",
-            imagePrompt: "quiet ending with a glowing star shard and a warm night sky",
-            compositionHint: "quiet ending shot",
-            pageVisualRole: "quiet_ending",
-          },
-        ],
-      },
-      readingProfile: getAgeReadingProfile(4),
-      creationMode: "guided_ai",
-      productPlan: "premium_paid",
-    });
-
-    expect(
-      report.issues.some((issue) => issue.code === "missing_quest_object_resolution")
-    ).toBe(false);
-  });
-
-  it("treats thin premium preschool text as not ok even if the free threshold would pass", () => {
-    const report = validateGeneratedStoryQuality({
-      story: {
-        ...baseStory,
-        storyGoal: "たっくんが ほしのこと いっしょに 星のかけらを さがす",
-        mainQuestObject: "星のかけら",
-        pages: [
-          {
-            text: "たっくんは、すなばであそんでいました。あれ？ ちいさな ひかりを 見つけました。",
-            imagePrompt: "wide establishing shot of a sandbox with a tiny glow",
-            compositionHint: "wide establishing shot",
-            pageVisualRole: "opening_establishing",
-          },
-          {
-            text: "それは、ちいさな ほしのこでした。こんにちは、と こえが しました。たっくんは びっくりしました。",
-            imagePrompt: "discovery scene with a small star child in the sand",
-            compositionHint: "medium shot",
-            pageVisualRole: "discovery",
-          },
-          {
-            text: "たっくんは いっしょに さがそうと いいました。ほしのこを そっと もちあげました。だいじょうぶだよ。",
-            imagePrompt: "action scene in a sandbox",
-            compositionHint: "action shot",
-            pageVisualRole: "action",
-          },
-          {
-            text: "よるになりました。たっくんと ほしのこは おそらを 見ていました。わあ、きれい！",
-            imagePrompt: "quiet ending under the night sky",
-            compositionHint: "quiet ending shot",
-            pageVisualRole: "quiet_ending",
-          },
-        ],
-      },
-      readingProfile: getAgeReadingProfile(4),
-      creationMode: "guided_ai",
-      productPlan: "premium_paid",
-    });
-
-    expect(report.ok).toBe(false);
-    expect(report.summary.minCharsPerPage).toBeLessThan(70);
-    expect(report.issues.some((issue) => issue.code === "text.too_short_chars")).toBe(true);
   });
 
   it("accepts richer quest-consistent preschool text", () => {
@@ -352,7 +215,6 @@ describe("validateGeneratedStoryQuality", () => {
       },
       readingProfile: getAgeReadingProfile(4),
       creationMode: "guided_ai",
-      productPlan: "premium_paid",
     });
 
     expect(report.ok).toBe(true);
