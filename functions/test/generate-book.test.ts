@@ -109,7 +109,7 @@ describe("processBookGeneration", () => {
     expect(deps.llmClient.generateStory).toHaveBeenCalledOnce();
     expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
     expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
-      expect.stringContaining("Same child identity across all pages"),
+      expect.stringContaining("Character consistency"),
       expect.objectContaining({
         imageModelProfile: "klein_fast",
         inputImageUrls: expect.arrayContaining([
@@ -130,11 +130,11 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "standard",
         imagePurpose: "book_cover",
-        inputReferenceCount: expect.any(Number),
+        imageModelProfile: "klein_fast",
         inputImageUrlsCount: expect.any(Number),
+        inputReferenceCount: expect.any(Number),
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
-        imageModelProfile: "klein_fast",
         pageVisualRole: "opening_establishing",
       })
     );
@@ -144,10 +144,10 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "standard",
         imagePurpose: "book_page",
+        imageModelProfile: "klein_fast",
         inputImageUrlsCount: expect.any(Number),
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
-        imageModelProfile: "klein_fast",
         pageVisualRole: "action",
       })
     );
@@ -399,6 +399,7 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "premium",
         imagePurpose: "book_page",
+        imageModelProfile: "pro_consistent",
       })
     );
   });
@@ -428,6 +429,7 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "light",
         imagePurpose: "book_cover",
+        imageModelProfile: "klein_fast",
       })
     );
     expect(deps.writePage).toHaveBeenCalledWith(
@@ -437,6 +439,7 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "light",
         imagePurpose: "book_page",
+        imageModelProfile: "klein_fast",
       })
     );
   });
@@ -458,6 +461,7 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "light",
         imagePurpose: "book_cover",
+        imageModelProfile: "klein_fast",
       })
     );
     expect(deps.writePage).toHaveBeenCalledWith(
@@ -467,6 +471,7 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "light",
         imagePurpose: "book_page",
+        imageModelProfile: "klein_fast",
       })
     );
   });
@@ -487,6 +492,7 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "premium",
         imagePurpose: "book_cover",
+        imageModelProfile: "pro_consistent",
       })
     );
     expect(deps.writePage).toHaveBeenCalledWith(
@@ -496,6 +502,7 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "premium",
         imagePurpose: "book_page",
+        imageModelProfile: "pro_consistent",
       })
     );
   });
@@ -639,21 +646,21 @@ describe("processBookGeneration", () => {
     expect(pageWrites[0]).toEqual(
       expect.objectContaining({
         pageVisualRole: "opening_establishing",
-        inputReferenceCount: expect.any(Number),
+        imageModelProfile: "klein_fast",
         inputImageUrlsCount: expect.any(Number),
+        inputReferenceCount: expect.any(Number),
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
-        imageModelProfile: "klein_fast",
       })
     );
     expect(pageWrites[1]).toEqual(
       expect.objectContaining({
         pageVisualRole: "action",
-        inputReferenceCount: expect.any(Number),
+        imageModelProfile: "klein_fast",
         inputImageUrlsCount: expect.any(Number),
+        inputReferenceCount: expect.any(Number),
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
-        imageModelProfile: "klein_fast",
       })
     );
   });

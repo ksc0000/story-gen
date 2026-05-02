@@ -115,63 +115,6 @@ describe("buildImagePrompt", () => {
     expect(result).not.toContain("caption card");
     expect(result).not.toContain("phrase label");
   });
-  it("keeps klein prompts shorter while preserving core consistency and no-text rules", () => {
-    const kleinResult = buildImagePrompt(
-      "A child exploring a park with a yellow star and a small bird in the grass",
-      "watercolor",
-      "same yellow hat",
-      "same warm paper texture",
-      {
-        pageVisualRole: "discovery",
-        compositionHint: "medium shot with discovery",
-        visualMotif: "yellow star",
-        hiddenDetail: "small bird",
-        ageBand: "preschool_3_4",
-        imageModelProfile: "klein_fast",
-        imageQualityTier: "standard",
-      }
-    );
-    expect(kleinResult).toContain("Same child identity across all pages");
-    expect(kleinResult).toContain("Composition:");
-    expect(kleinResult).toContain("wordless picture book illustration");
-  });
-  it("builds pro prompts richer than klein prompts", () => {
-    const kleinResult = buildImagePrompt(
-      "A child exploring a park with a yellow star and a small bird in the grass",
-      "watercolor",
-      "same yellow hat",
-      "same warm paper texture",
-      {
-        pageVisualRole: "discovery",
-        compositionHint: "medium shot with discovery",
-        visualMotif: "yellow star",
-        hiddenDetail: "small bird",
-        ageBand: "preschool_3_4",
-        imageModelProfile: "klein_fast",
-        imageQualityTier: "standard",
-      }
-    );
-    const proResult = buildImagePrompt(
-      "A child exploring a park with a yellow star and a small bird in the grass",
-      "watercolor",
-      "same yellow hat",
-      "same warm paper texture",
-      {
-        pageVisualRole: "payoff",
-        compositionHint: "warm ending back view",
-        visualMotif: "yellow star",
-        visualMotifUsage: "yellow star near the pocket",
-        hiddenDetail: "small bird in a tree",
-        ageBand: "early_reader_5_6",
-        imageModelProfile: "pro_consistent",
-        imageQualityTier: "premium",
-      }
-    );
-    expect(proResult.length).toBeGreaterThan(kleinResult.length);
-    expect(proResult).toContain("Hidden detail:");
-    expect(proResult).toContain("Background richness:");
-    expect(proResult).toContain("Visual motif:");
-  });
   it("appends safety keywords", () => {
     const result = buildImagePrompt("A child at a party", "flat");
     expect(result).toContain("safe for children");

@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReplicateImageClient = void 0;
+exports.resolveImageModelProfile = resolveImageModelProfile;
 exports.resolveReplicateModel = resolveReplicateModel;
 exports.buildReplicateInput = buildReplicateInput;
 const replicate_1 = __importDefault(require("replicate"));
@@ -13,7 +14,7 @@ const FLUX_KLEIN_FAST_MODEL = "black-forest-labs/flux-2-klein-9b";
 const FLUX_KLEIN_BASE_MODEL = "black-forest-labs/flux-2-klein-9b-base";
 const FLUX_PRO_MODEL = "black-forest-labs/flux-2-pro";
 const FLUX_KONTEXT_PRO_MODEL = "black-forest-labs/flux-kontext-pro";
-function shouldUseKleinBaseForStandard() {
+function isKleinBaseEnabled() {
     return process.env.ENABLE_KLEIN_BASE === "true";
 }
 function resolveProfileModel(imageModelProfile) {
@@ -34,31 +35,34 @@ function resolveBookModelByTier(imageQualityTier) {
     if (tier === "premium") {
         return FLUX_PRO_MODEL;
     }
-    if (tier === "standard" && shouldUseKleinBaseForStandard()) {
+    if (tier === "standard" && isKleinBaseEnabled()) {
         return FLUX_KLEIN_BASE_MODEL;
     }
     return FLUX_KLEIN_FAST_MODEL;
 }
-function resolveReplicateModel(params) {
-    switch (params.purpose) {
-        case "child_avatar":
-        case "child_avatar_revision":
-            return FLUX_PRO_MODEL;
-        case "book_cover":
-        case "memory_key_page":
-        case "book_page": {
-            if (params.imageModelProfile) {
-                return resolveProfileModel(params.imageModelProfile);
-            }
-            return resolveBookModelByTier(params.imageQualityTier);
-        }
-        default: {
-            if (params.imageModelProfile) {
-                return resolveProfileModel(params.imageModelProfile);
-            }
-            return resolveBookModelByTier(params.imageQualityTier);
-        }
+function resolveImageModelProfile(params) {
+    if (params.purpose === "child_avatar" || params.purpose === "child_avatar_revision") {
+        return "pro_consistent";
     }
+    if (params.imageModelProfile) {
+        return params.imageModelProfile;
+    }
+    if (params.imageQualityTier === "premium") {
+        return "pro_consistent";
+    }
+    if (params.imageQualityTier === "standard" && isKleinBaseEnabled()) {
+        return "klein_base";
+    }
+    return "klein_fast";
+}
+function resolveReplicateModel(params) {
+    if (params.purpose === "child_avatar" || params.purpose === "child_avatar_revision") {
+        return FLUX_PRO_MODEL;
+    }
+    if (params.imageModelProfile) {
+        return resolveProfileModel(params.imageModelProfile);
+    }
+    return resolveBookModelByTier(params.imageQualityTier);
 }
 function buildReplicateInput(params) {
     const dedupedInputImageUrls = [...new Set(params.inputImageUrls ?? [])];
@@ -78,7 +82,9 @@ function buildReplicateInput(params) {
             output_format: "png",
             megapixels: "1",
             go_fast: true,
-            ...(dedupedInputImageUrls.length > 0 ? { images: dedupedInputImageUrls.slice(0, 5) } : {}),
+            ...(dedupedInputImageUrls.length > 0
+                ? { images: dedupedInputImageUrls.slice(0, 5) }
+                : {}),
         };
     }
     if (params.model === FLUX_KONTEXT_PRO_MODEL) {
@@ -86,14 +92,18 @@ function buildReplicateInput(params) {
             prompt: params.prompt,
             aspect_ratio: "4:3",
             output_format: "png",
-            ...(dedupedInputImageUrls.length > 0 ? { input_image: dedupedInputImageUrls[0] } : {}),
+            ...(dedupedInputImageUrls.length > 0
+                ? { input_image: dedupedInputImageUrls[0] }
+                : {}),
         };
     }
     return {
         prompt: params.prompt,
         aspect_ratio: "4:3",
         output_format: "png",
-        ...(dedupedInputImageUrls.length > 0 ? { input_images: dedupedInputImageUrls.slice(0, 8) } : {}),
+        ...(dedupedInputImageUrls.length > 0
+            ? { input_images: dedupedInputImageUrls.slice(0, 8) }
+            : {}),
     };
 }
 class ReplicateImageClient {
@@ -112,9 +122,7 @@ class ReplicateImageClient {
             prompt,
             inputImageUrls: options?.inputImageUrls,
         });
-        const output = await this.replicate.run(model, {
-            input,
-        });
+        const output = await this.replicate.run(model, { input });
         const outputs = this.normalizeReplicateOutput(output);
         if (!outputs || outputs.length === 0) {
             throw new Error("No image output from Replicate");

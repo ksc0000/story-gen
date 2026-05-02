@@ -129,15 +129,6 @@ function sanitizeImagePromptText(value) {
         .replace(/\s{2,}/g, " ")
         .trim();
 }
-function resolveImagePromptProfile(params) {
-    if (params.imageModelProfile === "kontext_reference") {
-        return "kontext";
-    }
-    if (params.imageModelProfile === "pro_consistent" || params.imageQualityTier === "premium") {
-        return "pro";
-    }
-    return "klein";
-}
 function getBackgroundRichnessGuidance(ageBand) {
     if (ageBand === "baby_toddler") {
         return "Background should stay soft and simple, with only a few clear supporting details.";
@@ -200,9 +191,6 @@ ${ageReadingGuidance}
 - imagePrompt には、そのページで何を一番見せたいかを明確に含めてください。
 - imagePrompt では "wide establishing shot of...", "small child seen from behind...", "focus on the sandbox toys in the foreground...", "family members in the background...", "bird's-eye view of the park...", "close-up of tiny hands holding..." のように、視点や焦点が伝わる表現を歓迎します。
 - Important: pages[].text is for the readable story text shown by the app. pages[].imagePrompt is only for generating a wordless illustration. Never ask the image model to render the story text, repeated phrase, labels, signs, books with readable titles, speech bubbles, captions, or any written characters inside the image.
-- pageVisualRole をできるだけ各ページに入れてください。4ページなら opening_establishing → discovery or action → emotional_closeup or object_detail → payoff or quiet_ending を基本にしてください。
-- 8ページなら opening_establishing, discovery, action, object_detail, setback_or_question, emotional_closeup, payoff, quiet_ending を目安にしてください。
-- 12ページ以上では、discovery / action / object_detail を中盤で複数回まぜつつ、最後は payoff または quiet_ending で閉じてください。
 - Story quality rules: ${STORY_QUALITY_RULES}
 - 3歳以上では、文字数が少なすぎる「薄いページ」にならないようにしてください。行動、気持ち、場面描写のうち少なくとも2つ以上を自然に含めてください。
 - 5歳以上では、小さな原因と結果、短い会話、場面の具体物を入れてください。
@@ -275,10 +263,6 @@ function buildUserPrompt(input, pageCount) {
     return lines.join("\n");
 }
 function buildImagePrompt(basePrompt, style, characterBible, styleBible, options) {
-    const promptProfile = resolveImagePromptProfile({
-        imageModelProfile: options?.imageModelProfile,
-        imageQualityTier: options?.imageQualityTier,
-    });
     const compositionHint = sanitizeImagePromptText(options?.compositionHint || getDefaultCompositionHint(options?.pageNumber));
     const pageVisualRole = options?.pageVisualRole || getDefaultPageVisualRole(options?.pageNumber);
     const visualMotif = sanitizeImagePromptText(options?.visualMotifUsage || options?.visualMotif || "");
@@ -312,34 +296,6 @@ function buildImagePrompt(basePrompt, style, characterBible, styleBible, options
         ? `Hidden detail: include this subtle background detail for children to notice: ${hiddenDetail}. Keep it purely visual and never written as text.`
         : "Hidden detail: include one small child-friendly background detail that rewards careful looking.";
     const emotionGuidance = `Age-appropriate emotional expression: ${getEmotionalExpressionGuidance(ageBand)}`;
-    const noTextRule = "wordless picture book illustration, no written text anywhere, no letters, no captions, no speech bubbles, no labels, no signage, no readable marks, no watermark. Use plain objects and unlabeled backgrounds.";
-    const avoidanceRule = promptProfile === "klein"
-        ? "Avoid distorted hands, extra fingers, malformed face, duplicated limbs, adult-looking child, uncanny expression, over-detailed busy background, and unreadable text or signs."
-        : "Avoid distorted hands, extra fingers, malformed face, duplicated limbs, adult-looking child, uncanny expression, over-detailed busy background, unreadable text or signs, and clutter that weakens the focal point.";
-    if (promptProfile === "klein") {
-        return [
-            characterBible ? `Character consistency: ${characterBible}` : "",
-            "Same child identity across all pages. Keep the same child character across all pages, with the same age impression, hairstyle, face shape, body proportions, outfit logic, and signature item when appropriate.",
-            "Keep identity consistent, but change pose, camera angle, distance, action, background, and focal point according to this page.",
-            "Do not repeat the same pose or same framing from previous pages.",
-            styleBible ? `Style consistency: ${styleBible}` : "",
-            getPageVisualRoleGuidance(pageVisualRole),
-            `Composition: ${compositionHint}. Clear focal point, rich but not cluttered.`,
-            `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
-            `Scene: ${sanitizedBasePrompt}`,
-            `Background: ${getBackgroundRichnessGuidance(ageBand)}`,
-            visualMotif ? `Recurring motif as a physical object or color cue: ${visualMotif}.` : "",
-            hiddenDetail ? `One subtle hidden detail: ${hiddenDetail}.` : "",
-            emotionGuidance,
-            IMAGE_STYLE_KEYWORDS[style],
-            SAFETY_KEYWORDS,
-            "Use purely visual storytelling through characters, objects, colors, actions, and scenery.",
-            avoidanceRule,
-            noTextRule,
-        ]
-            .filter(Boolean)
-            .join(", ");
-    }
     return [
         consistency,
         compositionGuidance,
@@ -352,8 +308,7 @@ function buildImagePrompt(basePrompt, style, characterBible, styleBible, options
         IMAGE_STYLE_KEYWORDS[style],
         SAFETY_KEYWORDS,
         "Use purely visual storytelling through characters, objects, colors, actions, and scenery.",
-        avoidanceRule,
-        noTextRule,
+        "wordless picture book illustration, no written text anywhere, no letters, no captions, no speech bubbles, no labels, no signage, no readable marks, no watermark. Use plain objects and unlabeled backgrounds.",
     ].join(", ");
 }
 function getStyleReferenceImagePath(style) {

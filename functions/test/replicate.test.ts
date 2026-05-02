@@ -1,66 +1,66 @@
 import { describe, expect, it } from "vitest";
-import { buildReplicateInput, resolveReplicateModel } from "../src/lib/replicate";
+import {
+  buildReplicateInput,
+  resolveImageModelProfile,
+  resolveReplicateModel,
+} from "../src/lib/replicate";
 
 describe("resolveReplicateModel", () => {
-  it("uses flux-2-klein-9b for light book pages and covers", () => {
+  it("uses flux-2-klein-9b for light and standard pages by default", () => {
     expect(resolveReplicateModel({ purpose: "book_page", imageQualityTier: "light" })).toBe(
       "black-forest-labs/flux-2-klein-9b"
     );
     expect(resolveReplicateModel({ purpose: "book_cover", imageQualityTier: "light" })).toBe(
       "black-forest-labs/flux-2-klein-9b"
     );
-  });
-
-  it("uses flux-2-klein-9b for standard book pages by default", () => {
     expect(resolveReplicateModel({ purpose: "book_page", imageQualityTier: "standard" })).toBe(
       "black-forest-labs/flux-2-klein-9b"
     );
   });
 
-  it("uses flux-2-pro for premium book pages and covers", () => {
+  it("uses flux-2-pro for premium pages", () => {
     expect(resolveReplicateModel({ purpose: "book_page", imageQualityTier: "premium" })).toBe(
       "black-forest-labs/flux-2-pro"
     );
-    expect(resolveReplicateModel({ purpose: "book_cover", imageQualityTier: "premium" })).toBe(
-      "black-forest-labs/flux-2-pro"
-    );
   });
 
-  it("keeps child avatar generation on flux-2-pro regardless of requested profile", () => {
-    expect(resolveReplicateModel({ purpose: "child_avatar", imageQualityTier: "light" })).toBe(
-      "black-forest-labs/flux-2-pro"
-    );
-    expect(
-      resolveReplicateModel({
-        purpose: "child_avatar_revision",
-        imageQualityTier: "premium",
-        imageModelProfile: "klein_base",
-      })
-    ).toBe("black-forest-labs/flux-2-pro");
-  });
-
-  it("prefers explicit imageModelProfile when provided", () => {
+  it("prefers explicit image model profiles", () => {
     expect(
       resolveReplicateModel({
         purpose: "book_page",
-        imageQualityTier: "light",
         imageModelProfile: "klein_base",
       })
     ).toBe("black-forest-labs/flux-2-klein-9b-base");
     expect(
       resolveReplicateModel({
         purpose: "book_page",
-        imageQualityTier: "light",
         imageModelProfile: "pro_consistent",
       })
     ).toBe("black-forest-labs/flux-2-pro");
     expect(
       resolveReplicateModel({
         purpose: "book_page",
-        imageQualityTier: "light",
         imageModelProfile: "kontext_reference",
       })
     ).toBe("black-forest-labs/flux-kontext-pro");
+  });
+
+  it("keeps child avatar generation on flux-2-pro regardless of requested profile", () => {
+    expect(
+      resolveReplicateModel({
+        purpose: "child_avatar",
+        imageQualityTier: "light",
+        imageModelProfile: "klein_base",
+      })
+    ).toBe("black-forest-labs/flux-2-pro");
+  });
+});
+
+describe("resolveImageModelProfile", () => {
+  it("derives default profiles from quality tier", () => {
+    expect(resolveImageModelProfile({ imageQualityTier: "light" })).toBe("klein_fast");
+    expect(resolveImageModelProfile({ imageQualityTier: "standard" })).toBe("klein_fast");
+    expect(resolveImageModelProfile({ imageQualityTier: "premium" })).toBe("pro_consistent");
   });
 });
 
@@ -80,7 +80,7 @@ describe("buildReplicateInput", () => {
     });
   });
 
-  it("builds klein fast input with images, megapixels, and go_fast", () => {
+  it("builds klein fast input with images max 5", () => {
     expect(
       buildReplicateInput({
         model: "black-forest-labs/flux-2-klein-9b",
@@ -127,7 +127,7 @@ describe("buildReplicateInput", () => {
     });
   });
 
-  it("builds pro input with input_images and caps them at 8", () => {
+  it("builds pro input with input_images max 8", () => {
     expect(
       buildReplicateInput({
         model: "black-forest-labs/flux-2-pro",
@@ -161,7 +161,7 @@ describe("buildReplicateInput", () => {
     });
   });
 
-  it("builds kontext input with a single input_image", () => {
+  it("builds kontext input with input_image", () => {
     expect(
       buildReplicateInput({
         model: "black-forest-labs/flux-kontext-pro",

@@ -59,9 +59,6 @@ function shouldThrottleImageRequests() {
 async function processBookGeneration(bookId, bookData, deps) {
     try {
         let lastImageAttemptAt = 0;
-        // Gemini generates one story JSON for the whole book in a single call.
-        // Character drift between pages is therefore primarily an image-generation problem,
-        // because Replicate is called separately for each page illustration.
         // Step 1: Validate input
         const mergedInput = mergeInputWithChildProfile(bookData.input, bookData.childProfileSnapshot);
         const sanitizeResult = (0, content_filter_1.sanitizeInput)(mergedInput);
@@ -135,8 +132,6 @@ async function processBookGeneration(bookId, bookData, deps) {
         const totalPages = story.pages.length;
         for (let i = 0; i < totalPages; i++) {
             const storyPage = story.pages[i];
-            const imagePurpose = getPageImagePurpose(i, normalizedBookData.theme);
-            const imageQualityTier = normalizedBookData.imageQualityTier ?? "light";
             const imagePrompt = (0, prompt_builder_1.buildImagePrompt)(storyPage.imagePrompt, normalizedBookData.style, buildFinalCharacterBible(story.characterBible, normalizedBookData), story.styleBible, {
                 pageNumber: i,
                 pageVisualRole: storyPage.pageVisualRole,
@@ -145,16 +140,21 @@ async function processBookGeneration(bookId, bookData, deps) {
                 visualMotifUsage: storyPage.visualMotifUsage,
                 hiddenDetail: storyPage.hiddenDetail ?? story.narrativeDevice?.hiddenDetails?.[i],
                 ageBand: readingProfile.ageBand,
-                imageModelProfile: normalizedBookData.imageModelProfile,
-                imageQualityTier,
             });
             // Generate image with retries (skip in development)
             let imageBuffer = null;
             let imageUrl = "";
-            const imageModel = (0, replicate_1.resolveReplicateModel)({
+            const imagePurpose = getPageImagePurpose(i, normalizedBookData.theme);
+            const imageQualityTier = normalizedBookData.imageQualityTier ?? "light";
+            const imageModelProfile = (0, replicate_1.resolveImageModelProfile)({
                 purpose: imagePurpose,
                 imageQualityTier,
                 imageModelProfile: normalizedBookData.imageModelProfile,
+            });
+            const imageModel = (0, replicate_1.resolveReplicateModel)({
+                purpose: imagePurpose,
+                imageQualityTier,
+                imageModelProfile,
             });
             const shouldUseReference = shouldUseCharacterReferenceForPage({
                 pageIndex: i,
@@ -180,7 +180,7 @@ async function processBookGeneration(bookId, bookData, deps) {
                         imageBuffer = await deps.imageClient.generateImage(imagePrompt, {
                             purpose: imagePurpose,
                             imageQualityTier,
-                            imageModelProfile: normalizedBookData.imageModelProfile,
+                            imageModelProfile,
                             inputImageUrls,
                         });
                         lastImageAttemptAt = Date.now();
@@ -206,11 +206,11 @@ async function processBookGeneration(bookId, bookData, deps) {
                                 imageModel,
                                 imageQualityTier,
                                 imagePurpose,
-                                inputReferenceCount: inputImageUrls.length,
                                 inputImageUrlsCount: inputImageUrls.length,
+                                inputReferenceCount: inputImageUrls.length,
                                 usedCharacterReference: inputImageUrls.length > 0,
                                 characterConsistencyMode: normalizedBookData.characterConsistencyMode,
-                                imageModelProfile: normalizedBookData.imageModelProfile,
+                                imageModelProfile,
                                 pageVisualRole: storyPage.pageVisualRole,
                             });
                             await deps.updateBookFailure(bookId, `画像生成に失敗しました（${message}）`);
@@ -230,11 +230,11 @@ async function processBookGeneration(bookId, bookData, deps) {
                 imageModel,
                 imageQualityTier,
                 imagePurpose,
-                inputReferenceCount: inputImageUrls.length,
                 inputImageUrlsCount: inputImageUrls.length,
+                inputReferenceCount: inputImageUrls.length,
                 usedCharacterReference: inputImageUrls.length > 0,
                 characterConsistencyMode: normalizedBookData.characterConsistencyMode,
-                imageModelProfile: normalizedBookData.imageModelProfile,
+                imageModelProfile,
                 pageVisualRole: storyPage.pageVisualRole,
             };
             await deps.writePage(bookId, pageData);
@@ -290,7 +290,7 @@ function normalizeBookForGeneration(bookData, template, userPlan) {
         productPlan: normalizedPlan,
         imageQualityTier: normalizedPlanConfig.imageQualityTier,
         characterConsistencyMode: bookData.characterConsistencyMode ?? normalizedPlanConfig.characterConsistencyMode,
-        imageModelProfile: bookData.imageModelProfile ?? normalizedPlanConfig.imageModelProfile,
+        imageModelProfile: bookData.imageModelProfile,
         pageCount: normalizedPageCount,
     };
 }

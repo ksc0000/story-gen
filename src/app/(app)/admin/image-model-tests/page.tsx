@@ -68,17 +68,15 @@ const PROFILE_RESULT_ORDER: ImageModelProfile[] = [
 ];
 
 function sortResults(results: TestImageModelsResult["results"]) {
-  return [...results].sort(
-    (a, b) => {
-      const aKey = a.tier
-        ? RESULT_ORDER.indexOf(a.tier)
-        : PROFILE_RESULT_ORDER.indexOf(a.modelProfile ?? "klein_fast");
-      const bKey = b.tier
-        ? RESULT_ORDER.indexOf(b.tier)
-        : PROFILE_RESULT_ORDER.indexOf(b.modelProfile ?? "klein_fast");
-      return aKey - bKey;
-    }
-  );
+  return [...results].sort((a, b) => {
+    const aOrder = a.tier
+      ? RESULT_ORDER.indexOf(a.tier)
+      : PROFILE_RESULT_ORDER.indexOf(a.modelProfile ?? "klein_fast");
+    const bOrder = b.tier
+      ? RESULT_ORDER.indexOf(b.tier)
+      : PROFILE_RESULT_ORDER.indexOf(b.modelProfile ?? "klein_fast");
+    return aOrder - bOrder;
+  });
 }
 
 export default function AdminImageModelTestsPage() {
@@ -136,6 +134,7 @@ export default function AdminImageModelTestsPage() {
         : [...current, tier]
     );
   };
+
   const handleToggleModelProfile = (profile: ImageModelProfile) => {
     setSelectedModelProfiles((current) =>
       current.includes(profile)
@@ -314,9 +313,6 @@ export default function AdminImageModelTestsPage() {
                     </label>
                   ))}
                 </div>
-                <p className="text-xs leading-relaxed text-violet-500">
-                  現在、light と standard はどちらも flux-2-klein-9b を使用します。premium は flux-2-pro を使用します。
-                </p>
               </div>
 
               <div className="space-y-2">
@@ -353,7 +349,7 @@ export default function AdminImageModelTestsPage() {
                   className="w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-4 py-3 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
                 />
                 <p className="text-xs leading-relaxed text-violet-500">
-                  参照画像URLを1行ずつ入力できます。book_page では model profile や quality tier に応じて参照画像の効き方を比較できます。
+                  参照画像URLを1行ずつ入力できます。quality tier 比較にも model profile 比較にも使えます。
                 </p>
                 <p className="text-xs text-violet-400">現在の対象件数: {inputImageUrls.length}件</p>
               </div>
@@ -370,7 +366,6 @@ export default function AdminImageModelTestsPage() {
                 </Button>
                 <div className="space-y-1 text-xs leading-relaxed text-violet-500">
                   <p>この画面は管理者向けの検証用です。実行すると実際にReplicate APIを呼び出し、画像生成コストが発生します。</p>
-                  <p>book_page / book_cover / memory_key_page は quality tier に応じて flux-2-klein-9b または flux-2-pro を使います。child_avatar 系は常に flux-2-pro です。</p>
                   <p>現在、light と standard はどちらも flux-2-klein-9b を使用します。premium は flux-2-pro を使用します。</p>
                 </div>
               </div>

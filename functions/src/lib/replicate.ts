@@ -25,14 +25,14 @@ type ReplicateInputPayload = {
   aspect_ratio: "4:3";
   output_format: "png";
   num_outputs?: 1;
-  megapixels?: "1";
-  go_fast?: boolean;
   images?: string[];
   input_images?: string[];
   input_image?: string;
+  megapixels?: "1";
+  go_fast?: boolean;
 };
 
-function shouldUseKleinBaseForStandard(): boolean {
+function isKleinBaseEnabled(): boolean {
   return process.env.ENABLE_KLEIN_BASE === "true";
 }
 
@@ -54,13 +54,40 @@ function resolveBookModelByTier(
   imageQualityTier: ImageQualityTier | undefined
 ): ReplicateModelName {
   const tier = imageQualityTier ?? "light";
+
   if (tier === "premium") {
     return FLUX_PRO_MODEL;
   }
-  if (tier === "standard" && shouldUseKleinBaseForStandard()) {
+
+  if (tier === "standard" && isKleinBaseEnabled()) {
     return FLUX_KLEIN_BASE_MODEL;
   }
+
   return FLUX_KLEIN_FAST_MODEL;
+}
+
+export function resolveImageModelProfile(params: {
+  purpose?: ImagePurpose;
+  imageQualityTier?: ImageQualityTier;
+  imageModelProfile?: ImageModelProfile;
+}): ImageModelProfile {
+  if (params.purpose === "child_avatar" || params.purpose === "child_avatar_revision") {
+    return "pro_consistent";
+  }
+
+  if (params.imageModelProfile) {
+    return params.imageModelProfile;
+  }
+
+  if (params.imageQualityTier === "premium") {
+    return "pro_consistent";
+  }
+
+  if (params.imageQualityTier === "standard" && isKleinBaseEnabled()) {
+    return "klein_base";
+  }
+
+  return "klein_fast";
 }
 
 export function resolveReplicateModel(params: {
@@ -68,25 +95,15 @@ export function resolveReplicateModel(params: {
   imageQualityTier?: ImageQualityTier;
   imageModelProfile?: ImageModelProfile;
 }): ReplicateModelName {
-  switch (params.purpose) {
-    case "child_avatar":
-    case "child_avatar_revision":
-      return FLUX_PRO_MODEL;
-    case "book_cover":
-    case "memory_key_page":
-    case "book_page": {
-      if (params.imageModelProfile) {
-        return resolveProfileModel(params.imageModelProfile);
-      }
-      return resolveBookModelByTier(params.imageQualityTier);
-    }
-    default: {
-      if (params.imageModelProfile) {
-        return resolveProfileModel(params.imageModelProfile);
-      }
-      return resolveBookModelByTier(params.imageQualityTier);
-    }
+  if (params.purpose === "child_avatar" || params.purpose === "child_avatar_revision") {
+    return FLUX_PRO_MODEL;
   }
+
+  if (params.imageModelProfile) {
+    return resolveProfileModel(params.imageModelProfile);
+  }
+
+  return resolveBookModelByTier(params.imageQualityTier);
 }
 
 export function buildReplicateInput(params: {
@@ -115,7 +132,9 @@ export function buildReplicateInput(params: {
       output_format: "png",
       megapixels: "1",
       go_fast: true,
-      ...(dedupedInputImageUrls.length > 0 ? { images: dedupedInputImageUrls.slice(0, 5) } : {}),
+      ...(dedupedInputImageUrls.length > 0
+        ? { images: dedupedInputImageUrls.slice(0, 5) }
+        : {}),
     };
   }
 
@@ -124,7 +143,9 @@ export function buildReplicateInput(params: {
       prompt: params.prompt,
       aspect_ratio: "4:3",
       output_format: "png",
-      ...(dedupedInputImageUrls.length > 0 ? { input_image: dedupedInputImageUrls[0] } : {}),
+      ...(dedupedInputImageUrls.length > 0
+        ? { input_image: dedupedInputImageUrls[0] }
+        : {}),
     };
   }
 
@@ -132,7 +153,9 @@ export function buildReplicateInput(params: {
     prompt: params.prompt,
     aspect_ratio: "4:3",
     output_format: "png",
-    ...(dedupedInputImageUrls.length > 0 ? { input_images: dedupedInputImageUrls.slice(0, 8) } : {}),
+    ...(dedupedInputImageUrls.length > 0
+      ? { input_images: dedupedInputImageUrls.slice(0, 8) }
+      : {}),
   };
 }
 
@@ -162,9 +185,7 @@ export class ReplicateImageClient implements ImageClient {
       prompt,
       inputImageUrls: options?.inputImageUrls,
     });
-    const output = await this.replicate.run(model, {
-      input,
-    });
+    const output = await this.replicate.run(model, { input });
 
     const outputs = this.normalizeReplicateOutput(output);
     if (!outputs || outputs.length === 0) {

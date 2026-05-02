@@ -7,6 +7,11 @@ import { ReplicateImageClient, resolveReplicateModel } from "./lib/replicate";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 const DEFAULT_TIERS: ImageQualityTier[] = ["light", "standard", "premium"];
+const DEFAULT_MODEL_PROFILES: ImageModelProfile[] = [
+  "klein_fast",
+  "klein_base",
+  "pro_consistent",
+];
 
 type TestImageModelsRequest = {
   prompt: string;
@@ -15,6 +20,24 @@ type TestImageModelsRequest = {
   qualityTiers?: ImageQualityTier[];
   modelProfiles?: ImageModelProfile[];
 };
+
+export function normalizeTestImageModelsRequest(data: TestImageModelsRequest): {
+  purpose: ImagePurpose;
+  inputImageUrls: string[];
+  qualityTiers: ImageQualityTier[];
+  modelProfiles: ImageModelProfile[];
+  compareByModelProfile: boolean;
+} {
+  return {
+    purpose: data.purpose ?? "book_page",
+    inputImageUrls: [...new Set(data.inputImageUrls ?? [])].slice(0, 8),
+    qualityTiers: (data.qualityTiers?.length ? data.qualityTiers : DEFAULT_TIERS).filter(Boolean),
+    modelProfiles: (data.modelProfiles?.length ? data.modelProfiles : DEFAULT_MODEL_PROFILES).filter(
+      Boolean
+    ),
+    compareByModelProfile: Boolean(data.modelProfiles?.length),
+  };
+}
 
 export const testImageModels = onCall(
   {
@@ -37,10 +60,9 @@ export const testImageModels = onCall(
       throw new HttpsError("invalid-argument", "prompt is required");
     }
 
-    const purpose = data.purpose ?? "book_page";
-    const qualityTiers = (data.qualityTiers?.length ? data.qualityTiers : DEFAULT_TIERS).filter(Boolean);
-    const modelProfiles = (data.modelProfiles?.length ? data.modelProfiles : []).filter(Boolean);
-    const inputImageUrls = [...new Set(data.inputImageUrls ?? [])].slice(0, 8);
+    const normalized = normalizeTestImageModelsRequest(data);
+    const { purpose, qualityTiers, inputImageUrls, modelProfiles, compareByModelProfile } =
+      normalized;
 
     const imageClient = new ReplicateImageClient(replicateApiToken.value());
     const bucket = admin.storage().bucket("story-gen-8a769.firebasestorage.app");
@@ -52,12 +74,8 @@ export const testImageModels = onCall(
       imageUrl: string;
     }> = [];
 
-    if (modelProfiles.length > 0) {
-      const profilesToRun = modelProfiles.includes("kontext_reference")
-        ? modelProfiles
-        : modelProfiles.filter(Boolean);
-
-      for (const modelProfile of profilesToRun) {
+    if (compareByModelProfile) {
+      for (const modelProfile of modelProfiles) {
         const imageBuffer = await imageClient.generateImage(data.prompt, {
           purpose,
           imageModelProfile: modelProfile,

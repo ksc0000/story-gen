@@ -196,8 +196,8 @@ export interface PageDoc {
   imageModel?: string;
   imageQualityTier?: ImageQualityTier;
   imagePurpose?: ImagePurpose;
-  inputReferenceCount?: number;
   inputImageUrlsCount?: number;
+  inputReferenceCount?: number;
   usedCharacterReference?: boolean;
   characterConsistencyMode?: CharacterConsistencyMode;
   imageModelProfile?: ImageModelProfile;
