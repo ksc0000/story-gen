@@ -192,6 +192,9 @@ export interface BookData {
   storyTextRewriteModel?: string;
   storyTextRewriteAttempts?: number;
   storyCast?: StoryCharacter[];
+  storyGoal?: string;
+  mainQuestObject?: string;
+  forbiddenQuestObjects?: string[];
   failureStage?: "story_generation" | "schema_validation" | "image_generation" | "validation";
   failureProvider?: "gemini" | "replicate" | "system";
   failureReason?: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
@@ -327,6 +330,9 @@ export interface GeneratedStory {
   title: string;
   characterBible: string;
   styleBible: string;
+  storyGoal?: string;
+  mainQuestObject?: string;
+  forbiddenQuestObjects?: string[];
   narrativeDevice?: GeneratedStoryNarrativeDevice;
   cast?: StoryCharacter[];
   storyModel?: string;

@@ -183,7 +183,28 @@ function validateGeneratedStoryQuality(params) {
                     pageIndex,
                 });
             }
+            if (heuristics.textTooGeneric) {
+                issues.push({
+                    severity: "warning",
+                    code: "text_too_generic",
+                    message: "本文が短く抽象的で、場面や出来事の情報量が不足している可能性があります。",
+                    pageIndex,
+                });
+            }
+            if (heuristics.sentenceTooShortForAge) {
+                issues.push({
+                    severity: "warning",
+                    code: "sentence_too_short_for_age",
+                    message: "対象年齢に対して文が短すぎ、読みごたえが不足している可能性があります。",
+                    pageIndex,
+                });
+            }
         }
+    });
+    addStoryGoalConsistencyIssues({
+        story: params.story,
+        readingProfile,
+        issues,
     });
     const averageCharsPerPage = Math.round(perPageStats.reduce((sum, stats) => sum + stats.chars, 0) / pageCount);
     const averageSentencesPerPage = Number((perPageStats.reduce((sum, stats) => sum + stats.sentences, 0) / pageCount).toFixed(2));
@@ -342,7 +363,122 @@ function analyzeJapaneseTextHeuristics(text) {
         missingSceneDetail: !placeWords.test(text),
         missingActionOrEmotion: !(actionWords.test(text) || emotionOrDiscoveryWords.test(text)),
         unnaturalJapaneseRisk: coinedPatterns.test(text) || (hiraganaRatio > 0.92 && commonSoundWords.length >= 2),
+        textTooGeneric: countJapaneseTextChars(text) < 45 &&
+            countSentences(text) <= 3 &&
+            (!actionWords.test(text) || !emotionOrDiscoveryWords.test(text)),
+        sentenceTooShortForAge: countJapaneseTextChars(text) < 40 || countSentences(text) <= 2,
     };
+}
+function addStoryGoalConsistencyIssues(params) {
+    const { story, readingProfile, issues } = params;
+    const isThreePlus = readingProfile.ageBand !== "baby_toddler";
+    if (!isThreePlus) {
+        return;
+    }
+    if (!story.storyGoal?.trim()) {
+        issues.push({
+            severity: "warning",
+            code: "missing_story_goal",
+            message: "物語全体の目的 storyGoal が不足しています。",
+        });
+    }
+    if (!story.mainQuestObject?.trim()) {
+        issues.push({
+            severity: "warning",
+            code: "missing_main_quest_object",
+            message: "探すものや向かう目的を示す mainQuestObject が不足しています。",
+        });
+        return;
+    }
+    const mainQuestTokens = buildQuestTokens([story.mainQuestObject], { includeStarAliases: false });
+    const storyGoalTokens = buildQuestTokens([story.storyGoal]);
+    const forbiddenTokens = (story.forbiddenQuestObjects ?? []).flatMap((value) => buildQuestTokens([value], { includeStarAliases: false }));
+    const hiddenDetailTokens = [
+        ...(story.narrativeDevice?.hiddenDetails ?? []),
+        ...story.pages.map((page) => page.hiddenDetail ?? ""),
+    ].flatMap((value) => buildQuestTokens([value], { includeStarAliases: false }));
+    const visualMotifTokens = buildQuestTokens([
+        story.narrativeDevice?.visualMotif,
+        story.narrativeDevice?.repeatedPhrase,
+        story.storyGoal,
+    ]);
+    story.pages.forEach((page, pageIndex) => {
+        const text = page.text ?? "";
+        const normalized = text.replace(/\s+/g, "");
+        const hasMainQuestSignal = mainQuestTokens.length === 0 || mainQuestTokens.some((token) => normalized.includes(token));
+        const hasStoryGoalSignal = storyGoalTokens.length === 0 || storyGoalTokens.some((token) => normalized.includes(token));
+        const forbiddenHits = forbiddenTokens.filter((token) => token && normalized.includes(token));
+        const hiddenHits = hiddenDetailTokens.filter((token) => token && normalized.includes(token));
+        const motifHits = visualMotifTokens.filter((token) => token && normalized.includes(token));
+        if (!hasMainQuestSignal && !hasStoryGoalSignal && countJapaneseTextChars(text) >= 20) {
+            issues.push({
+                severity: pageIndex === 0 ? "warning" : "error",
+                code: "page_text_not_connected_to_story_goal",
+                message: "本文が storyGoal や mainQuestObject につながっていない可能性があります。",
+                pageIndex,
+            });
+        }
+        if (forbiddenHits.length > 0) {
+            issues.push({
+                severity: "error",
+                code: "forbidden_object_became_goal",
+                message: "除外対象の小物や背景要素が、本文の主目的として扱われています。",
+                pageIndex,
+                actual: forbiddenHits.join(", "),
+            });
+        }
+        if (!hasMainQuestSignal && forbiddenHits.length > 0) {
+            issues.push({
+                severity: "error",
+                code: "main_quest_drift",
+                message: "物語の主目的が途中で別の対象にずれている可能性があります。",
+                pageIndex,
+            });
+        }
+        if ((hiddenHits.length > 0 || (forbiddenHits.length > 0 && Boolean(page.hiddenDetail?.trim()))) && !hasMainQuestSignal) {
+            issues.push({
+                severity: "warning",
+                code: "hidden_detail_used_as_main_goal",
+                message: "hiddenDetail が本文の主筋として使われている可能性があります。",
+                pageIndex,
+                actual: hiddenHits.join(", ") || page.hiddenDetail,
+            });
+        }
+        if (page.pageVisualRole !== "opening_establishing" &&
+            visualMotifTokens.length > 0 &&
+            motifHits.length === 0 &&
+            !forbiddenHits.length) {
+            issues.push({
+                severity: "warning",
+                code: "missing_visual_motif_in_text",
+                message: "本文に visualMotif や主目的の手がかりが十分反映されていない可能性があります。",
+                pageIndex,
+            });
+        }
+    });
+}
+function buildQuestTokens(values, options) {
+    const tokens = new Set();
+    for (const value of values) {
+        if (!value)
+            continue;
+        const normalized = value.replace(/[「」『』\s、。,.!！?？]/g, "");
+        if (!normalized)
+            continue;
+        tokens.add(normalized);
+        for (const part of value.split(/[\s、。,.!！?？・]/)) {
+            const token = part.trim();
+            if (!token)
+                continue;
+            if (token.length >= 2) {
+                tokens.add(token);
+            }
+        }
+        if ((options?.includeStarAliases ?? true) && value.includes("星")) {
+            ["星", "ほし", "ほしのこ", "ひかり", "キラキラ", "きらきら", "星のかけら"].forEach((token) => tokens.add(token));
+        }
+    }
+    return [...tokens];
 }
 function addCastConsistencyIssues(params) {
     const cast = params.story.cast ?? [];
@@ -354,6 +490,18 @@ function addCastConsistencyIssues(params) {
             code: "cast_missing_for_recurring_character",
             message: "繰り返し登場しそうな相棒・動物・魔法キャラがあるのに cast が定義されていません。",
         });
+    }
+    if (cast.length > 0) {
+        const pagesWithoutAppearingIds = params.story.pages.filter((page) => /buddy|friend|animal|magical|ほしのこ|ともだち/i.test(page.imagePrompt) &&
+            (!page.appearingCharacterIds || page.appearingCharacterIds.length === 0)).length;
+        if (pagesWithoutAppearingIds > 0) {
+            params.issues.push({
+                severity: "warning",
+                code: "cast_missing_page_linkage",
+                message: "cast はあるのに pages[].appearingCharacterIds が不足しているページがあります。",
+                actual: pagesWithoutAppearingIds,
+            });
+        }
     }
     for (const [characterId, count] of params.recurringCastIds.entries()) {
         if (characterId === "child_protagonist") {

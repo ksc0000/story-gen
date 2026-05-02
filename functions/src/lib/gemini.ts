@@ -382,10 +382,27 @@ function validateStory(data: unknown): GeneratedStory {
     narrativeDevice = device;
   }
 
+  if (obj.storyGoal !== undefined && typeof obj.storyGoal !== "string") {
+    throw new Error("'storyGoal' must be a string when provided");
+  }
+  if (obj.mainQuestObject !== undefined && typeof obj.mainQuestObject !== "string") {
+    throw new Error("'mainQuestObject' must be a string when provided");
+  }
+  if (
+    obj.forbiddenQuestObjects !== undefined &&
+    (!Array.isArray(obj.forbiddenQuestObjects) ||
+      !obj.forbiddenQuestObjects.every((item) => typeof item === "string"))
+  ) {
+    throw new Error("'forbiddenQuestObjects' must be a string array when provided");
+  }
+
   return {
     title: obj.title,
     characterBible: obj.characterBible,
     styleBible: obj.styleBible,
+    storyGoal: typeof obj.storyGoal === "string" ? obj.storyGoal : undefined,
+    mainQuestObject: typeof obj.mainQuestObject === "string" ? obj.mainQuestObject : undefined,
+    forbiddenQuestObjects: obj.forbiddenQuestObjects as string[] | undefined,
     cast,
     narrativeDevice: narrativeDevice as GeneratedStory["narrativeDevice"],
     storyModel: typeof obj.storyModel === "string" ? obj.storyModel : undefined,
@@ -629,9 +646,15 @@ export class GeminiClient implements LLMClient {
       "## Rewrite task",
       "Rewrite only pages[].text in natural Japanese picture-book prose.",
       "Keep title, characterBible, styleBible, cast, narrativeDevice, imagePrompt, compositionHint, pageVisualRole, appearingCharacterIds, and focusCharacterId unchanged.",
+      "Keep storyGoal, mainQuestObject, and forbiddenQuestObjects unchanged.",
+      "pages[].text only. Do not modify imagePrompt, pageVisualRole, cast, appearingCharacterIds, or focusCharacterId.",
       "For ages 3+, avoid sound-play-only text and meaningless invented words.",
+      "For ages 3+, each page should usually have 3 to 5 sentences and around 80 to 140 Japanese characters when natural.",
       "Add natural scene detail, action, emotion, and small discovery.",
       "Reduce excessive onomatopoeia and unclear repeated sounds.",
+      "Keep the main quest object consistent across all pages. Do not replace it with another object.",
+      "hiddenDetail is for visual background fun only. Do not turn hiddenDetail into the main story goal.",
+      "If imagePrompt shows a clear action or recurring motif, reflect that naturally in pages[].text.",
       "Do not turn the text into dry explanation. Keep it warm and story-like.",
       "Return JSON only in this shape: {\"pages\":[{\"text\":\"...\"}]}",
     ].join("\n");

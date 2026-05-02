@@ -42,9 +42,12 @@ const fixedTemplate: TemplateData = {
 };
 
 const mockStory: GeneratedStory = {
-  title: "ゆうたくんのたんじょうび",
+  title: "ゆうたとひかりのほし",
   characterBible: "A consistent boy with short black hair and blue overalls",
   styleBible: "Soft watercolor picture book style with warm paper texture",
+  storyGoal: "ゆうたが ひかりのともだちと いっしょに 小さな星のかけらを さがす",
+  mainQuestObject: "星のかけら",
+  forbiddenQuestObjects: ["すいか", "食べもの", "べつのおもちゃ"],
   storyModel: "gemini-2.5-flash-lite",
   storyModelFallbackUsed: false,
   storyGenerationAttempts: 1,
@@ -64,26 +67,26 @@ const mockStory: GeneratedStory = {
     visualMotif: "yellow star",
     setup: "はじめに見つけた小さな星",
     payoff: "最後にもう一度星が光る",
-    hiddenDetails: ["small bird", "blue cup"],
-  },
-  pages: [
-    {
-      text: "きょうはたんじょうびです。おへやには やさしい かざりが ゆれていて、みんなの えがおも きらきらしていました。",
-      imagePrompt: "A warm wide birthday party scene with family, decorations, toys, and a small yellow star motif in the room",
+      hiddenDetails: ["small bird", "blue cup"],
+    },
+    pages: [
+      {
+      text: "こうえんの すなばで、ゆうたは きょうも みどりの きょうりゅうを あそばせていました。すると すなの なかで、小さな 星のかけらが きらりと ひかりました。ゆうたは なんだろうと おもって、そっと すなを よけました。",
+      imagePrompt: "A warm wide sandbox scene with a child, a glowing tiny star shard, family-friendly park details, and a small yellow star motif",
       pageVisualRole: "opening_establishing",
       compositionHint: "wide establishing shot",
-      visualMotifUsage: "yellow star decoration above the table",
-      hiddenDetail: "small bird toy near the shelf",
+      visualMotifUsage: "yellow star glow near the sand",
+      hiddenDetail: "small bird near the hedge",
       appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
       focusCharacterId: "child_protagonist",
     },
     {
-      text: "ケーキをたべるまえに、ゆうたくんは みんなのこえを しっかり ききました。うれしくて、ありがとうが そっと くちから こぼれます。",
-      imagePrompt: "A medium storybook shot of a child near a birthday cake, family in the background, rich but not cluttered room details",
+      text: "ひかりの ともだちは、その 星のかけらを なくして こまっていました。ゆうたは びっくりしたけれど、いっしょに さがそうと やさしく うなずきました。ふたりは きらきらの あとを たどりはじめました。",
+      imagePrompt: "A medium storybook shot of a child meeting a magical glowing friend in a sandbox, following a tiny star trail with rich but not cluttered park details",
       pageVisualRole: "action",
       compositionHint: "medium shot with action",
-      visualMotifUsage: "yellow star on a small cup",
-      hiddenDetail: "tiny blue cup on the table",
+      visualMotifUsage: "yellow star trail on the sand",
+      hiddenDetail: "tiny blue cup near the sandbox edge",
       appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
       focusCharacterId: "magic_friend_01",
     },
@@ -194,9 +197,12 @@ describe("processBookGeneration", () => {
       expect.objectContaining({
         storyModel: expect.any(String),
         storyCast: expect.any(Array),
+        storyGoal: mockStory.storyGoal,
+        mainQuestObject: mockStory.mainQuestObject,
+        forbiddenQuestObjects: mockStory.forbiddenQuestObjects,
       })
     );
-    expect(deps.updateBookTitle).toHaveBeenCalledWith("book123", "ゆうたくんのたんじょうび");
+    expect(deps.updateBookTitle).toHaveBeenCalledWith("book123", "ゆうたとひかりのほし");
     expect(deps.updateBookStoryQualityReport).toHaveBeenCalledOnce();
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book123", "completed");
     expect(deps.incrementMonthlyCount).toHaveBeenCalledWith("user123");
@@ -235,7 +241,7 @@ describe("processBookGeneration", () => {
         { ...mockStory.pages[1], text: "ふわふわ ふわりん。" },
       ],
     });
-    deps.llmClient.rewriteStoryText.mockResolvedValueOnce({
+    deps.llmClient.rewriteStoryText.mockResolvedValue({
       pages: mockStory.pages.map((page) => ({ text: page.text })),
       storyTextRewriteModel: "gemini-2.5-pro",
       storyTextRewriteAttempts: 1,
@@ -249,6 +255,47 @@ describe("processBookGeneration", () => {
       expect.objectContaining({
         storyTextRewriteUsed: true,
         storyTextRewriteModel: "gemini-2.5-pro",
+        storyTextRewriteAttempts: 1,
+      })
+    );
+  });
+
+  it("runs premium rewrite up to 2 times when story goal consistency stays weak", async () => {
+    const premiumBook: BookData = {
+      ...baseBookData,
+      productPlan: "premium_paid",
+      input: { childName: "ゆうた", childAge: 4, storyRequest: "なくした星をさがす" },
+    };
+    deps.llmClient.generateStory.mockResolvedValueOnce({
+      ...mockStory,
+      pages: [
+        { ...mockStory.pages[0], text: "たのしいね。" },
+        { ...mockStory.pages[1], text: "すいかを さがしたよ。" },
+      ],
+    });
+    deps.llmClient.rewriteStoryText
+      .mockResolvedValueOnce({
+        pages: [
+          { text: "すなばで ひかりが きらり。ゆうたは ふしぎそうに みつめました。" },
+          { text: "でも ふたりは、まだ すいかを さがしているようでした。" },
+        ],
+        storyTextRewriteModel: "gemini-2.5-pro",
+        storyTextRewriteAttempts: 1,
+      })
+      .mockResolvedValueOnce({
+        pages: mockStory.pages.map((page) => ({ text: page.text })),
+        storyTextRewriteModel: "gemini-2.5-pro",
+        storyTextRewriteAttempts: 1,
+      });
+
+    await processBookGeneration("book-rewrite-2", premiumBook, deps);
+
+    expect(deps.llmClient.rewriteStoryText).toHaveBeenCalledTimes(2);
+    expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
+      "book-rewrite-2",
+      expect.objectContaining({
+        storyTextRewriteUsed: true,
+        storyTextRewriteAttempts: 2,
       })
     );
   });
@@ -675,7 +722,7 @@ describe("processBookGeneration", () => {
           compositionHint: "medium shot with action",
         },
         {
-          text: "そのとき、あおい ことりが ぴょこんと とんできました。ゆうたは そっと てを のばして、びっくりしながらも うれしく なりました。",
+          text: "そのとき、あおい ことりが ぴょこんと とんできて、ほしの ひかりが つづく ほうを みせてくれました。ゆうたは そっと てを のばして、星のかけらに ちかづいているのかもと おもいました。",
           imagePrompt: "side view storybook scene of a child noticing a small blue bird, with flowers, grass, and meaningful but not cluttered background details",
           pageVisualRole: "action",
           compositionHint: "side view with discovery",
@@ -687,7 +734,7 @@ describe("processBookGeneration", () => {
           compositionHint: "close-up of hands and expression",
         },
         {
-          text: "ふりかえると、こうえんの けしきが やさしく ひろがっていました。ゆうたは また こようねと つぶやき、あたたかな きもちで あるきだしました。",
+          text: "ふりかえると、こうえんの けしきの なかで、みつけた 星のかけらが まだ ちいさく ひかっていました。ゆうたは また あの ひかりに あえるかなと おもいながら、あたたかな きもちで あるきだしました。",
           imagePrompt: "warm ending back view of a child walking away through a beautiful park, gentle sky, repeated yellow star motif, and rich but calm scenery",
           pageVisualRole: "quiet_ending",
           compositionHint: "warm ending back view",
@@ -709,12 +756,41 @@ describe("processBookGeneration", () => {
 
     await processBookGeneration("book-key-pages", keyPagesBook, deps);
 
-    const calls = deps.imageClient.generateImage.mock.calls.map(([, options]) => options.inputImageUrls);
-    expect(calls[0]).toEqual(expect.arrayContaining(["https://example.com/approved.png"]));
-    expect(calls[1]).toEqual([]);
-    expect(calls[2]).toEqual([]);
-    expect(calls[3]).toEqual(expect.arrayContaining(["https://example.com/approved.png"]));
-    expect(calls[4]).toEqual(expect.arrayContaining(["https://example.com/approved.png"]));
+    expect(deps.imageClient.generateImage).toHaveBeenNthCalledWith(
+      1,
+      expect.any(String),
+      expect.objectContaining({
+        inputImageUrls: expect.arrayContaining(["https://example.com/approved.png"]),
+      })
+    );
+    expect(deps.imageClient.generateImage).toHaveBeenNthCalledWith(
+      2,
+      expect.any(String),
+      expect.objectContaining({
+        inputImageUrls: [],
+      })
+    );
+    expect(deps.imageClient.generateImage).toHaveBeenNthCalledWith(
+      3,
+      expect.any(String),
+      expect.objectContaining({
+        inputImageUrls: [],
+      })
+    );
+    expect(deps.imageClient.generateImage).toHaveBeenNthCalledWith(
+      4,
+      expect.any(String),
+      expect.objectContaining({
+        inputImageUrls: expect.arrayContaining(["https://example.com/approved.png"]),
+      })
+    );
+    expect(deps.imageClient.generateImage).toHaveBeenNthCalledWith(
+      5,
+      expect.any(String),
+      expect.objectContaining({
+        inputImageUrls: expect.arrayContaining(["https://example.com/approved.png"]),
+      })
+    );
   });
 
   it("uses references on every page for all_pages mode", async () => {

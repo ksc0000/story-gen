@@ -114,6 +114,116 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "unnatural_japanese_risk")).toBe(true);
   });
 
+  it("detects story goal drift and forbidden quest objects in weak premium text", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        storyGoal: "たっちゃんが ほしのこと いっしょに 星のかけらを さがす",
+        mainQuestObject: "星のかけら",
+        forbiddenQuestObjects: ["すいか", "食べもの"],
+        narrativeDevice: {
+          ...baseStory.narrativeDevice!,
+          hiddenDetails: ["watermelon-like pattern", "watermelon-shaped cloud"],
+        },
+        pages: [
+          {
+            text: "たっちゃん、すなばであそぼう。くろいかみの、たっちゃん。みどりのはっぱが、きらきら。",
+            imagePrompt: "wide shot of sandbox and small star light",
+            compositionHint: "wide shot",
+            pageVisualRole: "opening_establishing",
+            hiddenDetail: "watermelon-like pattern",
+          },
+          {
+            text: "あれ？ ちいさな、ほしのこ。「こんにちは」って、ふるえている。たっちゃん、びっくり！",
+            imagePrompt: "discovery scene with star child and sandbox",
+            compositionHint: "medium shot",
+            pageVisualRole: "discovery",
+          },
+          {
+            text: "おいしい、すいか、どこかな？ ほしのこ、さがしてる。キラキラ、どこかな？",
+            imagePrompt: "action scene in sandbox",
+            compositionHint: "action shot",
+            pageVisualRole: "action",
+            hiddenDetail: "watermelon-shaped cloud",
+          },
+          {
+            text: "あった！たっちゃんの、すいか。ほしのこ、わらってる。「ありがとう」って、たっちゃん。",
+            imagePrompt: "ending scene with glowing child",
+            compositionHint: "ending shot",
+            pageVisualRole: "quiet_ending",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "text_too_generic")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "sentence_too_short_for_age")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "main_quest_drift")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "forbidden_object_became_goal")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "hidden_detail_used_as_main_goal")).toBe(true);
+  });
+
+  it("accepts richer quest-consistent preschool text", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        storyGoal: "たっちゃんが ほしのこと いっしょに 星のかけらを さがす",
+        mainQuestObject: "星のかけら",
+        forbiddenQuestObjects: ["すいか", "食べもの"],
+        cast: [
+          {
+            characterId: "hoshinoko_01",
+            displayName: "ほしのこ",
+            role: "magical_friend",
+            visualBible: "small glowing star child",
+            signatureItems: ["small glow"],
+            doNotChange: ["Do not remove the glow"],
+          },
+        ],
+        pages: [
+          {
+            text: "たっちゃんは、すなばで みどりの きょうりゅうを すべらせて あそんでいました。すると、すなの なかで 小さな ひかりが きらりと ゆれました。なんだろうと おもって、たっちゃんは そっと すなを よけました。",
+            imagePrompt: "wide establishing shot of a sandbox with a tiny star glow and child-safe park details",
+            compositionHint: "wide establishing shot",
+            pageVisualRole: "opening_establishing",
+            appearingCharacterIds: ["child_protagonist"],
+          },
+          {
+            text: "すなの なかから、ふるえた こえで ほしのこが あらわれました。なくした 星のかけらを さがしていると きいて、たっちゃんは びっくりしながらも うなずきました。いっしょに さがそう、と やさしく てを のばしました。",
+            imagePrompt: "discovery scene with a small star child and sandbox details",
+            compositionHint: "medium shot with discovery",
+            pageVisualRole: "discovery",
+            appearingCharacterIds: ["child_protagonist", "hoshinoko_01"],
+            focusCharacterId: "hoshinoko_01",
+          },
+          {
+            text: "ほしのこは たっちゃんの ゆびに ちょこんと のって、ひかりの みちを てらしました。たっちゃんは すなの やまを そっと くずしながら、きらきらの かけらを さがしました。もう すこしで みつかりそうだね、と ふたりの かおが あかるく なりました。",
+            imagePrompt: "action scene in sandbox with glowing path and star motif",
+            compositionHint: "action shot",
+            pageVisualRole: "action",
+            appearingCharacterIds: ["child_protagonist", "hoshinoko_01"],
+            focusCharacterId: "child_protagonist",
+          },
+          {
+            text: "ひかりの みちの さきで、星のかけらが きらりと ひかりました。ほしのこは うれしそうに まわって、たっちゃんに ありがとうと いいました。すなばの うえには、やさしい ひかりが いつまでも のこっていました。",
+            imagePrompt: "quiet ending scene with found star shard and warm sandbox glow",
+            compositionHint: "quiet ending shot",
+            pageVisualRole: "quiet_ending",
+            appearingCharacterIds: ["child_protagonist", "hoshinoko_01"],
+            focusCharacterId: "hoshinoko_01",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.issues.some((issue) => issue.severity === "error")).toBe(false);
+  });
+
   it("warns when scene detail or action/emotion is missing", () => {
     const report = validateGeneratedStoryQuality({
       story: {

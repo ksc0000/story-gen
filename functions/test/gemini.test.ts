@@ -108,6 +108,9 @@ describe("GeminiClient", () => {
       title: "テスト",
       characterBible: "A consistent child",
       styleBible: "Flat picture book style",
+      storyGoal: "ゆうたが ほしのこと いっしょに 星のかけらを さがす",
+      mainQuestObject: "星のかけら",
+      forbiddenQuestObjects: ["すいか", "食べもの"],
       cast: [
         {
           characterId: "magic_friend_01",
@@ -146,6 +149,9 @@ describe("GeminiClient", () => {
     });
 
     expect(result.cast?.[0].characterId).toBe("magic_friend_01");
+    expect(result.storyGoal).toContain("星のかけら");
+    expect(result.mainQuestObject).toBe("星のかけら");
+    expect(result.forbiddenQuestObjects).toEqual(["すいか", "食べもの"]);
     expect(result.pages[0].appearingCharacterIds).toEqual(["child_protagonist", "magic_friend_01"]);
     expect(result.pages[0].focusCharacterId).toBe("magic_friend_01");
   });

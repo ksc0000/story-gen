@@ -198,6 +198,9 @@ async function processBookGeneration(bookId, bookData, deps) {
                 storyTextRewriteModel: storyResult.rewriteMetadata?.storyTextRewriteModel,
                 storyTextRewriteAttempts: storyResult.rewriteMetadata?.storyTextRewriteAttempts,
                 storyCast: story.cast,
+                storyGoal: story.storyGoal,
+                mainQuestObject: story.mainQuestObject,
+                forbiddenQuestObjects: story.forbiddenQuestObjects,
             });
         }
         await deps.updateBookStoryQualityReport(bookId, (0, story_quality_1.toFirestoreStoryQualityReport)(qualityReport));
@@ -456,15 +459,18 @@ function collectPageTextQualityWarnings(report, pageIndex) {
         .map((issue) => issue.code);
 }
 function shouldRewriteStoryText(bookData, report) {
-    if (bookData.productPlan === "premium_paid" || bookData.creationMode === "original_ai") {
-        return true;
-    }
     return report.issues.some((issue) => [
         "text_too_childish",
         "too_many_sound_words",
-        "missing_scene_detail",
-        "missing_action_or_emotion",
         "unnatural_japanese_risk",
+        "text_too_generic",
+        "sentence_too_short_for_age",
+        "missing_story_goal",
+        "missing_main_quest_object",
+        "main_quest_drift",
+        "forbidden_object_became_goal",
+        "hidden_detail_used_as_main_goal",
+        "page_text_not_connected_to_story_goal",
     ].includes(issue.code));
 }
 async function generateStoryWithQualityGate(params) {
@@ -504,7 +510,14 @@ async function generateStoryWithQualityGate(params) {
         creationMode: params.normalizedBookData.creationMode,
     });
     let rewriteMetadata;
-    if (params.llmClient.rewriteStoryText && shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
+    const forceRewrite = params.normalizedBookData.productPlan === "premium_paid" ||
+        params.normalizedBookData.creationMode === "original_ai";
+    const maxRewritePasses = forceRewrite ? 2 : 1;
+    let rewritePassCount = 0;
+    let lastRewriteModel;
+    while (params.llmClient.rewriteStoryText &&
+        rewritePassCount < maxRewritePasses &&
+        (forceRewrite || shouldRewriteStoryText(params.normalizedBookData, qualityReport))) {
         const rewritten = await params.llmClient.rewriteStoryText({
             story,
             systemPrompt: baseSystemPrompt,
@@ -515,6 +528,8 @@ async function generateStoryWithQualityGate(params) {
             creationMode: params.normalizedBookData.creationMode,
             storyModelCandidates,
         });
+        rewritePassCount += 1;
+        lastRewriteModel = rewritten.storyTextRewriteModel ?? lastRewriteModel;
         story = {
             ...story,
             pages: story.pages.map((page, index) => ({
@@ -524,14 +539,20 @@ async function generateStoryWithQualityGate(params) {
         };
         rewriteMetadata = {
             storyTextRewriteUsed: true,
-            storyTextRewriteModel: rewritten.storyTextRewriteModel,
-            storyTextRewriteAttempts: rewritten.storyTextRewriteAttempts,
+            storyTextRewriteModel: lastRewriteModel,
+            storyTextRewriteAttempts: rewritePassCount,
         };
         qualityReport = (0, story_quality_1.validateGeneratedStoryQuality)({
             story,
             readingProfile: params.readingProfile,
             creationMode: params.normalizedBookData.creationMode,
         });
+        if (!forceRewrite && !shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
+            break;
+        }
+        if (qualityReport.ok && rewritePassCount >= 1) {
+            break;
+        }
     }
     if (qualityReport.ok) {
         return { story, qualityReport, rewriteMetadata };
@@ -559,7 +580,10 @@ async function generateStoryWithQualityGate(params) {
         categoryGroupId: params.template.categoryGroupId,
         storyModelCandidates,
     });
-    if (params.llmClient.rewriteStoryText && shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
+    rewritePassCount = rewriteMetadata?.storyTextRewriteAttempts ?? 0;
+    while (params.llmClient.rewriteStoryText &&
+        rewritePassCount < maxRewritePasses &&
+        (forceRewrite || shouldRewriteStoryText(params.normalizedBookData, qualityReport))) {
         const rewritten = await params.llmClient.rewriteStoryText({
             story,
             systemPrompt: baseSystemPrompt,
@@ -570,6 +594,8 @@ async function generateStoryWithQualityGate(params) {
             creationMode: params.normalizedBookData.creationMode,
             storyModelCandidates,
         });
+        rewritePassCount += 1;
+        lastRewriteModel = rewritten.storyTextRewriteModel ?? lastRewriteModel;
         story = {
             ...story,
             pages: story.pages.map((page, index) => ({
@@ -579,9 +605,20 @@ async function generateStoryWithQualityGate(params) {
         };
         rewriteMetadata = {
             storyTextRewriteUsed: true,
-            storyTextRewriteModel: rewritten.storyTextRewriteModel,
-            storyTextRewriteAttempts: (rewriteMetadata?.storyTextRewriteAttempts ?? 0) + (rewritten.storyTextRewriteAttempts ?? 0),
+            storyTextRewriteModel: lastRewriteModel,
+            storyTextRewriteAttempts: rewritePassCount,
         };
+        qualityReport = (0, story_quality_1.validateGeneratedStoryQuality)({
+            story,
+            readingProfile: params.readingProfile,
+            creationMode: params.normalizedBookData.creationMode,
+        });
+        if (!forceRewrite && !shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
+            break;
+        }
+        if (qualityReport.ok && rewritePassCount >= 1) {
+            break;
+        }
     }
     qualityReport = (0, story_quality_1.validateGeneratedStoryQuality)({
         story,

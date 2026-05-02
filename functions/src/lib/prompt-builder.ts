@@ -101,6 +101,27 @@ const JAPANESE_STORY_TEXT_RULES = [
   "説明文ではなく、絵本らしい語り口にしてください。",
 ].join(" ");
 
+const STORY_GOAL_CONSISTENCY_RULES = [
+  "物語の中心目的 storyGoal を最初に決め、最後まで変えないでください。",
+  "mainQuestObject を途中で別のものに変えないでください。",
+  "hiddenDetail や背景小物を、物語の主目的にしてはいけません。",
+  "visualMotif は本文と絵に出してよいが、hiddenDetail は基本的に絵だけの小さな発見要素です。",
+  "例えば、hiddenDetail に『すいか模様の雲』がある場合でも、物語の目的を『すいか探し』に変えてはいけません。",
+  "storyRequest が『なくした星を探す』なら、最後まで探す対象は『星』または『星のかけら』です。",
+  "4ページ構成では、各ページが storyGoal に向かって少しずつ進む必要があります。",
+].join(" ");
+
+const PAGE_TEXT_ROLE_RULES = [
+  "opening_establishing: 場所、主人公の行動、storyGoal につながる小さな異変や発見、次ページへの予感を入れる。",
+  "discovery: 見つけたもの、それがなぜ不思議か、何に困っているか、主人公の反応を入れる。",
+  "action: mainQuestObject を探すための行動、探す場所、小さな手がかり、同じ目的に向かっていることを明確にする。",
+  "emotional_closeup: 表情、手元、気持ち、何を感じて何を決めたかを自然に描く。",
+  "object_detail: 小物の見た目と、その小物が storyGoal にどう関係するかを書く。",
+  "setback_or_question: 見つからない、迷う、問いが生まれる場面を書く。ただし別目的に脱線しない。",
+  "payoff: mainQuestObject が見つかる、visualMotif や setup が回収される場面にする。",
+  "quiet_ending: 見つかった後の安心感、ありがとう、うれしさ、余韻を書く。別目的を持ち込まない。",
+].join(" ");
+
 const BAD_TEXT_EXAMPLE =
   "ころころ こりころ。まきまき まきば。まきまき むすんで、ふしぎな じゅうたん。";
 const GOOD_TEXT_EXAMPLE = [
@@ -263,6 +284,8 @@ ${ageReadingGuidance}
 - ただし、どの年齢でも説教臭くせず、絵本として自然な文章にしてください。
 - 各ページの本文量は対象年齢の目安を大きく超えないでください。
 - Japanese story text rules: ${JAPANESE_STORY_TEXT_RULES}
+- Story goal consistency rules: ${STORY_GOAL_CONSISTENCY_RULES}
+- pageVisualRole ごとの本文設計ルール: ${PAGE_TEXT_ROLE_RULES}
 - 悪い例: 「${BAD_TEXT_EXAMPLE}」
 - 理由: 意味が通りにくく、情景や行動が不足している。
 - 良い例:
@@ -282,6 +305,9 @@ ${GOOD_TEXT_EXAMPLE}
   "title": "絵本のタイトル",
   "characterBible": "Consistent English character design description used for every illustration",
   "styleBible": "Consistent English visual style guide used for every illustration",
+  "storyGoal": "たっちゃんが、すなばで出会ったほしのこと一緒に、なくした星のかけらを探す",
+  "mainQuestObject": "星のかけら",
+  "forbiddenQuestObjects": ["すいか", "食べ物"],
   "cast": [
     {
       "characterId": "magic_friend_01",

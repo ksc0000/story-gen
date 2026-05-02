@@ -53,6 +53,13 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("cast");
     expect(result).toContain("appearingCharacterIds");
     expect(result).toContain("focusCharacterId");
+    expect(result).toContain("storyGoal");
+    expect(result).toContain("mainQuestObject");
+    expect(result).toContain("forbiddenQuestObjects");
+    expect(result).toContain("hiddenDetail や背景小物を、物語の主目的にしてはいけません");
+    expect(result).toContain("opening_establishing:");
+    expect(result).toContain("action:");
+    expect(result).toContain("quiet_ending:");
   });
 });
 
