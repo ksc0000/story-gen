@@ -5,6 +5,10 @@ import type {
   PageCount,
   IllustrationStyle,
   PageVisualRole,
+  ProductPlan,
+  CreationMode,
+  StoryCharacter,
+  StoryCharacterRole,
 } from "./types";
 import { PAGE_VISUAL_ROLES } from "./types";
 
@@ -21,16 +25,18 @@ const SAFETY_SETTINGS = [
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
 ];
 
+type GeminiRetryReason = "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
+
 export class GeminiServiceUnavailableError extends Error {
   retryable = true;
-  reason: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
+  reason: GeminiRetryReason;
   modelNamesTried: string[];
   totalAttempts: number;
   technicalMessage: string;
 
   constructor(params: {
     message: string;
-    reason: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
+    reason: GeminiRetryReason;
     modelNamesTried: string[];
     totalAttempts: number;
     technicalMessage: string;
@@ -58,13 +64,32 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function getStoryModelCandidates(): string[] {
+function getStoryModelCandidatesFromEnv(): string[] {
   const primary = process.env.GEMINI_STORY_MODEL_PRIMARY?.trim() || DEFAULT_STORY_MODEL_PRIMARY;
   const fallbackCsv = process.env.GEMINI_STORY_MODEL_FALLBACKS?.trim();
   const fallbacks = fallbackCsv
     ? fallbackCsv.split(",").map((value) => value.trim()).filter(Boolean)
     : DEFAULT_STORY_MODEL_FALLBACKS;
   return [...new Set([primary, ...fallbacks])];
+}
+
+export function resolveStoryModelCandidates(params: {
+  productPlan?: ProductPlan;
+  creationMode?: CreationMode;
+  theme?: string;
+  categoryGroupId?: string;
+}): string[] {
+  const isMemory = params.theme === "memory" || params.categoryGroupId === "memories";
+
+  if (params.creationMode === "original_ai" || params.productPlan === "premium_paid" || isMemory) {
+    return ["gemini-2.5-pro", "gemini-2.5-flash"];
+  }
+
+  if (params.productPlan === "standard_paid") {
+    return ["gemini-2.5-flash", "gemini-2.5-pro"];
+  }
+
+  return ["gemini-2.5-flash", "gemini-2.0-flash"];
 }
 
 function getErrorMessage(err: unknown): string {
@@ -79,9 +104,7 @@ function getErrorMessage(err: unknown): string {
   return JSON.stringify(err);
 }
 
-function getRetryableGeminiReason(
-  err: unknown
-): "service_unavailable" | "rate_limited" | "overloaded" | "unknown" | null {
+function getRetryableGeminiReason(err: unknown): GeminiRetryReason | null {
   const message = getErrorMessage(err).toLowerCase();
   const status = typeof err === "object" && err !== null ? String((err as { status?: unknown }).status ?? "") : "";
 
@@ -187,6 +210,89 @@ export function normalizePageVisualRole(
   return defaultPageVisualRole(pageIndex, totalPages);
 }
 
+function normalizeStoryCharacterRole(value: unknown): StoryCharacterRole {
+  if (typeof value !== "string") {
+    return "buddy";
+  }
+
+  const normalized = value.trim().toLowerCase();
+  const allowed: StoryCharacterRole[] = [
+    "protagonist",
+    "buddy",
+    "parent",
+    "sibling",
+    "animal",
+    "magical_friend",
+    "object_character",
+    "background_recurring",
+  ];
+
+  if (allowed.includes(normalized as StoryCharacterRole)) {
+    return normalized as StoryCharacterRole;
+  }
+
+  if (normalized.includes("animal")) return "animal";
+  if (normalized.includes("magic")) return "magical_friend";
+  if (normalized.includes("object")) return "object_character";
+  if (normalized.includes("background")) return "background_recurring";
+
+  return "buddy";
+}
+
+function validateStringArray(
+  value: unknown,
+  errorLabel: string
+): string[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
+    throw new Error(`${errorLabel} must be a string array when provided`);
+  }
+  return value as string[];
+}
+
+function validateStoryCast(data: unknown): StoryCharacter[] | undefined {
+  if (data === undefined) {
+    return undefined;
+  }
+
+  if (!Array.isArray(data)) {
+    throw new Error("'cast' must be an array when provided");
+  }
+
+  return data.map((entry, index) => {
+    if (typeof entry !== "object" || entry === null) {
+      throw new Error(`cast[${index}] must be an object`);
+    }
+
+    const obj = entry as Record<string, unknown>;
+    if (typeof obj.characterId !== "string") {
+      throw new Error(`cast[${index}].characterId must be a string`);
+    }
+    if (typeof obj.displayName !== "string") {
+      throw new Error(`cast[${index}].displayName must be a string`);
+    }
+    if (typeof obj.visualBible !== "string") {
+      throw new Error(`cast[${index}].visualBible must be a string`);
+    }
+
+    return {
+      characterId: obj.characterId,
+      displayName: obj.displayName,
+      role: normalizeStoryCharacterRole(obj.role),
+      visualBible: obj.visualBible,
+      silhouette: typeof obj.silhouette === "string" ? obj.silhouette : undefined,
+      colorPalette: validateStringArray(obj.colorPalette, `cast[${index}].colorPalette`),
+      signatureItems: validateStringArray(obj.signatureItems, `cast[${index}].signatureItems`),
+      doNotChange: validateStringArray(obj.doNotChange, `cast[${index}].doNotChange`),
+      canChangeByScene: validateStringArray(obj.canChangeByScene, `cast[${index}].canChangeByScene`),
+      referenceImageUrl: typeof obj.referenceImageUrl === "string" ? obj.referenceImageUrl : undefined,
+      approvedImageUrl: typeof obj.approvedImageUrl === "string" ? obj.approvedImageUrl : undefined,
+    } satisfies StoryCharacter;
+  });
+}
+
 function validateStory(data: unknown): GeneratedStory {
   if (typeof data !== "object" || data === null) throw new Error("LLM response is not an object");
   const obj = data as Record<string, unknown>;
@@ -195,6 +301,8 @@ function validateStory(data: unknown): GeneratedStory {
   if (typeof obj.styleBible !== "string") throw new Error("LLM response missing 'styleBible' string");
   if (!Array.isArray(obj.pages) || obj.pages.length === 0) throw new Error("LLM response missing 'pages' array");
 
+  const cast = validateStoryCast(obj.cast);
+  const castIds = new Set((cast ?? []).map((character) => character.characterId));
   const pages = obj.pages as unknown[];
   const normalizedPages = pages.map((page, index) => {
     if (typeof page !== "object" || page === null) {
@@ -217,6 +325,23 @@ function validateStory(data: unknown): GeneratedStory {
     if (pageObj.pageVisualRole !== undefined && typeof pageObj.pageVisualRole !== "string") {
       throw new Error("Page 'pageVisualRole' must be a string when provided");
     }
+    if (
+      pageObj.appearingCharacterIds !== undefined &&
+      (!Array.isArray(pageObj.appearingCharacterIds) ||
+        !pageObj.appearingCharacterIds.every((item) => typeof item === "string"))
+    ) {
+      throw new Error("Page 'appearingCharacterIds' must be a string array when provided");
+    }
+    if (pageObj.focusCharacterId !== undefined && typeof pageObj.focusCharacterId !== "string") {
+      throw new Error("Page 'focusCharacterId' must be a string when provided");
+    }
+
+    const appearingCharacterIds = pageObj.appearingCharacterIds as string[] | undefined;
+    for (const characterId of appearingCharacterIds ?? []) {
+      if (!castIds.has(characterId) && characterId !== "child_protagonist") {
+        console.warn(`Unknown appearingCharacterId '${characterId}' on page ${index + 1}; keeping page data and ignoring for cast consistency.`);
+      }
+    }
 
     return {
       text: pageObj.text,
@@ -225,6 +350,8 @@ function validateStory(data: unknown): GeneratedStory {
       visualMotifUsage: pageObj.visualMotifUsage,
       hiddenDetail: pageObj.hiddenDetail,
       pageVisualRole: normalizePageVisualRole(pageObj.pageVisualRole, index, pages.length),
+      appearingCharacterIds,
+      focusCharacterId: pageObj.focusCharacterId as string | undefined,
     };
   });
 
@@ -259,6 +386,7 @@ function validateStory(data: unknown): GeneratedStory {
     title: obj.title,
     characterBible: obj.characterBible,
     styleBible: obj.styleBible,
+    cast,
     narrativeDevice: narrativeDevice as GeneratedStory["narrativeDevice"],
     storyModel: typeof obj.storyModel === "string" ? obj.storyModel : undefined,
     storyModelFallbackUsed:
@@ -316,6 +444,81 @@ async function generateContentWithRetry(params: {
   }
 }
 
+async function runJsonGeneration(params: {
+  client: GoogleGenerativeAI;
+  request: {
+    contents: Array<{ role: "user"; parts: Array<{ text: string }> }>;
+    systemInstruction: { role: "system"; parts: Array<{ text: string }> };
+    generationConfig: { responseMimeType: "application/json" };
+  };
+  modelCandidates: string[];
+}): Promise<{ text: string; modelName: string; fallbackUsed: boolean; totalAttempts: number }> {
+  const modelNamesTried: string[] = [];
+  let totalAttempts = 0;
+  let lastRetryableReason: GeminiRetryReason = "unknown";
+  let lastRetryableMessage = "";
+
+  for (const [index, modelName] of params.modelCandidates.entries()) {
+    modelNamesTried.push(modelName);
+    const model = params.client.getGenerativeModel({ model: modelName, safetySettings: SAFETY_SETTINGS });
+
+    try {
+      const result = await generateContentWithRetry({
+        generateContent: model.generateContent.bind(model),
+        request: params.request,
+        modelName,
+      });
+
+      totalAttempts += result.attempts;
+      return {
+        text: result.response.text(),
+        modelName,
+        fallbackUsed: index > 0,
+        totalAttempts,
+      };
+    } catch (err) {
+      const retryReason = getRetryableGeminiReason(err);
+      const message = getErrorMessage(err);
+      const lastAttemptCount = retryReason !== null ? GEMINI_MAX_RETRIES + 1 : 1;
+      totalAttempts += lastAttemptCount;
+
+      if (retryReason !== null) {
+        lastRetryableReason = retryReason;
+        lastRetryableMessage = message;
+        if (index < params.modelCandidates.length - 1) {
+          console.warn("Switching Gemini story model after retryable failure", {
+            fromModel: modelName,
+            nextModel: params.modelCandidates[index + 1],
+            reason: retryReason,
+            error: message,
+          });
+          continue;
+        }
+
+        throw new GeminiServiceUnavailableError({
+          message:
+            "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。",
+          reason: lastRetryableReason,
+          modelNamesTried,
+          totalAttempts,
+          technicalMessage: lastRetryableMessage,
+        });
+      }
+
+      throw err;
+    }
+  }
+
+  throw new GeminiServiceUnavailableError({
+    message:
+      "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。",
+    reason: lastRetryableReason,
+    modelNamesTried,
+    totalAttempts,
+    technicalMessage: lastRetryableMessage || "Unknown Gemini generation failure",
+  });
+}
+
 export class GeminiClient implements LLMClient {
   private genAI: GoogleGenerativeAI;
 
@@ -324,10 +527,27 @@ export class GeminiClient implements LLMClient {
   }
 
   async generateStory(params: {
-    systemPrompt: string; childName: string; childAge?: number; favorites?: string;
-    lessonToTeach?: string; memoryToRecreate?: string; characterLook?: string;
-    signatureItem?: string; colorMood?: string; place?: string; familyMembers?: string;
-    season?: string; parentMessage?: string; storyRequest?: string; pageCount: PageCount; style: IllustrationStyle;
+    systemPrompt: string;
+    childName: string;
+    childAge?: number;
+    favorites?: string;
+    lessonToTeach?: string;
+    memoryToRecreate?: string;
+    characterLook?: string;
+    signatureItem?: string;
+    colorMood?: string;
+    place?: string;
+    familyMembers?: string;
+    season?: string;
+    parentMessage?: string;
+    storyRequest?: string;
+    pageCount: PageCount;
+    style: IllustrationStyle;
+    productPlan?: ProductPlan;
+    creationMode?: CreationMode;
+    theme?: string;
+    categoryGroupId?: string;
+    storyModelCandidates?: string[];
   }): Promise<GeneratedStory> {
     const userParts: string[] = [`主人公の名前: ${params.childName}`];
     if (params.storyRequest) userParts.push(`今回の絵本で描きたいこと: ${params.storyRequest}`);
@@ -350,81 +570,105 @@ export class GeminiClient implements LLMClient {
       generationConfig: { responseMimeType: "application/json" as const },
     };
 
-    const modelCandidates = getStoryModelCandidates();
-    const modelNamesTried: string[] = [];
-    let totalAttempts = 0;
-    let lastRetryableReason: "service_unavailable" | "rate_limited" | "overloaded" | "unknown" =
-      "unknown";
-    let lastRetryableMessage = "";
+    const modelCandidates =
+      params.storyModelCandidates && params.storyModelCandidates.length > 0
+        ? params.storyModelCandidates
+        : resolveStoryModelCandidates({
+            productPlan: params.productPlan,
+            creationMode: params.creationMode,
+            theme: params.theme,
+            categoryGroupId: params.categoryGroupId,
+          }) ?? getStoryModelCandidatesFromEnv();
 
-    for (const [index, modelName] of modelCandidates.entries()) {
-      modelNamesTried.push(modelName);
-      const model = this.genAI.getGenerativeModel({ model: modelName, safetySettings: SAFETY_SETTINGS });
+    const result = await runJsonGeneration({
+      client: this.genAI,
+      request,
+      modelCandidates,
+    });
 
-      try {
-        const result = await generateContentWithRetry({
-          generateContent: model.generateContent.bind(model),
-          request,
-          modelName,
-        });
-
-        totalAttempts += result.attempts;
-        const rawText = result.response.text();
-        const jsonStr = extractJSON(rawText);
-        let parsed: unknown;
-        try {
-          parsed = JSON.parse(jsonStr);
-        } catch {
-          throw new Error(`Failed to parse LLM JSON response: ${rawText.slice(0, 200)}`);
-        }
-
-        const validated = validateStory(parsed);
-        return {
-          ...validated,
-          storyModel: modelName,
-          storyModelFallbackUsed: index > 0,
-          storyGenerationAttempts: totalAttempts,
-        };
-      } catch (err) {
-        const retryReason = getRetryableGeminiReason(err);
-        const message = getErrorMessage(err);
-        const lastAttemptCount = retryReason !== null ? GEMINI_MAX_RETRIES + 1 : 1;
-        totalAttempts += lastAttemptCount;
-
-        if (retryReason !== null) {
-          lastRetryableReason = retryReason;
-          lastRetryableMessage = message;
-          if (index < modelCandidates.length - 1) {
-            console.warn("Switching Gemini story model after retryable failure", {
-              fromModel: modelName,
-              nextModel: modelCandidates[index + 1],
-              reason: retryReason,
-              error: message,
-            });
-            continue;
-          }
-
-          throw new GeminiServiceUnavailableError({
-            message:
-              "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。",
-            reason: lastRetryableReason,
-            modelNamesTried,
-            totalAttempts,
-            technicalMessage: lastRetryableMessage,
-          });
-        }
-
-        throw err;
-      }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(extractJSON(result.text));
+    } catch {
+      throw new Error(`Failed to parse LLM JSON response: ${result.text.slice(0, 200)}`);
     }
 
-    throw new GeminiServiceUnavailableError({
-      message:
-        "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。",
-      reason: lastRetryableReason,
-      modelNamesTried,
-      totalAttempts,
-      technicalMessage: lastRetryableMessage || "Unknown Gemini story generation failure",
+    const validated = validateStory(parsed);
+    return {
+      ...validated,
+      storyModel: result.modelName,
+      storyModelFallbackUsed: result.fallbackUsed,
+      storyGenerationAttempts: result.totalAttempts,
+    };
+  }
+
+  async rewriteStoryText(params: {
+    story: GeneratedStory;
+    systemPrompt: string;
+    childName: string;
+    childAge?: number;
+    style: IllustrationStyle;
+    productPlan?: ProductPlan;
+    creationMode?: CreationMode;
+    storyModelCandidates?: string[];
+  }): Promise<{
+    pages: Array<{ text: string }>;
+    storyTextRewriteModel?: string;
+    storyTextRewriteAttempts?: number;
+  }> {
+    const modelCandidates =
+      params.storyModelCandidates && params.storyModelCandidates.length > 0
+        ? params.storyModelCandidates
+        : resolveStoryModelCandidates({
+            productPlan: params.productPlan,
+            creationMode: params.creationMode,
+          });
+
+    const rewriteInstruction = [
+      params.systemPrompt,
+      "## Rewrite task",
+      "Rewrite only pages[].text in natural Japanese picture-book prose.",
+      "Keep title, characterBible, styleBible, cast, narrativeDevice, imagePrompt, compositionHint, pageVisualRole, appearingCharacterIds, and focusCharacterId unchanged.",
+      "For ages 3+, avoid sound-play-only text and meaningless invented words.",
+      "Add natural scene detail, action, emotion, and small discovery.",
+      "Reduce excessive onomatopoeia and unclear repeated sounds.",
+      "Do not turn the text into dry explanation. Keep it warm and story-like.",
+      "Return JSON only in this shape: {\"pages\":[{\"text\":\"...\"}]}",
+    ].join("\n");
+
+    const request = {
+      contents: [{
+        role: "user" as const,
+        parts: [{
+          text: JSON.stringify({
+            childName: params.childName,
+            childAge: params.childAge,
+            style: params.style,
+            story: params.story,
+          }),
+        }],
+      }],
+      systemInstruction: { role: "system" as const, parts: [{ text: rewriteInstruction }] },
+      generationConfig: { responseMimeType: "application/json" as const },
+    };
+
+    const result = await runJsonGeneration({
+      client: this.genAI,
+      request,
+      modelCandidates,
     });
+
+    const parsed = JSON.parse(extractJSON(result.text)) as { pages?: Array<{ text?: string }> };
+    if (!Array.isArray(parsed.pages) || parsed.pages.length !== params.story.pages.length) {
+      throw new Error("Rewrite response pages are missing or have different length");
+    }
+
+    return {
+      pages: parsed.pages.map((page, pageIndex) => ({
+        text: typeof page?.text === "string" ? page.text : params.story.pages[pageIndex].text,
+      })),
+      storyTextRewriteModel: result.modelName,
+      storyTextRewriteAttempts: result.totalAttempts,
+    };
   }
 }

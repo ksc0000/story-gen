@@ -48,6 +48,17 @@ const mockStory: GeneratedStory = {
   storyModel: "gemini-2.5-flash-lite",
   storyModelFallbackUsed: false,
   storyGenerationAttempts: 1,
+  cast: [
+    {
+      characterId: "magic_friend_01",
+      displayName: "ひかりのともだち",
+      role: "magical_friend",
+      visualBible: "small glowing golden spirit child with a tiny purple top hat",
+      signatureItems: ["tiny purple top hat", "gold star necklace"],
+      doNotChange: ["Do not remove the tiny purple top hat"],
+      approvedImageUrl: "https://example.com/magic-friend.png",
+    },
+  ],
   narrativeDevice: {
     repeatedPhrase: "だいじょうぶ、いっしょにいるよ",
     visualMotif: "yellow star",
@@ -63,6 +74,8 @@ const mockStory: GeneratedStory = {
       compositionHint: "wide establishing shot",
       visualMotifUsage: "yellow star decoration above the table",
       hiddenDetail: "small bird toy near the shelf",
+      appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+      focusCharacterId: "child_protagonist",
     },
     {
       text: "ケーキをたべるまえに、ゆうたくんは みんなのこえを しっかり ききました。うれしくて、ありがとうが そっと くちから こぼれます。",
@@ -71,6 +84,8 @@ const mockStory: GeneratedStory = {
       compositionHint: "medium shot with action",
       visualMotifUsage: "yellow star on a small cup",
       hiddenDetail: "tiny blue cup on the table",
+      appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+      focusCharacterId: "magic_friend_01",
     },
   ],
 };
@@ -81,7 +96,14 @@ function createMockDeps() {
   return {
     getTemplate: vi.fn().mockResolvedValue(mockTemplate),
     getUserPlan: vi.fn().mockResolvedValue("free" as const),
-    llmClient: { generateStory: vi.fn().mockResolvedValue(mockStory) },
+    llmClient: {
+      generateStory: vi.fn().mockResolvedValue(mockStory),
+      rewriteStoryText: vi.fn().mockResolvedValue({
+        pages: mockStory.pages.map((page) => ({ text: page.text })),
+        storyTextRewriteModel: "gemini-2.5-pro",
+        storyTextRewriteAttempts: 1,
+      }),
+    },
     imageClient: { generateImage: vi.fn().mockResolvedValue(mockImageBuffer) },
     uploadImage: vi.fn().mockResolvedValue("https://storage.example.com/image.png"),
     updateBookTitle: vi.fn().mockResolvedValue(undefined),
@@ -120,6 +142,7 @@ describe("processBookGeneration", () => {
         inputImageUrls: expect.arrayContaining([
           "https://story-gen-8a769.web.app/images/styles/soft_watercolor.png",
           "https://story-gen-8a769.web.app/images/templates/animals.png",
+          "https://example.com/magic-friend.png",
         ]),
       })
     );
@@ -141,6 +164,11 @@ describe("processBookGeneration", () => {
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
         pageVisualRole: "opening_establishing",
+        appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+        focusCharacterId: "child_protagonist",
+        textCharCount: expect.any(Number),
+        textSentenceCount: expect.any(Number),
+        textQualityWarnings: expect.any(Array),
       })
     );
     expect(deps.writePage).toHaveBeenCalledWith(
@@ -154,12 +182,18 @@ describe("processBookGeneration", () => {
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
         pageVisualRole: "action",
+        appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+        focusCharacterId: "magic_friend_01",
+        textCharCount: expect.any(Number),
+        textSentenceCount: expect.any(Number),
+        textQualityWarnings: expect.any(Array),
       })
     );
     expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
       "book123",
       expect.objectContaining({
         storyModel: expect.any(String),
+        storyCast: expect.any(Array),
       })
     );
     expect(deps.updateBookTitle).toHaveBeenCalledWith("book123", "ゆうたくんのたんじょうび");
@@ -186,6 +220,37 @@ describe("processBookGeneration", () => {
     expect(deps.updateBookStoryQualityReport).toHaveBeenCalledOnce();
     expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-retry", "completed");
+  });
+
+  it("uses rewriteStoryText for premium_paid books and stores rewrite metadata", async () => {
+    const premiumBook: BookData = {
+      ...baseBookData,
+      productPlan: "premium_paid",
+      input: { childName: "ゆうた", childAge: 4 },
+    };
+    deps.llmClient.generateStory.mockResolvedValueOnce({
+      ...mockStory,
+      pages: [
+        { ...mockStory.pages[0], text: "ころころ こりころ。" },
+        { ...mockStory.pages[1], text: "ふわふわ ふわりん。" },
+      ],
+    });
+    deps.llmClient.rewriteStoryText.mockResolvedValueOnce({
+      pages: mockStory.pages.map((page) => ({ text: page.text })),
+      storyTextRewriteModel: "gemini-2.5-pro",
+      storyTextRewriteAttempts: 1,
+    });
+
+    await processBookGeneration("book-rewrite", premiumBook, deps);
+
+    expect(deps.llmClient.rewriteStoryText).toHaveBeenCalled();
+    expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
+      "book-rewrite",
+      expect.objectContaining({
+        storyTextRewriteUsed: true,
+        storyTextRewriteModel: "gemini-2.5-pro",
+      })
+    );
   });
 
   it("fails guided_ai generation when retry still does not satisfy the quality gate", async () => {
@@ -670,6 +735,7 @@ describe("processBookGeneration", () => {
 
     const calls = deps.imageClient.generateImage.mock.calls.map(([, options]) => options.inputImageUrls);
     expect(calls.every((urls) => Array.isArray(urls) && urls.length > 0)).toBe(true);
+    expect(calls[0]).toEqual(expect.arrayContaining(["https://example.com/magic-friend.png"]));
   });
 
   it("stores pageVisualRole and reference usage metadata on every written page", async () => {

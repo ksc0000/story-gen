@@ -39,6 +39,15 @@ export const PAGE_VISUAL_ROLES = [
   "payoff",
   "quiet_ending",
 ] as const;
+export type StoryCharacterRole =
+  | "protagonist"
+  | "buddy"
+  | "parent"
+  | "sibling"
+  | "animal"
+  | "magical_friend"
+  | "object_character"
+  | "background_recurring";
 export type ImagePurpose =
   | "book_page"
   | "book_cover"
@@ -179,6 +188,10 @@ export interface BookData {
   storyModel?: string;
   storyModelFallbackUsed?: boolean;
   storyGenerationAttempts?: number;
+  storyTextRewriteUsed?: boolean;
+  storyTextRewriteModel?: string;
+  storyTextRewriteAttempts?: number;
+  storyCast?: StoryCharacter[];
   failureStage?: "story_generation" | "schema_validation" | "image_generation" | "validation";
   failureProvider?: "gemini" | "replicate" | "system";
   failureReason?: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
@@ -201,6 +214,9 @@ export interface PageData {
   text: string;
   imageUrl: string;
   imagePrompt: string;
+  textCharCount?: number;
+  textSentenceCount?: number;
+  textQualityWarnings?: string[];
   status: PageStatus;
   imageModel?: string;
   imageQualityTier?: ImageQualityTier;
@@ -211,6 +227,8 @@ export interface PageData {
   characterConsistencyMode?: CharacterConsistencyMode;
   imageModelProfile?: ImageModelProfile;
   pageVisualRole?: PageVisualRole;
+  appearingCharacterIds?: string[];
+  focusCharacterId?: string;
 }
 
 export interface TemplateData {
@@ -268,6 +286,22 @@ export interface GeneratedStoryPage {
   visualMotifUsage?: string;
   hiddenDetail?: string;
   pageVisualRole?: PageVisualRole;
+  appearingCharacterIds?: string[];
+  focusCharacterId?: string;
+}
+
+export interface StoryCharacter {
+  characterId: string;
+  displayName: string;
+  role: StoryCharacterRole;
+  visualBible: string;
+  silhouette?: string;
+  colorPalette?: string[];
+  signatureItems?: string[];
+  doNotChange?: string[];
+  canChangeByScene?: string[];
+  referenceImageUrl?: string;
+  approvedImageUrl?: string;
 }
 
 export interface StoryQualityReportData {
@@ -294,6 +328,7 @@ export interface GeneratedStory {
   characterBible: string;
   styleBible: string;
   narrativeDevice?: GeneratedStoryNarrativeDevice;
+  cast?: StoryCharacter[];
   storyModel?: string;
   storyModelFallbackUsed?: boolean;
   storyGenerationAttempts?: number;
@@ -318,7 +353,26 @@ export interface LLMClient {
     storyRequest?: string;
     pageCount: PageCount;
     style: IllustrationStyle;
+    productPlan?: ProductPlan;
+    creationMode?: CreationMode;
+    theme?: string;
+    categoryGroupId?: string;
+    storyModelCandidates?: string[];
   }): Promise<GeneratedStory>;
+  rewriteStoryText?(params: {
+    story: GeneratedStory;
+    systemPrompt: string;
+    childName: string;
+    childAge?: number;
+    style: IllustrationStyle;
+    productPlan?: ProductPlan;
+    creationMode?: CreationMode;
+    storyModelCandidates?: string[];
+  }): Promise<{
+    pages: Array<{ text: string }>;
+    storyTextRewriteModel?: string;
+    storyTextRewriteAttempts?: number;
+  }>;
 }
 
 export interface ImageClient {

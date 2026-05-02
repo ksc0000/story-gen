@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
-import type { TemplateData, IllustrationStyle, PageCount } from "../src/lib/types";
+import type { TemplateData } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
   name: "おたんじょうび", description: "主人公の誕生日パーティーの冒険",
@@ -42,6 +42,17 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("pageVisualRole must be exactly one of");
     expect(result).toContain("Do not invent other pageVisualRole values");
     expect(result).toContain("Use snake_case exactly");
+  });
+  it("includes Japanese story quality rules and examples", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("3歳以上では、単なる音遊びや擬音の羅列にしない");
+    expect(result).toContain("意味の通らない造語を使わない");
+    expect(result).toContain("日本語として自然な文にしてください");
+    expect(result).toContain("悪い例");
+    expect(result).toContain("良い例");
+    expect(result).toContain("cast");
+    expect(result).toContain("appearingCharacterIds");
+    expect(result).toContain("focusCharacterId");
   });
 });
 
@@ -117,6 +128,38 @@ describe("buildImagePrompt", () => {
     expect(result).not.toContain('"hello"');
     expect(result).not.toContain("caption card");
     expect(result).not.toContain("phrase label");
+  });
+  it("includes recurring cast character consistency only for appearing characters", () => {
+    const result = buildImagePrompt(
+      "A magical friend appears in a park",
+      "watercolor",
+      undefined,
+      undefined,
+      {
+        appearingCharacterIds: ["magic_friend_01"],
+        focusCharacterId: "magic_friend_01",
+        cast: [
+          {
+            characterId: "magic_friend_01",
+            displayName: "ひかりのともだち",
+            role: "magical_friend",
+            visualBible: "small glowing golden spirit child with a tiny purple top hat",
+            signatureItems: ["tiny purple top hat", "gold star necklace"],
+            doNotChange: ["Do not remove the tiny purple top hat"],
+          },
+          {
+            characterId: "animal_01",
+            displayName: "ことり",
+            role: "animal",
+            visualBible: "small blue bird",
+          },
+        ],
+      }
+    );
+    expect(result).toContain("Recurring character consistency: magic_friend_01");
+    expect(result).toContain("Do not redesign recurring characters");
+    expect(result).toContain("tiny purple top hat");
+    expect(result).not.toContain("small blue bird");
   });
   it("appends safety keywords", () => {
     const result = buildImagePrompt("A child at a party", "flat");

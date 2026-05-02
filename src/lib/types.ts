@@ -39,6 +39,15 @@ export const PAGE_VISUAL_ROLES = [
   "payoff",
   "quiet_ending",
 ] as const;
+export type StoryCharacterRole =
+  | "protagonist"
+  | "buddy"
+  | "parent"
+  | "sibling"
+  | "animal"
+  | "magical_friend"
+  | "object_character"
+  | "background_recurring";
 export type ImagePurpose =
   | "book_page"
   | "book_cover"
@@ -189,6 +198,10 @@ export interface BookDoc {
   storyModel?: string;
   storyModelFallbackUsed?: boolean;
   storyGenerationAttempts?: number;
+  storyTextRewriteUsed?: boolean;
+  storyTextRewriteModel?: string;
+  storyTextRewriteAttempts?: number;
+  storyCast?: StoryCharacter[];
   failureStage?: "story_generation" | "schema_validation" | "image_generation" | "validation";
   failureProvider?: "gemini" | "replicate" | "system";
   failureReason?: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
@@ -211,6 +224,9 @@ export interface PageDoc {
   text: string;
   imageUrl: string;
   imagePrompt: string;
+  textCharCount?: number;
+  textSentenceCount?: number;
+  textQualityWarnings?: string[];
   status: PageStatus;
   imageModel?: string;
   imageQualityTier?: ImageQualityTier;
@@ -221,6 +237,22 @@ export interface PageDoc {
   characterConsistencyMode?: CharacterConsistencyMode;
   imageModelProfile?: ImageModelProfile;
   pageVisualRole?: PageVisualRole;
+  appearingCharacterIds?: string[];
+  focusCharacterId?: string;
+}
+
+export interface StoryCharacter {
+  characterId: string;
+  displayName: string;
+  role: StoryCharacterRole;
+  visualBible: string;
+  silhouette?: string;
+  colorPalette?: string[];
+  signatureItems?: string[];
+  doNotChange?: string[];
+  canChangeByScene?: string[];
+  referenceImageUrl?: string;
+  approvedImageUrl?: string;
 }
 
 export interface BookFeedbackDoc {

@@ -25,3 +25,4 @@
 - 現在の品質検証フェーズでは、少なくとも `standard_paid` 以上を `all_pages` 参照に寄せ、全ページで人物一貫性を優先します。
 - 原価最適化は後で `key_pages` / `cover_only` を再検討し、まずは全ページ参照画像で一貫性改善量を検証します。
 - 現在の改善軸は「モデル切替」だけではなく、本文 quality gate、Gemini fallback、画像 prompt 最適化、reference all pages の組み合わせです。
+- 満足度低下の主因が本文品質にある場合は、画像モデルをむやみに変更するよりも、story quality gate と story text rewrite pass の改善を優先します。

@@ -93,6 +93,48 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "text.too_short_sentences" && issue.severity === "error")).toBe(true);
   });
 
+  it("flags overly childish or unnatural Japanese for preschool pages", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "ころころ こりころ。まきまき まきば。まきまき むすんで、ふしぎな じゅうたん。",
+            imagePrompt: "wide shot of a sandbox with magical light and a child nearby in a storybook park scene",
+            compositionHint: "wide shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "text_too_childish")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "unnatural_japanese_risk")).toBe(true);
+  });
+
+  it("warns when scene detail or action/emotion is missing", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "ふわふわです。きらきらです。たのしいです。",
+            imagePrompt: "medium shot of a child with a soft glow and simple background details in a picture book style",
+            compositionHint: "medium shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "missing_scene_detail")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "missing_action_or_emotion")).toBe(true);
+  });
+
   it("treats early reader pages with only 2 sentences as errors", () => {
     const report = validateGeneratedStoryQuality({
       story: {
@@ -225,6 +267,31 @@ describe("validateGeneratedStoryQuality", () => {
     });
 
     expect(report.issues.some((issue) => issue.code === "image_prompt.text_risk")).toBe(true);
+  });
+
+  it("warns when recurring magical friends lack cast definitions", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        cast: undefined,
+        pages: [
+          {
+            text: "ひかりのともだちが そっと わらいました。こうえんの きのしたで、ゆうたは その ひかりを みつめました。うれしくて、こころが ふわっと しました。",
+            imagePrompt: "medium shot of a magical friend floating beside a child in a park, with small flowers and a gentle sky",
+            compositionHint: "medium shot",
+          },
+          {
+            text: "また ひかりのともだちが きてくれて、ゆうたは そっと てを のばしました。あたたかな ひかりが、すなのうえに ゆれています。",
+            imagePrompt: "wide shot of the same magical friend with the child near a sandbox, warm light and park details",
+            compositionHint: "wide shot",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(5),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "cast_missing_for_recurring_character")).toBe(true);
   });
 
   it("is ok when there are only warnings", () => {
