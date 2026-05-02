@@ -2,6 +2,7 @@ import type {
   GeneratedStory,
   AgeBand,
   CreationMode,
+  ProductPlan,
   StoryQualityReportData,
   StoryCharacter,
 } from "./types";
@@ -94,12 +95,17 @@ export function validateGeneratedStoryQuality(params: {
   story: GeneratedStory;
   readingProfile: AgeReadingProfile;
   creationMode?: CreationMode;
+  productPlan?: ProductPlan;
 }): StoryQualityReport {
   const { story, readingProfile } = params;
   const creationMode = params.creationMode ?? "guided_ai";
+  const productPlan = params.productPlan;
   const threshold = STORY_QUALITY_THRESHOLDS[readingProfile.ageBand];
   const issues: StoryQualityIssue[] = [];
   const pageCount = story.pages.length;
+  const isPremiumStoryPlan =
+    productPlan === "premium_paid" || creationMode === "original_ai";
+  const isThreePlus = readingProfile.ageBand !== "baby_toddler";
   const recurringCastIds = new Map<string, number>();
   for (const page of story.pages) {
     for (const characterId of page.appearingCharacterIds ?? []) {
@@ -191,7 +197,7 @@ export function validateGeneratedStoryQuality(params: {
       });
     }
 
-    if (readingProfile.ageBand !== "baby_toddler") {
+    if (isThreePlus) {
       const heuristics = analyzeJapaneseTextHeuristics(story.pages[pageIndex].text);
       if (heuristics.tooManySoundWords) {
         issues.push({
@@ -227,7 +233,7 @@ export function validateGeneratedStoryQuality(params: {
       }
       if (heuristics.unnaturalJapaneseRisk) {
         issues.push({
-          severity: "warning",
+          severity: isPremiumStoryPlan ? "error" : "warning",
           code: "unnatural_japanese_risk",
           message: "不自然な造語や同音反復が多く、日本語として読みづらい可能性があります。",
           pageIndex,
@@ -235,7 +241,7 @@ export function validateGeneratedStoryQuality(params: {
       }
       if (heuristics.textTooGeneric) {
         issues.push({
-          severity: "warning",
+          severity: isPremiumStoryPlan ? "error" : "warning",
           code: "text_too_generic",
           message: "本文が短く抽象的で、場面や出来事の情報量が不足している可能性があります。",
           pageIndex,
@@ -243,7 +249,7 @@ export function validateGeneratedStoryQuality(params: {
       }
       if (heuristics.sentenceTooShortForAge) {
         issues.push({
-          severity: "warning",
+          severity: isPremiumStoryPlan ? "error" : "warning",
           code: "sentence_too_short_for_age",
           message: "対象年齢に対して文が短すぎ、読みごたえが不足している可能性があります。",
           pageIndex,
@@ -255,6 +261,7 @@ export function validateGeneratedStoryQuality(params: {
   addStoryGoalConsistencyIssues({
     story: params.story,
     readingProfile,
+    productPlan,
     issues,
   });
 
@@ -284,6 +291,15 @@ export function validateGeneratedStoryQuality(params: {
       expected: `>= ${threshold.minSentencesPerPage}`,
     });
   }
+
+  addPremiumStoryDepthIssues({
+    story,
+    readingProfile,
+    productPlan,
+    issues,
+    perPageStats,
+    averageCharsPerPage,
+  });
 
   const hasNarrativeDevice = Boolean(story.narrativeDevice);
   const hasRepeatedPhraseOrMotif = Boolean(
@@ -377,6 +393,7 @@ export function validateGeneratedStoryQuality(params: {
     story,
     issues,
     recurringCastIds,
+    productPlan,
   });
 
   return {
@@ -433,6 +450,7 @@ function analyzeJapaneseTextHeuristics(text: string): JapaneseTextHeuristics {
   const actionWords = /(ある|はし|みつけ|あつめ|つく|のぼ|すべ|ひろ|みつめ|さわ|のぞ|えら|あけ|もっ|ぎゅっ|ふり|わら|みた|きい|のった|とんだ|ひらいた|ひろが|ならべ|おいた|みせた|つたえ|かんがえ|みつめた)/;
   const emotionOrDiscoveryWords = /(うれ|かなし|ほっ|びっくり|わくわく|どきどき|にっこり|わら|えがお|みつけ|きづ|ふしぎ|あんしん|こわ|たのし)/;
   const coinedPatterns = /(こりころ|ふわりん|ころころこりころ|まきまきまきば|ぴかりん|きらりん)/;
+  const unnaturalPhrasePatterns = /(キラキラ、ふわふわ、こえをだしました|きらきら、ふわふわ、こえをだしました|ふわふわ、ふわりん|おもしろい\s*こえ)/;
   const hiraganaRatio = normalized.length > 0
     ? ((normalized.match(/[ぁ-ん]/g) ?? []).length / normalized.length)
     : 0;
@@ -442,7 +460,10 @@ function analyzeJapaneseTextHeuristics(text: string): JapaneseTextHeuristics {
     textTooChildish: (commonSoundWords.length >= 2 && countJapaneseTextChars(text) < 80) || coinedPatterns.test(text),
     missingSceneDetail: !placeWords.test(text),
     missingActionOrEmotion: !(actionWords.test(text) || emotionOrDiscoveryWords.test(text)),
-    unnaturalJapaneseRisk: coinedPatterns.test(text) || (hiraganaRatio > 0.92 && commonSoundWords.length >= 2),
+    unnaturalJapaneseRisk:
+      coinedPatterns.test(text) ||
+      unnaturalPhrasePatterns.test(text) ||
+      (hiraganaRatio > 0.92 && commonSoundWords.length >= 2),
     textTooGeneric:
       countJapaneseTextChars(text) < 45 &&
       countSentences(text) <= 3 &&
@@ -455,10 +476,13 @@ function analyzeJapaneseTextHeuristics(text: string): JapaneseTextHeuristics {
 function addStoryGoalConsistencyIssues(params: {
   story: GeneratedStory;
   readingProfile: AgeReadingProfile;
+  productPlan?: ProductPlan;
   issues: StoryQualityIssue[];
 }): void {
-  const { story, readingProfile, issues } = params;
+  const { story, readingProfile, issues, productPlan } = params;
   const isThreePlus = readingProfile.ageBand !== "baby_toddler";
+  const isPremiumStoryPlan =
+    productPlan === "premium_paid";
   if (!isThreePlus) {
     return;
   }
@@ -508,7 +532,7 @@ function addStoryGoalConsistencyIssues(params: {
 
     if (!hasMainQuestSignal && !hasStoryGoalSignal && countJapaneseTextChars(text) >= 20) {
       issues.push({
-        severity: pageIndex === 0 ? "warning" : "error",
+        severity: pageIndex === 0 && !isPremiumStoryPlan ? "warning" : "error",
         code: "page_text_not_connected_to_story_goal",
         message: "本文が storyGoal や mainQuestObject につながっていない可能性があります。",
         pageIndex,
@@ -557,6 +581,41 @@ function addStoryGoalConsistencyIssues(params: {
         pageIndex,
       });
     }
+
+    if (
+      pageIndex === 0 &&
+      isPremiumStoryPlan &&
+      !hasMainQuestSignal &&
+      !hasStoryGoalSignal
+    ) {
+      issues.push({
+        severity: "error",
+        code: "missing_opening_hook",
+        message: "導入ページに storyGoal へつながる発見や予感が不足しています。",
+        pageIndex,
+      });
+    }
+
+    if (pageIndex === story.pages.length - 1 && isPremiumStoryPlan) {
+      const hasResolutionVerb = /(みつけ|見つけ|みつかった|見つかった|あった|ありがとう|あんしん|ほっと|うれし|戻った|かえってきた)/.test(text);
+      if (!hasMainQuestSignal) {
+        issues.push({
+          severity: "error",
+          code: "missing_quest_object_resolution",
+          message: "最終ページで mainQuestObject の解決が明示されていません。",
+          pageIndex,
+          expected: story.mainQuestObject,
+        });
+      }
+      if (!hasResolutionVerb) {
+        issues.push({
+          severity: "error",
+          code: "missing_story_resolution",
+          message: "最終ページに見つかった・安心した・ありがとう等の解決描写が不足しています。",
+          pageIndex,
+        });
+      }
+    }
   });
 }
 
@@ -588,11 +647,14 @@ function addCastConsistencyIssues(params: {
   story: GeneratedStory;
   issues: StoryQualityIssue[];
   recurringCastIds: Map<string, number>;
+  productPlan?: ProductPlan;
 }): void {
   const cast = params.story.cast ?? [];
   const castIds = new Set(cast.map((character) => character.characterId));
   const recurringCharacterHints = params.story.pages.filter((page) =>
-    /buddy|friend|animal|magical/i.test(page.imagePrompt)
+    /buddy|friend|animal|magical|star-child|star creature|star-creature|ほしのこ|ともだち/i.test(
+      `${page.imagePrompt} ${page.text}`
+    )
   ).length;
 
   if (cast.length === 0 && recurringCharacterHints >= 2) {
@@ -605,13 +667,15 @@ function addCastConsistencyIssues(params: {
 
   if (cast.length > 0) {
     const pagesWithoutAppearingIds = params.story.pages.filter(
-      (page) => /buddy|friend|animal|magical|ほしのこ|ともだち/i.test(page.imagePrompt) &&
+      (page) => /buddy|friend|animal|magical|star-child|star creature|star-creature|ほしのこ|ともだち/i.test(
+        `${page.imagePrompt} ${page.text}`
+      ) &&
         (!page.appearingCharacterIds || page.appearingCharacterIds.length === 0)
     ).length;
     if (pagesWithoutAppearingIds > 0) {
       params.issues.push({
-        severity: "warning",
-        code: "cast_missing_page_linkage",
+        severity: params.productPlan === "premium_paid" ? "error" : "warning",
+        code: "missing_appearing_character_ids",
         message: "cast はあるのに pages[].appearingCharacterIds が不足しているページがあります。",
         actual: pagesWithoutAppearingIds,
       });
@@ -661,6 +725,81 @@ function addCastConsistencyIssues(params: {
         message: "似た displayName のキャラクターが複数の characterId で作られています。",
       });
     }
+  }
+}
+
+function addPremiumStoryDepthIssues(params: {
+  story: GeneratedStory;
+  readingProfile: AgeReadingProfile;
+  productPlan?: ProductPlan;
+  issues: StoryQualityIssue[];
+  perPageStats: Array<{ chars: number; sentences: number; imagePromptChars: number }>;
+  averageCharsPerPage: number;
+}): void {
+  const { story, readingProfile, productPlan, issues, perPageStats, averageCharsPerPage } = params;
+  if (productPlan !== "premium_paid" || readingProfile.ageBand === "baby_toddler") {
+    return;
+  }
+
+  const premiumMinChars =
+    readingProfile.ageBand === "preschool_3_4" ? 70 :
+    readingProfile.ageBand === "general_child" ? 70 :
+    readingProfile.ageBand === "early_reader_5_6" ? 100 :
+    130;
+  const premiumRecommendedAverage =
+    readingProfile.ageBand === "preschool_3_4" ? 90 :
+    readingProfile.ageBand === "general_child" ? 90 :
+    readingProfile.ageBand === "early_reader_5_6" ? 130 :
+    180;
+  const premiumMinSentences =
+    readingProfile.ageBand === "preschool_3_4" || readingProfile.ageBand === "general_child" ? 3 :
+    readingProfile.ageBand === "early_reader_5_6" ? 4 :
+    5;
+
+  perPageStats.forEach((stats, pageIndex) => {
+    if (stats.chars < premiumMinChars) {
+      issues.push({
+        severity: "error",
+        code: "premium_text_too_short",
+        message: "premium本文としては短すぎます。情景・行動・気持ちを含む厚みが不足しています。",
+        pageIndex,
+        actual: stats.chars,
+        expected: `>= ${premiumMinChars}`,
+      });
+    }
+    if (stats.sentences < premiumMinSentences) {
+      issues.push({
+        severity: "error",
+        code: "premium_text_too_short",
+        message: "premium本文としては文数が少なすぎます。",
+        pageIndex,
+        actual: stats.sentences,
+        expected: `>= ${premiumMinSentences}`,
+      });
+    }
+  });
+
+  if (averageCharsPerPage < premiumRecommendedAverage) {
+    issues.push({
+      severity: "error",
+      code: "premium_text_too_short",
+      message: "premium本文としては全体平均の文字数が不足しています。",
+      actual: averageCharsPerPage,
+      expected: `>= ${premiumRecommendedAverage}`,
+    });
+  }
+
+  const openingText = story.pages[0]?.text ?? "";
+  const hasOpeningHook =
+    /(あれ|なんだろう|みつけ|見つけ|きらり|ひかり|ふしぎ|みつめ|そっと)/.test(openingText) &&
+    /(すなば|こうえん|おへや|そら|にわ|みち|もり|うみ|かわ)/.test(openingText);
+  if (!hasOpeningHook) {
+    issues.push({
+      severity: "error",
+      code: "missing_opening_hook",
+      message: "導入ページに場所・行動・発見のフックが不足しています。",
+      pageIndex: 0,
+    });
   }
 }
 

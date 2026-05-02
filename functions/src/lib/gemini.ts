@@ -12,8 +12,8 @@ import type {
 } from "./types";
 import { PAGE_VISUAL_ROLES } from "./types";
 
-const DEFAULT_STORY_MODEL_PRIMARY = "gemini-2.5-flash-lite";
-const DEFAULT_STORY_MODEL_FALLBACKS = ["gemini-2.5-flash", "gemini-2.0-flash"];
+const DEFAULT_STORY_MODEL_PRIMARY = "gemini-2.5-flash";
+const DEFAULT_STORY_MODEL_FALLBACKS = ["gemini-2.0-flash"];
 const GEMINI_MAX_RETRIES = 3;
 const GEMINI_BASE_DELAY_MS = 1_000;
 const GEMINI_JITTER_MS = 500;
@@ -650,11 +650,15 @@ export class GeminiClient implements LLMClient {
       "pages[].text only. Do not modify imagePrompt, pageVisualRole, cast, appearingCharacterIds, or focusCharacterId.",
       "For ages 3+, avoid sound-play-only text and meaningless invented words.",
       "For ages 3+, each page should usually have 3 to 5 sentences and around 80 to 140 Japanese characters when natural.",
+      "For premium_paid and original_ai quality, treat 70 to 140 Japanese characters and 3 to 5 sentences per page as the minimum target for preschool pages.",
       "Add natural scene detail, action, emotion, and small discovery.",
       "Reduce excessive onomatopoeia and unclear repeated sounds.",
+      "Avoid unnatural Japanese such as 'キラキラ、ふわふわ、こえをだしました'.",
       "Keep the main quest object consistent across all pages. Do not replace it with another object.",
       "hiddenDetail is for visual background fun only. Do not turn hiddenDetail into the main story goal.",
       "If imagePrompt shows a clear action or recurring motif, reflect that naturally in pages[].text.",
+      "If a magical friend, star-child, animal buddy, or recurring companion appears in two or more pages, cast must not be empty and pages[].appearingCharacterIds / focusCharacterId must stay intact.",
+      "On the final page, explicitly show that the mainQuestObject was found, resolved, or safely returned, and include relief, gratitude, or warm closure.",
       "Do not turn the text into dry explanation. Keep it warm and story-like.",
       "Return JSON only in this shape: {\"pages\":[{\"text\":\"...\"}]}",
     ].join("\n");

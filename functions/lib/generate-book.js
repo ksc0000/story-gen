@@ -83,6 +83,9 @@ function isRetryableGeminiFailure(err) {
         message.includes("service unavailable") ||
         message.includes("unavailable"));
 }
+function stripUndefinedFields(value) {
+    return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
+}
 async function processBookGeneration(bookId, bookData, deps) {
     try {
         let lastImageAttemptAt = 0;
@@ -185,23 +188,20 @@ async function processBookGeneration(bookId, bookData, deps) {
             throw err;
         }
         const { story, qualityReport } = storyResult;
-        if (story.storyModel ||
-            story.storyModelFallbackUsed !== undefined ||
-            story.storyGenerationAttempts !== undefined ||
-            storyResult.rewriteMetadata ||
-            story.cast) {
-            await deps.updateBookStoryGenerationMetadata(bookId, {
-                storyModel: story.storyModel,
-                storyModelFallbackUsed: story.storyModelFallbackUsed,
-                storyGenerationAttempts: story.storyGenerationAttempts,
-                storyTextRewriteUsed: storyResult.rewriteMetadata?.storyTextRewriteUsed,
-                storyTextRewriteModel: storyResult.rewriteMetadata?.storyTextRewriteModel,
-                storyTextRewriteAttempts: storyResult.rewriteMetadata?.storyTextRewriteAttempts,
-                storyCast: story.cast,
-                storyGoal: story.storyGoal,
-                mainQuestObject: story.mainQuestObject,
-                forbiddenQuestObjects: story.forbiddenQuestObjects,
-            });
+        const storyGenerationMetadata = stripUndefinedFields({
+            storyModel: story.storyModel,
+            storyModelFallbackUsed: story.storyModelFallbackUsed,
+            storyGenerationAttempts: story.storyGenerationAttempts,
+            storyTextRewriteUsed: storyResult.rewriteMetadata?.storyTextRewriteUsed,
+            storyTextRewriteModel: storyResult.rewriteMetadata?.storyTextRewriteModel,
+            storyTextRewriteAttempts: storyResult.rewriteMetadata?.storyTextRewriteAttempts,
+            storyCast: story.cast,
+            storyGoal: story.storyGoal,
+            mainQuestObject: story.mainQuestObject,
+            forbiddenQuestObjects: story.forbiddenQuestObjects,
+        });
+        if (Object.keys(storyGenerationMetadata).length > 0) {
+            await deps.updateBookStoryGenerationMetadata(bookId, storyGenerationMetadata);
         }
         await deps.updateBookStoryQualityReport(bookId, (0, story_quality_1.toFirestoreStoryQualityReport)(qualityReport));
         if (template.creationMode === "fixed_template" && !qualityReport.ok) {
@@ -465,6 +465,11 @@ function shouldRewriteStoryText(bookData, report) {
         "unnatural_japanese_risk",
         "text_too_generic",
         "sentence_too_short_for_age",
+        "premium_text_too_short",
+        "missing_story_resolution",
+        "missing_quest_object_resolution",
+        "missing_opening_hook",
+        "missing_appearing_character_ids",
         "missing_story_goal",
         "missing_main_quest_object",
         "main_quest_drift",
@@ -508,6 +513,7 @@ async function generateStoryWithQualityGate(params) {
         story,
         readingProfile: params.readingProfile,
         creationMode: params.normalizedBookData.creationMode,
+        productPlan: params.normalizedBookData.productPlan,
     });
     let rewriteMetadata;
     const forceRewrite = params.normalizedBookData.productPlan === "premium_paid" ||
@@ -546,6 +552,7 @@ async function generateStoryWithQualityGate(params) {
             story,
             readingProfile: params.readingProfile,
             creationMode: params.normalizedBookData.creationMode,
+            productPlan: params.normalizedBookData.productPlan,
         });
         if (!forceRewrite && !shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
             break;
@@ -612,6 +619,7 @@ async function generateStoryWithQualityGate(params) {
             story,
             readingProfile: params.readingProfile,
             creationMode: params.normalizedBookData.creationMode,
+            productPlan: params.normalizedBookData.productPlan,
         });
         if (!forceRewrite && !shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
             break;
@@ -624,6 +632,7 @@ async function generateStoryWithQualityGate(params) {
         story,
         readingProfile: params.readingProfile,
         creationMode: params.normalizedBookData.creationMode,
+        productPlan: params.normalizedBookData.productPlan,
     });
     return { story, qualityReport, rewriteMetadata };
 }
@@ -635,6 +644,7 @@ function generateFixedTemplateStoryWithQualityReport(fixedStory, mergedInput, bo
             story,
             readingProfile,
             creationMode: "fixed_template",
+            productPlan: bookData.productPlan,
         }),
     };
 }
