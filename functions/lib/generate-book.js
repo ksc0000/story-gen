@@ -138,6 +138,56 @@ function normalizeStoryCastWithChildProfile(story, childProfileSnapshot) {
         pages: normalizedPages,
     };
 }
+function normalizeStoryForBook(story, bookData, mergedInput) {
+    const withNormalizedCast = normalizeStoryCastWithChildProfile(story, bookData.childProfileSnapshot);
+    return {
+        ...withNormalizedCast,
+        forbiddenQuestObjects: sanitizeForbiddenQuestObjects(withNormalizedCast.forbiddenQuestObjects, bookData, mergedInput),
+    };
+}
+function sanitizeForbiddenQuestObjects(forbiddenQuestObjects, bookData, mergedInput) {
+    if (!forbiddenQuestObjects?.length) {
+        return undefined;
+    }
+    const signatureItem = mergedInput.signatureItem ?? bookData.childProfileSnapshot?.visualProfile.signatureItem;
+    const signatureTokens = new Set((signatureItem ?? "")
+        .split(/[、,\s]+/)
+        .map((token) => token.trim())
+        .filter((token) => token.length >= 2));
+    const genericForbidden = new Set(["おもちゃ", "おもちゃたち", "玩具", "toys", "toy"]);
+    const sanitized = forbiddenQuestObjects.filter((value, index, array) => {
+        const normalized = value.trim();
+        if (!normalized)
+            return false;
+        if (array.findIndex((item) => item.trim() === normalized) !== index)
+            return false;
+        if (genericForbidden.has(normalized))
+            return false;
+        if ([...signatureTokens].some((token) => normalized.includes(token) || token.includes(normalized))) {
+            return false;
+        }
+        return true;
+    });
+    return sanitized.length > 0 ? sanitized : undefined;
+}
+function resolveScenePolicy(bookData, template) {
+    if (bookData.scenePolicy) {
+        return bookData.scenePolicy;
+    }
+    if (template.creationMode === "fixed_template") {
+        return {
+            backgroundMode: "fixed",
+            sceneCoherenceRules: ["Keep the template setting stable across pages."],
+        };
+    }
+    return {
+        backgroundMode: "story_flexible",
+        sceneCoherenceRules: [
+            "Choose a setting that supports the page's story beat.",
+            "Avoid unrelated objects and setting contradictions.",
+        ],
+    };
+}
 function resolveProtagonistCharacterId(story, childProfileSnapshot) {
     const explicitProtagonistId = story.cast?.find((character) => character.role === "protagonist")?.characterId;
     if (explicitProtagonistId) {
@@ -372,6 +422,7 @@ async function processBookGeneration(bookId, bookData, deps) {
                 appearingCharacterIds: storyPage.appearingCharacterIds,
                 focusCharacterId: storyPage.focusCharacterId,
                 childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
+                scenePolicy: normalizedBookData.scenePolicy,
             });
             // Generate image with retries (skip in development)
             let imageBuffer = null;
@@ -553,6 +604,7 @@ function normalizeBookForGeneration(bookData, template, userPlan) {
         imageModelProfile: userPlan === "premium"
             ? bookData.imageModelProfile ?? normalizedPlanConfig.imageModelProfile
             : normalizedPlanConfig.imageModelProfile ?? bookData.imageModelProfile,
+        scenePolicy: resolveScenePolicy(bookData, template),
         pageCount: normalizedPageCount,
     };
 }
@@ -630,7 +682,7 @@ async function generateStoryWithQualityGate(params) {
         theme: params.normalizedBookData.theme,
         categoryGroupId: params.template.categoryGroupId,
     });
-    let story = normalizeStoryCastWithChildProfile(await params.llmClient.generateStory({
+    let story = normalizeStoryForBook(await params.llmClient.generateStory({
         systemPrompt: baseSystemPrompt,
         childName: params.mergedInput.childName,
         childAge: params.mergedInput.childAge,
@@ -652,7 +704,7 @@ async function generateStoryWithQualityGate(params) {
         theme: params.normalizedBookData.theme,
         categoryGroupId: params.template.categoryGroupId,
         storyModelCandidates,
-    }), params.normalizedBookData.childProfileSnapshot);
+    }), params.normalizedBookData, params.mergedInput);
     let qualityReport = (0, story_quality_1.validateGeneratedStoryQuality)({
         story,
         readingProfile: params.readingProfile,
@@ -708,7 +760,7 @@ async function generateStoryWithQualityGate(params) {
     if (qualityReport.ok) {
         return { story, qualityReport, rewriteMetadata };
     }
-    story = normalizeStoryCastWithChildProfile(await params.llmClient.generateStory({
+    story = normalizeStoryForBook(await params.llmClient.generateStory({
         systemPrompt: (0, prompt_builder_1.appendQualityRetryInstruction)(baseSystemPrompt, qualityReport),
         childName: params.mergedInput.childName,
         childAge: params.mergedInput.childAge,
@@ -730,7 +782,7 @@ async function generateStoryWithQualityGate(params) {
         theme: params.normalizedBookData.theme,
         categoryGroupId: params.template.categoryGroupId,
         storyModelCandidates,
-    }), params.normalizedBookData.childProfileSnapshot);
+    }), params.normalizedBookData, params.mergedInput);
     rewritePassCount = rewriteMetadata?.storyTextRewriteAttempts ?? 0;
     while (params.llmClient.rewriteStoryText &&
         rewritePassCount < maxRewritePasses &&

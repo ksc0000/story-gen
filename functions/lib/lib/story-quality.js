@@ -147,6 +147,38 @@ function validateGeneratedStoryQuality(params) {
                 pageIndex,
             });
         }
+        if (hasSceneConstraintConflict(story.pages[pageIndex].imagePrompt)) {
+            issues.push({
+                severity: "warning",
+                code: "scene_constraint_conflict",
+                message: "imagePrompt 内で背景制約と scene 要素が矛盾している可能性があります。",
+                pageIndex,
+            });
+        }
+        if (hasReadableTextRisk(story.pages[pageIndex].imagePrompt)) {
+            issues.push({
+                severity: "warning",
+                code: "readable_text_risk",
+                message: "imagePrompt に読める文字やラベルの生成を誘発しうる要素があります。",
+                pageIndex,
+            });
+        }
+        if (hasBrandOrLogoRisk(story.pages[pageIndex].imagePrompt)) {
+            issues.push({
+                severity: "warning",
+                code: "brand_or_logo_risk",
+                message: "imagePrompt にロゴやブランド表現を誘発しうる要素があります。",
+                pageIndex,
+            });
+        }
+        if (hasUnsafeSceneObject(story.pages[pageIndex].imagePrompt)) {
+            issues.push({
+                severity: "warning",
+                code: "unsafe_scene_object",
+                message: "imagePrompt に年齢不相応または危険になりうる要素があります。",
+                pageIndex,
+            });
+        }
         if (readingProfile.ageBand !== "baby_toddler") {
             const heuristics = analyzeJapaneseTextHeuristics(story.pages[pageIndex].text);
             if (heuristics.tooManySoundWords) {
@@ -370,6 +402,23 @@ function hasImagePromptTextRisk(imagePrompt) {
         "phrase",
     ].some((token) => normalized.includes(token));
 }
+function hasSceneConstraintConflict(imagePrompt) {
+    const normalized = imagePrompt.toLowerCase();
+    return (normalized.includes("do not include playground equipment") &&
+        /(slide|swing|jungle gym|climbing frame|playground equipment)/.test(normalized));
+}
+function hasReadableTextRisk(imagePrompt) {
+    const normalized = imagePrompt.toLowerCase();
+    return /(label|sign|letters|written|writing|caption|speech bubble|readable text)/.test(normalized);
+}
+function hasBrandOrLogoRisk(imagePrompt) {
+    const normalized = imagePrompt.toLowerCase();
+    return /(logo|brand mark|trademark|company mark)/.test(normalized);
+}
+function hasUnsafeSceneObject(imagePrompt) {
+    const normalized = imagePrompt.toLowerCase();
+    return /(gun|knife|weapon|alcohol|cigarette|traffic|car lane|busy road)/.test(normalized);
+}
 function analyzeJapaneseTextHeuristics(text) {
     const normalized = text.replace(/\s+/g, "");
     const commonSoundWords = normalized.match(/(ころころ|わくわく|どきどき|きらきら|ふわふわ|さらさら|ぴかぴか|ぐるぐる|ごろごろ|ぺたぺた|しゃかしゃか|こしこし|にこにこ)/g) ?? [];
@@ -518,6 +567,12 @@ function addStoryGoalConsistencyIssues(params) {
                 message: "hiddenDetail が本文の主筋として使われている可能性があります。",
                 pageIndex,
                 actual: hiddenHits.join(", ") || page.hiddenDetail,
+            });
+            issues.push({
+                severity: "warning",
+                code: "hidden_detail_too_prominent",
+                message: "hiddenDetail が目立ちすぎて、主筋より前に出ている可能性があります。",
+                pageIndex,
             });
         }
         if (page.pageVisualRole !== "opening_establishing" &&

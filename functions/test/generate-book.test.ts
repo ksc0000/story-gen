@@ -1137,7 +1137,7 @@ describe("processBookGeneration", () => {
     expect(savedReport.summary.minCharsPerPage).toBeGreaterThanOrEqual(70);
   });
 
-  it("uses child profile constraints in final image prompt and avoids conflicting protagonist outfit text", async () => {
+  it("keeps child consistency but does not hard-lock the background in story_flexible mode", async () => {
     deps.llmClient.generateStory.mockResolvedValueOnce({
       ...mockStory,
       characterBible: "A boy wearing yellow t-shirt and blue shorts",
@@ -1175,8 +1175,38 @@ describe("processBookGeneration", () => {
     const firstPrompt = deps.imageClient.generateImage.mock.calls[0]?.[0];
     expect(firstPrompt).toContain("blue sky t-shirt");
     expect(firstPrompt).not.toContain("yellow t-shirt and blue shorts");
-    expect(firstPrompt).toContain("Respect the child profile background constraints");
-    expect(firstPrompt).not.toContain("red slide");
+    expect(firstPrompt).toContain("Scene setting rules: choose a setting that naturally supports this page's story beat");
+    expect(firstPrompt).toContain("red slide");
+    expect(firstPrompt).not.toContain("Respect the child profile background constraints");
+    expect(firstPrompt).not.toContain("Do not include playground equipment");
+  });
+
+  it("removes generic toy words and signature items from forbidden quest objects", async () => {
+    deps.llmClient.generateStory.mockResolvedValueOnce({
+      ...createPremiumPassingStory(),
+      forbiddenQuestObjects: ["すいか", "おもちゃ", "みどりのきょうりゅう"],
+    });
+
+    await processBookGeneration(
+      "book-forbidden-sanitize",
+      {
+        ...baseBookData,
+        productPlan: "premium_paid",
+        input: { childName: "ゆうた", childAge: 4, signatureItem: "みどりのきょうりゅう" },
+        childProfileSnapshot: {
+          displayName: "ゆうた",
+          personality: {},
+          visualProfile: {
+            version: 1,
+            signatureItem: "みどりのきょうりゅう",
+          },
+        },
+      },
+      deps
+    );
+
+    const metadata = deps.updateBookStoryGenerationMetadata.mock.calls.at(-1)?.[1];
+    expect(metadata.forbiddenQuestObjects).toEqual(["すいか"]);
   });
 
   it("keeps fixed templates working with key_pages reference mode", async () => {

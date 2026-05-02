@@ -177,12 +177,52 @@ describe("buildImagePrompt", () => {
       {
         childProfileBasePrompt:
           "Background must always be quiet Japanese neighborhood park. Include square sandbox. Do not include playground equipment. Do not include buildings, roads, signs.",
+        scenePolicy: {
+          backgroundMode: "fixed",
+        },
       }
     );
 
     expect(result).toContain("Respect the child profile background constraints");
     expect(result).toContain("do not add slides, swings, playground equipment");
     expect(result).not.toContain("red slide");
+  });
+  it("does not carry fixed background rules into story_flexible prompts", () => {
+    const result = buildImagePrompt(
+      "A child near a red slide in a sandbox park scene",
+      "watercolor",
+      "same child with a blue sky t-shirt and green dinosaur toy",
+      undefined,
+      {
+        childProfileBasePrompt:
+          "Background must always be quiet Japanese neighborhood park. Include square sandbox. Do not include playground equipment. Do not include buildings, roads, signs.",
+        scenePolicy: {
+          backgroundMode: "story_flexible",
+        },
+      }
+    );
+
+    expect(result).toContain("Scene setting rules: choose a setting that naturally supports this page's story beat");
+    expect(result).toContain("red slide");
+    expect(result).not.toContain("Respect the child profile background constraints");
+    expect(result).not.toContain("Do not include playground equipment");
+  });
+  it("keeps character consistency details even when the background is story_flexible", () => {
+    const result = buildImagePrompt(
+      "A child exploring a park path",
+      "watercolor",
+      "same child with short black hair, blue sky t-shirt, and green dinosaur toy",
+      undefined,
+      {
+        scenePolicy: {
+          backgroundMode: "story_flexible",
+        },
+      }
+    );
+
+    expect(result).toContain("blue sky t-shirt");
+    expect(result).toContain("green dinosaur toy");
+    expect(result).toContain("same child character across all pages");
   });
   it("appends safety keywords", () => {
     const result = buildImagePrompt("A child at a party", "flat");

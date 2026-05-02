@@ -55,14 +55,19 @@ export default function HomePage() {
             <Button size="lg" variant="outline" className="text-base px-6">子どもプロフィール</Button>
           </Link>
           {isAdmin ? (
-            <Link href="/admin/image-model-tests/">
-              <Button size="lg" variant="outline" className="text-base px-6">画像モデル比較</Button>
-            </Link>
+            <>
+              <Link href="/admin/book-quality-review/">
+                <Button size="lg" variant="outline" className="text-base px-6">Book品質レビュー</Button>
+              </Link>
+              <Link href="/admin/image-model-tests/">
+                <Button size="lg" variant="outline" className="text-base px-6">画像モデル比較</Button>
+              </Link>
+            </>
           ) : null}
         </div>
         {isAdmin ? (
           <p className="mt-2 text-sm text-violet-500">
-            管理者向け: light / standard / premium の生成結果を比較
+            管理者向け: Book品質レビューと画像モデル比較を利用できます
           </p>
         ) : null}
         {loading ? (

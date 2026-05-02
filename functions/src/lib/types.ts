@@ -9,6 +9,7 @@ export type StoryCostLevel = "none" | "low" | "standard";
 export type ProductPlan = "free" | "light_paid" | "standard_paid" | "premium_paid";
 export type ImageQualityTier = "light" | "standard" | "premium";
 export type CharacterConsistencyMode = "cover_only" | "key_pages" | "all_pages";
+export type BackgroundMode = "story_flexible" | "profile_default" | "fixed";
 export type ImageModelProfile =
   | "klein_fast"
   | "klein_base"
@@ -131,6 +132,14 @@ export interface ChildVisualProfile {
   version: number;
 }
 
+export interface ScenePolicy {
+  backgroundMode: BackgroundMode;
+  preferredSettings?: string[];
+  allowedSettingTypes?: string[];
+  forbiddenVisualElements?: string[];
+  sceneCoherenceRules?: string[];
+}
+
 export interface ChildGenerationSettings {
   defaultStyle: IllustrationStyle;
   defaultPageCount: PageCount;
@@ -185,6 +194,7 @@ export interface BookData {
   imageQualityTier?: ImageQualityTier;
   characterConsistencyMode?: CharacterConsistencyMode;
   imageModelProfile?: ImageModelProfile;
+  scenePolicy?: ScenePolicy;
   storyModel?: string;
   storyModelFallbackUsed?: boolean;
   storyGenerationAttempts?: number;

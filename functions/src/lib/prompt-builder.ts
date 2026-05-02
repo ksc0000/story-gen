@@ -8,6 +8,7 @@ import type {
   ImageModelProfile,
   ImageQualityTier,
   StoryCharacter,
+  ScenePolicy,
 } from "./types";
 import type { AgeReadingProfile } from "./age-reading-profile";
 import type { StoryQualityReport } from "./story-quality";
@@ -193,8 +194,12 @@ function sanitizeImagePromptText(value: string): string {
     .trim();
 }
 
-function sanitizeSceneAgainstChildConstraints(scene: string, childProfileBasePrompt?: string): string {
-  if (!childProfileBasePrompt) {
+function sanitizeSceneAgainstChildConstraints(
+  scene: string,
+  childProfileBasePrompt?: string,
+  scenePolicy?: ScenePolicy
+): string {
+  if (!childProfileBasePrompt || scenePolicy?.backgroundMode === "story_flexible") {
     return scene;
   }
 
@@ -224,7 +229,7 @@ function sanitizeSceneAgainstChildConstraints(scene: string, childProfileBasePro
   return sanitized.replace(/\s{2,}/g, " ").replace(/\s+,/g, ",").trim();
 }
 
-function buildChildProfileConstraintGuidance(childProfileBasePrompt?: string): string {
+function buildFixedProfileConstraintGuidance(childProfileBasePrompt?: string): string {
   if (!childProfileBasePrompt?.trim()) {
     return "";
   }
@@ -233,6 +238,50 @@ function buildChildProfileConstraintGuidance(childProfileBasePrompt?: string): s
     `Child profile scene constraints: ${childProfileBasePrompt.trim()}`,
     "Respect the child profile background constraints.",
     "If the child profile says sandbox or quiet neighborhood park only, do not add slides, swings, playground equipment, buildings, roads, signs, or indoor spaces.",
+  ].join(" ");
+}
+
+function buildScenePolicyGuidance(
+  scenePolicy: ScenePolicy | undefined,
+  childProfileBasePrompt?: string
+): string {
+  const backgroundMode = scenePolicy?.backgroundMode ?? "story_flexible";
+
+  if (backgroundMode === "fixed") {
+    return [
+      "Scene setting rules: keep the background fixed and repeatable for this generation.",
+      childProfileBasePrompt?.trim()
+        ? `Use this profile scene guidance as a hard constraint: ${childProfileBasePrompt.trim()}`
+        : "",
+      "Do not introduce new locations or unrelated setting elements.",
+      "Do not contradict the fixed background rules.",
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  if (backgroundMode === "profile_default") {
+    return [
+      "Scene setting rules: start from the child profile's familiar atmosphere, but allow small scene adjustments when the story needs them.",
+      childProfileBasePrompt?.trim()
+        ? `Use this profile scene guidance as a soft default, not a hard lock: ${childProfileBasePrompt.trim()}`
+        : "",
+      "Prefer coherent variations of the profile setting over abrupt location changes.",
+      "Do not add unrelated objects that distract from the story.",
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  return [
+    "Scene setting rules: choose a setting that naturally supports this page's story beat.",
+    "The setting may vary across pages when it improves the picture book.",
+    "Keep the setting coherent with the storyGoal, page text, and previous pages.",
+    "Do not add unrelated objects that distract from the story.",
+    "Do not add readable text, signs, labels, logos, brand marks, numbers, watermarks, or random symbols.",
+    "Do not add dangerous objects, traffic, roads, vehicles, or adult-only items unless explicitly required and child-safe.",
+    "If playground equipment, furniture, buildings, or animals appear, they must be natural for the scene and must support the story.",
+    "Hidden details are allowed only as subtle visual discoveries and must never become the story goal.",
   ].join(" ");
 }
 
@@ -435,6 +484,7 @@ export function buildImagePrompt(
     appearingCharacterIds?: string[];
     focusCharacterId?: string;
     childProfileBasePrompt?: string;
+    scenePolicy?: ScenePolicy;
   }
 ): string {
   const compositionHint = sanitizeImagePromptText(
@@ -445,9 +495,12 @@ export function buildImagePrompt(
   const hiddenDetail = sanitizeImagePromptText(options?.hiddenDetail || "");
   const ageBand = options?.ageBand;
   const imageModelProfile = options?.imageModelProfile;
+  const scenePolicy = options?.scenePolicy;
   const sanitizedBasePrompt = sanitizeSceneAgainstChildConstraints(
     sanitizeImagePromptText(basePrompt),
     options?.childProfileBasePrompt
+    ,
+    scenePolicy
   );
   const appearingCharacters = (options?.cast ?? []).filter((character) =>
     options?.appearingCharacterIds?.includes(character.characterId) &&
@@ -475,7 +528,10 @@ export function buildImagePrompt(
     `Background richness: ${getBackgroundRichnessGuidance(ageBand)}`,
     "Show meaningful surroundings, not just the protagonist.",
     "Keep the scene rich but not cluttered.",
-    buildChildProfileConstraintGuidance(options?.childProfileBasePrompt),
+    buildScenePolicyGuidance(scenePolicy, options?.childProfileBasePrompt),
+    scenePolicy?.backgroundMode === "fixed"
+      ? buildFixedProfileConstraintGuidance(options?.childProfileBasePrompt)
+      : "",
   ].join(" ");
 
   const motifGuidance = visualMotif

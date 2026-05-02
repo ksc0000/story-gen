@@ -162,6 +162,34 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "forbidden_object_became_goal")).toBe(true);
   });
 
+  it("warns when prompt constraints conflict with scene objects", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "ゆうたは すなばで あそびながら、小さな ひかりを みつけました。そばには きのかげが ゆれていて、ふしぎな きもちに なりました。つぎに なにが おこるのか、そっと しゃがみこみました。",
+            imagePrompt:
+              "sandbox scene, do not include playground equipment, but a red slide appears behind the child with a readable sign",
+            compositionHint: "wide shot",
+            pageVisualRole: "opening_establishing",
+          },
+          {
+            text: "ひかりの したで ほしのこが ふるえながら ひかっていました。ゆうたは すなの うえに てを のばして、だいじょうぶだよと こえを かけました。ふたりの ぼうけんが はじまります。",
+            imagePrompt: "discovery scene with a small star child in the sand",
+            compositionHint: "medium shot",
+            pageVisualRole: "discovery",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "scene_constraint_conflict")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "readable_text_risk")).toBe(true);
+  });
+
   it("accepts richer quest-consistent preschool text", () => {
     const report = validateGeneratedStoryQuality({
       story: {
