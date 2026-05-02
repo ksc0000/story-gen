@@ -2,6 +2,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { processBookGeneration, shouldUseCharacterReferenceForPage } from "../src/generate-book";
 import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
 
+function hasUndefinedDeep(value: unknown): boolean {
+  if (value === undefined) return true;
+  if (Array.isArray(value)) return value.some((item) => hasUndefinedDeep(item));
+  if (value && typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).some((item) => hasUndefinedDeep(item));
+  }
+  return false;
+}
+
 const mockTemplate: TemplateData = {
   name: "おたんじょうび", description: "誕生日", icon: "🎂", order: 1,
   creationMode: "guided_ai", priceTier: "take", storyCostLevel: "standard",
@@ -258,6 +267,52 @@ describe("processBookGeneration", () => {
         storyTextRewriteAttempts: 1,
       })
     );
+  });
+
+  it("sanitizes story metadata and page data before Firestore writes", async () => {
+    const storyWithUndefinedCast: GeneratedStory = {
+      ...mockStory,
+      cast: [
+        {
+          characterId: "magic_friend_01",
+          displayName: "ひかりのともだち",
+          role: "magical_friend",
+          visualBible: "small glowing golden spirit child",
+          referenceImageUrl: undefined,
+          approvedImageUrl: "https://example.com/magic-friend.png",
+          silhouette: undefined,
+          colorPalette: undefined,
+          signatureItems: ["gold glow"],
+          doNotChange: undefined,
+          canChangeByScene: undefined,
+        },
+      ],
+      pages: mockStory.pages.map((page, index) =>
+        index === 0 ? { ...page, focusCharacterId: undefined } : page
+      ),
+    };
+    deps.llmClient.generateStory.mockResolvedValueOnce(storyWithUndefinedCast);
+    deps.llmClient.rewriteStoryText.mockResolvedValueOnce({
+      pages: storyWithUndefinedCast.pages.map((page) => ({ text: page.text })),
+      storyTextRewriteModel: "gemini-2.5-pro",
+      storyTextRewriteAttempts: 1,
+    });
+
+    await processBookGeneration(
+      "book-sanitize",
+      {
+        ...baseBookData,
+        productPlan: "premium_paid",
+        input: { childName: "ゆうた", childAge: 4 },
+      },
+      deps
+    );
+
+    const metadataArg = deps.updateBookStoryGenerationMetadata.mock.calls.at(-1)?.[1];
+    expect(hasUndefinedDeep(metadataArg)).toBe(false);
+
+    const pageArgs = deps.writePage.mock.calls.map((call) => call[1]);
+    expect(pageArgs.every((page) => !hasUndefinedDeep(page))).toBe(true);
   });
 
   it("runs premium rewrite up to 2 times when story goal consistency stays weak", async () => {

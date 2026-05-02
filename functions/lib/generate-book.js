@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateBook = void 0;
+exports.sanitizeStoryCastForFirestore = sanitizeStoryCastForFirestore;
 exports.processBookGeneration = processBookGeneration;
 exports.shouldUseCharacterReferenceForPage = shouldUseCharacterReferenceForPage;
 const firestore_1 = require("firebase-functions/v2/firestore");
@@ -50,11 +51,36 @@ const entitlements_1 = require("./lib/entitlements");
 const usage_1 = require("./lib/usage");
 const age_reading_profile_1 = require("./lib/age-reading-profile");
 const story_quality_1 = require("./lib/story-quality");
+const firestore_sanitize_1 = require("./lib/firestore-sanitize");
 const IMAGE_RETRY_LIMIT = 3;
 const IMAGE_REQUEST_INTERVAL_MS = 11_000;
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
 const GEMINI_RETRYABLE_USER_MESSAGE = "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。";
 const STORY_SCHEMA_FAILURE_USER_MESSAGE = "絵本の構成データを整える途中で失敗しました。入力内容が原因ではない可能性があります。もう一度お試しください。";
+function sanitizeStoryCastForFirestore(cast) {
+    if (!cast?.length) {
+        return undefined;
+    }
+    const sanitized = cast
+        .filter((character) => Boolean(character?.characterId) &&
+        Boolean(character?.displayName) &&
+        Boolean(character?.role) &&
+        Boolean(character?.visualBible))
+        .map((character) => (0, firestore_sanitize_1.removeUndefinedDeep)({
+        characterId: character.characterId,
+        displayName: character.displayName,
+        role: character.role,
+        visualBible: character.visualBible,
+        silhouette: character.silhouette,
+        colorPalette: character.colorPalette,
+        signatureItems: character.signatureItems,
+        doNotChange: character.doNotChange,
+        canChangeByScene: character.canChangeByScene,
+        referenceImageUrl: character.referenceImageUrl,
+        approvedImageUrl: character.approvedImageUrl,
+    }));
+    return sanitized.length > 0 ? sanitized : undefined;
+}
 function shouldThrottleImageRequests() {
     return process.env.NODE_ENV !== "test";
 }
@@ -92,14 +118,14 @@ async function processBookGeneration(bookId, bookData, deps) {
         if (!sanitizeResult.valid) {
             console.error(`Input validation failed for ${bookId}: ${sanitizeResult.reason}`);
             await deps.updateBookFailure(bookId, sanitizeResult.reason ?? "Input validation failed");
-            await deps.updateBookFailureMetadata(bookId, {
+            await deps.updateBookFailureMetadata(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)({
                 failureStage: "validation",
                 failureProvider: "system",
                 failureReason: "unknown",
                 retryable: false,
                 technicalErrorMessage: sanitizeResult.reason ?? "Input validation failed",
                 failedAt: admin.firestore.Timestamp.now(),
-            });
+            }));
             await deps.updateBookStatus(bookId, "failed");
             return;
         }
@@ -117,14 +143,14 @@ async function processBookGeneration(bookId, bookData, deps) {
                     : "今月の無料生成回数に達しました。来月またお試しください。";
                 console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount})`);
                 await deps.updateBookFailure(bookId, message);
-                await deps.updateBookFailureMetadata(bookId, {
+                await deps.updateBookFailureMetadata(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)({
                     failureStage: "validation",
                     failureProvider: "system",
                     failureReason: "unknown",
                     retryable: false,
                     technicalErrorMessage: `Monthly quota exceeded: ${monthlyCount}`,
                     failedAt: admin.firestore.Timestamp.now(),
-                });
+                }));
                 await deps.updateBookStatus(bookId, "failed");
                 return;
             }
@@ -157,51 +183,48 @@ async function processBookGeneration(bookId, bookData, deps) {
                         ? err.message
                         : "Unknown Gemini retryable error";
                 await deps.updateBookFailure(bookId, GEMINI_RETRYABLE_USER_MESSAGE);
-                await deps.updateBookFailureMetadata(bookId, {
+                await deps.updateBookFailureMetadata(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)({
                     failureStage: "story_generation",
                     failureProvider: "gemini",
                     failureReason: err instanceof gemini_1.GeminiServiceUnavailableError ? err.reason : "service_unavailable",
                     retryable: true,
                     technicalErrorMessage: technicalMessage,
                     failedAt: admin.firestore.Timestamp.now(),
-                });
+                }));
                 await deps.updateBookStatus(bookId, "failed");
                 return;
             }
             if (isStorySchemaValidationError(err)) {
                 const technicalMessage = err instanceof Error ? err.message : "Unknown schema validation error";
                 await deps.updateBookFailure(bookId, STORY_SCHEMA_FAILURE_USER_MESSAGE);
-                await deps.updateBookFailureMetadata(bookId, {
+                await deps.updateBookFailureMetadata(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)({
                     failureStage: "schema_validation",
                     failureProvider: "gemini",
                     failureReason: "unknown",
                     retryable: false,
                     technicalErrorMessage: technicalMessage,
                     failedAt: admin.firestore.Timestamp.now(),
-                });
+                }));
                 await deps.updateBookStatus(bookId, "failed");
                 return;
             }
             throw err;
         }
         const { story, qualityReport } = storyResult;
-        if (story.storyModel ||
-            story.storyModelFallbackUsed !== undefined ||
-            story.storyGenerationAttempts !== undefined ||
-            storyResult.rewriteMetadata ||
-            story.cast) {
-            await deps.updateBookStoryGenerationMetadata(bookId, {
-                storyModel: story.storyModel,
-                storyModelFallbackUsed: story.storyModelFallbackUsed,
-                storyGenerationAttempts: story.storyGenerationAttempts,
-                storyTextRewriteUsed: storyResult.rewriteMetadata?.storyTextRewriteUsed,
-                storyTextRewriteModel: storyResult.rewriteMetadata?.storyTextRewriteModel,
-                storyTextRewriteAttempts: storyResult.rewriteMetadata?.storyTextRewriteAttempts,
-                storyCast: story.cast,
-                storyGoal: story.storyGoal,
-                mainQuestObject: story.mainQuestObject,
-                forbiddenQuestObjects: story.forbiddenQuestObjects,
-            });
+        const storyGenerationMetadata = (0, firestore_sanitize_1.removeUndefinedDeep)({
+            storyModel: story.storyModel,
+            storyModelFallbackUsed: story.storyModelFallbackUsed,
+            storyGenerationAttempts: story.storyGenerationAttempts,
+            storyTextRewriteUsed: storyResult.rewriteMetadata?.storyTextRewriteUsed,
+            storyTextRewriteModel: storyResult.rewriteMetadata?.storyTextRewriteModel,
+            storyTextRewriteAttempts: storyResult.rewriteMetadata?.storyTextRewriteAttempts,
+            storyCast: sanitizeStoryCastForFirestore(story.cast),
+            storyGoal: story.storyGoal,
+            mainQuestObject: story.mainQuestObject,
+            forbiddenQuestObjects: story.forbiddenQuestObjects,
+        });
+        if (Object.keys(storyGenerationMetadata).length > 0) {
+            await deps.updateBookStoryGenerationMetadata(bookId, storyGenerationMetadata);
         }
         await deps.updateBookStoryQualityReport(bookId, (0, story_quality_1.toFirestoreStoryQualityReport)(qualityReport));
         if (template.creationMode === "fixed_template" && !qualityReport.ok) {
@@ -306,7 +329,7 @@ async function processBookGeneration(bookId, bookData, deps) {
                         if (attempt === IMAGE_RETRY_LIMIT - 1) {
                             console.error(`All ${IMAGE_RETRY_LIMIT} attempts failed for page ${i}`);
                             const message = err instanceof Error ? err.message : "Image generation failed";
-                            await deps.writePage(bookId, {
+                            await deps.writePage(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)({
                                 pageNumber: i,
                                 text: storyPage.text,
                                 imageUrl: "",
@@ -326,16 +349,16 @@ async function processBookGeneration(bookId, bookData, deps) {
                                 pageVisualRole: storyPage.pageVisualRole,
                                 appearingCharacterIds: storyPage.appearingCharacterIds,
                                 focusCharacterId: storyPage.focusCharacterId,
-                            });
+                            }));
                             await deps.updateBookFailure(bookId, `画像生成に失敗しました（${message}）`);
-                            await deps.updateBookFailureMetadata(bookId, {
+                            await deps.updateBookFailureMetadata(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)({
                                 failureStage: "image_generation",
                                 failureProvider: "replicate",
                                 failureReason: "unknown",
                                 retryable: true,
                                 technicalErrorMessage: message,
                                 failedAt: admin.firestore.Timestamp.now(),
-                            });
+                            }));
                             await deps.updateBookStatus(bookId, "failed");
                             return;
                         }
@@ -364,7 +387,7 @@ async function processBookGeneration(bookId, bookData, deps) {
                 appearingCharacterIds: storyPage.appearingCharacterIds,
                 focusCharacterId: storyPage.focusCharacterId,
             };
-            await deps.writePage(bookId, pageData);
+            await deps.writePage(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)(pageData));
             if (i === 0 && imageUrl) {
                 await deps.updateBookCoverImage(bookId, imageUrl);
             }
@@ -382,14 +405,14 @@ async function processBookGeneration(bookId, bookData, deps) {
         console.error(`Book generation failed for ${bookId}:`, err);
         const message = err instanceof Error ? err.message : "Unknown generation error";
         await deps.updateBookFailure(bookId, message);
-        await deps.updateBookFailureMetadata(bookId, {
+        await deps.updateBookFailureMetadata(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)({
             failureStage: "validation",
             failureProvider: "system",
             failureReason: "unknown",
             retryable: false,
             technicalErrorMessage: message,
             failedAt: admin.firestore.Timestamp.now(),
-        });
+        }));
         await deps.updateBookStatus(bookId, "failed");
     }
 }
