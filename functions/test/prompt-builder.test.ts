@@ -34,6 +34,12 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("背景、物、家族、友だち、動物、サブキャラクター");
     expect(result).toContain("そのページで何を一番見せたいか");
   });
+  it("explains that imagePrompt is for wordless illustrations only", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("pages[].imagePrompt is only for generating a wordless illustration");
+    expect(result).toContain("Never ask the image model to render the story text");
+    expect(result).toContain('"pageVisualRole": "opening_establishing"');
+  });
 });
 
 describe("buildUserPrompt", () => {
@@ -82,6 +88,32 @@ describe("buildImagePrompt", () => {
     expect(result).toContain("wide shots");
     expect(result).toContain("bird's-eye views");
     expect(result).toContain("secondary characters");
+  });
+  it("adds a wordless picture book instruction and blocks written elements", () => {
+    const result = buildImagePrompt("A child at a party", "watercolor");
+    expect(result).toContain("wordless picture book illustration");
+    expect(result).toContain("no speech bubbles");
+    expect(result).toContain("no labels");
+    expect(result).toContain("no signage");
+    expect(result).toContain("Use purely visual storytelling");
+  });
+  it("uses pageVisualRole guidance and sanitizes risky text-like prompt content", () => {
+    const result = buildImagePrompt(
+      'A scene with a sign that says "hello" and 「だいじょうぶ、いっしょにいるよ」',
+      "watercolor",
+      undefined,
+      undefined,
+      {
+        pageVisualRole: "object_detail",
+        visualMotifUsage: "yellow star phrase label",
+        hiddenDetail: "small bird near a caption card",
+      }
+    );
+    expect(result).toContain("Page visual role: object_detail");
+    expect(result).not.toContain("だいじょうぶ、いっしょにいるよ");
+    expect(result).not.toContain('"hello"');
+    expect(result).not.toContain("caption card");
+    expect(result).not.toContain("phrase label");
   });
   it("appends safety keywords", () => {
     const result = buildImagePrompt("A child at a party", "flat");

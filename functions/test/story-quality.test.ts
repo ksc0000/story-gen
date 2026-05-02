@@ -187,6 +187,46 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "image_prompt.thin")).toBe(true);
   });
 
+  it("warns when imagePrompt contains text-rendering risk terms", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "きょうは たのしい日です。おへやには やさしいひかりが さして、みんなの えがおが ひろがりました。",
+            imagePrompt: "wide shot with a speech bubble label and written sign in the room",
+            compositionHint: "wide shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "image_prompt.text_risk")).toBe(true);
+  });
+
+  it("warns when imagePrompt contains Japanese quote marks", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "きょうは たのしい日です。おへやには やさしいひかりが さして、みんなの えがおが ひろがりました。",
+            imagePrompt: "wide shot with 「ありがとう」 floating near the child",
+            compositionHint: "wide shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "image_prompt.text_risk")).toBe(true);
+  });
+
   it("is ok when there are only warnings", () => {
     const report = validateGeneratedStoryQuality({
       story: {

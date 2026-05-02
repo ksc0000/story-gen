@@ -165,6 +165,7 @@ export async function processBookGeneration(
         story.styleBible,
         {
           pageNumber: i,
+          pageVisualRole: storyPage.pageVisualRole,
           compositionHint: storyPage.compositionHint,
           visualMotif: story.narrativeDevice?.visualMotif,
           visualMotifUsage: storyPage.visualMotifUsage,
@@ -182,6 +183,13 @@ export async function processBookGeneration(
         purpose: imagePurpose,
         imageQualityTier,
       });
+      const shouldUseReference = shouldUseCharacterReferenceForPage({
+        pageIndex: i,
+        totalPages,
+        imagePurpose,
+        characterConsistencyMode: normalizedBookData.characterConsistencyMode,
+      });
+      const inputImageUrls = shouldUseReference ? coverReferenceImageUrls : [];
 
       // Skip image generation in development to avoid API costs
       if (process.env.NODE_ENV === 'development') {
@@ -195,14 +203,6 @@ export async function processBookGeneration(
             if (waitMs > 0 && shouldThrottleImageRequests()) {
               await new Promise((resolve) => setTimeout(resolve, waitMs));
             }
-
-            const shouldUseReference = shouldUseCharacterReferenceForPage({
-              pageIndex: i,
-              totalPages,
-              imagePurpose,
-              characterConsistencyMode: normalizedBookData.characterConsistencyMode,
-            });
-            const inputImageUrls = shouldUseReference ? coverReferenceImageUrls : [];
 
             // Page 1 is treated as the cover-quality image, while later pages can be tiered for model comparison.
             imageBuffer = await deps.imageClient.generateImage(imagePrompt, {
@@ -232,6 +232,10 @@ export async function processBookGeneration(
                 imageModel,
                 imageQualityTier,
                 imagePurpose,
+                inputReferenceCount: inputImageUrls.length,
+                usedCharacterReference: inputImageUrls.length > 0,
+                characterConsistencyMode: normalizedBookData.characterConsistencyMode,
+                pageVisualRole: storyPage.pageVisualRole,
               });
               await deps.updateBookFailure(bookId, `画像生成に失敗しました（${message}）`);
               await deps.updateBookStatus(bookId, "failed");
@@ -251,6 +255,10 @@ export async function processBookGeneration(
         imageModel,
         imageQualityTier,
         imagePurpose,
+        inputReferenceCount: inputImageUrls.length,
+        usedCharacterReference: inputImageUrls.length > 0,
+        characterConsistencyMode: normalizedBookData.characterConsistencyMode,
+        pageVisualRole: storyPage.pageVisualRole,
       };
       await deps.writePage(bookId, pageData);
       if (i === 0 && imageUrl) {
@@ -319,7 +327,8 @@ function normalizeBookForGeneration(
     creationMode,
     productPlan: normalizedPlan,
     imageQualityTier: normalizedPlanConfig.imageQualityTier,
-    characterConsistencyMode: normalizedPlanConfig.characterConsistencyMode,
+    characterConsistencyMode:
+      bookData.characterConsistencyMode ?? normalizedPlanConfig.characterConsistencyMode,
     pageCount: normalizedPageCount,
   };
 }

@@ -174,6 +174,15 @@ export function validateGeneratedStoryQuality(params: {
         expected: ">= 30",
       });
     }
+
+    if (hasImagePromptTextRisk(story.pages[pageIndex].imagePrompt)) {
+      issues.push({
+        severity: "warning",
+        code: "image_prompt.text_risk",
+        message: "imagePrompt に文字描画を誘発する表現が含まれています。",
+        pageIndex,
+      });
+    }
   });
 
   const averageCharsPerPage = Math.round(
@@ -304,6 +313,28 @@ export function validateGeneratedStoryQuality(params: {
   };
 }
 
+function hasImagePromptTextRisk(imagePrompt: string): boolean {
+  const normalized = imagePrompt.toLowerCase();
+  if (/[「」『』]/.test(imagePrompt)) {
+    return true;
+  }
+
+  return [
+    "text:",
+    "caption",
+    "speech bubble",
+    "label",
+    "sign",
+    "letters",
+    "written",
+    "writing",
+    "title on",
+    "words",
+    "quote",
+    "phrase",
+  ].some((token) => normalized.includes(token));
+}
+
 export function toFirestoreStoryQualityReport(report: StoryQualityReport): StoryQualityReportData {
   return stripUndefinedDeep(report) as StoryQualityReportData;
 }
@@ -320,4 +351,3 @@ function stripUndefinedDeep<T>(value: T): T {
   }
   return value;
 }
-

@@ -83,6 +83,7 @@ describe("GeminiClient", () => {
         {
           text: "テスト本文です。もうすこし つづきます。",
           imagePrompt: "A wide storybook scene with a child and family in a park",
+          pageVisualRole: "opening_establishing",
           compositionHint: "wide establishing shot",
           visualMotifUsage: "yellow star on a backpack",
           hiddenDetail: "small bird in a tree",
@@ -97,6 +98,7 @@ describe("GeminiClient", () => {
     });
 
     expect(result.narrativeDevice?.visualMotif).toBe("yellow star");
+    expect(result.pages[0].pageVisualRole).toBe("opening_establishing");
     expect(result.pages[0].compositionHint).toBe("wide establishing shot");
   });
 

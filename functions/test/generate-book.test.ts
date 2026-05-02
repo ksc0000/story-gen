@@ -56,6 +56,7 @@ const mockStory: GeneratedStory = {
     {
       text: "きょうはたんじょうびです。おへやには やさしい かざりが ゆれていて、みんなの えがおも きらきらしていました。",
       imagePrompt: "A warm wide birthday party scene with family, decorations, toys, and a small yellow star motif in the room",
+      pageVisualRole: "opening_establishing",
       compositionHint: "wide establishing shot",
       visualMotifUsage: "yellow star decoration above the table",
       hiddenDetail: "small bird toy near the shelf",
@@ -63,6 +64,7 @@ const mockStory: GeneratedStory = {
     {
       text: "ケーキをたべるまえに、ゆうたくんは みんなのこえを しっかり ききました。うれしくて、ありがとうが そっと くちから こぼれます。",
       imagePrompt: "A medium storybook shot of a child near a birthday cake, family in the background, rich but not cluttered room details",
+      pageVisualRole: "action",
       compositionHint: "medium shot with action",
       visualMotifUsage: "yellow star on a small cup",
       hiddenDetail: "tiny blue cup on the table",
@@ -127,6 +129,10 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "standard",
         imagePurpose: "book_cover",
+        inputReferenceCount: expect.any(Number),
+        usedCharacterReference: true,
+        characterConsistencyMode: "all_pages",
+        pageVisualRole: "opening_establishing",
       })
     );
     expect(deps.writePage).toHaveBeenCalledWith(
@@ -135,6 +141,9 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "standard",
         imagePurpose: "book_page",
+        usedCharacterReference: true,
+        characterConsistencyMode: "all_pages",
+        pageVisualRole: "action",
       })
     );
     expect(deps.updateBookTitle).toHaveBeenCalledWith("book123", "ゆうたくんのたんじょうび");
@@ -545,26 +554,31 @@ describe("processBookGeneration", () => {
         {
           text: "こうえんに ついたとき、ゆうたは おおきく いきを すいました。やわらかな ひかりのなかで、きょうの ぼうけんが はじまります。",
           imagePrompt: "wide establishing shot of a child arriving at a bright park with gentle trees, a yellow star motif, and clear child-safe scenery details",
+          pageVisualRole: "opening_establishing",
           compositionHint: "wide establishing shot",
         },
         {
           text: "ベンチの そばには、ちいさな はっぱが ゆれていました。ゆうたは その かたちを みて、ほしに すこし にているなあと おもいました。",
           imagePrompt: "medium shot with action showing a child near a park bench, looking at leaf shapes, with soft seasonal details and a clear focal point",
+          pageVisualRole: "discovery",
           compositionHint: "medium shot with action",
         },
         {
           text: "そのとき、あおい ことりが ぴょこんと とんできました。ゆうたは そっと てを のばして、びっくりしながらも うれしく なりました。",
           imagePrompt: "side view storybook scene of a child noticing a small blue bird, with flowers, grass, and meaningful but not cluttered background details",
+          pageVisualRole: "action",
           compositionHint: "side view with discovery",
         },
         {
           text: "かえりみち、ポケットの なかで きいろい ほしが きらっと ひかりました。ゆうたは きょうの ことを おもいだして、もういちど にっこり しました。",
           imagePrompt: "close-up emotional moment of a child holding a glowing yellow star near a pocket, with hands and clothing details in focus",
+          pageVisualRole: "payoff",
           compositionHint: "close-up of hands and expression",
         },
         {
           text: "ふりかえると、こうえんの けしきが やさしく ひろがっていました。ゆうたは また こようねと つぶやき、あたたかな きもちで あるきだしました。",
           imagePrompt: "warm ending back view of a child walking away through a beautiful park, gentle sky, repeated yellow star motif, and rich but calm scenery",
+          pageVisualRole: "quiet_ending",
           compositionHint: "warm ending back view",
         },
       ],
@@ -610,6 +624,29 @@ describe("processBookGeneration", () => {
 
     const calls = deps.imageClient.generateImage.mock.calls.map(([, options]) => options.inputImageUrls);
     expect(calls.every((urls) => Array.isArray(urls) && urls.length > 0)).toBe(true);
+  });
+
+  it("stores pageVisualRole and reference usage metadata on every written page", async () => {
+    await processBookGeneration("book123", baseBookData, deps);
+
+    const pageWrites = deps.writePage.mock.calls.map(([, page]) => page).filter((page) => page.status === "completed");
+    expect(pageWrites).toHaveLength(2);
+    expect(pageWrites[0]).toEqual(
+      expect.objectContaining({
+        pageVisualRole: "opening_establishing",
+        inputReferenceCount: expect.any(Number),
+        usedCharacterReference: true,
+        characterConsistencyMode: "all_pages",
+      })
+    );
+    expect(pageWrites[1]).toEqual(
+      expect.objectContaining({
+        pageVisualRole: "action",
+        inputReferenceCount: expect.any(Number),
+        usedCharacterReference: true,
+        characterConsistencyMode: "all_pages",
+      })
+    );
   });
 
   it("keeps fixed templates working with key_pages reference mode", async () => {

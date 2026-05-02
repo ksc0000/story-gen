@@ -15,6 +15,15 @@ export type AgeBand =
   | "early_reader_5_6"
   | "early_elementary_7_8"
   | "general_child";
+export type PageVisualRole =
+  | "opening_establishing"
+  | "discovery"
+  | "action"
+  | "emotional_closeup"
+  | "object_detail"
+  | "setback_or_question"
+  | "payoff"
+  | "quiet_ending";
 export type ImagePurpose =
   | "book_page"
   | "book_cover"
@@ -171,6 +180,10 @@ export interface PageData {
   imageModel?: string;
   imageQualityTier?: ImageQualityTier;
   imagePurpose?: ImagePurpose;
+  inputReferenceCount?: number;
+  usedCharacterReference?: boolean;
+  characterConsistencyMode?: CharacterConsistencyMode;
+  pageVisualRole?: PageVisualRole;
 }
 
 export interface TemplateData {
@@ -227,6 +240,7 @@ export interface GeneratedStoryPage {
   compositionHint?: string;
   visualMotifUsage?: string;
   hiddenDetail?: string;
+  pageVisualRole?: PageVisualRole;
 }
 
 export interface StoryQualityReportData {

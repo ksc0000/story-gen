@@ -9,6 +9,16 @@ const SAFETY_SETTINGS = [
   { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
 ];
+const ALLOWED_PAGE_VISUAL_ROLES = new Set([
+  "opening_establishing",
+  "discovery",
+  "action",
+  "emotional_closeup",
+  "object_detail",
+  "setback_or_question",
+  "payoff",
+  "quiet_ending",
+]);
 
 function extractJSON(text: string): string {
   const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
@@ -38,6 +48,14 @@ function validateStory(data: unknown): GeneratedStory {
     }
     if (pageObj.hiddenDetail !== undefined && typeof pageObj.hiddenDetail !== "string") {
       throw new Error("Page 'hiddenDetail' must be a string when provided");
+    }
+    if (pageObj.pageVisualRole !== undefined) {
+      if (typeof pageObj.pageVisualRole !== "string") {
+        throw new Error("Page 'pageVisualRole' must be a string when provided");
+      }
+      if (!ALLOWED_PAGE_VISUAL_ROLES.has(pageObj.pageVisualRole)) {
+        throw new Error("Page 'pageVisualRole' must be one of the allowed visual roles");
+      }
     }
   }
 

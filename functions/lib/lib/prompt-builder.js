@@ -85,6 +85,50 @@ function getDefaultCompositionHint(pageNumber) {
             return "varied storybook composition with a clear focal point";
     }
 }
+function getDefaultPageVisualRole(pageNumber) {
+    switch (pageNumber) {
+        case 0:
+            return "opening_establishing";
+        case 1:
+            return "discovery";
+        case 2:
+            return "emotional_closeup";
+        case 3:
+            return "quiet_ending";
+        default:
+            return "action";
+    }
+}
+function getPageVisualRoleGuidance(role) {
+    switch (role) {
+        case "opening_establishing":
+            return "Page visual role: opening_establishing. Use a wide establishing shot that clearly shows the place and the child's relationship to the world. The protagonist may appear small if that helps the scene.";
+        case "discovery":
+            return "Page visual role: discovery. Use a medium shot or guided composition where the protagonist notices something important, with the eye naturally led toward the discovery.";
+        case "action":
+            return "Page visual role: action. Show movement, body gesture, interaction, and a clear sense of what is happening in this moment.";
+        case "emotional_closeup":
+            return "Page visual role: emotional_closeup. Use a close-up of face, hands, or a meaningful gesture to highlight emotion without turning the page into a static portrait.";
+        case "object_detail":
+            return "Page visual role: object_detail. Focus on a meaningful object in the foreground, with the protagonist secondary or in the background if helpful.";
+        case "setback_or_question":
+            return "Page visual role: setback_or_question. Show a gentle child-safe moment of uncertainty, wondering, or small tension, with clear visual storytelling.";
+        case "payoff":
+            return "Page visual role: payoff. Bring back an earlier motif, object, or visual clue so the scene feels satisfying and story-driven.";
+        case "quiet_ending":
+            return "Page visual role: quiet_ending. Use a scenic wide shot, warm back view, or calm closure image with emotional afterglow.";
+        default:
+            return "Page visual role: action. Keep the scene dynamic and story-driven.";
+    }
+}
+function sanitizeImagePromptText(value) {
+    return value
+        .replace(/[「『][^」』]*[」』]/g, "")
+        .replace(/"[^"]*"/g, "")
+        .replace(/\b(repeated phrase|phrase|text|letters?|caption|speech bubbles?|labels?|signboards?|signage|written|writing|title on|words?|quotes?)\b/gi, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+}
 function getBackgroundRichnessGuidance(ageBand) {
     if (ageBand === "baby_toddler") {
         return "Background should stay soft and simple, with only a few clear supporting details.";
@@ -146,6 +190,7 @@ ${ageReadingGuidance}
 - ときには背景、物、家族、友だち、動物、サブキャラクターが絵の主役になっても構いません。
 - imagePrompt には、そのページで何を一番見せたいかを明確に含めてください。
 - imagePrompt では "wide establishing shot of...", "small child seen from behind...", "focus on the sandbox toys in the foreground...", "family members in the background...", "bird's-eye view of the park...", "close-up of tiny hands holding..." のように、視点や焦点が伝わる表現を歓迎します。
+- Important: pages[].text is for the readable story text shown by the app. pages[].imagePrompt is only for generating a wordless illustration. Never ask the image model to render the story text, repeated phrase, labels, signs, books with readable titles, speech bubbles, captions, or any written characters inside the image.
 - Story quality rules: ${STORY_QUALITY_RULES}
 - 3歳以上では、文字数が少なすぎる「薄いページ」にならないようにしてください。行動、気持ち、場面描写のうち少なくとも2つ以上を自然に含めてください。
 - 5歳以上では、小さな原因と結果、短い会話、場面の具体物を入れてください。
@@ -175,7 +220,8 @@ ${ageReadingGuidance}
   "pages": [
     {
       "text": "ページの本文（日本語・ひらがな多め・幼児が理解できる表現）",
-      "imagePrompt": "English description of the illustration for this page",
+      "imagePrompt": "English description of a wordless illustration for this page, with no readable text inside the image",
+      "pageVisualRole": "opening_establishing",
       "compositionHint": "wide establishing shot / medium action shot / close-up / back view / object-focused shot",
       "visualMotifUsage": "How the recurring visual motif appears on this page",
       "hiddenDetail": "One small background detail children can notice"
@@ -217,17 +263,23 @@ function buildUserPrompt(input, pageCount) {
     return lines.join("\n");
 }
 function buildImagePrompt(basePrompt, style, characterBible, styleBible, options) {
-    const compositionHint = options?.compositionHint || getDefaultCompositionHint(options?.pageNumber);
-    const visualMotif = options?.visualMotifUsage || options?.visualMotif;
-    const hiddenDetail = options?.hiddenDetail;
+    const compositionHint = sanitizeImagePromptText(options?.compositionHint || getDefaultCompositionHint(options?.pageNumber));
+    const pageVisualRole = options?.pageVisualRole || getDefaultPageVisualRole(options?.pageNumber);
+    const visualMotif = sanitizeImagePromptText(options?.visualMotifUsage || options?.visualMotif || "");
+    const hiddenDetail = sanitizeImagePromptText(options?.hiddenDetail || "");
     const ageBand = options?.ageBand;
+    const sanitizedBasePrompt = sanitizeImagePromptText(basePrompt);
     const consistency = [
         characterBible ? `Character consistency: ${characterBible}` : "",
         "Character consistency rules: same child character across all pages, same age impression, same hairstyle, same face shape, same body proportions, same outfit unless the outfit rule says otherwise, keep the signature item when appropriate.",
         "If the child is seen from behind, in side view, or far away, preserve the same hairstyle, silhouette, outfit logic, and recognizable age impression.",
+        "Keep identity consistent, but change pose, camera angle, distance, action, background, and focal point according to this page.",
+        "Do not repeat the same pose or same framing from previous pages.",
+        "The child can appear from behind, side view, far away, or partially visible, as long as hairstyle, outfit, silhouette, and age impression remain recognizable.",
         styleBible ? `Style consistency: ${styleBible}` : "",
     ].filter(Boolean).join(" ");
     const compositionGuidance = [
+        getPageVisualRoleGuidance(pageVisualRole),
         `Composition variety: ${compositionHint}.`,
         "Avoid front-facing portrait composition unless the page genuinely needs it.",
         "Use a clear focal point with cinematic picture-book framing.",
@@ -238,10 +290,10 @@ function buildImagePrompt(basePrompt, style, characterBible, styleBible, options
         "Keep the scene rich but not cluttered.",
     ].join(" ");
     const motifGuidance = visualMotif
-        ? `Visual motif: include ${visualMotif} in a natural way on this page.`
-        : "Visual motif: if the story includes a recurring small motif, place it naturally in the scene.";
+        ? `Visual motif: include ${visualMotif} as a physical object, color motif, or shape cue in a natural way on this page, never as written text.`
+        : "Visual motif: if the story includes a recurring small motif, place it naturally in the scene as an object, color, or shape, never as written text.";
     const hiddenDetailGuidance = hiddenDetail
-        ? `Hidden detail: include this subtle background detail for children to notice: ${hiddenDetail}.`
+        ? `Hidden detail: include this subtle background detail for children to notice: ${hiddenDetail}. Keep it purely visual and never written as text.`
         : "Hidden detail: include one small child-friendly background detail that rewards careful looking.";
     const emotionGuidance = `Age-appropriate emotional expression: ${getEmotionalExpressionGuidance(ageBand)}`;
     return [
@@ -252,10 +304,11 @@ function buildImagePrompt(basePrompt, style, characterBible, styleBible, options
         hiddenDetailGuidance,
         emotionGuidance,
         `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
-        `Scene: ${basePrompt}`,
+        `Scene: ${sanitizedBasePrompt}`,
         IMAGE_STYLE_KEYWORDS[style],
         SAFETY_KEYWORDS,
-        "no text, no letters, no captions, no watermark, no readable signs",
+        "Use purely visual storytelling through characters, objects, colors, actions, and scenery.",
+        "wordless picture book illustration, no written text anywhere, no letters, no captions, no speech bubbles, no labels, no signage, no readable marks, no watermark. Use plain objects and unlabeled backgrounds.",
     ].join(", ");
 }
 function getStyleReferenceImagePath(style) {

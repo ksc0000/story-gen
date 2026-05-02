@@ -14,4 +14,6 @@
   - `cover_only`: 表紙または key image のみ
   - `key_pages`: 表紙、中盤〜後半の感情ピーク、最終ページ
   - `all_pages`: 全ページ
+- 現在の品質検証フェーズでは、主人公の揺らぎを減らすために `characterConsistencyMode` を全プランで `all_pages` に寄せています。
+- 原価最適化は後で `key_pages` / `cover_only` を再検討し、まずは全ページ参照画像で一貫性改善量を検証します。
 - 今回の品質改善はモデル切替ではなく、story quality gate により本文量・文数・絵本らしい構成を検査する方向で進めます。

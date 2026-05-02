@@ -127,6 +127,14 @@ function validateGeneratedStoryQuality(params) {
                 expected: ">= 30",
             });
         }
+        if (hasImagePromptTextRisk(story.pages[pageIndex].imagePrompt)) {
+            issues.push({
+                severity: "warning",
+                code: "image_prompt.text_risk",
+                message: "imagePrompt に文字描画を誘発する表現が含まれています。",
+                pageIndex,
+            });
+        }
     });
     const averageCharsPerPage = Math.round(perPageStats.reduce((sum, stats) => sum + stats.chars, 0) / pageCount);
     const averageSentencesPerPage = Number((perPageStats.reduce((sum, stats) => sum + stats.sentences, 0) / pageCount).toFixed(2));
@@ -243,6 +251,26 @@ function validateGeneratedStoryQuality(params) {
             minSentencesPerPage: threshold.minSentencesPerPage,
         },
     };
+}
+function hasImagePromptTextRisk(imagePrompt) {
+    const normalized = imagePrompt.toLowerCase();
+    if (/[「」『』]/.test(imagePrompt)) {
+        return true;
+    }
+    return [
+        "text:",
+        "caption",
+        "speech bubble",
+        "label",
+        "sign",
+        "letters",
+        "written",
+        "writing",
+        "title on",
+        "words",
+        "quote",
+        "phrase",
+    ].some((token) => normalized.includes(token));
 }
 function toFirestoreStoryQualityReport(report) {
     return stripUndefinedDeep(report);
