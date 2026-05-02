@@ -1,5 +1,11 @@
 import type { Functions, HttpsCallable } from "firebase/functions";
-import type { AvatarRevisionRequest, IllustrationStyle, ImagePurpose, ImageQualityTier } from "@/lib/types";
+import type {
+  AvatarRevisionRequest,
+  IllustrationStyle,
+  ImageModelProfile,
+  ImagePurpose,
+  ImageQualityTier,
+} from "@/lib/types";
 
 let cachedFunctions: Functions | null = null;
 
@@ -78,6 +84,7 @@ export type TestImageModelsRequest = {
   purpose?: ImagePurpose;
   inputImageUrls?: string[];
   qualityTiers?: ImageQualityTier[];
+  modelProfiles?: ImageModelProfile[];
 };
 
 export type TestImageModelsResult = {
@@ -85,7 +92,8 @@ export type TestImageModelsResult = {
   purpose: ImagePurpose;
   inputImageUrls: string[];
   results: Array<{
-    tier: ImageQualityTier;
+    tier?: ImageQualityTier;
+    modelProfile?: ImageModelProfile;
     model: string;
     imageUrl: string;
   }>;

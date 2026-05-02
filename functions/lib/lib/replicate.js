@@ -9,25 +9,53 @@ exports.buildReplicateInput = buildReplicateInput;
 const replicate_1 = __importDefault(require("replicate"));
 // Legacy fallback only. Not used in normal generation.
 const LEGACY_FLUX_SCHNELL_MODEL = "black-forest-labs/flux-schnell";
-const FLUX_KLEIN_MODEL = "black-forest-labs/flux-2-klein-9b";
-const FLUX_QUALITY_MODEL = "black-forest-labs/flux-2-pro";
+const FLUX_KLEIN_FAST_MODEL = "black-forest-labs/flux-2-klein-9b";
+const FLUX_KLEIN_BASE_MODEL = "black-forest-labs/flux-2-klein-9b-base";
+const FLUX_PRO_MODEL = "black-forest-labs/flux-2-pro";
+const FLUX_KONTEXT_PRO_MODEL = "black-forest-labs/flux-kontext-pro";
+function shouldUseKleinBaseForStandard() {
+    return process.env.ENABLE_KLEIN_BASE === "true";
+}
+function resolveProfileModel(imageModelProfile) {
+    switch (imageModelProfile) {
+        case "klein_base":
+            return FLUX_KLEIN_BASE_MODEL;
+        case "pro_consistent":
+            return FLUX_PRO_MODEL;
+        case "kontext_reference":
+            return FLUX_KONTEXT_PRO_MODEL;
+        case "klein_fast":
+        default:
+            return FLUX_KLEIN_FAST_MODEL;
+    }
+}
 function resolveBookModelByTier(imageQualityTier) {
     const tier = imageQualityTier ?? "light";
     if (tier === "premium") {
-        return FLUX_QUALITY_MODEL;
+        return FLUX_PRO_MODEL;
     }
-    return FLUX_KLEIN_MODEL;
+    if (tier === "standard" && shouldUseKleinBaseForStandard()) {
+        return FLUX_KLEIN_BASE_MODEL;
+    }
+    return FLUX_KLEIN_FAST_MODEL;
 }
 function resolveReplicateModel(params) {
     switch (params.purpose) {
         case "child_avatar":
         case "child_avatar_revision":
-            return FLUX_QUALITY_MODEL;
+            return FLUX_PRO_MODEL;
         case "book_cover":
         case "memory_key_page":
-        case "book_page":
+        case "book_page": {
+            if (params.imageModelProfile) {
+                return resolveProfileModel(params.imageModelProfile);
+            }
             return resolveBookModelByTier(params.imageQualityTier);
+        }
         default: {
+            if (params.imageModelProfile) {
+                return resolveProfileModel(params.imageModelProfile);
+            }
             return resolveBookModelByTier(params.imageQualityTier);
         }
     }
@@ -42,19 +70,30 @@ function buildReplicateInput(params) {
             num_outputs: 1,
         };
     }
-    if (params.model === FLUX_KLEIN_MODEL) {
+    if (params.model === FLUX_KLEIN_FAST_MODEL ||
+        params.model === FLUX_KLEIN_BASE_MODEL) {
         return {
             prompt: params.prompt,
             aspect_ratio: "4:3",
             output_format: "png",
+            megapixels: "1",
+            go_fast: true,
             ...(dedupedInputImageUrls.length > 0 ? { images: dedupedInputImageUrls.slice(0, 5) } : {}),
+        };
+    }
+    if (params.model === FLUX_KONTEXT_PRO_MODEL) {
+        return {
+            prompt: params.prompt,
+            aspect_ratio: "4:3",
+            output_format: "png",
+            ...(dedupedInputImageUrls.length > 0 ? { input_image: dedupedInputImageUrls[0] } : {}),
         };
     }
     return {
         prompt: params.prompt,
         aspect_ratio: "4:3",
         output_format: "png",
-        ...(dedupedInputImageUrls.length > 0 ? { input_images: dedupedInputImageUrls.slice(0, 4) } : {}),
+        ...(dedupedInputImageUrls.length > 0 ? { input_images: dedupedInputImageUrls.slice(0, 8) } : {}),
     };
 }
 class ReplicateImageClient {
@@ -66,6 +105,7 @@ class ReplicateImageClient {
         const model = resolveReplicateModel({
             purpose: options?.purpose,
             imageQualityTier: options?.imageQualityTier,
+            imageModelProfile: options?.imageModelProfile,
         });
         const input = buildReplicateInput({
             model,

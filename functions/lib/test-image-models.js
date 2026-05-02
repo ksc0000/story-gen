@@ -59,11 +59,45 @@ exports.testImageModels = (0, https_1.onCall)({
     }
     const purpose = data.purpose ?? "book_page";
     const qualityTiers = (data.qualityTiers?.length ? data.qualityTiers : DEFAULT_TIERS).filter(Boolean);
+    const modelProfiles = (data.modelProfiles?.length ? data.modelProfiles : []).filter(Boolean);
     const inputImageUrls = [...new Set(data.inputImageUrls ?? [])].slice(0, 8);
     const imageClient = new replicate_1.ReplicateImageClient(replicateApiToken.value());
     const bucket = admin.storage().bucket("story-gen-8a769.firebasestorage.app");
     const batchId = (0, crypto_1.randomUUID)();
     const results = [];
+    if (modelProfiles.length > 0) {
+        const profilesToRun = modelProfiles.includes("kontext_reference")
+            ? modelProfiles
+            : modelProfiles.filter(Boolean);
+        for (const modelProfile of profilesToRun) {
+            const imageBuffer = await imageClient.generateImage(data.prompt, {
+                purpose,
+                imageModelProfile: modelProfile,
+                inputImageUrls,
+            });
+            const filename = `internal-tests/image-models/${batchId}/${modelProfile}.png`;
+            const token = (0, crypto_1.randomUUID)();
+            await bucket.file(filename).save(imageBuffer, {
+                contentType: "image/png",
+                metadata: {
+                    metadata: {
+                        firebaseStorageDownloadTokens: token,
+                    },
+                },
+            });
+            results.push({
+                modelProfile,
+                model: (0, replicate_1.resolveReplicateModel)({ purpose, imageModelProfile: modelProfile }),
+                imageUrl: `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${token}`,
+            });
+        }
+        return {
+            batchId,
+            purpose,
+            inputImageUrls,
+            results,
+        };
+    }
     for (const tier of qualityTiers) {
         const imageBuffer = await imageClient.generateImage(data.prompt, {
             purpose,

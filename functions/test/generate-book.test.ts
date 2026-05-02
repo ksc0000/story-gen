@@ -109,8 +109,9 @@ describe("processBookGeneration", () => {
     expect(deps.llmClient.generateStory).toHaveBeenCalledOnce();
     expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
     expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
-      expect.stringContaining("Character consistency"),
+      expect.stringContaining("Same child identity across all pages"),
       expect.objectContaining({
+        imageModelProfile: "klein_fast",
         inputImageUrls: expect.arrayContaining([
           "https://story-gen-8a769.web.app/images/styles/soft_watercolor.png",
           "https://story-gen-8a769.web.app/images/templates/animals.png",
@@ -130,8 +131,10 @@ describe("processBookGeneration", () => {
         imageQualityTier: "standard",
         imagePurpose: "book_cover",
         inputReferenceCount: expect.any(Number),
+        inputImageUrlsCount: expect.any(Number),
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
+        imageModelProfile: "klein_fast",
         pageVisualRole: "opening_establishing",
       })
     );
@@ -141,8 +144,10 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-klein-9b",
         imageQualityTier: "standard",
         imagePurpose: "book_page",
+        inputImageUrlsCount: expect.any(Number),
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
+        imageModelProfile: "klein_fast",
         pageVisualRole: "action",
       })
     );
@@ -635,16 +640,20 @@ describe("processBookGeneration", () => {
       expect.objectContaining({
         pageVisualRole: "opening_establishing",
         inputReferenceCount: expect.any(Number),
+        inputImageUrlsCount: expect.any(Number),
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
+        imageModelProfile: "klein_fast",
       })
     );
     expect(pageWrites[1]).toEqual(
       expect.objectContaining({
         pageVisualRole: "action",
         inputReferenceCount: expect.any(Number),
+        inputImageUrlsCount: expect.any(Number),
         usedCharacterReference: true,
         characterConsistencyMode: "all_pages",
+        imageModelProfile: "klein_fast",
       })
     );
   });

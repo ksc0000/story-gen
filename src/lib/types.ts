@@ -9,6 +9,11 @@ export type StoryCostLevel = "none" | "low" | "standard";
 export type ProductPlan = "free" | "light_paid" | "standard_paid" | "premium_paid";
 export type ImageQualityTier = "light" | "standard" | "premium";
 export type CharacterConsistencyMode = "cover_only" | "key_pages" | "all_pages";
+export type ImageModelProfile =
+  | "klein_fast"
+  | "klein_base"
+  | "pro_consistent"
+  | "kontext_reference";
 export type AgeBand =
   | "baby_toddler"
   | "preschool_3_4"
@@ -170,6 +175,7 @@ export interface BookDoc {
   productPlan?: ProductPlan;
   imageQualityTier?: ImageQualityTier;
   characterConsistencyMode?: CharacterConsistencyMode;
+  imageModelProfile?: ImageModelProfile;
   style: IllustrationStyle;
   pageCount: PageCount;
   status: BookStatus;
@@ -191,8 +197,10 @@ export interface PageDoc {
   imageQualityTier?: ImageQualityTier;
   imagePurpose?: ImagePurpose;
   inputReferenceCount?: number;
+  inputImageUrlsCount?: number;
   usedCharacterReference?: boolean;
   characterConsistencyMode?: CharacterConsistencyMode;
+  imageModelProfile?: ImageModelProfile;
   pageVisualRole?: PageVisualRole;
 }
 

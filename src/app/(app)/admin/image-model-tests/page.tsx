@@ -12,7 +12,7 @@ import {
   testImageModelsCallable,
   type TestImageModelsResult,
 } from "@/lib/functions";
-import type { ImagePurpose, ImageQualityTier } from "@/lib/types";
+import type { ImageModelProfile, ImagePurpose, ImageQualityTier } from "@/lib/types";
 
 const DEFAULT_PROMPT =
   "A warm Japanese children's picture book illustration of a preschool child playing in a quiet park sandbox, soft watercolor texture, gentle expression, safe and cozy mood, 4:3 composition, no text, no letters, no watermark.";
@@ -29,6 +29,16 @@ const QUALITY_TIER_OPTIONS: Array<{ value: ImageQualityTier; label: string }> = 
   { value: "light", label: "light" },
   { value: "standard", label: "standard" },
   { value: "premium", label: "premium" },
+];
+const MODEL_PROFILE_OPTIONS: Array<{
+  value: ImageModelProfile;
+  label: string;
+  disabled?: boolean;
+}> = [
+  { value: "klein_fast", label: "klein_fast" },
+  { value: "klein_base", label: "klein_base" },
+  { value: "pro_consistent", label: "pro_consistent" },
+  { value: "kontext_reference", label: "kontext_reference", disabled: true },
 ];
 
 const PRESET_PROMPTS = [
@@ -50,10 +60,24 @@ const PRESET_PROMPTS = [
 ];
 
 const RESULT_ORDER: ImageQualityTier[] = ["light", "standard", "premium"];
+const PROFILE_RESULT_ORDER: ImageModelProfile[] = [
+  "klein_fast",
+  "klein_base",
+  "pro_consistent",
+  "kontext_reference",
+];
 
 function sortResults(results: TestImageModelsResult["results"]) {
   return [...results].sort(
-    (a, b) => RESULT_ORDER.indexOf(a.tier) - RESULT_ORDER.indexOf(b.tier)
+    (a, b) => {
+      const aKey = a.tier
+        ? RESULT_ORDER.indexOf(a.tier)
+        : PROFILE_RESULT_ORDER.indexOf(a.modelProfile ?? "klein_fast");
+      const bKey = b.tier
+        ? RESULT_ORDER.indexOf(b.tier)
+        : PROFILE_RESULT_ORDER.indexOf(b.modelProfile ?? "klein_fast");
+      return aKey - bKey;
+    }
   );
 }
 
@@ -67,6 +91,14 @@ export default function AdminImageModelTestsPage() {
     "light",
     "standard",
     "premium",
+  ]);
+  const [compareMode, setCompareMode] = useState<"qualityTiers" | "modelProfiles">(
+    "qualityTiers"
+  );
+  const [selectedModelProfiles, setSelectedModelProfiles] = useState<ImageModelProfile[]>([
+    "klein_fast",
+    "klein_base",
+    "pro_consistent",
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,13 +125,22 @@ export default function AdminImageModelTestsPage() {
     isAdmin &&
     !submitting &&
     prompt.trim().length > 0 &&
-    selectedTiers.length > 0;
+    (compareMode === "qualityTiers"
+      ? selectedTiers.length > 0
+      : selectedModelProfiles.length > 0);
 
   const handleToggleTier = (tier: ImageQualityTier) => {
     setSelectedTiers((current) =>
       current.includes(tier)
         ? current.filter((item) => item !== tier)
         : [...current, tier]
+    );
+  };
+  const handleToggleModelProfile = (profile: ImageModelProfile) => {
+    setSelectedModelProfiles((current) =>
+      current.includes(profile)
+        ? current.filter((item) => item !== profile)
+        : [...current, profile]
     );
   };
 
@@ -115,7 +156,8 @@ export default function AdminImageModelTestsPage() {
         prompt: prompt.trim(),
         purpose,
         inputImageUrls,
-        qualityTiers: selectedTiers,
+        qualityTiers: compareMode === "qualityTiers" ? selectedTiers : undefined,
+        modelProfiles: compareMode === "modelProfiles" ? selectedModelProfiles : undefined,
       });
       setResult({
         ...nextResult,
@@ -233,6 +275,28 @@ export default function AdminImageModelTestsPage() {
               </div>
 
               <div className="space-y-2">
+                <Label className="text-purple-800">比較モード</Label>
+                <div className="flex flex-wrap gap-3">
+                  <label className="flex items-center gap-2 rounded-full border border-[rgba(240,171,252,0.3)] px-4 py-2 text-sm text-violet-700">
+                    <input
+                      type="radio"
+                      checked={compareMode === "qualityTiers"}
+                      onChange={() => setCompareMode("qualityTiers")}
+                    />
+                    quality tiers
+                  </label>
+                  <label className="flex items-center gap-2 rounded-full border border-[rgba(240,171,252,0.3)] px-4 py-2 text-sm text-violet-700">
+                    <input
+                      type="radio"
+                      checked={compareMode === "modelProfiles"}
+                      onChange={() => setCompareMode("modelProfiles")}
+                    />
+                    model profiles
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label className="text-purple-800">quality tiers</Label>
                 <div className="flex flex-wrap gap-3">
                   {QUALITY_TIER_OPTIONS.map((option) => (
@@ -244,8 +308,33 @@ export default function AdminImageModelTestsPage() {
                         type="checkbox"
                         checked={selectedTiers.includes(option.value)}
                         onChange={() => handleToggleTier(option.value)}
+                        disabled={compareMode !== "qualityTiers"}
                       />
                       {option.label}
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs leading-relaxed text-violet-500">
+                  現在、light と standard はどちらも flux-2-klein-9b を使用します。premium は flux-2-pro を使用します。
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-purple-800">model profiles</Label>
+                <div className="flex flex-wrap gap-3">
+                  {MODEL_PROFILE_OPTIONS.map((option) => (
+                    <label
+                      key={option.value}
+                      className="flex items-center gap-2 rounded-full border border-[rgba(240,171,252,0.3)] px-4 py-2 text-sm text-violet-700"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedModelProfiles.includes(option.value)}
+                        onChange={() => handleToggleModelProfile(option.value)}
+                        disabled={compareMode !== "modelProfiles" || option.disabled}
+                      />
+                      {option.label}
+                      {option.disabled ? " (準備中)" : ""}
                     </label>
                   ))}
                 </div>
@@ -264,7 +353,7 @@ export default function AdminImageModelTestsPage() {
                   className="w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-4 py-3 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
                 />
                 <p className="text-xs leading-relaxed text-violet-500">
-                  参照画像URLを1行ずつ入力できます。book_page + light では参照画像は使われません。standard/premium や child系の検証で使います。
+                  参照画像URLを1行ずつ入力できます。book_page では model profile や quality tier に応じて参照画像の効き方を比較できます。
                 </p>
                 <p className="text-xs text-violet-400">現在の対象件数: {inputImageUrls.length}件</p>
               </div>
@@ -281,6 +370,7 @@ export default function AdminImageModelTestsPage() {
                 </Button>
                 <div className="space-y-1 text-xs leading-relaxed text-violet-500">
                   <p>この画面は管理者向けの検証用です。実行すると実際にReplicate APIを呼び出し、画像生成コストが発生します。</p>
+                  <p>book_page / book_cover / memory_key_page は quality tier に応じて flux-2-klein-9b または flux-2-pro を使います。child_avatar 系は常に flux-2-pro です。</p>
                   <p>現在、light と standard はどちらも flux-2-klein-9b を使用します。premium は flux-2-pro を使用します。</p>
                 </div>
               </div>
@@ -310,10 +400,15 @@ export default function AdminImageModelTestsPage() {
 
           <div className="grid gap-4 md:grid-cols-3">
             {result.results.map((item) => (
-              <Card key={`${result.batchId}-${item.tier}`} className="overflow-hidden">
+              <Card
+                key={`${result.batchId}-${item.tier ?? item.modelProfile ?? item.model}`}
+                className="overflow-hidden"
+              >
                 <CardContent className="space-y-4 p-4">
                   <div>
-                    <p className="text-sm font-semibold text-purple-900">{item.tier}</p>
+                    <p className="text-sm font-semibold text-purple-900">
+                      {item.modelProfile ?? item.tier}
+                    </p>
                     <p className="mt-1 break-all text-xs text-violet-500">{item.model}</p>
                   </div>
                   {/* eslint-disable-next-line @next/next/no-img-element */}

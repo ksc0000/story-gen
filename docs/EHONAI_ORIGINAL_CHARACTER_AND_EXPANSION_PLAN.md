@@ -632,6 +632,12 @@ Character Bible:
 - 既存の有名キャラクターに似せない
 ```
 
+補足:
+
+- Gemini は 1ページずつではなく **絵本1冊分の story JSON をまとめて生成** する
+- ページ間の見た目の揺らぎは主に画像生成側で起きるため、将来的な `originalCharacters` / 相棒キャラでも **全ページ参照画像 (`all_pages`)** を選べる構造を前提にする
+- `characterBible` / `approvedImageUrl` / `referenceImageUrl` / `characterConsistencyMode` は、子ども主人公とオリジナル相棒の両方に共通で使える一貫性ルールとして設計する
+
 ---
 
 # 11. キャラクター案生成フォーマット
