@@ -5,6 +5,9 @@ import type {
   PageCount,
   AgeBand,
   PageVisualRole,
+  ImageModelProfile,
+  ImageQualityTier,
+  StoryCharacter,
 } from "./types";
 import type { AgeReadingProfile } from "./age-reading-profile";
 import type { StoryQualityReport } from "./story-quality";
@@ -80,6 +83,32 @@ const STORY_QUALITY_RULES = [
   "Use gentle humor, discovery, or emotional change.",
   "Keep the child protagonist visually consistent.",
 ].join(" ");
+
+const JAPANESE_STORY_TEXT_RULES = [
+  "pages[].text は、画像プロンプトではなく、親が読み聞かせる本文です。",
+  "3歳以上では、単なる音遊びや擬音の羅列にしないでください。",
+  "すべてのページに「場所」「行動」「気持ち」または「発見」のうち2つ以上を自然に含めてください。",
+  "意味の通らない造語を使わないでください。",
+  "「おもしろい こえ」「ふわふわ ふわりん」のような曖昧で説明不足な文を避けてください。",
+  "擬音は1ページにつき最大1〜2個までにしてください。",
+  "くり返し表現は、毎回少し物語が進む形で使ってください。",
+  "3歳向けでも、1ページ2〜4文を基本にしてください。",
+  "文章はやさしいが、内容は幼稚にしすぎないでください。",
+  "情景描写を1文以上入れてください。",
+  "子どもの行動または感情を1文以上入れてください。",
+  "日本語として自然な文にしてください。",
+  "ひらがなを多めにしても、意味が曖昧になりすぎないようにしてください。",
+  "説明文ではなく、絵本らしい語り口にしてください。",
+].join(" ");
+
+const BAD_TEXT_EXAMPLE =
+  "ころころ こりころ。まきまき まきば。まきまき むすんで、ふしぎな じゅうたん。";
+const GOOD_TEXT_EXAMPLE = [
+  "すなばの すみに、あかい スコップが ちょこんと ありました。",
+  "〇〇ちゃんが すなを まるく あつめると、ふしぎな もようが できました。",
+  "『これ、じゅうたんみたい』",
+  "そのとき、さらさらの すなが 小さく ひかりました。",
+].join("\n");
 
 function getDefaultCompositionHint(pageNumber?: number): string {
   switch (pageNumber) {
@@ -233,6 +262,17 @@ ${ageReadingGuidance}
 - 年齢が高い場合は、少しだけ理由、選択、気持ちの変化を含めてください。
 - ただし、どの年齢でも説教臭くせず、絵本として自然な文章にしてください。
 - 各ページの本文量は対象年齢の目安を大きく超えないでください。
+- Japanese story text rules: ${JAPANESE_STORY_TEXT_RULES}
+- 悪い例: 「${BAD_TEXT_EXAMPLE}」
+- 理由: 意味が通りにくく、情景や行動が不足している。
+- 良い例:
+${GOOD_TEXT_EXAMPLE}
+- 主要な登場人物は cast に定義してください。
+- 子ども主人公以外に、相棒、魔法キャラ、動物キャラ、第三者キャラが出る場合は必ず cast に入れてください。
+- 同じ存在として再登場するキャラクターは、毎ページ新しく作らず、同じ characterId を使ってください。
+- 各キャラクターには visualBible / signatureItems / doNotChange を持たせてください。
+- pages[].appearingCharacterIds には、そのページに出る characterId を入れてください。
+- pages[].focusCharacterId には、そのページの主役になる characterId を入れてください。
 
 ## 出力形式
 以下のJSON形式で出力してください。JSON以外のテキストは含めないでください。
@@ -242,6 +282,23 @@ ${ageReadingGuidance}
   "title": "絵本のタイトル",
   "characterBible": "Consistent English character design description used for every illustration",
   "styleBible": "Consistent English visual style guide used for every illustration",
+  "cast": [
+    {
+      "characterId": "magic_friend_01",
+      "displayName": "ひかりの ともだち",
+      "role": "magical_friend",
+      "visualBible": "A small glowing golden spirit child with translucent body, flowing blonde hair, tiny purple top hat, gold star necklace, warm green eyes, sparkling magical aura.",
+      "silhouette": "floating translucent body with smoke-like tail and flowing hair",
+      "colorPalette": ["gold", "cream", "soft purple", "warm white"],
+      "signatureItems": ["tiny purple top hat", "gold star necklace", "sparkling golden aura"],
+      "doNotChange": [
+        "Do not remove the tiny purple top hat",
+        "Do not change the glowing translucent body",
+        "Do not change the gold star necklace"
+      ],
+      "canChangeByScene": ["pose", "facial expression", "camera angle"]
+    }
+  ],
   "narrativeDevice": {
     "repeatedPhrase": "A short memorable repeated phrase",
     "visualMotif": "A recurring visual motif such as a yellow star or red backpack",
@@ -256,7 +313,9 @@ ${ageReadingGuidance}
       "pageVisualRole": "opening_establishing",
       "compositionHint": "wide establishing shot / medium action shot / close-up / back view / object-focused shot",
       "visualMotifUsage": "How the recurring visual motif appears on this page",
-      "hiddenDetail": "One small background detail children can notice"
+      "hiddenDetail": "One small background detail children can notice",
+      "appearingCharacterIds": ["child_protagonist", "magic_friend_01"],
+      "focusCharacterId": "magic_friend_01"
     }
   ]
 }
@@ -298,6 +357,11 @@ export function buildImagePrompt(
     visualMotifUsage?: string;
     hiddenDetail?: string;
     ageBand?: AgeBand;
+    imageModelProfile?: ImageModelProfile;
+    imageQualityTier?: ImageQualityTier;
+    cast?: StoryCharacter[];
+    appearingCharacterIds?: string[];
+    focusCharacterId?: string;
   }
 ): string {
   const compositionHint = sanitizeImagePromptText(
@@ -307,7 +371,11 @@ export function buildImagePrompt(
   const visualMotif = sanitizeImagePromptText(options?.visualMotifUsage || options?.visualMotif || "");
   const hiddenDetail = sanitizeImagePromptText(options?.hiddenDetail || "");
   const ageBand = options?.ageBand;
+  const imageModelProfile = options?.imageModelProfile;
   const sanitizedBasePrompt = sanitizeImagePromptText(basePrompt);
+  const appearingCharacters = (options?.cast ?? []).filter((character) =>
+    options?.appearingCharacterIds?.includes(character.characterId)
+  );
   const consistency = [
     characterBible ? `Character consistency: ${characterBible}` : "",
     "Character consistency rules: same child character across all pages, same age impression, same hairstyle, same face shape, same body proportions, same outfit unless the outfit rule says otherwise, keep the signature item when appropriate.",
@@ -338,13 +406,59 @@ export function buildImagePrompt(
     ? `Hidden detail: include this subtle background detail for children to notice: ${hiddenDetail}. Keep it purely visual and never written as text.`
     : "Hidden detail: include one small child-friendly background detail that rewards careful looking.";
   const emotionGuidance = `Age-appropriate emotional expression: ${getEmotionalExpressionGuidance(ageBand)}`;
+  const castGuidance = appearingCharacters.length
+    ? [
+        options?.focusCharacterId
+          ? `Focus character: ${options.focusCharacterId}.`
+          : "",
+        ...appearingCharacters.map((character) =>
+          [
+            `Recurring character consistency: ${character.characterId} is the same character whenever it appears.`,
+            character.visualBible,
+            character.signatureItems?.length
+              ? `Keep signature items: ${character.signatureItems.join(", ")}.`
+              : "",
+            character.doNotChange?.length
+              ? `Do not change: ${character.doNotChange.join("; ")}.`
+              : "",
+            character.colorPalette?.length
+              ? `Color palette: ${character.colorPalette.join(", ")}.`
+              : "",
+            character.silhouette
+              ? `Preserve silhouette: ${character.silhouette}.`
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ")
+        ),
+        "Do not redesign recurring characters. Do not merge characters. Do not turn one character into another.",
+        "If a recurring character appears from behind, far away, or partially visible, preserve silhouette and signature items.",
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : "";
+  const modelSpecificGuidance =
+    imageModelProfile === "pro_consistent" || imageModelProfile === "kontext_reference"
+      ? [
+          backgroundGuidance,
+          motifGuidance,
+          hiddenDetailGuidance,
+          "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, unreadable text, and over-detailed busy backgrounds.",
+        ].join(" ")
+      : [
+          "Keep the prompt simple and clear for the image model.",
+          backgroundGuidance,
+          visualMotif
+            ? `Include only one recurring motif: ${visualMotif}.`
+            : "At most one recurring motif or one hidden detail.",
+          "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, unreadable text, and cluttered backgrounds.",
+        ].join(" ");
 
   return [
     consistency,
+    castGuidance,
     compositionGuidance,
-    backgroundGuidance,
-    motifGuidance,
-    hiddenDetailGuidance,
+    modelSpecificGuidance,
     emotionGuidance,
     `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
     `Scene: ${sanitizedBasePrompt}`,

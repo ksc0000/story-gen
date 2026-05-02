@@ -3,6 +3,7 @@ import type {
   AgeBand,
   CreationMode,
   StoryQualityReportData,
+  StoryCharacter,
 } from "./types";
 import type { AgeReadingProfile } from "./age-reading-profile";
 
@@ -99,6 +100,12 @@ export function validateGeneratedStoryQuality(params: {
   const threshold = STORY_QUALITY_THRESHOLDS[readingProfile.ageBand];
   const issues: StoryQualityIssue[] = [];
   const pageCount = story.pages.length;
+  const recurringCastIds = new Map<string, number>();
+  for (const page of story.pages) {
+    for (const characterId of page.appearingCharacterIds ?? []) {
+      recurringCastIds.set(characterId, (recurringCastIds.get(characterId) ?? 0) + 1);
+    }
+  }
 
   if (pageCount === 0) {
     return {
@@ -182,6 +189,50 @@ export function validateGeneratedStoryQuality(params: {
         message: "imagePrompt に文字描画を誘発する表現が含まれています。",
         pageIndex,
       });
+    }
+
+    if (readingProfile.ageBand !== "baby_toddler") {
+      const heuristics = analyzeJapaneseTextHeuristics(story.pages[pageIndex].text);
+      if (heuristics.tooManySoundWords) {
+        issues.push({
+          severity: readingProfile.ageBand === "preschool_3_4" ? "error" : "warning",
+          code: "too_many_sound_words",
+          message: "擬音や音遊びが多すぎて、物語としての読みごたえが弱くなっています。",
+          pageIndex,
+        });
+      }
+      if (heuristics.textTooChildish) {
+        issues.push({
+          severity: readingProfile.ageBand === "preschool_3_4" ? "error" : "warning",
+          code: "text_too_childish",
+          message: "本文が音遊びに寄りすぎており、意味の通る物語文としては弱い可能性があります。",
+          pageIndex,
+        });
+      }
+      if (heuristics.missingSceneDetail) {
+        issues.push({
+          severity: "warning",
+          code: "missing_scene_detail",
+          message: "場所や情景を示す情報が少なく、場面が想像しにくい可能性があります。",
+          pageIndex,
+        });
+      }
+      if (heuristics.missingActionOrEmotion) {
+        issues.push({
+          severity: "warning",
+          code: "missing_action_or_emotion",
+          message: "行動または感情の情報が少なく、物語の動きが弱い可能性があります。",
+          pageIndex,
+        });
+      }
+      if (heuristics.unnaturalJapaneseRisk) {
+        issues.push({
+          severity: "warning",
+          code: "unnatural_japanese_risk",
+          message: "不自然な造語や同音反復が多く、日本語として読みづらい可能性があります。",
+          pageIndex,
+        });
+      }
     }
   });
 
@@ -300,6 +351,12 @@ export function validateGeneratedStoryQuality(params: {
     }
   }
 
+  addCastConsistencyIssues({
+    story,
+    issues,
+    recurringCastIds,
+  });
+
   return {
     ok: !issues.some((issue) => issue.severity === "error"),
     issues,
@@ -333,6 +390,101 @@ function hasImagePromptTextRisk(imagePrompt: string): boolean {
     "quote",
     "phrase",
   ].some((token) => normalized.includes(token));
+}
+
+type JapaneseTextHeuristics = {
+  tooManySoundWords: boolean;
+  textTooChildish: boolean;
+  missingSceneDetail: boolean;
+  missingActionOrEmotion: boolean;
+  unnaturalJapaneseRisk: boolean;
+};
+
+function analyzeJapaneseTextHeuristics(text: string): JapaneseTextHeuristics {
+  const normalized = text.replace(/\s+/g, "");
+  const commonSoundWords = normalized.match(
+    /(ころころ|わくわく|どきどき|きらきら|ふわふわ|さらさら|ぴかぴか|ぐるぐる|ごろごろ|ぺたぺた|しゃかしゃか|こしこし|にこにこ)/g
+  ) ?? [];
+  const placeWords = /(おへや|へや|まど|そら|こうえん|もり|みち|すなば|うみ|かわ|やま|にわ|キッチン|テーブル|ベッド|どうぶつえん|みずうみ|くも)/;
+  const actionWords = /(ある|はし|みつけ|あつめ|つく|のぼ|すべ|ひろ|みつめ|さわ|のぞ|えら|あけ|もっ|ぎゅっ|ふり|わら|みた|きい|のった|とんだ|ひらいた|ひろが|ならべ|おいた|みせた|つたえ|かんがえ|みつめた)/;
+  const emotionOrDiscoveryWords = /(うれ|かなし|ほっ|びっくり|わくわく|どきどき|にっこり|わら|えがお|みつけ|きづ|ふしぎ|あんしん|こわ|たのし)/;
+  const coinedPatterns = /(こりころ|ふわりん|ころころこりころ|まきまきまきば|ぴかりん|きらりん)/;
+  const hiraganaRatio = normalized.length > 0
+    ? ((normalized.match(/[ぁ-ん]/g) ?? []).length / normalized.length)
+    : 0;
+
+  return {
+    tooManySoundWords: commonSoundWords.length >= 3,
+    textTooChildish: (commonSoundWords.length >= 2 && countJapaneseTextChars(text) < 80) || coinedPatterns.test(text),
+    missingSceneDetail: !placeWords.test(text),
+    missingActionOrEmotion: !(actionWords.test(text) || emotionOrDiscoveryWords.test(text)),
+    unnaturalJapaneseRisk: coinedPatterns.test(text) || (hiraganaRatio > 0.92 && commonSoundWords.length >= 2),
+  };
+}
+
+function addCastConsistencyIssues(params: {
+  story: GeneratedStory;
+  issues: StoryQualityIssue[];
+  recurringCastIds: Map<string, number>;
+}): void {
+  const cast = params.story.cast ?? [];
+  const castIds = new Set(cast.map((character) => character.characterId));
+  const recurringCharacterHints = params.story.pages.filter((page) =>
+    /buddy|friend|animal|magical/i.test(page.imagePrompt)
+  ).length;
+
+  if (cast.length === 0 && recurringCharacterHints >= 2) {
+    params.issues.push({
+      severity: "warning",
+      code: "cast_missing_for_recurring_character",
+      message: "繰り返し登場しそうな相棒・動物・魔法キャラがあるのに cast が定義されていません。",
+    });
+  }
+
+  for (const [characterId, count] of params.recurringCastIds.entries()) {
+    if (characterId === "child_protagonist") {
+      continue;
+    }
+    if (!castIds.has(characterId)) {
+      params.issues.push({
+        severity: "warning",
+        code: "cast_unknown_character_id",
+        message: "pages[].appearingCharacterIds に cast 未定義の characterId があります。",
+        actual: characterId,
+        expected: "cast に同じ characterId を定義",
+      });
+    }
+
+    if (count >= 2) {
+      const character = cast.find((entry) => entry.characterId === characterId);
+      if (character && (!character.visualBible || (!character.signatureItems?.length && !character.doNotChange?.length))) {
+        params.issues.push({
+          severity: "warning",
+          code: "cast_missing_identity_anchors",
+          message: "繰り返し登場するキャラクターに visualBible / signatureItems / doNotChange が不足しています。",
+          actual: characterId,
+        });
+      }
+    }
+  }
+
+  const normalizedNames = new Map<string, StoryCharacter[]>();
+  for (const character of cast) {
+    const key = character.displayName.replace(/\s+/g, "").toLowerCase();
+    const existing = normalizedNames.get(key) ?? [];
+    existing.push(character);
+    normalizedNames.set(key, existing);
+  }
+  for (const characters of normalizedNames.values()) {
+    const uniqueIds = new Set(characters.map((character) => character.characterId));
+    if (characters.length > 1 && uniqueIds.size > 1) {
+      params.issues.push({
+        severity: "warning",
+        code: "cast_duplicate_like_character",
+        message: "似た displayName のキャラクターが複数の characterId で作られています。",
+      });
+    }
+  }
 }
 
 export function toFirestoreStoryQualityReport(report: StoryQualityReport): StoryQualityReportData {

@@ -185,11 +185,19 @@ async function processBookGeneration(bookId, bookData, deps) {
             throw err;
         }
         const { story, qualityReport } = storyResult;
-        if (story.storyModel || story.storyModelFallbackUsed !== undefined || story.storyGenerationAttempts !== undefined) {
+        if (story.storyModel ||
+            story.storyModelFallbackUsed !== undefined ||
+            story.storyGenerationAttempts !== undefined ||
+            storyResult.rewriteMetadata ||
+            story.cast) {
             await deps.updateBookStoryGenerationMetadata(bookId, {
                 storyModel: story.storyModel,
                 storyModelFallbackUsed: story.storyModelFallbackUsed,
                 storyGenerationAttempts: story.storyGenerationAttempts,
+                storyTextRewriteUsed: storyResult.rewriteMetadata?.storyTextRewriteUsed,
+                storyTextRewriteModel: storyResult.rewriteMetadata?.storyTextRewriteModel,
+                storyTextRewriteAttempts: storyResult.rewriteMetadata?.storyTextRewriteAttempts,
+                storyCast: story.cast,
             });
         }
         await deps.updateBookStoryQualityReport(bookId, (0, story_quality_1.toFirestoreStoryQualityReport)(qualityReport));
@@ -231,6 +239,11 @@ async function processBookGeneration(bookId, bookData, deps) {
                 visualMotifUsage: storyPage.visualMotifUsage,
                 hiddenDetail: storyPage.hiddenDetail ?? story.narrativeDevice?.hiddenDetails?.[i],
                 ageBand: readingProfile.ageBand,
+                imageModelProfile: normalizedBookData.imageModelProfile,
+                imageQualityTier: normalizedBookData.imageQualityTier,
+                cast: story.cast,
+                appearingCharacterIds: storyPage.appearingCharacterIds,
+                focusCharacterId: storyPage.focusCharacterId,
             });
             // Generate image with retries (skip in development)
             let imageBuffer = null;
@@ -253,7 +266,9 @@ async function processBookGeneration(bookId, bookData, deps) {
                 imagePurpose,
                 characterConsistencyMode: normalizedBookData.characterConsistencyMode,
             });
-            const inputImageUrls = shouldUseReference ? coverReferenceImageUrls : [];
+            const inputImageUrls = shouldUseReference
+                ? buildPageReferenceImageUrls(coverReferenceImageUrls, story.cast, storyPage.appearingCharacterIds)
+                : [];
             // Skip image generation in development to avoid API costs
             if (process.env.NODE_ENV === 'development') {
                 console.log(`Skipping image generation for page ${i} in development mode`);
@@ -293,6 +308,9 @@ async function processBookGeneration(bookId, bookData, deps) {
                                 text: storyPage.text,
                                 imageUrl: "",
                                 imagePrompt,
+                                textCharCount: (0, story_quality_1.countJapaneseTextChars)(storyPage.text),
+                                textSentenceCount: (0, story_quality_1.countSentences)(storyPage.text),
+                                textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
                                 status: "failed",
                                 imageModel,
                                 imageQualityTier,
@@ -303,6 +321,8 @@ async function processBookGeneration(bookId, bookData, deps) {
                                 characterConsistencyMode: normalizedBookData.characterConsistencyMode,
                                 imageModelProfile,
                                 pageVisualRole: storyPage.pageVisualRole,
+                                appearingCharacterIds: storyPage.appearingCharacterIds,
+                                focusCharacterId: storyPage.focusCharacterId,
                             });
                             await deps.updateBookFailure(bookId, `画像生成に失敗しました（${message}）`);
                             await deps.updateBookFailureMetadata(bookId, {
@@ -325,6 +345,9 @@ async function processBookGeneration(bookId, bookData, deps) {
                 text: storyPage.text,
                 imageUrl,
                 imagePrompt,
+                textCharCount: (0, story_quality_1.countJapaneseTextChars)(storyPage.text),
+                textSentenceCount: (0, story_quality_1.countSentences)(storyPage.text),
+                textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
                 status: "completed",
                 imageModel,
                 imageQualityTier,
@@ -335,6 +358,8 @@ async function processBookGeneration(bookId, bookData, deps) {
                 characterConsistencyMode: normalizedBookData.characterConsistencyMode,
                 imageModelProfile,
                 pageVisualRole: storyPage.pageVisualRole,
+                appearingCharacterIds: storyPage.appearingCharacterIds,
+                focusCharacterId: storyPage.focusCharacterId,
             };
             await deps.writePage(bookId, pageData);
             if (i === 0 && imageUrl) {
@@ -417,8 +442,39 @@ function buildReferenceImageUrls(style, template, childProfileSnapshot) {
         .map(toPublicUrl);
     return [...new Set(urls)];
 }
+function buildPageReferenceImageUrls(baseReferenceImageUrls, cast, appearingCharacterIds) {
+    const castUrls = (cast ?? [])
+        .filter((character) => appearingCharacterIds?.includes(character.characterId))
+        .flatMap((character) => [character.approvedImageUrl, character.referenceImageUrl])
+        .filter((value) => Boolean(value))
+        .map(toPublicUrl);
+    return [...new Set([...baseReferenceImageUrls, ...castUrls])].slice(0, 8);
+}
+function collectPageTextQualityWarnings(report, pageIndex) {
+    return report.issues
+        .filter((issue) => issue.pageIndex === pageIndex && issue.severity === "warning")
+        .map((issue) => issue.code);
+}
+function shouldRewriteStoryText(bookData, report) {
+    if (bookData.productPlan === "premium_paid" || bookData.creationMode === "original_ai") {
+        return true;
+    }
+    return report.issues.some((issue) => [
+        "text_too_childish",
+        "too_many_sound_words",
+        "missing_scene_detail",
+        "missing_action_or_emotion",
+        "unnatural_japanese_risk",
+    ].includes(issue.code));
+}
 async function generateStoryWithQualityGate(params) {
     const baseSystemPrompt = (0, prompt_builder_1.buildSystemPrompt)(params.template, params.normalizedBookData.style, params.readingProfile);
+    const storyModelCandidates = (0, gemini_1.resolveStoryModelCandidates)({
+        productPlan: params.normalizedBookData.productPlan,
+        creationMode: params.normalizedBookData.creationMode,
+        theme: params.normalizedBookData.theme,
+        categoryGroupId: params.template.categoryGroupId,
+    });
     let story = await params.llmClient.generateStory({
         systemPrompt: baseSystemPrompt,
         childName: params.mergedInput.childName,
@@ -436,14 +492,49 @@ async function generateStoryWithQualityGate(params) {
         storyRequest: params.mergedInput.storyRequest,
         pageCount: params.normalizedBookData.pageCount,
         style: params.normalizedBookData.style,
+        productPlan: params.normalizedBookData.productPlan,
+        creationMode: params.normalizedBookData.creationMode,
+        theme: params.normalizedBookData.theme,
+        categoryGroupId: params.template.categoryGroupId,
+        storyModelCandidates,
     });
     let qualityReport = (0, story_quality_1.validateGeneratedStoryQuality)({
         story,
         readingProfile: params.readingProfile,
         creationMode: params.normalizedBookData.creationMode,
     });
+    let rewriteMetadata;
+    if (params.llmClient.rewriteStoryText && shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
+        const rewritten = await params.llmClient.rewriteStoryText({
+            story,
+            systemPrompt: baseSystemPrompt,
+            childName: params.mergedInput.childName,
+            childAge: params.mergedInput.childAge,
+            style: params.normalizedBookData.style,
+            productPlan: params.normalizedBookData.productPlan,
+            creationMode: params.normalizedBookData.creationMode,
+            storyModelCandidates,
+        });
+        story = {
+            ...story,
+            pages: story.pages.map((page, index) => ({
+                ...page,
+                text: rewritten.pages[index]?.text ?? page.text,
+            })),
+        };
+        rewriteMetadata = {
+            storyTextRewriteUsed: true,
+            storyTextRewriteModel: rewritten.storyTextRewriteModel,
+            storyTextRewriteAttempts: rewritten.storyTextRewriteAttempts,
+        };
+        qualityReport = (0, story_quality_1.validateGeneratedStoryQuality)({
+            story,
+            readingProfile: params.readingProfile,
+            creationMode: params.normalizedBookData.creationMode,
+        });
+    }
     if (qualityReport.ok) {
-        return { story, qualityReport };
+        return { story, qualityReport, rewriteMetadata };
     }
     story = await params.llmClient.generateStory({
         systemPrompt: (0, prompt_builder_1.appendQualityRetryInstruction)(baseSystemPrompt, qualityReport),
@@ -462,13 +553,42 @@ async function generateStoryWithQualityGate(params) {
         storyRequest: params.mergedInput.storyRequest,
         pageCount: params.normalizedBookData.pageCount,
         style: params.normalizedBookData.style,
+        productPlan: params.normalizedBookData.productPlan,
+        creationMode: params.normalizedBookData.creationMode,
+        theme: params.normalizedBookData.theme,
+        categoryGroupId: params.template.categoryGroupId,
+        storyModelCandidates,
     });
+    if (params.llmClient.rewriteStoryText && shouldRewriteStoryText(params.normalizedBookData, qualityReport)) {
+        const rewritten = await params.llmClient.rewriteStoryText({
+            story,
+            systemPrompt: baseSystemPrompt,
+            childName: params.mergedInput.childName,
+            childAge: params.mergedInput.childAge,
+            style: params.normalizedBookData.style,
+            productPlan: params.normalizedBookData.productPlan,
+            creationMode: params.normalizedBookData.creationMode,
+            storyModelCandidates,
+        });
+        story = {
+            ...story,
+            pages: story.pages.map((page, index) => ({
+                ...page,
+                text: rewritten.pages[index]?.text ?? page.text,
+            })),
+        };
+        rewriteMetadata = {
+            storyTextRewriteUsed: true,
+            storyTextRewriteModel: rewritten.storyTextRewriteModel,
+            storyTextRewriteAttempts: (rewriteMetadata?.storyTextRewriteAttempts ?? 0) + (rewritten.storyTextRewriteAttempts ?? 0),
+        };
+    }
     qualityReport = (0, story_quality_1.validateGeneratedStoryQuality)({
         story,
         readingProfile: params.readingProfile,
         creationMode: params.normalizedBookData.creationMode,
     });
-    return { story, qualityReport };
+    return { story, qualityReport, rewriteMetadata };
 }
 function generateFixedTemplateStoryWithQualityReport(fixedStory, mergedInput, bookData, template, readingProfile) {
     const story = buildStoryFromFixedTemplate(fixedStory, mergedInput, bookData, template, readingProfile);

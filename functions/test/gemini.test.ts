@@ -7,6 +7,7 @@ describe("GeminiClient", () => {
   let normalizePageVisualRole: any;
   let defaultPageVisualRole: any;
   let GeminiServiceUnavailableError: any;
+  let resolveStoryModelCandidates: any;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -35,12 +36,28 @@ describe("GeminiClient", () => {
     normalizePageVisualRole = mod.normalizePageVisualRole;
     defaultPageVisualRole = mod.defaultPageVisualRole;
     GeminiServiceUnavailableError = mod.GeminiServiceUnavailableError;
+    resolveStoryModelCandidates = mod.resolveStoryModelCandidates;
   });
 
   afterEach(() => {
     vi.doUnmock("@google/generative-ai");
     delete process.env.GEMINI_STORY_MODEL_PRIMARY;
     delete process.env.GEMINI_STORY_MODEL_FALLBACKS;
+  });
+
+  it("uses flash/pro strategy for premium/original stories", () => {
+    expect(resolveStoryModelCandidates({ productPlan: "premium_paid" })).toEqual([
+      "gemini-2.5-pro",
+      "gemini-2.5-flash",
+    ]);
+    expect(resolveStoryModelCandidates({ creationMode: "original_ai" })).toEqual([
+      "gemini-2.5-pro",
+      "gemini-2.5-flash",
+    ]);
+    expect(resolveStoryModelCandidates({ productPlan: "standard_paid" })).toEqual([
+      "gemini-2.5-flash",
+      "gemini-2.5-pro",
+    ]);
   });
 
   it("parses valid JSON response into GeneratedStory", async () => {
@@ -60,6 +77,7 @@ describe("GeminiClient", () => {
     const client = new GeminiClient("fake-api-key");
     const result = await client.generateStory({
       systemPrompt: "テスト用システムプロンプト", childName: "ゆうた", pageCount: 4, style: "watercolor",
+      storyModelCandidates: ["gemini-2.5-flash-lite"],
     });
     expect(result.title).toBe("ゆうたくんのたんじょうび");
     expect(result.pages).toHaveLength(2);
@@ -80,15 +98,26 @@ describe("GeminiClient", () => {
     const client = new GeminiClient("fake-api-key");
     const result = await client.generateStory({
       systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "flat",
+      storyModelCandidates: ["gemini-2.5-flash-lite"],
     });
     expect(result.title).toBe("テスト");
   });
 
-  it("accepts optional narrativeDevice and allowed pageVisualRole values", async () => {
+  it("accepts cast and page character linkage fields", async () => {
     const story = {
       title: "テスト",
       characterBible: "A consistent child",
       styleBible: "Flat picture book style",
+      cast: [
+        {
+          characterId: "magic_friend_01",
+          displayName: "ひかりのともだち",
+          role: "magical_friend",
+          visualBible: "small glowing golden spirit child with a tiny purple top hat",
+          signatureItems: ["tiny purple top hat"],
+          doNotChange: ["Do not remove the hat"],
+        },
+      ],
       narrativeDevice: {
         repeatedPhrase: "だいじょうぶ、いっしょにいるよ",
         visualMotif: "yellow star",
@@ -101,6 +130,8 @@ describe("GeminiClient", () => {
           compositionHint: "wide establishing shot",
           visualMotifUsage: "yellow star on a backpack",
           hiddenDetail: "small bird in a tree",
+          appearingCharacterIds: ["child_protagonist", "magic_friend_01"],
+          focusCharacterId: "magic_friend_01",
         },
       ],
     } satisfies GeneratedStory;
@@ -111,11 +142,40 @@ describe("GeminiClient", () => {
     const client = new GeminiClient("fake-api-key");
     const result = await client.generateStory({
       systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "flat",
+      storyModelCandidates: ["gemini-2.5-flash-lite"],
     });
 
-    expect(result.narrativeDevice?.visualMotif).toBe("yellow star");
-    expect(result.pages[0].pageVisualRole).toBe("opening_establishing");
-    expect(result.pages[0].compositionHint).toBe("wide establishing shot");
+    expect(result.cast?.[0].characterId).toBe("magic_friend_01");
+    expect(result.pages[0].appearingCharacterIds).toEqual(["child_protagonist", "magic_friend_01"]);
+    expect(result.pages[0].focusCharacterId).toBe("magic_friend_01");
+  });
+
+  it("normalizes unknown cast roles to buddy", async () => {
+    const story = {
+      title: "テスト",
+      characterBible: "A consistent child",
+      styleBible: "Flat picture book style",
+      cast: [
+        {
+          characterId: "friend_01",
+          displayName: "ふしぎなともだち",
+          role: "mystery_role",
+          visualBible: "soft glowing companion",
+        },
+      ],
+      pages: [{ text: "テスト本文。もうすこし。", imagePrompt: "storybook scene" }],
+    };
+    handlers["gemini-2.5-flash-lite"] = vi
+      .fn()
+      .mockResolvedValue({ response: { text: () => JSON.stringify(story) } });
+
+    const client = new GeminiClient("fake-api-key");
+    const result = await client.generateStory({
+      systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "flat",
+      storyModelCandidates: ["gemini-2.5-flash-lite"],
+    });
+
+    expect(result.cast?.[0].role).toBe("buddy");
   });
 
   it("normalizes pageVisualRole aliases and missing values without throwing", async () => {
@@ -137,6 +197,7 @@ describe("GeminiClient", () => {
     const client = new GeminiClient("fake-api-key");
     const result = await client.generateStory({
       systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "flat",
+      storyModelCandidates: ["gemini-2.5-flash-lite"],
     });
 
     expect(result.pages[0].pageVisualRole).toBe("opening_establishing");
@@ -160,7 +221,7 @@ describe("GeminiClient", () => {
       styleBible: "Flat picture book style",
       pages: [{ text: "たのしいね。もうすこし。", imagePrompt: "storybook scene" }],
     };
-    handlers["gemini-2.5-flash-lite"] = vi
+    handlers["gemini-2.5-flash"] = vi
       .fn()
       .mockRejectedValueOnce(
         new Error("[503 Service Unavailable] This model is currently experiencing high demand.")
@@ -170,10 +231,11 @@ describe("GeminiClient", () => {
     const client = new GeminiClient("fake-api-key");
     const result = await client.generateStory({
       systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "flat",
+      storyModelCandidates: ["gemini-2.5-flash"],
     });
 
-    expect(handlers["gemini-2.5-flash-lite"]).toHaveBeenCalledTimes(2);
-    expect(result.storyModel).toBe("gemini-2.5-flash-lite");
+    expect(handlers["gemini-2.5-flash"]).toHaveBeenCalledTimes(2);
+    expect(result.storyModel).toBe("gemini-2.5-flash");
     expect(result.storyGenerationAttempts).toBe(2);
   });
 
@@ -184,32 +246,32 @@ describe("GeminiClient", () => {
       styleBible: "Flat picture book style",
       pages: [{ text: "たのしいね。もうすこし。", imagePrompt: "storybook scene" }],
     };
-    handlers["gemini-2.5-flash-lite"] = vi
+    handlers["gemini-2.5-flash"] = vi
       .fn()
       .mockRejectedValue(
         new Error("[503 Service Unavailable] This model is currently experiencing high demand.")
       );
-    handlers["gemini-2.5-flash"] = vi
+    handlers["gemini-2.5-pro"] = vi
       .fn()
       .mockResolvedValue({ response: { text: () => JSON.stringify(story) } });
 
     const client = new GeminiClient("fake-api-key");
     const result = await client.generateStory({
       systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "flat",
+      storyModelCandidates: ["gemini-2.5-flash", "gemini-2.5-pro"],
     });
 
-    expect(handlers["gemini-2.5-flash-lite"]).toHaveBeenCalledTimes(4);
-    expect(handlers["gemini-2.5-flash"]).toHaveBeenCalledTimes(1);
-    expect(result.storyModel).toBe("gemini-2.5-flash");
+    expect(handlers["gemini-2.5-flash"]).toHaveBeenCalledTimes(4);
+    expect(handlers["gemini-2.5-pro"]).toHaveBeenCalledTimes(1);
+    expect(result.storyModel).toBe("gemini-2.5-pro");
     expect(result.storyModelFallbackUsed).toBe(true);
   });
 
   it("throws GeminiServiceUnavailableError after all fallback models fail with retryable errors", async () => {
-    process.env.GEMINI_STORY_MODEL_FALLBACKS = "gemini-2.5-flash";
-    handlers["gemini-2.5-flash-lite"] = vi
+    handlers["gemini-2.5-flash"] = vi
       .fn()
       .mockRejectedValue(new Error("[429 Too Many Requests] rate limit"));
-    handlers["gemini-2.5-flash"] = vi
+    handlers["gemini-2.5-pro"] = vi
       .fn()
       .mockRejectedValue(new Error("[503 Service Unavailable] high demand"));
 
@@ -218,8 +280,49 @@ describe("GeminiClient", () => {
     await expect(
       client.generateStory({
         systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "flat",
+        storyModelCandidates: ["gemini-2.5-flash", "gemini-2.5-pro"],
       })
     ).rejects.toBeInstanceOf(GeminiServiceUnavailableError);
+  });
+
+  it("rewriteStoryText rewrites only text payload and preserves page count", async () => {
+    handlers["gemini-2.5-pro"] = vi.fn().mockResolvedValue({
+      response: {
+        text: () =>
+          JSON.stringify({
+            pages: [
+              { text: "すなばの すみに、あかい スコップが ちょこんと ありました。ゆうたは それを みつけて、めを まるく しました。" },
+            ],
+          }),
+      },
+    });
+
+    const client = new GeminiClient("fake-api-key");
+    const rewritten = await client.rewriteStoryText?.({
+      systemPrompt: "テスト",
+      childName: "ゆうた",
+      childAge: 4,
+      style: "watercolor",
+      productPlan: "premium_paid",
+      creationMode: "original_ai",
+      storyModelCandidates: ["gemini-2.5-pro"],
+      story: {
+        title: "テスト",
+        characterBible: "same child",
+        styleBible: "same style",
+        pages: [
+          {
+            text: "ころころ こりころ。",
+            imagePrompt: "wide shot of a sandbox",
+            pageVisualRole: "opening_establishing",
+          },
+        ],
+      },
+    });
+
+    expect(rewritten?.pages).toHaveLength(1);
+    expect(rewritten?.pages[0].text).toContain("あかい スコップ");
+    expect(rewritten?.storyTextRewriteModel).toBe("gemini-2.5-pro");
   });
 
   it("throws on invalid JSON response", async () => {
@@ -229,6 +332,7 @@ describe("GeminiClient", () => {
     const client = new GeminiClient("fake-api-key");
     await expect(client.generateStory({
       systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "crayon",
+      storyModelCandidates: ["gemini-2.5-flash-lite"],
     })).rejects.toThrow();
   });
 
@@ -245,6 +349,7 @@ describe("GeminiClient", () => {
     const client = new GeminiClient("fake-api-key");
     await expect(client.generateStory({
       systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "watercolor",
+      storyModelCandidates: ["gemini-2.5-flash-lite"],
     })).rejects.toThrow();
   });
 });

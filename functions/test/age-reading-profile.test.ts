@@ -33,6 +33,16 @@ describe("getAgeReadingProfile", () => {
   it("maps age 8 to early_elementary_7_8", () => {
     expect(getAgeReadingProfile(8).ageBand).toBe("early_elementary_7_8");
   });
+
+  it("strengthens preschool guidance beyond toddler sound play", () => {
+    const toddler = getAgeReadingProfile(2);
+    const preschool = getAgeReadingProfile(4);
+
+    expect(toddler.targetSentencesPerPage).toBe("1〜2文");
+    expect(preschool.targetCharsPerPage).toBe("80〜130文字程度");
+    expect(preschool.repetitionPolicy).toContain("意味が進む");
+    expect(preschool.narrativeComplexity).toContain("意味の通る");
+  });
 });
 
 describe("buildSystemPrompt with age reading profile", () => {

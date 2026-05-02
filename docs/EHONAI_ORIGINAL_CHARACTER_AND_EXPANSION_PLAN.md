@@ -218,6 +218,89 @@ EhonAIでは、ここに以下を追加する。
 
 ## 6-3. 画面タイトル案
 
+---
+
+# 7. story cast と recurring character consistency
+
+## 7-1. child protagonist だけでなく、buddy / magical friend / animal / object character にも Character Bible を適用する
+
+EhonAI では、主人公の子どもだけが一貫していれば十分ではない。相棒、魔法の友だち、動物キャラ、ものキャラなど、**同じ存在として再登場するキャラクター全体** に対して一貫性ルールを持たせる。
+
+そのため、1冊の絵本 story JSON に `cast` を持たせ、各キャラに以下を定義する。
+
+- `characterId`
+- `displayName`
+- `role`
+- `visualBible`
+- `silhouette`
+- `colorPalette`
+- `signatureItems`
+- `doNotChange`
+- `canChangeByScene`
+- `approvedImageUrl`
+- `referenceImageUrl`
+
+## 7-2. story cast の考え方
+
+`story cast` は、絵本内に出てくる recurring character の設計図である。
+
+- 子ども主人公は既存の `childProfileSnapshot` / `characterBible` で扱える
+- 相棒、動物、魔法キャラなどは `cast` に追加する
+- `pages[].appearingCharacterIds` で、そのページに出るキャラを明示する
+- `pages[].focusCharacterId` で、そのページの主役キャラを示す
+
+これにより、Gemini が毎ページ新しい “magical friend” を作ってしまうのではなく、**同じ `characterId` の同一存在を描く** 方向に寄せられる。
+
+## 7-3. 「同じ存在だがポーズや表情だけ変える」ルール
+
+同じキャラであっても、毎ページ同じポーズ・同じ角度・同じ表情に固定する必要はない。
+
+固定するもの:
+
+- 体型 / シルエット
+- 髪型 / 毛並み
+- 顔の特徴
+- 色の組み合わせ
+- 帽子やアクセサリー
+- 光り方やオーラ
+- 変えてはいけない特徴
+
+変えてよいもの:
+
+- ポーズ
+- 表情
+- カメラ角度
+- 距離感
+- 手のしぐさ
+- 背景との関係
+- シーンに応じた動き
+
+## 7-4. approvedImageUrl / referenceImageUrl を各ページで参照する方針
+
+将来的には、child protagonist だけでなく、story cast に含まれる相棒キャラにも参照画像を持たせる。
+
+- `users/{userId}/children/{childId}` 由来の child reference
+- `users/{userId}/originalCharacters/{characterId}` 由来の buddy reference
+
+画像生成時は、ページに登場する `appearingCharacterIds` を見て、必要な `approvedImageUrl` / `referenceImageUrl` を `input_images` に加える。
+
+これにより、premium / `pro_consistent` では **child reference + buddy reference** を同時に渡し、両方の一貫性を高められる。
+
+## 7-5. originalCharacters 保存設計への接続
+
+今回の実装では `originalCharacters` の本格 CRUD までは行わないが、設計上は以下に接続できるようにしておく。
+
+- `users/{userId}/originalCharacters/{characterId}`
+- `approvedImageUrl`
+- `referenceImageUrl`
+- `visualBible`
+- `signatureItems`
+- `doNotChange`
+- `colorPalette`
+- `silhouette`
+
+この情報は、その後の複数冊の絵本で再利用し、シリーズ化の土台になる。
+
 ```text
 ふしぎな相棒をつくろう
 ```

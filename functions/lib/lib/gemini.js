@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GeminiClient = exports.GeminiServiceUnavailableError = void 0;
+exports.resolveStoryModelCandidates = resolveStoryModelCandidates;
 exports.defaultPageVisualRole = defaultPageVisualRole;
 exports.normalizePageVisualRole = normalizePageVisualRole;
 const generative_ai_1 = require("@google/generative-ai");
@@ -44,13 +45,23 @@ function shouldDelayGeminiRetries() {
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
-function getStoryModelCandidates() {
+function getStoryModelCandidatesFromEnv() {
     const primary = process.env.GEMINI_STORY_MODEL_PRIMARY?.trim() || DEFAULT_STORY_MODEL_PRIMARY;
     const fallbackCsv = process.env.GEMINI_STORY_MODEL_FALLBACKS?.trim();
     const fallbacks = fallbackCsv
         ? fallbackCsv.split(",").map((value) => value.trim()).filter(Boolean)
         : DEFAULT_STORY_MODEL_FALLBACKS;
     return [...new Set([primary, ...fallbacks])];
+}
+function resolveStoryModelCandidates(params) {
+    const isMemory = params.theme === "memory" || params.categoryGroupId === "memories";
+    if (params.creationMode === "original_ai" || params.productPlan === "premium_paid" || isMemory) {
+        return ["gemini-2.5-pro", "gemini-2.5-flash"];
+    }
+    if (params.productPlan === "standard_paid") {
+        return ["gemini-2.5-flash", "gemini-2.5-pro"];
+    }
+    return ["gemini-2.5-flash", "gemini-2.0-flash"];
 }
 function getErrorMessage(err) {
     if (err instanceof Error) {
@@ -145,6 +156,79 @@ function normalizePageVisualRole(value, pageIndex, totalPages) {
     }
     return defaultPageVisualRole(pageIndex, totalPages);
 }
+function normalizeStoryCharacterRole(value) {
+    if (typeof value !== "string") {
+        return "buddy";
+    }
+    const normalized = value.trim().toLowerCase();
+    const allowed = [
+        "protagonist",
+        "buddy",
+        "parent",
+        "sibling",
+        "animal",
+        "magical_friend",
+        "object_character",
+        "background_recurring",
+    ];
+    if (allowed.includes(normalized)) {
+        return normalized;
+    }
+    if (normalized.includes("animal"))
+        return "animal";
+    if (normalized.includes("magic"))
+        return "magical_friend";
+    if (normalized.includes("object"))
+        return "object_character";
+    if (normalized.includes("background"))
+        return "background_recurring";
+    return "buddy";
+}
+function validateStringArray(value, errorLabel) {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
+        throw new Error(`${errorLabel} must be a string array when provided`);
+    }
+    return value;
+}
+function validateStoryCast(data) {
+    if (data === undefined) {
+        return undefined;
+    }
+    if (!Array.isArray(data)) {
+        throw new Error("'cast' must be an array when provided");
+    }
+    return data.map((entry, index) => {
+        if (typeof entry !== "object" || entry === null) {
+            throw new Error(`cast[${index}] must be an object`);
+        }
+        const obj = entry;
+        if (typeof obj.characterId !== "string") {
+            throw new Error(`cast[${index}].characterId must be a string`);
+        }
+        if (typeof obj.displayName !== "string") {
+            throw new Error(`cast[${index}].displayName must be a string`);
+        }
+        if (typeof obj.visualBible !== "string") {
+            throw new Error(`cast[${index}].visualBible must be a string`);
+        }
+        return {
+            characterId: obj.characterId,
+            displayName: obj.displayName,
+            role: normalizeStoryCharacterRole(obj.role),
+            visualBible: obj.visualBible,
+            silhouette: typeof obj.silhouette === "string" ? obj.silhouette : undefined,
+            colorPalette: validateStringArray(obj.colorPalette, `cast[${index}].colorPalette`),
+            signatureItems: validateStringArray(obj.signatureItems, `cast[${index}].signatureItems`),
+            doNotChange: validateStringArray(obj.doNotChange, `cast[${index}].doNotChange`),
+            canChangeByScene: validateStringArray(obj.canChangeByScene, `cast[${index}].canChangeByScene`),
+            referenceImageUrl: typeof obj.referenceImageUrl === "string" ? obj.referenceImageUrl : undefined,
+            approvedImageUrl: typeof obj.approvedImageUrl === "string" ? obj.approvedImageUrl : undefined,
+        };
+    });
+}
 function validateStory(data) {
     if (typeof data !== "object" || data === null)
         throw new Error("LLM response is not an object");
@@ -157,6 +241,8 @@ function validateStory(data) {
         throw new Error("LLM response missing 'styleBible' string");
     if (!Array.isArray(obj.pages) || obj.pages.length === 0)
         throw new Error("LLM response missing 'pages' array");
+    const cast = validateStoryCast(obj.cast);
+    const castIds = new Set((cast ?? []).map((character) => character.characterId));
     const pages = obj.pages;
     const normalizedPages = pages.map((page, index) => {
         if (typeof page !== "object" || page === null) {
@@ -178,6 +264,20 @@ function validateStory(data) {
         if (pageObj.pageVisualRole !== undefined && typeof pageObj.pageVisualRole !== "string") {
             throw new Error("Page 'pageVisualRole' must be a string when provided");
         }
+        if (pageObj.appearingCharacterIds !== undefined &&
+            (!Array.isArray(pageObj.appearingCharacterIds) ||
+                !pageObj.appearingCharacterIds.every((item) => typeof item === "string"))) {
+            throw new Error("Page 'appearingCharacterIds' must be a string array when provided");
+        }
+        if (pageObj.focusCharacterId !== undefined && typeof pageObj.focusCharacterId !== "string") {
+            throw new Error("Page 'focusCharacterId' must be a string when provided");
+        }
+        const appearingCharacterIds = pageObj.appearingCharacterIds;
+        for (const characterId of appearingCharacterIds ?? []) {
+            if (!castIds.has(characterId) && characterId !== "child_protagonist") {
+                console.warn(`Unknown appearingCharacterId '${characterId}' on page ${index + 1}; keeping page data and ignoring for cast consistency.`);
+            }
+        }
         return {
             text: pageObj.text,
             imagePrompt: pageObj.imagePrompt,
@@ -185,6 +285,8 @@ function validateStory(data) {
             visualMotifUsage: pageObj.visualMotifUsage,
             hiddenDetail: pageObj.hiddenDetail,
             pageVisualRole: normalizePageVisualRole(pageObj.pageVisualRole, index, pages.length),
+            appearingCharacterIds,
+            focusCharacterId: pageObj.focusCharacterId,
         };
     });
     let narrativeDevice = undefined;
@@ -215,6 +317,7 @@ function validateStory(data) {
         title: obj.title,
         characterBible: obj.characterBible,
         styleBible: obj.styleBible,
+        cast,
         narrativeDevice: narrativeDevice,
         storyModel: typeof obj.storyModel === "string" ? obj.storyModel : undefined,
         storyModelFallbackUsed: typeof obj.storyModelFallbackUsed === "boolean" ? obj.storyModelFallbackUsed : undefined,
@@ -253,6 +356,64 @@ async function generateContentWithRetry(params) {
         }
     }
 }
+async function runJsonGeneration(params) {
+    const modelNamesTried = [];
+    let totalAttempts = 0;
+    let lastRetryableReason = "unknown";
+    let lastRetryableMessage = "";
+    for (const [index, modelName] of params.modelCandidates.entries()) {
+        modelNamesTried.push(modelName);
+        const model = params.client.getGenerativeModel({ model: modelName, safetySettings: SAFETY_SETTINGS });
+        try {
+            const result = await generateContentWithRetry({
+                generateContent: model.generateContent.bind(model),
+                request: params.request,
+                modelName,
+            });
+            totalAttempts += result.attempts;
+            return {
+                text: result.response.text(),
+                modelName,
+                fallbackUsed: index > 0,
+                totalAttempts,
+            };
+        }
+        catch (err) {
+            const retryReason = getRetryableGeminiReason(err);
+            const message = getErrorMessage(err);
+            const lastAttemptCount = retryReason !== null ? GEMINI_MAX_RETRIES + 1 : 1;
+            totalAttempts += lastAttemptCount;
+            if (retryReason !== null) {
+                lastRetryableReason = retryReason;
+                lastRetryableMessage = message;
+                if (index < params.modelCandidates.length - 1) {
+                    console.warn("Switching Gemini story model after retryable failure", {
+                        fromModel: modelName,
+                        nextModel: params.modelCandidates[index + 1],
+                        reason: retryReason,
+                        error: message,
+                    });
+                    continue;
+                }
+                throw new GeminiServiceUnavailableError({
+                    message: "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。",
+                    reason: lastRetryableReason,
+                    modelNamesTried,
+                    totalAttempts,
+                    technicalMessage: lastRetryableMessage,
+                });
+            }
+            throw err;
+        }
+    }
+    throw new GeminiServiceUnavailableError({
+        message: "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。",
+        reason: lastRetryableReason,
+        modelNamesTried,
+        totalAttempts,
+        technicalMessage: lastRetryableMessage || "Unknown Gemini generation failure",
+    });
+}
 class GeminiClient {
     genAI;
     constructor(apiKey) {
@@ -290,73 +451,83 @@ class GeminiClient {
             systemInstruction: { role: "system", parts: [{ text: params.systemPrompt }] },
             generationConfig: { responseMimeType: "application/json" },
         };
-        const modelCandidates = getStoryModelCandidates();
-        const modelNamesTried = [];
-        let totalAttempts = 0;
-        let lastRetryableReason = "unknown";
-        let lastRetryableMessage = "";
-        for (const [index, modelName] of modelCandidates.entries()) {
-            modelNamesTried.push(modelName);
-            const model = this.genAI.getGenerativeModel({ model: modelName, safetySettings: SAFETY_SETTINGS });
-            try {
-                const result = await generateContentWithRetry({
-                    generateContent: model.generateContent.bind(model),
-                    request,
-                    modelName,
-                });
-                totalAttempts += result.attempts;
-                const rawText = result.response.text();
-                const jsonStr = extractJSON(rawText);
-                let parsed;
-                try {
-                    parsed = JSON.parse(jsonStr);
-                }
-                catch {
-                    throw new Error(`Failed to parse LLM JSON response: ${rawText.slice(0, 200)}`);
-                }
-                const validated = validateStory(parsed);
-                return {
-                    ...validated,
-                    storyModel: modelName,
-                    storyModelFallbackUsed: index > 0,
-                    storyGenerationAttempts: totalAttempts,
-                };
-            }
-            catch (err) {
-                const retryReason = getRetryableGeminiReason(err);
-                const message = getErrorMessage(err);
-                const lastAttemptCount = retryReason !== null ? GEMINI_MAX_RETRIES + 1 : 1;
-                totalAttempts += lastAttemptCount;
-                if (retryReason !== null) {
-                    lastRetryableReason = retryReason;
-                    lastRetryableMessage = message;
-                    if (index < modelCandidates.length - 1) {
-                        console.warn("Switching Gemini story model after retryable failure", {
-                            fromModel: modelName,
-                            nextModel: modelCandidates[index + 1],
-                            reason: retryReason,
-                            error: message,
-                        });
-                        continue;
-                    }
-                    throw new GeminiServiceUnavailableError({
-                        message: "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。",
-                        reason: lastRetryableReason,
-                        modelNamesTried,
-                        totalAttempts,
-                        technicalMessage: lastRetryableMessage,
-                    });
-                }
-                throw err;
-            }
-        }
-        throw new GeminiServiceUnavailableError({
-            message: "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。",
-            reason: lastRetryableReason,
-            modelNamesTried,
-            totalAttempts,
-            technicalMessage: lastRetryableMessage || "Unknown Gemini story generation failure",
+        const modelCandidates = params.storyModelCandidates && params.storyModelCandidates.length > 0
+            ? params.storyModelCandidates
+            : resolveStoryModelCandidates({
+                productPlan: params.productPlan,
+                creationMode: params.creationMode,
+                theme: params.theme,
+                categoryGroupId: params.categoryGroupId,
+            }) ?? getStoryModelCandidatesFromEnv();
+        const result = await runJsonGeneration({
+            client: this.genAI,
+            request,
+            modelCandidates,
         });
+        let parsed;
+        try {
+            parsed = JSON.parse(extractJSON(result.text));
+        }
+        catch {
+            throw new Error(`Failed to parse LLM JSON response: ${result.text.slice(0, 200)}`);
+        }
+        const validated = validateStory(parsed);
+        return {
+            ...validated,
+            storyModel: result.modelName,
+            storyModelFallbackUsed: result.fallbackUsed,
+            storyGenerationAttempts: result.totalAttempts,
+        };
+    }
+    async rewriteStoryText(params) {
+        const modelCandidates = params.storyModelCandidates && params.storyModelCandidates.length > 0
+            ? params.storyModelCandidates
+            : resolveStoryModelCandidates({
+                productPlan: params.productPlan,
+                creationMode: params.creationMode,
+            });
+        const rewriteInstruction = [
+            params.systemPrompt,
+            "## Rewrite task",
+            "Rewrite only pages[].text in natural Japanese picture-book prose.",
+            "Keep title, characterBible, styleBible, cast, narrativeDevice, imagePrompt, compositionHint, pageVisualRole, appearingCharacterIds, and focusCharacterId unchanged.",
+            "For ages 3+, avoid sound-play-only text and meaningless invented words.",
+            "Add natural scene detail, action, emotion, and small discovery.",
+            "Reduce excessive onomatopoeia and unclear repeated sounds.",
+            "Do not turn the text into dry explanation. Keep it warm and story-like.",
+            "Return JSON only in this shape: {\"pages\":[{\"text\":\"...\"}]}",
+        ].join("\n");
+        const request = {
+            contents: [{
+                    role: "user",
+                    parts: [{
+                            text: JSON.stringify({
+                                childName: params.childName,
+                                childAge: params.childAge,
+                                style: params.style,
+                                story: params.story,
+                            }),
+                        }],
+                }],
+            systemInstruction: { role: "system", parts: [{ text: rewriteInstruction }] },
+            generationConfig: { responseMimeType: "application/json" },
+        };
+        const result = await runJsonGeneration({
+            client: this.genAI,
+            request,
+            modelCandidates,
+        });
+        const parsed = JSON.parse(extractJSON(result.text));
+        if (!Array.isArray(parsed.pages) || parsed.pages.length !== params.story.pages.length) {
+            throw new Error("Rewrite response pages are missing or have different length");
+        }
+        return {
+            pages: parsed.pages.map((page, pageIndex) => ({
+                text: typeof page?.text === "string" ? page.text : params.story.pages[pageIndex].text,
+            })),
+            storyTextRewriteModel: result.modelName,
+            storyTextRewriteAttempts: result.totalAttempts,
+        };
     }
 }
 exports.GeminiClient = GeminiClient;
