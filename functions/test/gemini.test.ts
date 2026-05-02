@@ -70,6 +70,36 @@ describe("GeminiClient", () => {
     expect(result.title).toBe("テスト");
   });
 
+  it("accepts optional narrativeDevice and page metadata", async () => {
+    const story = {
+      title: "テスト",
+      characterBible: "A consistent child",
+      styleBible: "Flat picture book style",
+      narrativeDevice: {
+        repeatedPhrase: "だいじょうぶ、いっしょにいるよ",
+        visualMotif: "yellow star",
+      },
+      pages: [
+        {
+          text: "テスト本文です。もうすこし つづきます。",
+          imagePrompt: "A wide storybook scene with a child and family in a park",
+          compositionHint: "wide establishing shot",
+          visualMotifUsage: "yellow star on a backpack",
+          hiddenDetail: "small bird in a tree",
+        },
+      ],
+    } satisfies GeneratedStory;
+    mockGenerateContent.mockResolvedValue({ response: { text: () => JSON.stringify(story) } });
+
+    const client = new GeminiClient("fake-api-key");
+    const result = await client.generateStory({
+      systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "flat",
+    });
+
+    expect(result.narrativeDevice?.visualMotif).toBe("yellow star");
+    expect(result.pages[0].compositionHint).toBe("wide establishing shot");
+  });
+
   it("throws on invalid JSON response", async () => {
     mockGenerateContent.mockResolvedValue({ response: { text: () => "This is not JSON" } });
     const client = new GeminiClient("fake-api-key");

@@ -45,9 +45,28 @@ const mockStory: GeneratedStory = {
   title: "ゆうたくんのたんじょうび",
   characterBible: "A consistent boy with short black hair and blue overalls",
   styleBible: "Soft watercolor picture book style with warm paper texture",
+  narrativeDevice: {
+    repeatedPhrase: "だいじょうぶ、いっしょにいるよ",
+    visualMotif: "yellow star",
+    setup: "はじめに見つけた小さな星",
+    payoff: "最後にもう一度星が光る",
+    hiddenDetails: ["small bird", "blue cup"],
+  },
   pages: [
-    { text: "きょうはたんじょうびです。", imagePrompt: "A birthday party" },
-    { text: "ケーキをたべました。", imagePrompt: "A child eating cake" },
+    {
+      text: "きょうはたんじょうびです。おへやには やさしい かざりが ゆれていて、みんなの えがおも きらきらしていました。",
+      imagePrompt: "A warm wide birthday party scene with family, decorations, toys, and a small yellow star motif in the room",
+      compositionHint: "wide establishing shot",
+      visualMotifUsage: "yellow star decoration above the table",
+      hiddenDetail: "small bird toy near the shelf",
+    },
+    {
+      text: "ケーキをたべるまえに、ゆうたくんは みんなのこえを しっかり ききました。うれしくて、ありがとうが そっと くちから こぼれます。",
+      imagePrompt: "A medium storybook shot of a child near a birthday cake, family in the background, rich but not cluttered room details",
+      compositionHint: "medium shot with action",
+      visualMotifUsage: "yellow star on a small cup",
+      hiddenDetail: "tiny blue cup on the table",
+    },
   ],
 };
 
@@ -66,6 +85,7 @@ function createMockDeps() {
     updateBookProgress: vi.fn().mockResolvedValue(undefined),
     updateBookStatus: vi.fn().mockResolvedValue(undefined),
     updateBookFailure: vi.fn().mockResolvedValue(undefined),
+    updateBookStoryQualityReport: vi.fn().mockResolvedValue(undefined),
     getUserMonthlyCount: vi.fn().mockResolvedValue(0),
     incrementMonthlyCount: vi.fn().mockResolvedValue(undefined),
   };
@@ -118,8 +138,52 @@ describe("processBookGeneration", () => {
       })
     );
     expect(deps.updateBookTitle).toHaveBeenCalledWith("book123", "ゆうたくんのたんじょうび");
+    expect(deps.updateBookStoryQualityReport).toHaveBeenCalledOnce();
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book123", "completed");
     expect(deps.incrementMonthlyCount).toHaveBeenCalledWith("user123");
+  });
+
+  it("retries guided_ai story generation once when the first story is too thin", async () => {
+    deps.llmClient.generateStory
+      .mockResolvedValueOnce({
+        ...mockStory,
+        narrativeDevice: undefined,
+        pages: [
+          { text: "たのしいね。", imagePrompt: "short image prompt", compositionHint: undefined },
+          { text: "うれしいね。", imagePrompt: "short image prompt", compositionHint: undefined },
+        ],
+      })
+      .mockResolvedValueOnce(mockStory);
+
+    await processBookGeneration("book-retry", baseBookData, deps);
+
+    expect(deps.llmClient.generateStory).toHaveBeenCalledTimes(2);
+    expect(deps.updateBookStoryQualityReport).toHaveBeenCalledOnce();
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-retry", "completed");
+  });
+
+  it("fails guided_ai generation when retry still does not satisfy the quality gate", async () => {
+    const thinStory: GeneratedStory = {
+      ...mockStory,
+      narrativeDevice: undefined,
+      pages: [
+        { text: "たのしいね。", imagePrompt: "short image prompt", compositionHint: undefined },
+        { text: "うれしいね。", imagePrompt: "short image prompt", compositionHint: undefined },
+      ],
+    };
+    deps.llmClient.generateStory.mockResolvedValueOnce(thinStory).mockResolvedValueOnce(thinStory);
+
+    await processBookGeneration("book-retry-fail", baseBookData, deps);
+
+    expect(deps.llmClient.generateStory).toHaveBeenCalledTimes(2);
+    expect(deps.updateBookStoryQualityReport).toHaveBeenCalledOnce();
+    expect(deps.imageClient.generateImage).not.toHaveBeenCalled();
+    expect(deps.updateBookFailure).toHaveBeenCalledWith(
+      "book-retry-fail",
+      "本文の品質基準を満たす絵本を作れませんでした。もう一度お試しください。"
+    );
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-retry-fail", "failed");
   });
 
   it("keeps calling the LLM for guided_ai templates", async () => {
@@ -470,12 +534,39 @@ describe("processBookGeneration", () => {
   it("uses references on cover, emotional peak, and ending for key_pages mode", async () => {
     deps.llmClient.generateStory.mockResolvedValue({
       ...mockStory,
+      narrativeDevice: {
+        repeatedPhrase: "だいじょうぶ、いっしょにいるよ",
+        visualMotif: "yellow star",
+        setup: "はじめに見つけた小さな星",
+        payoff: "最後にもう一度星が光る",
+        hiddenDetails: ["small bird", "blue cup", "leaf shape", "toy rabbit", "flower pot"],
+      },
       pages: [
-        { text: "1", imagePrompt: "page1" },
-        { text: "2", imagePrompt: "page2" },
-        { text: "3", imagePrompt: "page3" },
-        { text: "4", imagePrompt: "page4" },
-        { text: "5", imagePrompt: "page5" },
+        {
+          text: "こうえんに ついたとき、ゆうたは おおきく いきを すいました。やわらかな ひかりのなかで、きょうの ぼうけんが はじまります。",
+          imagePrompt: "wide establishing shot of a child arriving at a bright park with gentle trees, a yellow star motif, and clear child-safe scenery details",
+          compositionHint: "wide establishing shot",
+        },
+        {
+          text: "ベンチの そばには、ちいさな はっぱが ゆれていました。ゆうたは その かたちを みて、ほしに すこし にているなあと おもいました。",
+          imagePrompt: "medium shot with action showing a child near a park bench, looking at leaf shapes, with soft seasonal details and a clear focal point",
+          compositionHint: "medium shot with action",
+        },
+        {
+          text: "そのとき、あおい ことりが ぴょこんと とんできました。ゆうたは そっと てを のばして、びっくりしながらも うれしく なりました。",
+          imagePrompt: "side view storybook scene of a child noticing a small blue bird, with flowers, grass, and meaningful but not cluttered background details",
+          compositionHint: "side view with discovery",
+        },
+        {
+          text: "かえりみち、ポケットの なかで きいろい ほしが きらっと ひかりました。ゆうたは きょうの ことを おもいだして、もういちど にっこり しました。",
+          imagePrompt: "close-up emotional moment of a child holding a glowing yellow star near a pocket, with hands and clothing details in focus",
+          compositionHint: "close-up of hands and expression",
+        },
+        {
+          text: "ふりかえると、こうえんの けしきが やさしく ひろがっていました。ゆうたは また こようねと つぶやき、あたたかな きもちで あるきだしました。",
+          imagePrompt: "warm ending back view of a child walking away through a beautiful park, gentle sky, repeated yellow star motif, and rich but calm scenery",
+          compositionHint: "warm ending back view",
+        },
       ],
     });
     const keyPagesBook: BookData = {
@@ -546,6 +637,43 @@ describe("processBookGeneration", () => {
     await processBookGeneration("book-fixed-key-pages", fixedBook, deps);
 
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed-key-pages", "completed");
+  });
+
+  it("continues fixed_template generation even when the quality report has errors", async () => {
+    deps.getTemplate.mockResolvedValue({
+      ...fixedTemplate,
+      fixedStory: {
+        titleTemplate: fixedTemplate.fixedStory!.titleTemplate,
+        pages: [
+          {
+            textTemplate: "{childName}、いった。",
+            imagePromptTemplate: "A child at the zoo with family in a warm memory scene",
+          },
+          {
+            textTemplate: "{parentMessage}",
+            imagePromptTemplate: "A warm ending zoo memory scene with family",
+          },
+        ],
+      },
+    });
+
+    const thinFixedBook: BookData = {
+      ...baseBookData,
+      theme: "fixed-first-zoo",
+      creationMode: "fixed_template",
+      input: {
+        childName: "ゆうた",
+        childAge: 6,
+        place: "上野動物園",
+        familyMembers: "ママとパパ",
+      },
+    };
+
+    await processBookGeneration("book-fixed-thin", thinFixedBook, deps);
+
+    expect(deps.updateBookStoryQualityReport).toHaveBeenCalledOnce();
+    expect(deps.imageClient.generateImage).toHaveBeenCalled();
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed-thin", "completed");
   });
 });
 

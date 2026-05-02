@@ -14,3 +14,4 @@
   - `cover_only`: 表紙または key image のみ
   - `key_pages`: 表紙、中盤〜後半の感情ピーク、最終ページ
   - `all_pages`: 全ページ
+- 今回の品質改善はモデル切替ではなく、story quality gate により本文量・文数・絵本らしい構成を検査する方向で進めます。

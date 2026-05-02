@@ -1,5 +1,6 @@
 import type { TemplateData, IllustrationStyle, BookInput, PageCount, AgeBand } from "./types";
 import type { AgeReadingProfile } from "./age-reading-profile";
+import type { StoryQualityReport } from "./story-quality";
 
 const STYLE_DESCRIPTIONS: Record<IllustrationStyle, string> = {
   soft_watercolor: "やさしい水彩（淡い色、にじみ、手描き感のある柔らかなタッチ）",
@@ -279,4 +280,30 @@ export function buildImagePrompt(
 
 export function getStyleReferenceImagePath(style: IllustrationStyle): string | undefined {
   return STYLE_REFERENCE_IMAGE_PATHS[style];
+}
+
+export function appendQualityRetryInstruction(systemPrompt: string, report: StoryQualityReport): string {
+  const issueLines = report.issues
+    .filter((issue) => issue.severity === "error" || issue.code.startsWith("narrative_device") || issue.code.startsWith("composition_hint"))
+    .map((issue) => {
+      const pageText = issue.pageIndex !== undefined ? ` page=${issue.pageIndex + 1}` : "";
+      const actualText = issue.actual !== undefined ? ` actual=${issue.actual}` : "";
+      const expectedText = issue.expected !== undefined ? ` expected=${issue.expected}` : "";
+      return `- ${issue.code}:${pageText}${actualText}${expectedText} ${issue.message}`;
+    })
+    .join("\n");
+
+  return `${systemPrompt}
+
+## Retry quality correction
+- 前回の出力は年齢別の本文量または絵本品質の最低条件を満たしていません。
+- 各ページで最低文数・最低文字数を満たしてください。
+- 3歳以上では、薄すぎるページを作らないでください。各ページに行動、気持ち、場面描写のうち少なくとも2つ以上を自然に含めてください。
+- compositionHint を各ページに入れてください。
+- narrativeDevice を含めてください。
+- repeatedPhrase または visualMotif を入れてください。
+- 5歳以上では setup / payoff を入れてください。
+- imagePrompt は各ページで十分に具体的にしてください。
+
+${issueLines ? `### Previous issues\n${issueLines}\n` : ""}`.trimEnd();
 }

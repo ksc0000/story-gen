@@ -38,6 +38,7 @@ exports.processBookGeneration = processBookGeneration;
 exports.shouldUseCharacterReferenceForPage = shouldUseCharacterReferenceForPage;
 const firestore_1 = require("firebase-functions/v2/firestore");
 const params_1 = require("firebase-functions/params");
+const logger = __importStar(require("firebase-functions/logger"));
 const admin = __importStar(require("firebase-admin"));
 const crypto_1 = require("crypto");
 const content_filter_1 = require("./lib/content-filter");
@@ -48,6 +49,7 @@ const plans_1 = require("./lib/plans");
 const entitlements_1 = require("./lib/entitlements");
 const usage_1 = require("./lib/usage");
 const age_reading_profile_1 = require("./lib/age-reading-profile");
+const story_quality_1 = require("./lib/story-quality");
 const IMAGE_RETRY_LIMIT = 3;
 const IMAGE_REQUEST_INTERVAL_MS = 11_000;
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
@@ -84,33 +86,46 @@ async function processBookGeneration(bookId, bookData, deps) {
                 return;
             }
         }
-        // Step 4: Build prompts
-        const systemPrompt = (0, prompt_builder_1.buildSystemPrompt)(template, normalizedBookData.style, readingProfile);
+        // Step 4: Build reference assets
         const coverReferenceImageUrls = buildReferenceImageUrls(normalizedBookData.style, template, normalizedBookData.childProfileSnapshot);
-        // Step 5: Generate story with LLM
-        const story = template.creationMode === "fixed_template" && template.fixedStory
+        // Step 5: Generate story with quality gate
+        const { story, qualityReport } = template.creationMode === "fixed_template" && template.fixedStory
             ? (() => {
                 console.log(`Book ${bookId} uses fixed_template; skipping LLM story generation.`);
-                return buildStoryFromFixedTemplate(template.fixedStory, mergedInput, bookData, template, readingProfile);
+                return generateFixedTemplateStoryWithQualityReport(template.fixedStory, mergedInput, normalizedBookData, template, readingProfile);
             })()
-            : await deps.llmClient.generateStory({
-                systemPrompt,
-                childName: mergedInput.childName,
-                childAge: mergedInput.childAge,
-                favorites: mergedInput.favorites,
-                lessonToTeach: mergedInput.lessonToTeach,
-                memoryToRecreate: mergedInput.memoryToRecreate,
-                characterLook: mergedInput.characterLook,
-                signatureItem: mergedInput.signatureItem,
-                colorMood: mergedInput.colorMood,
-                place: mergedInput.place,
-                familyMembers: mergedInput.familyMembers,
-                season: mergedInput.season,
-                parentMessage: mergedInput.parentMessage,
-                storyRequest: mergedInput.storyRequest,
-                pageCount: normalizedBookData.pageCount,
-                style: normalizedBookData.style,
+            : await generateStoryWithQualityGate({
+                llmClient: deps.llmClient,
+                template,
+                normalizedBookData,
+                mergedInput,
+                readingProfile,
             });
+        await deps.updateBookStoryQualityReport(bookId, (0, story_quality_1.toFirestoreStoryQualityReport)(qualityReport));
+        if (template.creationMode === "fixed_template" && !qualityReport.ok) {
+            logger.warn("Fixed template quality report has errors but generation continues", {
+                bookId,
+                issues: qualityReport.issues,
+                summary: qualityReport.summary,
+            });
+        }
+        if (template.creationMode !== "fixed_template" && !qualityReport.ok) {
+            logger.warn("Story quality gate failed after retry", {
+                bookId,
+                issues: qualityReport.issues,
+                summary: qualityReport.summary,
+            });
+            await deps.updateBookFailure(bookId, "本文の品質基準を満たす絵本を作れませんでした。もう一度お試しください。");
+            await deps.updateBookStatus(bookId, "failed");
+            return;
+        }
+        if (qualityReport.issues.length > 0) {
+            logger.warn("Story quality issues", {
+                bookId,
+                issues: qualityReport.issues,
+                summary: qualityReport.summary,
+            });
+        }
         // Step 6: Update book title
         await deps.updateBookTitle(bookId, story.title);
         // Step 7: Process each page
@@ -271,6 +286,70 @@ function buildReferenceImageUrls(style, template, childProfileSnapshot) {
         .filter((value) => Boolean(value))
         .map(toPublicUrl);
     return [...new Set(urls)];
+}
+async function generateStoryWithQualityGate(params) {
+    const baseSystemPrompt = (0, prompt_builder_1.buildSystemPrompt)(params.template, params.normalizedBookData.style, params.readingProfile);
+    let story = await params.llmClient.generateStory({
+        systemPrompt: baseSystemPrompt,
+        childName: params.mergedInput.childName,
+        childAge: params.mergedInput.childAge,
+        favorites: params.mergedInput.favorites,
+        lessonToTeach: params.mergedInput.lessonToTeach,
+        memoryToRecreate: params.mergedInput.memoryToRecreate,
+        characterLook: params.mergedInput.characterLook,
+        signatureItem: params.mergedInput.signatureItem,
+        colorMood: params.mergedInput.colorMood,
+        place: params.mergedInput.place,
+        familyMembers: params.mergedInput.familyMembers,
+        season: params.mergedInput.season,
+        parentMessage: params.mergedInput.parentMessage,
+        storyRequest: params.mergedInput.storyRequest,
+        pageCount: params.normalizedBookData.pageCount,
+        style: params.normalizedBookData.style,
+    });
+    let qualityReport = (0, story_quality_1.validateGeneratedStoryQuality)({
+        story,
+        readingProfile: params.readingProfile,
+        creationMode: params.normalizedBookData.creationMode,
+    });
+    if (qualityReport.ok) {
+        return { story, qualityReport };
+    }
+    story = await params.llmClient.generateStory({
+        systemPrompt: (0, prompt_builder_1.appendQualityRetryInstruction)(baseSystemPrompt, qualityReport),
+        childName: params.mergedInput.childName,
+        childAge: params.mergedInput.childAge,
+        favorites: params.mergedInput.favorites,
+        lessonToTeach: params.mergedInput.lessonToTeach,
+        memoryToRecreate: params.mergedInput.memoryToRecreate,
+        characterLook: params.mergedInput.characterLook,
+        signatureItem: params.mergedInput.signatureItem,
+        colorMood: params.mergedInput.colorMood,
+        place: params.mergedInput.place,
+        familyMembers: params.mergedInput.familyMembers,
+        season: params.mergedInput.season,
+        parentMessage: params.mergedInput.parentMessage,
+        storyRequest: params.mergedInput.storyRequest,
+        pageCount: params.normalizedBookData.pageCount,
+        style: params.normalizedBookData.style,
+    });
+    qualityReport = (0, story_quality_1.validateGeneratedStoryQuality)({
+        story,
+        readingProfile: params.readingProfile,
+        creationMode: params.normalizedBookData.creationMode,
+    });
+    return { story, qualityReport };
+}
+function generateFixedTemplateStoryWithQualityReport(fixedStory, mergedInput, bookData, template, readingProfile) {
+    const story = buildStoryFromFixedTemplate(fixedStory, mergedInput, bookData, template, readingProfile);
+    return {
+        story,
+        qualityReport: (0, story_quality_1.validateGeneratedStoryQuality)({
+            story,
+            readingProfile,
+            creationMode: "fixed_template",
+        }),
+    };
 }
 function buildStoryFromFixedTemplate(fixedStory, mergedInput, bookData, template, readingProfile) {
     const replacements = buildFixedTemplateReplacements(mergedInput);
@@ -509,6 +588,9 @@ exports.generateBook = (0, firestore_1.onDocumentCreated)({
         },
         updateBookFailure: async (bookId, message) => {
             await db.collection("books").doc(bookId).update({ errorMessage: message.slice(0, 500) });
+        },
+        updateBookStoryQualityReport: async (bookId, report) => {
+            await db.collection("books").doc(bookId).update({ storyQualityReport: report });
         },
         getUserMonthlyCount: async (userId) => {
             const now = new Date();

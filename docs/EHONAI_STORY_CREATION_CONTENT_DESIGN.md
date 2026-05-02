@@ -129,6 +129,40 @@ MVPでは4ページを推奨。
 
 `general_child` は、年齢未登録時の標準設定や、特定年齢帯の本文が未用意な場合の安全な共通 fallback として使う。
 
+### 年齢別本文量は quality gate でも検査する
+
+現在の guided_ai / original_ai では、年齢別本文量・文数・絵本らしいしかけを **プロンプトで指示するだけでなく、生成後に quality gate で検査** する。
+
+- `storyQualityReport` を `books/{bookId}` に保存する
+- 本文が薄すぎる場合、guided_ai / original_ai は **1回だけ再生成** する
+- それでも基準を満たさない場合は failed にする
+- fixed_template はまず warning / report 収集を優先し、生成自体は継続する
+
+これにより、3歳以上なのに「1ページ1文・10文字程度」のような薄すぎる結果を減らしやすくする。
+
+### 絵本らしいしかけの設計
+
+guided_ai / original_ai では、物語と絵の両方に以下の要素を入れやすくする。
+
+- `repeatedPhrase`: 覚えやすい短い反復フレーズ
+- `visualMotif`: 複数ページで見つかる小物・色・しるし
+- `setup`: 序盤に置く小さな伏線
+- `payoff`: 最後に回収する余韻
+- `hiddenDetails`: 背景にある探し要素
+
+これらは `GeneratedStory.narrativeDevice` に保持し、本文と imagePrompt の両方に活用する。
+
+### imagePromptTemplate 強化方針
+
+fixed_template でも、単なる主人公正面絵ではなく「絵本としてめくりたくなる絵」を増やすため、`imagePromptTemplate` には以下を含める方針で整備する。
+
+- `wide shot / medium shot / close-up / back view / detail shot` などの構図指定
+- recurring motif の配置
+- 場所らしさが伝わる背景情報
+- 小物や自然物などの探し要素
+- `rich but not cluttered`
+- `no text / no letters / no readable signs`
+
 ### 入力項目
 
 #### 必須

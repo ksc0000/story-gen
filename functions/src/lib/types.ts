@@ -156,6 +156,7 @@ export interface BookData {
   status: BookStatus;
   progress: number;
   coverImageUrl?: string;
+  storyQualityReport?: StoryQualityReportData;
   input: BookInput;
   createdAt: FirebaseFirestore.Timestamp;
   expiresAt: FirebaseFirestore.Timestamp | null;
@@ -226,6 +227,25 @@ export interface GeneratedStoryPage {
   compositionHint?: string;
   visualMotifUsage?: string;
   hiddenDetail?: string;
+}
+
+export interface StoryQualityReportData {
+  ok: boolean;
+  summary: {
+    pageCount: number;
+    averageCharsPerPage: number;
+    averageSentencesPerPage: number;
+    minCharsPerPage: number;
+    minSentencesPerPage: number;
+  };
+  issues: Array<{
+    severity: "warning" | "error";
+    code: string;
+    message: string;
+    pageIndex?: number;
+    actual?: number | string;
+    expected?: number | string;
+  }>;
 }
 
 export interface GeneratedStory {
