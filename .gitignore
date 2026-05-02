@@ -40,3 +40,13 @@ next-env.d.ts
 
 # Next.js static export output
 out/
+
+# dependencies
+node_modules/
+functions/node_modules/
+
+# Firebase / logs
+firebase-debug.log
+*-debug.log
+*.log
+.firebase/
