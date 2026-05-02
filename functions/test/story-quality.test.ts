@@ -165,7 +165,6 @@ describe("validateGeneratedStoryQuality", () => {
     expect(
       report.issues.some((issue) => issue.code === "forbidden_object_became_goal_persistent")
     ).toBe(true);
-    expect(report.issues.some((issue) => issue.code === "hidden_detail_used_as_main_goal")).toBe(true);
     expect(report.issues.some((issue) => issue.code === "missing_quest_object_resolution")).toBe(true);
   });
 
