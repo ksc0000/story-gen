@@ -38,9 +38,9 @@ type ReviewPlanFilter = "all" | ProductPlan;
 type ReviewModelFilter = "all" | ImageModelProfile;
 
 type AdminReviewForm = {
-  adminQualityScore: string;
   adminTextQualityScore: string;
-  adminImageConsistencyScore: string;
+  adminImageQualityScore: string;
+  adminCharacterConsistencyScore: string;
   adminStorySatisfactionScore: string;
   adminMemo: string;
 };
@@ -160,11 +160,17 @@ function getQualityBadgeClass(status: "ok" | "warning" | "failed") {
 
 function normalizeReviewForm(book?: BookWithId): AdminReviewForm {
   return {
-    adminQualityScore: book?.adminQualityScore ? String(book.adminQualityScore) : "",
     adminTextQualityScore: book?.adminTextQualityScore ? String(book.adminTextQualityScore) : "",
-    adminImageConsistencyScore: book?.adminImageConsistencyScore
-      ? String(book.adminImageConsistencyScore)
-      : "",
+    adminImageQualityScore: book?.adminImageQualityScore
+      ? String(book.adminImageQualityScore)
+      : book?.adminQualityScore
+        ? String(book.adminQualityScore)
+        : "",
+    adminCharacterConsistencyScore: book?.adminCharacterConsistencyScore
+      ? String(book.adminCharacterConsistencyScore)
+      : book?.adminImageConsistencyScore
+        ? String(book.adminImageConsistencyScore)
+        : "",
     adminStorySatisfactionScore: book?.adminStorySatisfactionScore
       ? String(book.adminStorySatisfactionScore)
       : "",
@@ -377,6 +383,10 @@ export default function AdminBookQualityReviewPage() {
   const summaryByPlan = useMemo(() => countByProductPlan(books), [books]);
   const summaryByQuality = useMemo(() => countByStoryQualityStatus(books), [books]);
   const summaryByModel = useMemo(() => countByImageModelProfile(books), [books]);
+  const qualityReportNgCount = useMemo(
+    () => books.filter((book) => book.storyQualityReport?.ok === false).length,
+    [books]
+  );
 
   const handleCopy = async (value: string, label: string) => {
     try {
@@ -395,14 +405,20 @@ export default function AdminBookQualityReviewPage() {
     setSaveMessage(null);
     try {
       await updateDoc(doc(db, "books", selectedBook.id), {
-        adminQualityScore: reviewForm.adminQualityScore
-          ? Number(reviewForm.adminQualityScore)
-          : null,
         adminTextQualityScore: reviewForm.adminTextQualityScore
           ? Number(reviewForm.adminTextQualityScore)
           : null,
-        adminImageConsistencyScore: reviewForm.adminImageConsistencyScore
-          ? Number(reviewForm.adminImageConsistencyScore)
+        adminImageQualityScore: reviewForm.adminImageQualityScore
+          ? Number(reviewForm.adminImageQualityScore)
+          : null,
+        adminCharacterConsistencyScore: reviewForm.adminCharacterConsistencyScore
+          ? Number(reviewForm.adminCharacterConsistencyScore)
+          : null,
+        adminQualityScore: reviewForm.adminImageQualityScore
+          ? Number(reviewForm.adminImageQualityScore)
+          : null,
+        adminImageConsistencyScore: reviewForm.adminCharacterConsistencyScore
+          ? Number(reviewForm.adminCharacterConsistencyScore)
           : null,
         adminStorySatisfactionScore: reviewForm.adminStorySatisfactionScore
           ? Number(reviewForm.adminStorySatisfactionScore)
@@ -469,12 +485,12 @@ export default function AdminBookQualityReviewPage() {
               <div className="grid gap-3 md:grid-cols-5">
                 <BookStatCard label="total loaded" value={books.length} />
                 <BookStatCard label="completed" value={summaryByStatus.completed ?? 0} />
+                <BookStatCard label="quality ok=false" value={qualityReportNgCount} />
                 <BookStatCard label="failed" value={summaryByStatus.failed ?? 0} />
-                <BookStatCard label="warning" value={summaryByQuality.warning ?? 0} />
                 <BookStatCard
                   label="premium"
                   value={summaryByPlan.premium_paid ?? 0}
-                  hint={`avg rewrite ${averageRewriteAttempts(books).toFixed(1)}`}
+                  hint={`avg rewrite ${averageRewriteAttempts(books).toFixed(1)} / avg chars ${averageTextChars(books).toFixed(0)}`}
                 />
               </div>
 
@@ -565,6 +581,7 @@ export default function AdminBookQualityReviewPage() {
                         {filteredBooks.map((book) => {
                           const qualityStatus = getStoryQualityStatus(book);
                           const warningCount = getStoryQualityWarnings(book.storyQualityReport).length;
+                          const issueCount = book.storyQualityReport?.issues.length ?? 0;
                           const isSelected = book.id === selectedBookId;
                           return (
                             <button
@@ -598,6 +615,8 @@ export default function AdminBookQualityReviewPage() {
                                 <p>modelProfile: {book.imageModelProfile ?? "—"}</p>
                                 <p>storyModel: {book.storyModel ?? "—"}</p>
                                 <p>rewrite: {book.storyTextRewriteUsed ? `yes (${book.storyTextRewriteAttempts ?? 0})` : "no"}</p>
+                                <p>quality ok: {typeof book.storyQualityReport?.ok === "boolean" ? String(book.storyQualityReport.ok) : "—"}</p>
+                                <p>issues: {issueCount}</p>
                                 <p>warnings: {warningCount}</p>
                                 <p>createdAt: {formatTimestamp(book.createdAt)}</p>
                                 <p>userId: {book.userId}</p>
@@ -690,7 +709,17 @@ export default function AdminBookQualityReviewPage() {
                                       {selectedBook.storyQualityReport?.issues.length ? (
                                         selectedBook.storyQualityReport.issues.map((issue, index) => (
                                           <tr key={`${issue.code}-${index}`} className="border-t border-violet-100">
-                                            <td className="pr-3 py-2">{issue.severity}</td>
+                                            <td className="pr-3 py-2">
+                                              <span
+                                                className={`rounded-full px-2 py-1 text-[11px] font-medium ${
+                                                  issue.severity === "error"
+                                                    ? "bg-rose-100 text-rose-700"
+                                                    : "bg-amber-100 text-amber-700"
+                                                }`}
+                                              >
+                                                {issue.severity}
+                                              </span>
+                                            </td>
                                             <td className="pr-3 py-2 font-medium">{issue.code}</td>
                                             <td className="pr-3 py-2">{typeof issue.pageIndex === "number" ? issue.pageIndex + 1 : "—"}</td>
                                             <td className="pr-3 py-2">{issue.message}</td>
@@ -858,9 +887,9 @@ export default function AdminBookQualityReviewPage() {
                           <h3 className="text-lg font-semibold text-purple-900">管理者評価</h3>
                           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                             {[
-                              ["adminQualityScore", "総合品質"],
                               ["adminTextQualityScore", "本文品質"],
-                              ["adminImageConsistencyScore", "画像一貫性"],
+                              ["adminImageQualityScore", "画像品質"],
+                              ["adminCharacterConsistencyScore", "キャラ一貫性"],
                               ["adminStorySatisfactionScore", "物語満足度"],
                             ].map(([key, label]) => (
                               <div key={key} className="space-y-2">

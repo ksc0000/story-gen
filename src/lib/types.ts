@@ -233,7 +233,9 @@ export interface BookDoc {
   storyQualityWarnings?: string[];
   adminQualityScore?: number;
   adminTextQualityScore?: number;
+  adminImageQualityScore?: number;
   adminImageConsistencyScore?: number;
+  adminCharacterConsistencyScore?: number;
   adminStorySatisfactionScore?: number;
   adminMemo?: string;
   adminReviewedAt?: Timestamp | null;
