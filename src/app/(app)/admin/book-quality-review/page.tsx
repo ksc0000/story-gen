@@ -21,8 +21,10 @@ import { Label } from "@/components/ui/label";
 import { db } from "@/lib/firebase";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { PLAN_CONFIGS } from "@/lib/plans";
 import type {
   BookDoc,
+  BookFeedbackDoc,
   ImageModelProfile,
   PageDoc,
   ProductPlan,
@@ -32,6 +34,7 @@ import type {
 
 type BookWithId = BookDoc & { id: string };
 type PageWithId = PageDoc & { id: string };
+type FeedbackWithId = BookFeedbackDoc & { id: string };
 type ReviewStatusFilter = "all" | "completed" | "failed";
 type ReviewQualityFilter = "all" | "ok" | "warning" | "failed";
 type ReviewPlanFilter = "all" | ProductPlan;
@@ -104,7 +107,7 @@ function countByStoryQualityStatus(books: BookWithId[]) {
 
 function countByImageModelProfile(books: BookWithId[]) {
   return books.reduce<Record<string, number>>((acc, book) => {
-    const key = book.imageModelProfile ?? "unknown";
+    const key = resolveEffectiveImageModelProfile(book);
     acc[key] = (acc[key] ?? 0) + 1;
     return acc;
   }, {});
@@ -126,20 +129,103 @@ function averageTextChars(books: BookWithId[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function formatTimestamp(value: unknown) {
-  if (!value) return "—";
-  if (typeof value === "object" && value !== null && "toDate" in value) {
-    try {
-      const date = (value as { toDate: () => Date }).toDate();
-      return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("ja-JP");
-    } catch {
-      return "—";
+function resolveDate(value: unknown): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === "number") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  if (typeof value === "object" && value !== null) {
+    if ("toDate" in value && typeof value.toDate === "function") {
+      try {
+        const date = value.toDate();
+        return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null;
+      } catch {
+        return null;
+      }
+    }
+    if ("seconds" in value && typeof value.seconds === "number") {
+      const milliseconds =
+        value.seconds * 1000 +
+        ("nanoseconds" in value && typeof value.nanoseconds === "number"
+          ? Math.floor(value.nanoseconds / 1_000_000)
+          : 0);
+      const date = new Date(milliseconds);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+    if ("_methodName" in value && value._methodName === "serverTimestamp") {
+      return null;
     }
   }
-  if (value instanceof Date) {
-    return value.toLocaleString("ja-JP");
+  return null;
+}
+
+function estimateCreatedAtFromExpiresAt(expiresAt: unknown) {
+  const expiresDate = resolveDate(expiresAt);
+  if (!expiresDate) return null;
+  const estimated = new Date(expiresDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+  return Number.isNaN(estimated.getTime()) ? null : estimated;
+}
+
+function formatTimestamp(value: unknown, fallbackValue?: unknown) {
+  const date = resolveDate(value) ?? resolveDate(fallbackValue);
+  return date ? date.toLocaleString("ja-JP") : "日付不明";
+}
+
+function formatBookTimestamp(
+  book: BookWithId,
+  field: "createdAt" | "updatedAt" | "generationStartedAt" | "completedAt" | "failedAt"
+) {
+  const timestampValue = book[field];
+  const msValue =
+    field === "createdAt"
+      ? book.createdAtMs
+      : field === "updatedAt"
+        ? book.updatedAtMs
+        : field === "generationStartedAt"
+          ? book.generationStartedAtMs
+          : field === "completedAt"
+            ? book.completedAtMs
+            : book.failedAtMs;
+  if (field === "createdAt") {
+    return formatTimestamp(
+      timestampValue,
+      msValue ?? book.completedAtMs ?? book.generationStartedAtMs ?? estimateCreatedAtFromExpiresAt(book.expiresAt)
+    );
   }
-  return "—";
+  return formatTimestamp(timestampValue, msValue);
+}
+
+function resolveEffectiveImageModelProfile(
+  book: BookWithId,
+  pages?: PageWithId[]
+): ImageModelProfile | "unknown" {
+  if (book.imageModelProfile) {
+    return book.imageModelProfile;
+  }
+
+  if (pages?.length) {
+    const pageZeroProfile = pages.find((page) => page.pageNumber === 0)?.imageModelProfile;
+    if (pageZeroProfile) {
+      return pageZeroProfile;
+    }
+
+    const counts = pages.reduce<Record<string, number>>((acc, page) => {
+      if (!page.imageModelProfile) return acc;
+      acc[page.imageModelProfile] = (acc[page.imageModelProfile] ?? 0) + 1;
+      return acc;
+    }, {});
+    const mostFrequentProfile = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (mostFrequentProfile) {
+      return mostFrequentProfile as ImageModelProfile;
+    }
+  }
+
+  const planConfig = book.productPlan ? PLAN_CONFIGS[book.productPlan] : null;
+  return planConfig?.imageModelProfile ?? "unknown";
 }
 
 function compactJson(value: unknown) {
@@ -277,6 +363,9 @@ export default function AdminBookQualityReviewPage() {
   const [pages, setPages] = useState<PageWithId[]>([]);
   const [pagesLoading, setPagesLoading] = useState(false);
   const [pagesError, setPagesError] = useState<string | null>(null);
+  const [feedbacks, setFeedbacks] = useState<FeedbackWithId[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ReviewStatusFilter>("all");
   const [planFilter, setPlanFilter] = useState<ReviewPlanFilter>("all");
   const [qualityFilter, setQualityFilter] = useState<ReviewQualityFilter>("all");
@@ -324,10 +413,10 @@ export default function AdminBookQualityReviewPage() {
       if (statusFilter !== "all" && book.status !== statusFilter) return false;
       if (planFilter !== "all" && book.productPlan !== planFilter) return false;
       if (qualityFilter !== "all" && getStoryQualityStatus(book) !== qualityFilter) return false;
-      if (modelFilter !== "all" && book.imageModelProfile !== modelFilter) return false;
+      if (modelFilter !== "all" && resolveEffectiveImageModelProfile(book) !== modelFilter) return false;
       if (!normalizedSearch) return true;
 
-      const haystack = [book.title, book.userId, book.childId]
+      const haystack = [book.id, book.title, book.userId, book.childId]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -349,6 +438,10 @@ export default function AdminBookQualityReviewPage() {
     () => filteredBooks.find((book) => book.id === selectedBookId) ?? null,
     [filteredBooks, selectedBookId]
   );
+  const selectedBookEffectiveImageModelProfile = useMemo(
+    () => (selectedBook ? resolveEffectiveImageModelProfile(selectedBook, pages) : "unknown"),
+    [pages, selectedBook]
+  );
 
   useEffect(() => {
     setReviewForm(normalizeReviewForm(selectedBook ?? undefined));
@@ -358,6 +451,7 @@ export default function AdminBookQualityReviewPage() {
   useEffect(() => {
     if (!selectedBookId || !isAdmin) {
       setPages([]);
+      setFeedbacks([]);
       return;
     }
     setPagesLoading(true);
@@ -379,8 +473,50 @@ export default function AdminBookQualityReviewPage() {
       },
       (error) => {
         console.error("Failed to load page review data:", error);
-        setPagesError(error.message);
+        setPagesError(getPermissionHelpMessage(error.message));
         setPagesLoading(false);
+      }
+    );
+    return () => unsubscribe();
+  }, [isAdmin, selectedBookId]);
+
+  useEffect(() => {
+    if (!selectedBookId || !isAdmin) {
+      setFeedbacks([]);
+      return;
+    }
+    setFeedbackLoading(true);
+    const unsubscribe = onSnapshot(
+      collection(db, "books", selectedBookId, "feedback"),
+      (snapshot) => {
+        const nextFeedbacks = snapshot.docs
+          .map((snapshotDoc) => ({
+            id: snapshotDoc.id,
+            ...(snapshotDoc.data() as BookFeedbackDoc),
+          }))
+          .sort((a, b) => {
+            const aTime =
+              resolveDate(a.updatedAt)?.getTime() ??
+              resolveDate(a.createdAt)?.getTime() ??
+              a.updatedAtMs ??
+              a.createdAtMs ??
+              0;
+            const bTime =
+              resolveDate(b.updatedAt)?.getTime() ??
+              resolveDate(b.createdAt)?.getTime() ??
+              b.updatedAtMs ??
+              b.createdAtMs ??
+              0;
+            return bTime - aTime;
+          });
+        setFeedbacks(nextFeedbacks);
+        setFeedbackLoading(false);
+        setFeedbackError(null);
+      },
+      (error) => {
+        console.error("Failed to load feedback review data:", error);
+        setFeedbackError(getPermissionHelpMessage(error.message));
+        setFeedbackLoading(false);
       }
     );
     return () => unsubscribe();
@@ -561,7 +697,7 @@ export default function AdminBookQualityReviewPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="searchText">title / userId / childId</Label>
+                  <Label htmlFor="searchText">title / userId / childId / bookId</Label>
                   <Input
                     id="searchText"
                     value={searchText}
@@ -620,13 +756,13 @@ export default function AdminBookQualityReviewPage() {
                                 <p>productPlan: {book.productPlan ?? "—"}</p>
                                 <p>creationMode: {book.creationMode ?? "—"}</p>
                                 <p>imageTier: {book.imageQualityTier ?? "—"}</p>
-                                <p>modelProfile: {book.imageModelProfile ?? "—"}</p>
+                                <p>modelProfile: {resolveEffectiveImageModelProfile(book)}</p>
                                 <p>storyModel: {book.storyModel ?? "—"}</p>
                                 <p>rewrite: {book.storyTextRewriteUsed ? `yes (${book.storyTextRewriteAttempts ?? 0})` : "no"}</p>
                                 <p>quality ok: {typeof book.storyQualityReport?.ok === "boolean" ? String(book.storyQualityReport.ok) : "—"}</p>
                                 <p>issues: {issueCount}</p>
                                 <p>warnings: {warningCount}</p>
-                                <p>createdAt: {formatTimestamp(book.createdAt)}</p>
+                                <p>createdAt: {formatBookTimestamp(book, "createdAt")}</p>
                                 <p>userId: {book.userId}</p>
                                 <p>childId: {book.childId ?? "—"}</p>
                               </div>
@@ -683,7 +819,11 @@ export default function AdminBookQualityReviewPage() {
                           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 text-sm text-violet-800">
                             <p><span className="font-medium text-purple-900">storyTitleCandidate:</span> {selectedBook.storyTitleCandidate ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">progress:</span> {selectedBook.progress}</p>
-                            <p><span className="font-medium text-purple-900">createdAt:</span> {formatTimestamp(selectedBook.createdAt)}</p>
+                            <p><span className="font-medium text-purple-900">createdAt:</span> {formatBookTimestamp(selectedBook, "createdAt")}</p>
+                            <p><span className="font-medium text-purple-900">updatedAt:</span> {formatBookTimestamp(selectedBook, "updatedAt")}</p>
+                            <p><span className="font-medium text-purple-900">generationStartedAt:</span> {formatBookTimestamp(selectedBook, "generationStartedAt")}</p>
+                            <p><span className="font-medium text-purple-900">completedAt:</span> {formatBookTimestamp(selectedBook, "completedAt")}</p>
+                            <p><span className="font-medium text-purple-900">failedAt:</span> {formatBookTimestamp(selectedBook, "failedAt")}</p>
                             <p><span className="font-medium text-purple-900">storyGoal:</span> {selectedBook.storyGoal ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">mainQuestObject:</span> {selectedBook.mainQuestObject ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">forbiddenQuestObjects:</span> {selectedBook.forbiddenQuestObjects?.join(", ") ?? "—"}</p>
@@ -699,7 +839,7 @@ export default function AdminBookQualityReviewPage() {
                             <p><span className="font-medium text-purple-900">storyTextRewriteModel:</span> {selectedBook.storyTextRewriteModel ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">storyTextRewriteAttempts:</span> {selectedBook.storyTextRewriteAttempts ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">imageQualityTier:</span> {selectedBook.imageQualityTier ?? "—"}</p>
-                            <p><span className="font-medium text-purple-900">imageModelProfile:</span> {selectedBook.imageModelProfile ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">imageModelProfile:</span> {selectedBookEffectiveImageModelProfile}</p>
                             <p><span className="font-medium text-purple-900">characterConsistencyMode:</span> {selectedBook.characterConsistencyMode ?? "—"}</p>
                           </div>
 
@@ -808,6 +948,66 @@ export default function AdminBookQualityReviewPage() {
 
                       <Card>
                         <CardContent className="space-y-4 p-6">
+                          <h3 className="text-lg font-semibold text-purple-900">ユーザーフィードバック</h3>
+                          {feedbackLoading ? (
+                            <p className="text-sm text-violet-500">フィードバックを読み込み中...</p>
+                          ) : feedbackError ? (
+                            <p className="text-sm text-rose-600">{feedbackError}</p>
+                          ) : feedbacks.length === 0 ? (
+                            <p className="text-sm text-violet-500">まだフィードバックはありません。</p>
+                          ) : (
+                            <div className="space-y-4">
+                              {feedbacks.map((feedback) => (
+                                <Card key={feedback.id} className="border-violet-100">
+                                  <CardContent className="space-y-3 p-4">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                      <div>
+                                        <p className="font-semibold text-purple-950">{feedback.userId}</p>
+                                        <p className="text-xs text-violet-500">{feedback.id}</p>
+                                      </div>
+                                      <div className="text-right text-xs text-violet-600">
+                                        <p>createdAt: {formatTimestamp(feedback.createdAt, feedback.createdAtMs)}</p>
+                                        <p>updatedAt: {formatTimestamp(feedback.updatedAt, feedback.updatedAtMs)}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 text-xs">
+                                      <span className="rounded-full bg-violet-100 px-3 py-1 text-violet-700">
+                                        overall: {feedback.rating}
+                                      </span>
+                                      <span className="rounded-full bg-pink-50 px-3 py-1 text-pink-700">
+                                        story {feedback.storyRating}
+                                      </span>
+                                      <span className="rounded-full bg-pink-50 px-3 py-1 text-pink-700">
+                                        image {feedback.illustrationRating}
+                                      </span>
+                                      <span className="rounded-full bg-pink-50 px-3 py-1 text-pink-700">
+                                        consistency {feedback.consistencyRating}
+                                      </span>
+                                      <span className="rounded-full bg-pink-50 px-3 py-1 text-pink-700">
+                                        likeness {feedback.childLikenessRating}
+                                      </span>
+                                      <span className="rounded-full bg-pink-50 px-3 py-1 text-pink-700">
+                                        create-again {feedback.wantToCreateAgain}
+                                      </span>
+                                    </div>
+                                    <div className="grid gap-2 text-xs text-violet-700 md:grid-cols-3">
+                                      <p>productPlan: {feedback.productPlan ?? "—"}</p>
+                                      <p>imageModelProfile: {feedback.imageModelProfile ?? "—"}</p>
+                                      <p>storyModel: {feedback.storyModel ?? "—"}</p>
+                                    </div>
+                                    <div className="rounded-2xl bg-violet-50 p-4 text-sm text-violet-900">
+                                      {feedback.comment?.trim() ? feedback.comment : "コメントなし"}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardContent className="space-y-4 p-6">
                           <div className="flex items-center justify-between gap-3">
                             <h3 className="text-lg font-semibold text-purple-900">pages</h3>
                             {copyMessage ? <span className="text-xs text-violet-500">{copyMessage}</span> : null}
@@ -841,19 +1041,27 @@ export default function AdminBookQualityReviewPage() {
                                     </div>
                                     <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
                                       <div className="space-y-3">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                          src={page.imageUrl}
-                                          alt={`page ${page.pageNumber + 1}`}
-                                          className="aspect-[4/3] w-full rounded-2xl border border-violet-100 object-cover"
-                                        />
+                                        {page.imageUrl ? (
+                                          // eslint-disable-next-line @next/next/no-img-element
+                                          <img
+                                            src={page.imageUrl}
+                                            alt={`page ${page.pageNumber + 1}`}
+                                            className="aspect-[4/3] w-full rounded-2xl border border-violet-100 object-cover"
+                                          />
+                                        ) : (
+                                          <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border border-dashed border-violet-200 bg-violet-50 text-sm text-violet-500">
+                                            no image
+                                          </div>
+                                        )}
                                         <div className="grid gap-2 text-xs text-violet-700">
                                           <p>textCharCount: {page.textCharCount ?? "—"}</p>
                                           <p>textSentenceCount: {page.textSentenceCount ?? "—"}</p>
                                           <p>imageModel: {page.imageModel ?? "—"}</p>
                                           <p>imageModelProfile: {page.imageModelProfile ?? "—"}</p>
                                           <p>inputImageUrlsCount: {page.inputImageUrlsCount ?? "—"}</p>
+                                          <p>inputReferenceCount: {page.inputReferenceCount ?? "—"}</p>
                                           <p>usedCharacterReference: {page.usedCharacterReference ? "true" : "false"}</p>
+                                          <p>imagePurpose: {page.imagePurpose ?? "—"}</p>
                                           <p>focusCharacterId: {page.focusCharacterId ?? "—"}</p>
                                           <p>appearingCharacterIds: {page.appearingCharacterIds?.join(", ") ?? "—"}</p>
                                         </div>
@@ -965,13 +1173,22 @@ export default function AdminBookQualityReviewPage() {
                       </Card>
 
                       <Card>
-                        <CardContent className="space-y-2 p-6 text-xs text-violet-600">
-                          <p>countByStatus: {compactJson(summaryByStatus)}</p>
-                          <p>countByProductPlan: {compactJson(summaryByPlan)}</p>
-                          <p>countByStoryQualityStatus: {compactJson(summaryByQuality)}</p>
-                          <p>countByImageModelProfile: {compactJson(summaryByModel)}</p>
-                          <p>averageRewriteAttempts: {averageRewriteAttempts(books).toFixed(2)}</p>
-                          <p>averageTextChars: {averageTextChars(books).toFixed(2)}</p>
+                        <CardContent className="p-6">
+                          <details className="rounded-2xl border border-violet-100 p-4">
+                            <summary className="cursor-pointer text-sm font-medium text-purple-900">
+                              Debug summary
+                            </summary>
+                            <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-xs text-violet-600">
+{compactJson({
+  countByStatus: summaryByStatus,
+  countByProductPlan: summaryByPlan,
+  countByStoryQualityStatus: summaryByQuality,
+  countByImageModelProfile: summaryByModel,
+  averageRewriteAttempts: Number(averageRewriteAttempts(books).toFixed(2)),
+  averageTextChars: Number(averageTextChars(books).toFixed(2)),
+})}
+                            </pre>
+                          </details>
                         </CardContent>
                       </Card>
                     </>

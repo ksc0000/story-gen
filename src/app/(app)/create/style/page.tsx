@@ -119,6 +119,7 @@ function StyleSelectionPageContent() {
     try {
       const now = Timestamp.now();
       const expiresAt = Timestamp.fromMillis(now.toMillis() + 30 * 24 * 60 * 60 * 1000);
+      const createdAtMs = Date.now();
       let bookId: string;
 
       if (isDemoMode) {
@@ -163,6 +164,7 @@ function StyleSelectionPageContent() {
           storyCostLevel: template.storyCostLevel ?? "standard",
           productPlan: selectedPlanConfig.productPlan,
           imageQualityTier: selectedPlanConfig.imageQualityTier,
+          imageModelProfile: selectedPlanConfig.imageModelProfile,
           characterConsistencyMode: selectedPlanConfig.characterConsistencyMode as CharacterConsistencyMode,
           style: selected,
           pageCount,
@@ -182,6 +184,9 @@ function StyleSelectionPageContent() {
             ...(parentMessage ? { parentMessage } : {}),
           },
           createdAt: serverTimestamp(),
+          createdAtMs,
+          updatedAt: serverTimestamp(),
+          updatedAtMs: createdAtMs,
           expiresAt,
         });
         const bookRef = await addDoc(collection(db, "books"), bookPayload);

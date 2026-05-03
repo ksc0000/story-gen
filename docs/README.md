@@ -26,3 +26,7 @@ EhonAI / story-gen の設計メモと運用資料の入口です。
 - 例:
   - `firebase deploy --only firestore:rules --project story-gen-8a769`
   - `firebase deploy --only firestore:rules,hosting,functions --project story-gen-8a769`
+- 既存 Book の `createdAt` が欠けている場合は、`scripts/backfill-book-timestamps.js` で dry-run しながら補完できます。
+  - 例:
+    - `node scripts/backfill-book-timestamps.js --dry-run --limit=50`
+    - `node scripts/backfill-book-timestamps.js --limit=50`

@@ -50,6 +50,44 @@ const STORY_SCHEMA_FAILURE_USER_MESSAGE =
 const STORY_QUALITY_FAILURE_USER_MESSAGE =
   "絵本の内容を整えきれませんでした。もう一度作成すると、別の構成で成功する場合があります。";
 
+function createUpdatedAtPatch() {
+  return {
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAtMs: Date.now(),
+  };
+}
+
+function createGenerationStartedPatch() {
+  return {
+    generationStartedAt: admin.firestore.FieldValue.serverTimestamp(),
+    generationStartedAtMs: Date.now(),
+    ...createUpdatedAtPatch(),
+  };
+}
+
+function createCompletedAtPatch() {
+  return {
+    completedAt: admin.firestore.FieldValue.serverTimestamp(),
+    completedAtMs: Date.now(),
+    ...createUpdatedAtPatch(),
+  };
+}
+
+function createFailedAtPatch() {
+  return {
+    failedAt: admin.firestore.FieldValue.serverTimestamp(),
+    failedAtMs: Date.now(),
+    ...createUpdatedAtPatch(),
+  };
+}
+
+function buildFailureMetadata<T extends Record<string, unknown>>(data: T) {
+  return {
+    ...removeUndefinedDeep(data),
+    ...createFailedAtPatch(),
+  };
+}
+
 export function sanitizeStoryCastForFirestore(cast?: GeneratedStory["cast"]): GeneratedStory["cast"] | undefined {
   if (!cast?.length) {
     return undefined;
@@ -323,38 +361,12 @@ export interface GenerationDeps {
   updateBookFailure: (bookId: string, message: string) => Promise<void>;
   updateBookFailureMetadata: (
     bookId: string,
-    data: Partial<
-      Pick<
-        BookData,
-        | "failureStage"
-        | "failureProvider"
-        | "failureReason"
-        | "retryable"
-        | "technicalErrorMessage"
-        | "failedAt"
-      >
-    >
+    data: Record<string, unknown>
   ) => Promise<void>;
   updateBookStoryQualityReport: (bookId: string, report: BookData["storyQualityReport"]) => Promise<void>;
   updateBookStoryGenerationMetadata: (
     bookId: string,
-    data: Partial<
-      Pick<
-        BookData,
-        | "storyModel"
-        | "storyModelFallbackUsed"
-        | "storyGenerationAttempts"
-        | "storyTextRewriteUsed"
-        | "storyTextRewriteModel"
-        | "storyTextRewriteAttempts"
-        | "storyCast"
-        | "storyGoal"
-        | "mainQuestObject"
-        | "forbiddenQuestObjects"
-        | "storyTitleCandidate"
-        | "generatedTextPreview"
-      >
-    >
+    data: Record<string, unknown>
   ) => Promise<void>;
   getUserMonthlyCount: (userId: string) => Promise<number>;
   incrementMonthlyCount: (userId: string) => Promise<void>;
@@ -374,13 +386,12 @@ export async function processBookGeneration(
     if (!sanitizeResult.valid) {
       console.error(`Input validation failed for ${bookId}: ${sanitizeResult.reason}`);
       await deps.updateBookFailure(bookId, sanitizeResult.reason ?? "Input validation failed");
-      await deps.updateBookFailureMetadata(bookId, removeUndefinedDeep({
+      await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
         failureStage: "validation",
         failureProvider: "system",
         failureReason: "unknown",
         retryable: false,
         technicalErrorMessage: sanitizeResult.reason ?? "Input validation failed",
-        failedAt: admin.firestore.Timestamp.now(),
       }));
       await deps.updateBookStatus(bookId, "failed");
       return;
@@ -391,6 +402,12 @@ export async function processBookGeneration(
     const userPlan = await deps.getUserPlan(bookData.userId);
     const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
     const readingProfile = getAgeReadingProfile(mergedInput.childAge);
+    await deps.updateBookStoryGenerationMetadata(bookId, {
+      ...(normalizedBookData.imageModelProfile
+        ? { imageModelProfile: normalizedBookData.imageModelProfile }
+        : {}),
+      ...createGenerationStartedPatch(),
+    });
 
     // Step 3: Check quota (skip in development)
     if (process.env.NODE_ENV !== "development") {
@@ -402,13 +419,12 @@ export async function processBookGeneration(
             : "今月の無料生成回数に達しました。来月またお試しください。";
         console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount})`);
         await deps.updateBookFailure(bookId, message);
-        await deps.updateBookFailureMetadata(bookId, removeUndefinedDeep({
+        await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
           failureStage: "validation",
           failureProvider: "system",
           failureReason: "unknown",
           retryable: false,
           technicalErrorMessage: `Monthly quota exceeded: ${monthlyCount}`,
-          failedAt: admin.firestore.Timestamp.now(),
         }));
         await deps.updateBookStatus(bookId, "failed");
         return;
@@ -458,14 +474,13 @@ export async function processBookGeneration(
               ? err.message
               : "Unknown Gemini retryable error";
         await deps.updateBookFailure(bookId, GEMINI_RETRYABLE_USER_MESSAGE);
-        await deps.updateBookFailureMetadata(bookId, removeUndefinedDeep({
+        await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
           failureStage: "story_generation",
           failureProvider: "gemini",
           failureReason:
             err instanceof GeminiServiceUnavailableError ? err.reason : "service_unavailable",
           retryable: true,
           technicalErrorMessage: technicalMessage,
-          failedAt: admin.firestore.Timestamp.now(),
         }));
         await deps.updateBookStatus(bookId, "failed");
         return;
@@ -474,13 +489,12 @@ export async function processBookGeneration(
       if (isStorySchemaValidationError(err)) {
         const technicalMessage = err instanceof Error ? err.message : "Unknown schema validation error";
         await deps.updateBookFailure(bookId, STORY_SCHEMA_FAILURE_USER_MESSAGE);
-        await deps.updateBookFailureMetadata(bookId, removeUndefinedDeep({
+        await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
           failureStage: "schema_validation",
           failureProvider: "gemini",
           failureReason: "unknown",
           retryable: false,
           technicalErrorMessage: technicalMessage,
-          failedAt: admin.firestore.Timestamp.now(),
         }));
         await deps.updateBookStatus(bookId, "failed");
         return;
@@ -503,6 +517,7 @@ export async function processBookGeneration(
         mainQuestObject: story.mainQuestObject,
         forbiddenQuestObjects: story.forbiddenQuestObjects,
         generatedTextPreview: story.pages.map((page) => page.text),
+        imageModelProfile: normalizedBookData.imageModelProfile,
       });
     if (Object.keys(storyGenerationMetadata).length > 0) {
       await deps.updateBookStoryGenerationMetadata(bookId, storyGenerationMetadata);
@@ -525,13 +540,12 @@ export async function processBookGeneration(
         summary: qualityReport.summary,
       });
       await deps.updateBookFailure(bookId, STORY_QUALITY_FAILURE_USER_MESSAGE);
-      await deps.updateBookFailureMetadata(bookId, removeUndefinedDeep({
+      await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
         failureStage: "quality_gate",
         failureProvider: "system",
         failureReason: "unknown",
         retryable: false,
         technicalErrorMessage: buildStoryQualityTechnicalMessage(qualityReport),
-        failedAt: admin.firestore.Timestamp.now(),
       }));
       await deps.updateBookStatus(bookId, "failed");
       return;
@@ -655,13 +669,12 @@ export async function processBookGeneration(
                 focusCharacterId: storyPage.focusCharacterId,
               }));
               await deps.updateBookFailure(bookId, `画像生成に失敗しました（${message}）`);
-              await deps.updateBookFailureMetadata(bookId, removeUndefinedDeep({
+              await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
                 failureStage: "image_generation",
                 failureProvider: "replicate",
                 failureReason: "unknown",
                 retryable: true,
                 technicalErrorMessage: message,
-                failedAt: admin.firestore.Timestamp.now(),
               }));
               await deps.updateBookStatus(bookId, "failed");
               return;
@@ -713,13 +726,12 @@ export async function processBookGeneration(
     console.error(`Book generation failed for ${bookId}:`, err);
     const message = err instanceof Error ? err.message : "Unknown generation error";
     await deps.updateBookFailure(bookId, message);
-    await deps.updateBookFailureMetadata(bookId, removeUndefinedDeep({
+    await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
       failureStage: "validation",
       failureProvider: "system",
       failureReason: "unknown",
       retryable: false,
       technicalErrorMessage: message,
-      failedAt: admin.firestore.Timestamp.now(),
     }));
     await deps.updateBookStatus(bookId, "failed");
   }
@@ -1383,7 +1395,12 @@ export const generateBook = onDocumentCreated(
       },
 
       updateBookStatus: async (bookId: string, status: "completed" | "failed") => {
-        await db.collection("books").doc(bookId).update({ status });
+        const statusPatch =
+          status === "completed" ? createCompletedAtPatch() : createFailedAtPatch();
+        await db.collection("books").doc(bookId).update({
+          status,
+          ...statusPatch,
+        });
       },
 
       updateBookFailure: async (bookId: string, message: string) => {
@@ -1391,15 +1408,24 @@ export const generateBook = onDocumentCreated(
       },
 
       updateBookFailureMetadata: async (bookId: string, data) => {
-        await db.collection("books").doc(bookId).update(data);
+        await db.collection("books").doc(bookId).update({
+          ...data,
+          ...createUpdatedAtPatch(),
+        });
       },
 
       updateBookStoryQualityReport: async (bookId: string, report) => {
-        await db.collection("books").doc(bookId).update({ storyQualityReport: report });
+        await db.collection("books").doc(bookId).update({
+          storyQualityReport: report,
+          ...createUpdatedAtPatch(),
+        });
       },
 
       updateBookStoryGenerationMetadata: async (bookId: string, data) => {
-        await db.collection("books").doc(bookId).update(data);
+        await db.collection("books").doc(bookId).update({
+          ...data,
+          ...createUpdatedAtPatch(),
+        });
       },
 
       getUserMonthlyCount: async (userId: string) => {

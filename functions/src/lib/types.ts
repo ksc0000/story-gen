@@ -207,6 +207,16 @@ export interface BookData {
   forbiddenQuestObjects?: string[];
   storyTitleCandidate?: string;
   generatedTextPreview?: string[];
+  createdAtMs?: number;
+  createdAtSource?: string;
+  updatedAt?: FirebaseFirestore.Timestamp;
+  updatedAtMs?: number;
+  generationStartedAt?: FirebaseFirestore.Timestamp;
+  generationStartedAtMs?: number;
+  completedAt?: FirebaseFirestore.Timestamp;
+  completedAtMs?: number;
+  failedAtMs?: number;
+  backfilledAt?: FirebaseFirestore.Timestamp;
   failureStage?: "story_generation" | "schema_validation" | "image_generation" | "validation" | "quality_gate";
   failureProvider?: "gemini" | "replicate" | "system";
   failureReason?: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";

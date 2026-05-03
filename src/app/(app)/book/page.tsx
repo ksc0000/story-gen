@@ -192,11 +192,21 @@ function BookContent() {
                 setFeedbackSaving(true);
                 setFeedbackError(null);
                 try {
+                  const nowMs = Date.now();
+                  const createdFields = feedbackSaved
+                    ? {}
+                    : {
+                        createdAt: serverTimestamp(),
+                        createdAtMs: nowMs,
+                      };
                   await setDoc(
                     doc(db, "books", bookId, "feedback", user.uid),
                     {
                       userId: user.uid,
                       bookId,
+                      productPlan: book.productPlan ?? "free",
+                      imageModelProfile: book.imageModelProfile,
+                      storyModel: book.storyModel,
                       rating: feedback.rating,
                       childLikenessRating: feedback.childLikenessRating,
                       illustrationRating: feedback.illustrationRating,
@@ -204,8 +214,9 @@ function BookContent() {
                       consistencyRating: feedback.consistencyRating,
                       wantToCreateAgain: feedback.wantToCreateAgain,
                       comment: feedback.comment.trim(),
-                      createdAt: serverTimestamp(),
+                      ...createdFields,
                       updatedAt: serverTimestamp(),
+                      updatedAtMs: nowMs,
                     },
                     { merge: true }
                   );
