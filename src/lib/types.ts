@@ -335,6 +335,10 @@ export interface PageDoc {
   imageFailureReason?: string;
   imageRetryable?: boolean;
   replicateModel?: string;
+  imageRegenerationStartedAtMs?: number;
+  imageRegeneratedAtMs?: number;
+  regenerationAttemptCount?: number;
+  regenerationTriggeredBy?: "owner" | "admin";
 }
 
 export interface StoryCharacter {

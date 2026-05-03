@@ -18,7 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { db } from "@/lib/firebase";
+import { db, functions } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { PLAN_CONFIGS } from "@/lib/plans";
@@ -369,6 +370,8 @@ export default function AdminBookQualityReviewPage() {
   const [savingReview, setSavingReview] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [regeneratingPageIds, setRegeneratingPageIds] = useState<Set<string>>(new Set());
+  const [regenerationMessages, setRegenerationMessages] = useState<Record<string, string>>({});
 
   function getPermissionHelpMessage(message: string) {
     if (!/Missing or insufficient permissions/i.test(message)) {
@@ -533,6 +536,26 @@ export default function AdminBookQualityReviewPage() {
     } catch (error) {
       console.error("Failed to copy text:", error);
       setCopyMessage("コピーに失敗しました");
+    }
+  };
+
+  const handleRegeneratePage = async (page: PageWithId) => {
+    if (!selectedBookId || regeneratingPageIds.has(page.id)) return;
+    setRegeneratingPageIds((prev) => new Set(prev).add(page.id));
+    setRegenerationMessages((prev) => ({ ...prev, [page.id]: "再生成中..." }));
+    try {
+      const regenerate = httpsCallable(functions, "regeneratePageImage");
+      await regenerate({ bookId: selectedBookId, pageNumber: page.pageNumber });
+      setRegenerationMessages((prev) => ({ ...prev, [page.id]: "再生成完了" }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "再生成に失敗しました";
+      setRegenerationMessages((prev) => ({ ...prev, [page.id]: `失敗: ${message}` }));
+    } finally {
+      setRegeneratingPageIds((prev) => {
+        const next = new Set(prev);
+        next.delete(page.id);
+        return next;
+      });
     }
   };
 
@@ -1055,13 +1078,27 @@ export default function AdminBookQualityReviewPage() {
                                         <p className="font-semibold text-purple-950">page {page.pageNumber + 1}</p>
                                         <p className="text-xs text-violet-500">{page.id}</p>
                                       </div>
-                                      <div className="flex flex-wrap gap-2">
+                                      <div className="flex flex-wrap items-center gap-2">
                                         <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusBadgeClass(page.status)}`}>
                                           {page.status}
                                         </span>
                                         {page.pageVisualRole ? (
                                           <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-700">
                                             {page.pageVisualRole}
+                                          </span>
+                                        ) : null}
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleRegeneratePage(page)}
+                                          disabled={regeneratingPageIds.has(page.id)}
+                                        >
+                                          {regeneratingPageIds.has(page.id) ? "再生成中..." : "再生成"}
+                                        </Button>
+                                        {regenerationMessages[page.id] ? (
+                                          <span className={`text-xs ${regenerationMessages[page.id].startsWith("失敗") ? "text-rose-600" : "text-emerald-600"}`}>
+                                            {regenerationMessages[page.id]}
                                           </span>
                                         ) : null}
                                       </div>
@@ -1099,6 +1136,14 @@ export default function AdminBookQualityReviewPage() {
                                           <p>fallbackFromProfile: {page.fallbackFromModelProfile ?? "—"}</p>
                                           <p>imageFailureReason: {page.imageFailureReason ?? "—"}</p>
                                           <p>replicateModel: {page.replicateModel ?? "—"}</p>
+                                          {(page.regenerationAttemptCount ?? 0) > 0 ? (
+                                            <>
+                                              <p className="col-span-full border-t border-violet-100 pt-2 font-medium text-purple-900">再生成履歴</p>
+                                              <p>regenerationAttemptCount: {page.regenerationAttemptCount}</p>
+                                              <p>triggeredBy: {page.regenerationTriggeredBy ?? "—"}</p>
+                                              <p>imageRegeneratedAtMs: {page.imageRegeneratedAtMs ? formatTimestamp(undefined, page.imageRegeneratedAtMs) : "—"}</p>
+                                            </>
+                                          ) : null}
                                         </div>
                                       </div>
                                       <div className="space-y-4">

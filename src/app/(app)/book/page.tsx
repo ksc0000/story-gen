@@ -4,15 +4,16 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 import { Button } from "@/components/ui/button";
 import { BookViewer } from "@/components/book-viewer";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { db } from "@/lib/firebase";
+import { db, functions } from "@/lib/firebase";
 import { isDemoMode } from "@/lib/demo";
 import { trackAnalyticsEvent } from "@/lib/analytics";
-import type { BookFeedbackDoc } from "@/lib/types";
+import type { BookFeedbackDoc, PageDoc } from "@/lib/types";
 
 function BookContent() {
   const searchParams = useSearchParams();
@@ -39,7 +40,10 @@ function BookContent() {
   const [feedbackSaved, setFeedbackSaved] = useState(false);
   const [feedbackSaving, setFeedbackSaving] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const [regeneratingPages, setRegeneratingPages] = useState<Set<number>>(new Set());
+  const [regenerationErrors, setRegenerationErrors] = useState<Record<number, string>>({});
   const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
+  const isOwner = Boolean(user && book && book.userId === user.uid);
 
   useEffect(() => {
     if (!user || !bookId || isDemoMode) return;
@@ -73,12 +77,109 @@ function BookContent() {
     </div>
   );
 
-  const completedPages = pages.filter((p) => p.status === "completed").sort((a, b) => a.pageNumber - b.pageNumber);
+  const viewablePages = pages
+    .filter((p) => p.status === "completed" || p.status === "fallback_completed")
+    .sort((a, b) => a.pageNumber - b.pageNumber);
+
+  const failedPages = pages
+    .filter((p) => p.status === "image_failed")
+    .sort((a, b) => a.pageNumber - b.pageNumber);
+
+  const generatingPages = pages.filter((p) => p.status === "generating");
+
+  const isPartial = book.status === "partial_completed";
+
+  async function handleRegeneratePage(page: PageDoc) {
+    if (!bookId || regeneratingPages.has(page.pageNumber)) return;
+    setRegeneratingPages((prev) => new Set(prev).add(page.pageNumber));
+    setRegenerationErrors((prev) => {
+      const next = { ...prev };
+      delete next[page.pageNumber];
+      return next;
+    });
+    try {
+      const regenerate = httpsCallable(functions, "regeneratePageImage");
+      await regenerate({ bookId, pageNumber: page.pageNumber });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "再生成に失敗しました。";
+      setRegenerationErrors((prev) => ({ ...prev, [page.pageNumber]: message }));
+    } finally {
+      setRegeneratingPages((prev) => {
+        const next = new Set(prev);
+        next.delete(page.pageNumber);
+        return next;
+      });
+    }
+  }
 
   return (
     <PageTransition className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="text-center text-2xl font-bold text-purple-900">{book.title}</h1>
-      <div className="mt-6"><BookViewer pages={completedPages} title={book.title} /></div>
+
+      {isPartial && (
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          一部のページが完成していません。「このページを仕上げる」ボタンで再試行できます。
+        </div>
+      )}
+
+      <div className="mt-6"><BookViewer pages={viewablePages} title={book.title} /></div>
+
+      {(failedPages.length > 0 || generatingPages.length > 0) && (
+        <div className="mt-8 space-y-4">
+          <h2 className="text-lg font-semibold text-purple-900">未完成のページ</h2>
+
+          {generatingPages.map((page) => (
+            <div
+              key={page.pageNumber}
+              className="flex items-center gap-4 rounded-2xl border border-violet-200 bg-violet-50 p-4"
+            >
+              <div className="flex h-16 w-20 shrink-0 items-center justify-center rounded-xl border border-violet-200 bg-white text-xs text-violet-400">
+                仕上げ中...
+              </div>
+              <div>
+                <p className="text-sm font-medium text-purple-900">
+                  ページ {page.pageNumber + 1}
+                </p>
+                <p className="text-xs text-violet-500">生成中です。しばらくお待ちください。</p>
+              </div>
+            </div>
+          ))}
+
+          {failedPages.map((page) => {
+            const isRegenerating = regeneratingPages.has(page.pageNumber);
+            const error = regenerationErrors[page.pageNumber];
+            return (
+              <div
+                key={page.pageNumber}
+                className="flex items-start gap-4 rounded-2xl border border-rose-100 bg-rose-50 p-4"
+              >
+                <div className="flex h-16 w-20 shrink-0 items-center justify-center rounded-xl border border-rose-200 bg-white text-xs text-rose-400">
+                  未完成
+                </div>
+                <div className="flex-1 space-y-2">
+                  <p className="text-sm font-medium text-purple-900">
+                    ページ {page.pageNumber + 1}
+                  </p>
+                  <p className="text-xs text-violet-600">{page.text?.slice(0, 60)}…</p>
+                  {error && (
+                    <p className="text-xs text-rose-600">{error}</p>
+                  )}
+                  {isOwner && !isDemoMode && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleRegeneratePage(page)}
+                      disabled={isRegenerating}
+                    >
+                      {isRegenerating ? "仕上げ中..." : "このページを仕上げる"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {user && !isDemoMode ? (
         <div className="mt-8 rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-6">
           <h2 className="text-lg font-semibold text-purple-900">この絵本はどうでしたか？</h2>
