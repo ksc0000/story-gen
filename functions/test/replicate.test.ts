@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   buildReplicateInput,
+  ImageTimeoutError,
+  resolveImageFallbackProfiles,
   resolveImageModelProfile,
   resolveReplicateModel,
+  withImageTimeout,
 } from "../src/lib/replicate";
 
 describe("resolveReplicateModel", () => {
@@ -61,6 +64,49 @@ describe("resolveImageModelProfile", () => {
     expect(resolveImageModelProfile({ imageQualityTier: "light" })).toBe("klein_fast");
     expect(resolveImageModelProfile({ imageQualityTier: "standard" })).toBe("klein_fast");
     expect(resolveImageModelProfile({ imageQualityTier: "premium" })).toBe("pro_consistent");
+  });
+});
+
+describe("resolveImageFallbackProfiles", () => {
+  it("returns pro_consistent then klein_fast for pro_consistent", () => {
+    expect(resolveImageFallbackProfiles("pro_consistent")).toEqual(["pro_consistent", "klein_fast"]);
+  });
+
+  it("returns klein_base then klein_fast for klein_base", () => {
+    expect(resolveImageFallbackProfiles("klein_base")).toEqual(["klein_base", "klein_fast"]);
+  });
+
+  it("returns kontext_reference then klein_fast for kontext_reference", () => {
+    expect(resolveImageFallbackProfiles("kontext_reference")).toEqual(["kontext_reference", "klein_fast"]);
+  });
+
+  it("returns only klein_fast for klein_fast (no further fallback)", () => {
+    expect(resolveImageFallbackProfiles("klein_fast")).toEqual(["klein_fast"]);
+  });
+});
+
+describe("withImageTimeout", () => {
+  it("resolves with the value when the promise resolves before timeout", async () => {
+    const result = await withImageTimeout(Promise.resolve("ok"), 1000);
+    expect(result).toBe("ok");
+  });
+
+  it("rejects with ImageTimeoutError when the promise exceeds the timeout", async () => {
+    const neverResolves = new Promise<never>(() => {});
+    await expect(withImageTimeout(neverResolves, 10)).rejects.toBeInstanceOf(ImageTimeoutError);
+  });
+
+  it("ImageTimeoutError has the correct name property", async () => {
+    const neverResolves = new Promise<never>(() => {});
+    await withImageTimeout(neverResolves, 10).catch((err) => {
+      expect(err.name).toBe("ImageTimeoutError");
+      expect(err.message).toContain("10ms");
+    });
+  });
+
+  it("propagates rejection from the original promise when it rejects before timeout", async () => {
+    const fails = Promise.reject(new Error("original error"));
+    await expect(withImageTimeout(fails, 1000)).rejects.toThrow("original error");
   });
 });
 

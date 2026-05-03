@@ -55,6 +55,15 @@ const STORY_GOAL_CONSISTENCY_RULES = [
     "storyRequest が『なくした星を探す』なら、最後まで探す対象は『星』または『星のかけら』です。",
     "4ページ構成では、各ページが storyGoal に向かって少しずつ進む必要があります。",
 ].join(" ");
+const CHARACTER_METADATA_RULES = [
+    'There is exactly one human child protagonist: "child_protagonist".',
+    "Do not create additional human children unless cast explicitly includes another human_child character.",
+    "Magical friends, star creatures, glowing companions, object characters, and recurring buddies should usually be non-human unless the story truly requires a human character.",
+    "For non-human recurring characters, use characterKind such as magical_creature or object_character and describe a non-human silhouette clearly.",
+    "Avoid words like child, boy, girl, person, human, or spirit child for non-human magical companions.",
+    "pages[].appearingCharacterIds must contain only characterId strings from cast plus child_protagonist.",
+    "pages[].focusCharacterId must be a single characterId string or omitted.",
+].join(" ");
 const PAGE_TEXT_ROLE_RULES = [
     "opening_establishing: 場所、主人公の行動、storyGoal につながる小さな異変や発見、次ページへの予感を入れる。",
     "discovery: 見つけたもの、それがなぜ不思議か、何に困っているか、主人公の反応を入れる。場所や手元の状況も1文入れる。",
@@ -203,6 +212,24 @@ function buildScenePolicyGuidance(scenePolicy, childProfileBasePrompt) {
         "Hidden details are allowed only as subtle visual discoveries and must never become the story goal.",
     ].join(" ");
 }
+function describeCharacterKind(kind) {
+    switch (kind) {
+        case "human_child":
+            return "human child";
+        case "human_adult":
+            return "human adult";
+        case "animal":
+            return "animal";
+        case "magical_creature":
+            return "non-human magical creature";
+        case "object_character":
+            return "non-human object-like character";
+        case "background":
+            return "background recurring element";
+        default:
+            return "recurring story character";
+    }
+}
 function getBackgroundRichnessGuidance(ageBand) {
     if (ageBand === "baby_toddler") {
         return "Background should stay soft and simple, with only a few clear supporting details.";
@@ -291,6 +318,7 @@ ${ageReadingGuidance}
 - Japanese story text rules: ${JAPANESE_STORY_TEXT_RULES}
 - Story goal consistency rules: ${STORY_GOAL_CONSISTENCY_RULES}
 - pageVisualRole ごとの本文設計ルール: ${PAGE_TEXT_ROLE_RULES}
+- Character metadata rules: ${CHARACTER_METADATA_RULES}
 - 悪い例: 「${BAD_TEXT_EXAMPLE}」
 - 理由: 意味が通りにくく、情景や行動が不足している。
 - 良い例:
@@ -326,16 +354,22 @@ ${GOOD_TEXT_EXAMPLE}
       "characterId": "magic_friend_01",
       "displayName": "ひかりの ともだち",
       "role": "magical_friend",
-      "visualBible": "A small glowing golden spirit child with translucent body, flowing blonde hair, tiny purple top hat, gold star necklace, warm green eyes, sparkling magical aura.",
-      "silhouette": "floating translucent body with smoke-like tail and flowing hair",
+      "characterKind": "magical_creature",
+      "visualBible": "A tiny glowing non-human star creature, about the size of a child's hand, with a rounded five-point star silhouette, soft golden light, tiny expressive eyes, no human body, no clothing, and a faint trail of sparkles.",
+      "silhouette": "small rounded five-point star silhouette with a soft floating glow",
       "colorPalette": ["gold", "cream", "soft purple", "warm white"],
-      "signatureItems": ["tiny purple top hat", "gold star necklace", "sparkling golden aura"],
+      "signatureItems": ["soft golden glow", "tiny expressive eyes", "sparkling golden trail"],
       "doNotChange": [
-        "Do not remove the tiny purple top hat",
-        "Do not change the glowing translucent body",
-        "Do not change the gold star necklace"
+        "Must remain a non-human glowing star creature",
+        "Must not become a child, boy, girl, person, fairy child, or second protagonist",
+        "Must keep the rounded five-point star silhouette"
       ],
-      "canChangeByScene": ["pose", "facial expression", "camera angle"]
+      "negativeCharacterRules": [
+        "Do not draw this character as a human child",
+        "Do not create a second child protagonist",
+        "Do not give it human hair, human clothes, or human body proportions"
+      ],
+      "canChangeByScene": ["expression", "glow intensity", "floating pose", "camera angle"]
     }
   ],
   "narrativeDevice": {
@@ -442,12 +476,30 @@ function buildImagePrompt(basePrompt, style, characterBible, styleBible, options
                 : "",
             ...appearingCharacters.map((character) => [
                 `Recurring character consistency: ${character.characterId} is the same character whenever it appears.`,
+                character.characterKind
+                    ? `Character kind: ${describeCharacterKind(character.characterKind)}.`
+                    : "",
+                character.nonHuman
+                    ? "This character must remain clearly non-human."
+                    : "",
+                character.noHumanFace
+                    ? "Do not give this character a human face."
+                    : "",
+                character.noHumanBody
+                    ? "Do not give this character a human body, human arms, or human legs."
+                    : "",
+                character.scaleHint
+                    ? `Scale hint: ${character.scaleHint}.`
+                    : "",
                 character.visualBible,
                 character.signatureItems?.length
                     ? `Keep signature items: ${character.signatureItems.join(", ")}.`
                     : "",
                 character.doNotChange?.length
                     ? `Do not change: ${character.doNotChange.join("; ")}.`
+                    : "",
+                character.negativeCharacterRules?.length
+                    ? `Negative character rules: ${character.negativeCharacterRules.join("; ")}.`
                     : "",
                 character.colorPalette?.length
                     ? `Color palette: ${character.colorPalette.join(", ")}.`
@@ -490,6 +542,14 @@ function buildImagePrompt(basePrompt, style, characterBible, styleBible, options
         compositionGuidance,
         modelSpecificGuidance,
         emotionGuidance,
+        "Global character count rule: there is exactly one human child protagonist: child_protagonist.",
+        "Do not create additional human children unless storyCast explicitly includes another human_child character.",
+        "Magical friends must not be drawn as human children unless characterKind is human_child.",
+        "If a non-human magical creature appears, preserve its non-human silhouette.",
+        "Do not clone the protagonist. Do not draw the protagonist twice in the same image unless the page explicitly requires a reflection, memory, or picture-within-picture.",
+        options?.appearingCharacterIds?.length
+            ? `Only draw these recurring characters when relevant: ${options.appearingCharacterIds.join(", ")}. Do not add other recurring characters.`
+            : "",
         `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
         `Scene: ${sanitizedBasePrompt}`,
         SAFETY_KEYWORDS,

@@ -11,6 +11,28 @@
 - `kontext_reference` / `black-forest-labs/flux-kontext-pro` は将来の参照強化検証用です。
 - `flux-schnell` は通常生成では使いません。
 
+## 生成信頼性方針（2026-05 改定）
+
+### 現在の実装（MVPフェーズ）: Bounded synchronous generation
+
+- ページ画像は並列 concurrency=2 で生成（`IMAGE_CONCURRENCY` 環境変数で調整可）
+- 1枚あたり timeout=120秒（`IMAGE_GENERATION_TIMEOUT_MS` 環境変数で調整可）
+- timeout または失敗時は fallback model に切り替え（`pro_consistent` → `klein_fast`）
+- 1ページ失敗でもBook全体をfailedにしない: `partial_completed` ステータスで継続
+- recurring character reference 生成は `premium_paid` の `quality` モードのみ有効
+  - `free` / `standard_paid` は `reliable_fast` モードで reference 生成をスキップ
+- 生成メトリクス（imageDurationMs, imageAttemptCount, imageFallbackUsed 等）を Firestore に保存
+
+### 次フェーズ候補: Async page jobs + Replicate webhooks
+
+- **Why**: Functions タイムアウト問題を根本解決、ページ単位のジョブキューで resume/retry を可能にする
+- **How**: Replicate の prediction webhook を利用し、ページ完了ごとに Cloud Functions を呼び出す
+- **Benefit**: Functions を長時間占有しない、失敗ページのみ再生成可能、スケーリングが容易
+- **Cost**: アーキテクチャの複雑性増加、webhook エンドポイントの追加、prediction ID 管理が必要
+
+現時点では MVP の bounded synchronous 方式（timeout + fallback + partial_completed）で十分な信頼性を確保し、
+需要増加時に webhook 化を検討する。
+
 補足:
 
 - 無料プランは「低品質モデルで原価を下げる」のではなく、**4ページ固定・作成モード制限・回数制限** で原価を管理します。

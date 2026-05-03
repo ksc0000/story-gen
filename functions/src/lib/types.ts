@@ -1,8 +1,10 @@
 /// <reference types="firebase-admin" />
 
 export type UserPlan = "free" | "premium";
-export type BookStatus = "generating" | "completed" | "failed";
-export type PageStatus = "pending" | "generating" | "completed" | "failed";
+export type BookStatus = "generating" | "completed" | "partial_completed" | "failed";
+export type PageStatus = "pending" | "generating" | "completed" | "image_failed" | "fallback_completed" | "failed";
+export type GenerationMode = "reliable_fast" | "quality";
+export type GenerationReliabilityStatus = "ok" | "partial" | "failed";
 export type CreationMode = "fixed_template" | "guided_ai" | "original_ai";
 export type PriceTier = "ume" | "take" | "matsu";
 export type StoryCostLevel = "none" | "low" | "standard";
@@ -260,6 +262,16 @@ export interface BookData {
   input: BookInput;
   createdAt: FirebaseFirestore.Timestamp;
   expiresAt: FirebaseFirestore.Timestamp | null;
+  generationMode?: GenerationMode;
+  generationDurationMs?: number;
+  averageImageDurationMs?: number;
+  maxImageDurationMs?: number;
+  imageSuccessCount?: number;
+  imageFailureCount?: number;
+  totalImageCount?: number;
+  failedPageNumbers?: number[];
+  generationReliabilityStatus?: GenerationReliabilityStatus;
+  partialFailureReasons?: string[];
 }
 
 export interface PageData {
@@ -290,6 +302,16 @@ export interface PageData {
   pageVisualRole?: PageVisualRole;
   appearingCharacterIds?: string[];
   focusCharacterId?: string;
+  imageGenerationStartedAtMs?: number;
+  imageCompletedAtMs?: number;
+  imageDurationMs?: number;
+  imageAttemptCount?: number;
+  imageTimeoutCount?: number;
+  imageFallbackUsed?: boolean;
+  fallbackFromModelProfile?: ImageModelProfile;
+  imageFailureReason?: string;
+  imageRetryable?: boolean;
+  replicateModel?: string;
 }
 
 export interface TemplateData {

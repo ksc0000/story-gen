@@ -55,8 +55,8 @@ const age_reading_profile_1 = require("./lib/age-reading-profile");
 const story_quality_1 = require("./lib/story-quality");
 const firestore_sanitize_1 = require("./lib/firestore-sanitize");
 const illustration_styles_1 = require("./lib/illustration-styles");
-const IMAGE_RETRY_LIMIT = 3;
-const IMAGE_REQUEST_INTERVAL_MS = 11_000;
+const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
+const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCURRENCY ?? "2")));
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
 const GEMINI_RETRYABLE_USER_MESSAGE = "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。";
 const STORY_SCHEMA_FAILURE_USER_MESSAGE = "絵本の構成データを整える途中で失敗しました。入力内容が原因ではない可能性があります。もう一度お試しください。";
@@ -108,13 +108,23 @@ function sanitizeStoryCastForFirestore(cast) {
         displayName: character.displayName,
         role: character.role,
         visualBible: character.visualBible,
+        characterKind: character.characterKind,
+        nonHuman: character.nonHuman,
+        noHumanFace: character.noHumanFace,
+        noHumanBody: character.noHumanBody,
+        scaleHint: character.scaleHint,
         silhouette: character.silhouette,
         colorPalette: character.colorPalette,
         signatureItems: character.signatureItems,
         doNotChange: character.doNotChange,
+        negativeCharacterRules: character.negativeCharacterRules,
         canChangeByScene: character.canChangeByScene,
         referenceImageUrl: character.referenceImageUrl,
         approvedImageUrl: character.approvedImageUrl,
+        generatedReferenceImageUrl: character.generatedReferenceImageUrl,
+        referenceImageGeneratedAt: character.referenceImageGeneratedAt,
+        referenceImagePrompt: character.referenceImagePrompt,
+        referenceImageStatus: character.referenceImageStatus,
     }));
     return sanitized.length > 0 ? sanitized : undefined;
 }
@@ -145,6 +155,10 @@ function normalizeStoryCastWithChildProfile(story, childProfileSnapshot) {
         characterId: protagonistId,
         displayName: protagonistDisplayName,
         role: "protagonist",
+        characterKind: "human_child",
+        nonHuman: false,
+        noHumanFace: false,
+        noHumanBody: false,
         visualBible: visualProfile.characterBible ||
             existingProtagonist?.visualBible ||
             story.characterBible,
@@ -172,8 +186,98 @@ function normalizeStoryCastWithChildProfile(story, childProfileSnapshot) {
         pages: normalizedPages,
     };
 }
+function inferCharacterKind(character) {
+    if (character.role === "protagonist") {
+        return "human_child";
+    }
+    if (character.role === "parent") {
+        return "human_adult";
+    }
+    if (character.role === "animal") {
+        return "animal";
+    }
+    if (character.role === "object_character") {
+        return "object_character";
+    }
+    if (character.role === "background_recurring") {
+        return "background";
+    }
+    return "magical_creature";
+}
+function isHumanLikePrompt(text) {
+    if (!text) {
+        return false;
+    }
+    return /\b(child|boy|girl|person|human|fairy child|spirit child)\b/i.test(text);
+}
+function buildNonHumanRecurringCharacter(character) {
+    const isStarLike = /star|ほし|星|magic_friend|ひかり|light/i.test(character.characterId) ||
+        /star|ほし|星|ひかり|light/i.test(character.displayName) ||
+        /star|ほし|星|spark/i.test(character.visualBible);
+    const visualBible = isStarLike
+        ? "A tiny glowing non-human star creature, about the size of a child's hand. It has a rounded five-point star silhouette, soft golden light, two small expressive eyes, no human body, no human arms like a child, no human legs, no human hairstyle, and no clothing. It floats gently and leaves a faint trail of golden sparkles."
+        : "A tiny non-human magical creature with a clear simple silhouette, child-safe expression, no human body, no human clothing, and a small floating presence that is easy to recognize across pages.";
+    const doNotChange = [
+        "Must remain a non-human recurring character.",
+        "Must not become a child, boy, girl, person, fairy child, or second protagonist.",
+        isStarLike ? "Must keep a rounded five-point star silhouette." : undefined,
+        ...(character.doNotChange ?? []),
+    ].filter((value, index, array) => Boolean(value) && array.indexOf(value) === index);
+    const negativeCharacterRules = [
+        "Do not draw this character as a human child.",
+        "Do not create a second child protagonist.",
+        "Do not give it human hair, human clothes, or human body proportions.",
+        ...(character.negativeCharacterRules ?? []),
+    ].filter((value, index, array) => Boolean(value) && array.indexOf(value) === index);
+    const signatureItems = [
+        ...(character.signatureItems ?? []),
+        ...(isStarLike ? ["soft golden glow", "tiny expressive eyes", "sparkling golden trail"] : []),
+    ].filter((value, index, array) => Boolean(value) && array.indexOf(value) === index);
+    return (0, firestore_sanitize_1.removeUndefinedDeep)({
+        ...character,
+        characterKind: "magical_creature",
+        nonHuman: true,
+        noHumanFace: true,
+        noHumanBody: true,
+        scaleHint: character.scaleHint ?? "about the size of a child's hand",
+        visualBible: isHumanLikePrompt(character.visualBible) ? visualBible : character.visualBible,
+        silhouette: character.silhouette ??
+            (isStarLike ? "small rounded five-point star silhouette with a soft floating glow" : undefined),
+        colorPalette: character.colorPalette ?? (isStarLike ? ["gold", "warm white", "pale yellow"] : undefined),
+        signatureItems: signatureItems.length > 0 ? signatureItems : undefined,
+        doNotChange: doNotChange.length > 0 ? doNotChange : undefined,
+        negativeCharacterRules: negativeCharacterRules.length > 0 ? negativeCharacterRules : undefined,
+    });
+}
+function normalizeRecurringCharacterKinds(story) {
+    if (!story.cast?.length) {
+        return story;
+    }
+    return {
+        ...story,
+        cast: story.cast.map((character) => {
+            const characterKind = character.characterKind ?? inferCharacterKind(character);
+            const withKind = {
+                ...character,
+                characterKind,
+            };
+            if (characterKind === "magical_creature" || characterKind === "object_character") {
+                return buildNonHumanRecurringCharacter(withKind);
+            }
+            if (characterKind === "human_child" && character.role !== "protagonist") {
+                return (0, firestore_sanitize_1.removeUndefinedDeep)({
+                    ...withKind,
+                    nonHuman: false,
+                    noHumanFace: false,
+                    noHumanBody: false,
+                });
+            }
+            return withKind;
+        }),
+    };
+}
 function normalizeStoryForBook(story, bookData, mergedInput) {
-    const withNormalizedCast = normalizeStoryCastWithChildProfile(story, bookData.childProfileSnapshot);
+    const withNormalizedCast = normalizeRecurringCharacterKinds(normalizeStoryCastWithChildProfile(story, bookData.childProfileSnapshot));
     return {
         ...withNormalizedCast,
         forbiddenQuestObjects: sanitizeForbiddenQuestObjects(withNormalizedCast.forbiddenQuestObjects, bookData, mergedInput),
@@ -256,9 +360,6 @@ function isGeneratedProtagonistId(value, childProfileSnapshot) {
         .map((name) => name.replace(/\s+/g, "").toLowerCase());
     return nameCandidates.includes(normalized.replace(/\s+/g, ""));
 }
-function shouldThrottleImageRequests() {
-    return process.env.NODE_ENV !== "test";
-}
 function isStorySchemaValidationError(err) {
     if (!(err instanceof Error)) {
         return false;
@@ -284,9 +385,109 @@ function isRetryableGeminiFailure(err) {
         message.includes("service unavailable") ||
         message.includes("unavailable"));
 }
+async function generatePageImageWithFallback(params) {
+    const { primaryProfile, pageIndex, skip } = params;
+    const base = {
+        pageIndex,
+        usedProfile: primaryProfile,
+        primaryProfile,
+        fallbackUsed: false,
+        attemptCount: 0,
+        timeoutCount: 0,
+        durationMs: 0,
+    };
+    if (skip) {
+        return { ...base, success: true, imageUrl: `https://via.placeholder.com/512x512/cccccc/666666?text=Page+${pageIndex}` };
+    }
+    const fallbackProfiles = (0, replicate_1.resolveImageFallbackProfiles)(primaryProfile);
+    const startMs = Date.now();
+    let totalAttempts = 0;
+    let timeoutCount = 0;
+    let lastFailureReason;
+    for (const profile of fallbackProfiles) {
+        const maxRetries = 2;
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            totalAttempts++;
+            try {
+                const buffer = await (0, replicate_1.withImageTimeout)(params.imageClient.generateImage(params.prompt, {
+                    purpose: params.imagePurpose,
+                    imageQualityTier: params.imageQualityTier,
+                    imageModelProfile: profile,
+                    inputImageUrls: params.inputImageUrls,
+                }), IMAGE_GENERATION_TIMEOUT_MS);
+                return {
+                    ...base,
+                    success: true,
+                    imageUrl: "",
+                    imageBuffer: buffer,
+                    usedProfile: profile,
+                    fallbackUsed: profile !== primaryProfile,
+                    attemptCount: totalAttempts,
+                    timeoutCount,
+                    durationMs: Date.now() - startMs,
+                };
+            }
+            catch (err) {
+                if (err instanceof replicate_1.ImageTimeoutError) {
+                    timeoutCount++;
+                    lastFailureReason = "image_timeout";
+                    logger.warn("Image generation timeout", {
+                        bookId: params.bookId,
+                        pageIndex,
+                        profile,
+                        attempt,
+                        timeoutMs: IMAGE_GENERATION_TIMEOUT_MS,
+                    });
+                    break;
+                }
+                const retryAfterMs = getRetryAfterMs(err);
+                lastFailureReason = err instanceof Error ? err.message : "unknown";
+                logger.warn("Image generation attempt failed", {
+                    bookId: params.bookId,
+                    pageIndex,
+                    profile,
+                    attempt,
+                    error: lastFailureReason,
+                });
+                if (attempt < maxRetries - 1) {
+                    if (retryAfterMs > 0) {
+                        await new Promise((resolve) => setTimeout(resolve, Math.min(retryAfterMs, 30_000)));
+                    }
+                    continue;
+                }
+                break;
+            }
+        }
+    }
+    return {
+        ...base,
+        success: false,
+        imageUrl: "",
+        usedProfile: fallbackProfiles[fallbackProfiles.length - 1],
+        fallbackUsed: fallbackProfiles.length > 1,
+        attemptCount: totalAttempts,
+        timeoutCount,
+        durationMs: Date.now() - startMs,
+        failureReason: lastFailureReason,
+        retryable: true,
+    };
+}
+async function runWithConcurrencyLimit(tasks, concurrency) {
+    const results = [];
+    let nextIndex = 0;
+    async function runNext() {
+        while (nextIndex < tasks.length) {
+            const index = nextIndex++;
+            results[index] = await tasks[index]();
+        }
+    }
+    const workers = Array.from({ length: Math.min(concurrency, tasks.length) }, () => runNext());
+    await Promise.all(workers);
+    return results;
+}
 async function processBookGeneration(bookId, bookData, deps) {
+    const generationStartMs = Date.now();
     try {
-        let lastImageAttemptAt = 0;
         // Step 1: Validate input
         const mergedInput = mergeInputWithChildProfile(bookData.input, bookData.childProfileSnapshot);
         const sanitizeResult = (0, content_filter_1.sanitizeInput)(mergedInput);
@@ -308,10 +509,12 @@ async function processBookGeneration(bookId, bookData, deps) {
         const userPlan = await deps.getUserPlan(bookData.userId);
         const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
         const readingProfile = (0, age_reading_profile_1.getAgeReadingProfile)(mergedInput.childAge);
+        const generationMode = normalizedBookData.generationMode ?? "reliable_fast";
         await deps.updateBookStoryGenerationMetadata(bookId, {
             ...(normalizedBookData.imageModelProfile
                 ? { imageModelProfile: normalizedBookData.imageModelProfile }
                 : {}),
+            generationMode,
             ...createGenerationStartedPatch(),
         });
         // Step 3: Check quota (skip in development)
@@ -335,9 +538,9 @@ async function processBookGeneration(bookId, bookData, deps) {
             }
         }
         // Step 4: Build reference assets
-        const coverReferenceImageUrls = buildReferenceImageUrls(normalizedBookData.childProfileSnapshot);
-        // Step 5: Generate the whole-book story JSON once with Gemini and validate it.
-        // Gemini is not called per page. After this step, Replicate is invoked page by page for illustrations.
+        const childHasReferenceImages = Boolean(normalizedBookData.childProfileSnapshot?.visualProfile.referenceImageUrl ||
+            normalizedBookData.childProfileSnapshot?.visualProfile.approvedImageUrl);
+        // Step 5: Generate story JSON once with Gemini and validate it.
         let storyResult;
         try {
             storyResult =
@@ -387,10 +590,22 @@ async function processBookGeneration(bookId, bookData, deps) {
             }
             throw err;
         }
-        const { story, qualityReport } = storyResult;
+        // Step 6: Ensure recurring character references (premium + quality mode only)
+        const enableRecurringRef = resolveEnableRecurringCharacterReference(generationMode);
+        let story = enableRecurringRef
+            ? await ensureRecurringCharacterReferences({
+                bookId,
+                story: storyResult.story,
+                normalizedBookData,
+                deps,
+            })
+            : storyResult.story;
+        const { qualityReport } = storyResult;
         const selectedStyleProfile = (0, illustration_styles_1.getIllustrationStyleProfile)(normalizedBookData.style);
-        const hasAnyCharacterReference = coverReferenceImageUrls.length > 0 ||
-            (story.cast ?? []).some((character) => Boolean(character.approvedImageUrl) || Boolean(character.referenceImageUrl));
+        const hasAnyCharacterReference = childHasReferenceImages ||
+            (story.cast ?? []).some((character) => Boolean(character.approvedImageUrl) ||
+                Boolean(character.referenceImageUrl) ||
+                Boolean(character.generatedReferenceImageUrl));
         const storyGenerationMetadata = (0, firestore_sanitize_1.removeUndefinedDeep)({
             storyModel: story.storyModel,
             storyModelFallbackUsed: story.storyModelFallbackUsed,
@@ -447,31 +662,14 @@ async function processBookGeneration(bookId, bookData, deps) {
                 summary: qualityReport.summary,
             });
         }
-        // Step 6: Update book title
+        // Step 7: Update book title
         await deps.updateBookTitle(bookId, story.title);
-        // Step 7: Process each page
+        // Step 8: Process pages concurrently with fallback and partial success
         const totalPages = story.pages.length;
-        for (let i = 0; i < totalPages; i++) {
-            const storyPage = story.pages[i];
-            const imagePrompt = (0, prompt_builder_1.buildImagePrompt)(storyPage.imagePrompt, normalizedBookData.style, buildFinalCharacterBible(story.characterBible, normalizedBookData), story.styleBible, {
-                pageNumber: i,
-                pageVisualRole: storyPage.pageVisualRole,
-                compositionHint: storyPage.compositionHint,
-                visualMotif: story.narrativeDevice?.visualMotif,
-                visualMotifUsage: storyPage.visualMotifUsage,
-                hiddenDetail: storyPage.hiddenDetail ?? story.narrativeDevice?.hiddenDetails?.[i],
-                ageBand: readingProfile.ageBand,
-                imageModelProfile: normalizedBookData.imageModelProfile,
-                imageQualityTier: normalizedBookData.imageQualityTier,
-                cast: story.cast,
-                appearingCharacterIds: storyPage.appearingCharacterIds,
-                focusCharacterId: storyPage.focusCharacterId,
-                childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
-                scenePolicy: normalizedBookData.scenePolicy,
-            });
-            // Generate image with retries (skip in development)
-            let imageBuffer = null;
-            let imageUrl = "";
+        const isDev = process.env.NODE_ENV === "development";
+        const concurrency = IMAGE_CONCURRENCY;
+        let completedPageCount = 0;
+        const pageTasks = story.pages.map((storyPage, i) => async () => {
             const imagePurpose = getPageImagePurpose(i, normalizedBookData.theme);
             const imageQualityTier = normalizedBookData.imageQualityTier ?? "light";
             const imageModelProfile = (0, replicate_1.resolveImageModelProfile)({
@@ -490,82 +688,60 @@ async function processBookGeneration(bookId, bookData, deps) {
                 imagePurpose,
                 characterConsistencyMode: normalizedBookData.characterConsistencyMode,
             });
-            const inputImageUrls = shouldUseReference
-                ? buildPageReferenceImageUrls(coverReferenceImageUrls, story.cast, storyPage.appearingCharacterIds)
+            const inputImageRefs = shouldUseReference
+                ? buildInputImageRefs(normalizedBookData.childProfileSnapshot, story.cast, storyPage.appearingCharacterIds)
                 : [];
-            const inputImageRoles = buildInputImageRoles(inputImageUrls, false);
-            // Skip image generation in development to avoid API costs
-            if (process.env.NODE_ENV === 'development') {
-                console.log(`Skipping image generation for page ${i} in development mode`);
-                imageUrl = `https://via.placeholder.com/512x512/cccccc/666666?text=Page+${i}`;
-            }
-            else {
-                for (let attempt = 0; attempt < IMAGE_RETRY_LIMIT; attempt++) {
-                    try {
-                        const now = Date.now();
-                        const waitMs = Math.max(0, IMAGE_REQUEST_INTERVAL_MS - (now - lastImageAttemptAt));
-                        if (waitMs > 0 && shouldThrottleImageRequests()) {
-                            await new Promise((resolve) => setTimeout(resolve, waitMs));
-                        }
-                        // Page 1 is treated as the cover-quality image, while later pages can be tiered for model comparison.
-                        imageBuffer = await deps.imageClient.generateImage(imagePrompt, {
-                            purpose: imagePurpose,
-                            imageQualityTier,
-                            imageModelProfile,
-                            inputImageUrls,
-                        });
-                        lastImageAttemptAt = Date.now();
-                        imageUrl = await deps.uploadImage(bookId, i, imageBuffer);
-                        break; // Success
-                    }
-                    catch (err) {
-                        lastImageAttemptAt = Date.now();
-                        console.error(`Image generation attempt ${attempt + 1}/${IMAGE_RETRY_LIMIT} failed for page ${i}:`, err);
-                        const retryAfterMs = getRetryAfterMs(err);
-                        if (retryAfterMs > 0 && attempt < IMAGE_RETRY_LIMIT - 1 && shouldThrottleImageRequests()) {
-                            await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
-                        }
-                        if (attempt === IMAGE_RETRY_LIMIT - 1) {
-                            console.error(`All ${IMAGE_RETRY_LIMIT} attempts failed for page ${i}`);
-                            const message = err instanceof Error ? err.message : "Image generation failed";
-                            await deps.writePage(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)({
-                                pageNumber: i,
-                                text: storyPage.text,
-                                imageUrl: "",
-                                imagePrompt,
-                                textCharCount: (0, story_quality_1.countJapaneseTextChars)(storyPage.text),
-                                textSentenceCount: (0, story_quality_1.countSentences)(storyPage.text),
-                                textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
-                                status: "failed",
-                                imageModel,
-                                imageQualityTier,
-                                imagePurpose,
-                                inputImageRoles,
-                                inputImageUrlsCount: inputImageUrls.length,
-                                inputReferenceCount: inputImageUrls.length,
-                                usedCharacterReference: inputImageUrls.length > 0,
-                                characterConsistencyMode: normalizedBookData.characterConsistencyMode,
-                                imageModelProfile,
-                                pageVisualRole: storyPage.pageVisualRole,
-                                appearingCharacterIds: storyPage.appearingCharacterIds,
-                                focusCharacterId: storyPage.focusCharacterId,
-                            }));
-                            await deps.updateBookFailure(bookId, `画像生成に失敗しました（${message}）`);
-                            await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
-                                failureStage: "image_generation",
-                                failureProvider: "replicate",
-                                failureReason: "unknown",
-                                retryable: true,
-                                technicalErrorMessage: message,
-                            }));
-                            await deps.updateBookStatus(bookId, "failed");
-                            return;
-                        }
-                    }
+            const inputImageUrls = inputImageRefs.map((ref) => ref.url);
+            const inputImageRoles = buildInputImageRoles(inputImageRefs, false);
+            const missingReferenceCharacters = collectMissingReferenceCharacters(story.cast, storyPage.appearingCharacterIds, inputImageRefs);
+            const imagePrompt = (0, prompt_builder_1.buildImagePrompt)(storyPage.imagePrompt, normalizedBookData.style, buildFinalCharacterBible(story.characterBible, normalizedBookData), story.styleBible, {
+                pageNumber: i,
+                pageVisualRole: storyPage.pageVisualRole,
+                compositionHint: storyPage.compositionHint,
+                visualMotif: story.narrativeDevice?.visualMotif,
+                visualMotifUsage: storyPage.visualMotifUsage,
+                hiddenDetail: storyPage.hiddenDetail ?? story.narrativeDevice?.hiddenDetails?.[i],
+                ageBand: readingProfile.ageBand,
+                imageModelProfile: normalizedBookData.imageModelProfile,
+                imageQualityTier: normalizedBookData.imageQualityTier,
+                cast: story.cast,
+                appearingCharacterIds: storyPage.appearingCharacterIds,
+                focusCharacterId: storyPage.focusCharacterId,
+                childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
+                scenePolicy: normalizedBookData.scenePolicy,
+            });
+            const imageStartMs = Date.now();
+            const imageResult = await generatePageImageWithFallback({
+                prompt: imagePrompt,
+                primaryProfile: imageModelProfile,
+                inputImageUrls,
+                imageQualityTier,
+                imagePurpose,
+                imageClient: deps.imageClient,
+                bookId,
+                pageIndex: i,
+                skip: isDev,
+            });
+            let imageUrl = imageResult.imageUrl;
+            if (imageResult.success && imageResult.imageBuffer) {
+                try {
+                    imageUrl = await deps.uploadImage(bookId, i, imageResult.imageBuffer);
+                }
+                catch (uploadErr) {
+                    logger.error("Image upload failed", {
+                        bookId,
+                        pageIndex: i,
+                        error: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
+                    });
+                    imageResult.success = false;
+                    imageResult.failureReason = `upload_failed: ${uploadErr instanceof Error ? uploadErr.message : "unknown"}`;
+                    imageUrl = "";
                 }
             }
-            // Write page document
-            const pageData = {
+            const pageStatus = imageResult.success
+                ? (imageResult.fallbackUsed ? "fallback_completed" : "completed")
+                : "image_failed";
+            const pageData = (0, firestore_sanitize_1.removeUndefinedDeep)({
                 pageNumber: i,
                 text: storyPage.text,
                 imageUrl,
@@ -573,33 +749,97 @@ async function processBookGeneration(bookId, bookData, deps) {
                 textCharCount: (0, story_quality_1.countJapaneseTextChars)(storyPage.text),
                 textSentenceCount: (0, story_quality_1.countSentences)(storyPage.text),
                 textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
-                status: "completed",
+                status: pageStatus,
                 imageModel,
                 imageQualityTier,
                 imagePurpose,
                 inputImageRoles,
+                inputImageRefs,
                 inputImageUrlsCount: inputImageUrls.length,
                 inputReferenceCount: inputImageUrls.length,
                 usedCharacterReference: inputImageUrls.length > 0,
+                missingReferenceCharacters,
                 characterConsistencyMode: normalizedBookData.characterConsistencyMode,
-                imageModelProfile,
+                imageModelProfile: imageResult.usedProfile,
+                fallbackFromModelProfile: imageResult.fallbackUsed ? imageResult.primaryProfile : undefined,
                 pageVisualRole: storyPage.pageVisualRole,
                 appearingCharacterIds: storyPage.appearingCharacterIds,
                 focusCharacterId: storyPage.focusCharacterId,
-            };
-            await deps.writePage(bookId, (0, firestore_sanitize_1.removeUndefinedDeep)(pageData));
-            if (i === 0 && imageUrl) {
+                imageGenerationStartedAtMs: imageStartMs,
+                imageCompletedAtMs: Date.now(),
+                imageDurationMs: imageResult.durationMs,
+                imageAttemptCount: imageResult.attemptCount,
+                imageTimeoutCount: imageResult.timeoutCount > 0 ? imageResult.timeoutCount : undefined,
+                imageFallbackUsed: imageResult.fallbackUsed || undefined,
+                imageFailureReason: imageResult.failureReason,
+                imageRetryable: imageResult.retryable,
+                replicateModel: (0, replicate_1.resolveReplicateModel)({
+                    purpose: imagePurpose,
+                    imageQualityTier,
+                    imageModelProfile: imageResult.usedProfile,
+                }),
+            });
+            await deps.writePage(bookId, pageData);
+            if (i === 0 && imageResult.success && imageUrl) {
                 await deps.updateBookCoverImage(bookId, imageUrl);
             }
-            // Update progress
-            const progress = Math.round(((i + 1) / totalPages) * 100);
+            completedPageCount++;
+            const progress = Math.round((completedPageCount / totalPages) * 100);
             await deps.updateBookProgress(bookId, progress);
+            return imageResult;
+        });
+        const pageResults = await runWithConcurrencyLimit(pageTasks, concurrency);
+        // Step 9: Compute book-level metrics and status
+        const successResults = pageResults.filter((r) => r.success);
+        const failedResults = pageResults.filter((r) => !r.success);
+        const imageSuccessCount = successResults.length;
+        const imageFailureCount = failedResults.length;
+        const failedPageNumbers = failedResults.map((r) => r.pageIndex);
+        const durations = pageResults.map((r) => r.durationMs).filter((d) => d > 0);
+        const averageImageDurationMs = durations.length > 0
+            ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+            : 0;
+        const maxImageDurationMs = durations.length > 0 ? Math.max(...durations) : 0;
+        const generationDurationMs = Date.now() - generationStartMs;
+        const generationReliabilityStatus = imageFailureCount === 0 ? "ok" : imageSuccessCount > 0 ? "partial" : "failed";
+        const bookStatus = imageFailureCount === 0
+            ? "completed"
+            : imageSuccessCount > 0
+                ? "partial_completed"
+                : "failed";
+        const bookMetrics = (0, firestore_sanitize_1.removeUndefinedDeep)({
+            imageSuccessCount,
+            imageFailureCount,
+            totalImageCount: totalPages,
+            failedPageNumbers: failedPageNumbers.length > 0 ? failedPageNumbers : undefined,
+            generationDurationMs,
+            averageImageDurationMs,
+            maxImageDurationMs,
+            generationReliabilityStatus,
+            generationMode,
+        });
+        if (bookStatus === "failed") {
+            await deps.updateBookFailure(bookId, "すべてのページの画像生成に失敗しました。しばらく経ってから再作成してください。");
+            await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
+                ...bookMetrics,
+                failureStage: "image_generation",
+                failureProvider: "replicate",
+                failureReason: "unknown",
+                retryable: true,
+                technicalErrorMessage: `All ${totalPages} pages failed`,
+            }));
         }
-        // Step 8: Mark book as completed
-        await deps.updateBookStatus(bookId, "completed");
-        // Step 9: Increment monthly count
-        await deps.incrementMonthlyCount(bookData.userId);
-        console.log(`Book ${bookId} generation completed successfully`);
+        else {
+            await deps.updateBookStoryGenerationMetadata(bookId, {
+                ...bookMetrics,
+                ...(bookStatus === "completed" ? createCompletedAtPatch() : createCompletedAtPatch()),
+            });
+        }
+        await deps.updateBookStatus(bookId, bookStatus);
+        if (bookStatus !== "failed") {
+            await deps.incrementMonthlyCount(bookData.userId);
+        }
+        console.log(`Book ${bookId} generation ${bookStatus}: ${imageSuccessCount}/${totalPages} pages succeeded`);
     }
     catch (err) {
         console.error(`Book generation failed for ${bookId}:`, err);
@@ -614,6 +854,15 @@ async function processBookGeneration(bookId, bookData, deps) {
         }));
         await deps.updateBookStatus(bookId, "failed");
     }
+}
+function resolveEnableRecurringCharacterReference(generationMode) {
+    if (process.env.ENABLE_RECURRING_CHARACTER_REFERENCE === "true") {
+        return true;
+    }
+    if (process.env.ENABLE_RECURRING_CHARACTER_REFERENCE === "false") {
+        return false;
+    }
+    return generationMode === "quality";
 }
 function normalizeBookForGeneration(bookData, template, userPlan) {
     const creationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
@@ -652,42 +901,175 @@ function normalizeBookForGeneration(bookData, template, userPlan) {
             : normalizedPlanConfig.imageModelProfile ?? bookData.imageModelProfile,
         scenePolicy: resolveScenePolicy(bookData, template),
         pageCount: normalizedPageCount,
+        generationMode: normalizedPlanConfig.generationMode,
     };
 }
 function isValidPageCount(value) {
     return value === 4 || value === 8 || value === 12;
 }
-function buildReferenceImageUrls(childProfileSnapshot) {
-    const urls = [
-        childProfileSnapshot?.visualProfile.referenceImageUrl,
-        childProfileSnapshot?.visualProfile.approvedImageUrl,
-    ]
-        .filter((value) => Boolean(value))
-        .map(toPublicUrl);
-    return [...new Set(urls)];
+function buildInputImageRefs(childProfileSnapshot, cast, appearingCharacterIds) {
+    const refs = [
+        childProfileSnapshot?.visualProfile.referenceImageUrl
+            ? {
+                role: "character_reference",
+                characterId: "child_protagonist",
+                url: toPublicUrl(childProfileSnapshot.visualProfile.referenceImageUrl),
+                source: "referenceImageUrl",
+            }
+            : undefined,
+        childProfileSnapshot?.visualProfile.approvedImageUrl
+            ? {
+                role: "character_reference",
+                characterId: "child_protagonist",
+                url: toPublicUrl(childProfileSnapshot.visualProfile.approvedImageUrl),
+                source: "approvedImageUrl",
+            }
+            : undefined,
+    ].filter(Boolean);
+    for (const character of cast ?? []) {
+        if (!appearingCharacterIds?.includes(character.characterId)) {
+            continue;
+        }
+        const candidates = [
+            [character.approvedImageUrl, "approvedImageUrl"],
+            [character.referenceImageUrl, "referenceImageUrl"],
+            [character.generatedReferenceImageUrl, "generatedReferenceImageUrl"],
+        ];
+        for (const [url, source] of candidates) {
+            if (!url) {
+                continue;
+            }
+            refs.push({
+                role: "character_reference",
+                characterId: character.characterId,
+                url: toPublicUrl(url),
+                source,
+            });
+        }
+    }
+    const deduped = refs.filter((ref, index, array) => array.findIndex((candidate) => candidate.url === ref.url &&
+        candidate.characterId === ref.characterId &&
+        candidate.source === ref.source) === index);
+    return deduped.slice(0, 8);
 }
-function buildPageReferenceImageUrls(baseReferenceImageUrls, cast, appearingCharacterIds) {
-    const castUrls = (cast ?? [])
-        .filter((character) => appearingCharacterIds?.includes(character.characterId))
-        .flatMap((character) => [character.approvedImageUrl, character.referenceImageUrl])
-        .filter((value) => Boolean(value))
-        .map(toPublicUrl);
-    return [...new Set([...baseReferenceImageUrls, ...castUrls])].slice(0, 8);
-}
-function buildInputImageRoles(inputImageUrls, stylePreviewUsedAsReference = false) {
-    if (inputImageUrls.length === 0) {
+function buildInputImageRoles(inputImageRefs, stylePreviewUsedAsReference = false) {
+    if (inputImageRefs.length === 0) {
         return [];
     }
     return stylePreviewUsedAsReference
         ? ["character_reference", "style_reference"]
         : ["character_reference"];
 }
+function shouldGenerateRecurringCharacterReference(character, story, bookData) {
+    if (!["standard_paid", "premium_paid"].includes(bookData.productPlan ?? "free")) {
+        return false;
+    }
+    if (character.approvedImageUrl ||
+        character.referenceImageUrl ||
+        character.generatedReferenceImageUrl) {
+        return false;
+    }
+    if (!["magical_creature", "object_character", "animal"].includes(character.characterKind ?? "")) {
+        return false;
+    }
+    const appearances = story.pages.filter((page) => page.appearingCharacterIds?.includes(character.characterId)).length;
+    return appearances >= 2;
+}
+function buildRecurringCharacterReferencePrompt(character, story, bookData) {
+    const styleProfile = (0, illustration_styles_1.getIllustrationStyleProfile)(bookData.style);
+    return [
+        `Character reference illustration for recurring character ${character.characterId}.`,
+        `Draw exactly one recurring ${character.characterKind ?? "non-human"} character on a clean, simple background.`,
+        "No protagonist, no extra children, no other characters, no duplicated character, no scenery clutter.",
+        character.nonHuman ? "This character must remain clearly non-human." : "",
+        character.noHumanFace ? "Do not give it a human face." : "",
+        character.noHumanBody ? "Do not give it a human body, human hair, human clothes, human arms, or human legs." : "",
+        character.scaleHint ? `Scale hint: ${character.scaleHint}.` : "",
+        `Visual identity: ${character.visualBible}`,
+        character.silhouette ? `Silhouette: ${character.silhouette}.` : "",
+        character.colorPalette?.length ? `Color palette: ${character.colorPalette.join(", ")}.` : "",
+        character.signatureItems?.length ? `Signature items: ${character.signatureItems.join(", ")}.` : "",
+        character.doNotChange?.length ? `Do not change: ${character.doNotChange.join("; ")}.` : "",
+        character.negativeCharacterRules?.length
+            ? `Negative rules: ${character.negativeCharacterRules.join("; ")}.`
+            : "",
+        `Illustration style: ${styleProfile.styleBible}`,
+        story.styleBible ? `Story-specific style consistency: ${story.styleBible}` : "",
+        "wordless reference illustration, no written text, no captions, no labels, no signage, no watermark.",
+    ]
+        .filter(Boolean)
+        .join(" ");
+}
+async function ensureRecurringCharacterReferences(params) {
+    if (!params.story.cast?.length) {
+        return params.story;
+    }
+    const nextCast = [];
+    for (const [index, character] of params.story.cast.entries()) {
+        if (!shouldGenerateRecurringCharacterReference(character, params.story, params.normalizedBookData)) {
+            nextCast.push(character);
+            continue;
+        }
+        const referencePrompt = buildRecurringCharacterReferencePrompt(character, params.story, params.normalizedBookData);
+        try {
+            const buffer = await (0, replicate_1.withImageTimeout)(params.deps.imageClient.generateImage(referencePrompt, {
+                purpose: "book_page",
+                imageQualityTier: params.normalizedBookData.imageQualityTier,
+                imageModelProfile: params.normalizedBookData.imageModelProfile,
+                inputImageUrls: [],
+            }), IMAGE_GENERATION_TIMEOUT_MS);
+            const url = await params.deps.uploadImage(params.bookId, -100 - index, buffer);
+            nextCast.push((0, firestore_sanitize_1.removeUndefinedDeep)({
+                ...character,
+                generatedReferenceImageUrl: url,
+                referenceImageGeneratedAt: admin.firestore.Timestamp.now(),
+                referenceImagePrompt: referencePrompt,
+                referenceImageStatus: "completed",
+            }));
+        }
+        catch (error) {
+            logger.warn("Recurring character reference generation failed, continuing without reference", {
+                bookId: params.bookId,
+                characterId: character.characterId,
+                error: error instanceof Error ? error.message : String(error),
+            });
+            nextCast.push((0, firestore_sanitize_1.removeUndefinedDeep)({
+                ...character,
+                referenceImagePrompt: referencePrompt,
+                referenceImageStatus: "failed",
+            }));
+        }
+    }
+    return {
+        ...params.story,
+        cast: nextCast,
+    };
+}
+function collectMissingReferenceCharacters(cast, appearingCharacterIds, inputImageRefs) {
+    if (!appearingCharacterIds?.length) {
+        return undefined;
+    }
+    const referencedCharacterIds = new Set((inputImageRefs ?? []).map((ref) => ref.characterId).filter((value) => Boolean(value)));
+    const missing = appearingCharacterIds.filter((characterId) => {
+        if (characterId === "child_protagonist") {
+            return !referencedCharacterIds.has("child_protagonist");
+        }
+        const character = cast?.find((entry) => entry.characterId === characterId);
+        if (!character) {
+            return true;
+        }
+        return !(character.approvedImageUrl ||
+            character.referenceImageUrl ||
+            character.generatedReferenceImageUrl);
+    });
+    return missing.length > 0 ? [...new Set(missing)] : undefined;
+}
 function collectPageTextQualityWarnings(report, pageIndex) {
     return report.issues
         .filter((issue) => issue.pageIndex === pageIndex && issue.severity === "warning")
         .map((issue) => issue.code);
 }
-function shouldRewriteStoryText(bookData, report) {
+function shouldRewriteStoryText(_bookData, report) {
     return report.issues.some((issue) => [
         "text_too_childish",
         "too_many_sound_words",
@@ -1131,7 +1513,7 @@ exports.generateBook = (0, firestore_1.onDocumentCreated)({
             await db.collection("books").doc(bookId).update({ progress });
         },
         updateBookStatus: async (bookId, status) => {
-            const statusPatch = status === "completed" ? createCompletedAtPatch() : createFailedAtPatch();
+            const statusPatch = status === "failed" ? createFailedAtPatch() : createCompletedAtPatch();
             await db.collection("books").doc(bookId).update({
                 status,
                 ...statusPatch,

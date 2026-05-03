@@ -186,6 +186,35 @@ function normalizeStoryCharacterRole(value) {
         return "background_recurring";
     return "buddy";
 }
+function normalizeStoryCharacterKind(value, role) {
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        const allowed = [
+            "human_child",
+            "human_adult",
+            "animal",
+            "magical_creature",
+            "object_character",
+            "background",
+        ];
+        if (allowed.includes(normalized)) {
+            return normalized;
+        }
+    }
+    if (role === "protagonist")
+        return "human_child";
+    if (role === "parent")
+        return "human_adult";
+    if (role === "animal")
+        return "animal";
+    if (role === "object_character")
+        return "object_character";
+    if (role === "background_recurring")
+        return "background";
+    if (role === "magical_friend" || role === "buddy")
+        return "magical_creature";
+    return undefined;
+}
 function validateStringArray(value, errorLabel) {
     if (value === undefined) {
         return undefined;
@@ -273,15 +302,22 @@ function validateStoryCast(data) {
         if (typeof obj.visualBible !== "string") {
             throw new Error(`cast[${index}].visualBible must be a string`);
         }
+        const role = normalizeStoryCharacterRole(obj.role);
         return {
             characterId: obj.characterId,
             displayName: obj.displayName,
-            role: normalizeStoryCharacterRole(obj.role),
+            role,
             visualBible: obj.visualBible,
+            characterKind: normalizeStoryCharacterKind(obj.characterKind, role),
+            nonHuman: typeof obj.nonHuman === "boolean" ? obj.nonHuman : undefined,
+            noHumanFace: typeof obj.noHumanFace === "boolean" ? obj.noHumanFace : undefined,
+            noHumanBody: typeof obj.noHumanBody === "boolean" ? obj.noHumanBody : undefined,
+            scaleHint: typeof obj.scaleHint === "string" ? obj.scaleHint : undefined,
             silhouette: typeof obj.silhouette === "string" ? obj.silhouette : undefined,
             colorPalette: validateStringArray(obj.colorPalette, `cast[${index}].colorPalette`),
             signatureItems: validateStringArray(obj.signatureItems, `cast[${index}].signatureItems`),
             doNotChange: validateStringArray(obj.doNotChange, `cast[${index}].doNotChange`),
+            negativeCharacterRules: validateStringArray(obj.negativeCharacterRules, `cast[${index}].negativeCharacterRules`),
             canChangeByScene: validateStringArray(obj.canChangeByScene, `cast[${index}].canChangeByScene`),
             referenceImageUrl: typeof obj.referenceImageUrl === "string" ? obj.referenceImageUrl : undefined,
             approvedImageUrl: typeof obj.approvedImageUrl === "string" ? obj.approvedImageUrl : undefined,

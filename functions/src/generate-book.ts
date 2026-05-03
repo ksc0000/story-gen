@@ -21,6 +21,7 @@ import type {
   InputImageRole,
   InputImageSource,
   StoryCharacterKind,
+  ImageModelProfile,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
@@ -29,6 +30,9 @@ import {
   ReplicateImageClient,
   resolveImageModelProfile,
   resolveReplicateModel,
+  resolveImageFallbackProfiles,
+  withImageTimeout,
+  ImageTimeoutError,
 } from "./lib/replicate";
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
 import { canUseProductPlan } from "./lib/entitlements";
@@ -44,8 +48,8 @@ import {
 import { removeUndefinedDeep } from "./lib/firestore-sanitize";
 import { getIllustrationStyleProfile } from "./lib/illustration-styles";
 
-const IMAGE_RETRY_LIMIT = 3;
-const IMAGE_REQUEST_INTERVAL_MS = 11_000;
+const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
+const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCURRENCY ?? "2")));
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
 const GEMINI_RETRYABLE_USER_MESSAGE =
   "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。";
@@ -433,10 +437,6 @@ function isGeneratedProtagonistId(
   return nameCandidates.includes(normalized.replace(/\s+/g, ""));
 }
 
-function shouldThrottleImageRequests(): boolean {
-  return process.env.NODE_ENV !== "test";
-}
-
 function isStorySchemaValidationError(err: unknown): boolean {
   if (!(err instanceof Error)) {
     return false;
@@ -480,7 +480,7 @@ export interface GenerationDeps {
   updateBookCoverImage: (bookId: string, imageUrl: string) => Promise<void>;
   writePage: (bookId: string, page: PageData) => Promise<void>;
   updateBookProgress: (bookId: string, progress: number) => Promise<void>;
-  updateBookStatus: (bookId: string, status: "completed" | "failed") => Promise<void>;
+  updateBookStatus: (bookId: string, status: "completed" | "partial_completed" | "failed") => Promise<void>;
   updateBookFailure: (bookId: string, message: string) => Promise<void>;
   updateBookFailureMetadata: (
     bookId: string,
@@ -495,14 +495,152 @@ export interface GenerationDeps {
   incrementMonthlyCount: (userId: string) => Promise<void>;
 }
 
+interface PageImageResult {
+  pageIndex: number;
+  success: boolean;
+  imageUrl: string;
+  imageBuffer?: Buffer;
+  usedProfile: ImageModelProfile;
+  primaryProfile: ImageModelProfile;
+  fallbackUsed: boolean;
+  attemptCount: number;
+  timeoutCount: number;
+  durationMs: number;
+  failureReason?: string;
+  retryable?: boolean;
+}
+
+async function generatePageImageWithFallback(params: {
+  prompt: string;
+  primaryProfile: ImageModelProfile;
+  inputImageUrls: string[];
+  imageQualityTier: import("./lib/types").ImageQualityTier;
+  imagePurpose: ImagePurpose;
+  imageClient: ImageClient;
+  bookId: string;
+  pageIndex: number;
+  skip: boolean;
+}): Promise<PageImageResult> {
+  const { primaryProfile, pageIndex, skip } = params;
+  const base: Omit<PageImageResult, "success" | "imageUrl" | "imageBuffer"> = {
+    pageIndex,
+    usedProfile: primaryProfile,
+    primaryProfile,
+    fallbackUsed: false,
+    attemptCount: 0,
+    timeoutCount: 0,
+    durationMs: 0,
+  };
+
+  if (skip) {
+    return { ...base, success: true, imageUrl: `https://via.placeholder.com/512x512/cccccc/666666?text=Page+${pageIndex}` };
+  }
+
+  const fallbackProfiles = resolveImageFallbackProfiles(primaryProfile);
+  const startMs = Date.now();
+  let totalAttempts = 0;
+  let timeoutCount = 0;
+  let lastFailureReason: string | undefined;
+
+  for (const profile of fallbackProfiles) {
+    const maxRetries = 2;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      totalAttempts++;
+      try {
+        const buffer = await withImageTimeout(
+          params.imageClient.generateImage(params.prompt, {
+            purpose: params.imagePurpose,
+            imageQualityTier: params.imageQualityTier,
+            imageModelProfile: profile,
+            inputImageUrls: params.inputImageUrls,
+          }),
+          IMAGE_GENERATION_TIMEOUT_MS
+        );
+        return {
+          ...base,
+          success: true,
+          imageUrl: "",
+          imageBuffer: buffer,
+          usedProfile: profile,
+          fallbackUsed: profile !== primaryProfile,
+          attemptCount: totalAttempts,
+          timeoutCount,
+          durationMs: Date.now() - startMs,
+        };
+      } catch (err) {
+        if (err instanceof ImageTimeoutError) {
+          timeoutCount++;
+          lastFailureReason = "image_timeout";
+          logger.warn("Image generation timeout", {
+            bookId: params.bookId,
+            pageIndex,
+            profile,
+            attempt,
+            timeoutMs: IMAGE_GENERATION_TIMEOUT_MS,
+          });
+          break;
+        }
+        const retryAfterMs = getRetryAfterMs(err);
+        lastFailureReason = err instanceof Error ? err.message : "unknown";
+        logger.warn("Image generation attempt failed", {
+          bookId: params.bookId,
+          pageIndex,
+          profile,
+          attempt,
+          error: lastFailureReason,
+        });
+        if (attempt < maxRetries - 1) {
+          if (retryAfterMs > 0) {
+            await new Promise((resolve) => setTimeout(resolve, Math.min(retryAfterMs, 30_000)));
+          }
+          continue;
+        }
+        break;
+      }
+    }
+  }
+
+  return {
+    ...base,
+    success: false,
+    imageUrl: "",
+    usedProfile: fallbackProfiles[fallbackProfiles.length - 1],
+    fallbackUsed: fallbackProfiles.length > 1,
+    attemptCount: totalAttempts,
+    timeoutCount,
+    durationMs: Date.now() - startMs,
+    failureReason: lastFailureReason,
+    retryable: true,
+  };
+}
+
+async function runWithConcurrencyLimit<T>(
+  tasks: Array<() => Promise<T>>,
+  concurrency: number
+): Promise<T[]> {
+  const results: T[] = [];
+  let nextIndex = 0;
+
+  async function runNext(): Promise<void> {
+    while (nextIndex < tasks.length) {
+      const index = nextIndex++;
+      results[index] = await tasks[index]();
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, tasks.length) }, () => runNext());
+  await Promise.all(workers);
+  return results;
+}
+
 export async function processBookGeneration(
   bookId: string,
   bookData: BookData,
   deps: GenerationDeps
 ): Promise<void> {
-  try {
-    let lastImageAttemptAt = 0;
+  const generationStartMs = Date.now();
 
+  try {
     // Step 1: Validate input
     const mergedInput = mergeInputWithChildProfile(bookData.input, bookData.childProfileSnapshot);
     const sanitizeResult = sanitizeInput(mergedInput);
@@ -525,10 +663,13 @@ export async function processBookGeneration(
     const userPlan = await deps.getUserPlan(bookData.userId);
     const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
     const readingProfile = getAgeReadingProfile(mergedInput.childAge);
+    const generationMode = normalizedBookData.generationMode ?? "reliable_fast";
+
     await deps.updateBookStoryGenerationMetadata(bookId, {
       ...(normalizedBookData.imageModelProfile
         ? { imageModelProfile: normalizedBookData.imageModelProfile }
         : {}),
+      generationMode,
       ...createGenerationStartedPatch(),
     });
 
@@ -560,8 +701,7 @@ export async function processBookGeneration(
         normalizedBookData.childProfileSnapshot?.visualProfile.approvedImageUrl
     );
 
-    // Step 5: Generate the whole-book story JSON once with Gemini and validate it.
-    // Gemini is not called per page. After this step, Replicate is invoked page by page for illustrations.
+    // Step 5: Generate story JSON once with Gemini and validate it.
     let storyResult: {
       story: GeneratedStory;
       qualityReport: StoryQualityReport;
@@ -625,12 +765,17 @@ export async function processBookGeneration(
       throw err;
     }
 
-    let story = await ensureRecurringCharacterReferences({
-      bookId,
-      story: storyResult.story,
-      normalizedBookData,
-      deps,
-    });
+    // Step 6: Ensure recurring character references (premium + quality mode only)
+    const enableRecurringRef = resolveEnableRecurringCharacterReference(generationMode);
+    let story = enableRecurringRef
+      ? await ensureRecurringCharacterReferences({
+          bookId,
+          story: storyResult.story,
+          normalizedBookData,
+          deps,
+        })
+      : storyResult.story;
+
     const { qualityReport } = storyResult;
     const selectedStyleProfile = getIllustrationStyleProfile(normalizedBookData.style);
     const hasAnyCharacterReference =
@@ -702,39 +847,16 @@ export async function processBookGeneration(
       });
     }
 
-    // Step 6: Update book title
+    // Step 7: Update book title
     await deps.updateBookTitle(bookId, story.title);
 
-    // Step 7: Process each page
+    // Step 8: Process pages concurrently with fallback and partial success
     const totalPages = story.pages.length;
-    for (let i = 0; i < totalPages; i++) {
-      const storyPage = story.pages[i];
-      const imagePrompt = buildImagePrompt(
-        storyPage.imagePrompt,
-        normalizedBookData.style,
-        buildFinalCharacterBible(story.characterBible, normalizedBookData),
-        story.styleBible,
-        {
-          pageNumber: i,
-          pageVisualRole: storyPage.pageVisualRole,
-          compositionHint: storyPage.compositionHint,
-          visualMotif: story.narrativeDevice?.visualMotif,
-          visualMotifUsage: storyPage.visualMotifUsage,
-          hiddenDetail: storyPage.hiddenDetail ?? story.narrativeDevice?.hiddenDetails?.[i],
-          ageBand: readingProfile.ageBand,
-          imageModelProfile: normalizedBookData.imageModelProfile,
-          imageQualityTier: normalizedBookData.imageQualityTier,
-          cast: story.cast,
-          appearingCharacterIds: storyPage.appearingCharacterIds,
-          focusCharacterId: storyPage.focusCharacterId,
-          childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
-          scenePolicy: normalizedBookData.scenePolicy,
-        }
-      );
+    const isDev = process.env.NODE_ENV === "development";
+    const concurrency = IMAGE_CONCURRENCY;
+    let completedPageCount = 0;
 
-      // Generate image with retries (skip in development)
-      let imageBuffer: Buffer | null = null;
-      let imageUrl = "";
+    const pageTasks = story.pages.map((storyPage, i) => async () => {
       const imagePurpose = getPageImagePurpose(i, normalizedBookData.theme);
       const imageQualityTier = normalizedBookData.imageQualityTier ?? "light";
       const imageModelProfile = resolveImageModelProfile({
@@ -768,80 +890,64 @@ export async function processBookGeneration(
         inputImageRefs
       );
 
-      // Skip image generation in development to avoid API costs
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Skipping image generation for page ${i} in development mode`);
-        imageUrl = `https://via.placeholder.com/512x512/cccccc/666666?text=Page+${i}`;
-      } else {
-        for (let attempt = 0; attempt < IMAGE_RETRY_LIMIT; attempt++) {
-          try {
-            const now = Date.now();
-            const waitMs = Math.max(0, IMAGE_REQUEST_INTERVAL_MS - (now - lastImageAttemptAt));
-            if (waitMs > 0 && shouldThrottleImageRequests()) {
-              await new Promise((resolve) => setTimeout(resolve, waitMs));
-            }
+      const imagePrompt = buildImagePrompt(
+        storyPage.imagePrompt,
+        normalizedBookData.style,
+        buildFinalCharacterBible(story.characterBible, normalizedBookData),
+        story.styleBible,
+        {
+          pageNumber: i,
+          pageVisualRole: storyPage.pageVisualRole,
+          compositionHint: storyPage.compositionHint,
+          visualMotif: story.narrativeDevice?.visualMotif,
+          visualMotifUsage: storyPage.visualMotifUsage,
+          hiddenDetail: storyPage.hiddenDetail ?? story.narrativeDevice?.hiddenDetails?.[i],
+          ageBand: readingProfile.ageBand,
+          imageModelProfile: normalizedBookData.imageModelProfile,
+          imageQualityTier: normalizedBookData.imageQualityTier,
+          cast: story.cast,
+          appearingCharacterIds: storyPage.appearingCharacterIds,
+          focusCharacterId: storyPage.focusCharacterId,
+          childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
+          scenePolicy: normalizedBookData.scenePolicy,
+        }
+      );
 
-            // Page 1 is treated as the cover-quality image, while later pages can be tiered for model comparison.
-            imageBuffer = await deps.imageClient.generateImage(imagePrompt, {
-              purpose: imagePurpose,
-              imageQualityTier,
-              imageModelProfile,
-              inputImageUrls,
-            });
-            lastImageAttemptAt = Date.now();
-            imageUrl = await deps.uploadImage(bookId, i, imageBuffer);
-            break; // Success
-          } catch (err) {
-            lastImageAttemptAt = Date.now();
-            console.error(`Image generation attempt ${attempt + 1}/${IMAGE_RETRY_LIMIT} failed for page ${i}:`, err);
-            const retryAfterMs = getRetryAfterMs(err);
-            if (retryAfterMs > 0 && attempt < IMAGE_RETRY_LIMIT - 1 && shouldThrottleImageRequests()) {
-              await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
-            }
-            if (attempt === IMAGE_RETRY_LIMIT - 1) {
-              console.error(`All ${IMAGE_RETRY_LIMIT} attempts failed for page ${i}`);
-              const message = err instanceof Error ? err.message : "Image generation failed";
-              await deps.writePage(bookId, removeUndefinedDeep({
-                pageNumber: i,
-                text: storyPage.text,
-                imageUrl: "",
-                imagePrompt,
-                textCharCount: countJapaneseTextChars(storyPage.text),
-                textSentenceCount: countSentences(storyPage.text),
-                textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
-                status: "failed",
-                imageModel,
-                imageQualityTier,
-                imagePurpose,
-                inputImageRoles,
-                inputImageRefs,
-                inputImageUrlsCount: inputImageUrls.length,
-                inputReferenceCount: inputImageUrls.length,
-                usedCharacterReference: inputImageUrls.length > 0,
-                missingReferenceCharacters,
-                characterConsistencyMode: normalizedBookData.characterConsistencyMode,
-                imageModelProfile,
-                pageVisualRole: storyPage.pageVisualRole,
-                appearingCharacterIds: storyPage.appearingCharacterIds,
-                focusCharacterId: storyPage.focusCharacterId,
-              }));
-              await deps.updateBookFailure(bookId, `画像生成に失敗しました（${message}）`);
-              await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
-                failureStage: "image_generation",
-                failureProvider: "replicate",
-                failureReason: "unknown",
-                retryable: true,
-                technicalErrorMessage: message,
-              }));
-              await deps.updateBookStatus(bookId, "failed");
-              return;
-            }
-          }
+      const imageStartMs = Date.now();
+
+      const imageResult = await generatePageImageWithFallback({
+        prompt: imagePrompt,
+        primaryProfile: imageModelProfile,
+        inputImageUrls,
+        imageQualityTier,
+        imagePurpose,
+        imageClient: deps.imageClient,
+        bookId,
+        pageIndex: i,
+        skip: isDev,
+      });
+
+      let imageUrl = imageResult.imageUrl;
+      if (imageResult.success && imageResult.imageBuffer) {
+        try {
+          imageUrl = await deps.uploadImage(bookId, i, imageResult.imageBuffer);
+        } catch (uploadErr) {
+          logger.error("Image upload failed", {
+            bookId,
+            pageIndex: i,
+            error: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
+          });
+          imageResult.success = false;
+          imageResult.failureReason = `upload_failed: ${uploadErr instanceof Error ? uploadErr.message : "unknown"}`;
+          imageUrl = "";
         }
       }
 
-      // Write page document
-      const pageData: PageData = {
+      const pageStatus = imageResult.success
+        ? (imageResult.fallbackUsed ? "fallback_completed" : "completed")
+        : "image_failed";
+
+      const pageData: PageData = removeUndefinedDeep({
         pageNumber: i,
         text: storyPage.text,
         imageUrl,
@@ -849,7 +955,7 @@ export async function processBookGeneration(
         textCharCount: countJapaneseTextChars(storyPage.text),
         textSentenceCount: countSentences(storyPage.text),
         textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
-        status: "completed",
+        status: pageStatus as PageData["status"],
         imageModel,
         imageQualityTier,
         imagePurpose,
@@ -860,28 +966,99 @@ export async function processBookGeneration(
         usedCharacterReference: inputImageUrls.length > 0,
         missingReferenceCharacters,
         characterConsistencyMode: normalizedBookData.characterConsistencyMode,
-        imageModelProfile,
+        imageModelProfile: imageResult.usedProfile,
+        fallbackFromModelProfile: imageResult.fallbackUsed ? imageResult.primaryProfile : undefined,
         pageVisualRole: storyPage.pageVisualRole,
         appearingCharacterIds: storyPage.appearingCharacterIds,
         focusCharacterId: storyPage.focusCharacterId,
-      };
-      await deps.writePage(bookId, removeUndefinedDeep(pageData));
-      if (i === 0 && imageUrl) {
+        imageGenerationStartedAtMs: imageStartMs,
+        imageCompletedAtMs: Date.now(),
+        imageDurationMs: imageResult.durationMs,
+        imageAttemptCount: imageResult.attemptCount,
+        imageTimeoutCount: imageResult.timeoutCount > 0 ? imageResult.timeoutCount : undefined,
+        imageFallbackUsed: imageResult.fallbackUsed || undefined,
+        imageFailureReason: imageResult.failureReason,
+        imageRetryable: imageResult.retryable,
+        replicateModel: resolveReplicateModel({
+          purpose: imagePurpose,
+          imageQualityTier,
+          imageModelProfile: imageResult.usedProfile,
+        }),
+      });
+
+      await deps.writePage(bookId, pageData);
+
+      if (i === 0 && imageResult.success && imageUrl) {
         await deps.updateBookCoverImage(bookId, imageUrl);
       }
 
-      // Update progress
-      const progress = Math.round(((i + 1) / totalPages) * 100);
+      completedPageCount++;
+      const progress = Math.round((completedPageCount / totalPages) * 100);
       await deps.updateBookProgress(bookId, progress);
+
+      return imageResult;
+    });
+
+    const pageResults = await runWithConcurrencyLimit(pageTasks, concurrency);
+
+    // Step 9: Compute book-level metrics and status
+    const successResults = pageResults.filter((r) => r.success);
+    const failedResults = pageResults.filter((r) => !r.success);
+    const imageSuccessCount = successResults.length;
+    const imageFailureCount = failedResults.length;
+    const failedPageNumbers = failedResults.map((r) => r.pageIndex);
+    const durations = pageResults.map((r) => r.durationMs).filter((d) => d > 0);
+    const averageImageDurationMs = durations.length > 0
+      ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+      : 0;
+    const maxImageDurationMs = durations.length > 0 ? Math.max(...durations) : 0;
+    const generationDurationMs = Date.now() - generationStartMs;
+    const generationReliabilityStatus =
+      imageFailureCount === 0 ? "ok" : imageSuccessCount > 0 ? "partial" : "failed";
+
+    const bookStatus: "completed" | "partial_completed" | "failed" =
+      imageFailureCount === 0
+        ? "completed"
+        : imageSuccessCount > 0
+          ? "partial_completed"
+          : "failed";
+
+    const bookMetrics = removeUndefinedDeep({
+      imageSuccessCount,
+      imageFailureCount,
+      totalImageCount: totalPages,
+      failedPageNumbers: failedPageNumbers.length > 0 ? failedPageNumbers : undefined,
+      generationDurationMs,
+      averageImageDurationMs,
+      maxImageDurationMs,
+      generationReliabilityStatus,
+      generationMode,
+    });
+
+    if (bookStatus === "failed") {
+      await deps.updateBookFailure(bookId, "すべてのページの画像生成に失敗しました。しばらく経ってから再作成してください。");
+      await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
+        ...bookMetrics,
+        failureStage: "image_generation",
+        failureProvider: "replicate",
+        failureReason: "unknown",
+        retryable: true,
+        technicalErrorMessage: `All ${totalPages} pages failed`,
+      }));
+    } else {
+      await deps.updateBookStoryGenerationMetadata(bookId, {
+        ...bookMetrics,
+        ...(bookStatus === "completed" ? createCompletedAtPatch() : createCompletedAtPatch()),
+      });
     }
 
-    // Step 8: Mark book as completed
-    await deps.updateBookStatus(bookId, "completed");
+    await deps.updateBookStatus(bookId, bookStatus);
 
-    // Step 9: Increment monthly count
-    await deps.incrementMonthlyCount(bookData.userId);
+    if (bookStatus !== "failed") {
+      await deps.incrementMonthlyCount(bookData.userId);
+    }
 
-    console.log(`Book ${bookId} generation completed successfully`);
+    console.log(`Book ${bookId} generation ${bookStatus}: ${imageSuccessCount}/${totalPages} pages succeeded`);
   } catch (err) {
     console.error(`Book generation failed for ${bookId}:`, err);
     const message = err instanceof Error ? err.message : "Unknown generation error";
@@ -895,6 +1072,16 @@ export async function processBookGeneration(
     }));
     await deps.updateBookStatus(bookId, "failed");
   }
+}
+
+function resolveEnableRecurringCharacterReference(generationMode: string): boolean {
+  if (process.env.ENABLE_RECURRING_CHARACTER_REFERENCE === "true") {
+    return true;
+  }
+  if (process.env.ENABLE_RECURRING_CHARACTER_REFERENCE === "false") {
+    return false;
+  }
+  return generationMode === "quality";
 }
 
 function normalizeBookForGeneration(
@@ -947,6 +1134,7 @@ function normalizeBookForGeneration(
         : normalizedPlanConfig.imageModelProfile ?? bookData.imageModelProfile,
     scenePolicy: resolveScenePolicy(bookData, template),
     pageCount: normalizedPageCount,
+    generationMode: normalizedPlanConfig.generationMode,
   };
 }
 
@@ -1125,12 +1313,15 @@ async function ensureRecurringCharacterReferences(params: {
     );
 
     try {
-      const buffer = await params.deps.imageClient.generateImage(referencePrompt, {
-        purpose: "book_page",
-        imageQualityTier: params.normalizedBookData.imageQualityTier,
-        imageModelProfile: params.normalizedBookData.imageModelProfile,
-        inputImageUrls: [],
-      });
+      const buffer = await withImageTimeout(
+        params.deps.imageClient.generateImage(referencePrompt, {
+          purpose: "book_page",
+          imageQualityTier: params.normalizedBookData.imageQualityTier,
+          imageModelProfile: params.normalizedBookData.imageModelProfile,
+          inputImageUrls: [],
+        }),
+        IMAGE_GENERATION_TIMEOUT_MS
+      );
       const url = await params.deps.uploadImage(params.bookId, -100 - index, buffer);
       nextCast.push(
         removeUndefinedDeep({
@@ -1142,7 +1333,7 @@ async function ensureRecurringCharacterReferences(params: {
         }) as StoryCharacter
       );
     } catch (error) {
-      logger.warn("Recurring character reference generation failed", {
+      logger.warn("Recurring character reference generation failed, continuing without reference", {
         bookId: params.bookId,
         characterId: character.characterId,
         error: error instanceof Error ? error.message : String(error),
@@ -1204,7 +1395,7 @@ function collectPageTextQualityWarnings(
 }
 
 function shouldRewriteStoryText(
-  bookData: BookData,
+  _bookData: BookData,
   report: StoryQualityReport
 ): boolean {
   return report.issues.some((issue) =>
@@ -1765,9 +1956,9 @@ export const generateBook = onDocumentCreated(
         await db.collection("books").doc(bookId).update({ progress });
       },
 
-      updateBookStatus: async (bookId: string, status: "completed" | "failed") => {
+      updateBookStatus: async (bookId: string, status: "completed" | "partial_completed" | "failed") => {
         const statusPatch =
-          status === "completed" ? createCompletedAtPatch() : createFailedAtPatch();
+          status === "failed" ? createFailedAtPatch() : createCompletedAtPatch();
         await db.collection("books").doc(bookId).update({
           status,
           ...statusPatch,

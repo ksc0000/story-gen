@@ -35,12 +35,13 @@ import type {
   ProductPlan,
   StoryCharacter,
   StoryQualityReportData,
+  Timestamp,
 } from "@/lib/types";
 
 type BookWithId = BookDoc & { id: string };
 type PageWithId = PageDoc & { id: string };
 type FeedbackWithId = BookFeedbackDoc & { id: string };
-type ReviewStatusFilter = "all" | "completed" | "failed";
+type ReviewStatusFilter = "all" | "completed" | "partial_completed" | "failed";
 type ReviewQualityFilter = "all" | "ok" | "warning" | "failed";
 type ReviewPlanFilter = "all" | ProductPlan;
 type ReviewModelFilter = "all" | ImageModelProfile;
@@ -68,6 +69,29 @@ const MODEL_PROFILE_OPTIONS: Array<{ value: ReviewModelFilter; label: string }> 
   { value: "pro_consistent", label: "pro_consistent" },
   { value: "kontext_reference", label: "kontext_reference" },
 ];
+
+function formatTimestamp(ts: Timestamp | null | undefined, ms?: number): string {
+  const date = normalizeFirestoreDate(ts) ?? (ms ? new Date(ms) : null);
+  if (!date) return "—";
+  return formatResolvedDate(date);
+}
+
+function formatBookTimestamp(book: BookWithId, field: keyof BookWithId): string {
+  const value = book[field];
+  if (value && typeof value === "object" && "seconds" in value) {
+    return formatTimestamp(value as Timestamp);
+  }
+  if (typeof value === "number") {
+    return formatTimestamp(undefined, value);
+  }
+  return "—";
+}
+
+function formatMs(ms: number | undefined): string {
+  if (ms === undefined || ms === 0) return "—";
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
+}
 
 function getStoryQualityWarnings(report?: StoryQualityReportData) {
   return report?.issues.filter((issue) => issue.severity === "warning") ?? [];
@@ -132,6 +156,41 @@ function averageTextChars(books: BookWithId[]) {
     .filter((value): value is number => typeof value === "number");
   if (values.length === 0) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function averageImageDuration(books: BookWithId[]) {
+  const values = books
+    .map((book) => book.averageImageDurationMs)
+    .filter((value): value is number => typeof value === "number" && value > 0);
+  if (values.length === 0) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function imageFailureRate(books: BookWithId[]) {
+  const withData = books.filter(
+    (book) => typeof book.totalImageCount === "number" && book.totalImageCount > 0
+  );
+  if (withData.length === 0) return 0;
+  const totalImages = withData.reduce((sum, book) => sum + (book.totalImageCount ?? 0), 0);
+  const failedImages = withData.reduce((sum, book) => sum + (book.imageFailureCount ?? 0), 0);
+  return totalImages > 0 ? (failedImages / totalImages) * 100 : 0;
+}
+
+function fallbackRate(books: BookWithId[]) {
+  const withData = books.filter(
+    (book) => typeof book.totalImageCount === "number" && book.totalImageCount > 0
+  );
+  if (withData.length === 0) return 0;
+  const totalImages = withData.reduce((sum, book) => sum + (book.totalImageCount ?? 0), 0);
+  const successImages = withData.reduce((sum, book) => sum + (book.imageSuccessCount ?? 0), 0);
+  const totalFallbackPages = withData.reduce((sum, book) => {
+    return sum + (book.failedPageNumbers?.length ?? 0);
+  }, 0);
+  return totalImages > 0 ? (totalFallbackPages / successImages) * 100 : 0;
+}
+
+function slowImageCount(books: BookWithId[]) {
+  return books.filter((book) => (book.maxImageDurationMs ?? 0) > 120_000).length;
 }
 
 function resolveEffectiveImageModelProfile(
@@ -564,12 +623,35 @@ export default function AdminBookQualityReviewPage() {
               <div className="grid gap-3 md:grid-cols-5">
                 <BookStatCard label="total loaded" value={books.length} />
                 <BookStatCard label="completed" value={summaryByStatus.completed ?? 0} />
-                <BookStatCard label="quality ok=false" value={qualityReportNgCount} />
+                <BookStatCard label="partial_completed" value={summaryByStatus.partial_completed ?? 0} />
                 <BookStatCard label="failed" value={summaryByStatus.failed ?? 0} />
+                <BookStatCard label="quality ok=false" value={qualityReportNgCount} />
+              </div>
+              <div className="grid gap-3 md:grid-cols-5">
+                <BookStatCard
+                  label="avg image time"
+                  value={formatMs(Math.round(averageImageDuration(books)))}
+                  hint="直近50件の平均画像生成時間"
+                />
+                <BookStatCard
+                  label="img failure rate"
+                  value={`${imageFailureRate(books).toFixed(1)}%`}
+                  hint="直近50件の画像失敗率"
+                />
+                <BookStatCard
+                  label="slow images (>2min)"
+                  value={slowImageCount(books)}
+                  hint="maxImageDurationMs > 120s"
+                />
                 <BookStatCard
                   label="premium"
                   value={summaryByPlan.premium_paid ?? 0}
-                  hint={`avg rewrite ${averageRewriteAttempts(books).toFixed(1)} / avg chars ${averageTextChars(books).toFixed(0)}`}
+                  hint={`avg rewrite ${averageRewriteAttempts(books).toFixed(1)}`}
+                />
+                <BookStatCard
+                  label="avg chars"
+                  value={averageTextChars(books).toFixed(0)}
+                  hint="storyQualityReport.averageCharsPerPage"
                 />
               </div>
 
@@ -584,6 +666,7 @@ export default function AdminBookQualityReviewPage() {
                   >
                     <option value="all">all</option>
                     <option value="completed">completed</option>
+                    <option value="partial_completed">partial_completed</option>
                     <option value="failed">failed</option>
                   </select>
                 </div>
@@ -697,9 +780,10 @@ export default function AdminBookQualityReviewPage() {
                                 <p>quality ok: {typeof book.storyQualityReport?.ok === "boolean" ? String(book.storyQualityReport.ok) : "—"}</p>
                                 <p>issues: {issueCount}</p>
                                 <p>warnings: {warningCount}</p>
+                                <p>reliability: {book.generationReliabilityStatus ?? "—"}</p>
+                                <p>img {book.imageSuccessCount ?? "?"}/{book.totalImageCount ?? "?"} avgTime:{formatMs(book.averageImageDurationMs)}</p>
                                 <p>createdAt: {formatBookTimestamp(book, "createdAt")}</p>
                                 <p>userId: {book.userId}</p>
-                                <p>childId: {book.childId ?? "—"}</p>
                               </div>
                             </button>
                           );
@@ -776,6 +860,14 @@ export default function AdminBookQualityReviewPage() {
                             <p><span className="font-medium text-purple-900">imageQualityTier:</span> {selectedBook.imageQualityTier ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">imageModelProfile:</span> {selectedBookEffectiveImageModelProfile}</p>
                             <p><span className="font-medium text-purple-900">characterConsistencyMode:</span> {selectedBook.characterConsistencyMode ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">generationMode:</span> {selectedBook.generationMode ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">generationReliabilityStatus:</span> {selectedBook.generationReliabilityStatus ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">imageSuccess/Total:</span> {selectedBook.imageSuccessCount ?? "—"} / {selectedBook.totalImageCount ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">imageFailureCount:</span> {selectedBook.imageFailureCount ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">failedPageNumbers:</span> {selectedBook.failedPageNumbers?.join(", ") ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">generationDurationMs:</span> {formatMs(selectedBook.generationDurationMs)}</p>
+                            <p><span className="font-medium text-purple-900">avgImageDurationMs:</span> {formatMs(selectedBook.averageImageDurationMs)}</p>
+                            <p><span className="font-medium text-purple-900">maxImageDurationMs:</span> {formatMs(selectedBook.maxImageDurationMs)}</p>
                           </div>
 
                           <div className="grid gap-4 xl:grid-cols-2">
@@ -999,6 +1091,14 @@ export default function AdminBookQualityReviewPage() {
                                           <p>imagePurpose: {page.imagePurpose ?? "—"}</p>
                                           <p>focusCharacterId: {page.focusCharacterId ?? "—"}</p>
                                           <p>appearingCharacterIds: {page.appearingCharacterIds?.join(", ") ?? "—"}</p>
+                                          <p className="col-span-full border-t border-violet-100 pt-2 font-medium text-purple-900">生成メトリクス</p>
+                                          <p>imageDurationMs: <span className={(page.imageDurationMs ?? 0) > 120_000 ? "font-semibold text-rose-600" : ""}>{formatMs(page.imageDurationMs)}</span></p>
+                                          <p>imageAttemptCount: {page.imageAttemptCount ?? "—"}</p>
+                                          <p>imageTimeoutCount: {page.imageTimeoutCount ?? "—"}</p>
+                                          <p>imageFallbackUsed: {page.imageFallbackUsed ? "true" : "false"}</p>
+                                          <p>fallbackFromProfile: {page.fallbackFromModelProfile ?? "—"}</p>
+                                          <p>imageFailureReason: {page.imageFailureReason ?? "—"}</p>
+                                          <p>replicateModel: {page.replicateModel ?? "—"}</p>
                                         </div>
                                       </div>
                                       <div className="space-y-4">

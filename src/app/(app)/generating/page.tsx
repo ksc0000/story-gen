@@ -18,16 +18,22 @@ import {
   IMAGE_QUALITY_LABELS,
 } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
-import type { BookDoc } from "@/lib/types";
+import type { BookDoc, PageDoc } from "@/lib/types";
 
-function getProgressStep(progress: number) {
-  if (progress < 20) return "お話の準備をしています";
-  if (progress < 40) return "絵本の世界観を整えています";
+function getProgressStep(progress: number, pages: PageDoc[]) {
+  const completedPages = pages.filter((p) => p.status === "completed" || p.status === "fallback_completed").length;
+  const totalPages = pages.length;
+
+  if (progress < 20) return "本文を作っています";
+  if (progress < 35) return "キャラクターを整えています";
+  if (totalPages > 0 && completedPages < totalPages) {
+    return `画像を生成しています ${completedPages}/${totalPages}`;
+  }
   if (progress < 80) return "ページのイラストを描いています";
   return "仕上げています";
 }
 
-function getGeneratingSummary(book: BookDoc, completedPages: number, totalPages: number) {
+function getGeneratingSummary(book: BookDoc, completedPages: number, totalPages: number, pages: PageDoc[]) {
   const productPlan = getPlanDisplayLabel(book.productPlan ?? "free");
   const quality = IMAGE_QUALITY_LABELS[book.imageQualityTier ?? "light"];
   const consistency =
@@ -41,7 +47,7 @@ function getGeneratingSummary(book: BookDoc, completedPages: number, totalPages:
     creationMode,
     completedPages,
     totalPages,
-    step: getProgressStep(book.progress ?? 0),
+    step: getProgressStep(book.progress ?? 0, pages),
   };
 }
 
@@ -74,11 +80,13 @@ function GeneratingContent() {
   const bookId = searchParams.get("id") ?? "";
   const router = useRouter();
   const { book, pages, loading } = useGenerationProgress(bookId);
-  const completedPages = pages.filter((page) => page.status === "completed").length;
+  const completedPages = pages.filter((page) => page.status === "completed" || page.status === "fallback_completed").length;
   const totalPages = book?.pageCount ?? Math.max(pages.length, 1);
 
   useEffect(() => {
-    if (book?.status === "completed") router.push(`/book?id=${bookId}`);
+    if (book?.status === "completed" || book?.status === "partial_completed") {
+      router.push(`/book?id=${bookId}`);
+    }
   }, [book?.status, bookId, router]);
 
   useEffect(() => {
@@ -90,6 +98,16 @@ function GeneratingContent() {
         pageCount: book.pageCount,
         creationMode: book.creationMode ?? "guided_ai",
         templateId: book.templateId ?? book.theme,
+      });
+    } else if (book.status === "partial_completed") {
+      trackAnalyticsEvent("partial_complete_book_generation", {
+        productPlan: book.productPlan ?? "free",
+        imageQualityTier: book.imageQualityTier ?? "light",
+        pageCount: book.pageCount,
+        creationMode: book.creationMode ?? "guided_ai",
+        templateId: book.templateId ?? book.theme,
+        imageSuccessCount: book.imageSuccessCount,
+        imageFailureCount: book.imageFailureCount,
       });
     } else if (book.status === "failed") {
       trackAnalyticsEvent("fail_book_generation", {
@@ -134,7 +152,8 @@ function GeneratingContent() {
     </PageTransition>
   );
 
-  const summary = getGeneratingSummary(book, completedPages, totalPages);
+  const summary = getGeneratingSummary(book, completedPages, totalPages, pages);
+  const hasLongWait = pages.some((p) => (p.imageDurationMs ?? 0) > 90_000);
 
   return (
     <PageTransition className="relative mx-auto max-w-2xl px-4 py-8">
@@ -151,6 +170,9 @@ function GeneratingContent() {
               </motion.div>
               <h1 className="mt-3 text-xl font-bold text-purple-900">絵本を作っています</h1>
               <p className="mt-1 text-sm text-violet-500">{summary.step}</p>
+              {hasLongWait ? (
+                <p className="mt-1 text-xs text-amber-600">一部画像の仕上げに時間がかかっています</p>
+              ) : null}
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <SummaryCard label="プラン" value={summary.productPlan} />

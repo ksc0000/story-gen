@@ -12,6 +12,7 @@ exports.SERVER_PLAN_CONFIGS = {
         imageModelProfile: "pro_consistent",
         characterConsistencyMode: "all_pages",
         allowedCreationModes: ["fixed_template"],
+        generationMode: "reliable_fast",
         enabled: true,
     },
     light_paid: {
@@ -22,6 +23,7 @@ exports.SERVER_PLAN_CONFIGS = {
         imageModelProfile: "pro_consistent",
         characterConsistencyMode: "all_pages",
         allowedCreationModes: ["fixed_template", "guided_ai"],
+        generationMode: "reliable_fast",
         enabled: false,
     },
     standard_paid: {
@@ -32,6 +34,7 @@ exports.SERVER_PLAN_CONFIGS = {
         imageModelProfile: "pro_consistent",
         characterConsistencyMode: "all_pages",
         allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
+        generationMode: "reliable_fast",
         enabled: false,
     },
     premium_paid: {
@@ -42,6 +45,7 @@ exports.SERVER_PLAN_CONFIGS = {
         imageModelProfile: "pro_consistent",
         characterConsistencyMode: "all_pages",
         allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
+        generationMode: "quality",
         enabled: false,
     },
 };

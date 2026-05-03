@@ -32,6 +32,15 @@ type ReplicateInputPayload = {
   go_fast?: boolean;
 };
 
+export interface ImageGenerationMetadata {
+  buffer: Buffer;
+  model: ReplicateModelName;
+  modelProfile: ImageModelProfile;
+  durationMs: number;
+  attemptCount: number;
+  inputImageUrlsCount: number;
+}
+
 function isKleinBaseEnabled(): boolean {
   return process.env.ENABLE_KLEIN_BASE === "true";
 }
@@ -106,6 +115,20 @@ export function resolveReplicateModel(params: {
   return resolveBookModelByTier(params.imageQualityTier);
 }
 
+export function resolveImageFallbackProfiles(profile: ImageModelProfile): ImageModelProfile[] {
+  switch (profile) {
+    case "pro_consistent":
+      return ["pro_consistent", "klein_fast"];
+    case "klein_base":
+      return ["klein_base", "klein_fast"];
+    case "kontext_reference":
+      return ["kontext_reference", "klein_fast"];
+    case "klein_fast":
+    default:
+      return ["klein_fast"];
+  }
+}
+
 export function buildReplicateInput(params: {
   model: ReplicateModelName;
   prompt: string;
@@ -159,6 +182,23 @@ export function buildReplicateInput(params: {
   };
 }
 
+export function withImageTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    const timer = setTimeout(() => {
+      reject(new ImageTimeoutError(`Image generation timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+    promise.finally(() => clearTimeout(timer)).catch(() => {});
+  });
+  return Promise.race([promise, timeoutPromise]);
+}
+
+export class ImageTimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ImageTimeoutError";
+  }
+}
+
 export class ReplicateImageClient implements ImageClient {
   private replicate: Replicate;
 
@@ -175,15 +215,35 @@ export class ReplicateImageClient implements ImageClient {
       imageModelProfile?: ImageModelProfile;
     }
   ): Promise<Buffer> {
+    const { buffer } = await this.generateImageWithMetadata(prompt, options);
+    return buffer;
+  }
+
+  async generateImageWithMetadata(
+    prompt: string,
+    options?: {
+      inputImageUrls?: string[];
+      purpose?: ImagePurpose;
+      imageQualityTier?: ImageQualityTier;
+      imageModelProfile?: ImageModelProfile;
+    }
+  ): Promise<ImageGenerationMetadata> {
+    const startMs = Date.now();
+    const modelProfile = resolveImageModelProfile({
+      purpose: options?.purpose,
+      imageQualityTier: options?.imageQualityTier,
+      imageModelProfile: options?.imageModelProfile,
+    });
     const model = resolveReplicateModel({
       purpose: options?.purpose,
       imageQualityTier: options?.imageQualityTier,
       imageModelProfile: options?.imageModelProfile,
     });
+    const inputImageUrls = options?.inputImageUrls ?? [];
     const input = buildReplicateInput({
       model,
       prompt,
-      inputImageUrls: options?.inputImageUrls,
+      inputImageUrls,
     });
     const output = await this.replicate.run(model, { input });
 
@@ -199,7 +259,16 @@ export class ReplicateImageClient implements ImageClient {
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+    const buffer = Buffer.from(arrayBuffer);
+
+    return {
+      buffer,
+      model,
+      modelProfile,
+      durationMs: Date.now() - startMs,
+      attemptCount: 1,
+      inputImageUrlsCount: inputImageUrls.length,
+    };
   }
 
   private extractUrlFromReplicateOutput(output: unknown): string {

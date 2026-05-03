@@ -3,10 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReplicateImageClient = void 0;
+exports.ReplicateImageClient = exports.ImageTimeoutError = void 0;
 exports.resolveImageModelProfile = resolveImageModelProfile;
 exports.resolveReplicateModel = resolveReplicateModel;
+exports.resolveImageFallbackProfiles = resolveImageFallbackProfiles;
 exports.buildReplicateInput = buildReplicateInput;
+exports.withImageTimeout = withImageTimeout;
 const replicate_1 = __importDefault(require("replicate"));
 // Legacy fallback only. Not used in normal generation.
 const LEGACY_FLUX_SCHNELL_MODEL = "black-forest-labs/flux-schnell";
@@ -64,6 +66,19 @@ function resolveReplicateModel(params) {
     }
     return resolveBookModelByTier(params.imageQualityTier);
 }
+function resolveImageFallbackProfiles(profile) {
+    switch (profile) {
+        case "pro_consistent":
+            return ["pro_consistent", "klein_fast"];
+        case "klein_base":
+            return ["klein_base", "klein_fast"];
+        case "kontext_reference":
+            return ["kontext_reference", "klein_fast"];
+        case "klein_fast":
+        default:
+            return ["klein_fast"];
+    }
+}
 function buildReplicateInput(params) {
     const dedupedInputImageUrls = [...new Set(params.inputImageUrls ?? [])];
     if (params.model === LEGACY_FLUX_SCHNELL_MODEL) {
@@ -106,21 +121,48 @@ function buildReplicateInput(params) {
             : {}),
     };
 }
+function withImageTimeout(promise, timeoutMs) {
+    const timeoutPromise = new Promise((_, reject) => {
+        const timer = setTimeout(() => {
+            reject(new ImageTimeoutError(`Image generation timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+        promise.finally(() => clearTimeout(timer)).catch(() => { });
+    });
+    return Promise.race([promise, timeoutPromise]);
+}
+class ImageTimeoutError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "ImageTimeoutError";
+    }
+}
+exports.ImageTimeoutError = ImageTimeoutError;
 class ReplicateImageClient {
     replicate;
     constructor(apiToken) {
         this.replicate = new replicate_1.default({ auth: apiToken });
     }
     async generateImage(prompt, options) {
+        const { buffer } = await this.generateImageWithMetadata(prompt, options);
+        return buffer;
+    }
+    async generateImageWithMetadata(prompt, options) {
+        const startMs = Date.now();
+        const modelProfile = resolveImageModelProfile({
+            purpose: options?.purpose,
+            imageQualityTier: options?.imageQualityTier,
+            imageModelProfile: options?.imageModelProfile,
+        });
         const model = resolveReplicateModel({
             purpose: options?.purpose,
             imageQualityTier: options?.imageQualityTier,
             imageModelProfile: options?.imageModelProfile,
         });
+        const inputImageUrls = options?.inputImageUrls ?? [];
         const input = buildReplicateInput({
             model,
             prompt,
-            inputImageUrls: options?.inputImageUrls,
+            inputImageUrls,
         });
         const output = await this.replicate.run(model, { input });
         const outputs = this.normalizeReplicateOutput(output);
@@ -133,7 +175,15 @@ class ReplicateImageClient {
             throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
         }
         const arrayBuffer = await response.arrayBuffer();
-        return Buffer.from(arrayBuffer);
+        const buffer = Buffer.from(arrayBuffer);
+        return {
+            buffer,
+            model,
+            modelProfile,
+            durationMs: Date.now() - startMs,
+            attemptCount: 1,
+            inputImageUrlsCount: inputImageUrls.length,
+        };
     }
     extractUrlFromReplicateOutput(output) {
         if (typeof output === "string") {

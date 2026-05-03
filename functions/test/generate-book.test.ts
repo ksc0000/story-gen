@@ -314,7 +314,7 @@ describe("processBookGeneration", () => {
     await processBookGeneration("book-rewrite", premiumBook, deps);
 
     expect(deps.llmClient.rewriteStoryText).toHaveBeenCalled();
-    const metadata = deps.updateBookStoryGenerationMetadata.mock.calls.at(-1)?.[1];
+    const metadata = deps.updateBookStoryGenerationMetadata.mock.calls.at(-2)?.[1];
     expect(metadata).toEqual(
       expect.objectContaining({
         storyTextRewriteUsed: true,
@@ -624,28 +624,86 @@ describe("processBookGeneration", () => {
     expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
   });
 
-  it("retries image generation up to 2 times on failure", async () => {
+  it("retries within a fallback profile then falls back to klein_fast on failure", async () => {
     deps.imageClient.generateImage
       .mockRejectedValueOnce(new Error("Network error"))
       .mockRejectedValueOnce(new Error("Network error"))
       .mockResolvedValue(mockImageBuffer);
     await processBookGeneration("book123", baseBookData, deps);
-    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(4); // 3 for first page + 1 for second
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book123", "completed");
+    expect(deps.writePage).toHaveBeenCalledTimes(2);
   });
 
-  it("stops the book as soon as a page image fails after 3 attempts", async () => {
-    deps.imageClient.generateImage
-      .mockRejectedValueOnce(new Error("fail 1"))
-      .mockRejectedValueOnce(new Error("fail 2"))
-      .mockRejectedValueOnce(new Error("fail 3"))
-      .mockResolvedValue(mockImageBuffer);
+  it("writes image_failed page status when all fallback profiles fail and marks book failed", async () => {
+    deps.imageClient.generateImage.mockRejectedValue(new Error("always fail"));
     await processBookGeneration("book123", baseBookData, deps);
-    expect(deps.writePage).toHaveBeenCalledWith("book123", expect.objectContaining({ pageNumber: 0, status: "failed" }));
-    expect(deps.writePage).toHaveBeenCalledTimes(1);
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book123",
+      expect.objectContaining({ pageNumber: 0, status: "image_failed" })
+    );
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book123",
+      expect.objectContaining({ pageNumber: 1, status: "image_failed" })
+    );
+    expect(deps.writePage).toHaveBeenCalledTimes(2);
     expect(deps.uploadImage).not.toHaveBeenCalled();
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book123", "failed");
     expect(deps.incrementMonthlyCount).not.toHaveBeenCalled();
+  });
+
+  it("marks book as partial_completed when some pages fail and some succeed", async () => {
+    const page0Keyword = "warm wide sandbox";
+    deps.imageClient.generateImage.mockImplementation(async (prompt: string) => {
+      if (prompt.includes(page0Keyword)) {
+        throw new Error("page 0 always fails");
+      }
+      return mockImageBuffer;
+    });
+
+    await processBookGeneration("book-partial", baseBookData, deps);
+
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-partial",
+      expect.objectContaining({ pageNumber: 0, status: "image_failed" })
+    );
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-partial",
+      expect.objectContaining({ pageNumber: 1, status: expect.stringMatching(/^(completed|fallback_completed)$/) })
+    );
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-partial", "partial_completed");
+    expect(deps.incrementMonthlyCount).toHaveBeenCalledWith("user123");
+  });
+
+  it("marks page status as fallback_completed when primary profile fails but fallback succeeds", async () => {
+    deps.imageClient.generateImage.mockImplementation(
+      async (_prompt: string, options?: { imageModelProfile?: string }) => {
+        if (options?.imageModelProfile === "pro_consistent") {
+          throw new Error("pro_consistent unavailable");
+        }
+        return mockImageBuffer;
+      }
+    );
+
+    await processBookGeneration("book-fallback", baseBookData, deps);
+
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-fallback",
+      expect.objectContaining({
+        imageFallbackUsed: true,
+        status: "fallback_completed",
+      })
+    );
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fallback", "completed");
+  });
+
+  it("saves image generation metrics per page", async () => {
+    await processBookGeneration("book-metrics", baseBookData, deps);
+
+    const pageArgs = deps.writePage.mock.calls.map((call) => call[1]);
+    for (const page of pageArgs) {
+      expect(page.imageAttemptCount).toBeGreaterThan(0);
+      expect(page.imageDurationMs).toBeGreaterThanOrEqual(0);
+    }
   });
 
   it("validates input and rejects NG words", async () => {
@@ -1215,7 +1273,7 @@ describe("processBookGeneration", () => {
       deps
     );
 
-    const metadata = deps.updateBookStoryGenerationMetadata.mock.calls.at(-1)?.[1];
+    const metadata = deps.updateBookStoryGenerationMetadata.mock.calls.at(-2)?.[1];
     expect(metadata.forbiddenQuestObjects).toEqual(["すいか"]);
   });
 

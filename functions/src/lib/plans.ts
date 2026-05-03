@@ -1,6 +1,7 @@
 import type {
   CharacterConsistencyMode,
   CreationMode,
+  GenerationMode,
   ImageModelProfile,
   ImageQualityTier,
   PageCount,
@@ -15,6 +16,7 @@ export type ServerPlanConfig = {
   imageModelProfile?: ImageModelProfile;
   characterConsistencyMode: CharacterConsistencyMode;
   allowedCreationModes: CreationMode[];
+  generationMode: GenerationMode;
   enabled: boolean;
 };
 
@@ -27,6 +29,7 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
+    generationMode: "reliable_fast",
     enabled: true,
   },
   light_paid: {
@@ -37,6 +40,7 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
+    generationMode: "reliable_fast",
     enabled: false,
   },
   standard_paid: {
@@ -47,6 +51,7 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
+    generationMode: "reliable_fast",
     enabled: false,
   },
   premium_paid: {
@@ -57,6 +62,7 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
+    generationMode: "quality",
     enabled: false,
   },
 };

@@ -5,6 +5,7 @@ type AnalyticsEventName =
   | "select_story_theme"
   | "start_book_generation"
   | "complete_book_generation"
+  | "partial_complete_book_generation"
   | "fail_book_generation"
   | "submit_book_feedback"
   | "view_quality_sample";
