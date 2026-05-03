@@ -312,6 +312,7 @@ export interface BookFeedbackDoc {
   wantToCreateAgain: number;
   comment?: string;
   createdAt: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 export interface TemplateDoc {

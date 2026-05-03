@@ -19,3 +19,10 @@ EhonAI / story-gen の設計メモと運用資料の入口です。
 - [image-model-policy.md](./image-model-policy.md)
 - [security-roadmap.md](./security-roadmap.md)
 - [SETUP_GUIDE.md](./SETUP_GUIDE.md)
+
+## 運用メモ
+
+- Firestore Security Rules を変更した場合は、Hosting / Functions とは別に rules の deploy が必要です。
+- 例:
+  - `firebase deploy --only firestore:rules --project story-gen-8a769`
+  - `firebase deploy --only firestore:rules,hosting,functions --project story-gen-8a769`

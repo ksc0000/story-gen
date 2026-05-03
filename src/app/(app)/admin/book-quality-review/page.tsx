@@ -269,7 +269,7 @@ function StoryCastCard({ character }: { character: StoryCharacter }) {
 
 export default function AdminBookQualityReviewPage() {
   const { user, loading } = useAuth();
-  const { checkingAdmin, isAdmin } = useAdminClaim();
+  const { checkingAdmin, isAdmin, refreshAdminClaim } = useAdminClaim();
   const [books, setBooks] = useState<BookWithId[]>([]);
   const [booksLoading, setBooksLoading] = useState(true);
   const [booksError, setBooksError] = useState<string | null>(null);
@@ -287,6 +287,13 @@ export default function AdminBookQualityReviewPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
+  function getPermissionHelpMessage(message: string) {
+    if (!/Missing or insufficient permissions/i.test(message)) {
+      return message;
+    }
+    return `${message} Firestore rules が管理者読み取り/更新を許可していない、または admin claim がID tokenに反映されていない可能性があります。`;
+  }
+
   useEffect(() => {
     if (!isAdmin) return;
     const booksQuery = query(collection(db, "books"), orderBy("createdAt", "desc"), limit(50));
@@ -303,7 +310,7 @@ export default function AdminBookQualityReviewPage() {
       },
       (error) => {
         console.error("Failed to load books for review:", error);
-        setBooksError(error.message);
+        setBooksError(getPermissionHelpMessage(error.message));
         setBooksLoading(false);
       }
     );
@@ -430,7 +437,8 @@ export default function AdminBookQualityReviewPage() {
       setSaveMessage("管理者レビューを保存しました");
     } catch (error) {
       console.error("Failed to save admin review:", error);
-      setSaveMessage(error instanceof Error ? error.message : "保存に失敗しました");
+      const message = error instanceof Error ? error.message : "保存に失敗しました";
+      setSaveMessage(getPermissionHelpMessage(message));
     } finally {
       setSavingReview(false);
     }
@@ -629,6 +637,22 @@ export default function AdminBookQualityReviewPage() {
                     )}
                   </CardContent>
                 </Card>
+                {booksError && /Missing or insufficient permissions/i.test(booksError) ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <p>
+                      Firestore rules が管理者読み取りを許可していない、または admin claim がID tokenに反映されていない可能性があります。
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={async () => {
+                        await refreshAdminClaim();
+                      }}
+                    >
+                      admin claim を再確認
+                    </Button>
+                  </div>
+                ) : null}
 
                 <div className="space-y-6">
                   {!selectedBook ? (

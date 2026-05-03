@@ -39,11 +39,12 @@ function BookContent() {
   const [feedbackSaved, setFeedbackSaved] = useState(false);
   const [feedbackSaving, setFeedbackSaving] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
 
   useEffect(() => {
     if (!user || !bookId || isDemoMode) return;
 
-    return onSnapshot(doc(db, "books", bookId, "feedback", "main"), (snapshot) => {
+    return onSnapshot(doc(db, "books", bookId, "feedback", user.uid), (snapshot) => {
       if (!snapshot.exists()) return;
       const data = snapshot.data() as Partial<BookFeedbackDoc>;
       setFeedback({
@@ -172,6 +173,11 @@ function BookContent() {
           {feedbackError ? (
             <p className="mt-3 text-sm text-rose-600">{feedbackError}</p>
           ) : null}
+          {!canSubmitFeedback ? (
+            <p className="mt-3 text-sm text-violet-600">
+              この絵本のフィードバックを送信できるのは、この絵本を作成したユーザーのみです。
+            </p>
+          ) : null}
           {feedbackSaved ? (
             <p className="mt-3 text-sm text-emerald-600">ご協力ありがとうございます。</p>
           ) : null}
@@ -179,12 +185,15 @@ function BookContent() {
           <div className="mt-4">
             <Button
               onClick={async () => {
-                if (!user) return;
+                if (!user || !book || book.userId !== user.uid) {
+                  setFeedbackError("この絵本のフィードバックを保存する権限がありません。");
+                  return;
+                }
                 setFeedbackSaving(true);
                 setFeedbackError(null);
                 try {
                   await setDoc(
-                    doc(db, "books", bookId, "feedback", "main"),
+                    doc(db, "books", bookId, "feedback", user.uid),
                     {
                       userId: user.uid,
                       bookId,
@@ -196,6 +205,7 @@ function BookContent() {
                       wantToCreateAgain: feedback.wantToCreateAgain,
                       comment: feedback.comment.trim(),
                       createdAt: serverTimestamp(),
+                      updatedAt: serverTimestamp(),
                     },
                     { merge: true }
                   );
@@ -216,7 +226,7 @@ function BookContent() {
                   setFeedbackSaving(false);
                 }
               }}
-              disabled={feedbackSaving}
+              disabled={feedbackSaving || !canSubmitFeedback}
             >
               {feedbackSaving ? "保存中..." : "フィードバックを送る"}
             </Button>
