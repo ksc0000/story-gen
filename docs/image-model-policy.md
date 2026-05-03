@@ -19,6 +19,10 @@
 - `klein_fast` は Starting 滞留が確認されているため、通常生成候補から外し、管理者検証用に隔離しています。
 - `flux-schnell` の入力 schema は緊急時の legacy fallback としてコード上に残していますが、通常ルートでは選択されません。
 - ページ間の見た目の揺れを減らすため、参照画像を渡すページは `characterConsistencyMode` で制御します。
+- スタイルカード画像は **UIで見せるプレビュー** であり、通常の絵本生成では input image に入れません。
+- 通常生成のスタイル制御は `styleBible` とスタイル指示文で行い、input image は child protagonist / storyCast の一貫性維持用に限定します。
+- seed はスタイル指定の道具ではなく、同一条件の再現比較用に扱います。
+- 管理者向け `image-model-tests` だけは、比較のために `stylePreviewReference` を ON にして style preview image を `style_reference` として加えられます。
   - `cover_only`: 表紙または key image のみ
   - `key_pages`: 表紙、中盤〜後半の感情ピーク、最終ページ
   - `all_pages`: 全ページ

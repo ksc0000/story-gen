@@ -18,9 +18,10 @@ import type {
   StoryCharacter,
   StoryCharacterRole,
   ScenePolicy,
+  InputImageRole,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
-import { buildSystemPrompt, buildImagePrompt, getStyleReferenceImagePath, appendQualityRetryInstruction } from "./lib/prompt-builder";
+import { buildSystemPrompt, buildImagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
 import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates } from "./lib/gemini";
 import {
   ReplicateImageClient,
@@ -39,6 +40,7 @@ import {
   type StoryQualityReport,
 } from "./lib/story-quality";
 import { removeUndefinedDeep } from "./lib/firestore-sanitize";
+import { getIllustrationStyleProfile } from "./lib/illustration-styles";
 
 const IMAGE_RETRY_LIMIT = 3;
 const IMAGE_REQUEST_INTERVAL_MS = 11_000;
@@ -433,8 +435,6 @@ export async function processBookGeneration(
 
     // Step 4: Build reference assets
     const coverReferenceImageUrls = buildReferenceImageUrls(
-      normalizedBookData.style,
-      template,
       normalizedBookData.childProfileSnapshot
     );
 
@@ -504,10 +504,22 @@ export async function processBookGeneration(
     }
 
     const { story, qualityReport } = storyResult;
+    const selectedStyleProfile = getIllustrationStyleProfile(normalizedBookData.style);
+    const hasAnyCharacterReference =
+      coverReferenceImageUrls.length > 0 ||
+      (story.cast ?? []).some(
+        (character) => Boolean(character.approvedImageUrl) || Boolean(character.referenceImageUrl)
+      );
     const storyGenerationMetadata = removeUndefinedDeep({
         storyModel: story.storyModel,
         storyModelFallbackUsed: story.storyModelFallbackUsed,
         storyGenerationAttempts: story.storyGenerationAttempts,
+        selectedStyleId: selectedStyleProfile.id,
+        selectedStyleName: selectedStyleProfile.name,
+        styleBible: story.styleBible,
+        stylePreviewImageUrl: selectedStyleProfile.previewImageUrl,
+        stylePreviewUsedAsReference: false,
+        inputImageRoles: hasAnyCharacterReference ? ["character_reference"] : [],
         storyTextRewriteUsed: storyResult.rewriteMetadata?.storyTextRewriteUsed,
         storyTextRewriteModel: storyResult.rewriteMetadata?.storyTextRewriteModel,
         storyTextRewriteAttempts: storyResult.rewriteMetadata?.storyTextRewriteAttempts,
@@ -613,6 +625,7 @@ export async function processBookGeneration(
       const inputImageUrls = shouldUseReference
         ? buildPageReferenceImageUrls(coverReferenceImageUrls, story.cast, storyPage.appearingCharacterIds)
         : [];
+      const inputImageRoles = buildInputImageRoles(inputImageUrls, false);
 
       // Skip image generation in development to avoid API costs
       if (process.env.NODE_ENV === 'development') {
@@ -659,6 +672,7 @@ export async function processBookGeneration(
                 imageModel,
                 imageQualityTier,
                 imagePurpose,
+                inputImageRoles,
                 inputImageUrlsCount: inputImageUrls.length,
                 inputReferenceCount: inputImageUrls.length,
                 usedCharacterReference: inputImageUrls.length > 0,
@@ -696,6 +710,7 @@ export async function processBookGeneration(
         imageModel,
         imageQualityTier,
         imagePurpose,
+        inputImageRoles,
         inputImageUrlsCount: inputImageUrls.length,
         inputReferenceCount: inputImageUrls.length,
         usedCharacterReference: inputImageUrls.length > 0,
@@ -795,15 +810,11 @@ function isValidPageCount(value: number | undefined): value is BookData["pageCou
 }
 
 function buildReferenceImageUrls(
-  style: BookData["style"],
-  template: TemplateData,
   childProfileSnapshot?: BookData["childProfileSnapshot"]
 ): string[] {
   const urls = [
     childProfileSnapshot?.visualProfile.referenceImageUrl,
     childProfileSnapshot?.visualProfile.approvedImageUrl,
-    getStyleReferenceImagePath(style),
-    template.sampleImageUrl,
   ]
     .filter((value): value is string => Boolean(value))
     .map(toPublicUrl);
@@ -823,6 +834,16 @@ function buildPageReferenceImageUrls(
     .map(toPublicUrl);
 
   return [...new Set([...baseReferenceImageUrls, ...castUrls])].slice(0, 8);
+}
+
+function buildInputImageRoles(inputImageUrls: string[], stylePreviewUsedAsReference = false): InputImageRole[] {
+  if (inputImageUrls.length === 0) {
+    return [];
+  }
+
+  return stylePreviewUsedAsReference
+    ? ["character_reference", "style_reference"]
+    : ["character_reference"];
 }
 
 function collectPageTextQualityWarnings(
@@ -1172,8 +1193,10 @@ function buildFixedCharacterBible(bookData: BookData, input: BookInput): string 
 }
 
 function buildFixedStyleBible(bookData: BookData, template: TemplateData): string {
+  const styleProfile = getIllustrationStyleProfile(bookData.style);
   return [
-    `Use a consistent ${bookData.style} picture book rendering across every page.`,
+    `Use a consistent ${styleProfile.name} picture book rendering across every page.`,
+    styleProfile.styleBible,
     template.visualDirection ? `Visual direction: ${template.visualDirection}` : "",
     "Keep lighting soft, compositions clear, and the mood safe and gentle for young children.",
   ]

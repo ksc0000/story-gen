@@ -5,6 +5,7 @@ import type {
   ImageModelProfile,
   ImagePurpose,
   ImageQualityTier,
+  InputImageRole,
 } from "@/lib/types";
 
 let cachedFunctions: Functions | null = null;
@@ -85,12 +86,15 @@ export type TestImageModelsRequest = {
   inputImageUrls?: string[];
   qualityTiers?: ImageQualityTier[];
   modelProfiles?: ImageModelProfile[];
+  style?: IllustrationStyle;
+  stylePreviewReference?: boolean;
 };
 
 export type TestImageModelsResult = {
   batchId: string;
   purpose: ImagePurpose;
   inputImageUrls: string[];
+  inputImageRoles: InputImageRole[];
   results: Array<{
     tier?: ImageQualityTier;
     modelProfile?: ImageModelProfile;

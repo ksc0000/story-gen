@@ -54,6 +54,7 @@ const usage_1 = require("./lib/usage");
 const age_reading_profile_1 = require("./lib/age-reading-profile");
 const story_quality_1 = require("./lib/story-quality");
 const firestore_sanitize_1 = require("./lib/firestore-sanitize");
+const illustration_styles_1 = require("./lib/illustration-styles");
 const IMAGE_RETRY_LIMIT = 3;
 const IMAGE_REQUEST_INTERVAL_MS = 11_000;
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
@@ -334,7 +335,7 @@ async function processBookGeneration(bookId, bookData, deps) {
             }
         }
         // Step 4: Build reference assets
-        const coverReferenceImageUrls = buildReferenceImageUrls(normalizedBookData.style, template, normalizedBookData.childProfileSnapshot);
+        const coverReferenceImageUrls = buildReferenceImageUrls(normalizedBookData.childProfileSnapshot);
         // Step 5: Generate the whole-book story JSON once with Gemini and validate it.
         // Gemini is not called per page. After this step, Replicate is invoked page by page for illustrations.
         let storyResult;
@@ -387,10 +388,19 @@ async function processBookGeneration(bookId, bookData, deps) {
             throw err;
         }
         const { story, qualityReport } = storyResult;
+        const selectedStyleProfile = (0, illustration_styles_1.getIllustrationStyleProfile)(normalizedBookData.style);
+        const hasAnyCharacterReference = coverReferenceImageUrls.length > 0 ||
+            (story.cast ?? []).some((character) => Boolean(character.approvedImageUrl) || Boolean(character.referenceImageUrl));
         const storyGenerationMetadata = (0, firestore_sanitize_1.removeUndefinedDeep)({
             storyModel: story.storyModel,
             storyModelFallbackUsed: story.storyModelFallbackUsed,
             storyGenerationAttempts: story.storyGenerationAttempts,
+            selectedStyleId: selectedStyleProfile.id,
+            selectedStyleName: selectedStyleProfile.name,
+            styleBible: story.styleBible,
+            stylePreviewImageUrl: selectedStyleProfile.previewImageUrl,
+            stylePreviewUsedAsReference: false,
+            inputImageRoles: hasAnyCharacterReference ? ["character_reference"] : [],
             storyTextRewriteUsed: storyResult.rewriteMetadata?.storyTextRewriteUsed,
             storyTextRewriteModel: storyResult.rewriteMetadata?.storyTextRewriteModel,
             storyTextRewriteAttempts: storyResult.rewriteMetadata?.storyTextRewriteAttempts,
@@ -483,6 +493,7 @@ async function processBookGeneration(bookId, bookData, deps) {
             const inputImageUrls = shouldUseReference
                 ? buildPageReferenceImageUrls(coverReferenceImageUrls, story.cast, storyPage.appearingCharacterIds)
                 : [];
+            const inputImageRoles = buildInputImageRoles(inputImageUrls, false);
             // Skip image generation in development to avoid API costs
             if (process.env.NODE_ENV === 'development') {
                 console.log(`Skipping image generation for page ${i} in development mode`);
@@ -529,6 +540,7 @@ async function processBookGeneration(bookId, bookData, deps) {
                                 imageModel,
                                 imageQualityTier,
                                 imagePurpose,
+                                inputImageRoles,
                                 inputImageUrlsCount: inputImageUrls.length,
                                 inputReferenceCount: inputImageUrls.length,
                                 usedCharacterReference: inputImageUrls.length > 0,
@@ -565,6 +577,7 @@ async function processBookGeneration(bookId, bookData, deps) {
                 imageModel,
                 imageQualityTier,
                 imagePurpose,
+                inputImageRoles,
                 inputImageUrlsCount: inputImageUrls.length,
                 inputReferenceCount: inputImageUrls.length,
                 usedCharacterReference: inputImageUrls.length > 0,
@@ -644,12 +657,10 @@ function normalizeBookForGeneration(bookData, template, userPlan) {
 function isValidPageCount(value) {
     return value === 4 || value === 8 || value === 12;
 }
-function buildReferenceImageUrls(style, template, childProfileSnapshot) {
+function buildReferenceImageUrls(childProfileSnapshot) {
     const urls = [
         childProfileSnapshot?.visualProfile.referenceImageUrl,
         childProfileSnapshot?.visualProfile.approvedImageUrl,
-        (0, prompt_builder_1.getStyleReferenceImagePath)(style),
-        template.sampleImageUrl,
     ]
         .filter((value) => Boolean(value))
         .map(toPublicUrl);
@@ -662,6 +673,14 @@ function buildPageReferenceImageUrls(baseReferenceImageUrls, cast, appearingChar
         .filter((value) => Boolean(value))
         .map(toPublicUrl);
     return [...new Set([...baseReferenceImageUrls, ...castUrls])].slice(0, 8);
+}
+function buildInputImageRoles(inputImageUrls, stylePreviewUsedAsReference = false) {
+    if (inputImageUrls.length === 0) {
+        return [];
+    }
+    return stylePreviewUsedAsReference
+        ? ["character_reference", "style_reference"]
+        : ["character_reference"];
 }
 function collectPageTextQualityWarnings(report, pageIndex) {
     return report.issues
@@ -929,8 +948,10 @@ function buildFixedCharacterBible(bookData, input) {
     return appearance;
 }
 function buildFixedStyleBible(bookData, template) {
+    const styleProfile = (0, illustration_styles_1.getIllustrationStyleProfile)(bookData.style);
     return [
-        `Use a consistent ${bookData.style} picture book rendering across every page.`,
+        `Use a consistent ${styleProfile.name} picture book rendering across every page.`,
+        styleProfile.styleBible,
         template.visualDirection ? `Visual direction: ${template.visualDirection}` : "",
         "Keep lighting soft, compositions clear, and the mood safe and gentle for young children.",
     ]

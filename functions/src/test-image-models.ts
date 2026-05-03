@@ -2,8 +2,15 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
-import type { ImageModelProfile, ImagePurpose, ImageQualityTier } from "./lib/types";
+import type {
+  IllustrationStyle,
+  ImageModelProfile,
+  ImagePurpose,
+  ImageQualityTier,
+  InputImageRole,
+} from "./lib/types";
 import { ReplicateImageClient, resolveReplicateModel } from "./lib/replicate";
+import { getIllustrationStyleProfile } from "./lib/illustration-styles";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 const DEFAULT_TIERS: ImageQualityTier[] = ["light", "standard", "premium"];
@@ -19,6 +26,8 @@ type TestImageModelsRequest = {
   inputImageUrls?: string[];
   qualityTiers?: ImageQualityTier[];
   modelProfiles?: ImageModelProfile[];
+  style?: IllustrationStyle;
+  stylePreviewReference?: boolean;
 };
 
 export function normalizeTestImageModelsRequest(data: TestImageModelsRequest): {
@@ -27,15 +36,38 @@ export function normalizeTestImageModelsRequest(data: TestImageModelsRequest): {
   qualityTiers: ImageQualityTier[];
   modelProfiles: ImageModelProfile[];
   compareByModelProfile: boolean;
+  style: IllustrationStyle;
+  stylePreviewReference: boolean;
+  inputImageRoles: InputImageRole[];
 } {
+  const style = data.style ?? "soft_watercolor";
+  const stylePreviewReference = data.stylePreviewReference === true;
+  const dedupedInputImageUrls = [...new Set(data.inputImageUrls ?? [])].slice(0, 8);
+  const stylePreviewUrl = stylePreviewReference
+    ? `https://story-gen-8a769.web.app${getIllustrationStyleProfile(style).previewImageUrl}`
+    : undefined;
+  const inputImageUrls = stylePreviewUrl
+    ? [...new Set([...dedupedInputImageUrls, stylePreviewUrl])]
+    : dedupedInputImageUrls;
+  const inputImageRoles: InputImageRole[] = [];
+  if (dedupedInputImageUrls.length > 0) {
+    inputImageRoles.push("character_reference");
+  }
+  if (stylePreviewUrl) {
+    inputImageRoles.push("style_reference");
+  }
+
   return {
     purpose: data.purpose ?? "book_page",
-    inputImageUrls: [...new Set(data.inputImageUrls ?? [])].slice(0, 8),
+    inputImageUrls,
     qualityTiers: (data.qualityTiers?.length ? data.qualityTiers : DEFAULT_TIERS).filter(Boolean),
     modelProfiles: (data.modelProfiles?.length ? data.modelProfiles : DEFAULT_MODEL_PROFILES).filter(
       Boolean
     ),
     compareByModelProfile: Boolean(data.modelProfiles?.length),
+    style,
+    stylePreviewReference,
+    inputImageRoles,
   };
 }
 
@@ -61,8 +93,14 @@ export const testImageModels = onCall(
     }
 
     const normalized = normalizeTestImageModelsRequest(data);
-    const { purpose, qualityTiers, inputImageUrls, modelProfiles, compareByModelProfile } =
-      normalized;
+    const {
+      purpose,
+      qualityTiers,
+      inputImageUrls,
+      modelProfiles,
+      compareByModelProfile,
+      inputImageRoles,
+    } = normalized;
 
     const imageClient = new ReplicateImageClient(replicateApiToken.value());
     const bucket = admin.storage().bucket("story-gen-8a769.firebasestorage.app");
@@ -103,6 +141,7 @@ export const testImageModels = onCall(
         batchId,
         purpose,
         inputImageUrls,
+        inputImageRoles,
         results,
       };
     }
@@ -135,6 +174,7 @@ export const testImageModels = onCall(
       batchId,
       purpose,
       inputImageUrls,
+      inputImageRoles,
       results,
     };
   }

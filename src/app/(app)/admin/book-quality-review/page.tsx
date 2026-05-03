@@ -175,28 +175,47 @@ function formatTimestamp(value: unknown, fallbackValue?: unknown) {
   return date ? date.toLocaleString("ja-JP") : "日付不明";
 }
 
+function getBookCreatedDate(book: BookWithId) {
+  return (
+    book.createdAt ??
+    book.createdAtMs ??
+    book.generationStartedAt ??
+    book.generationStartedAtMs ??
+    book.completedAt ??
+    book.completedAtMs ??
+    book.failedAt ??
+    book.failedAtMs ??
+    book.updatedAt ??
+    book.updatedAtMs ??
+    estimateCreatedAtFromExpiresAt(book.expiresAt)
+  );
+}
+
+function getBookTimestampValue(
+  book: BookWithId,
+  field: "createdAt" | "updatedAt" | "generationStartedAt" | "completedAt" | "failedAt"
+) {
+  switch (field) {
+    case "createdAt":
+      return getBookCreatedDate(book);
+    case "updatedAt":
+      return book.updatedAt ?? book.updatedAtMs ?? getBookCreatedDate(book);
+    case "generationStartedAt":
+      return book.generationStartedAt ?? book.generationStartedAtMs ?? getBookCreatedDate(book);
+    case "completedAt":
+      return book.completedAt ?? book.completedAtMs ?? undefined;
+    case "failedAt":
+      return book.failedAt ?? book.failedAtMs ?? undefined;
+    default:
+      return undefined;
+  }
+}
+
 function formatBookTimestamp(
   book: BookWithId,
   field: "createdAt" | "updatedAt" | "generationStartedAt" | "completedAt" | "failedAt"
 ) {
-  const timestampValue = book[field];
-  const msValue =
-    field === "createdAt"
-      ? book.createdAtMs
-      : field === "updatedAt"
-        ? book.updatedAtMs
-        : field === "generationStartedAt"
-          ? book.generationStartedAtMs
-          : field === "completedAt"
-            ? book.completedAtMs
-            : book.failedAtMs;
-  if (field === "createdAt") {
-    return formatTimestamp(
-      timestampValue,
-      msValue ?? book.completedAtMs ?? book.generationStartedAtMs ?? estimateCreatedAtFromExpiresAt(book.expiresAt)
-    );
-  }
-  return formatTimestamp(timestampValue, msValue);
+  return formatTimestamp(getBookTimestampValue(book, field));
 }
 
 function resolveEffectiveImageModelProfile(

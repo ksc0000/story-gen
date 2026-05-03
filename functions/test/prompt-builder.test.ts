@@ -235,11 +235,17 @@ describe("buildImagePrompt", () => {
   });
   it("appends flat style keywords", () => {
     expect(buildImagePrompt("A birthday scene", "flat")).toContain("flat illustration");
-    expect(buildImagePrompt("A birthday scene", "flat")).toContain("bright simple colors");
+    expect(buildImagePrompt("A birthday scene", "flat")).toContain("bright clean colors");
   });
   it("appends crayon style keywords", () => {
-    expect(buildImagePrompt("A birthday scene", "crayon")).toContain("crayon pastel");
-    expect(buildImagePrompt("A birthday scene", "crayon")).toContain("hand-drawn texture");
+    expect(buildImagePrompt("A birthday scene", "crayon")).toContain("Crayon storybook style");
+    expect(buildImagePrompt("A birthday scene", "crayon")).toContain("warm hand-drawn strokes");
+  });
+  it("uses the style bible for style control instead of mentioning preview references", () => {
+    const result = buildImagePrompt("A birthday scene", "toy_3d");
+    expect(result).toContain("Illustration style:");
+    expect(result).toContain("Rounded 3D toy storybook style");
+    expect(result).not.toContain("reference image");
   });
   it("returns a style reference image path", () => {
     expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.png");

@@ -11,6 +11,7 @@ describe("normalizeTestImageModelsRequest", () => {
     expect(normalized.compareByModelProfile).toBe(false);
     expect(normalized.purpose).toBe("book_page");
     expect(normalized.inputImageUrls).toEqual(["https://example.com/a.png"]);
+    expect(normalized.inputImageRoles).toEqual(["character_reference"]);
     expect(normalized.qualityTiers).toEqual(["light", "standard", "premium"]);
     expect(normalized.modelProfiles).toEqual([
       "klein_fast",
@@ -31,5 +32,23 @@ describe("normalizeTestImageModelsRequest", () => {
     expect(normalized.purpose).toBe("book_cover");
     expect(normalized.qualityTiers).toEqual(["premium"]);
     expect(normalized.modelProfiles).toEqual(["klein_base", "pro_consistent"]);
+  });
+
+  it("can append a style preview image only for admin comparison when enabled", () => {
+    const normalized = normalizeTestImageModelsRequest({
+      prompt: "storybook prompt",
+      style: "toy_3d",
+      stylePreviewReference: true,
+      inputImageUrls: ["https://example.com/child-reference.png"],
+    });
+
+    expect(normalized.inputImageUrls).toEqual([
+      "https://example.com/child-reference.png",
+      "https://story-gen-8a769.web.app/images/styles/toy_3d.png",
+    ]);
+    expect(normalized.inputImageRoles).toEqual([
+      "character_reference",
+      "style_reference",
+    ]);
   });
 });

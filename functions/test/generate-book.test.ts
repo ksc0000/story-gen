@@ -197,14 +197,16 @@ describe("processBookGeneration", () => {
       expect.objectContaining({
         imageModelProfile: "pro_consistent",
         inputImageUrls: expect.arrayContaining([
-          "https://story-gen-8a769.web.app/images/styles/soft_watercolor.png",
-          "https://story-gen-8a769.web.app/images/templates/animals.png",
           "https://example.com/magic-friend.png",
         ]),
       })
     );
     expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
-      expect.stringContaining("Style consistency"),
+      expect.not.stringContaining("reference image"),
+      expect.any(Object)
+    );
+    expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
+      expect.stringContaining("Illustration style:"),
       expect.any(Object)
     );
     expect(deps.uploadImage).toHaveBeenCalledTimes(2);
@@ -215,6 +217,7 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "standard",
         imagePurpose: "book_cover",
+        inputImageRoles: ["character_reference"],
         imageModelProfile: "pro_consistent",
         inputImageUrlsCount: expect.any(Number),
         inputReferenceCount: expect.any(Number),
@@ -234,6 +237,7 @@ describe("processBookGeneration", () => {
         imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "standard",
         imagePurpose: "book_page",
+        inputImageRoles: ["character_reference"],
         imageModelProfile: "pro_consistent",
         inputImageUrlsCount: expect.any(Number),
         usedCharacterReference: true,
@@ -250,6 +254,12 @@ describe("processBookGeneration", () => {
       "book123",
       expect.objectContaining({
         storyModel: expect.any(String),
+        selectedStyleId: "watercolor",
+        selectedStyleName: "やさしい水彩",
+        stylePreviewImageUrl: "/images/styles/soft_watercolor.png",
+        stylePreviewUsedAsReference: false,
+        styleBible: mockStory.styleBible,
+        inputImageRoles: ["character_reference"],
         storyCast: expect.any(Array),
         storyGoal: mockStory.storyGoal,
         mainQuestObject: mockStory.mainQuestObject,

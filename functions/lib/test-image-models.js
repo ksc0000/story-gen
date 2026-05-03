@@ -40,6 +40,7 @@ const params_1 = require("firebase-functions/params");
 const admin = __importStar(require("firebase-admin"));
 const crypto_1 = require("crypto");
 const replicate_1 = require("./lib/replicate");
+const illustration_styles_1 = require("./lib/illustration-styles");
 const replicateApiToken = (0, params_1.defineSecret)("REPLICATE_API_TOKEN");
 const DEFAULT_TIERS = ["light", "standard", "premium"];
 const DEFAULT_MODEL_PROFILES = [
@@ -48,12 +49,31 @@ const DEFAULT_MODEL_PROFILES = [
     "pro_consistent",
 ];
 function normalizeTestImageModelsRequest(data) {
+    const style = data.style ?? "soft_watercolor";
+    const stylePreviewReference = data.stylePreviewReference === true;
+    const dedupedInputImageUrls = [...new Set(data.inputImageUrls ?? [])].slice(0, 8);
+    const stylePreviewUrl = stylePreviewReference
+        ? `https://story-gen-8a769.web.app${(0, illustration_styles_1.getIllustrationStyleProfile)(style).previewImageUrl}`
+        : undefined;
+    const inputImageUrls = stylePreviewUrl
+        ? [...new Set([...dedupedInputImageUrls, stylePreviewUrl])]
+        : dedupedInputImageUrls;
+    const inputImageRoles = [];
+    if (dedupedInputImageUrls.length > 0) {
+        inputImageRoles.push("character_reference");
+    }
+    if (stylePreviewUrl) {
+        inputImageRoles.push("style_reference");
+    }
     return {
         purpose: data.purpose ?? "book_page",
-        inputImageUrls: [...new Set(data.inputImageUrls ?? [])].slice(0, 8),
+        inputImageUrls,
         qualityTiers: (data.qualityTiers?.length ? data.qualityTiers : DEFAULT_TIERS).filter(Boolean),
         modelProfiles: (data.modelProfiles?.length ? data.modelProfiles : DEFAULT_MODEL_PROFILES).filter(Boolean),
         compareByModelProfile: Boolean(data.modelProfiles?.length),
+        style,
+        stylePreviewReference,
+        inputImageRoles,
     };
 }
 exports.testImageModels = (0, https_1.onCall)({
@@ -73,7 +93,7 @@ exports.testImageModels = (0, https_1.onCall)({
         throw new https_1.HttpsError("invalid-argument", "prompt is required");
     }
     const normalized = normalizeTestImageModelsRequest(data);
-    const { purpose, qualityTiers, inputImageUrls, modelProfiles, compareByModelProfile } = normalized;
+    const { purpose, qualityTiers, inputImageUrls, modelProfiles, compareByModelProfile, inputImageRoles, } = normalized;
     const imageClient = new replicate_1.ReplicateImageClient(replicateApiToken.value());
     const bucket = admin.storage().bucket("story-gen-8a769.firebasestorage.app");
     const batchId = (0, crypto_1.randomUUID)();
@@ -105,6 +125,7 @@ exports.testImageModels = (0, https_1.onCall)({
             batchId,
             purpose,
             inputImageUrls,
+            inputImageRoles,
             results,
         };
     }
@@ -134,6 +155,7 @@ exports.testImageModels = (0, https_1.onCall)({
         batchId,
         purpose,
         inputImageUrls,
+        inputImageRoles,
         results,
     };
 });

@@ -15,6 +15,7 @@ export type ImageModelProfile =
   | "klein_base"
   | "pro_consistent"
   | "kontext_reference";
+export type InputImageRole = "character_reference" | "style_reference";
 export type AgeBand =
   | "baby_toddler"
   | "preschool_3_4"
@@ -69,6 +70,15 @@ export type IllustrationStyle =
   | "watercolor"
   | "flat";
 export type PageCount = 4 | 8 | 12;
+
+export type IllustrationStyleProfile = {
+  id: IllustrationStyle;
+  name: string;
+  previewImageUrl: string;
+  styleBible: string;
+  negativeStyleRules?: string[];
+  usePreviewAsReference?: boolean;
+};
 
 export interface FixedStoryPageTemplate {
   textTemplate: string;
@@ -198,6 +208,12 @@ export interface BookData {
   storyModel?: string;
   storyModelFallbackUsed?: boolean;
   storyGenerationAttempts?: number;
+  selectedStyleId?: IllustrationStyle;
+  selectedStyleName?: string;
+  styleBible?: string;
+  stylePreviewImageUrl?: string;
+  stylePreviewUsedAsReference?: boolean;
+  inputImageRoles?: InputImageRole[];
   storyTextRewriteUsed?: boolean;
   storyTextRewriteModel?: string;
   storyTextRewriteAttempts?: number;
@@ -246,6 +262,7 @@ export interface PageData {
   imageModel?: string;
   imageQualityTier?: ImageQualityTier;
   imagePurpose?: ImagePurpose;
+  inputImageRoles?: InputImageRole[];
   inputImageUrlsCount?: number;
   inputReferenceCount?: number;
   usedCharacterReference?: boolean;

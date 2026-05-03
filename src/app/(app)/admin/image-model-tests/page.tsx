@@ -8,11 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
+import { ILLUSTRATION_STYLE_PROFILES } from "@/lib/illustration-styles";
 import {
   testImageModelsCallable,
   type TestImageModelsResult,
 } from "@/lib/functions";
-import type { ImageModelProfile, ImagePurpose, ImageQualityTier } from "@/lib/types";
+import type {
+  IllustrationStyle,
+  ImageModelProfile,
+  ImagePurpose,
+  ImageQualityTier,
+} from "@/lib/types";
 
 const DEFAULT_PROMPT =
   "A warm Japanese children's picture book illustration of a preschool child playing in a quiet park sandbox, soft watercolor texture, gentle expression, safe and cozy mood, 4:3 composition, no text, no letters, no watermark.";
@@ -96,6 +102,8 @@ export default function AdminImageModelTestsPage() {
   const [selectedModelProfiles, setSelectedModelProfiles] = useState<ImageModelProfile[]>([
     "pro_consistent",
   ]);
+  const [selectedStyle, setSelectedStyle] = useState<IllustrationStyle>("soft_watercolor");
+  const [stylePreviewReference, setStylePreviewReference] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TestImageModelsResult | null>(null);
@@ -155,6 +163,8 @@ export default function AdminImageModelTestsPage() {
         inputImageUrls,
         qualityTiers: compareMode === "qualityTiers" ? selectedTiers : undefined,
         modelProfiles: compareMode === "modelProfiles" ? selectedModelProfiles : undefined,
+        style: selectedStyle,
+        stylePreviewReference,
       });
       setResult({
         ...nextResult,
@@ -338,6 +348,41 @@ export default function AdminImageModelTestsPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="style" className="text-purple-800">
+                  style
+                </Label>
+                <select
+                  id="style"
+                  value={selectedStyle}
+                  onChange={(e) => setSelectedStyle(e.target.value as IllustrationStyle)}
+                  className="w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-4 py-3 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
+                >
+                  {ILLUSTRATION_STYLE_PROFILES.filter(
+                    (profile) => profile.id !== "watercolor" && profile.id !== "flat"
+                  ).map((profile) => (
+                    <option key={profile.id} value={profile.id}>
+                      {profile.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-purple-800">style preview reference</Label>
+                <label className="flex items-center gap-2 rounded-full border border-[rgba(240,171,252,0.3)] px-4 py-2 text-sm text-violet-700">
+                  <input
+                    type="checkbox"
+                    checked={stylePreviewReference}
+                    onChange={(e) => setStylePreviewReference(e.target.checked)}
+                  />
+                  style preview image を input image に加えて比較する
+                </label>
+                <p className="text-xs leading-relaxed text-violet-500">
+                  通常生成では off が既定です。on のときだけ style preview image を style reference として追加します。
+                </p>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="inputImageUrls" className="text-purple-800">
                   inputImageUrls
                 </Label>
@@ -387,6 +432,10 @@ export default function AdminImageModelTestsPage() {
               </p>
               <p>
                 <span className="font-semibold text-purple-900">参照画像件数:</span> {result.inputImageUrls.length}
+              </p>
+              <p>
+                <span className="font-semibold text-purple-900">inputImageRoles:</span>{" "}
+                {result.inputImageRoles.length > 0 ? result.inputImageRoles.join(", ") : "none"}
               </p>
               <p>
                 <span className="font-semibold text-purple-900">実行日時:</span> {executedAt ?? "不明"}

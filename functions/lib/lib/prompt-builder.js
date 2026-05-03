@@ -5,48 +5,7 @@ exports.buildUserPrompt = buildUserPrompt;
 exports.buildImagePrompt = buildImagePrompt;
 exports.getStyleReferenceImagePath = getStyleReferenceImagePath;
 exports.appendQualityRetryInstruction = appendQualityRetryInstruction;
-const STYLE_DESCRIPTIONS = {
-    soft_watercolor: "やさしい水彩（淡い色、にじみ、手描き感のある柔らかなタッチ）",
-    fluffy_pastel: "ふんわりパステル（柔らかい色、丸い形、かわいい雰囲気）",
-    crayon: "クレヨンで描いた絵本（子どもが描いたような温かい線と手触り）",
-    flat_illustration: "シンプルフラット（シンプル、影少なめ、現代的で見やすいタッチ）",
-    anime_storybook: "わくわくアニメ風（表情が大きく、キャラクター性が強いタッチ）",
-    classic_picture_book: "クラシック絵本（昔ながらの童話風、細かい描き込み）",
-    toy_3d: "ぷっくり3Dトイ風（粘土・おもちゃのような立体感）",
-    paper_collage: "紙あそびコラージュ（紙を貼ったような質感、温かい手作り感）",
-    pencil_sketch: "やさしい鉛筆スケッチ（線画中心、淡い色づけ、素朴な雰囲気）",
-    colorful_pop: "カラフルポップ（鮮やかで元気な配色、楽しい絵本風）",
-    watercolor: "やさしい水彩（淡い色、にじみ、手描き感のある柔らかなタッチ）",
-    flat: "シンプルフラット（シンプル、影少なめ、現代的で見やすいタッチ）",
-};
-const IMAGE_STYLE_KEYWORDS = {
-    soft_watercolor: "soft watercolor painting style, soft warm colors, pale colors, gentle blooms, warm hand-painted texture, Japanese picture book style",
-    fluffy_pastel: "fluffy pastel picture book style, soft rounded shapes, cute gentle mood, airy colors, toddler-friendly illustration",
-    crayon: "crayon pastel drawing style, childlike warm lines, hand-drawn texture, wax texture, colorful, children's picture book style",
-    flat_illustration: "flat illustration style, bright simple colors, clean shapes, minimal shadows, modern picture book style",
-    anime_storybook: "anime storybook style, expressive faces, sparkling eyes, dynamic composition, vivid cheerful colors",
-    classic_picture_book: "classic picture book style, traditional fairytale illustration, detailed linework, painterly forest textures",
-    toy_3d: "3D toy style, clay-like rounded characters, playful miniature diorama, soft plastic texture, cheerful lighting",
-    paper_collage: "paper cutout collage style, layered handmade paper texture, warm craft feeling, tactile edges",
-    pencil_sketch: "gentle pencil sketch style, delicate line art, subtle watercolor tint, nostalgic quiet picture book mood",
-    colorful_pop: "colorful pop picture book style, vivid colors, round friendly forms, energetic composition, playful graphics",
-    watercolor: "soft watercolor painting style, soft warm colors, pale colors, gentle blooms, warm hand-painted texture, Japanese picture book style",
-    flat: "flat illustration style, bright simple colors, clean shapes, minimal shadows, modern picture book style",
-};
-const STYLE_REFERENCE_IMAGE_PATHS = {
-    soft_watercolor: "/images/styles/soft_watercolor.png",
-    fluffy_pastel: "/images/styles/fluffy_pastel.png",
-    crayon: "/images/styles/crayon.png",
-    flat_illustration: "/images/styles/flat_illustration.png",
-    anime_storybook: "/images/styles/anime_storybook.png",
-    classic_picture_book: "/images/styles/classic_picture_book.png",
-    toy_3d: "/images/styles/toy_3d.png",
-    paper_collage: "/images/styles/paper_collage.png",
-    pencil_sketch: "/images/styles/pencil_sketch.png",
-    colorful_pop: "/images/styles/colorful_pop.png",
-    watercolor: "/images/styles/soft_watercolor.png",
-    flat: "/images/styles/flat_illustration.png",
-};
+const illustration_styles_1 = require("./illustration-styles");
 const SAFETY_KEYWORDS = "safe for children, family friendly, wholesome, gentle";
 const VISUAL_STORYTELLING_RULES = [
     "This is a narrative picture book scene, not a character portrait.",
@@ -266,6 +225,7 @@ function getEmotionalExpressionGuidance(ageBand) {
     return "Show age-appropriate emotional nuance, including thinking, deciding, noticing others, and a small sense of growth.";
 }
 function buildSystemPrompt(template, style, readingProfile) {
+    const styleProfile = (0, illustration_styles_1.getIllustrationStyleProfile)(style);
     const visualDirection = template.visualDirection
         ? `\n## カテゴリのビジュアル方向\n${template.visualDirection}\n`
         : "";
@@ -294,7 +254,8 @@ ${ageReadingGuidance}
 ## 制約
 - 子ども向けの安全な内容のみ生成してください。暴力、恐怖、悲しい結末は禁止です。
 - 親の目的: ${template.parentIntent ?? "子どもに合った絵本を作る"}
-- 挿絵のスタイル: ${STYLE_DESCRIPTIONS[style]}
+- 挿絵のスタイル: ${styleProfile.name}
+- 生成時の絵柄制御は style preview 画像ではなく、styleBible とスタイル指示文で行ってください。
 - 各ページの imagePrompt は英語で、挿絵の内容を具体的に描写してください。
 - characterBible は全ページで同じ主人公として見えるように、年齢感、髪型、服装、固定アイテム、表情の特徴を英語で具体化してください。
 - styleBible は全ページで同じ画風として見えるように、カテゴリのビジュアル方向、線、色、質感、光、構図のルールを英語で具体化してください。
@@ -432,6 +393,7 @@ function buildUserPrompt(input, pageCount) {
     return lines.join("\n");
 }
 function buildImagePrompt(basePrompt, style, characterBible, styleBible, options) {
+    const styleProfile = (0, illustration_styles_1.getIllustrationStyleProfile)(style);
     const compositionHint = sanitizeImagePromptText(options?.compositionHint || getDefaultCompositionHint(options?.pageNumber));
     const pageVisualRole = options?.pageVisualRole || getDefaultPageVisualRole(options?.pageNumber);
     const visualMotif = sanitizeImagePromptText(options?.visualMotifUsage || options?.visualMotif || "");
@@ -450,7 +412,6 @@ function buildImagePrompt(basePrompt, style, characterBible, styleBible, options
         "Keep identity consistent, but change pose, camera angle, distance, action, background, and focal point according to this page.",
         "Do not repeat the same pose or same framing from previous pages.",
         "The child can appear from behind, side view, far away, or partially visible, as long as hairstyle, outfit, silhouette, and age impression remain recognizable.",
-        styleBible ? `Style consistency: ${styleBible}` : "",
     ].filter(Boolean).join(" ");
     const compositionGuidance = [
         getPageVisualRoleGuidance(pageVisualRole),
@@ -521,19 +482,23 @@ function buildImagePrompt(basePrompt, style, characterBible, styleBible, options
     return [
         consistency,
         castGuidance,
+        `Illustration style: ${styleProfile.styleBible}`,
+        styleBible ? `Story-specific style consistency: ${styleBible}` : "",
+        styleProfile.negativeStyleRules?.length
+            ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
+            : "",
         compositionGuidance,
         modelSpecificGuidance,
         emotionGuidance,
         `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
         `Scene: ${sanitizedBasePrompt}`,
-        IMAGE_STYLE_KEYWORDS[style],
         SAFETY_KEYWORDS,
         "Use purely visual storytelling through characters, objects, colors, actions, and scenery.",
         "wordless picture book illustration, no written text anywhere, no letters, no captions, no speech bubbles, no labels, no signage, no readable marks, no watermark. Use plain objects and unlabeled backgrounds.",
     ].join(", ");
 }
 function getStyleReferenceImagePath(style) {
-    return STYLE_REFERENCE_IMAGE_PATHS[style];
+    return (0, illustration_styles_1.getIllustrationStyleProfile)(style).previewImageUrl;
 }
 function appendQualityRetryInstruction(systemPrompt, report) {
     const issueLines = report.issues

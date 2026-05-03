@@ -13,6 +13,7 @@ import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
 import { getAgeReadingDisplayProfile } from "@/lib/age-reading-profile";
+import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import {
   CHARACTER_CONSISTENCY_LABELS,
   CREATION_MODE_LABELS,
@@ -120,6 +121,7 @@ function StyleSelectionPageContent() {
       const now = Timestamp.now();
       const expiresAt = Timestamp.fromMillis(now.toMillis() + 30 * 24 * 60 * 60 * 1000);
       const createdAtMs = Date.now();
+      const selectedStyleProfile = getIllustrationStyleProfile(selected);
       let bookId: string;
 
       if (isDemoMode) {
@@ -167,6 +169,11 @@ function StyleSelectionPageContent() {
           imageModelProfile: selectedPlanConfig.imageModelProfile,
           characterConsistencyMode: selectedPlanConfig.characterConsistencyMode as CharacterConsistencyMode,
           style: selected,
+          selectedStyleId: selectedStyleProfile.id,
+          selectedStyleName: selectedStyleProfile.name,
+          styleBible: selectedStyleProfile.styleBible,
+          stylePreviewImageUrl: selectedStyleProfile.previewImageUrl,
+          stylePreviewUsedAsReference: false,
           pageCount,
           status: "generating",
           progress: 0,
@@ -185,6 +192,7 @@ function StyleSelectionPageContent() {
           },
           createdAt: serverTimestamp(),
           createdAtMs,
+          createdAtSource: "client_create",
           updatedAt: serverTimestamp(),
           updatedAtMs: createdAtMs,
           expiresAt,
