@@ -4,6 +4,8 @@ exports.GeminiClient = exports.GeminiServiceUnavailableError = void 0;
 exports.resolveStoryModelCandidates = resolveStoryModelCandidates;
 exports.defaultPageVisualRole = defaultPageVisualRole;
 exports.normalizePageVisualRole = normalizePageVisualRole;
+exports.normalizeAppearingCharacterIds = normalizeAppearingCharacterIds;
+exports.normalizeFocusCharacterId = normalizeFocusCharacterId;
 const generative_ai_1 = require("@google/generative-ai");
 const types_1 = require("./types");
 const DEFAULT_STORY_MODEL_PRIMARY = "gemini-2.5-flash-lite";
@@ -193,6 +195,63 @@ function validateStringArray(value, errorLabel) {
     }
     return value;
 }
+function isKnownCharacterId(id, castIds) {
+    return id === "child_protagonist" || castIds.has(id);
+}
+function normalizeAppearingCharacterIds(value, castIds, pageIndex) {
+    const rawValues = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+    const normalized = rawValues
+        .filter((item) => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .filter((item, index, array) => array.indexOf(item) === index)
+        .filter((item) => {
+        if (isKnownCharacterId(item, castIds)) {
+            return true;
+        }
+        console.warn(`Unknown appearingCharacterId '${item}' on page ${pageIndex + 1}; keeping page data and ignoring for cast consistency.`);
+        return false;
+    });
+    return normalized.length > 0 ? normalized : undefined;
+}
+function normalizeFocusCharacterId(params) {
+    const { value, appearingCharacterIds, castIds, pageIndex } = params;
+    const normalizeCandidate = (candidate) => {
+        if (typeof candidate !== "string")
+            return undefined;
+        const trimmed = candidate.trim();
+        if (!trimmed)
+            return undefined;
+        if (isKnownCharacterId(trimmed, castIds))
+            return trimmed;
+        console.warn(`Unknown focusCharacterId '${trimmed}' on page ${pageIndex + 1}; using fallback.`);
+        return undefined;
+    };
+    const direct = normalizeCandidate(value);
+    if (direct)
+        return direct;
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            const normalized = normalizeCandidate(item);
+            if (normalized)
+                return normalized;
+        }
+    }
+    if (typeof value === "object" && value !== null) {
+        const obj = value;
+        const fromObject = normalizeCandidate(obj.characterId) ??
+            normalizeCandidate(obj.id) ??
+            normalizeCandidate(obj.focusCharacterId);
+        if (fromObject)
+            return fromObject;
+    }
+    for (const id of appearingCharacterIds ?? []) {
+        const normalized = normalizeCandidate(id);
+        if (normalized)
+            return normalized;
+    }
+    return undefined;
+}
 function validateStoryCast(data) {
     if (data === undefined) {
         return undefined;
@@ -264,20 +323,13 @@ function validateStory(data) {
         if (pageObj.pageVisualRole !== undefined && typeof pageObj.pageVisualRole !== "string") {
             throw new Error("Page 'pageVisualRole' must be a string when provided");
         }
-        if (pageObj.appearingCharacterIds !== undefined &&
-            (!Array.isArray(pageObj.appearingCharacterIds) ||
-                !pageObj.appearingCharacterIds.every((item) => typeof item === "string"))) {
-            throw new Error("Page 'appearingCharacterIds' must be a string array when provided");
-        }
-        if (pageObj.focusCharacterId !== undefined && typeof pageObj.focusCharacterId !== "string") {
-            throw new Error("Page 'focusCharacterId' must be a string when provided");
-        }
-        const appearingCharacterIds = pageObj.appearingCharacterIds;
-        for (const characterId of appearingCharacterIds ?? []) {
-            if (!castIds.has(characterId) && characterId !== "child_protagonist") {
-                console.warn(`Unknown appearingCharacterId '${characterId}' on page ${index + 1}; keeping page data and ignoring for cast consistency.`);
-            }
-        }
+        const appearingCharacterIds = normalizeAppearingCharacterIds(pageObj.appearingCharacterIds, castIds, index);
+        const focusCharacterId = normalizeFocusCharacterId({
+            value: pageObj.focusCharacterId,
+            appearingCharacterIds,
+            castIds,
+            pageIndex: index,
+        });
         return {
             text: pageObj.text,
             imagePrompt: pageObj.imagePrompt,
@@ -286,7 +338,7 @@ function validateStory(data) {
             hiddenDetail: pageObj.hiddenDetail,
             pageVisualRole: normalizePageVisualRole(pageObj.pageVisualRole, index, pages.length),
             appearingCharacterIds,
-            focusCharacterId: pageObj.focusCharacterId,
+            focusCharacterId,
         };
     });
     let narrativeDevice = undefined;

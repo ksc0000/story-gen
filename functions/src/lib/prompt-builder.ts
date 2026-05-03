@@ -390,6 +390,11 @@ ${GOOD_TEXT_EXAMPLE}
 - 各キャラクターには visualBible / signatureItems / doNotChange を持たせてください。
 - pages[].appearingCharacterIds には、そのページに出る characterId を入れてください。
 - pages[].focusCharacterId には、そのページの主役になる characterId を入れてください。
+- pages[].appearingCharacterIds must be an array of characterId strings.
+- pages[].focusCharacterId must be a single characterId string, not an array or object.
+- If multiple characters are central, choose the most visually important one as focusCharacterId.
+- Valid IDs are "child_protagonist" and ids from cast[].characterId.
+- Omit focusCharacterId if unsure.
 - cast を省略してはいけません。ただし完全に主人公だけの話なら空配列は可です。
 
 ## 出力形式

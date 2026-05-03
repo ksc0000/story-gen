@@ -6,6 +6,7 @@ describe("GeminiClient", () => {
   let GeminiClient: any;
   let normalizePageVisualRole: any;
   let defaultPageVisualRole: any;
+  let normalizeFocusCharacterId: any;
   let GeminiServiceUnavailableError: any;
   let resolveStoryModelCandidates: any;
 
@@ -35,6 +36,7 @@ describe("GeminiClient", () => {
     GeminiClient = mod.GeminiClient;
     normalizePageVisualRole = mod.normalizePageVisualRole;
     defaultPageVisualRole = mod.defaultPageVisualRole;
+    normalizeFocusCharacterId = mod.normalizeFocusCharacterId;
     GeminiServiceUnavailableError = mod.GeminiServiceUnavailableError;
     resolveStoryModelCandidates = mod.resolveStoryModelCandidates;
   });
@@ -154,6 +156,119 @@ describe("GeminiClient", () => {
     expect(result.forbiddenQuestObjects).toEqual(["すいか", "食べもの"]);
     expect(result.pages[0].appearingCharacterIds).toEqual(["child_protagonist", "magic_friend_01"]);
     expect(result.pages[0].focusCharacterId).toBe("magic_friend_01");
+  });
+
+  it("normalizes focusCharacterId and appearingCharacterIds without throwing", async () => {
+    const story = {
+      title: "テスト",
+      characterBible: "A consistent child",
+      styleBible: "Flat picture book style",
+      cast: [
+        {
+          characterId: "star_child_01",
+          displayName: "ほしのこ",
+          role: "magical_friend",
+          visualBible: "small glowing star friend",
+        },
+      ],
+      pages: [
+        {
+          text: "テスト本文です。もうすこし つづきます。",
+          imagePrompt: "storybook scene",
+          appearingCharacterIds: "star_child_01",
+          focusCharacterId: null,
+        },
+        {
+          text: "テスト本文です。もうすこし つづきます。",
+          imagePrompt: "storybook scene",
+          appearingCharacterIds: ["child_protagonist", 123, "star_child_01", {}],
+          focusCharacterId: ["unknown_id", "star_child_01"],
+        },
+        {
+          text: "テスト本文です。もうすこし つづきます。",
+          imagePrompt: "storybook scene",
+          appearingCharacterIds: ["child_protagonist", "star_child_01"],
+          focusCharacterId: { characterId: "star_child_01" },
+        },
+        {
+          text: "テスト本文です。もうすこし つづきます。",
+          imagePrompt: "storybook scene",
+          appearingCharacterIds: ["child_protagonist", "star_child_01"],
+          focusCharacterId: "unknown_id",
+        },
+        {
+          text: "テスト本文です。もうすこし つづきます。",
+          imagePrompt: "storybook scene",
+          focusCharacterId: { foo: "bar" },
+        },
+      ],
+    };
+    handlers["gemini-2.5-flash-lite"] = vi
+      .fn()
+      .mockResolvedValue({ response: { text: () => JSON.stringify(story) } });
+
+    const client = new GeminiClient("fake-api-key");
+    const result = await client.generateStory({
+      systemPrompt: "テスト", childName: "ゆうた", pageCount: 4, style: "flat",
+      storyModelCandidates: ["gemini-2.5-flash-lite"],
+    });
+
+    expect(result.pages[0].appearingCharacterIds).toEqual(["star_child_01"]);
+    expect(result.pages[0].focusCharacterId).toBe("star_child_01");
+    expect(result.pages[1].appearingCharacterIds).toEqual(["child_protagonist", "star_child_01"]);
+    expect(result.pages[1].focusCharacterId).toBe("star_child_01");
+    expect(result.pages[2].focusCharacterId).toBe("star_child_01");
+    expect(result.pages[3].focusCharacterId).toBe("child_protagonist");
+    expect(result.pages[4].focusCharacterId).toBeUndefined();
+  });
+
+  it("normalizes focusCharacterId helper fallbacks", () => {
+    const castIds = new Set(["star_child_01"]);
+
+    expect(
+      normalizeFocusCharacterId({
+        value: "star_child_01",
+        appearingCharacterIds: ["child_protagonist"],
+        castIds,
+        pageIndex: 0,
+      })
+    ).toBe("star_child_01");
+
+    expect(
+      normalizeFocusCharacterId({
+        value: null,
+        appearingCharacterIds: ["child_protagonist"],
+        castIds,
+        pageIndex: 0,
+      })
+    ).toBe("child_protagonist");
+
+    expect(
+      normalizeFocusCharacterId({
+        value: ["bad_id", "star_child_01"],
+        appearingCharacterIds: ["child_protagonist"],
+        castIds,
+        pageIndex: 0,
+      })
+    ).toBe("star_child_01");
+
+    expect(
+      normalizeFocusCharacterId({
+        value: { characterId: "star_child_01" },
+        appearingCharacterIds: ["child_protagonist"],
+        castIds,
+        pageIndex: 0,
+      })
+    ).toBe("star_child_01");
+
+    expect(
+      normalizeFocusCharacterId({
+        value: { foo: "bar" },
+        appearingCharacterIds: undefined,
+        castIds,
+        pageIndex: 0,
+      })
+    ).toBeUndefined();
   });
 
   it("normalizes unknown cast roles to buddy", async () => {

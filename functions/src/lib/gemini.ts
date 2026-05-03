@@ -252,6 +252,81 @@ function validateStringArray(
   return value as string[];
 }
 
+function isKnownCharacterId(id: string, castIds: Set<string>) {
+  return id === "child_protagonist" || castIds.has(id);
+}
+
+export function normalizeAppearingCharacterIds(
+  value: unknown,
+  castIds: Set<string>,
+  pageIndex: number
+): string[] | undefined {
+  const rawValues = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+  const normalized = rawValues
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item, index, array) => array.indexOf(item) === index)
+    .filter((item) => {
+      if (isKnownCharacterId(item, castIds)) {
+        return true;
+      }
+      console.warn(
+        `Unknown appearingCharacterId '${item}' on page ${pageIndex + 1}; keeping page data and ignoring for cast consistency.`
+      );
+      return false;
+    });
+
+  return normalized.length > 0 ? normalized : undefined;
+}
+
+export function normalizeFocusCharacterId(params: {
+  value: unknown;
+  appearingCharacterIds?: string[];
+  castIds: Set<string>;
+  pageIndex: number;
+}): string | undefined {
+  const { value, appearingCharacterIds, castIds, pageIndex } = params;
+
+  const normalizeCandidate = (candidate: unknown): string | undefined => {
+    if (typeof candidate !== "string") return undefined;
+    const trimmed = candidate.trim();
+    if (!trimmed) return undefined;
+    if (isKnownCharacterId(trimmed, castIds)) return trimmed;
+
+    console.warn(
+      `Unknown focusCharacterId '${trimmed}' on page ${pageIndex + 1}; using fallback.`
+    );
+    return undefined;
+  };
+
+  const direct = normalizeCandidate(value);
+  if (direct) return direct;
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const normalized = normalizeCandidate(item);
+      if (normalized) return normalized;
+    }
+  }
+
+  if (typeof value === "object" && value !== null) {
+    const obj = value as Record<string, unknown>;
+    const fromObject =
+      normalizeCandidate(obj.characterId) ??
+      normalizeCandidate(obj.id) ??
+      normalizeCandidate(obj.focusCharacterId);
+    if (fromObject) return fromObject;
+  }
+
+  for (const id of appearingCharacterIds ?? []) {
+    const normalized = normalizeCandidate(id);
+    if (normalized) return normalized;
+  }
+
+  return undefined;
+}
+
 function validateStoryCast(data: unknown): StoryCharacter[] | undefined {
   if (data === undefined) {
     return undefined;
@@ -325,23 +400,17 @@ function validateStory(data: unknown): GeneratedStory {
     if (pageObj.pageVisualRole !== undefined && typeof pageObj.pageVisualRole !== "string") {
       throw new Error("Page 'pageVisualRole' must be a string when provided");
     }
-    if (
-      pageObj.appearingCharacterIds !== undefined &&
-      (!Array.isArray(pageObj.appearingCharacterIds) ||
-        !pageObj.appearingCharacterIds.every((item) => typeof item === "string"))
-    ) {
-      throw new Error("Page 'appearingCharacterIds' must be a string array when provided");
-    }
-    if (pageObj.focusCharacterId !== undefined && typeof pageObj.focusCharacterId !== "string") {
-      throw new Error("Page 'focusCharacterId' must be a string when provided");
-    }
-
-    const appearingCharacterIds = pageObj.appearingCharacterIds as string[] | undefined;
-    for (const characterId of appearingCharacterIds ?? []) {
-      if (!castIds.has(characterId) && characterId !== "child_protagonist") {
-        console.warn(`Unknown appearingCharacterId '${characterId}' on page ${index + 1}; keeping page data and ignoring for cast consistency.`);
-      }
-    }
+    const appearingCharacterIds = normalizeAppearingCharacterIds(
+      pageObj.appearingCharacterIds,
+      castIds,
+      index
+    );
+    const focusCharacterId = normalizeFocusCharacterId({
+      value: pageObj.focusCharacterId,
+      appearingCharacterIds,
+      castIds,
+      pageIndex: index,
+    });
 
     return {
       text: pageObj.text,
@@ -351,7 +420,7 @@ function validateStory(data: unknown): GeneratedStory {
       hiddenDetail: pageObj.hiddenDetail,
       pageVisualRole: normalizePageVisualRole(pageObj.pageVisualRole, index, pages.length),
       appearingCharacterIds,
-      focusCharacterId: pageObj.focusCharacterId as string | undefined,
+      focusCharacterId,
     };
   });
 
