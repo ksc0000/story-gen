@@ -22,6 +22,11 @@ import { db } from "@/lib/firebase";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { PLAN_CONFIGS } from "@/lib/plans";
+import {
+  formatBookDate,
+  formatResolvedDate,
+  normalizeFirestoreDate,
+} from "@/lib/date";
 import type {
   BookDoc,
   BookFeedbackDoc,
@@ -127,95 +132,6 @@ function averageTextChars(books: BookWithId[]) {
     .filter((value): value is number => typeof value === "number");
   if (values.length === 0) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function resolveDate(value: unknown): Date | null {
-  if (!value) return null;
-  if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? null : value;
-  }
-  if (typeof value === "number") {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-  if (typeof value === "object" && value !== null) {
-    if ("toDate" in value && typeof value.toDate === "function") {
-      try {
-        const date = value.toDate();
-        return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null;
-      } catch {
-        return null;
-      }
-    }
-    if ("seconds" in value && typeof value.seconds === "number") {
-      const milliseconds =
-        value.seconds * 1000 +
-        ("nanoseconds" in value && typeof value.nanoseconds === "number"
-          ? Math.floor(value.nanoseconds / 1_000_000)
-          : 0);
-      const date = new Date(milliseconds);
-      return Number.isNaN(date.getTime()) ? null : date;
-    }
-    if ("_methodName" in value && value._methodName === "serverTimestamp") {
-      return null;
-    }
-  }
-  return null;
-}
-
-function estimateCreatedAtFromExpiresAt(expiresAt: unknown) {
-  const expiresDate = resolveDate(expiresAt);
-  if (!expiresDate) return null;
-  const estimated = new Date(expiresDate.getTime() - 30 * 24 * 60 * 60 * 1000);
-  return Number.isNaN(estimated.getTime()) ? null : estimated;
-}
-
-function formatTimestamp(value: unknown, fallbackValue?: unknown) {
-  const date = resolveDate(value) ?? resolveDate(fallbackValue);
-  return date ? date.toLocaleString("ja-JP") : "日付不明";
-}
-
-function getBookCreatedDate(book: BookWithId) {
-  return (
-    book.createdAt ??
-    book.createdAtMs ??
-    book.generationStartedAt ??
-    book.generationStartedAtMs ??
-    book.completedAt ??
-    book.completedAtMs ??
-    book.failedAt ??
-    book.failedAtMs ??
-    book.updatedAt ??
-    book.updatedAtMs ??
-    estimateCreatedAtFromExpiresAt(book.expiresAt)
-  );
-}
-
-function getBookTimestampValue(
-  book: BookWithId,
-  field: "createdAt" | "updatedAt" | "generationStartedAt" | "completedAt" | "failedAt"
-) {
-  switch (field) {
-    case "createdAt":
-      return getBookCreatedDate(book);
-    case "updatedAt":
-      return book.updatedAt ?? book.updatedAtMs ?? getBookCreatedDate(book);
-    case "generationStartedAt":
-      return book.generationStartedAt ?? book.generationStartedAtMs ?? getBookCreatedDate(book);
-    case "completedAt":
-      return book.completedAt ?? book.completedAtMs ?? undefined;
-    case "failedAt":
-      return book.failedAt ?? book.failedAtMs ?? undefined;
-    default:
-      return undefined;
-  }
-}
-
-function formatBookTimestamp(
-  book: BookWithId,
-  field: "createdAt" | "updatedAt" | "generationStartedAt" | "completedAt" | "failedAt"
-) {
-  return formatTimestamp(getBookTimestampValue(book, field));
 }
 
 function resolveEffectiveImageModelProfile(
@@ -515,14 +431,14 @@ export default function AdminBookQualityReviewPage() {
           }))
           .sort((a, b) => {
             const aTime =
-              resolveDate(a.updatedAt)?.getTime() ??
-              resolveDate(a.createdAt)?.getTime() ??
+              normalizeFirestoreDate(a.updatedAt)?.getTime() ??
+              normalizeFirestoreDate(a.createdAt)?.getTime() ??
               a.updatedAtMs ??
               a.createdAtMs ??
               0;
             const bTime =
-              resolveDate(b.updatedAt)?.getTime() ??
-              resolveDate(b.createdAt)?.getTime() ??
+              normalizeFirestoreDate(b.updatedAt)?.getTime() ??
+              normalizeFirestoreDate(b.createdAt)?.getTime() ??
               b.updatedAtMs ??
               b.createdAtMs ??
               0;

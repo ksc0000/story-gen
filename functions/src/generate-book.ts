@@ -19,6 +19,8 @@ import type {
   StoryCharacterRole,
   ScenePolicy,
   InputImageRole,
+  InputImageSource,
+  StoryCharacterKind,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
@@ -109,13 +111,23 @@ export function sanitizeStoryCastForFirestore(cast?: GeneratedStory["cast"]): Ge
         displayName: character.displayName,
         role: character.role,
         visualBible: character.visualBible,
+        characterKind: character.characterKind,
+        nonHuman: character.nonHuman,
+        noHumanFace: character.noHumanFace,
+        noHumanBody: character.noHumanBody,
+        scaleHint: character.scaleHint,
         silhouette: character.silhouette,
         colorPalette: character.colorPalette,
         signatureItems: character.signatureItems,
         doNotChange: character.doNotChange,
+        negativeCharacterRules: character.negativeCharacterRules,
         canChangeByScene: character.canChangeByScene,
         referenceImageUrl: character.referenceImageUrl,
         approvedImageUrl: character.approvedImageUrl,
+        generatedReferenceImageUrl: character.generatedReferenceImageUrl,
+        referenceImageGeneratedAt: character.referenceImageGeneratedAt,
+        referenceImagePrompt: character.referenceImagePrompt,
+        referenceImageStatus: character.referenceImageStatus,
       })
     );
 
@@ -156,6 +168,10 @@ export function normalizeStoryCastWithChildProfile(
     characterId: protagonistId,
     displayName: protagonistDisplayName,
     role: "protagonist" satisfies StoryCharacterRole,
+    characterKind: "human_child" satisfies StoryCharacterKind,
+    nonHuman: false,
+    noHumanFace: false,
+    noHumanBody: false,
     visualBible:
       visualProfile.characterBible ||
       existingProtagonist?.visualBible ||
@@ -193,14 +209,119 @@ export function normalizeStoryCastWithChildProfile(
   };
 }
 
+function inferCharacterKind(character: StoryCharacter): StoryCharacterKind {
+  if (character.role === "protagonist") {
+    return "human_child";
+  }
+  if (character.role === "parent") {
+    return "human_adult";
+  }
+  if (character.role === "animal") {
+    return "animal";
+  }
+  if (character.role === "object_character") {
+    return "object_character";
+  }
+  if (character.role === "background_recurring") {
+    return "background";
+  }
+  return "magical_creature";
+}
+
+function isHumanLikePrompt(text: string | undefined): boolean {
+  if (!text) {
+    return false;
+  }
+  return /\b(child|boy|girl|person|human|fairy child|spirit child)\b/i.test(text);
+}
+
+function buildNonHumanRecurringCharacter(character: StoryCharacter): StoryCharacter {
+  const isStarLike =
+    /star|ほし|星|magic_friend|ひかり|light/i.test(character.characterId) ||
+    /star|ほし|星|ひかり|light/i.test(character.displayName) ||
+    /star|ほし|星|spark/i.test(character.visualBible);
+
+  const visualBible = isStarLike
+    ? "A tiny glowing non-human star creature, about the size of a child's hand. It has a rounded five-point star silhouette, soft golden light, two small expressive eyes, no human body, no human arms like a child, no human legs, no human hairstyle, and no clothing. It floats gently and leaves a faint trail of golden sparkles."
+    : "A tiny non-human magical creature with a clear simple silhouette, child-safe expression, no human body, no human clothing, and a small floating presence that is easy to recognize across pages.";
+
+  const doNotChange = [
+    "Must remain a non-human recurring character.",
+    "Must not become a child, boy, girl, person, fairy child, or second protagonist.",
+    isStarLike ? "Must keep a rounded five-point star silhouette." : undefined,
+    ...(character.doNotChange ?? []),
+  ].filter((value, index, array): value is string => Boolean(value) && array.indexOf(value) === index);
+
+  const negativeCharacterRules = [
+    "Do not draw this character as a human child.",
+    "Do not create a second child protagonist.",
+    "Do not give it human hair, human clothes, or human body proportions.",
+    ...(character.negativeCharacterRules ?? []),
+  ].filter((value, index, array): value is string => Boolean(value) && array.indexOf(value) === index);
+
+  const signatureItems = [
+    ...(character.signatureItems ?? []),
+    ...(isStarLike ? ["soft golden glow", "tiny expressive eyes", "sparkling golden trail"] : []),
+  ].filter((value, index, array): value is string => Boolean(value) && array.indexOf(value) === index);
+
+  return removeUndefinedDeep({
+    ...character,
+    characterKind: "magical_creature" satisfies StoryCharacterKind,
+    nonHuman: true,
+    noHumanFace: true,
+    noHumanBody: true,
+    scaleHint: character.scaleHint ?? "about the size of a child's hand",
+    visualBible: isHumanLikePrompt(character.visualBible) ? visualBible : character.visualBible,
+    silhouette:
+      character.silhouette ??
+      (isStarLike ? "small rounded five-point star silhouette with a soft floating glow" : undefined),
+    colorPalette: character.colorPalette ?? (isStarLike ? ["gold", "warm white", "pale yellow"] : undefined),
+    signatureItems: signatureItems.length > 0 ? signatureItems : undefined,
+    doNotChange: doNotChange.length > 0 ? doNotChange : undefined,
+    negativeCharacterRules:
+      negativeCharacterRules.length > 0 ? negativeCharacterRules : undefined,
+  }) as StoryCharacter;
+}
+
+function normalizeRecurringCharacterKinds(story: GeneratedStory): GeneratedStory {
+  if (!story.cast?.length) {
+    return story;
+  }
+
+  return {
+    ...story,
+    cast: story.cast.map((character) => {
+      const characterKind = character.characterKind ?? inferCharacterKind(character);
+      const withKind = {
+        ...character,
+        characterKind,
+      } satisfies StoryCharacter;
+
+      if (characterKind === "magical_creature" || characterKind === "object_character") {
+        return buildNonHumanRecurringCharacter(withKind);
+      }
+
+      if (characterKind === "human_child" && character.role !== "protagonist") {
+        return removeUndefinedDeep({
+          ...withKind,
+          nonHuman: false,
+          noHumanFace: false,
+          noHumanBody: false,
+        }) as StoryCharacter;
+      }
+
+      return withKind;
+    }),
+  };
+}
+
 function normalizeStoryForBook(
   story: GeneratedStory,
   bookData: BookData,
   mergedInput: BookInput
 ): GeneratedStory {
-  const withNormalizedCast = normalizeStoryCastWithChildProfile(
-    story,
-    bookData.childProfileSnapshot
+  const withNormalizedCast = normalizeRecurringCharacterKinds(
+    normalizeStoryCastWithChildProfile(story, bookData.childProfileSnapshot)
   );
 
   return {
@@ -434,8 +555,9 @@ export async function processBookGeneration(
     }
 
     // Step 4: Build reference assets
-    const coverReferenceImageUrls = buildReferenceImageUrls(
-      normalizedBookData.childProfileSnapshot
+    const childHasReferenceImages = Boolean(
+      normalizedBookData.childProfileSnapshot?.visualProfile.referenceImageUrl ||
+        normalizedBookData.childProfileSnapshot?.visualProfile.approvedImageUrl
     );
 
     // Step 5: Generate the whole-book story JSON once with Gemini and validate it.
@@ -503,12 +625,21 @@ export async function processBookGeneration(
       throw err;
     }
 
-    const { story, qualityReport } = storyResult;
+    let story = await ensureRecurringCharacterReferences({
+      bookId,
+      story: storyResult.story,
+      normalizedBookData,
+      deps,
+    });
+    const { qualityReport } = storyResult;
     const selectedStyleProfile = getIllustrationStyleProfile(normalizedBookData.style);
     const hasAnyCharacterReference =
-      coverReferenceImageUrls.length > 0 ||
+      childHasReferenceImages ||
       (story.cast ?? []).some(
-        (character) => Boolean(character.approvedImageUrl) || Boolean(character.referenceImageUrl)
+        (character) =>
+          Boolean(character.approvedImageUrl) ||
+          Boolean(character.referenceImageUrl) ||
+          Boolean(character.generatedReferenceImageUrl)
       );
     const storyGenerationMetadata = removeUndefinedDeep({
         storyModel: story.storyModel,
@@ -622,10 +753,20 @@ export async function processBookGeneration(
         imagePurpose,
         characterConsistencyMode: normalizedBookData.characterConsistencyMode,
       });
-      const inputImageUrls = shouldUseReference
-        ? buildPageReferenceImageUrls(coverReferenceImageUrls, story.cast, storyPage.appearingCharacterIds)
+      const inputImageRefs = shouldUseReference
+        ? buildInputImageRefs(
+            normalizedBookData.childProfileSnapshot,
+            story.cast,
+            storyPage.appearingCharacterIds
+          )
         : [];
-      const inputImageRoles = buildInputImageRoles(inputImageUrls, false);
+      const inputImageUrls = inputImageRefs.map((ref) => ref.url);
+      const inputImageRoles = buildInputImageRoles(inputImageRefs, false);
+      const missingReferenceCharacters = collectMissingReferenceCharacters(
+        story.cast,
+        storyPage.appearingCharacterIds,
+        inputImageRefs
+      );
 
       // Skip image generation in development to avoid API costs
       if (process.env.NODE_ENV === 'development') {
@@ -673,9 +814,11 @@ export async function processBookGeneration(
                 imageQualityTier,
                 imagePurpose,
                 inputImageRoles,
+                inputImageRefs,
                 inputImageUrlsCount: inputImageUrls.length,
                 inputReferenceCount: inputImageUrls.length,
                 usedCharacterReference: inputImageUrls.length > 0,
+                missingReferenceCharacters,
                 characterConsistencyMode: normalizedBookData.characterConsistencyMode,
                 imageModelProfile,
                 pageVisualRole: storyPage.pageVisualRole,
@@ -711,9 +854,11 @@ export async function processBookGeneration(
         imageQualityTier,
         imagePurpose,
         inputImageRoles,
+        inputImageRefs,
         inputImageUrlsCount: inputImageUrls.length,
         inputReferenceCount: inputImageUrls.length,
         usedCharacterReference: inputImageUrls.length > 0,
+        missingReferenceCharacters,
         characterConsistencyMode: normalizedBookData.characterConsistencyMode,
         imageModelProfile,
         pageVisualRole: storyPage.pageVisualRole,
@@ -809,41 +954,244 @@ function isValidPageCount(value: number | undefined): value is BookData["pageCou
   return value === 4 || value === 8 || value === 12;
 }
 
-function buildReferenceImageUrls(
-  childProfileSnapshot?: BookData["childProfileSnapshot"]
-): string[] {
-  const urls = [
-    childProfileSnapshot?.visualProfile.referenceImageUrl,
-    childProfileSnapshot?.visualProfile.approvedImageUrl,
-  ]
-    .filter((value): value is string => Boolean(value))
-    .map(toPublicUrl);
-
-  return [...new Set(urls)];
-}
-
-function buildPageReferenceImageUrls(
-  baseReferenceImageUrls: string[],
+function buildInputImageRefs(
+  childProfileSnapshot: BookData["childProfileSnapshot"] | undefined,
   cast: GeneratedStory["cast"],
   appearingCharacterIds?: string[]
-): string[] {
-  const castUrls = (cast ?? [])
-    .filter((character) => appearingCharacterIds?.includes(character.characterId))
-    .flatMap((character) => [character.approvedImageUrl, character.referenceImageUrl])
-    .filter((value): value is string => Boolean(value))
-    .map(toPublicUrl);
+): Array<{
+  role: InputImageRole;
+  characterId?: string;
+    url: string;
+    source?: InputImageSource;
+  }> {
+  const refs: Array<{
+    role: InputImageRole;
+    characterId?: string;
+    url: string;
+    source?: InputImageSource;
+  }> = [
+    childProfileSnapshot?.visualProfile.referenceImageUrl
+      ? {
+          role: "character_reference",
+          characterId: "child_protagonist",
+          url: toPublicUrl(childProfileSnapshot.visualProfile.referenceImageUrl),
+          source: "referenceImageUrl" as const,
+        }
+      : undefined,
+    childProfileSnapshot?.visualProfile.approvedImageUrl
+      ? {
+          role: "character_reference",
+          characterId: "child_protagonist",
+          url: toPublicUrl(childProfileSnapshot.visualProfile.approvedImageUrl),
+          source: "approvedImageUrl" as const,
+        }
+      : undefined,
+  ].filter(Boolean) as Array<{
+    role: InputImageRole;
+    characterId?: string;
+    url: string;
+    source?: InputImageSource;
+  }>;
 
-  return [...new Set([...baseReferenceImageUrls, ...castUrls])].slice(0, 8);
+  for (const character of cast ?? []) {
+    if (!appearingCharacterIds?.includes(character.characterId)) {
+      continue;
+    }
+
+    const candidates: Array<[string | undefined, InputImageSource]> = [
+      [character.approvedImageUrl, "approvedImageUrl"],
+      [character.referenceImageUrl, "referenceImageUrl"],
+      [character.generatedReferenceImageUrl, "generatedReferenceImageUrl"],
+    ];
+
+    for (const [url, source] of candidates) {
+      if (!url) {
+        continue;
+      }
+      refs.push({
+        role: "character_reference",
+        characterId: character.characterId,
+        url: toPublicUrl(url),
+        source,
+      });
+    }
+  }
+
+  const deduped = refs.filter(
+    (ref, index, array) =>
+      array.findIndex(
+        (candidate) =>
+          candidate.url === ref.url &&
+          candidate.characterId === ref.characterId &&
+          candidate.source === ref.source
+      ) === index
+  );
+
+  return deduped.slice(0, 8);
 }
 
-function buildInputImageRoles(inputImageUrls: string[], stylePreviewUsedAsReference = false): InputImageRole[] {
-  if (inputImageUrls.length === 0) {
+function buildInputImageRoles(
+  inputImageRefs: Array<{ role: InputImageRole }>,
+  stylePreviewUsedAsReference = false
+): InputImageRole[] {
+  if (inputImageRefs.length === 0) {
     return [];
   }
 
   return stylePreviewUsedAsReference
     ? ["character_reference", "style_reference"]
     : ["character_reference"];
+}
+
+function shouldGenerateRecurringCharacterReference(
+  character: StoryCharacter,
+  story: GeneratedStory,
+  bookData: BookData
+): boolean {
+  if (!["standard_paid", "premium_paid"].includes(bookData.productPlan ?? "free")) {
+    return false;
+  }
+
+  if (
+    character.approvedImageUrl ||
+    character.referenceImageUrl ||
+    character.generatedReferenceImageUrl
+  ) {
+    return false;
+  }
+
+  if (!["magical_creature", "object_character", "animal"].includes(character.characterKind ?? "")) {
+    return false;
+  }
+
+  const appearances = story.pages.filter((page) =>
+    page.appearingCharacterIds?.includes(character.characterId)
+  ).length;
+  return appearances >= 2;
+}
+
+function buildRecurringCharacterReferencePrompt(
+  character: StoryCharacter,
+  story: GeneratedStory,
+  bookData: BookData
+): string {
+  const styleProfile = getIllustrationStyleProfile(bookData.style);
+  return [
+    `Character reference illustration for recurring character ${character.characterId}.`,
+    `Draw exactly one recurring ${character.characterKind ?? "non-human"} character on a clean, simple background.`,
+    "No protagonist, no extra children, no other characters, no duplicated character, no scenery clutter.",
+    character.nonHuman ? "This character must remain clearly non-human." : "",
+    character.noHumanFace ? "Do not give it a human face." : "",
+    character.noHumanBody ? "Do not give it a human body, human hair, human clothes, human arms, or human legs." : "",
+    character.scaleHint ? `Scale hint: ${character.scaleHint}.` : "",
+    `Visual identity: ${character.visualBible}`,
+    character.silhouette ? `Silhouette: ${character.silhouette}.` : "",
+    character.colorPalette?.length ? `Color palette: ${character.colorPalette.join(", ")}.` : "",
+    character.signatureItems?.length ? `Signature items: ${character.signatureItems.join(", ")}.` : "",
+    character.doNotChange?.length ? `Do not change: ${character.doNotChange.join("; ")}.` : "",
+    character.negativeCharacterRules?.length
+      ? `Negative rules: ${character.negativeCharacterRules.join("; ")}.`
+      : "",
+    `Illustration style: ${styleProfile.styleBible}`,
+    story.styleBible ? `Story-specific style consistency: ${story.styleBible}` : "",
+    "wordless reference illustration, no written text, no captions, no labels, no signage, no watermark.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+async function ensureRecurringCharacterReferences(params: {
+  bookId: string;
+  story: GeneratedStory;
+  normalizedBookData: BookData;
+  deps: Pick<GenerationDeps, "imageClient" | "uploadImage">;
+}): Promise<GeneratedStory> {
+  if (!params.story.cast?.length) {
+    return params.story;
+  }
+
+  const nextCast: StoryCharacter[] = [];
+
+  for (const [index, character] of params.story.cast.entries()) {
+    if (!shouldGenerateRecurringCharacterReference(character, params.story, params.normalizedBookData)) {
+      nextCast.push(character);
+      continue;
+    }
+
+    const referencePrompt = buildRecurringCharacterReferencePrompt(
+      character,
+      params.story,
+      params.normalizedBookData
+    );
+
+    try {
+      const buffer = await params.deps.imageClient.generateImage(referencePrompt, {
+        purpose: "book_page",
+        imageQualityTier: params.normalizedBookData.imageQualityTier,
+        imageModelProfile: params.normalizedBookData.imageModelProfile,
+        inputImageUrls: [],
+      });
+      const url = await params.deps.uploadImage(params.bookId, -100 - index, buffer);
+      nextCast.push(
+        removeUndefinedDeep({
+          ...character,
+          generatedReferenceImageUrl: url,
+          referenceImageGeneratedAt: admin.firestore.Timestamp.now(),
+          referenceImagePrompt: referencePrompt,
+          referenceImageStatus: "completed" as const,
+        }) as StoryCharacter
+      );
+    } catch (error) {
+      logger.warn("Recurring character reference generation failed", {
+        bookId: params.bookId,
+        characterId: character.characterId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      nextCast.push(
+        removeUndefinedDeep({
+          ...character,
+          referenceImagePrompt: referencePrompt,
+          referenceImageStatus: "failed" as const,
+        }) as StoryCharacter
+      );
+    }
+  }
+
+  return {
+    ...params.story,
+    cast: nextCast,
+  };
+}
+
+function collectMissingReferenceCharacters(
+  cast: GeneratedStory["cast"],
+  appearingCharacterIds?: string[],
+  inputImageRefs?: Array<{ characterId?: string }>
+): string[] | undefined {
+  if (!appearingCharacterIds?.length) {
+    return undefined;
+  }
+
+  const referencedCharacterIds = new Set(
+    (inputImageRefs ?? []).map((ref) => ref.characterId).filter((value): value is string => Boolean(value))
+  );
+
+  const missing = appearingCharacterIds.filter((characterId) => {
+    if (characterId === "child_protagonist") {
+      return !referencedCharacterIds.has("child_protagonist");
+    }
+    const character = cast?.find((entry) => entry.characterId === characterId);
+    if (!character) {
+      return true;
+    }
+    return !(
+      character.approvedImageUrl ||
+      character.referenceImageUrl ||
+      character.generatedReferenceImageUrl
+    );
+  });
+
+  return missing.length > 0 ? [...new Set(missing)] : undefined;
 }
 
 function collectPageTextQualityWarnings(

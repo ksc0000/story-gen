@@ -16,6 +16,18 @@ export type ImageModelProfile =
   | "pro_consistent"
   | "kontext_reference";
 export type InputImageRole = "character_reference" | "style_reference";
+export type InputImageSource =
+  | "approvedImageUrl"
+  | "referenceImageUrl"
+  | "generatedReferenceImageUrl"
+  | "stylePreviewImageUrl";
+export type StoryCharacterKind =
+  | "human_child"
+  | "human_adult"
+  | "animal"
+  | "magical_creature"
+  | "object_character"
+  | "background";
 export type AgeBand =
   | "baby_toddler"
   | "preschool_3_4"
@@ -263,9 +275,16 @@ export interface PageData {
   imageQualityTier?: ImageQualityTier;
   imagePurpose?: ImagePurpose;
   inputImageRoles?: InputImageRole[];
+  inputImageRefs?: Array<{
+    role: InputImageRole;
+    characterId?: string;
+    url: string;
+    source?: InputImageSource;
+  }>;
   inputImageUrlsCount?: number;
   inputReferenceCount?: number;
   usedCharacterReference?: boolean;
+  missingReferenceCharacters?: string[];
   characterConsistencyMode?: CharacterConsistencyMode;
   imageModelProfile?: ImageModelProfile;
   pageVisualRole?: PageVisualRole;
@@ -337,13 +356,23 @@ export interface StoryCharacter {
   displayName: string;
   role: StoryCharacterRole;
   visualBible: string;
+  characterKind?: StoryCharacterKind;
+  nonHuman?: boolean;
+  noHumanFace?: boolean;
+  noHumanBody?: boolean;
+  scaleHint?: string;
   silhouette?: string;
   colorPalette?: string[];
   signatureItems?: string[];
   doNotChange?: string[];
+  negativeCharacterRules?: string[];
   canChangeByScene?: string[];
   referenceImageUrl?: string;
   approvedImageUrl?: string;
+  generatedReferenceImageUrl?: string;
+  referenceImageGeneratedAt?: FirebaseFirestore.Timestamp;
+  referenceImagePrompt?: string;
+  referenceImageStatus?: "pending" | "completed" | "failed";
 }
 
 export interface StoryQualityReportData {
