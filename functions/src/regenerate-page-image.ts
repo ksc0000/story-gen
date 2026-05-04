@@ -15,6 +15,40 @@ const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
 const STORAGE_BUCKET = "story-gen-8a769.firebasestorage.app";
 
+export function buildRegenerationSuccessPatch(params: {
+  newPageStatus: PageStatus;
+  imageUrl: string;
+  durationMs: number;
+  attemptCount: number;
+  usedProfile: ImageModelProfile;
+  timeoutCount: number;
+  fallbackUsed: boolean;
+  primaryProfile: ImageModelProfile;
+  deleteSentinel: unknown;
+  serverTimestampSentinel: unknown;
+  nowMs: number;
+}): Record<string, unknown> {
+  const {
+    newPageStatus, imageUrl, durationMs, attemptCount, usedProfile,
+    timeoutCount, fallbackUsed, primaryProfile,
+    deleteSentinel: del, serverTimestampSentinel, nowMs,
+  } = params;
+  return {
+    status: newPageStatus,
+    imageUrl,
+    imageDurationMs: durationMs,
+    imageAttemptCount: attemptCount,
+    imageModelProfile: usedProfile,
+    imageFailureReason: del,
+    imageRetryable: del,
+    imageTimeoutCount: timeoutCount > 0 ? timeoutCount : del,
+    imageFallbackUsed: fallbackUsed ? true : del,
+    fallbackFromModelProfile: fallbackUsed ? primaryProfile : del,
+    imageRegeneratedAt: serverTimestampSentinel,
+    imageRegeneratedAtMs: nowMs,
+  };
+}
+
 interface RegeneratePageImageRequest {
   bookId: string;
   pageId?: string;
@@ -160,22 +194,19 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
 
     const newPageStatus: PageStatus = fallbackUsed ? "fallback_completed" : "completed";
 
-    const successPatch: Record<string, unknown> = {
-      status: newPageStatus,
+    const successPatch = buildRegenerationSuccessPatch({
+      newPageStatus,
       imageUrl,
-      imageDurationMs: durationMs,
-      imageAttemptCount: attemptCount,
-      imageModelProfile: usedProfile,
-      imageFailureReason: admin.firestore.FieldValue.delete(),
-      imageRetryable: admin.firestore.FieldValue.delete(),
-      imageRegeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
-      imageRegeneratedAtMs: Date.now(),
-    };
-    if (timeoutCount > 0) successPatch.imageTimeoutCount = timeoutCount;
-    if (fallbackUsed) {
-      successPatch.imageFallbackUsed = true;
-      successPatch.fallbackFromModelProfile = primaryProfile;
-    }
+      durationMs,
+      attemptCount,
+      usedProfile,
+      timeoutCount,
+      fallbackUsed,
+      primaryProfile,
+      deleteSentinel: admin.firestore.FieldValue.delete(),
+      serverTimestampSentinel: admin.firestore.FieldValue.serverTimestamp(),
+      nowMs: Date.now(),
+    });
     await pageRef.update(successPatch);
 
     if (pageData.pageNumber === 0) {

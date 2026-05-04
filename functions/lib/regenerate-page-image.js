@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.regeneratePageImage = void 0;
+exports.buildRegenerationSuccessPatch = buildRegenerationSuccessPatch;
 const https_1 = require("firebase-functions/v2/https");
 const params_1 = require("firebase-functions/params");
 const admin = __importStar(require("firebase-admin"));
@@ -43,6 +44,23 @@ const replicate_1 = require("./lib/replicate");
 const replicateApiToken = (0, params_1.defineSecret)("REPLICATE_API_TOKEN");
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
 const STORAGE_BUCKET = "story-gen-8a769.firebasestorage.app";
+function buildRegenerationSuccessPatch(params) {
+    const { newPageStatus, imageUrl, durationMs, attemptCount, usedProfile, timeoutCount, fallbackUsed, primaryProfile, deleteSentinel: del, serverTimestampSentinel, nowMs, } = params;
+    return {
+        status: newPageStatus,
+        imageUrl,
+        imageDurationMs: durationMs,
+        imageAttemptCount: attemptCount,
+        imageModelProfile: usedProfile,
+        imageFailureReason: del,
+        imageRetryable: del,
+        imageTimeoutCount: timeoutCount > 0 ? timeoutCount : del,
+        imageFallbackUsed: fallbackUsed ? true : del,
+        fallbackFromModelProfile: fallbackUsed ? primaryProfile : del,
+        imageRegeneratedAt: serverTimestampSentinel,
+        imageRegeneratedAtMs: nowMs,
+    };
+}
 exports.regeneratePageImage = (0, https_1.onCall)({ secrets: [replicateApiToken] }, async (request) => {
     if (!request.auth) {
         throw new https_1.HttpsError("unauthenticated", "ログインが必要です。");
@@ -158,23 +176,19 @@ exports.regeneratePageImage = (0, https_1.onCall)({ secrets: [replicateApiToken]
     });
     const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
     const newPageStatus = fallbackUsed ? "fallback_completed" : "completed";
-    const successPatch = {
-        status: newPageStatus,
+    const successPatch = buildRegenerationSuccessPatch({
+        newPageStatus,
         imageUrl,
-        imageDurationMs: durationMs,
-        imageAttemptCount: attemptCount,
-        imageModelProfile: usedProfile,
-        imageFailureReason: admin.firestore.FieldValue.delete(),
-        imageRetryable: admin.firestore.FieldValue.delete(),
-        imageRegeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
-        imageRegeneratedAtMs: Date.now(),
-    };
-    if (timeoutCount > 0)
-        successPatch.imageTimeoutCount = timeoutCount;
-    if (fallbackUsed) {
-        successPatch.imageFallbackUsed = true;
-        successPatch.fallbackFromModelProfile = primaryProfile;
-    }
+        durationMs,
+        attemptCount,
+        usedProfile,
+        timeoutCount,
+        fallbackUsed,
+        primaryProfile,
+        deleteSentinel: admin.firestore.FieldValue.delete(),
+        serverTimestampSentinel: admin.firestore.FieldValue.serverTimestamp(),
+        nowMs: Date.now(),
+    });
     await pageRef.update(successPatch);
     if (pageData.pageNumber === 0) {
         await bookRef.update({ coverImageUrl: imageUrl });
