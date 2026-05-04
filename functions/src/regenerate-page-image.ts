@@ -9,7 +9,6 @@ import {
   withImageTimeout,
   ImageTimeoutError,
 } from "./lib/replicate";
-import { removeUndefinedDeep } from "./lib/firestore-sanitize";
 import type { PageData, BookData, ImageModelProfile, PageStatus, GenerationReliabilityStatus } from "./lib/types";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
@@ -74,6 +73,7 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
 
     await pageRef.update({
       status: "generating",
+      imageRegenerationStartedAt: admin.firestore.FieldValue.serverTimestamp(),
       imageRegenerationStartedAtMs: startMs,
       regenerationAttemptCount: admin.firestore.FieldValue.increment(1),
       regenerationTriggeredBy: isAdmin ? "admin" : "owner",
@@ -134,16 +134,15 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
     const durationMs = Date.now() - startMs;
 
     if (!success || !imageBuffer) {
-      await pageRef.update(
-        removeUndefinedDeep({
-          status: "image_failed" as PageStatus,
-          imageFailureReason: failureReason ?? "unknown",
-          imageRetryable: true,
-          imageDurationMs: durationMs,
-          imageAttemptCount: attemptCount,
-          imageTimeoutCount: timeoutCount > 0 ? timeoutCount : undefined,
-        })
-      );
+      const failurePatch: Record<string, unknown> = {
+        status: "image_failed" as PageStatus,
+        imageFailureReason: failureReason ?? "unknown",
+        imageRetryable: true,
+        imageDurationMs: durationMs,
+        imageAttemptCount: attemptCount,
+      };
+      if (timeoutCount > 0) failurePatch.imageTimeoutCount = timeoutCount;
+      await pageRef.update(failurePatch);
       await recalculateBookMetrics(bookId, bookRef);
       throw new HttpsError("internal", `画像生成に失敗しました: ${failureReason}`);
     }
@@ -161,21 +160,23 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
 
     const newPageStatus: PageStatus = fallbackUsed ? "fallback_completed" : "completed";
 
-    await pageRef.update(
-      removeUndefinedDeep({
-        status: newPageStatus,
-        imageUrl,
-        imageDurationMs: durationMs,
-        imageAttemptCount: attemptCount,
-        imageTimeoutCount: timeoutCount > 0 ? timeoutCount : undefined,
-        imageFallbackUsed: fallbackUsed || undefined,
-        fallbackFromModelProfile: fallbackUsed ? primaryProfile : undefined,
-        imageModelProfile: usedProfile,
-        imageFailureReason: undefined,
-        imageRetryable: undefined,
-        imageRegeneratedAtMs: Date.now(),
-      })
-    );
+    const successPatch: Record<string, unknown> = {
+      status: newPageStatus,
+      imageUrl,
+      imageDurationMs: durationMs,
+      imageAttemptCount: attemptCount,
+      imageModelProfile: usedProfile,
+      imageFailureReason: admin.firestore.FieldValue.delete(),
+      imageRetryable: admin.firestore.FieldValue.delete(),
+      imageRegeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
+      imageRegeneratedAtMs: Date.now(),
+    };
+    if (timeoutCount > 0) successPatch.imageTimeoutCount = timeoutCount;
+    if (fallbackUsed) {
+      successPatch.imageFallbackUsed = true;
+      successPatch.fallbackFromModelProfile = primaryProfile;
+    }
+    await pageRef.update(successPatch);
 
     if (pageData.pageNumber === 0) {
       await bookRef.update({ coverImageUrl: imageUrl });

@@ -40,7 +40,6 @@ const admin = __importStar(require("firebase-admin"));
 const logger = __importStar(require("firebase-functions/logger"));
 const crypto_1 = require("crypto");
 const replicate_1 = require("./lib/replicate");
-const firestore_sanitize_1 = require("./lib/firestore-sanitize");
 const replicateApiToken = (0, params_1.defineSecret)("REPLICATE_API_TOKEN");
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
 const STORAGE_BUCKET = "story-gen-8a769.firebasestorage.app";
@@ -80,6 +79,7 @@ exports.regeneratePageImage = (0, https_1.onCall)({ secrets: [replicateApiToken]
     const startMs = Date.now();
     await pageRef.update({
         status: "generating",
+        imageRegenerationStartedAt: admin.firestore.FieldValue.serverTimestamp(),
         imageRegenerationStartedAtMs: startMs,
         regenerationAttemptCount: admin.firestore.FieldValue.increment(1),
         regenerationTriggeredBy: isAdmin ? "admin" : "owner",
@@ -134,14 +134,16 @@ exports.regeneratePageImage = (0, https_1.onCall)({ secrets: [replicateApiToken]
     }
     const durationMs = Date.now() - startMs;
     if (!success || !imageBuffer) {
-        await pageRef.update((0, firestore_sanitize_1.removeUndefinedDeep)({
+        const failurePatch = {
             status: "image_failed",
             imageFailureReason: failureReason ?? "unknown",
             imageRetryable: true,
             imageDurationMs: durationMs,
             imageAttemptCount: attemptCount,
-            imageTimeoutCount: timeoutCount > 0 ? timeoutCount : undefined,
-        }));
+        };
+        if (timeoutCount > 0)
+            failurePatch.imageTimeoutCount = timeoutCount;
+        await pageRef.update(failurePatch);
         await recalculateBookMetrics(bookId, bookRef);
         throw new https_1.HttpsError("internal", `画像生成に失敗しました: ${failureReason}`);
     }
@@ -156,19 +158,24 @@ exports.regeneratePageImage = (0, https_1.onCall)({ secrets: [replicateApiToken]
     });
     const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
     const newPageStatus = fallbackUsed ? "fallback_completed" : "completed";
-    await pageRef.update((0, firestore_sanitize_1.removeUndefinedDeep)({
+    const successPatch = {
         status: newPageStatus,
         imageUrl,
         imageDurationMs: durationMs,
         imageAttemptCount: attemptCount,
-        imageTimeoutCount: timeoutCount > 0 ? timeoutCount : undefined,
-        imageFallbackUsed: fallbackUsed || undefined,
-        fallbackFromModelProfile: fallbackUsed ? primaryProfile : undefined,
         imageModelProfile: usedProfile,
-        imageFailureReason: undefined,
-        imageRetryable: undefined,
+        imageFailureReason: admin.firestore.FieldValue.delete(),
+        imageRetryable: admin.firestore.FieldValue.delete(),
+        imageRegeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
         imageRegeneratedAtMs: Date.now(),
-    }));
+    };
+    if (timeoutCount > 0)
+        successPatch.imageTimeoutCount = timeoutCount;
+    if (fallbackUsed) {
+        successPatch.imageFallbackUsed = true;
+        successPatch.fallbackFromModelProfile = primaryProfile;
+    }
+    await pageRef.update(successPatch);
     if (pageData.pageNumber === 0) {
         await bookRef.update({ coverImageUrl: imageUrl });
     }

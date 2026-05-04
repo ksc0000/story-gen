@@ -312,7 +312,9 @@ export interface PageData {
   imageFailureReason?: string;
   imageRetryable?: boolean;
   replicateModel?: string;
+  imageRegenerationStartedAt?: FirebaseFirestore.Timestamp;
   imageRegenerationStartedAtMs?: number;
+  imageRegeneratedAt?: FirebaseFirestore.Timestamp;
   imageRegeneratedAtMs?: number;
   regenerationAttemptCount?: number;
   regenerationTriggeredBy?: "owner" | "admin";

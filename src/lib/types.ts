@@ -335,7 +335,9 @@ export interface PageDoc {
   imageFailureReason?: string;
   imageRetryable?: boolean;
   replicateModel?: string;
+  imageRegenerationStartedAt?: Timestamp;
   imageRegenerationStartedAtMs?: number;
+  imageRegeneratedAt?: Timestamp;
   imageRegeneratedAtMs?: number;
   regenerationAttemptCount?: number;
   regenerationTriggeredBy?: "owner" | "admin";
