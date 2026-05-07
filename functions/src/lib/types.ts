@@ -318,6 +318,28 @@ export interface PageData {
   imageRegeneratedAtMs?: number;
   regenerationAttemptCount?: number;
   regenerationTriggeredBy?: "owner" | "admin";
+  lastRegeneratedAt?: FirebaseFirestore.Timestamp;
+  lastRegeneratedAtMs?: number;
+  lastRegenerationSucceeded?: boolean;
+}
+
+/**
+ * Subcollection entry at books/{bookId}/pages/{pageId}/regenerationHistory/{attemptId}
+ */
+export interface RegenerationHistoryEntry {
+  attemptedAt: FirebaseFirestore.Timestamp;
+  attemptedAtMs: number;
+  attemptedBy: string;
+  triggeredBy: "owner" | "admin";
+  beforeStatus: PageStatus;
+  afterStatus: PageStatus;
+  beforeImageUrl?: string;
+  afterImageUrl?: string;
+  imageModelProfile?: ImageModelProfile;
+  fallbackUsed: boolean;
+  durationMs: number;
+  failureReason?: string;
+  success: boolean;
 }
 
 export interface TemplateData {

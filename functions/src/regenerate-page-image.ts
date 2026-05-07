@@ -174,9 +174,30 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
         imageRetryable: true,
         imageDurationMs: durationMs,
         imageAttemptCount: attemptCount,
+        lastRegeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastRegeneratedAtMs: Date.now(),
+        lastRegenerationSucceeded: false,
       };
       if (timeoutCount > 0) failurePatch.imageTimeoutCount = timeoutCount;
       await pageRef.update(failurePatch);
+
+      // Write regeneration history entry
+      const historyEntry = {
+        attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+        attemptedAtMs: Date.now(),
+        attemptedBy: uid,
+        triggeredBy: isAdmin ? "admin" : "owner",
+        beforeStatus: pageData.status,
+        afterStatus: "image_failed" as PageStatus,
+        beforeImageUrl: pageData.imageUrl ?? null,
+        imageModelProfile: primaryProfile,
+        fallbackUsed: false,
+        durationMs,
+        failureReason: failureReason ?? "unknown",
+        success: false,
+      };
+      await pageRef.collection("regenerationHistory").add(historyEntry);
+
       await recalculateBookMetrics(bookId, bookRef);
       throw new HttpsError("internal", `画像生成に失敗しました: ${failureReason}`);
     }
@@ -208,6 +229,30 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
       nowMs: Date.now(),
     });
     await pageRef.update(successPatch);
+
+    // Write regeneration history entry
+    const historyEntry = {
+      attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+      attemptedAtMs: Date.now(),
+      attemptedBy: uid,
+      triggeredBy: isAdmin ? "admin" : "owner",
+      beforeStatus: pageData.status,
+      afterStatus: newPageStatus,
+      beforeImageUrl: pageData.imageUrl ?? null,
+      afterImageUrl: imageUrl,
+      imageModelProfile: usedProfile,
+      fallbackUsed,
+      durationMs,
+      success: true,
+    };
+    await pageRef.collection("regenerationHistory").add(historyEntry);
+
+    // Update page-level regeneration metadata
+    await pageRef.update({
+      lastRegeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
+      lastRegeneratedAtMs: Date.now(),
+      lastRegenerationSucceeded: true,
+    });
 
     if (pageData.pageNumber === 0) {
       await bookRef.update({ coverImageUrl: imageUrl });

@@ -36,6 +36,7 @@ import type {
   ImageModelProfile,
   PageDoc,
   ProductPlan,
+  RegenerationHistoryEntry,
   StoryCharacter,
   StoryQualityReportData,
   Timestamp,
@@ -55,8 +56,11 @@ interface SloSnapshot extends Partial<SloMetrics> {
   createdBy?: string;
   bookCount?: number;
   pageCount?: number;
+  sampleSize?: number;
   source?: string;
 }
+
+type SloSampleSize = 50 | 100 | 200;
 
 type AdminReviewForm = {
   adminTextQualityScore: string;
@@ -415,6 +419,10 @@ export default function AdminBookQualityReviewPage() {
   const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
   const [snapshotHistory, setSnapshotHistory] = useState<SloSnapshot[]>([]);
   const [snapshotHistoryLoading, setSnapshotHistoryLoading] = useState(false);
+  const [sloSampleSize, setSloSampleSize] = useState<SloSampleSize>(50);
+  const [regenHistory, setRegenHistory] = useState<RegenerationHistoryEntry[]>([]);
+  const [regenHistoryLoading, setRegenHistoryLoading] = useState(false);
+  const [regenHistoryPageId, setRegenHistoryPageId] = useState<string | null>(null);
 
   function getPermissionHelpMessage(message: string) {
     if (!/Missing or insufficient permissions/i.test(message)) {
@@ -425,7 +433,7 @@ export default function AdminBookQualityReviewPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    const booksQuery = query(collection(db, "books"), orderBy("createdAt", "desc"), limit(50));
+    const booksQuery = query(collection(db, "books"), orderBy("createdAt", "desc"), limit(sloSampleSize));
     const unsubscribe = onSnapshot(
       booksQuery,
       (snapshot) => {
@@ -445,7 +453,7 @@ export default function AdminBookQualityReviewPage() {
     );
 
     return () => unsubscribe();
-  }, [isAdmin]);
+  }, [isAdmin, sloSampleSize]);
 
   // Stable key for the set of loaded book IDs – avoids reloading pages
   // when only book fields (status, scores) change via onSnapshot.
@@ -659,7 +667,6 @@ export default function AdminBookQualityReviewPage() {
   useEffect(() => {
     if (!isAdmin) return;
     fetchSnapshotHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
   const handleSaveSnapshot = async () => {
@@ -675,6 +682,7 @@ export default function AdminBookQualityReviewPage() {
         createdBy: user.uid,
         bookCount: sloMetrics.totalBooks,
         pageCount: sloMetrics.totalPages,
+        sampleSize: sloSampleSize,
       });
       setSnapshotMessage("SLO snapshot を保存しました");
       window.setTimeout(() => setSnapshotMessage(null), 3000);
@@ -851,6 +859,16 @@ export default function AdminBookQualityReviewPage() {
                     {allPagesLoading && (
                       <span className="text-xs text-violet-500">ページデータ読み込み中...</span>
                     )}
+                    <select
+                      value={sloSampleSize}
+                      onChange={(e) => setSloSampleSize(Number(e.target.value) as SloSampleSize)}
+                      className="rounded-lg border border-input bg-background px-2 py-1 text-xs"
+                      aria-label="SLO sample size"
+                    >
+                      <option value={50}>50 books</option>
+                      <option value={100}>100 books</option>
+                      <option value={200}>200 books</option>
+                    </select>
                     <Button
                       variant="outline"
                       size="sm"
@@ -905,7 +923,7 @@ export default function AdminBookQualityReviewPage() {
                 <div className="grid gap-3 md:grid-cols-4">
                   <BookStatCard label="image p50" value={formatMs(Math.round(sloMetrics.imageP50Ms))} />
                   <BookStatCard label="image p90" value={formatMs(Math.round(sloMetrics.imageP90Ms))} />
-                  <BookStatCard label="timeout pages" value={sloMetrics.timeoutPages} />
+                  <BookStatCard label="timeout pages" value={sloMetrics.timeoutPages} hint={`${sloMetrics.timeoutRate.toFixed(1)}%`} />
                   <BookStatCard
                     label="regen count"
                     value={`${sloMetrics.regenerationSuccessCount}/${sloMetrics.regenerationCount}`}
@@ -964,6 +982,7 @@ export default function AdminBookQualityReviewPage() {
                           { label: "Hard Failed", curr: latest.bookHardFailedRate ?? 0, prev: prev.bookHardFailedRate ?? 0, higherIsBetter: false, unit: "%" },
                           { label: "Image p95", curr: latest.imageP95Ms ?? 0, prev: prev.imageP95Ms ?? 0, higherIsBetter: false, unit: "ms" },
                           { label: "Img Fail", curr: latest.pageImageFailureRate ?? 0, prev: prev.pageImageFailureRate ?? 0, higherIsBetter: false, unit: "%" },
+                          { label: "Timeout", curr: latest.timeoutRate ?? 0, prev: prev.timeoutRate ?? 0, higherIsBetter: false, unit: "%" },
                         ];
                         return (
                           <div className="mb-3 flex flex-wrap gap-3">
@@ -992,10 +1011,12 @@ export default function AdminBookQualityReviewPage() {
                             <th className="pb-2 pr-4">Failed</th>
                             <th className="pb-2 pr-4">p95</th>
                             <th className="pb-2 pr-4">Img Fail</th>
+                            <th className="pb-2 pr-4">Timeout</th>
                             <th className="pb-2 pr-4">Regen</th>
                             <th className="pb-2 pr-4">Fallback</th>
                             <th className="pb-2 pr-4">Books</th>
                             <th className="pb-2 pr-4">Pages</th>
+                            <th className="pb-2 pr-4">Sample</th>
                             <th className="pb-2 pr-4">By</th>
                           </tr>
                         </thead>
@@ -1009,10 +1030,12 @@ export default function AdminBookQualityReviewPage() {
                               <td className="py-2 pr-4">{(s.bookHardFailedRate ?? 0).toFixed(1)}%</td>
                               <td className="py-2 pr-4">{formatMs(Math.round(s.imageP95Ms ?? 0))}</td>
                               <td className="py-2 pr-4">{(s.pageImageFailureRate ?? 0).toFixed(1)}%</td>
+                              <td className="py-2 pr-4">{(s.timeoutRate ?? 0).toFixed(1)}%</td>
                               <td className="py-2 pr-4">{(s.regenerationSuccessRate ?? 0).toFixed(1)}%</td>
                               <td className="py-2 pr-4">{(s.fallbackRate ?? 0).toFixed(1)}%</td>
                               <td className="py-2 pr-4">{s.bookCount ?? s.totalBooks ?? "—"}</td>
                               <td className="py-2 pr-4">{s.pageCount ?? s.totalPages ?? "—"}</td>
+                              <td className="py-2 pr-4 text-xs">{s.sampleSize ?? s.bookCount ?? "—"}</td>
                               <td className="py-2 pr-4 text-xs text-violet-500">{s.createdBy ? s.createdBy.slice(0, 8) : "—"}</td>
                             </tr>
                           ))}
@@ -1487,6 +1510,59 @@ export default function AdminBookQualityReviewPage() {
                                               <p>regenerationAttemptCount: {page.regenerationAttemptCount}</p>
                                               <p>triggeredBy: {page.regenerationTriggeredBy ?? "—"}</p>
                                               <p>imageRegeneratedAtMs: {page.imageRegeneratedAtMs ? formatTimestamp(undefined, page.imageRegeneratedAtMs) : "—"}</p>
+                                              <p>lastRegenerationSucceeded: {page.lastRegenerationSucceeded === true ? "true" : page.lastRegenerationSucceeded === false ? "false" : "—"}</p>
+                                              <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="ghost"
+                                                className="mt-1 h-6 px-2 text-xs"
+                                                disabled={regenHistoryLoading}
+                                                onClick={async () => {
+                                                  if (regenHistoryPageId === page.id) {
+                                                    setRegenHistoryPageId(null);
+                                                    setRegenHistory([]);
+                                                    return;
+                                                  }
+                                                  setRegenHistoryLoading(true);
+                                                  setRegenHistoryPageId(page.id);
+                                                  try {
+                                                    const snap = await getDocs(
+                                                      query(
+                                                        collection(db, "books", selectedBookId!, "pages", page.id, "regenerationHistory"),
+                                                        orderBy("attemptedAtMs", "desc"),
+                                                        limit(10),
+                                                      ),
+                                                    );
+                                                    setRegenHistory(snap.docs.map((d) => ({ id: d.id, ...d.data() } as RegenerationHistoryEntry)));
+                                                  } catch (err) {
+                                                    console.error("Failed to load regen history:", err);
+                                                    setRegenHistory([]);
+                                                  } finally {
+                                                    setRegenHistoryLoading(false);
+                                                  }
+                                                }}
+                                              >
+                                                {regenHistoryLoading && regenHistoryPageId === page.id ? "読込中..." : regenHistoryPageId === page.id ? "hide history" : "show history"}
+                                              </Button>
+                                              {regenHistoryPageId === page.id && regenHistory.length > 0 && (
+                                                <div className="col-span-full mt-1 space-y-1">
+                                                  {regenHistory.map((h, i) => (
+                                                    <div key={h.id ?? i} className="rounded border border-violet-100 bg-violet-50/50 px-2 py-1 text-xs">
+                                                      <span className={h.success ? "text-emerald-600" : "text-rose-600"}>{h.success ? "✓" : "✗"}</span>{" "}
+                                                      <span>{h.attemptedAtMs ? new Date(h.attemptedAtMs).toLocaleString("ja-JP") : "—"}</span>{" "}
+                                                      <span className="text-violet-500">{h.triggeredBy ?? "—"}</span>{" "}
+                                                      <span>{h.beforeStatus} → {h.afterStatus}</span>{" "}
+                                                      <span>{formatMs(h.durationMs)}</span>{" "}
+                                                      {h.imageModelProfile && <span className="text-violet-500">{h.imageModelProfile}</span>}
+                                                      {h.fallbackUsed && <span className="ml-1 text-amber-600">fallback</span>}
+                                                      {h.failureReason && <span className="ml-1 text-rose-500">{h.failureReason}</span>}
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              )}
+                                              {regenHistoryPageId === page.id && regenHistory.length === 0 && !regenHistoryLoading && (
+                                                <p className="text-xs text-violet-400">履歴データなし（基盤追加前の再生成）</p>
+                                              )}
                                             </>
                                           ) : null}
                                         </div>

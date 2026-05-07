@@ -20,6 +20,7 @@ export interface SloMetrics {
   fallbackPages: number;
   fallbackRate: number;
   timeoutPages: number;
+  timeoutRate: number;
   imageP50Ms: number;
   imageP90Ms: number;
   imageP95Ms: number;
@@ -49,6 +50,7 @@ export const EMPTY_SLO: SloMetrics = {
   fallbackPages: 0,
   fallbackRate: 0,
   timeoutPages: 0,
+  timeoutRate: 0,
   imageP50Ms: 0,
   imageP90Ms: 0,
   imageP95Ms: 0,
@@ -121,6 +123,7 @@ export function computeSloMetrics(
   const fallbackPages = allPages.filter((p) => p.imageFallbackUsed === true).length;
   const fallbackRate = totalPages > 0 ? (fallbackPages / totalPages) * 100 : 0;
   const timeoutPages = allPages.filter(isTimeoutPage).length;
+  const timeoutRate = totalPages > 0 ? (timeoutPages / totalPages) * 100 : 0;
 
   const durations = allPages
     .map((p) => p.imageDurationMs)
@@ -151,6 +154,7 @@ export function computeSloMetrics(
     fallbackPages,
     fallbackRate,
     timeoutPages,
+    timeoutRate,
     imageP50Ms,
     imageP90Ms,
     imageP95Ms,

@@ -341,6 +341,28 @@ export interface PageDoc {
   imageRegeneratedAtMs?: number;
   regenerationAttemptCount?: number;
   regenerationTriggeredBy?: "owner" | "admin";
+  lastRegeneratedAt?: Timestamp;
+  lastRegeneratedAtMs?: number;
+  lastRegenerationSucceeded?: boolean;
+}
+
+/**
+ * Subcollection entry at books/{bookId}/pages/{pageId}/regenerationHistory/{attemptId}
+ */
+export interface RegenerationHistoryEntry {
+  id?: string;
+  attemptedAtMs: number;
+  attemptedBy: string;
+  triggeredBy: "owner" | "admin";
+  beforeStatus: string;
+  afterStatus: string;
+  beforeImageUrl?: string;
+  afterImageUrl?: string;
+  imageModelProfile?: string;
+  fallbackUsed: boolean;
+  durationMs: number;
+  failureReason?: string;
+  success: boolean;
 }
 
 export interface StoryCharacter {
