@@ -1,0 +1,129 @@
+<h2>EhoNAI デザイン改善 — 全体仕様まとめ</h2>
+<p class="subtitle">パステルドリーム × 丸ゴシック × Framer Motion</p>
+
+<div class="section">
+  <h3>🎨 カラーシステム</h3>
+  <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid rgba(240,171,252,0.2); margin-top: 12px;">
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 24px; height: 24px; border-radius: 50%; background: #fdf2f8; border: 1px solid #fbcfe8;"></div>
+        <span><strong>Background:</strong> #fdf2f8 (pink-50)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(180deg, #fdf2f8, #ede9fe, #e0f2fe);border: 1px solid #e9d5ff;"></div>
+        <span><strong>BG Gradient:</strong> pink→lavender→sky</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 24px; height: 24px; border-radius: 50%; background: #a78bfa;"></div>
+        <span><strong>Primary:</strong> #a78bfa (violet-400)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 24px; height: 24px; border-radius: 50%; background: #f0abfc;"></div>
+        <span><strong>Accent:</strong> #f0abfc (fuchsia-300)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 24px; height: 24px; border-radius: 50%; background: #67e8f9;"></div>
+        <span><strong>Secondary:</strong> #67e8f9 (cyan-300)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 24px; height: 24px; border-radius: 50%; background: #fde047;"></div>
+        <span><strong>Joy:</strong> #fde047 (yellow-300)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 24px; height: 24px; border-radius: 50%; background: #581c87;"></div>
+        <span><strong>Heading:</strong> #581c87 (purple-900)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 24px; height: 24px; border-radius: 50%; background: #7c3aed;"></div>
+        <span><strong>Subtext:</strong> #7c3aed (violet-600)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>🔤 タイポグラフィ</h3>
+  <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid rgba(240,171,252,0.2); margin-top: 12px;">
+    <div style="font-size: 13px; line-height: 2;">
+      <div><strong>フォント:</strong> Zen Maru Gothic (Google Fonts) — 丸ゴシック</div>
+      <div><strong>見出し:</strong> font-weight: 700, color: purple-900</div>
+      <div><strong>本文:</strong> font-weight: 400, color: gray-600</div>
+      <div><strong>装飾テキスト:</strong> font-weight: 500, color: violet-600</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>📐 コンポーネント共通スタイル</h3>
+  <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid rgba(240,171,252,0.2); margin-top: 12px; font-size: 13px; line-height: 2;">
+    <div><strong>角丸:</strong> 20px (カード), 9999px (ボタン/バッジ)</div>
+    <div><strong>シャドウ:</strong> カラフルソフトシャドウ (例: 0 4px 20px rgba(167,139,250,0.1))</div>
+    <div><strong>ボーダー:</strong> 1px solid + パステルカラー半透明</div>
+    <div><strong>ボタン:</strong> グラデーション背景 (violet→fuchsia) + pill形状</div>
+    <div><strong>バッジ:</strong> パステル背景 + 丸い pill 形状</div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>✨ アニメーション</h3>
+  <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid rgba(240,171,252,0.2); margin-top: 12px; font-size: 13px; line-height: 2;">
+    <div><strong>ライブラリ:</strong> framer-motion (motion/react)</div>
+    <div><strong>ページ読み込み:</strong> staggerChildren 0.1s, fadeIn + slideUp</div>
+    <div><strong>背景:</strong> 浮遊パーティクル (5-7個, ゆっくり上下+回転)</div>
+    <div><strong>カード:</strong> whileHover: scale 1.03 / whileTap: scale 0.97 (spring)</div>
+    <div><strong>ページ遷移:</strong> AnimatePresence, fadeSlide (0.3s)</div>
+    <div><strong>生成中:</strong> カードパルス + 星キラキラ回転</div>
+    <div><strong>ステップ:</strong> 進行時にバウンス/ポップアニメーション</div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>📄 ページ別の変更</h3>
+  <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid rgba(240,171,252,0.2); margin-top: 12px; font-size: 12px;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 1px solid #ede9fe;">
+          <th style="text-align: left; padding: 8px; color: #581c87;">ページ</th>
+          <th style="text-align: left; padding: 8px; color: #581c87;">主な変更</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #f5f3ff;">
+          <td style="padding: 8px; font-weight: 600;">ランディング</td>
+          <td style="padding: 8px;">グラデ背景+浮遊パーティクル、pillボタン、カードstagger登場</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #f5f3ff;">
+          <td style="padding: 8px; font-weight: 600;">ログイン</td>
+          <td style="padding: 8px;">中央カード+ソフトシャドウ、Googleボタンにホバーアニメ</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #f5f3ff;">
+          <td style="padding: 8px; font-weight: 600;">ホーム（本棚）</td>
+          <td style="padding: 8px;">BookCardのホバー浮き上がり、グリッドstagger、空状態にイラスト的演出</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #f5f3ff;">
+          <td style="padding: 8px; font-weight: 600;">作成ウィザード</td>
+          <td style="padding: 8px;">StepIndicatorアニメ化、テーマ/スタイルカードの選択時バウンス</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #f5f3ff;">
+          <td style="padding: 8px; font-weight: 600;">生成中</td>
+          <td style="padding: 8px;">ページカードのパルス、星回転、プログレスバーグラデ</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; font-weight: 600;">絵本閲覧</td>
+          <td style="padding: 8px;">ページめくりアニメ、画像フェードイン</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>📦 技術的な変更</h3>
+  <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid rgba(240,171,252,0.2); margin-top: 12px; font-size: 13px; line-height: 2;">
+    <div><strong>追加パッケージ:</strong> framer-motion</div>
+    <div><strong>フォント変更:</strong> Inter → Zen Maru Gothic (next/font/google)</div>
+    <div><strong>globals.css:</strong> CSS変数をパステルドリームカラーに全面書き換え</div>
+    <div><strong>共通コンポーネント新規:</strong> FloatingParticles, AnimatedCard, PageTransition</div>
+    <div><strong>既存コンポーネント改修:</strong> 全UIコンポーネントのカラー・角丸・シャドウ更新</div>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+<h2>実装アプローチの比較</h2>
+<p class="subtitle">パステルドリーム × 丸ゴシック × リッチアニメーションの実現方法</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Tailwind + CSS変数のみ（推奨）</h3>
+      <p>現在のshadcn/ui + Tailwind構成を活かし、CSS変数を全面的に書き換え。アニメーションはtw-animate-css + カスタムCSS keyframesで実装。新規依存なし。</p>
+      <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <span style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #166534;">軽量</span>
+        <span style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #166534;">既存構成活用</span>
+        <span style="background: #fefce8; border: 1px solid #fef08a; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #854d0e;">アニメ自前実装</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Tailwind + Framer Motion</h3>
+      <p>CSS変数書き換えに加え、Framer Motionを導入。ページ遷移、スタガー表示、パララックス、ドラッグ等のリッチアニメーションを宣言的に記述。</p>
+      <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <span style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #166534;">宣言的で保守しやすい</span>
+        <span style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #166534;">リッチなアニメ簡単</span>
+        <span style="background: #fefce8; border: 1px solid #fef08a; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #854d0e;">+50KB依存追加</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>デザインシステム再構築</h3>
+      <p>shadcn/uiのテーマを完全カスタマイズし、独自デザイントークン体系を導入。全コンポーネントをパステルドリーム専用に再設計。Framer Motion含む。</p>
+      <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <span style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #166534;">最も統一感が出る</span>
+        <span style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #991b1b;">工数大</span>
+        <span style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #991b1b;">既存コード大幅変更</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px; padding: 16px; background: rgba(139, 92, 246, 0.05); border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.15);">
+  <p class="label">推奨</p>
+  <p style="font-size: 14px; color: #4c1d95;">「たっぷりアニメーション」を効率的に実現するなら <strong>B. Tailwind + Framer Motion</strong> が最適です。CSS変数でパステルカラーを定義し、Framer Motionで表示アニメーション・ページ遷移・パララックスを宣言的に書けます。既存のshadcn/uiコンポーネントはそのまま活かせます。</p>
+</div>
