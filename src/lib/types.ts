@@ -85,6 +85,31 @@ export type IllustrationStyle =
   | "watercolor"
   | "flat";
 export type PageCount = 4 | 8 | 12;
+export type QualityReviewScore = 1 | 2 | 3 | 4 | 5;
+export type QualityReviewStatus = "not_reviewed" | "reviewed" | "needs_fix" | "approved";
+export type QualityReviewerType = "human" | "llm";
+
+export type QualityReview = {
+  id?: string;
+  bookId: string;
+  reviewerType: QualityReviewerType;
+  reviewerId: string;
+  storyScore: QualityReviewScore;
+  illustrationScore: QualityReviewScore;
+  characterConsistencyScore: QualityReviewScore;
+  personalizationScore: QualityReviewScore;
+  safetyScore: QualityReviewScore;
+  overallScore: number;
+  status: QualityReviewStatus;
+  reviewReason: string;
+  flaggedIssues: string[];
+  recommendedFixes: string[];
+  rubricVersion: string;
+  createdAt?: Timestamp;
+  createdAtMs: number;
+  updatedAt?: Timestamp;
+  updatedAtMs: number;
+};
 
 export type IllustrationStyleProfile = {
   id: IllustrationStyle;
@@ -296,6 +321,17 @@ export interface BookDoc {
   adminMemo?: string;
   adminReviewedAt?: Timestamp | null;
   adminReviewedBy?: string;
+  latestQualityReviewId?: string;
+  qualityReviewStatus?: QualityReviewStatus;
+  storyQualityScore?: number;
+  illustrationQualityScore?: number;
+  characterConsistencyScore?: number;
+  personalizationScore?: number;
+  safetyScore?: number;
+  overallQualityScore?: number;
+  qualityReviewedAt?: Timestamp;
+  qualityReviewedAtMs?: number;
+  qualityReviewerType?: QualityReviewerType;
   errorMessage?: string;
   input: BookInput;
   createdAt: Timestamp;
