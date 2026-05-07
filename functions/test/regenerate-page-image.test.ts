@@ -174,11 +174,15 @@ describe("deriveBookMetrics", () => {
     expect(result.failedPageNumbers).toEqual([]);
   });
 
-  it("handles empty pages array", () => {
+  it("treats empty pages array as failed (anomalous book)", () => {
     const result = deriveBookMetrics([]);
 
     expect(result.totalImageCount).toBe(0);
-    expect(result.bookStatus).toBe("completed");
-    expect(result.generationReliabilityStatus).toBe("ok");
+    expect(result.imageSuccessCount).toBe(0);
+    expect(result.imageFailureCount).toBe(0);
+    expect(result.bookStatus).toBe("failed");
+    expect(result.generationReliabilityStatus).toBe("failed");
+    expect(result.failedPageNumbers).toEqual([]);
+    expect(result.pendingPageNumbers).toEqual([]);
   });
 });

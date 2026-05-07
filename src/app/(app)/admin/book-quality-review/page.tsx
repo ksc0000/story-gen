@@ -1261,7 +1261,11 @@ export default function AdminBookQualityReviewPage() {
                             <p><span className="font-medium text-purple-900">characterConsistencyMode:</span> {selectedBook.characterConsistencyMode ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">generationMode:</span> {selectedBook.generationMode ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">generationReliabilityStatus:</span> {selectedBook.generationReliabilityStatus ?? "—"}</p>
-                            <p><span className="font-medium text-purple-900">imageSuccess/Total:</span> {selectedBook.imageSuccessCount ?? "—"} / {selectedBook.totalImageCount ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">imageSuccess/Total:</span> {selectedBook.imageSuccessCount ?? "—"} / {selectedBook.totalImageCount ?? "—"}
+                              {selectedBook.status !== "generating" && (selectedBook.totalImageCount === 0 || selectedBook.totalImageCount == null) && (
+                                <span className="ml-1 text-xs font-semibold text-red-600">⚠ ページ0件</span>
+                              )}
+                            </p>
                             <p><span className="font-medium text-purple-900">imageFailureCount:</span> {selectedBook.imageFailureCount ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">failedPageNumbers:</span> {selectedBook.failedPageNumbers?.join(", ") ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">recoveredFromPartialCompleted:</span> {selectedBook.recoveredFromPartialCompleted ? "true" : "—"}</p>
