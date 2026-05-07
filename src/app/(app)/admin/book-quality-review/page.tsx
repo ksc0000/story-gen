@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   collection,
   doc,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
@@ -271,6 +272,145 @@ function BookStatCard({ label, value, hint }: { label: string; value: string | n
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  SLO computation                                                    */
+/* ------------------------------------------------------------------ */
+
+function computePercentile(sorted: number[], p: number): number {
+  if (sorted.length === 0) return 0;
+  const i = (p / 100) * (sorted.length - 1);
+  const lo = Math.floor(i);
+  const hi = Math.ceil(i);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo);
+}
+
+interface SloMetrics {
+  totalBooks: number;
+  completedBooks: number;
+  partialCompletedBooks: number;
+  failedBooks: number;
+  bookReadableRate: number;
+  bookHardFailedRate: number;
+  totalPages: number;
+  imageFailedPages: number;
+  pageImageFailureRate: number;
+  fallbackPages: number;
+  fallbackRate: number;
+  timeoutPages: number;
+  imageP50Ms: number;
+  imageP90Ms: number;
+  imageP95Ms: number;
+  regenerationCount: number;
+  regenerationSuccessCount: number;
+  regenerationSuccessRate: number;
+}
+
+const SLO_TARGETS = {
+  bookReadableRate: 98,
+  bookHardFailedRate: 2,
+  imageP95Sec: 120,
+  pageImageFailureRate: 2,
+  regenerationSuccessRate: 95,
+} as const;
+
+const EMPTY_SLO: SloMetrics = {
+  totalBooks: 0, completedBooks: 0, partialCompletedBooks: 0, failedBooks: 0,
+  bookReadableRate: 0, bookHardFailedRate: 0,
+  totalPages: 0, imageFailedPages: 0, pageImageFailureRate: 0,
+  fallbackPages: 0, fallbackRate: 0, timeoutPages: 0,
+  imageP50Ms: 0, imageP90Ms: 0, imageP95Ms: 0,
+  regenerationCount: 0, regenerationSuccessCount: 0, regenerationSuccessRate: 0,
+};
+
+function computeSloMetrics(
+  targetBooks: BookWithId[],
+  pagesMap: Map<string, PageWithId[]>,
+): SloMetrics {
+  const terminalBooks = targetBooks.filter(
+    (b) => b.status === "completed" || b.status === "partial_completed" || b.status === "failed",
+  );
+  const totalBooks = terminalBooks.length;
+  if (totalBooks === 0) return EMPTY_SLO;
+
+  const completedBooks = terminalBooks.filter((b) => b.status === "completed").length;
+  const partialCompletedBooks = terminalBooks.filter((b) => b.status === "partial_completed").length;
+  const failedBooks = terminalBooks.filter((b) => b.status === "failed").length;
+  const bookReadableRate = ((completedBooks + partialCompletedBooks) / totalBooks) * 100;
+  const bookHardFailedRate = (failedBooks / totalBooks) * 100;
+
+  const allPages: PageWithId[] = [];
+  for (const book of terminalBooks) {
+    const bp = pagesMap.get(book.id);
+    if (bp) allPages.push(...bp);
+  }
+
+  const totalPages = allPages.length;
+  const imageFailedPages = allPages.filter((p) => p.status === "image_failed").length;
+  const pageImageFailureRate = totalPages > 0 ? (imageFailedPages / totalPages) * 100 : 0;
+  const fallbackPages = allPages.filter((p) => p.imageFallbackUsed === true).length;
+  const fallbackRate = totalPages > 0 ? (fallbackPages / totalPages) * 100 : 0;
+  const timeoutPages = allPages.filter((p) => (p.imageTimeoutCount ?? 0) > 0).length;
+
+  const durations = allPages
+    .map((p) => p.imageDurationMs)
+    .filter((d): d is number => typeof d === "number" && d > 0)
+    .sort((a, b) => a - b);
+  const imageP50Ms = computePercentile(durations, 50);
+  const imageP90Ms = computePercentile(durations, 90);
+  const imageP95Ms = computePercentile(durations, 95);
+
+  const regeneratedPages = allPages.filter((p) => (p.regenerationAttemptCount ?? 0) > 0);
+  const regenerationCount = regeneratedPages.length;
+  const regenerationSuccessCount = regeneratedPages.filter(
+    (p) => p.status === "completed" || p.status === "fallback_completed",
+  ).length;
+  const regenerationSuccessRate =
+    regenerationCount > 0 ? (regenerationSuccessCount / regenerationCount) * 100 : 0;
+
+  return {
+    totalBooks, completedBooks, partialCompletedBooks, failedBooks,
+    bookReadableRate, bookHardFailedRate,
+    totalPages, imageFailedPages, pageImageFailureRate,
+    fallbackPages, fallbackRate, timeoutPages,
+    imageP50Ms, imageP90Ms, imageP95Ms,
+    regenerationCount, regenerationSuccessCount, regenerationSuccessRate,
+  };
+}
+
+function SloCard({
+  label,
+  value,
+  target,
+  pass,
+}: {
+  label: string;
+  value: string;
+  target: string;
+  pass: boolean | null;
+}) {
+  return (
+    <Card>
+      <CardContent className="space-y-1 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs uppercase tracking-wide text-violet-500">{label}</p>
+          {pass !== null && (
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                pass ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+              }`}
+            >
+              {pass ? "PASS" : "FAIL"}
+            </span>
+          )}
+        </div>
+        <p className="text-2xl font-semibold text-purple-950">{value}</p>
+        <p className="text-xs text-violet-500">target: {target}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function StoryCastCard({ character }: { character: StoryCharacter }) {
   return (
     <Card className="border-violet-100">
@@ -372,6 +512,8 @@ export default function AdminBookQualityReviewPage() {
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [regeneratingPageIds, setRegeneratingPageIds] = useState<Set<string>>(new Set());
   const [regenerationMessages, setRegenerationMessages] = useState<Record<string, string>>({});
+  const [allPagesMap, setAllPagesMap] = useState<Map<string, PageWithId[]>>(new Map());
+  const [allPagesLoading, setAllPagesLoading] = useState(false);
 
   function getPermissionHelpMessage(message: string) {
     if (!/Missing or insufficient permissions/i.test(message)) {
@@ -403,6 +545,50 @@ export default function AdminBookQualityReviewPage() {
 
     return () => unsubscribe();
   }, [isAdmin]);
+
+  // Stable key for the set of loaded book IDs – avoids reloading pages
+  // when only book fields (status, scores) change via onSnapshot.
+  const bookIdsKey = useMemo(() => books.map((b) => b.id).join(","), [books]);
+
+  // Batch-load pages for all loaded books (one-time getDocs per book).
+  // ~50 books × ~4 pages = ~200 docs – bounded and admin-only.
+  useEffect(() => {
+    const ids = bookIdsKey.split(",").filter(Boolean);
+    if (!isAdmin || ids.length === 0) {
+      setAllPagesMap(new Map());
+      return;
+    }
+    let cancelled = false;
+    setAllPagesLoading(true);
+
+    Promise.all(
+      ids.map(async (bookId) => {
+        const snap = await getDocs(collection(db, "books", bookId, "pages"));
+        return {
+          bookId,
+          pages: snap.docs.map((d) => ({ id: d.id, ...(d.data() as PageDoc) })),
+        };
+      }),
+    )
+      .then((results) => {
+        if (cancelled) return;
+        const map = new Map<string, PageWithId[]>();
+        for (const r of results) {
+          map.set(r.bookId, r.pages);
+        }
+        setAllPagesMap(map);
+        setAllPagesLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error("Failed to load pages for SLO metrics:", err);
+        setAllPagesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, bookIdsKey]);
 
   const filteredBooks = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
@@ -527,6 +713,27 @@ export default function AdminBookQualityReviewPage() {
     () => books.filter((book) => book.storyQualityReport?.ok === false).length,
     [books]
   );
+
+  const sloMetrics = useMemo(
+    () => computeSloMetrics(books, allPagesMap),
+    [books, allPagesMap],
+  );
+
+  const sloByPlan = useMemo(() => {
+    const planKeys = ["free", "light_paid", "standard_paid", "premium_paid", "unknown"] as const;
+    const result: Record<string, SloMetrics> = {};
+    for (const plan of planKeys) {
+      const planBooks = books.filter((b) => (b.productPlan ?? "unknown") === plan);
+      if (planBooks.length === 0) continue;
+      const planPagesMap = new Map<string, PageWithId[]>();
+      for (const book of planBooks) {
+        const bp = allPagesMap.get(book.id);
+        if (bp) planPagesMap.set(book.id, bp);
+      }
+      result[plan] = computeSloMetrics(planBooks, planPagesMap);
+    }
+    return result;
+  }, [books, allPagesMap]);
 
   const handleCopy = async (value: string, label: string) => {
     try {
@@ -676,6 +883,102 @@ export default function AdminBookQualityReviewPage() {
                   value={averageTextChars(books).toFixed(0)}
                   hint="storyQualityReport.averageCharsPerPage"
                 />
+              </div>
+
+              {/* SLO Dashboard */}
+              <div className="space-y-4 rounded-2xl border border-violet-200 bg-violet-50/30 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-base font-semibold text-purple-900">
+                    SLO Dashboard
+                    <span className="ml-2 text-xs font-normal text-violet-500">
+                      {sloMetrics.totalBooks}冊完了 / {sloMetrics.totalPages}ページ
+                    </span>
+                  </h3>
+                  {allPagesLoading && (
+                    <span className="text-xs text-violet-500">ページデータ読み込み中...</span>
+                  )}
+                </div>
+                <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+                  <SloCard
+                    label="Book Readable"
+                    value={`${sloMetrics.bookReadableRate.toFixed(1)}%`}
+                    target="≥ 98%"
+                    pass={sloMetrics.totalBooks > 0 ? sloMetrics.bookReadableRate >= SLO_TARGETS.bookReadableRate : null}
+                  />
+                  <SloCard
+                    label="Book Hard Failed"
+                    value={`${sloMetrics.bookHardFailedRate.toFixed(1)}%`}
+                    target="≤ 2%"
+                    pass={sloMetrics.totalBooks > 0 ? sloMetrics.bookHardFailedRate <= SLO_TARGETS.bookHardFailedRate : null}
+                  />
+                  <SloCard
+                    label="Image p95"
+                    value={formatMs(Math.round(sloMetrics.imageP95Ms))}
+                    target="≤ 120s"
+                    pass={sloMetrics.totalPages > 0 ? sloMetrics.imageP95Ms <= SLO_TARGETS.imageP95Sec * 1000 : null}
+                  />
+                  <SloCard
+                    label="Image Failed"
+                    value={`${sloMetrics.pageImageFailureRate.toFixed(1)}%`}
+                    target="≤ 2%"
+                    pass={sloMetrics.totalPages > 0 ? sloMetrics.pageImageFailureRate <= SLO_TARGETS.pageImageFailureRate : null}
+                  />
+                  <SloCard
+                    label="Regen Success"
+                    value={sloMetrics.regenerationCount > 0 ? `${sloMetrics.regenerationSuccessRate.toFixed(1)}%` : "—"}
+                    target="≥ 95%"
+                    pass={sloMetrics.regenerationCount > 0 ? sloMetrics.regenerationSuccessRate >= SLO_TARGETS.regenerationSuccessRate : null}
+                  />
+                  <SloCard
+                    label="Fallback Rate"
+                    value={`${sloMetrics.fallbackRate.toFixed(1)}%`}
+                    target="(参考)"
+                    pass={null}
+                  />
+                </div>
+                <div className="grid gap-3 md:grid-cols-4">
+                  <BookStatCard label="image p50" value={formatMs(Math.round(sloMetrics.imageP50Ms))} />
+                  <BookStatCard label="image p90" value={formatMs(Math.round(sloMetrics.imageP90Ms))} />
+                  <BookStatCard label="timeout pages" value={sloMetrics.timeoutPages} />
+                  <BookStatCard
+                    label="regen count"
+                    value={`${sloMetrics.regenerationSuccessCount}/${sloMetrics.regenerationCount}`}
+                    hint="成功/試行"
+                  />
+                </div>
+                {Object.keys(sloByPlan).length > 0 && (
+                  <div className="overflow-x-auto rounded-xl bg-white p-3">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-violet-500">Plan別 SLO</p>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-left text-xs uppercase tracking-wide text-violet-500">
+                          <th className="pb-2 pr-4">Plan</th>
+                          <th className="pb-2 pr-4">Books</th>
+                          <th className="pb-2 pr-4">Readable</th>
+                          <th className="pb-2 pr-4">Failed</th>
+                          <th className="pb-2 pr-4">Pages</th>
+                          <th className="pb-2 pr-4">Img Fail</th>
+                          <th className="pb-2 pr-4">Fallback</th>
+                          <th className="pb-2 pr-4">p95</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(sloByPlan).map(([plan, m]) => (
+                          <tr key={plan} className="border-b border-violet-50 text-violet-800">
+                            <td className="py-2 pr-4 font-medium text-purple-900">{plan}</td>
+                            <td className="py-2 pr-4">{m.totalBooks}</td>
+                            <td className="py-2 pr-4">{m.bookReadableRate.toFixed(1)}%</td>
+                            <td className="py-2 pr-4">{m.bookHardFailedRate.toFixed(1)}%</td>
+                            <td className="py-2 pr-4">{m.totalPages}</td>
+                            <td className="py-2 pr-4">{m.pageImageFailureRate.toFixed(1)}%</td>
+                            <td className="py-2 pr-4">{m.fallbackRate.toFixed(1)}%</td>
+                            <td className="py-2 pr-4">{formatMs(Math.round(m.imageP95Ms))}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
 
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
