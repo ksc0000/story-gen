@@ -4,12 +4,13 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { deriveBookMetrics } from "./regenerate-page-image";
 import {
   DEFAULT_STALE_CONFIG,
-  findStaleBooks,
   findStalePages,
   buildStalePagePatch,
+  extractBookIdFromPagePath,
+  buildCleanupRunKey,
 } from "./lib/stale-detection";
-import type { StaleBookCandidate, StalePageCandidate, StaleCleanupSummary } from "./lib/stale-detection";
-import type { BookData, PageData } from "./lib/types";
+import type { StalePageCandidate, StaleCleanupSummary } from "./lib/stale-detection";
+import type { PageData } from "./lib/types";
 
 export const cleanupStaleGeneration = onSchedule(
   { schedule: "30 3 * * *", timeZone: "Asia/Tokyo", retryCount: 2, region: "asia-northeast1" },
@@ -22,58 +23,46 @@ export const cleanupStaleGeneration = onSchedule(
     logger.info("Starting stale generation cleanup", { config });
 
     // ------------------------------------------------------------------
-    // 1. Find stale "generating" books
+    // 1. Collection group query: find all "generating" pages across books
     // ------------------------------------------------------------------
-    const booksSnap = await db
-      .collection("books")
+    const pagesSnap = await db
+      .collectionGroup("pages")
       .where("status", "==", "generating")
-      .limit(config.maxBooks)
+      .limit(config.maxPages)
       .get();
 
-    const bookCandidates: StaleBookCandidate[] = booksSnap.docs.map((d) => {
-      const data = d.data() as BookData;
-      return {
-        id: d.id,
-        status: data.status,
-        updatedAtMs: data.updatedAtMs,
-      };
-    });
-
-    const staleBooks = findStaleBooks(bookCandidates, nowMs, config);
-
-    // ------------------------------------------------------------------
-    // 2. Find stale "generating" pages across stale books
-    // ------------------------------------------------------------------
-    const allStalePages: StalePageCandidate[] = [];
-
-    for (const book of staleBooks) {
-      const pagesSnap = await db
-        .collection("books")
-        .doc(book.id)
-        .collection("pages")
-        .where("status", "==", "generating")
-        .get();
-
-      for (const pageDoc of pagesSnap.docs) {
-        const data = pageDoc.data() as PageData;
-        allStalePages.push({
-          id: pageDoc.id,
-          bookId: book.id,
-          pageNumber: data.pageNumber,
-          status: data.status,
-          imageGenerationStartedAtMs: data.imageGenerationStartedAtMs,
-          imageRegenerationStartedAtMs: data.imageRegenerationStartedAtMs,
-        });
+    const pageCandidates: StalePageCandidate[] = [];
+    for (const pageDoc of pagesSnap.docs) {
+      const bookId = extractBookIdFromPagePath(pageDoc.ref.path);
+      if (!bookId) {
+        logger.warn("Could not extract bookId from page path", { path: pageDoc.ref.path });
+        continue;
       }
+      const data = pageDoc.data() as PageData;
+      pageCandidates.push({
+        id: pageDoc.id,
+        bookId,
+        pageNumber: data.pageNumber,
+        status: data.status,
+        imageGenerationStartedAtMs: data.imageGenerationStartedAtMs,
+        imageRegenerationStartedAtMs: data.imageRegenerationStartedAtMs,
+      });
     }
 
-    const stalePages = findStalePages(allStalePages, nowMs, config);
+    const stalePages = findStalePages(pageCandidates, nowMs, config);
+
+    logger.info("Stale page detection complete", {
+      checkedPages: pageCandidates.length,
+      stalePages: stalePages.length,
+    });
 
     // ------------------------------------------------------------------
-    // 3. Fix stale pages → image_failed
+    // 2. Fix stale pages → image_failed
     // ------------------------------------------------------------------
     const pagePatch = buildStalePagePatch(nowMs);
     let updatedPages = 0;
+    let skippedPages = 0;
+    const affectedBookIds = new Set<string>();
 
     for (const page of stalePages) {
       try {
@@ -87,12 +76,14 @@ export const cleanupStaleGeneration = onSchedule(
             lastStaleCleanupAt: FieldValue.serverTimestamp(),
           });
         updatedPages++;
+        affectedBookIds.add(page.bookId);
         logger.info("Fixed stale page", {
           bookId: page.bookId,
           pageId: page.id,
           pageNumber: page.pageNumber,
         });
       } catch (err) {
+        skippedPages++;
         logger.error("Failed to fix stale page", {
           bookId: page.bookId,
           pageId: page.id,
@@ -102,14 +93,15 @@ export const cleanupStaleGeneration = onSchedule(
     }
 
     // ------------------------------------------------------------------
-    // 4. Recalculate book metrics for each stale book
+    // 3. Recalculate book metrics for each affected book
     // ------------------------------------------------------------------
     let updatedBooks = 0;
     let skippedBooks = 0;
+    const uniqueBookIds = [...affectedBookIds].slice(0, config.maxBooks);
 
-    for (const book of staleBooks) {
+    for (const bookId of uniqueBookIds) {
       try {
-        const bookRef = db.collection("books").doc(book.id);
+        const bookRef = db.collection("books").doc(bookId);
         const allPagesSnap = await bookRef.collection("pages").get();
         const pages = allPagesSnap.docs.map((d) => d.data() as PageData);
         const metrics = deriveBookMetrics(pages);
@@ -130,7 +122,7 @@ export const cleanupStaleGeneration = onSchedule(
 
         updatedBooks++;
         logger.info("Recalculated stale book metrics", {
-          bookId: book.id,
+          bookId,
           newStatus: metrics.bookStatus,
           imageSuccessCount: metrics.imageSuccessCount,
           imageFailureCount: metrics.imageFailureCount,
@@ -138,23 +130,28 @@ export const cleanupStaleGeneration = onSchedule(
       } catch (err) {
         skippedBooks++;
         logger.error("Failed to recalculate stale book metrics", {
-          bookId: book.id,
+          bookId,
           error: err instanceof Error ? err.message : String(err),
         });
       }
     }
 
     // ------------------------------------------------------------------
-    // 5. Save cleanup summary
+    // 4. Save cleanup summary (latest + history)
     // ------------------------------------------------------------------
     const summary: StaleCleanupSummary = {
-      checkedBooks: bookCandidates.length,
+      checkedPages: pageCandidates.length,
+      checkedBooks: affectedBookIds.size,
       updatedBooks,
       updatedPages,
       skippedBooks,
+      skippedPages,
     };
 
-    await db.collection("adminMetrics").doc("staleCleanup").set(
+    const runKey = buildCleanupRunKey(nowMs);
+    const staleCleanupRef = db.collection("adminMetrics").doc("staleCleanup");
+
+    await staleCleanupRef.set(
       {
         lastRunAt: FieldValue.serverTimestamp(),
         lastRunAtMs: nowMs,
@@ -163,6 +160,13 @@ export const cleanupStaleGeneration = onSchedule(
       { merge: true },
     );
 
-    logger.info("Stale generation cleanup complete", summary);
+    await staleCleanupRef.collection("runs").doc(runKey).set({
+      ...summary,
+      runKey,
+      createdAt: FieldValue.serverTimestamp(),
+      createdAtMs: nowMs,
+    });
+
+    logger.info("Stale generation cleanup complete", { ...summary, runKey });
   },
 );

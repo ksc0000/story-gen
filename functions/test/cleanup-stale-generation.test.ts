@@ -5,6 +5,8 @@ import {
   findStaleBooks,
   findStalePages,
   buildStalePagePatch,
+  extractBookIdFromPagePath,
+  buildCleanupRunKey,
   DEFAULT_STALE_CONFIG,
 } from "../src/lib/stale-detection";
 import type { StaleBookCandidate, StalePageCandidate } from "../src/lib/stale-detection";
@@ -146,5 +148,49 @@ describe("buildStalePagePatch", () => {
     expect(patch.imageFailureReason).toBe("stale_generation_timeout");
     expect(patch.imageRetryable).toBe(true);
     expect(patch.lastStaleCleanupAtMs).toBe(NOW);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  extractBookIdFromPagePath                                          */
+/* ------------------------------------------------------------------ */
+describe("extractBookIdFromPagePath", () => {
+  it("extracts bookId from valid page path", () => {
+    expect(extractBookIdFromPagePath("books/abc123/pages/page0")).toBe("abc123");
+  });
+
+  it("returns null for invalid path", () => {
+    expect(extractBookIdFromPagePath("users/u1/books/b1")).toBeNull();
+  });
+
+  it("returns null for empty path", () => {
+    expect(extractBookIdFromPagePath("")).toBeNull();
+  });
+
+  it("handles book IDs with hyphens and underscores", () => {
+    expect(extractBookIdFromPagePath("books/book-id_123/pages/p1")).toBe("book-id_123");
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  buildCleanupRunKey                                                 */
+/* ------------------------------------------------------------------ */
+describe("buildCleanupRunKey", () => {
+  it("generates key in JST at 03:30", () => {
+    // 2026-05-07 03:30 JST = 2026-05-06 18:30 UTC
+    const jst0330 = Date.UTC(2026, 4, 6, 18, 30, 0);
+    expect(buildCleanupRunKey(jst0330)).toBe("daily-2026-05-07-0330");
+  });
+
+  it("pads single-digit hour and minute", () => {
+    // 2026-01-05 01:05 JST = 2026-01-04 16:05 UTC
+    const jst0105 = Date.UTC(2026, 0, 4, 16, 5, 0);
+    expect(buildCleanupRunKey(jst0105)).toBe("daily-2026-01-05-0105");
+  });
+
+  it("handles midnight JST", () => {
+    // 2026-05-07 00:00 JST = 2026-05-06 15:00 UTC
+    const jstMidnight = Date.UTC(2026, 4, 6, 15, 0, 0);
+    expect(buildCleanupRunKey(jstMidnight)).toBe("daily-2026-05-07-0000");
   });
 });

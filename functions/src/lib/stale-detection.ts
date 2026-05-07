@@ -20,10 +20,12 @@ export interface StalePageCandidate {
 }
 
 export interface StaleCleanupSummary {
+  checkedPages: number;
   checkedBooks: number;
   updatedBooks: number;
   updatedPages: number;
   skippedBooks: number;
+  skippedPages: number;
 }
 
 export interface StaleDetectionConfig {
@@ -107,4 +109,27 @@ export function buildStalePagePatch(nowMs: number) {
     imageRetryable: true,
     lastStaleCleanupAtMs: nowMs,
   };
+}
+
+/**
+ * Extract bookId from a collection group page document path.
+ * Path format: books/{bookId}/pages/{pageId}
+ */
+export function extractBookIdFromPagePath(path: string): string | null {
+  const match = /^books\/([^/]+)\/pages\/[^/]+$/.exec(path);
+  return match ? match[1] : null;
+}
+
+/**
+ * Build a deterministic run key for cleanup history.
+ * Uses JST (UTC+9) date/time. Format: daily-YYYY-MM-DD-HHmm
+ */
+export function buildCleanupRunKey(nowMs: number): string {
+  const jst = new Date(nowMs + 9 * 60 * 60 * 1000);
+  const yyyy = jst.getUTCFullYear();
+  const mm = String(jst.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(jst.getUTCDate()).padStart(2, "0");
+  const hh = String(jst.getUTCHours()).padStart(2, "0");
+  const min = String(jst.getUTCMinutes()).padStart(2, "0");
+  return `daily-${yyyy}-${mm}-${dd}-${hh}${min}`;
 }
