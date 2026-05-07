@@ -50,6 +50,10 @@
 - ~~SLO メトリクス集計ダッシュボード~~ → 実装済み（admin SLO Dashboard + Snapshot History）
 - ~~SLO 自動スナップショット~~ → 実装済み（Daily 03:00 JST / Weekly Mon 03:15 JST、idempotent）
 - ~~Stale metadata cleanup~~ → 実装済み（Daily 03:30 JST、collection group query + admin UI）
+- Admin Quality Review UI（Story / Illustration / Character / Personalization / Safety score）
+- manual quality score 保存
+- quality review history
+- LLM auto review prototype
 - provider abstraction（ImageProvider インターフェース）
 - provider 比較・A/B テスト
 - Stripe 決済
@@ -91,7 +95,20 @@
 
 ## 2. Phase 1: Reliability First
 
-(省略: 既存内容維持)
+### 状態
+
+Phase 1 の実装・可視化・自動化・運用ドキュメントはほぼ完了。現在は production smoke evidence pending。
+
+### 残タスク
+
+- [ ] [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
+- [ ] [Production smoke results](./PRODUCTION_SMOKE_RESULTS.md)
+- [ ] 実データでの Scheduler 実行確認（saveDailySloSnapshot / saveWeeklySloSnapshot / cleanupStaleGeneration）
+- [ ] Firestore index / permission 確認（collection group query の composite index、runs subcollection の read 権限）
+
+### 完了判定
+
+Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production evidence が揃い、Final Decision が更新されるまで `production smoke evidence pending` とする。
 
 ---
 
@@ -103,7 +120,14 @@
 
 ### 品質仕様
 
-- [Story Quality Score / Quality Metrics](./QUALITY_METRICS.md)
+- [Quality Metrics / Phase 2 Review Rubric](./QUALITY_METRICS.md)
+
+### 最初の実装タスク
+
+1. Admin Quality Review UI を追加する。
+2. manual quality score を Firestore に保存する。
+3. quality review history を保存する。
+4. Admin book list / detail で quality score を表示する。
 
 ### 含めるタスク
 
@@ -123,30 +147,37 @@
 - [ ] 主人公一貫性の改善
 - [ ] 相棒キャラ一貫性の改善
 - [ ] 余計な人物が増えない制御（cast 外のキャラが登場しない）
+- [ ] character consistency diagnostics
 
 #### 画像品質
 
 - [ ] `styleBible` 改善
 - [ ] `pageVisualRole` 改善（構図バリエーション）
 - [ ] cover page illustration quality 改善
+- [ ] prompt completeness checker
+- [ ] image regeneration recommendation
 
 #### 品質管理
 
 - [ ] Story Quality Score rubric 導入
 - [ ] Illustration Quality Score rubric 導入
+- [ ] Character Consistency / Personalization / Safety score 導入
 - [ ] axis-level quality metrics 保存
+- [ ] quality review history 保存
 - [ ] human review と LLM review の比較分析
 - [ ] quality regression detection
 
 ### 完了条件
 
-- `adminTextQualityScore` 平均 >= 4.0
-- `adminImageQualityScore` 平均 >= 4.0
-- `adminCharacterConsistencyScore` 平均 >= 4.0
-- paid books の Story Quality Score 平均 >= 80
-- premium books の Story Quality Score 平均 >= 88
-- swipe / slide navigation を含む reading UX が自然
-- 「急に始まる感」feedback が一定以下
+- [ ] Quality Metrics が定義され、roadmap からリンクされている
+- [ ] Admin Review 1〜5 rubric が定義されている
+- [ ] Future LLM auto review JSON schema が定義されている
+- [ ] Firestore field draft が定義されている
+- [ ] Admin Quality Review UI が manual score を保存できる
+- [ ] paid books の Story Quality Score 平均 >= 80
+- [ ] premium books の Story Quality Score 平均 >= 88
+- [ ] swipe / slide navigation を含む reading UX が自然
+- [ ] 「急に始まる感」feedback が一定以下
 
 ---
 
@@ -188,14 +219,13 @@
 
 ### Now（現在着手中〜次に着手）
 
-- ~~stale metadata cleanup の定期実行化~~ ✅
-- ~~daily / weekly SLO 自動スナップショット~~ ✅
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - [Production smoke results](./PRODUCTION_SMOKE_RESULTS.md)
-- [Story Quality Score / Quality Metrics](./QUALITY_METRICS.md)
-- 実データでの Scheduler 実行確認
-- Phase 2: Story & Illustration Quality 着手
-- reading UX backlog 整理（swipe navigation / cover flow）
+- [Quality Metrics / Phase 2 Review Rubric](./QUALITY_METRICS.md)
+- production smoke evidence 確認
+- Admin Quality Review UI 着手
+- manual quality score 保存
+- quality review history 保存
 
 ---
 
@@ -204,9 +234,9 @@
 ### Phase 2 の依頼例
 
 ```
-- "Story Quality Score rubricをadmin reviewに追加して"
-- "Illustration Quality Score rubricをadmin reviewに追加して"
-- "swipe / slide page navigation を追加して"
-- "cover page generation を追加して"
-- "読み聞かせ向け opening narration flow を追加して"
+- "Admin Quality Review UIを追加して、Story / Illustration / Personalization / Character / Safety scoreを入力できるようにして"
+- "manual quality reviewをbooks/{bookId}/qualityReviews/{reviewId}に保存して"
+- "books/{bookId}にquality score summaryを保存してadmin一覧に表示して"
+- "LLM auto review prompt draftを追加して"
+- "character consistency diagnosticsを追加して"
 ```
