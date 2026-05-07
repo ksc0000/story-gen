@@ -107,9 +107,11 @@
 
 - [ ] per-page deadline の導入（ページごとの残り時間管理）
 - [ ] fallback model の安定化（`pro_consistent` → `klein_fast` の切替判定改善）
-- [ ] `partial_completed` → `completed` への復旧フロー確認
+- [x] `partial_completed` → `completed` への復旧フロー（`deriveBookMetrics` + `recalculateBookMetrics` 強化）
+- [x] `checkBookCompletion` callable（admin から手動で book status 再計算）
+- [x] admin UI に recovery メタデータ表示 + "Check completion" ボタン
 - [ ] stale metadata cleanup（古い生成中データの定期実行化）
-- [x] regeneration history 保存（再生成の試行履歴）
+- [x] regeneration history 保存（`regenerationHistory` subcollection + admin UI 履歴表示）
 
 #### SLO メトリクス
 
@@ -349,10 +351,9 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 
 ### Now（現在着手中〜次に着手）
 
-- ~~SLO 実測（p95 / failure rate / fallback rate の可視化）~~ → 実装済み
-- partial_completed → completed 復旧フロー確認
 - stale metadata cleanup の定期実行化
-- daily / weekly SLO 可視化
+- daily / weekly SLO 自動スナップショット
+- production smoke checklist（SLO 基準を実データで検証）
 - provider abstraction 設計
 
 ### Next（売り物化前に必須）
