@@ -49,6 +49,15 @@ type ReviewQualityFilter = "all" | "ok" | "warning" | "failed";
 type ReviewPlanFilter = "all" | ProductPlan;
 type ReviewModelFilter = "all" | ImageModelProfile;
 
+interface SloSnapshot extends Partial<SloMetrics> {
+  id: string;
+  createdAtMs?: number;
+  createdBy?: string;
+  bookCount?: number;
+  pageCount?: number;
+  source?: string;
+}
+
 type AdminReviewForm = {
   adminTextQualityScore: string;
   adminImageQualityScore: string;
@@ -404,6 +413,8 @@ export default function AdminBookQualityReviewPage() {
   const [allPagesLoading, setAllPagesLoading] = useState(false);
   const [savingSnapshot, setSavingSnapshot] = useState(false);
   const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
+  const [snapshotHistory, setSnapshotHistory] = useState<SloSnapshot[]>([]);
+  const [snapshotHistoryLoading, setSnapshotHistoryLoading] = useState(false);
 
   function getPermissionHelpMessage(message: string) {
     if (!/Missing or insufficient permissions/i.test(message)) {
@@ -625,6 +636,32 @@ export default function AdminBookQualityReviewPage() {
     return result;
   }, [books, allPagesMap]);
 
+  const fetchSnapshotHistory = async () => {
+    setSnapshotHistoryLoading(true);
+    try {
+      const q = query(
+        collection(db, "adminMetrics", "sloSnapshots", "items"),
+        orderBy("createdAtMs", "desc"),
+        limit(20),
+      );
+      const snap = await getDocs(q);
+      setSnapshotHistory(
+        snap.docs.map((d) => ({ id: d.id, ...d.data() } as SloSnapshot)),
+      );
+    } catch (err) {
+      console.error("Failed to fetch snapshot history:", err);
+    } finally {
+      setSnapshotHistoryLoading(false);
+    }
+  };
+
+  // Load snapshot history on mount (admin only)
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetchSnapshotHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
+
   const handleSaveSnapshot = async () => {
     if (!user || savingSnapshot || sloMetrics.totalBooks === 0) return;
     setSavingSnapshot(true);
@@ -641,6 +678,8 @@ export default function AdminBookQualityReviewPage() {
       });
       setSnapshotMessage("SLO snapshot を保存しました");
       window.setTimeout(() => setSnapshotMessage(null), 3000);
+      // Refresh history
+      await fetchSnapshotHistory();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "保存に失敗しました";
       setSnapshotMessage(`失敗: ${msg}`);
@@ -906,6 +945,82 @@ export default function AdminBookQualityReviewPage() {
                     </table>
                   </div>
                 )}
+
+                {/* SLO Snapshot History */}
+                <div className="overflow-x-auto rounded-xl bg-white p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-violet-500">SLO Snapshot History</p>
+                  {snapshotHistoryLoading ? (
+                    <p className="py-4 text-center text-xs text-violet-400">読み込み中...</p>
+                  ) : snapshotHistory.length === 0 ? (
+                    <p className="py-4 text-center text-xs text-violet-400">スナップショットがありません。「Save SLO Snapshot」ボタンで保存してください。</p>
+                  ) : (
+                    <>
+                      {/* Trend indicators: compare latest vs previous */}
+                      {snapshotHistory.length >= 2 && (() => {
+                        const latest = snapshotHistory[0];
+                        const prev = snapshotHistory[1];
+                        const trends: { label: string; curr: number; prev: number; higherIsBetter: boolean; unit: string }[] = [
+                          { label: "Readable", curr: latest.bookReadableRate ?? 0, prev: prev.bookReadableRate ?? 0, higherIsBetter: true, unit: "%" },
+                          { label: "Hard Failed", curr: latest.bookHardFailedRate ?? 0, prev: prev.bookHardFailedRate ?? 0, higherIsBetter: false, unit: "%" },
+                          { label: "Image p95", curr: latest.imageP95Ms ?? 0, prev: prev.imageP95Ms ?? 0, higherIsBetter: false, unit: "ms" },
+                          { label: "Img Fail", curr: latest.pageImageFailureRate ?? 0, prev: prev.pageImageFailureRate ?? 0, higherIsBetter: false, unit: "%" },
+                        ];
+                        return (
+                          <div className="mb-3 flex flex-wrap gap-3">
+                            {trends.map((t) => {
+                              const diff = t.curr - t.prev;
+                              const improved = t.higherIsBetter ? diff > 0 : diff < 0;
+                              const arrow = diff === 0 ? "→" : improved ? "↑" : "↓";
+                              const color = diff === 0 ? "text-violet-500" : improved ? "text-emerald-600" : "text-rose-600";
+                              const formatted = t.unit === "ms" ? formatMs(Math.round(t.curr)) : `${t.curr.toFixed(1)}%`;
+                              return (
+                                <div key={t.label} className="rounded-lg border border-violet-100 bg-violet-50/50 px-3 py-1.5 text-xs">
+                                  <span className="text-violet-500">{t.label}</span>{" "}
+                                  <span className="font-medium text-violet-800">{formatted}</span>{" "}
+                                  <span className={`font-semibold ${color}`}>{arrow}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-left text-xs uppercase tracking-wide text-violet-500">
+                            <th className="pb-2 pr-4">Date</th>
+                            <th className="pb-2 pr-4">Readable</th>
+                            <th className="pb-2 pr-4">Failed</th>
+                            <th className="pb-2 pr-4">p95</th>
+                            <th className="pb-2 pr-4">Img Fail</th>
+                            <th className="pb-2 pr-4">Regen</th>
+                            <th className="pb-2 pr-4">Fallback</th>
+                            <th className="pb-2 pr-4">Books</th>
+                            <th className="pb-2 pr-4">Pages</th>
+                            <th className="pb-2 pr-4">By</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {snapshotHistory.map((s) => (
+                            <tr key={s.id} className="border-b border-violet-50 text-violet-800">
+                              <td className="py-2 pr-4 text-xs">
+                                {s.createdAtMs ? new Date(s.createdAtMs).toLocaleDateString("ja-JP", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"}
+                              </td>
+                              <td className="py-2 pr-4">{(s.bookReadableRate ?? 0).toFixed(1)}%</td>
+                              <td className="py-2 pr-4">{(s.bookHardFailedRate ?? 0).toFixed(1)}%</td>
+                              <td className="py-2 pr-4">{formatMs(Math.round(s.imageP95Ms ?? 0))}</td>
+                              <td className="py-2 pr-4">{(s.pageImageFailureRate ?? 0).toFixed(1)}%</td>
+                              <td className="py-2 pr-4">{(s.regenerationSuccessRate ?? 0).toFixed(1)}%</td>
+                              <td className="py-2 pr-4">{(s.fallbackRate ?? 0).toFixed(1)}%</td>
+                              <td className="py-2 pr-4">{s.bookCount ?? s.totalBooks ?? "—"}</td>
+                              <td className="py-2 pr-4">{s.pageCount ?? s.totalPages ?? "—"}</td>
+                              <td className="py-2 pr-4 text-xs text-violet-500">{s.createdBy ? s.createdBy.slice(0, 8) : "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
