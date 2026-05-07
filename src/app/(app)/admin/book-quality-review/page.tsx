@@ -178,19 +178,6 @@ function imageFailureRate(books: BookWithId[]) {
   return totalImages > 0 ? (failedImages / totalImages) * 100 : 0;
 }
 
-function fallbackRate(books: BookWithId[]) {
-  const withData = books.filter(
-    (book) => typeof book.totalImageCount === "number" && book.totalImageCount > 0
-  );
-  if (withData.length === 0) return 0;
-  const totalImages = withData.reduce((sum, book) => sum + (book.totalImageCount ?? 0), 0);
-  const successImages = withData.reduce((sum, book) => sum + (book.imageSuccessCount ?? 0), 0);
-  const totalFallbackPages = withData.reduce((sum, book) => {
-    return sum + (book.failedPageNumbers?.length ?? 0);
-  }, 0);
-  return totalImages > 0 ? (totalFallbackPages / successImages) * 100 : 0;
-}
-
 function slowImageCount(books: BookWithId[]) {
   return books.filter((book) => (book.maxImageDurationMs ?? 0) > 120_000).length;
 }
