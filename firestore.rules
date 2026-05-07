@@ -81,6 +81,17 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /adminMetrics/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+
+      match /items/{itemId} {
+        allow read: if isAdmin();
+        allow create: if isAdmin();
+        allow update, delete: if false;
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

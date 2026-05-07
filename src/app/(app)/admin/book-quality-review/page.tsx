@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  addDoc,
   collection,
   doc,
   getDocs,
@@ -401,6 +402,8 @@ export default function AdminBookQualityReviewPage() {
   const [regenerationMessages, setRegenerationMessages] = useState<Record<string, string>>({});
   const [allPagesMap, setAllPagesMap] = useState<Map<string, PageWithId[]>>(new Map());
   const [allPagesLoading, setAllPagesLoading] = useState(false);
+  const [savingSnapshot, setSavingSnapshot] = useState(false);
+  const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
 
   function getPermissionHelpMessage(message: string) {
     if (!/Missing or insufficient permissions/i.test(message)) {
@@ -622,6 +625,30 @@ export default function AdminBookQualityReviewPage() {
     return result;
   }, [books, allPagesMap]);
 
+  const handleSaveSnapshot = async () => {
+    if (!user || savingSnapshot || sloMetrics.totalBooks === 0) return;
+    setSavingSnapshot(true);
+    setSnapshotMessage(null);
+    try {
+      await addDoc(collection(db, "adminMetrics", "sloSnapshots", "items"), {
+        ...sloMetrics,
+        source: "admin-book-quality-review",
+        createdAt: serverTimestamp(),
+        createdAtMs: Date.now(),
+        createdBy: user.uid,
+        bookCount: sloMetrics.totalBooks,
+        pageCount: sloMetrics.totalPages,
+      });
+      setSnapshotMessage("SLO snapshot を保存しました");
+      window.setTimeout(() => setSnapshotMessage(null), 3000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "保存に失敗しました";
+      setSnapshotMessage(`失敗: ${msg}`);
+    } finally {
+      setSavingSnapshot(false);
+    }
+  };
+
   const handleCopy = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value);
@@ -781,9 +808,22 @@ export default function AdminBookQualityReviewPage() {
                       {sloMetrics.totalBooks}冊完了 / {sloMetrics.totalPages}ページ
                     </span>
                   </h3>
-                  {allPagesLoading && (
-                    <span className="text-xs text-violet-500">ページデータ読み込み中...</span>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {allPagesLoading && (
+                      <span className="text-xs text-violet-500">ページデータ読み込み中...</span>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={savingSnapshot || sloMetrics.totalBooks === 0}
+                      onClick={handleSaveSnapshot}
+                    >
+                      {savingSnapshot ? "保存中..." : "Save SLO Snapshot"}
+                    </Button>
+                    {snapshotMessage && (
+                      <span className="text-xs text-violet-600">{snapshotMessage}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
                   <SloCard
