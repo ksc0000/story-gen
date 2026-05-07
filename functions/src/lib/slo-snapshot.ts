@@ -28,6 +28,41 @@ export interface SnapshotResult {
 /* ------------------------------------------------------------------ */
 
 /**
+ * Build a deterministic snapshot key for idempotent writes.
+ * Uses JST (UTC+9) date to derive the key.
+ *
+ * - daily  → "daily-2026-05-07"
+ * - weekly → "weekly-2026-W19"
+ */
+export function buildSnapshotKey(window: string, nowMs: number): string {
+  // JST = UTC + 9h
+  const jstDate = new Date(nowMs + 9 * 60 * 60 * 1000);
+  const yyyy = jstDate.getUTCFullYear();
+  const mm = String(jstDate.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(jstDate.getUTCDate()).padStart(2, "0");
+
+  if (window === "weekly") {
+    const { year: isoYear, week } = getISOYearWeek(jstDate);
+    return `weekly-${isoYear}-W${String(week).padStart(2, "0")}`;
+  }
+  return `daily-${yyyy}-${mm}-${dd}`;
+}
+
+/**
+ * Calculate ISO 8601 week number and week-year from a Date (interpreted as UTC).
+ */
+function getISOYearWeek(d: Date): { year: number; week: number } {
+  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  // Set to nearest Thursday: current date + 4 - current day number (Mon=1, Sun=7)
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const isoYear = date.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(isoYear, 0, 1));
+  const week = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return { year: isoYear, week };
+}
+
+/**
  * Build the Firestore document payload from computed metrics.
  * Pure function — no side effects.
  */
@@ -36,10 +71,13 @@ export function buildSnapshotDoc(
   config: SnapshotConfig,
   nowMs: number,
 ) {
+  const snapshotKey = buildSnapshotKey(config.window, nowMs);
   return {
     ...metrics,
+    snapshotKey,
     source: config.source,
     createdAtMs: nowMs,
+    updatedAtMs: nowMs,
     createdBy: "system",
     bookCount: metrics.totalBooks,
     pageCount: metrics.totalPages,
@@ -112,16 +150,18 @@ export async function saveSloSnapshot(config: SnapshotConfig): Promise<SnapshotR
   // 3. Compute metrics
   const metrics = computeSloMetrics(books, pagesMap);
 
-  // 4. Save snapshot
+  // 4. Save snapshot (idempotent: deterministic doc ID via snapshotKey)
   const doc = buildSnapshotDoc(metrics, config, Date.now());
-  await db
-    .collection("adminMetrics")
-    .doc("sloSnapshots")
-    .collection("items")
-    .add({
+  const itemsRef = db.collection("adminMetrics").doc("sloSnapshots").collection("items");
+  await itemsRef.doc(doc.snapshotKey).set(
+    {
       ...doc,
+      updatedAt: FieldValue.serverTimestamp(),
+      updatedAtMs: Date.now(),
       createdAt: FieldValue.serverTimestamp(),
-    });
+    },
+    { merge: true },
+  );
 
   logger.info(`${config.window} SLO snapshot saved`, {
     source: config.source,
