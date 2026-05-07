@@ -1,8 +1,8 @@
 # Quality Metrics
 
-Purpose: define reviewable quality metrics for Phase 2 Story & Illustration Quality.
+Phase 2: Story & Illustration Quality の評価仕様。
 
-This document is designed to work first as a human review rubric, then later as the baseline for automated LLM evaluation and Admin Review UI scoring.
+この文書は、実装前の仕様書として Story Quality / Illustration Quality / Character Consistency / Personalization / Safety を定義する。まずは human review で使い、将来は LLM auto review と admin quality analytics の土台にする。
 
 Related:
 
@@ -11,556 +11,293 @@ Related:
 
 ---
 
-## 1. Overview
+## Overview
 
-Phase 2 quality work has two primary scores:
+Phase 2 の目的は、生成された絵本を「読める」から「売り物として満足できる」品質へ引き上げること。
 
-| Score | Max | Scope |
+| Score | Max | 主な用途 |
 |---|---:|---|
-| Story Quality Score | 100 | Text, structure, personalization, pacing, read-aloud experience |
-| Illustration Quality Score | 100 | Generated images, prompts, visual consistency, composition, child friendliness |
-
-Both scores should support:
-
-- human review
-- future LLM auto review
-- Admin Review UI input
-- axis-level analytics
-- quality trend tracking
-- rewrite / regeneration recommendation
+| Story Quality Score | 100 | 物語構成・文量・読後感・年齢適合 |
+| Illustration Quality Score | 100 | prompt品質・絵の一貫性・シーン適合 |
+| Character Consistency Score | 100 | 主人公・相棒・登場人物の一貫性 |
+| Personalization Score | 100 | 子ども情報・思い出・好みの反映度 |
+| Safety Score | 100 | 年齢適合・安心感・NG表現回避 |
 
 ---
 
-## 2. Story Quality Score
+## Quality Score Principles
 
-Story Quality Score is a 100-point score that measures whether a generated picture book feels personal, coherent, age-appropriate, emotionally satisfying, readable aloud, and complete as a book experience.
-
-The score should be calculated per book. Page-level observations may be recorded as review notes, but the final score represents the overall user-facing story quality.
-
-### 2.1 Story scoring axes
-
-| Axis | Points | What it measures |
-|---|---:|---|
-| Child personalization | 15 | Whether the story reflects the child profile, preferences, name, traits, and context in a meaningful way. |
-| Story coherence | 18 | Whether the story has a clear beginning, development, ending, goal, and causal flow. |
-| Age appropriateness | 15 | Whether vocabulary, sentence length, concept difficulty, emotional intensity, and reading load match the target age band. |
-| Emotional satisfaction | 14 | Whether the story creates warmth, delight, reassurance, achievement, or a memorable parent-child reading moment. |
-| Page length balance | 10 | Whether page text lengths are balanced and suitable for picture book pacing. |
-| Character consistency | 12 | Whether recurring characters, relationships, traits, and story roles remain consistent across pages. |
-| Reading flow / pacing | 8 | Whether the book works smoothly for read-aloud use and page transitions feel natural. |
-| Opening / cover flow | 8 | Whether the book has a proper entry point, cover/title expectation, and does not start abruptly. |
-| **Total** | **100** |  |
-
----
-
-### 2.2 Child personalization — 15 points
-
-| Score | Criteria |
-|---:|---|
-| 13-15 | The child feels clearly represented. Name, traits, interests, family context, or preferences are naturally woven into the story without feeling pasted on. |
-| 9-12 | Some personalization is present, but it is shallow or appears only in isolated places. |
-| 5-8 | Personalization is mostly generic. The child could be replaced with another child with little change. |
-| 0-4 | Personalization is missing, contradictory, or inappropriate for the supplied profile. |
-
-Review notes:
-
-- Check whether personalization affects the story, not just the title or first sentence.
-- Avoid overusing profile facts mechanically.
-- A good story should feel like it was made for this child, not merely addressed to this child.
-
----
-
-### 2.3 Story coherence — 18 points
-
-| Score | Criteria |
-|---:|---|
-| 16-18 | The book has a clear setup, progression, resolution, and emotional or narrative payoff. Each page connects naturally to the next. |
-| 12-15 | The story mostly makes sense, but one or two transitions are weak, abrupt, or underexplained. |
-| 7-11 | The story has recognizable events, but the goal, conflict, sequence, or ending is vague. |
-| 0-6 | The story feels random, contradictory, incomplete, or lacks a meaningful ending. |
-
-Review notes:
-
-- `storyGoal` should remain visible throughout the book.
-- `hiddenDetail` and `visualMotif` should support the story, not become distracting side quests.
-- The final page should usually provide closure, discovery, achievement, or emotional reassurance.
-
----
-
-### 2.4 Age appropriateness — 15 points
-
-| Score | Criteria |
-|---:|---|
-| 13-15 | Vocabulary, sentence length, concept complexity, and emotional tone fit the target age band. |
-| 9-12 | Mostly age-appropriate, but some sentences are too abstract, too long, too childish, or too complex. |
-| 5-8 | Frequently mismatched to the age band. Reading aloud may feel awkward or the meaning may be hard to follow. |
-| 0-4 | Clearly unsuitable for the target age due to complexity, fear, safety, maturity, or oversimplification. |
-
-Review notes:
-
-- Younger children need concrete actions, clear feelings, repetition, and simple cause-effect.
-- Older children need more meaning density: place, action, emotion, discovery, choice, or consequence.
-- Avoid babyish nonsense words for older age bands unless intentionally used and still natural.
-
----
-
-### 2.5 Emotional satisfaction — 14 points
-
-| Score | Criteria |
-|---:|---|
-| 12-14 | The book leaves a warm, happy, reassuring, exciting, or proud feeling. It gives the parent and child a reason to remember or reread it. |
-| 8-11 | Emotion is positive but somewhat flat, predictable, or not fully earned. |
-| 4-7 | The story is readable but emotionally thin. It reports events more than it creates a feeling. |
-| 0-3 | The story feels cold, confusing, scary, disappointing, or emotionally inappropriate. |
-
-Review notes:
-
-- Emotional satisfaction does not require drama; small discoveries can work well.
-- The ending should feel like a gift to the child or parent.
-- Avoid moralizing too hard. Picture books should charm first, lecture second.
-
----
-
-### 2.6 Page length balance — 10 points
-
-| Score | Criteria |
-|---:|---|
-| 9-10 | Page text lengths are balanced, readable aloud, and appropriate for the book format. |
-| 7-8 | Mostly balanced, with minor unevenness. |
-| 4-6 | One or more pages are too short, too long, or rhythmically awkward. |
-| 0-3 | Page lengths are severely uneven or unsuitable for picture book pacing. |
-
-Review notes:
-
-- Each page should carry a meaningful beat.
-- Avoid one page doing all the narrative work while others become filler.
-- For 4-page books, each page should usually have one clear visual/narrative purpose.
-
----
-
-### 2.7 Character consistency — 12 points
-
-| Score | Criteria |
-|---:|---|
-| 10-12 | Main character, companion characters, traits, relationships, and roles are consistent across all pages. |
-| 7-9 | Mostly consistent, with minor drift in role, naming, traits, or focus. |
-| 4-6 | Noticeable inconsistency, such as changing traits, unclear relationships, or extra unplanned characters. |
-| 0-3 | Major inconsistency, duplicated protagonist, missing main character, or contradictory character behavior. |
-
-Review notes:
-
-- `storyCast`, `appearingCharacterIds`, and `focusCharacterId` should match the actual page story.
-- Extra characters should not appear unless the story requires them.
-- For premium quality, approved/reference character images should be respected by prompt design.
-
----
-
-### 2.8 Reading flow / pacing — 8 points
-
-| Score | Criteria |
-|---:|---|
-| 7-8 | The story reads smoothly aloud. Page transitions feel natural and do not interrupt the read-aloud rhythm. |
-| 5-6 | Mostly readable, but one or two pages feel abrupt, too dense, or too thin. |
-| 2-4 | Read-aloud pacing is uneven. The reader may need to pause or explain transitions. |
-| 0-1 | The book is awkward to read aloud and page progression feels broken. |
-
-Review notes:
-
-- This axis captures the feedback that page navigation should feel like a slide/swipe experience, not a repeated hard button interruption.
-- The story text should support smooth reading even before UI improvements are implemented.
-- Future UX should support swipe / slide navigation, animated page transitions, and read-aloud mode.
-
----
-
-### 2.9 Opening / cover flow — 8 points
-
-| Score | Criteria |
-|---:|---|
-| 7-8 | The book has a clear title/cover expectation and a gentle opening that prepares the reader for the story. |
-| 5-6 | The opening is understandable, but it could better establish mood, title, setting, or read-aloud entry. |
-| 2-4 | The story starts abruptly or feels like it begins in the middle. |
-| 0-1 | There is no meaningful entry point; the book is not suitable for read-aloud use without extra explanation. |
-
-Review notes:
-
-- This axis captures the feedback that no cover page makes the story feel like it starts too suddenly.
-- Future implementation should include cover page generation, title page support, and opening narration flow.
-- A picture book should feel like a book before it becomes a sequence of pages.
-
----
-
-## 3. Illustration Quality Score
-
-Illustration Quality Score is a 100-point score that measures whether generated illustrations are visually coherent, child-friendly, emotionally readable, style-consistent, and aligned with the story and prompts.
-
-The score should be calculated per book, using page-level image observations as supporting notes.
-
-### 3.1 Illustration scoring axes
-
-| Axis | Points | What it measures |
-|---|---:|---|
-| Character visual consistency | 20 | Whether the protagonist and companion characters remain visually consistent across pages. |
-| Prompt-to-image alignment | 15 | Whether generated images match the page prompt, story beat, and intended visual role. |
-| Composition / framing | 15 | Whether each image has clear subject placement, readable framing, and appropriate visual focus. |
-| Style consistency | 15 | Whether the whole book feels like one illustrated work with consistent art direction. |
-| Emotional expression | 10 | Whether character expressions and body language communicate the intended emotion. |
-| Scene clarity | 10 | Whether the reader can understand what is happening without confusion. |
-| Child friendliness / safety | 10 | Whether the image is safe, warm, non-frightening, and appropriate for children. |
-| Text-safe layout | 5 | Whether the image leaves room for app-rendered text and avoids text-in-image problems. |
-| **Total** | **100** |  |
-
----
-
-### 3.2 Character visual consistency — 20 points
-
-| Score | Criteria |
-|---:|---|
-| 17-20 | Characters look consistently like the same individuals across pages. Key traits, proportions, outfit cues, and companion identity remain stable. |
-| 12-16 | Mostly consistent, with minor drift in face, outfit, age, or species. |
-| 6-11 | Noticeable drift. The same character may look significantly different on multiple pages. |
-| 0-5 | Major visual inconsistency, duplicated protagonist, missing character, or wrong species/age. |
-
----
-
-### 3.3 Prompt-to-image alignment — 15 points
-
-| Score | Criteria |
-|---:|---|
-| 13-15 | Image clearly follows the page prompt, page role, story beat, characters, setting, and mood. |
-| 9-12 | Mostly aligned, but some details are missing or weak. |
-| 5-8 | Partial alignment; the image captures general mood but misses important story details. |
-| 0-4 | Image does not match the page content or prompt. |
-
----
-
-### 3.4 Composition / framing — 15 points
-
-| Score | Criteria |
-|---:|---|
-| 13-15 | Clear focal point, good framing, readable character placement, and strong visual hierarchy. |
-| 9-12 | Generally readable, but composition could be stronger. |
-| 5-8 | Cluttered, distant, cropped awkwardly, or unclear subject hierarchy. |
-| 0-4 | Composition makes the scene hard to understand. |
-
----
-
-### 3.5 Style consistency — 15 points
-
-| Score | Criteria |
-|---:|---|
-| 13-15 | All pages feel like one coherent picture book with stable art direction and styleBible adherence. |
-| 9-12 | Mostly consistent, with minor color, texture, or rendering drift. |
-| 5-8 | Noticeable style drift between pages. |
-| 0-4 | Pages feel like different books or different models/styles. |
-
----
-
-### 3.6 Emotional expression — 10 points
-
-| Score | Criteria |
-|---:|---|
-| 9-10 | Expressions and body language clearly support the page emotion. |
-| 7-8 | Emotion is readable but not especially strong. |
-| 4-6 | Emotion is weak, stiff, or partially mismatched. |
-| 0-3 | Emotion is missing, confusing, or contradictory. |
-
----
-
-### 3.7 Scene clarity — 10 points
-
-| Score | Criteria |
-|---:|---|
-| 9-10 | The reader can quickly understand who is present, where they are, and what is happening. |
-| 7-8 | Mostly clear, with minor ambiguity. |
-| 4-6 | Important scene details are hard to understand. |
-| 0-3 | Scene is confusing or visually incoherent. |
-
----
-
-### 3.8 Child friendliness / safety — 10 points
-
-| Score | Criteria |
-|---:|---|
-| 9-10 | Warm, safe, age-appropriate, non-frightening, and suitable for bedtime/read-aloud use. |
-| 7-8 | Generally safe, with minor intensity or mood issues. |
-| 4-6 | Some elements may feel too strange, intense, or unsettling for young children. |
-| 0-3 | Unsafe, frightening, inappropriate, or unsuitable for children. |
-
----
-
-### 3.9 Text-safe layout — 5 points
-
-| Score | Criteria |
-|---:|---|
-| 5 | Image supports app-rendered text overlays and avoids generated text artifacts. |
-| 3-4 | Mostly safe, but may crowd text areas or include minor artifacts. |
-| 1-2 | Text overlay would likely obscure important visual content. |
-| 0 | Image contains problematic generated text or unusable layout. |
-
-Review notes:
-
-- Repeated phrases should remain app-rendered, not drawn into the image.
-- Text-safe composition matters for mobile reading UX.
-
----
-
-## 4. Quality thresholds by plan
-
-| Plan | Story minimum | Story strong | Illustration minimum | Illustration strong | Notes |
-|---|---:|---:|---:|---:|---|
-| free | 70 | 78 | 70 | 78 | Readable and pleasant, but can be simpler and less personalized. |
-| paid | 80 | 88 | 80 | 88 | Commercially acceptable and reliably personalized. Main MVP sales quality bar. |
-| premium | 88 | 94 | 88 | 94 | Highly personalized, polished, emotionally satisfying, and visually consistent. |
-
-### Blocking guidance
-
-| Score range | Decision |
-|---:|---|
-| 90-100 | Excellent. Suitable for premium examples and showcase candidates. |
-| 80-89 | Good. Suitable for paid release unless there is a serious safety or consistency issue. |
-| 70-79 | Acceptable for free or draft quality. Needs improvement before paid positioning. |
-| 60-69 | Weak. Should trigger rewrite, prompt repair, or targeted regeneration before user delivery when possible. |
-| 0-59 | Fail. Should be regenerated, rewritten, or blocked from paid delivery. |
-
-Safety and privacy issues are hard blockers even if the numerical score is high.
-
----
-
-## 5. Relationship to admin review scores
-
-Existing admin review fields are narrower, human-entered quality signals:
-
-- `adminTextQualityScore`
-- `adminImageQualityScore`
-- `adminCharacterConsistencyScore`
-
-Story Quality Score and Illustration Quality Score should not replace these fields immediately. They should add an actionable, axis-level layer for analysis and future auto review.
-
-### Mapping
-
-| Quality axis | Related admin review score |
+| Principle | 内容 |
 |---|---|
-| Story: Child personalization | `adminTextQualityScore` |
-| Story: Story coherence | `adminTextQualityScore` |
-| Story: Age appropriateness | `adminTextQualityScore` |
-| Story: Emotional satisfaction | `adminTextQualityScore` |
-| Story: Page length balance | `adminTextQualityScore` |
-| Story: Character consistency | `adminCharacterConsistencyScore` |
-| Story: Reading flow / pacing | `adminTextQualityScore` |
-| Story: Opening / cover flow | `adminTextQualityScore` |
-| Illustration: Character visual consistency | `adminImageQualityScore` and `adminCharacterConsistencyScore` |
-| Illustration: Prompt-to-image alignment | `adminImageQualityScore` |
-| Illustration: Composition / framing | `adminImageQualityScore` |
-| Illustration: Style consistency | `adminImageQualityScore` |
-| Illustration: Child friendliness / safety | `adminImageQualityScore` |
-
-### Recommended transition
-
-1. Continue collecting current admin review scores.
-2. Add Story Quality Score and Illustration Quality Score as detailed review layers.
-3. Store axis-level scores separately when implementation begins.
-4. Use current admin review scores as quick human sentiment indicators.
-5. Use detailed quality scores for root-cause analysis and automated evaluation.
+| Human-first | 最初は admin / reviewer が目視で評価できる rubric にする。 |
+| LLM-ready | 将来の LLM auto review が同じ軸で JSON 出力できるようにする。 |
+| Axis-level | overall score だけでなく、どの軸が弱いかを保存する。 |
+| Actionable | 低スコア時に rewrite / prompt repair / regeneration に接続する。 |
+| Plan-aware | free / paid / premium で要求品質を分ける。 |
+| Safety-first | safety / privacy issue は score と別に blocker 扱いできるようにする。 |
 
 ---
 
-## 6. Admin Review UI field design
+## Story Quality Score
 
-Future `/admin/book-quality-review` should support both human and LLM-based review fields.
+Story Quality Score は 100 点満点。Book 単位で評価する。
 
-### Proposed storage shape
+| Axis | Points | 評価内容 |
+|---|---:|---|
+| child personalization | 20 | 子ども本人らしさが物語に自然に入っているか |
+| story coherence | 20 | 起承転結・因果・ページ間接続が自然か |
+| age appropriateness | 15 | 対象年齢に合った語彙・文章量・理解難度か |
+| emotional satisfaction | 15 | 読後感・達成感・安心感・親子で読む満足感があるか |
+| page length balance | 10 | ページごとの文量・テンポが適切か |
+| character consistency | 10 | 主人公・相棒・登場人物の役割が一貫しているか |
+| ending satisfaction | 10 | 終わり方が唐突でなく、物語として締まっているか |
+| **Total** | **100** |  |
 
-```ts
-qualityReview: {
-  storyQualityScore: number;
-  illustrationQualityScore: number;
-  overallQualityScore?: number;
-  qualityRubricVersion: string;
+### Story rubric
 
-  storyAxes: {
-    childPersonalization: number;
-    storyCoherence: number;
-    ageAppropriateness: number;
-    emotionalSatisfaction: number;
-    pageLengthBalance: number;
-    characterConsistency: number;
-    readingFlowPacing: number;
-    openingCoverFlow: number;
-  };
-
-  illustrationAxes: {
-    characterVisualConsistency: number;
-    promptToImageAlignment: number;
-    compositionFraming: number;
-    styleConsistency: number;
-    emotionalExpression: number;
-    sceneClarity: number;
-    childFriendlinessSafety: number;
-    textSafeLayout: number;
-  };
-
-  reviewerType: 'human' | 'llm';
-  reviewerId?: string;
-  reviewerModel?: string;
-  reviewedAtMs: number;
-  confidence?: number;
-  notes?: string;
-  recommendedActions?: Array<
-    | 'rewrite_story'
-    | 'repair_prompt'
-    | 'regenerate_images'
-    | 'fix_character_reference'
-    | 'add_cover_page'
-    | 'improve_reading_ux'
-    | 'human_review_required'
-  >;
-}
-```
-
-### Admin UI expectations
-
-- Show total Story Quality Score and Illustration Quality Score.
-- Show axis-level bars or numeric controls.
-- Allow reviewer notes per book.
-- Allow filtering by low score axes.
-- Allow comparison between human and LLM review.
-- Preserve existing admin review fields during transition.
+| Axis | High | Medium | Low |
+|---|---|---|---|
+| child personalization | 名前・好きなもの・性格・思い出が自然に物語へ効いている | 名前や好みは出るが、物語上の意味は弱い | ほぼ generic。名前を差し替えても成立する |
+| story coherence | 各ページが自然につながり、目的・行動・結果が明確 | 大筋は分かるが、場面転換や因果がやや弱い | 話が飛ぶ。なぜそうなったか分かりにくい |
+| age appropriateness | 語彙・文章量・感情表現が対象年齢に合う | 一部だけ幼すぎる/難しすぎる | 年齢に合わず読み聞かせに向かない |
+| emotional satisfaction | ワクワク・安心・達成感があり、もう一度読みたくなる | 悪くないが印象が薄い | 無機質、盛り上がり不足、読後感が弱い |
+| page length balance | 各ページの文量が自然でテンポが良い | 1〜2ページに偏りがある | 長すぎる/短すぎるページが目立つ |
+| character consistency | キャラの性格・役割・呼び方が安定している | 軽微な揺れがある | 主人公や相棒が別人のように振る舞う |
+| ending satisfaction | 物語として自然に締まり、安心感がある | 終わりは分かるが余韻が弱い | 唐突に終わる。未完に感じる |
 
 ---
 
-## 7. Human review and future LLM evaluation
+## Illustration Quality Score
 
-This rubric is intentionally written so that both humans and an evaluator LLM can apply it.
+Illustration Quality Score は 100 点満点。Book 単位で評価し、必要に応じて page 単位の補助スコアを持つ。
 
-### Human review usage
+| Axis | Points | 評価内容 |
+|---|---:|---|
+| prompt completeness | 20 | prompt がキャラ・場面・構図・感情・style を十分に指定しているか |
+| visual consistency | 20 | ページ間で絵柄・色味・世界観が揃っているか |
+| character consistency | 20 | 同じ子ども/相棒が同じ存在として見えるか |
+| scene relevance | 15 | 本文内容・ページ役割と絵が合っているか |
+| style consistency | 15 | styleBible / target style に沿っているか |
+| artifact avoidance | 10 | 破綻・不要文字・手足崩れ・不自然な物体を避けているか |
+| **Total** | **100** |  |
 
-- Review one completed book at a time.
-- Score story and illustration separately.
-- Score each axis independently.
-- Add short notes for scores below 70% of the axis maximum.
-- Record the top 1-3 improvement reasons.
-- Do not rely only on gut feel; choose the closest rubric band.
+### Illustration rubric
 
-### Future automated LLM evaluation input
+| Axis | High | Medium | Low |
+|---|---|---|---|
+| prompt completeness | 主要キャラ、場面、構図、表情、style、NGが明確 | 必要情報はあるが構図や感情が弱い | generic prompt で生成結果がぶれやすい |
+| visual consistency | 全ページが同じ絵本世界に見える | 一部で色味や質感が揺れる | ページごとに別作品に見える |
+| character consistency | 顔・髪型・服・雰囲気が安定 | 軽微な揺れはあるが同一人物に見える | 同じ子どもがページごとに別人になる |
+| scene relevance | 本文の場面・感情・行動と一致 | 雰囲気は合うが細部が違う | 本文と絵が噛み合わない |
+| style consistency | styleBible に沿って安定 | 一部 style drift がある | style が大きく崩れる |
+| artifact avoidance | 破綻や不要文字が目立たない | 軽微な artifact がある | 手足・顔・文字・物体破綻が目立つ |
 
-A future evaluator LLM should receive:
+---
 
+## Character Consistency Score
+
+Character Consistency Score は、Book 全体で主人公・相棒・登場人物が一貫しているかを評価する。
+
+| 観点 | 確認内容 |
+|---|---|
+| recurring character visual bible | 主人公・相棒の visual bible が prompt / reference に反映されているか |
+| `characterId` | 各キャラクターを安定した ID で追跡できるか |
+| `appearingCharacterIds` | page ごとの登場キャラが story / prompt / image と一致しているか |
+| `focusCharacterId` | page の主役が明確か |
+| page-level character linkage | page text、prompt、image metadata が同じキャラを参照しているか |
+| outfit / hairstyle consistency | 服装・髪型・特徴色がページ間で破綻していないか |
+| color palette consistency | 主人公・相棒の key color が保たれているか |
+
+NG例:
+
+- 同じ子どもがページごとに別人になる
+- 主人公が2人に増える
+- 相棒キャラの種族や色が変わる
+- `appearingCharacterIds` にいないキャラが主役化する
+- `focusCharacterId` と画像の中心人物が一致しない
+
+---
+
+## Personalization Score
+
+Personalization Score は、child profile / family context / memory context が自然に反映されているかを評価する。
+
+| 観点 | High | Low |
+|---|---|---|
+| child profile usage | 性格・年齢・好きな遊びが行動に反映される | 名前以外ほぼ使われない |
+| name / nickname usage | 呼び方が自然で過剰でない | 毎文のように名前が出て不自然 |
+| favorite things | 好きなものが story goal や発見につながる | 単語だけ挿入される |
+| family context | 家族や読み聞かせ文脈に合う | 家庭向けとして違和感がある |
+| memory / event context | 思い出絵本として具体性がある | 事実の羅列または generic |
+| over-personalization risk | 個人情報を出しすぎない | 住所・園名などが不用意に出る |
+
+注意:
+
+- personalization は多ければ良いわけではない。
+- 子どもの情報は story に効く必要がある。
+- privacy / safety に触れる情報は出力しすぎない。
+
+---
+
+## Safety / Age Appropriateness
+
+Safety / Age Appropriateness は、家庭向け絵本として安心して読めるかを評価する。
+
+| 観点 | 確認内容 |
+|---|---|
+| 対象年齢に合った語彙 | 難しすぎる言葉、抽象的すぎる表現を避ける |
+| 怖すぎない表現 | 暗すぎる、脅かす、強い不安を残す描写を避ける |
+| 危険行動の回避 | 子どもが真似しやすい危険行動を肯定しない |
+| 家庭向けの安心感 | bedtime / parent-child reading に合う穏やかさがある |
+| 個人情報配慮 | child profile を過度に露出しない |
+
+NG内容の例:
+
+- 子どもだけで危険な場所へ行くことを肯定する
+- 暴力・自傷・脅迫・過度な恐怖
+- 年齢に不適切な恋愛・性的・政治的表現
+- 実在住所、園名、学校名などの不要な露出
+- 子どもが真似しやすい危険行動を「楽しい冒険」として描く
+
+---
+
+## Admin Review Rubric
+
+人間レビューでは 1〜5 点で簡易評価し、必要に応じて詳細 score に変換する。
+
+| Score | story | illustration | personalization | safety | overall |
+|---:|---|---|---|---|---|
+| 5 | 商品品質として強い | 一貫性・構図・style が良い | 子ども本人らしい | 安心して読める | premium 候補 |
+| 4 | 概ね良い | 軽微な揺れのみ | 自然に反映 | 問題なし | paid 品質 |
+| 3 | 読めるが改善余地あり | 一部違和感 | やや浅い | 大きな問題なし | free / draft 品質 |
+| 2 | 品質不足 | 崩れや不一致が目立つ | generic | 注意が必要 | 修正推奨 |
+| 1 | 失敗 | 破綻 | 反映なし/不適切 | blocker | 配信不可 |
+
+---
+
+## Future LLM Auto Review
+
+将来、LLM evaluator で自動評価する。
+
+### Input data
+
+- book metadata
+- plan / quality mode
 - child profile summary
-- selected plan / quality mode
+- memory / event context
 - story JSON
 - page text
 - page prompts
-- storyQualityReport
-- cast metadata
-- target age band
-- generated image metadata when available
-- generated image URLs or descriptions when image review is available
-- optional admin feedback
+- `storyCast`
+- `appearingCharacterIds`
+- `focusCharacterId`
+- styleBible
+- generated image URLs or image descriptions
+- existing admin feedback
 
-### Future automated LLM evaluation output
-
-The evaluator should return:
+### Output JSON schema draft
 
 ```ts
-interface AutoQualityReviewResult {
+interface QualityAutoReviewResult {
   storyQualityScore: number;
   illustrationQualityScore: number;
-  storyAxes: Record<string, number>;
-  illustrationAxes: Record<string, number>;
+  characterConsistencyScore: number;
+  personalizationScore: number;
+  safetyScore: number;
+  overallQualityScore: number;
   confidence: number;
-  rationale: string;
-  axisFeedback: Array<{
-    axis: string;
-    score: number;
-    maxScore: number;
-    feedback: string;
-    severity: 'info' | 'minor' | 'major' | 'blocker';
+  reviewReason: string;
+  flaggedIssues: Array<{
+    severity: 'low' | 'medium' | 'high' | 'blocker';
+    area: 'story' | 'illustration' | 'character' | 'personalization' | 'safety';
+    message: string;
+    pageNumber?: number;
   }>;
-  recommendedActions: string[];
-  humanReviewRequired: boolean;
+  recommendedFixes: Array<{
+    action:
+      | 'rewrite_story'
+      | 'repair_prompt'
+      | 'regenerate_page_image'
+      | 'fix_character_reference'
+      | 'reduce_personal_data'
+      | 'human_review_required';
+    reason: string;
+    pageNumber?: number;
+  }>;
 }
 ```
 
-### Guardrails for LLM evaluation
+Guidelines:
 
-- LLM score should assist, not silently override, human admin judgement.
-- Low confidence or contradictory evaluations should be flagged for human review.
-- Safety and privacy issues should be handled as hard blockers outside the normal 100-point quality score.
-- LLM image review should not be treated as authoritative until validated against human review.
-
----
-
-## 8. Phase 2 backlog
-
-Initial backlog items for Story & Illustration Quality:
-
-- [ ] Add Story Quality Score fields to the book quality review data model.
-- [ ] Add Illustration Quality Score fields to the book quality review data model.
-- [ ] Add axis-level Story Quality Score input controls to the Admin Review UI.
-- [ ] Add axis-level Illustration Quality Score input controls to the Admin Review UI.
-- [ ] Show total Story / Illustration Quality Scores and axis breakdowns in the Admin Review UI.
-- [ ] Add score-based filtering for low-quality books in admin review.
-- [ ] Add quality trend aggregation by plan: free / paid / premium.
-- [ ] Add age-band-specific text length validation and warnings.
-- [ ] Add story coherence checks for setup, progression, resolution, and `storyGoal` continuity.
-- [ ] Add child personalization depth checks beyond name insertion.
-- [ ] Add character consistency warnings for cast drift, duplicated protagonist, and unexpected extra characters.
-- [ ] Add illustration prompt quality checks for visual specificity, style alignment, text-in-image risk, and page role variation.
-- [ ] Add illustration quality checks for character visual consistency, composition, scene clarity, and style consistency.
-- [ ] Add rewrite recommendations based on the weakest story scoring axes.
-- [ ] Add prompt repair / image regeneration recommendations based on the weakest illustration scoring axes.
-- [ ] Prototype LLM-based evaluator using this rubric and compare it with human admin review scores.
-- [ ] Add cover page generation to avoid abrupt story starts.
-- [ ] Add title page / opening flow support for read-aloud use.
-- [ ] Add swipe / slide page navigation for smoother reading UX.
-- [ ] Add animated page transition and read-aloud mode considerations to the reader UI backlog.
+- `confidence < 0.7` は human review required。
+- safety blocker は overall score に関係なく配信停止候補。
+- LLM score は人間レビューを置き換えず、初期は補助 signal として使う。
 
 ---
 
-## 9. Future UX considerations
+## Firestore Field Design Draft
 
-These are not implemented in this documentation change, but they should be treated as Phase 2 / Phase 6 backlog items.
+### `books/{bookId}`
 
-### Swipe / slide navigation
+| Field | Type | Purpose |
+|---|---|---|
+| `storyQualityScore` | number | Book単位の story score |
+| `illustrationQualityScore` | number | Book単位の illustration score |
+| `personalizationScore` | number | child profile 反映度 |
+| `characterConsistencyScore` | number | story / image 両面のキャラ一貫性 |
+| `safetyScore` | number | safety / age appropriateness |
+| `overallQualityScore` | number | 総合品質 |
+| `qualityReviewStatus` | string | `not_reviewed` / `human_reviewed` / `llm_reviewed` / `needs_fix` |
+| `qualityReviewedAtMs` | number | review timestamp |
+| `qualityReviewer` | string | human reviewer id or model name |
+| `qualityReviewReason` | string | 評価理由 |
+| `qualityFlaggedIssues` | array | blocker / issue 一覧 |
+| `qualityRecommendedFixes` | array | rewrite / regenerate など |
 
-Current issue:
+### `books/{bookId}/pages/{pageId}`
 
-- Users must press a button every time they move to the next page.
-- This can interrupt read-aloud rhythm.
-- It feels more like a form flow than a picture book.
-
-Future direction:
-
-- Swipe-based page navigation.
-- Slide animation between pages.
-- Keyboard / touch / button fallback for accessibility.
-- Optional read-aloud mode with less UI interruption.
-
-### Cover page / opening flow
-
-Current issue:
-
-- The book starts directly with story content.
-- There is no cover/title moment.
-- This makes the experience less suitable for read-aloud use.
-
-Future direction:
-
-- Dedicated cover page generation.
-- Title page or title spread support.
-- Opening narration page or gentle first-page setup.
-- Story Quality Score should penalize abrupt starts until this is improved.
+| Field | Type | Purpose |
+|---|---|---|
+| `pageIllustrationQualityScore` | number | page単位の illustration score |
+| `pagePromptQualityScore` | number | prompt completeness score |
+| `pageCharacterConsistencyScore` | number | page単位の character consistency |
+| `pageReviewIssues` | array | page-specific issues |
+| `pageRecommendedFixes` | array | page-specific fixes |
+| `pageReviewStatus` | string | `not_reviewed` / `needs_regeneration` / `approved` |
 
 ---
 
-## 10. Phase 2 completion signal
+## Phase 2 Backlog
 
-Phase 2 quality work should be considered healthy when:
+- [ ] Add quality score types.
+- [ ] Add admin quality review panel.
+- [ ] Add story rubric UI.
+- [ ] Add illustration rubric UI.
+- [ ] Save manual quality review.
+- [ ] Add quality review history.
+- [ ] Add LLM review prompt draft.
+- [ ] Add character consistency diagnostics.
+- [ ] Add page prompt completeness checker.
+- [ ] Add premium story quality gate.
+- [ ] Add personalization depth checker.
+- [ ] Add safety / age appropriateness checker.
+- [ ] Add page-level review issue storage.
+- [ ] Add recommended fixes display in admin UI.
+- [ ] Add quality trend dashboard by plan.
 
-- paid books consistently score >= 80 for both Story and Illustration Quality.
-- premium books consistently score >= 88 for both Story and Illustration Quality.
-- `adminTextQualityScore` average is >= 4.0.
-- `adminImageQualityScore` average is >= 4.0.
-- `adminCharacterConsistencyScore` average is >= 4.0.
-- low-score root causes are visible in admin analytics.
-- the team can identify whether a quality problem is caused by story generation, prompt generation, illustration generation, character consistency, or reading UX.
+---
+
+## Acceptance Criteria
+
+Phase 2 quality foundation is ready when:
+
+- [ ] Story Quality Score rubric is documented.
+- [ ] Illustration Quality Score rubric is documented.
+- [ ] Character Consistency Score is documented.
+- [ ] Personalization Score is documented.
+- [ ] Safety / Age Appropriateness rules are documented.
+- [ ] Admin Review Rubric is usable by a human reviewer.
+- [ ] Future LLM Auto Review schema draft exists.
+- [ ] Firestore field draft exists for Book and Page.
+- [ ] Phase 2 backlog has at least 10 actionable tasks.
+- [ ] Product Roadmap links to this document as the first Phase 2 task.
