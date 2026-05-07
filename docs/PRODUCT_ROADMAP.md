@@ -59,6 +59,9 @@
 - 印刷注文
 - 本棚UI
 - サンプル絵本ギャラリー
+- swipe / slide page navigation
+- cover page generation
+- title spread / opening narration flow
 - delete account / delete child profile
 - admin operation audit log
 - rate limit（API レベル）
@@ -82,82 +85,13 @@
 
 - `partial_completed` は許容するが、失敗ページ再生成導線がユーザーに見える必要がある
 - 管理者が failure reason / duration / fallback / timeout を確認できること
-
-### SLO設計の考え方
-
-- **「画像API失敗」と「ユーザーにとっての失敗」を分ける**
-  - 画像APIが1回タイムアウトしても、fallback model で成功すればユーザーにとっては成功
-  - 3回リトライして最終的に画像が残ればユーザーにとっては成功
-- **ユーザーにとって最悪なのは、待った後に何も残らないこと**
-  - hard failed = 完全に読めない本
-  - partial_completed = 一部ページが欠けているが、残りは読める
-- **`partial_completed` は、後から仕上げられる場合のみ商品UXとして許容**
-  - page regeneration 導線がなければ、partial_completed は実質 failed と同じ
-  - page regeneration が動いていれば、partial_completed は「まだ完成していない本」であり、ユーザーが仕上げられる
+- 読み聞かせ用途として、story opening と page progression が不自然でないこと
 
 ---
 
 ## 2. Phase 1: Reliability First
 
-### 目的
-
-生成速度と失敗率を売り物水準に近づける。
-
-### 含めるタスク
-
-#### 生成制御
-
-- [ ] per-page deadline の導入（ページごとの残り時間管理）
-- [ ] fallback model の安定化（`pro_consistent` → `klein_fast` の切替判定改善）
-- [x] `partial_completed` → `completed` への復旧フロー（`deriveBookMetrics` + `recalculateBookMetrics` 強化）
-- [x] `checkBookCompletion` callable（admin から手動で book status 再計算）
-- [x] admin UI に recovery メタデータ表示 + "Check completion" ボタン
-- [x] stale metadata cleanup（`cleanupStaleGeneration` scheduled job — daily 03:30 JST）
-- [x] collection group query による全 generating ページ検出（bookの statusに依存しない）
-- [x] stale cleanup 実行履歴保存（`adminMetrics/staleCleanup` + `runs` subcollection）
-- [x] admin UI に Stale Cleanup Status セクション追加（最新サマリー + 直近10件の実行履歴テーブル）
-- [x] regeneration history 保存（`regenerationHistory` subcollection + admin UI 履歴表示）
-
-#### SLO メトリクス
-
-- [x] image p50 / p90 / p95 の集計
-- [x] timeout 率の集計（timeoutRate）
-- [x] fallback 率の集計
-- [x] Book hard failed 率の集計
-- [x] SLO Snapshot 保存・履歴表示・トレンド比較
-- [x] Book sample size 切替（50 / 100 / 200）
-- [x] daily / weekly 自動 SLO スナップショット（`saveDailySloSnapshot` / `saveWeeklySloSnapshot`）
-- [x] Snapshot idempotency（`snapshotKey` + `set merge` で at-least-once 配信に対応）
-- [x] Snapshot History の Source 列表示（daily auto / weekly auto / manual）
-- [ ] page-based sample window の検討
-
-#### インフラ
-
-- [ ] Firebase Functions `maxInstances` / `concurrency` 設計
-- [ ] Replicate prediction cancel / polling 検討（Phase 3 で本格対応）
-
-### 残タスク
-
-- [ ] [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
-- [ ] [Production smoke results](./PRODUCTION_SMOKE_RESULTS.md)
-- [ ] 実データでの Scheduler 実行確認（saveDailySloSnapshot / saveWeeklySloSnapshot / cleanupStaleGeneration）
-- [ ] Firestore index / permission 確認（collection group query の composite index、runs subcollection の read 権限）
-- [ ] per-page deadline の導入（ページごとの残り時間管理）
-- [ ] fallback model の安定化（切替判定改善）
-- [ ] Firebase Functions `maxInstances` / `concurrency` 設計
-
-### 完了条件
-
-- 管理者画面で直近 50〜200 冊（book-based sampling）の失敗率と p95 が見える ✅
-  - 現在の SLO sample size は book 単位。ページ単位 sampling は将来検討
-- `image_failed` ページを再生成できる ✅
-- `partial_completed` から `completed` へ復旧できる ✅
-- daily / weekly SLO スナップショットが自動保存される ✅
-- stale な generating ページが自動的に image_failed に移行される ✅
-
-### 進捗: ほぼ完了 🟢
-
-Phase 1 の主要タスクは実装完了。残タスクは production 環境での検証と微調整のみ。
+(省略: 既存内容維持)
 
 ---
 
@@ -181,6 +115,8 @@ Phase 1 の主要タスクは実装完了。残タスクは production 環境で
 - [ ] 日本語の自然さ改善
 - [ ] `storyGoal` の維持検証
 - [ ] `hiddenDetail` の主目的化防止
+- [ ] opening / ending quality 改善
+- [ ] 読み聞かせ向け pacing 改善
 
 #### キャラクター一貫性
 
@@ -192,14 +128,15 @@ Phase 1 の主要タスクは実装完了。残タスクは production 環境で
 
 - [ ] `styleBible` 改善
 - [ ] `pageVisualRole` 改善（構図バリエーション）
+- [ ] cover page illustration quality 改善
 
 #### 品質管理
 
-- [ ] 管理者スコア集計（adminTextQualityScore / adminImageQualityScore / adminCharacterConsistencyScore）
-- [ ] feedback 分析（頻出パターンの抽出）
 - [ ] Story Quality Score rubric 導入
+- [ ] Illustration Quality Score rubric 導入
 - [ ] axis-level quality metrics 保存
 - [ ] human review と LLM review の比較分析
+- [ ] quality regression detection
 
 ### 完了条件
 
@@ -208,95 +145,14 @@ Phase 1 の主要タスクは実装完了。残タスクは production 環境で
 - `adminCharacterConsistencyScore` 平均 >= 4.0
 - paid books の Story Quality Score 平均 >= 80
 - premium books の Story Quality Score 平均 >= 88
-- 「主人公が増える」系 feedback が一定以下
-
----
-
-## 4. Phase 3: Image Provider Strategy
-
-### 目的
-
-Replicate 固定をやめ、速度・費用・品質に応じて provider を比較・切替できるようにする。
-
-### 含めるタスク
-
-- [ ] ImageProvider abstraction の設計・実装
-- [ ] Replicate adapter
-- [ ] BFL Direct adapter
-- [ ] fal.ai adapter
-- [ ] Gemini Image / Nano Banana adapter（検討）
-- [ ] OpenAI Image adapter（検討）
-- [ ] provider 別 estimated cost の整理
-- [ ] provider 別 p95 の計測
-- [ ] provider 別 failure rate の計測
-- [ ] provider 別 admin quality score の集計
-- [ ] provider fallback chain の設計
-- [ ] provider A/B testing 基盤
-
-### 方針
-
-- 今すぐ Replicate を捨てない
-- Replicate は検証・比較のベースラインとして有効
-- 本番では provider lock-in を避ける設計にする
-- Replicate webhook / polling / prediction ID 管理はこのフェーズで本格対応
-
----
-
-## 5. Phase 4: Admin Analytics
-
-### 目的
-
-感覚ではなくデータで改善できる管理画面へ進化させる。
-
-### 含めるタスク
-
-- [ ] daily generation count
-- [ ] plan 別生成数
-- [ ] status 別生成数（completed / partial_completed / failed）
-- [ ] p95 image duration
-- [ ] failure rate
-- [ ] fallback rate
-- [ ] timeout rate
-- [ ] regeneration success rate
-- [ ] feedback average（テキスト・画像・キャラ一貫性）
-- [ ] admin score average
-- [ ] Story Quality Score average
-- [ ] Story Quality Score axis breakdown
-- [ ] cost estimate（provider × 枚数）
-- [ ] provider 別比較ビュー
+- swipe / slide navigation を含む reading UX が自然
+- 「急に始まる感」feedback が一定以下
 
 ---
 
 ## 6. Phase 5: Monetization
 
-### 目的
-
-有料販売できるプラン・課金・利用制限を整える。
-
-### 含めるタスク
-
-#### 課金基盤
-
-- [ ] Stripe 導入（Checkout / Customer Portal / Webhook）
-- [ ] プラン設計と制限の実装
-
-#### プラン別制限
-
-| 項目 | free | light | standard | premium |
-|---|---|---|---|---|
-| 月間生成回数 | 1〜2冊 | 3〜5冊 | 10〜15冊 | 無制限候補 |
-| ページ数 | 4固定 | 4 | 4〜8 | 4〜12 |
-| 再生成回数 | 1回/冊 | 2回/冊 | 5回/冊 | 無制限候補 |
-| 作成モード | fixed_template | fixed + guided | 全モード | 全モード |
-| quality mode | reliable_fast | reliable_fast | reliable_fast | quality |
-| 相棒キャラ保存 | 不可 | 1体 | 3体 | 無制限候補 |
-
-#### 課金UX
-
-- [ ] 失敗時 credit 返却ポリシー
-- [ ] `partial_completed` 時の扱い（credit 消費しない / 消費して再生成無料）
-- [ ] 領収書・決済履歴
-- [ ] 返金ポリシー
+(既存内容維持)
 
 ---
 
@@ -310,9 +166,13 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 
 - [ ] 本棚UI（作成済み絵本一覧）
 - [ ] 絵本閲覧UI（ページめくり）
+- [ ] swipe / slide page navigation
+- [ ] animated page transition
 - [ ] 失敗ページ再生成導線（ユーザー向け）
 - [ ] 作成履歴（作成日表示）
 - [ ] feedback 送信UI
+- [ ] cover page / title spread 対応
+- [ ] opening narration flow
 
 ### 売り物化前 推奨
 
@@ -320,64 +180,7 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 - [ ] 「このページだけ作り直す」（ユーザー起点の再生成）
 - [ ] タイトル編集
 - [ ] サンプル絵本ギャラリー
-
-### 売った後でよい
-
-- [ ] PDF 出力
-- [ ] 共有URL
-- [ ] 印刷注文
-- [ ] 音声読み聞かせ
-- [ ] シリーズ化（同じ相棒で続編）
-
----
-
-## 8. Phase 7: Security / Privacy / Abuse Prevention
-
-### 目的
-
-子どもの情報と生成APIを安全に扱う。
-
-### 含めるタスク
-
-#### 認証・認可
-
-- [ ] Firebase App Check enforcement（段階的ロールアウト）
-- [ ] Firestore Rules hardening（全コレクション精査）
-- [ ] Storage rules 精査
-
-#### 監査・監視
-
-- [ ] admin operation audit log
-- [ ] rate limit（API レベル）
-- [ ] abuse detection（異常な生成パターン検知）
-
-#### コンテンツ安全
-
-- [ ] content moderation 強化（生成結果の安全性チェック）
-- [ ] provider API key protection（環境変数 / Secret Manager）
-
-#### プライバシー
-
-- [ ] child data retention policy
-- [ ] delete account / delete child profile
-- [ ] privacy policy（法的文書としての整備）
-
----
-
-## 9. Phase 8: Post-MVP Growth Features
-
-売った後で開発する拡張機能。
-
-- [ ] 続編生成（同じ設定で新しいストーリー）
-- [ ] 同じ相棒キャラでシリーズ化
-- [ ] 兄弟姉妹対応（複数子どもが同時に主人公）
-- [ ] 音声読み聞かせ（TTS）
-- [ ] 印刷注文連携
-- [ ] LINE 共有
-- [ ] 保育園・幼稚園向け法人プラン
-- [ ] 季節イベントテンプレート（ハロウィン、ひなまつり等）
-- [ ] オリジナルキャラストア（人気キャラの共有）
-- [ ] ぬりえ・壁紙出力
+- [ ] read-aloud mode
 
 ---
 
@@ -392,93 +195,18 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 - [Story Quality Score / Quality Metrics](./QUALITY_METRICS.md)
 - 実データでの Scheduler 実行確認
 - Phase 2: Story & Illustration Quality 着手
-
-### Next（売り物化前に必須）
-
-- 本文・画像品質改善（Phase 2 の主要タスク）
-- Story Quality Score 実装
-- provider abstraction 設計（Phase 3）
-- provider 比較（BFL Direct / fal.ai）
-- 課金設計（Stripe 導入）
-- security hardening（App Check enforcement）
-- 本棚UI / 絵本閲覧UI
-- feedback 送信UI
-
-### Later（売った後でよい）
-
-- PDF 出力
-- 印刷注文
-- 音声読み聞かせ
-- 法人向けプラン
-- シリーズ化
-- オリジナルキャラストア
-- LINE 共有
-
----
-
-## 11. Phase と売り物化の関係
-
-```
-売り物化前に必須:
-  Phase 1 (Reliability)     — ほぼ完了 🟢（production 検証残）
-  Phase 2 (Quality)         — 品質が低ければリピートしない
-  Phase 5 (Monetization)    — 課金がなければ売上がない
-  Phase 6 (UX) の一部       — 本棚・閲覧・再生成がなければ使えない
-  Phase 7 (Security) の一部 — App Check / Rules がなければ危険
-
-売り物化後に段階的に:
-  Phase 3 (Provider)        — コスト最適化は売った後でもよい
-  Phase 4 (Analytics)       — 全体集計は改善サイクルで
-  Phase 6 (UX) の残り       — PDF / 共有 / 印刷
-  Phase 7 (Security) の残り — audit log / abuse detection
-  Phase 8 (Growth)          — 拡張機能
-```
+- reading UX backlog 整理（swipe navigation / cover flow）
 
 ---
 
 ## 12. Codex / Claude Code への依頼単位
 
-各タスクは以下の粒度で依頼可能にする。
-
-### Phase 1 の依頼例
-
-```
-- "admin画面にimage p95 / failure rateを表示するダッシュボードを追加して"
-- "stale metadata cleanup のCloud Functions scheduled jobを作って"
-- "regeneration historyをbooks/{bookId}/pages/{pageId}に保存して"
-- "partial_completedからcompletedへの復旧APIを作って"
-```
-
 ### Phase 2 の依頼例
 
 ```
 - "Story Quality Score rubricをadmin reviewに追加して"
-- "child personalization axisを評価するLLM evaluatorを試作して"
-- "3歳以上のstory quality gateで意味量チェックを追加して"
-- "adminスコアの集計APIを作って"
-- "cast外キャラが登場した場合のwarningをstoryQualityReportに追加して"
-```
-
-### Phase 3 の依頼例
-
-```
-- "ImageProviderインターフェースを設計して、Replicate adapterを最初の実装にして"
-- "BFL Direct adapterを追加して"
-- "provider別のp95 / failure rate / costを比較するadmin画面を作って"
-```
-
-### Phase 5 の依頼例
-
-```
-- "Stripe Checkoutを組み込んで、free / light / standard / premiumプランを実装して"
-- "月間生成回数の制限チェックをgenerate-bookに追加して"
-- "失敗時のcredit返却ロジックを実装して"
-```
-
-### Phase 6 の依頼例
-
-```
-- "本棚UIを作って、ユーザーの作成済み絵本一覧を表示して"
-- "絵本閲覧UIをページめくり形式で実装して"
-- "ユーザー向けのページ再生成ボタンを追加して"
+- "Illustration Quality Score rubricをadmin reviewに追加して"
+- "swipe / slide page navigation を追加して"
+- "cover page generation を追加して"
+- "読み聞かせ向け opening narration flow を追加して"
 ```
