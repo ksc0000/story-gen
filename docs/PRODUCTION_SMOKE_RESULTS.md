@@ -1,10 +1,17 @@
-# Production Smoke Results
+# Production Smoke Results Template
 
-Production smoke checklist の実行結果・証跡・残課題を記録するためのテンプレート。
+このファイルは production smoke test result のテンプレートです。
+
+運用ルール:
+
+- 実行結果はこのファイルをコピーして `docs/smoke-results/YYYY-MM-DD-phase1-production.md` に保存する。
+- テンプレート自体を直接上書きしない。
+- 日付別の実行結果を残すことで、Phase 1 Reliability First の完了判定履歴を追跡する。
 
 Related:
 
 - [Production Smoke Checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
+- [Smoke Results History](./smoke-results/)
 - [Product Roadmap](./PRODUCT_ROADMAP.md)
 
 Status values:
