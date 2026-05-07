@@ -1,95 +1,100 @@
 # Production Smoke Results
 
-Production smoke checklist の実行結果を記録するためのテンプレート。
+Production smoke checklist の実行結果・証跡・残課題を記録するためのテンプレート。
 
-Reference:
+Related:
 
 - [Production Smoke Checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - [Product Roadmap](./PRODUCT_ROADMAP.md)
-
----
-
-## Execution Metadata
-
-| Item | Value |
-|---|---|
-| 実行日 | YYYY-MM-DD |
-| 実行者 |  |
-| 対象環境 | production / staging / production-equivalent |
-| 対象 commit SHA |  |
-| Firebase project | `story-gen-8a769` |
-| Functions region | `asia-northeast1` |
-| Scheduler timezone | `Asia/Tokyo` |
-| Admin route | `/admin/book-quality-review` |
-| Checklist version / commit |  |
-| 備考 |  |
 
 Status values:
 
 - `PASS`: 期待値どおり確認できた
 - `FAIL`: 期待値を満たしていない、または blocker がある
 - `N/A`: 今回の実行対象外、または確認データなし
+- `NOT_RUN`: 未実行
+
+Overall result values:
+
+- `PASS`
+- `PASS_WITH_FOLLOW_UP`
+- `FAIL`
+- `NOT_RUN`
 
 ---
 
 ## Summary
 
-| Check area | Status | Evidence / Notes | Issue ID / Link |
+| Item | Value |
+|---|---|
+| 実行日 | YYYY-MM-DD |
+| 実行者 |  |
+| 対象環境 | production / staging / production-equivalent |
+| Firebase project | `story-gen-8a769` |
+| 対象 branch | main |
+| 対象 commit SHA |  |
+| checklist version |  |
+| overall result | PASS / PASS_WITH_FOLLOW_UP / FAIL / NOT_RUN |
+| 備考 |  |
+
+| Check area | Result | Evidence / Notes | Issue / PR |
 |---|---|---|---|
-| Deploy Result |  |  |  |
-| GitHub Actions / Build Result |  |  |  |
-| Scheduled Functions Result |  |  |  |
-| Firestore Rules / Index Result |  |  |  |
-| Admin UI Result |  |  |  |
-| Regeneration / Recovery Result |  |  |  |
-| Failure Handling Result |  |  |  |
-| Final Decision |  |  |  |
-
-Overall notes:
-
-- 
+| Deploy Result | PASS / FAIL / N/A / NOT_RUN |  |  |
+| GitHub Actions / Build Result | PASS / FAIL / N/A / NOT_RUN |  |  |
+| Scheduled Functions Result | PASS / FAIL / N/A / NOT_RUN |  |  |
+| Firestore Rules / Index Result | PASS / FAIL / N/A / NOT_RUN |  |  |
+| Firestore Documents Result | PASS / FAIL / N/A / NOT_RUN |  |  |
+| Admin UI Result | PASS / FAIL / N/A / NOT_RUN |  |  |
+| Regeneration / Recovery Result | PASS / FAIL / N/A / NOT_RUN |  |  |
+| Failure Handling Result | PASS / FAIL / N/A / NOT_RUN |  |  |
 
 ---
 
 ## Environment
 
-| Item | Expected | Actual | Status | Evidence / Notes |
+| Item | Expected | Actual | Result | Notes |
 |---|---|---|---|---|
-| Firebase project | `story-gen-8a769` |  |  |  |
-| Functions region | `asia-northeast1` |  |  |  |
-| Scheduler timezone | `Asia/Tokyo` |  |  |  |
-| Admin route | `/admin/book-quality-review` |  |  |  |
-| Target commit SHA | recorded |  |  |  |
-| Admin user available | yes |  |  |  |
-| Non-admin user available | yes |  |  |  |
-| Test `image_failed` page available | yes |  |  |  |
-| Test `partial_completed` book available | yes |  |  |  |
+| Firebase project | `story-gen-8a769` |  | PASS / FAIL / N/A |  |
+| Functions region | `asia-northeast1` |  | PASS / FAIL / N/A |  |
+| Scheduler timezone | `Asia/Tokyo` |  | PASS / FAIL / N/A |  |
+| Admin route | `/admin/book-quality-review` |  | PASS / FAIL / N/A |  |
+| Hosting URL | production Hosting URL |  | PASS / FAIL / N/A |  |
+| Firestore database | production database |  | PASS / FAIL / N/A |  |
+| checked Firebase account | expected operator account |  | PASS / FAIL / N/A |  |
 
-Notes:
+---
 
-- 
+## Target Commit
+
+| Item | Value | Result | Notes |
+|---|---|---|---|
+| commit SHA |  | PASS / FAIL / N/A |  |
+| commit message |  | PASS / FAIL / N/A |  |
+| branch |  | PASS / FAIL / N/A |  |
+| pushed at |  | PASS / FAIL / N/A |  |
+| GitHub Actions status | success / failed / skipped / unknown | PASS / FAIL / N/A |  |
+| deployed | yes / no / unknown | PASS / FAIL / N/A |  |
 
 ---
 
 ## Deploy Result
 
-| Item | Expected | Actual | Status | Evidence / Notes |
-|---|---|---|---|---|
-| Firebase deploy | success |  |  |  |
-| Hosting deploy | deployed |  |  |  |
-| Functions deploy | deployed |  |  |  |
-| Firestore rules deploy | deployed |  |  |  |
-| Storage rules deploy | deployed |  |  |  |
-| Production Admin UI uses latest build | yes |  |  |  |
-| Deploy project | `story-gen-8a769` |  |  |  |
-
-Commands used:
+Deploy command:
 
 ```bash
-# Full deploy
 firebase deploy --only hosting,functions,firestore:rules,storage --project story-gen-8a769
+```
 
-# Optional targeted deploy
+| Deploy target | Expected | Actual | Result | Notes |
+|---|---|---|---|---|
+| hosting | deployed |  | PASS / FAIL / N/A |  |
+| functions | deployed |  | PASS / FAIL / N/A |  |
+| firestore:rules | deployed |  | PASS / FAIL / N/A |  |
+| storage | deployed |  | PASS / FAIL / N/A |  |
+
+Optional targeted commands:
+
+```bash
 firebase deploy --only functions:saveDailySloSnapshot,functions:saveWeeklySloSnapshot,functions:cleanupStaleGeneration --project story-gen-8a769
 firebase deploy --only firestore:rules --project story-gen-8a769
 ```
@@ -102,230 +107,138 @@ Notes:
 
 ## GitHub Actions / Build Result
 
-| Item | Expected | Actual | Status | Evidence / Notes |
+| Workflow name | Run URL | Commit SHA | Status | Failed step | Notes |
+|---|---|---|---|---|---|
+|  |  |  | success / failed / skipped / unknown |  |  |
+
+Additional checks:
+
+| Item | Expected | Actual | Result | Notes |
 |---|---|---|---|---|
-| GitHub Actions status | success |  |  |  |
-| Build result | success |  |  |  |
-| Lint result | success / not required |  |  |  |
-| Typecheck result | success / not required |  |  |  |
-| Target commit SHA matches deployed build | yes |  |  |  |
-
-Commands / links:
-
-- GitHub Actions run: 
-- Build command: 
-- Lint command: 
-- Typecheck command: 
-
-Notes:
-
-- 
+| Build result | success |  | PASS / FAIL / N/A |  |
+| Lint result | success / not required |  | PASS / FAIL / N/A |  |
+| Typecheck result | success / not required |  | PASS / FAIL / N/A |  |
+| Target commit SHA matches deployed build | yes |  | PASS / FAIL / N/A |  |
 
 ---
 
 ## Scheduled Functions Result
 
-| Function | Expected schedule | Expected timezone | Expected region | Last execution | Status | Evidence / Notes |
-|---|---|---|---|---|---|---|
-| `saveDailySloSnapshot` | `0 3 * * *` / daily 03:00 JST | `Asia/Tokyo` | `asia-northeast1` |  |  |  |
-| `saveWeeklySloSnapshot` | `15 3 * * 1` / Monday 03:15 JST | `Asia/Tokyo` | `asia-northeast1` |  |  |  |
-| `cleanupStaleGeneration` | `30 3 * * *` / daily 03:30 JST | `Asia/Tokyo` | `asia-northeast1` |  |  |  |
+| Function | Expected | Last run | Next run | Result | Notes |
+|---|---|---|---|---|---|
+| `saveDailySloSnapshot` | daily 03:00 JST |  |  | PASS / FAIL / N/A |  |
+| `saveWeeklySloSnapshot` | Monday 03:15 JST |  |  | PASS / FAIL / N/A |  |
+| `cleanupStaleGeneration` | daily 03:30 JST |  |  | PASS / FAIL / N/A |  |
 
-Execution confirmation:
+Confirmation items:
 
-| Item | Expected | Actual | Status | Evidence / Notes |
+| Item | Expected | Actual | Result | Notes |
 |---|---|---|---|---|
-| Cloud Scheduler jobs registered | 3 jobs |  |  |  |
-| Daily snapshot execution confirmed | at least once |  |  |  |
-| Weekly snapshot execution confirmed | at least once |  |  |  |
-| Cleanup execution confirmed | at least once |  |  |  |
-| Functions logs have no scheduler runtime error | no errors |  |  |  |
-| Functions logs have no permission denied | no errors |  |  |  |
-
-Notes:
-
-- 
+| Cloud Scheduler job exists | yes |  | PASS / FAIL / N/A |  |
+| timezone is `Asia/Tokyo` | yes |  | PASS / FAIL / N/A |  |
+| region is `asia-northeast1` | yes |  | PASS / FAIL / N/A |  |
+| at least one successful execution confirmed | yes |  | PASS / FAIL / N/A |  |
+| no runtime errors in logs | yes |  | PASS / FAIL / N/A |  |
 
 ---
 
 ## Firestore Rules / Index Result
 
-### Permission checks
+### Rules
 
-| Item | Expected | Actual | Status | Evidence / Notes |
+| Rule check | Expected | Actual | Result | Notes |
 |---|---|---|---|---|
-| Admin can read `adminMetrics/sloSnapshots/items` | allowed |  |  |  |
-| Admin can read `adminMetrics/staleCleanup` | allowed |  |  |  |
-| Admin can read `adminMetrics/staleCleanup/runs` | allowed |  |  |  |
-| Admin can read `regenerationHistory` | allowed |  |  |  |
-| Non-admin can read `adminMetrics` | denied |  |  |  |
-| Non-admin can write `adminMetrics` | denied |  |  |  |
-| Client can write `adminMetrics/staleCleanup/runs` | denied |  |  |  |
+| `adminMetrics/sloSnapshots/items` admin read | allowed |  | PASS / FAIL / N/A |  |
+| `adminMetrics/staleCleanup` admin read | allowed |  | PASS / FAIL / N/A |  |
+| `adminMetrics/staleCleanup/runs` admin read | allowed |  | PASS / FAIL / N/A |  |
+| `regenerationHistory` admin read | allowed |  | PASS / FAIL / N/A |  |
+| non-admin `adminMetrics` read/write | denied |  | PASS / FAIL / N/A |  |
+| client write to runs | denied |  | PASS / FAIL / N/A |  |
 
-### Index checks
+### Indexes
 
-| Item | Expected | Actual | Status | Evidence / Notes |
+| Index check | Expected | Actual | Result | Notes |
 |---|---|---|---|---|
-| Collection group query | `pages` |  |  |  |
-| Query filter | `status == "generating"` |  |  |  |
-| Function | `cleanupStaleGeneration` |  |  |  |
-| `Firestore index required` in logs | none |  |  |  |
-| `FAILED_PRECONDITION` in logs | none |  |  |  |
-| Required index status | `Enabled` |  |  |  |
+| collection group | `pages` |  | PASS / FAIL / N/A |  |
+| filter | `status == "generating"` |  | PASS / FAIL / N/A |  |
+| index required error | no | yes / no / unknown | PASS / FAIL / N/A |  |
+| index status | Enabled / Not Required | Enabled / Building / Not Required / Unknown | PASS / FAIL / N/A |  |
 
-### Firestore document checks
+---
 
-| Path | Expected | Actual | Status | Evidence / Notes |
+## Firestore Documents Result
+
+| Path | Exists | Key fields checked | Result | Notes |
 |---|---|---|---|---|
-| `adminMetrics/sloSnapshots/items/{daily-YYYY-MM-DD}` | exists |  |  |  |
-| `adminMetrics/sloSnapshots/items/{weekly-YYYY-Www}` | exists |  |  |  |
-| `adminMetrics/staleCleanup` | exists |  |  |  |
-| `adminMetrics/staleCleanup/runs/{daily-YYYY-MM-DD-HHmm}` | exists |  |  |  |
-| `books/{bookId}/pages/{pageId}/regenerationHistory/{attemptId}` | exists after regeneration |  |  |  |
-
-Notes:
-
-- 
+| `adminMetrics/sloSnapshots/items/{daily-YYYY-MM-DD}` | yes / no / N/A | `snapshotKey`, `source`, `window`, `sampleSize`, `sampleUnit`, `createdAtMs`, `updatedAtMs`, `readableRate`, `hardFailedRate`, `imageP95Ms`, `imageFailureRate`, `timeoutRate` | PASS / FAIL / N/A |  |
+| `adminMetrics/sloSnapshots/items/{weekly-YYYY-Www}` | yes / no / N/A | `snapshotKey`, `source`, `window`, `sampleSize`, `sampleUnit`, `createdAtMs`, `updatedAtMs`, `readableRate`, `hardFailedRate`, `imageP95Ms`, `imageFailureRate`, `timeoutRate` | PASS / FAIL / N/A |  |
+| `adminMetrics/staleCleanup` | yes / no / N/A | `lastRunAtMs`, `lastSummary.checkedPages`, `lastSummary.updatedPages`, `lastSummary.updatedBooks`, `lastSummary.skippedPages`, `lastSummary.skippedBooks` | PASS / FAIL / N/A |  |
+| `adminMetrics/staleCleanup/runs/{daily-YYYY-MM-DD-HHmm}` | yes / no / N/A | run summary fields | PASS / FAIL / N/A |  |
+| `books/{bookId}/pages/{pageId}/regenerationHistory/{attemptId}` | yes / no / N/A | `attemptedAtMs`, `attemptedBy`, `beforeStatus`, `afterStatus`, `success`, `durationMs`, `failureReason` | PASS / FAIL / N/A |  |
 
 ---
 
 ## Admin UI Result
 
-Admin route:
+Route: `/admin/book-quality-review`
 
-- `/admin/book-quality-review`
-
-### SLO Dashboard
-
-| Item | Expected | Actual | Status | Evidence / Notes |
+| Check | Expected | Actual | Result | Notes |
 |---|---|---|---|---|
-| SLO Dashboard visible | yes |  |  |  |
-| total books visible | yes |  |  |  |
-| total pages visible | yes |  |  |  |
-| readable rate visible | yes |  |  |  |
-| hard failed rate visible | yes |  |  |  |
-| image p95 visible | yes |  |  |  |
-| timeout rate visible | yes |  |  |  |
-| sample size 50 works | yes |  |  |  |
-| sample size 100 works | yes |  |  |  |
-| sample size 200 works | yes |  |  |  |
-
-### Snapshot History
-
-| Item | Expected | Actual | Status | Evidence / Notes |
-|---|---|---|---|---|
-| Snapshot History visible | yes |  |  |  |
-| `manual` source visible | yes |  |  |  |
-| `daily auto` source visible | yes |  |  |  |
-| `weekly auto` source visible | yes |  |  |  |
-| `Source` column visible | yes |  |  |  |
-| `Timeout` column visible | yes |  |  |  |
-| `Sample` column visible | yes |  |  |  |
-
-### Stale Cleanup Status
-
-| Item | Expected | Actual | Status | Evidence / Notes |
-|---|---|---|---|---|
-| Stale Cleanup Status visible | yes |  |  |  |
-| last run visible | yes |  |  |  |
-| checkedPages visible | yes |  |  |  |
-| checkedBooks visible | yes |  |  |  |
-| updatedPages visible | yes |  |  |  |
-| updatedBooks visible | yes |  |  |  |
-| skippedPages visible | yes |  |  |  |
-| skippedBooks visible | yes |  |  |  |
-| latest 10 runs visible | yes |  |  |  |
-
-Notes:
-
-- 
+| SLO Dashboard visible | yes |  | PASS / FAIL / N/A |  |
+| sample size selector works | 50 / 100 / 200 |  | PASS / FAIL / N/A |  |
+| Snapshot History visible | yes |  | PASS / FAIL / N/A |  |
+| manual source visible | yes |  | PASS / FAIL / N/A |  |
+| daily auto source visible | yes |  | PASS / FAIL / N/A |  |
+| weekly auto source visible | yes |  | PASS / FAIL / N/A |  |
+| Timeout column visible | yes |  | PASS / FAIL / N/A |  |
+| Sample column visible | yes |  | PASS / FAIL / N/A |  |
+| Stale Cleanup Status visible | yes |  | PASS / FAIL / N/A |  |
+| cleanup run history visible | latest 10 |  | PASS / FAIL / N/A |  |
+| no permission denied | yes |  | PASS / FAIL / N/A |  |
+| no UI crash | yes |  | PASS / FAIL / N/A |  |
 
 ---
 
 ## Regeneration / Recovery Result
 
-### Regeneration
-
-| Item | Expected | Actual | Status | Evidence / Notes |
+| Scenario | Expected | Actual | Result | Notes |
 |---|---|---|---|---|
-| `image_failed` page selected | yes |  |  |  |
-| Admin UI regeneration action succeeds | yes |  |  |  |
-| page.status after regeneration | `completed` or `fallback_completed` |  |  |  |
-| page image metadata updated | yes |  |  |  |
-| `regenerationHistory` created | yes |  |  |  |
-| `attemptedAtMs` saved | yes |  |  |  |
-| `attemptedBy` saved | yes |  |  |  |
-| `beforeStatus` saved | yes |  |  |  |
-| `afterStatus` saved | yes |  |  |  |
-| `success` saved | yes |  |  |  |
-| `durationMs` saved | yes |  |  |  |
-| `failureReason` saved when failed | yes / N/A |  |  |  |
-
-### Recovery
-
-| Item | Expected | Actual | Status | Evidence / Notes |
-|---|---|---|---|---|
-| `partial_completed` book selected | yes |  |  |  |
-| failed pages regenerated | yes |  |  |  |
-| `Check completion` button works | yes |  |  |  |
-| Book metrics updated | yes |  |  |  |
-| book.status after recovery | `completed` |  |  |  |
-| `recoveredFromPartialCompleted` updated | yes |  |  |  |
-| `recoveredAtMs` updated | yes |  |  |  |
-| `lastCompletionCheckedAtMs` updated | yes |  |  |  |
-
-Notes:
-
-- 
+| `image_failed` page regeneration | succeeds |  | PASS / FAIL / N/A |  |
+| `regenerationHistory` created | yes |  | PASS / FAIL / N/A |  |
+| page status after regeneration | `completed` / `fallback_completed` |  | PASS / FAIL / N/A |  |
+| book metrics updated | yes |  | PASS / FAIL / N/A |  |
+| `partial_completed` to `completed` recovery | succeeds |  | PASS / FAIL / N/A |  |
+| `Check completion` button | works |  | PASS / FAIL / N/A |  |
+| recovery metadata updated | `recoveredFromPartialCompleted`, `recoveredAtMs`, `lastCompletionCheckedAtMs` |  | PASS / FAIL / N/A |  |
 
 ---
 
 ## Failure Handling Result
 
-| Item | Expected | Actual | Status | Evidence / Notes |
+| Check | Expected | Actual | Result | Notes |
 |---|---|---|---|---|
-| fallback model usage recorded | `imageFallbackUsed` saved |  |  |  |
-| timeout failure reason recorded | `imageFailureReason` saved |  |  |  |
-| timeout count recorded | `imageTimeoutCount` saved |  |  |  |
-| retryable flag recorded | `imageRetryable` saved |  |  |  |
-| old generating page cleaned up | status becomes `image_failed` |  |  |  |
-| cleanup recalculates book metrics | metrics updated |  |  |  |
-| partial completed and hard failed distinguishable | yes |  |  |  |
-| Admin UI handles failure state | no crash |  |  |  |
-
-Notes:
-
-- 
+| fallback metadata | `imageFallbackUsed` recorded when fallback used |  | PASS / FAIL / N/A |  |
+| timeout metadata | `imageFailureReason`, `imageTimeoutCount`, `imageRetryable` recorded |  | PASS / FAIL / N/A |  |
+| stale generating page cleanup | stale `generating` becomes `image_failed` |  | PASS / FAIL / N/A |  |
+| book metrics recalculation after cleanup | metrics updated |  | PASS / FAIL / N/A |  |
+| no data corruption after retry | existing successful data preserved |  | PASS / FAIL / N/A |  |
+| known issues | documented |  | PASS / FAIL / N/A |  |
 
 ---
 
 ## Issues Found
 
-| ID | Severity | Area | Description | Evidence / Link | Owner | Status |
-|---|---|---|---|---|---|---|
-|  | blocker / major / minor |  |  |  |  | open / closed |
-
-Severity guide:
-
-- `blocker`: Phase 1 Complete 判定不可
-- `major`: Phase 1 Complete with follow-up の候補
-- `minor`: Phase 1 完了後に改善可能
-
-Notes:
-
-- 
+| ID | Severity | Area | Description | Evidence / URL | Owner | Status | Follow-up issue / PR |
+|---|---|---|---|---|---|---|---|
+|  | High / Medium / Low |  |  |  |  | open / in progress / closed |  |
 
 ---
 
 ## Follow-up Actions
 
-| Action | Reason | Owner | Due date | Linked issue / PR | Status |
+| Action | Owner | Due date | Priority | Related issue / PR | Status |
 |---|---|---|---|---|---|
-|  |  |  |  |  | open / in progress / done |
-
-Notes:
-
-- 
+|  |  |  | High / Medium / Low |  | open / in progress / done |
 
 ---
 
@@ -337,24 +250,16 @@ Select one:
 - [ ] Phase 1 Complete with follow-up
 - [ ] Phase 1 Not Complete
 
-Decision criteria:
-
-| Decision | Meaning |
-|---|---|
-| Phase 1 Complete | Acceptance criteria をすべて満たし、blocker / major issue がない。 |
-| Phase 1 Complete with follow-up | 本番運用上の blocker はないが、minor / non-blocking follow-up が残る。 |
-| Phase 1 Not Complete | blocker が残り、Phase 1 を完了扱いにできない。 |
-
-Decision note:
+Decision reason:
 
 ```md
 Decision: <Phase 1 Complete / Phase 1 Complete with follow-up / Phase 1 Not Complete>
 Date: YYYY-MM-DD
 Commit SHA: <sha>
 Firebase project: story-gen-8a769
-Summary:
-- <summary item 1>
-- <summary item 2>
+Reason:
+- <reason 1>
+- <reason 2>
 Issues:
 - <issue or none>
 Follow-up:
