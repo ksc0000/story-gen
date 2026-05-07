@@ -33,6 +33,22 @@
 現時点では MVP の bounded synchronous 方式（timeout + fallback + partial_completed）で十分な信頼性を確保し、
 需要増加時に webhook 化を検討する。
 
+### SLO の考え方
+
+- SLO は「画像1枚が必ず2分以内」ではなく「**p95 120秒以内**」として扱う
+- 個別ページの一時的な遅延は許容し、全体の分布で管理する
+- **Book hard failure** と **partial_completed** を分けて計測する
+  - hard failure = ユーザーに何も残らない完全な失敗
+  - partial_completed = 一部ページが欠けているが残りは読める
+- `partial_completed` は page regeneration がある場合のみ商品UXとして許容する
+  - 再生成導線がなければ、partial_completed は実質 failed と同じ
+
+### Provider lock-in 回避
+
+- provider lock-in を避けるため、ImageProvider abstraction を今後導入する（PRODUCT_ROADMAP Phase 3）
+- Replicate webhook / polling / prediction ID 管理は Phase 3 以降の候補
+- Firebase Functions `maxInstances` / `concurrency` も信頼性設計に含める
+
 補足:
 
 - 無料プランは「低品質モデルで原価を下げる」のではなく、**4ページ固定・作成モード制限・回数制限** で原価を管理します。

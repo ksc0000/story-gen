@@ -1370,3 +1370,38 @@ EhonAIで目指すべき方向性は、単なるAI絵本生成ではなく、以
 ```
 
 これは単発のAI絵本ではなく、**子どもごとの小さなIPを育てるサービス** である。
+
+---
+
+# 21. 商品化フェーズにおける相棒キャラ / オリジナルキャラの位置づけ
+
+詳細な商品化ロードマップは [PRODUCT_ROADMAP.md](./PRODUCT_ROADMAP.md) を参照。
+
+### MVP（売り物化前）での扱い
+
+相棒キャラ / オリジナルキャラは、MVP では **管理者・生成内部の品質改善対象** として扱う。
+
+- `characterKind` / `nonHuman` / `species` による生成制御の改善
+- `referenceImageUrl` / `approvedImageUrl` による一貫性改善
+- `doNotChange` / `signatureItems` / `colorPalette` / `silhouette` の定義と検証
+- `storyCast` / `appearingCharacterIds` / `focusCharacterId` の動作安定化
+- 管理者レビューでの `adminCharacterConsistencyScore` 集計
+
+### Post-MVP（売った後）での扱い
+
+ユーザーが自由に相棒キャラを育てる機能は Post-MVP とする。
+
+- オリジナルキャラストア（人気キャラの共有）→ Phase 8
+- シリーズ化（同じ相棒で続編）→ Phase 8
+- ユーザー向けキャラクター作成 UI → Phase 8
+- 兄弟姉妹対応 → Phase 8
+
+### 優先順位
+
+まずは以下による一貫性改善を優先する。
+
+1. `characterKind` / `nonHuman` / reference image / `doNotChange` による cast 一貫性
+2. `styleBible` と `pageVisualRole` によるページ間の絵柄安定
+3. 管理者スコアと feedback による改善サイクル
+
+オリジナルキャラストアやシリーズ化は Phase 8（売った後の拡張機能）に配置する。

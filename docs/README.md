@@ -13,6 +13,13 @@ EhonAI / story-gen の設計メモと運用資料の入口です。
   - オリジナル相棒キャラクター機能の拡張案
   - `users/{userId}/children/{childId}` と `users/{userId}/originalCharacters/{characterId}` を前提にした設計
 
+## 商品化ロードマップ
+
+- [PRODUCT_ROADMAP.md](./PRODUCT_ROADMAP.md)
+  - 商品化までの開発ロードマップ
+  - 現状 / 不足 / 売り物化前必須 / 売った後でよい追加機能
+  - Reliability / Quality / Provider / Monetization / UX / Security の整理
+
 ## そのほかの資料
 
 - [admin-claim-bootstrap.md](./admin-claim-bootstrap.md)

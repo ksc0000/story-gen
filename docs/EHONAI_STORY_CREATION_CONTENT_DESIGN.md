@@ -185,6 +185,22 @@ MVPでは4ページを推奨。
 - 良い例: `すなばの すみに、あかい スコップが ちょこんと ありました。...`
   理由: 場所、行動、発見があり、絵本として読み進めやすい
 
+### 品質改善は Reliability Phase と Story Quality Phase を分ける
+
+品質改善は2段階に分けて進める。詳細は [PRODUCT_ROADMAP.md](./PRODUCT_ROADMAP.md) を参照。
+
+- **Phase 1: Reliability First** — 生成の成功率・速度・fallback の安定化
+  - timeout / fallback / partial_completed / page regeneration の安定化
+  - SLO メトリクスの可視化
+  - 生成インフラの信頼性向上
+- **Phase 2: Story & Illustration Quality** — 本文・画像の品質改善
+  - 年齢別本文品質の継続改善
+  - 3歳以上の意味量確保
+  - 主人公・相棒キャラ一貫性の改善
+  - styleBible / pageVisualRole の改善
+
+本文品質は売り物化前に継続改善する。画像生成 provider 比較は [image-model-policy.md](./image-model-policy.md) および [PRODUCT_ROADMAP.md](./PRODUCT_ROADMAP.md) Phase 3 に委譲する。
+
 ### premium は本文 rewrite pass を使う
 
 `premium_paid` と `original_ai` では、Gemini で story JSON を生成したあとに **本文だけを磨き直す rewrite pass** を使う。
