@@ -59,6 +59,7 @@ interface SloSnapshot extends Partial<SloMetrics> {
   sampleSize?: number;
   sampleUnit?: string;
   source?: string;
+  window?: string;
 }
 
 type SloSampleSize = 50 | 100 | 200;
@@ -1019,6 +1020,7 @@ export default function AdminBookQualityReviewPage() {
                             <th className="pb-2 pr-4">Books</th>
                             <th className="pb-2 pr-4">Pages</th>
                             <th className="pb-2 pr-4">Book Sample</th>
+                            <th className="pb-2 pr-4">Source</th>
                             <th className="pb-2 pr-4">By</th>
                           </tr>
                         </thead>
@@ -1038,6 +1040,20 @@ export default function AdminBookQualityReviewPage() {
                               <td className="py-2 pr-4">{s.bookCount ?? s.totalBooks ?? "—"}</td>
                               <td className="py-2 pr-4">{s.pageCount ?? s.totalPages ?? "—"}</td>
                               <td className="py-2 pr-4 text-xs">{s.sampleSize ?? s.bookCount ?? "—"}</td>
+                              <td className="py-2 pr-4 text-xs">
+                                {(() => {
+                                  const src = s.source ?? "manual";
+                                  const label = src === "scheduled-daily-slo" ? "daily auto" : src === "admin-book-quality-review" ? "manual" : src;
+                                  const isAuto = src === "scheduled-daily-slo";
+                                  return (
+                                    <span className={isAuto ? "rounded bg-blue-100 px-1.5 py-0.5 text-blue-700" : "text-violet-600"}>
+                                      {label}
+                                      {s.window && s.window !== "—" ? ` (${s.window})` : ""}
+                                      {s.sampleUnit && s.sampleUnit !== "books" ? ` [${s.sampleUnit}]` : ""}
+                                    </span>
+                                  );
+                                })()}
+                              </td>
                               <td className="py-2 pr-4 text-xs text-violet-500">{s.createdBy ? s.createdBy.slice(0, 8) : "—"}</td>
                             </tr>
                           ))}
