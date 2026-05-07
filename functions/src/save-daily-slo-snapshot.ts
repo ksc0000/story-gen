@@ -7,8 +7,8 @@ import type { BookData, PageData } from "./lib/types";
 const SAMPLE_SIZE = 200;
 
 export const saveDailySloSnapshot = onSchedule(
-  { schedule: "0 18 * * *", timeZone: "Asia/Tokyo", retryCount: 2, region: "asia-northeast1" },
-  // 18:00 UTC = 03:00 JST
+  { schedule: "0 3 * * *", timeZone: "Asia/Tokyo", retryCount: 2, region: "asia-northeast1" },
+  // 毎日 03:00 JST (timeZone 指定により cron は JST として解釈される)
   async () => {
     const db = getFirestore();
 
