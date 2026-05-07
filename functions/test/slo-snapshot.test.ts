@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSnapshotDoc, buildSnapshotKey } from "../src/lib/slo-snapshot";
+import { buildSnapshotDoc, buildSnapshotKey, buildSnapshotWritePayload } from "../src/lib/slo-snapshot";
 import { EMPTY_SLO } from "../src/lib/slo-metrics";
 
 describe("buildSnapshotKey", () => {
@@ -62,11 +62,12 @@ describe("buildSnapshotDoc", () => {
     expect(doc.sampleSize).toBe(200);
     expect(doc.sampleUnit).toBe("books");
     expect(doc.createdBy).toBe("system");
-    expect(doc.createdAtMs).toBe(nowMs);
-    expect(doc.updatedAtMs).toBe(nowMs);
     expect(doc.bookCount).toBe(10);
     expect(doc.pageCount).toBe(40);
     expect(doc.snapshotKey).toBe("daily-2026-05-07");
+    // createdAtMs / updatedAtMs are NOT in buildSnapshotDoc
+    expect(doc).not.toHaveProperty("createdAtMs");
+    expect(doc).not.toHaveProperty("updatedAtMs");
   });
 
   it("builds weekly snapshot doc with correct fields", () => {
@@ -100,5 +101,43 @@ describe("buildSnapshotDoc", () => {
     expect(doc.bookCount).toBe(0);
     expect(doc.pageCount).toBe(0);
     expect(doc.source).toBe("scheduled-daily-slo");
+  });
+});
+
+describe("buildSnapshotWritePayload", () => {
+  const config = { source: "scheduled-daily-slo", window: "daily", sampleSize: 200 };
+  const nowMs = Date.UTC(2026, 4, 6, 18, 0, 0);
+  const baseMetricsForPayload = {
+    ...EMPTY_SLO,
+    totalBooks: 5,
+    totalPages: 20,
+  };
+  const doc = buildSnapshotDoc(baseMetricsForPayload, config, nowMs);
+
+  it("sets both createdAtMs and updatedAtMs on new doc", () => {
+    const payload = buildSnapshotWritePayload(doc, nowMs, undefined);
+
+    expect(payload.createdAtMs).toBe(nowMs);
+    expect(payload.updatedAtMs).toBe(nowMs);
+    expect(payload.snapshotKey).toBe("daily-2026-05-07");
+  });
+
+  it("preserves existing createdAtMs and updates updatedAtMs on re-run", () => {
+    const originalCreatedAtMs = nowMs - 86400000; // 1 day earlier
+    const rerunNowMs = nowMs + 60000; // 1 minute later
+    const payload = buildSnapshotWritePayload(doc, rerunNowMs, originalCreatedAtMs);
+
+    expect(payload.createdAtMs).toBe(originalCreatedAtMs);
+    expect(payload.updatedAtMs).toBe(rerunNowMs);
+  });
+
+  it("carries through all doc fields", () => {
+    const payload = buildSnapshotWritePayload(doc, nowMs, undefined);
+
+    expect(payload.source).toBe("scheduled-daily-slo");
+    expect(payload.window).toBe("daily");
+    expect(payload.sampleSize).toBe(200);
+    expect(payload.totalBooks).toBe(5);
+    expect(payload.totalPages).toBe(20);
   });
 });

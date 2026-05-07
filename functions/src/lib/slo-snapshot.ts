@@ -65,6 +65,7 @@ function getISOYearWeek(d: Date): { year: number; week: number } {
 /**
  * Build the Firestore document payload from computed metrics.
  * Pure function — no side effects.
+ * Does NOT include createdAtMs/updatedAtMs — use buildSnapshotWritePayload for that.
  */
 export function buildSnapshotDoc(
   metrics: ReturnType<typeof computeSloMetrics>,
@@ -76,14 +77,30 @@ export function buildSnapshotDoc(
     ...metrics,
     snapshotKey,
     source: config.source,
-    createdAtMs: nowMs,
-    updatedAtMs: nowMs,
     createdBy: "system",
     bookCount: metrics.totalBooks,
     pageCount: metrics.totalPages,
     sampleSize: config.sampleSize,
     sampleUnit: "books",
     window: config.window,
+  };
+}
+
+/**
+ * Build the final write payload with correct timestamp semantics.
+ * - New doc: sets both createdAtMs and updatedAtMs to nowMs.
+ * - Existing doc: preserves existing createdAtMs, updates updatedAtMs.
+ * Pure function — no side effects.
+ */
+export function buildSnapshotWritePayload(
+  doc: ReturnType<typeof buildSnapshotDoc>,
+  nowMs: number,
+  existingCreatedAtMs: number | undefined,
+) {
+  return {
+    ...doc,
+    createdAtMs: existingCreatedAtMs ?? nowMs,
+    updatedAtMs: nowMs,
   };
 }
 
@@ -151,14 +168,24 @@ export async function saveSloSnapshot(config: SnapshotConfig): Promise<SnapshotR
   const metrics = computeSloMetrics(books, pagesMap);
 
   // 4. Save snapshot (idempotent: deterministic doc ID via snapshotKey)
-  const doc = buildSnapshotDoc(metrics, config, Date.now());
+  const nowMs = Date.now();
+  const doc = buildSnapshotDoc(metrics, config, nowMs);
   const itemsRef = db.collection("adminMetrics").doc("sloSnapshots").collection("items");
-  await itemsRef.doc(doc.snapshotKey).set(
+  const docRef = itemsRef.doc(doc.snapshotKey);
+
+  // Preserve createdAt/createdAtMs on re-execution (at-least-once)
+  const existingSnap = await docRef.get();
+  const existingCreatedAtMs = existingSnap.exists
+    ? (existingSnap.data() as Record<string, unknown>).createdAtMs as number | undefined
+    : undefined;
+  const isNew = !existingSnap.exists;
+
+  const payload = buildSnapshotWritePayload(doc, nowMs, existingCreatedAtMs);
+  await docRef.set(
     {
-      ...doc,
+      ...payload,
       updatedAt: FieldValue.serverTimestamp(),
-      updatedAtMs: Date.now(),
-      createdAt: FieldValue.serverTimestamp(),
+      ...(isNew ? { createdAt: FieldValue.serverTimestamp() } : {}),
     },
     { merge: true },
   );
