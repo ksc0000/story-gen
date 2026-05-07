@@ -48,6 +48,8 @@
 ### 未実装
 
 - ~~SLO メトリクス集計ダッシュボード~~ → 実装済み（admin SLO Dashboard + Snapshot History）
+- ~~SLO 自動スナップショット~~ → 実装済み（Daily 03:00 JST / Weekly Mon 03:15 JST、idempotent）
+- ~~Stale metadata cleanup~~ → 実装済み（Daily 03:30 JST、collection group query + admin UI）
 - provider abstraction（ImageProvider インターフェース）
 - provider 比較・A/B テスト
 - Stripe 決済
@@ -110,7 +112,10 @@
 - [x] `partial_completed` → `completed` への復旧フロー（`deriveBookMetrics` + `recalculateBookMetrics` 強化）
 - [x] `checkBookCompletion` callable（admin から手動で book status 再計算）
 - [x] admin UI に recovery メタデータ表示 + "Check completion" ボタン
-- [ ] stale metadata cleanup（古い生成中データの定期実行化）
+- [x] stale metadata cleanup（`cleanupStaleGeneration` scheduled job — daily 03:30 JST）
+- [x] collection group query による全 generating ページ検出（bookの statusに依存しない）
+- [x] stale cleanup 実行履歴保存（`adminMetrics/staleCleanup` + `runs` subcollection）
+- [x] admin UI に Stale Cleanup Status セクション追加（最新サマリー + 直近10件の実行履歴テーブル）
 - [x] regeneration history 保存（`regenerationHistory` subcollection + admin UI 履歴表示）
 
 #### SLO メトリクス
@@ -121,7 +126,9 @@
 - [x] Book hard failed 率の集計
 - [x] SLO Snapshot 保存・履歴表示・トレンド比較
 - [x] Book sample size 切替（50 / 100 / 200）
-- [ ] daily / weekly での可視化
+- [x] daily / weekly 自動 SLO スナップショット（`saveDailySloSnapshot` / `saveWeeklySloSnapshot`）
+- [x] Snapshot idempotency（`snapshotKey` + `set merge` で at-least-once 配信に対応）
+- [x] Snapshot History の Source 列表示（daily auto / weekly auto / manual）
 - [ ] page-based sample window の検討
 
 #### インフラ
@@ -129,12 +136,27 @@
 - [ ] Firebase Functions `maxInstances` / `concurrency` 設計
 - [ ] Replicate prediction cancel / polling 検討（Phase 3 で本格対応）
 
+### 残タスク
+
+- [ ] Production smoke checklist（SLO 基準を実データで検証）
+- [ ] 実データでの Scheduler 実行確認（saveDailySloSnapshot / saveWeeklySloSnapshot / cleanupStaleGeneration）
+- [ ] Firestore index / permission 確認（collection group query の composite index、runs subcollection の read 権限）
+- [ ] per-page deadline の導入（ページごとの残り時間管理）
+- [ ] fallback model の安定化（切替判定改善）
+- [ ] Firebase Functions `maxInstances` / `concurrency` 設計
+
 ### 完了条件
 
-- 管理者画面で直近 50〜200 冊（book-based sampling）の失敗率と p95 が見える
+- 管理者画面で直近 50〜200 冊（book-based sampling）の失敗率と p95 が見える ✅
   - 現在の SLO sample size は book 単位。ページ単位 sampling は将来検討
-- `image_failed` ページを再生成できる
-- `partial_completed` から `completed` へ復旧できる
+- `image_failed` ページを再生成できる ✅
+- `partial_completed` から `completed` へ復旧できる ✅
+- daily / weekly SLO スナップショットが自動保存される ✅
+- stale な generating ページが自動的に image_failed に移行される ✅
+
+### 進捗: ほぼ完了 🟢
+
+Phase 1 の主要タスクは実装完了。残タスクは production 環境での検証と微調整のみ。
 
 ---
 
@@ -351,15 +373,17 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 
 ### Now（現在着手中〜次に着手）
 
-- stale metadata cleanup の定期実行化
-- daily / weekly SLO 自動スナップショット
+- ~~stale metadata cleanup の定期実行化~~ ✅
+- ~~daily / weekly SLO 自動スナップショット~~ ✅
 - production smoke checklist（SLO 基準を実データで検証）
-- provider abstraction 設計
+- 実データでの Scheduler 実行確認
+- Phase 2: Story & Illustration Quality 着手
 
 ### Next（売り物化前に必須）
 
-- provider 比較（BFL Direct / fal.ai）
 - 本文・画像品質改善（Phase 2 の主要タスク）
+- provider abstraction 設計（Phase 3）
+- provider 比較（BFL Direct / fal.ai）
 - 課金設計（Stripe 導入）
 - security hardening（App Check enforcement）
 - 本棚UI / 絵本閲覧UI
@@ -381,7 +405,7 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 
 ```
 売り物化前に必須:
-  Phase 1 (Reliability)     — 生成が安定しなければ売れない
+  Phase 1 (Reliability)     — ほぼ完了 🟢（production 検証残）
   Phase 2 (Quality)         — 品質が低ければリピートしない
   Phase 5 (Monetization)    — 課金がなければ売上がない
   Phase 6 (UX) の一部       — 本棚・閲覧・再生成がなければ使えない
