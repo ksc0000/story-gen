@@ -166,6 +166,10 @@ Phase 1 の主要タスクは実装完了。残タスクは production 環境で
 
 生成結果を「売り物として納得できる絵本」にする。
 
+### 品質仕様
+
+- [Story Quality Score / Quality Metrics](./QUALITY_METRICS.md)
+
 ### 含めるタスク
 
 #### 本文品質
@@ -192,12 +196,17 @@ Phase 1 の主要タスクは実装完了。残タスクは production 環境で
 
 - [ ] 管理者スコア集計（adminTextQualityScore / adminImageQualityScore / adminCharacterConsistencyScore）
 - [ ] feedback 分析（頻出パターンの抽出）
+- [ ] Story Quality Score rubric 導入
+- [ ] axis-level quality metrics 保存
+- [ ] human review と LLM review の比較分析
 
 ### 完了条件
 
 - `adminTextQualityScore` 平均 >= 4.0
 - `adminImageQualityScore` 平均 >= 4.0
 - `adminCharacterConsistencyScore` 平均 >= 4.0
+- paid books の Story Quality Score 平均 >= 80
+- premium books の Story Quality Score 平均 >= 88
 - 「主人公が増える」系 feedback が一定以下
 
 ---
@@ -250,6 +259,8 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 - [ ] regeneration success rate
 - [ ] feedback average（テキスト・画像・キャラ一貫性）
 - [ ] admin score average
+- [ ] Story Quality Score average
+- [ ] Story Quality Score axis breakdown
 - [ ] cost estimate（provider × 枚数）
 - [ ] provider 別比較ビュー
 
@@ -376,12 +387,14 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 - ~~stale metadata cleanup の定期実行化~~ ✅
 - ~~daily / weekly SLO 自動スナップショット~~ ✅
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
+- [Story Quality Score / Quality Metrics](./QUALITY_METRICS.md)
 - 実データでの Scheduler 実行確認
 - Phase 2: Story & Illustration Quality 着手
 
 ### Next（売り物化前に必須）
 
 - 本文・画像品質改善（Phase 2 の主要タスク）
+- Story Quality Score 実装
 - provider abstraction 設計（Phase 3）
 - provider 比較（BFL Direct / fal.ai）
 - 課金設計（Stripe 導入）
@@ -437,6 +450,8 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 ### Phase 2 の依頼例
 
 ```
+- "Story Quality Score rubricをadmin reviewに追加して"
+- "child personalization axisを評価するLLM evaluatorを試作して"
 - "3歳以上のstory quality gateで意味量チェックを追加して"
 - "adminスコアの集計APIを作って"
 - "cast外キャラが登場した場合のwarningをstoryQualityReportに追加して"
