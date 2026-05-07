@@ -1,5 +1,9 @@
 # Production Smoke Checklist
 
+Result template:
+
+- [Production Smoke Results](./PRODUCTION_SMOKE_RESULTS.md)
+
 ## Overview
 
 Phase 1 Reliability First を「ほぼ完了」から「完了」にするための本番確認 checklist。
