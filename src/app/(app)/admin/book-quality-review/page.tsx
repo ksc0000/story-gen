@@ -1043,12 +1043,14 @@ export default function AdminBookQualityReviewPage() {
                               <td className="py-2 pr-4 text-xs">
                                 {(() => {
                                   const src = s.source ?? "manual";
-                                  const label = src === "scheduled-daily-slo" ? "daily auto" : src === "admin-book-quality-review" ? "manual" : src;
-                                  const isAuto = src === "scheduled-daily-slo";
+                                  const isAuto = src === "scheduled-daily-slo" || src === "scheduled-weekly-slo";
+                                  const label = src === "scheduled-daily-slo" ? "daily auto"
+                                    : src === "scheduled-weekly-slo" ? "weekly auto"
+                                    : src === "admin-book-quality-review" ? "manual"
+                                    : src;
                                   return (
                                     <span className={isAuto ? "rounded bg-blue-100 px-1.5 py-0.5 text-blue-700" : "text-violet-600"}>
                                       {label}
-                                      {s.window && s.window !== "—" ? ` (${s.window})` : ""}
                                       {s.sampleUnit && s.sampleUnit !== "books" ? ` [${s.sampleUnit}]` : ""}
                                     </span>
                                   );
