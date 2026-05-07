@@ -281,6 +281,11 @@ export interface BookDoc {
   failedPageNumbers?: number[];
   generationReliabilityStatus?: GenerationReliabilityStatus;
   partialFailureReasons?: string[];
+  lastCompletionCheckedAt?: Timestamp | null;
+  lastCompletionCheckedAtMs?: number;
+  recoveredFromPartialCompleted?: boolean;
+  recoveredAt?: Timestamp | null;
+  recoveredAtMs?: number;
   storyQualityWarnings?: string[];
   adminQualityScore?: number;
   adminTextQualityScore?: number;

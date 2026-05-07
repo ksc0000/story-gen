@@ -38,7 +38,7 @@
 
 ### 一部実装済み
 
-- 管理者 analytics（レビュー画面はあるが集計ダッシュボードは未実装）
+- 管理者 analytics（レビュー画面あり、SLO ダッシュボード実装済み）
 - `originalCharacters` 設計（型定義・Firestore構造設計済み、本格CRUD未実装）
 - cast の `approvedImageUrl` / `referenceImageUrl` 参照（構造は準備済み、全cast対応は進行中）
 - プラン別制限（`PlanConfig` に `imageModelProfile` 等あり、Stripe課金は未実装）
@@ -47,7 +47,7 @@
 
 ### 未実装
 
-- SLO メトリクス集計ダッシュボード
+- ~~SLO メトリクス集計ダッシュボード~~ → 実装済み（admin SLO Dashboard + Snapshot History）
 - provider abstraction（ImageProvider インターフェース）
 - provider 比較・A/B テスト
 - Stripe 決済
@@ -108,16 +108,19 @@
 - [ ] per-page deadline の導入（ページごとの残り時間管理）
 - [ ] fallback model の安定化（`pro_consistent` → `klein_fast` の切替判定改善）
 - [ ] `partial_completed` → `completed` への復旧フロー確認
-- [ ] stale metadata cleanup（古い生成中データの掃除）
-- [ ] regeneration history 保存（再生成の試行履歴）
+- [ ] stale metadata cleanup（古い生成中データの定期実行化）
+- [x] regeneration history 保存（再生成の試行履歴）
 
 #### SLO メトリクス
 
-- [ ] image p50 / p90 / p95 の集計
-- [ ] timeout 率の集計
-- [ ] fallback 率の集計
-- [ ] Book hard failed 率の集計
+- [x] image p50 / p90 / p95 の集計
+- [x] timeout 率の集計（timeoutRate）
+- [x] fallback 率の集計
+- [x] Book hard failed 率の集計
+- [x] SLO Snapshot 保存・履歴表示・トレンド比較
+- [x] Book sample size 切替（50 / 100 / 200）
 - [ ] daily / weekly での可視化
+- [ ] page-based sample window の検討
 
 #### インフラ
 
@@ -126,7 +129,8 @@
 
 ### 完了条件
 
-- 管理者画面で直近 50〜200 ページの失敗率と p95 が見える
+- 管理者画面で直近 50〜200 冊（book-based sampling）の失敗率と p95 が見える
+  - 現在の SLO sample size は book 単位。ページ単位 sampling は将来検討
 - `image_failed` ページを再生成できる
 - `partial_completed` から `completed` へ復旧できる
 
@@ -345,10 +349,10 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 
 ### Now（現在着手中〜次に着手）
 
-- SLO 実測（p95 / failure rate / fallback rate の可視化）
-- page regeneration 安定化
-- stale metadata cleanup
-- admin analytics 基盤
+- ~~SLO 実測（p95 / failure rate / fallback rate の可視化）~~ → 実装済み
+- partial_completed → completed 復旧フロー確認
+- stale metadata cleanup の定期実行化
+- daily / weekly SLO 可視化
 - provider abstraction 設計
 
 ### Next（売り物化前に必須）

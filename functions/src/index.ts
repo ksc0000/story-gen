@@ -9,4 +9,4 @@ export { resetMonthlyQuota } from "./reset-monthly-quota";
 export { seedTemplates } from "./seed-templates";
 export { testImageModels } from "./test-image-models";
 export { bootstrapAdmin } from "./bootstrap-admin";
-export { regeneratePageImage } from "./regenerate-page-image";
+export { regeneratePageImage, checkBookCompletion } from "./regenerate-page-image";

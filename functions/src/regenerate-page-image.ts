@@ -274,6 +274,59 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
   }
 );
 
+export interface DerivedBookMetrics {
+  imageSuccessCount: number;
+  imageFailureCount: number;
+  totalImageCount: number;
+  failedPageNumbers: number[];
+  pendingPageNumbers: number[];
+  generationReliabilityStatus: GenerationReliabilityStatus;
+  bookStatus: "completed" | "partial_completed" | "failed";
+}
+
+/**
+ * Pure function to derive book status from page statuses.
+ * Considers intermediate statuses (generating, pending) as incomplete.
+ */
+export function deriveBookMetrics(
+  pages: Pick<PageData, "status" | "pageNumber">[],
+): DerivedBookMetrics {
+  const totalImageCount = pages.length;
+  const successPages = pages.filter(
+    (p) => p.status === "completed" || p.status === "fallback_completed",
+  );
+  const failedPages = pages.filter((p) => p.status === "image_failed" || p.status === "failed");
+  const pendingPages = pages.filter(
+    (p) => p.status === "generating" || p.status === "pending",
+  );
+  const imageSuccessCount = successPages.length;
+  const imageFailureCount = failedPages.length;
+  const failedPageNumbers = failedPages.map((p) => p.pageNumber).sort((a, b) => a - b);
+  const pendingPageNumbers = pendingPages.map((p) => p.pageNumber).sort((a, b) => a - b);
+
+  const incompleteCount = imageFailureCount + pendingPages.length;
+
+  const generationReliabilityStatus: GenerationReliabilityStatus =
+    incompleteCount === 0 ? "ok" : imageSuccessCount > 0 ? "partial" : "failed";
+
+  const bookStatus: "completed" | "partial_completed" | "failed" =
+    incompleteCount === 0
+      ? "completed"
+      : imageSuccessCount > 0
+        ? "partial_completed"
+        : "failed";
+
+  return {
+    imageSuccessCount,
+    imageFailureCount,
+    totalImageCount,
+    failedPageNumbers,
+    pendingPageNumbers,
+    generationReliabilityStatus,
+    bookStatus,
+  };
+}
+
 async function recalculateBookMetrics(
   bookId: string,
   bookRef: FirebaseFirestore.DocumentReference
@@ -281,41 +334,74 @@ async function recalculateBookMetrics(
   const pagesSnap = await bookRef.collection("pages").get();
   const pages = pagesSnap.docs.map((d) => d.data() as PageData);
 
-  const totalImageCount = pages.length;
-  const successPages = pages.filter(
-    (p) => p.status === "completed" || p.status === "fallback_completed"
-  );
-  const failedPages = pages.filter((p) => p.status === "image_failed");
-  const imageSuccessCount = successPages.length;
-  const imageFailureCount = failedPages.length;
-  const failedPageNumbers = failedPages.map((p) => p.pageNumber).sort((a, b) => a - b);
+  const bookSnap = await bookRef.get();
+  const previousStatus = (bookSnap.data() as BookData | undefined)?.status;
 
-  const generationReliabilityStatus: GenerationReliabilityStatus =
-    imageFailureCount === 0 ? "ok" : imageSuccessCount > 0 ? "partial" : "failed";
+  const metrics = deriveBookMetrics(pages);
 
-  const bookStatus: "completed" | "partial_completed" | "failed" =
-    imageFailureCount === 0
-      ? "completed"
-      : imageSuccessCount > 0
-        ? "partial_completed"
-        : "failed";
-
-  await bookRef.update({
-    imageSuccessCount,
-    imageFailureCount,
-    totalImageCount,
-    failedPageNumbers,
-    generationReliabilityStatus,
-    status: bookStatus,
+  const updateData: Record<string, unknown> = {
+    imageSuccessCount: metrics.imageSuccessCount,
+    imageFailureCount: metrics.imageFailureCount,
+    totalImageCount: metrics.totalImageCount,
+    failedPageNumbers: metrics.failedPageNumbers,
+    generationReliabilityStatus: metrics.generationReliabilityStatus,
+    status: metrics.bookStatus,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAtMs: Date.now(),
-  });
+    lastCompletionCheckedAt: admin.firestore.FieldValue.serverTimestamp(),
+    lastCompletionCheckedAtMs: Date.now(),
+  };
+
+  // Track recovery from partial_completed to completed
+  if (previousStatus === "partial_completed" && metrics.bookStatus === "completed") {
+    updateData.recoveredFromPartialCompleted = true;
+    updateData.recoveredAt = admin.firestore.FieldValue.serverTimestamp();
+    updateData.recoveredAtMs = Date.now();
+    logger.info("Book recovered from partial_completed to completed", { bookId });
+  }
+
+  await bookRef.update(updateData);
 
   logger.info("Book metrics recalculated after regeneration", {
     bookId,
-    imageSuccessCount,
-    imageFailureCount,
-    bookStatus,
-    generationReliabilityStatus,
+    imageSuccessCount: metrics.imageSuccessCount,
+    imageFailureCount: metrics.imageFailureCount,
+    bookStatus: metrics.bookStatus,
+    generationReliabilityStatus: metrics.generationReliabilityStatus,
+    recoveredFromPartialCompleted: previousStatus === "partial_completed" && metrics.bookStatus === "completed",
   });
 }
+
+/**
+ * Admin-only callable to re-check a book's completion status.
+ * Useful when pages were fixed but book status was not updated.
+ */
+export const checkBookCompletion = onCall<{ bookId: string }, Promise<{ bookStatus: string; recovered: boolean }>>(
+  {},
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "ログインが必要です。");
+    }
+    if (request.auth.token?.admin !== true) {
+      throw new HttpsError("permission-denied", "管理者権限が必要です。");
+    }
+    const { bookId } = request.data;
+    if (!bookId) throw new HttpsError("invalid-argument", "bookId は必須です。");
+
+    const db = admin.firestore();
+    const bookRef = db.collection("books").doc(bookId);
+    const bookSnap = await bookRef.get();
+    if (!bookSnap.exists) throw new HttpsError("not-found", "絵本が見つかりません。");
+
+    const previousStatus = (bookSnap.data() as BookData).status;
+    await recalculateBookMetrics(bookId, bookRef);
+
+    const updatedSnap = await bookRef.get();
+    const newStatus = (updatedSnap.data() as BookData).status;
+
+    return {
+      bookStatus: newStatus,
+      recovered: previousStatus === "partial_completed" && newStatus === "completed",
+    };
+  },
+);

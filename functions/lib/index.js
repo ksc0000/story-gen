@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.regeneratePageImage = exports.bootstrapAdmin = exports.testImageModels = exports.seedTemplates = exports.resetMonthlyQuota = exports.cleanupExpired = exports.generateChildCharacter = exports.generateBook = void 0;
+exports.checkBookCompletion = exports.regeneratePageImage = exports.bootstrapAdmin = exports.testImageModels = exports.seedTemplates = exports.resetMonthlyQuota = exports.cleanupExpired = exports.generateChildCharacter = exports.generateBook = void 0;
 const app_1 = require("firebase-admin/app");
 if ((0, app_1.getApps)().length === 0)
     (0, app_1.initializeApp)();
@@ -20,4 +20,5 @@ var bootstrap_admin_1 = require("./bootstrap-admin");
 Object.defineProperty(exports, "bootstrapAdmin", { enumerable: true, get: function () { return bootstrap_admin_1.bootstrapAdmin; } });
 var regenerate_page_image_1 = require("./regenerate-page-image");
 Object.defineProperty(exports, "regeneratePageImage", { enumerable: true, get: function () { return regenerate_page_image_1.regeneratePageImage; } });
+Object.defineProperty(exports, "checkBookCompletion", { enumerable: true, get: function () { return regenerate_page_image_1.checkBookCompletion; } });
 //# sourceMappingURL=index.js.map

@@ -33,8 +33,9 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.regeneratePageImage = void 0;
+exports.checkBookCompletion = exports.regeneratePageImage = void 0;
 exports.buildRegenerationSuccessPatch = buildRegenerationSuccessPatch;
+exports.deriveBookMetrics = deriveBookMetrics;
 const https_1 = require("firebase-functions/v2/https");
 const params_1 = require("firebase-functions/params");
 const admin = __importStar(require("firebase-admin"));
@@ -158,10 +159,29 @@ exports.regeneratePageImage = (0, https_1.onCall)({ secrets: [replicateApiToken]
             imageRetryable: true,
             imageDurationMs: durationMs,
             imageAttemptCount: attemptCount,
+            lastRegeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
+            lastRegeneratedAtMs: Date.now(),
+            lastRegenerationSucceeded: false,
         };
         if (timeoutCount > 0)
             failurePatch.imageTimeoutCount = timeoutCount;
         await pageRef.update(failurePatch);
+        // Write regeneration history entry
+        const historyEntry = {
+            attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+            attemptedAtMs: Date.now(),
+            attemptedBy: uid,
+            triggeredBy: isAdmin ? "admin" : "owner",
+            beforeStatus: pageData.status,
+            afterStatus: "image_failed",
+            beforeImageUrl: pageData.imageUrl ?? null,
+            imageModelProfile: primaryProfile,
+            fallbackUsed: false,
+            durationMs,
+            failureReason: failureReason ?? "unknown",
+            success: false,
+        };
+        await pageRef.collection("regenerationHistory").add(historyEntry);
         await recalculateBookMetrics(bookId, bookRef);
         throw new https_1.HttpsError("internal", `画像生成に失敗しました: ${failureReason}`);
     }
@@ -190,6 +210,28 @@ exports.regeneratePageImage = (0, https_1.onCall)({ secrets: [replicateApiToken]
         nowMs: Date.now(),
     });
     await pageRef.update(successPatch);
+    // Write regeneration history entry
+    const historyEntry = {
+        attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+        attemptedAtMs: Date.now(),
+        attemptedBy: uid,
+        triggeredBy: isAdmin ? "admin" : "owner",
+        beforeStatus: pageData.status,
+        afterStatus: newPageStatus,
+        beforeImageUrl: pageData.imageUrl ?? null,
+        afterImageUrl: imageUrl,
+        imageModelProfile: usedProfile,
+        fallbackUsed,
+        durationMs,
+        success: true,
+    };
+    await pageRef.collection("regenerationHistory").add(historyEntry);
+    // Update page-level regeneration metadata
+    await pageRef.update({
+        lastRegeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastRegeneratedAtMs: Date.now(),
+        lastRegenerationSucceeded: true,
+    });
     if (pageData.pageNumber === 0) {
         await bookRef.update({ coverImageUrl: imageUrl });
     }
@@ -205,37 +247,97 @@ exports.regeneratePageImage = (0, https_1.onCall)({ secrets: [replicateApiToken]
     });
     return { success: true, pageStatus: newPageStatus, imageUrl };
 });
-async function recalculateBookMetrics(bookId, bookRef) {
-    const pagesSnap = await bookRef.collection("pages").get();
-    const pages = pagesSnap.docs.map((d) => d.data());
+/**
+ * Pure function to derive book status from page statuses.
+ * Considers intermediate statuses (generating, pending) as incomplete.
+ */
+function deriveBookMetrics(pages) {
     const totalImageCount = pages.length;
     const successPages = pages.filter((p) => p.status === "completed" || p.status === "fallback_completed");
-    const failedPages = pages.filter((p) => p.status === "image_failed");
+    const failedPages = pages.filter((p) => p.status === "image_failed" || p.status === "failed");
+    const pendingPages = pages.filter((p) => p.status === "generating" || p.status === "pending");
     const imageSuccessCount = successPages.length;
     const imageFailureCount = failedPages.length;
     const failedPageNumbers = failedPages.map((p) => p.pageNumber).sort((a, b) => a - b);
-    const generationReliabilityStatus = imageFailureCount === 0 ? "ok" : imageSuccessCount > 0 ? "partial" : "failed";
-    const bookStatus = imageFailureCount === 0
+    const pendingPageNumbers = pendingPages.map((p) => p.pageNumber).sort((a, b) => a - b);
+    const incompleteCount = imageFailureCount + pendingPages.length;
+    const generationReliabilityStatus = incompleteCount === 0 ? "ok" : imageSuccessCount > 0 ? "partial" : "failed";
+    const bookStatus = incompleteCount === 0
         ? "completed"
         : imageSuccessCount > 0
             ? "partial_completed"
             : "failed";
-    await bookRef.update({
+    return {
         imageSuccessCount,
         imageFailureCount,
         totalImageCount,
         failedPageNumbers,
+        pendingPageNumbers,
         generationReliabilityStatus,
-        status: bookStatus,
+        bookStatus,
+    };
+}
+async function recalculateBookMetrics(bookId, bookRef) {
+    const pagesSnap = await bookRef.collection("pages").get();
+    const pages = pagesSnap.docs.map((d) => d.data());
+    const bookSnap = await bookRef.get();
+    const previousStatus = bookSnap.data()?.status;
+    const metrics = deriveBookMetrics(pages);
+    const updateData = {
+        imageSuccessCount: metrics.imageSuccessCount,
+        imageFailureCount: metrics.imageFailureCount,
+        totalImageCount: metrics.totalImageCount,
+        failedPageNumbers: metrics.failedPageNumbers,
+        generationReliabilityStatus: metrics.generationReliabilityStatus,
+        status: metrics.bookStatus,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAtMs: Date.now(),
-    });
+        lastCompletionCheckedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastCompletionCheckedAtMs: Date.now(),
+    };
+    // Track recovery from partial_completed to completed
+    if (previousStatus === "partial_completed" && metrics.bookStatus === "completed") {
+        updateData.recoveredFromPartialCompleted = true;
+        updateData.recoveredAt = admin.firestore.FieldValue.serverTimestamp();
+        updateData.recoveredAtMs = Date.now();
+        logger.info("Book recovered from partial_completed to completed", { bookId });
+    }
+    await bookRef.update(updateData);
     logger.info("Book metrics recalculated after regeneration", {
         bookId,
-        imageSuccessCount,
-        imageFailureCount,
-        bookStatus,
-        generationReliabilityStatus,
+        imageSuccessCount: metrics.imageSuccessCount,
+        imageFailureCount: metrics.imageFailureCount,
+        bookStatus: metrics.bookStatus,
+        generationReliabilityStatus: metrics.generationReliabilityStatus,
+        recoveredFromPartialCompleted: previousStatus === "partial_completed" && metrics.bookStatus === "completed",
     });
 }
+/**
+ * Admin-only callable to re-check a book's completion status.
+ * Useful when pages were fixed but book status was not updated.
+ */
+exports.checkBookCompletion = (0, https_1.onCall)({}, async (request) => {
+    if (!request.auth) {
+        throw new https_1.HttpsError("unauthenticated", "ログインが必要です。");
+    }
+    if (request.auth.token?.admin !== true) {
+        throw new https_1.HttpsError("permission-denied", "管理者権限が必要です。");
+    }
+    const { bookId } = request.data;
+    if (!bookId)
+        throw new https_1.HttpsError("invalid-argument", "bookId は必須です。");
+    const db = admin.firestore();
+    const bookRef = db.collection("books").doc(bookId);
+    const bookSnap = await bookRef.get();
+    if (!bookSnap.exists)
+        throw new https_1.HttpsError("not-found", "絵本が見つかりません。");
+    const previousStatus = bookSnap.data().status;
+    await recalculateBookMetrics(bookId, bookRef);
+    const updatedSnap = await bookRef.get();
+    const newStatus = updatedSnap.data().status;
+    return {
+        bookStatus: newStatus,
+        recovered: previousStatus === "partial_completed" && newStatus === "completed",
+    };
+});
 //# sourceMappingURL=regenerate-page-image.js.map

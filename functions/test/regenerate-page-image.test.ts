@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildRegenerationSuccessPatch } from "../src/regenerate-page-image";
+import { buildRegenerationSuccessPatch, deriveBookMetrics } from "../src/regenerate-page-image";
 
 const DEL = "DELETE_SENTINEL";
 const TS = "SERVER_TIMESTAMP_SENTINEL";
@@ -93,5 +93,92 @@ describe("buildRegenerationSuccessPatch", () => {
     expect(result.imageDurationMs).toBe(12345);
     expect(result.imageAttemptCount).toBe(3);
     expect(result.imageUrl).toBe("https://example.com/x.png");
+  });
+});
+
+describe("deriveBookMetrics", () => {
+  it("returns completed when all pages are completed or fallback_completed", () => {
+    const pages = [
+      { status: "completed" as const, pageNumber: 0 },
+      { status: "completed" as const, pageNumber: 1 },
+      { status: "fallback_completed" as const, pageNumber: 2 },
+      { status: "completed" as const, pageNumber: 3 },
+    ];
+    const result = deriveBookMetrics(pages);
+
+    expect(result.bookStatus).toBe("completed");
+    expect(result.generationReliabilityStatus).toBe("ok");
+    expect(result.imageSuccessCount).toBe(4);
+    expect(result.imageFailureCount).toBe(0);
+    expect(result.failedPageNumbers).toEqual([]);
+    expect(result.pendingPageNumbers).toEqual([]);
+  });
+
+  it("returns partial_completed when some pages are image_failed", () => {
+    const pages = [
+      { status: "completed" as const, pageNumber: 0 },
+      { status: "image_failed" as const, pageNumber: 1 },
+      { status: "completed" as const, pageNumber: 2 },
+      { status: "completed" as const, pageNumber: 3 },
+    ];
+    const result = deriveBookMetrics(pages);
+
+    expect(result.bookStatus).toBe("partial_completed");
+    expect(result.generationReliabilityStatus).toBe("partial");
+    expect(result.imageSuccessCount).toBe(3);
+    expect(result.imageFailureCount).toBe(1);
+    expect(result.failedPageNumbers).toEqual([1]);
+  });
+
+  it("returns partial_completed when pages are still generating", () => {
+    const pages = [
+      { status: "completed" as const, pageNumber: 0 },
+      { status: "generating" as const, pageNumber: 1 },
+      { status: "completed" as const, pageNumber: 2 },
+      { status: "completed" as const, pageNumber: 3 },
+    ];
+    const result = deriveBookMetrics(pages);
+
+    expect(result.bookStatus).toBe("partial_completed");
+    expect(result.pendingPageNumbers).toEqual([1]);
+  });
+
+  it("returns failed when all pages are image_failed", () => {
+    const pages = [
+      { status: "image_failed" as const, pageNumber: 0 },
+      { status: "image_failed" as const, pageNumber: 1 },
+      { status: "image_failed" as const, pageNumber: 2 },
+      { status: "image_failed" as const, pageNumber: 3 },
+    ];
+    const result = deriveBookMetrics(pages);
+
+    expect(result.bookStatus).toBe("failed");
+    expect(result.generationReliabilityStatus).toBe("failed");
+    expect(result.imageSuccessCount).toBe(0);
+    expect(result.imageFailureCount).toBe(4);
+  });
+
+  it("transitions from partial to completed when failed page is regenerated", () => {
+    // Simulate: page 1 was image_failed, now all completed
+    const pages = [
+      { status: "completed" as const, pageNumber: 0 },
+      { status: "fallback_completed" as const, pageNumber: 1 },
+      { status: "completed" as const, pageNumber: 2 },
+      { status: "completed" as const, pageNumber: 3 },
+    ];
+    const result = deriveBookMetrics(pages);
+
+    expect(result.bookStatus).toBe("completed");
+    expect(result.generationReliabilityStatus).toBe("ok");
+    expect(result.imageFailureCount).toBe(0);
+    expect(result.failedPageNumbers).toEqual([]);
+  });
+
+  it("handles empty pages array", () => {
+    const result = deriveBookMetrics([]);
+
+    expect(result.totalImageCount).toBe(0);
+    expect(result.bookStatus).toBe("completed");
+    expect(result.generationReliabilityStatus).toBe("ok");
   });
 });

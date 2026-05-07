@@ -272,6 +272,11 @@ export interface BookData {
   failedPageNumbers?: number[];
   generationReliabilityStatus?: GenerationReliabilityStatus;
   partialFailureReasons?: string[];
+  lastCompletionCheckedAt?: FirebaseFirestore.Timestamp;
+  lastCompletionCheckedAtMs?: number;
+  recoveredFromPartialCompleted?: boolean;
+  recoveredAt?: FirebaseFirestore.Timestamp;
+  recoveredAtMs?: number;
 }
 
 export interface PageData {

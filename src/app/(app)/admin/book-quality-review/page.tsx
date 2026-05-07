@@ -57,6 +57,7 @@ interface SloSnapshot extends Partial<SloMetrics> {
   bookCount?: number;
   pageCount?: number;
   sampleSize?: number;
+  sampleUnit?: string;
   source?: string;
 }
 
@@ -683,6 +684,7 @@ export default function AdminBookQualityReviewPage() {
         bookCount: sloMetrics.totalBooks,
         pageCount: sloMetrics.totalPages,
         sampleSize: sloSampleSize,
+        sampleUnit: "books",
       });
       setSnapshotMessage("SLO snapshot を保存しました");
       window.setTimeout(() => setSnapshotMessage(null), 3000);
@@ -863,7 +865,7 @@ export default function AdminBookQualityReviewPage() {
                       value={sloSampleSize}
                       onChange={(e) => setSloSampleSize(Number(e.target.value) as SloSampleSize)}
                       className="rounded-lg border border-input bg-background px-2 py-1 text-xs"
-                      aria-label="SLO sample size"
+                      aria-label="Book sample size"
                     >
                       <option value={50}>50 books</option>
                       <option value={100}>100 books</option>
@@ -1016,7 +1018,7 @@ export default function AdminBookQualityReviewPage() {
                             <th className="pb-2 pr-4">Fallback</th>
                             <th className="pb-2 pr-4">Books</th>
                             <th className="pb-2 pr-4">Pages</th>
-                            <th className="pb-2 pr-4">Sample</th>
+                            <th className="pb-2 pr-4">Book Sample</th>
                             <th className="pb-2 pr-4">By</th>
                           </tr>
                         </thead>
@@ -1173,6 +1175,12 @@ export default function AdminBookQualityReviewPage() {
                                 <p>warnings: {warningCount}</p>
                                 <p>reliability: {book.generationReliabilityStatus ?? "—"}</p>
                                 <p>img {book.imageSuccessCount ?? "?"}/{book.totalImageCount ?? "?"} avgTime:{formatMs(book.averageImageDurationMs)}</p>
+                                {book.status === "partial_completed" && (book.imageFailureCount ?? 0) > 0 && (
+                                  <p className="font-medium text-rose-600">failed pages: {book.imageFailureCount} ({book.failedPageNumbers?.join(", ") ?? "?"})</p>
+                                )}
+                                {book.recoveredFromPartialCompleted && (
+                                  <p className="font-medium text-emerald-600">recovered ✓</p>
+                                )}
                                 <p>createdAt: {formatBookTimestamp(book, "createdAt")}</p>
                                 <p>userId: {book.userId}</p>
                               </div>
@@ -1256,6 +1264,40 @@ export default function AdminBookQualityReviewPage() {
                             <p><span className="font-medium text-purple-900">imageSuccess/Total:</span> {selectedBook.imageSuccessCount ?? "—"} / {selectedBook.totalImageCount ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">imageFailureCount:</span> {selectedBook.imageFailureCount ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">failedPageNumbers:</span> {selectedBook.failedPageNumbers?.join(", ") ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">recoveredFromPartialCompleted:</span> {selectedBook.recoveredFromPartialCompleted ? "true" : "—"}</p>
+                            {selectedBook.recoveredAtMs && (
+                              <p><span className="font-medium text-purple-900">recoveredAt:</span> {formatTimestamp(undefined, selectedBook.recoveredAtMs)}</p>
+                            )}
+                            {selectedBook.lastCompletionCheckedAtMs && (
+                              <p><span className="font-medium text-purple-900">lastCompletionCheckedAt:</span> {formatTimestamp(undefined, selectedBook.lastCompletionCheckedAtMs)}</p>
+                            )}
+                            {selectedBook.status === "partial_completed" && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="mt-1"
+                                onClick={async () => {
+                                  try {
+                                    const checkCompletion = httpsCallable(functions, "checkBookCompletion");
+                                    const result = await checkCompletion({ bookId: selectedBook.id });
+                                    const data = result.data as { bookStatus: string; recovered: boolean };
+                                    if (data.recovered) {
+                                      setCopyMessage("復旧しました: completed");
+                                    } else {
+                                      setCopyMessage(`確認完了: ${data.bookStatus}`);
+                                    }
+                                    window.setTimeout(() => setCopyMessage(null), 3000);
+                                  } catch (err) {
+                                    const msg = err instanceof Error ? err.message : "確認に失敗";
+                                    setCopyMessage(msg);
+                                    window.setTimeout(() => setCopyMessage(null), 3000);
+                                  }
+                                }}
+                              >
+                                Check completion
+                              </Button>
+                            )}
                             <p><span className="font-medium text-purple-900">generationDurationMs:</span> {formatMs(selectedBook.generationDurationMs)}</p>
                             <p><span className="font-medium text-purple-900">avgImageDurationMs:</span> {formatMs(selectedBook.averageImageDurationMs)}</p>
                             <p><span className="font-medium text-purple-900">maxImageDurationMs:</span> {formatMs(selectedBook.maxImageDurationMs)}</p>
