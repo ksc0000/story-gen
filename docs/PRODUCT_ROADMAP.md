@@ -139,6 +139,7 @@
 ### 残タスク
 
 - [ ] [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
+- [ ] [Production smoke results](./PRODUCTION_SMOKE_RESULTS.md)
 - [ ] 実データでの Scheduler 実行確認（saveDailySloSnapshot / saveWeeklySloSnapshot / cleanupStaleGeneration）
 - [ ] Firestore index / permission 確認（collection group query の composite index、runs subcollection の read 権限）
 - [ ] per-page deadline の導入（ページごとの残り時間管理）
@@ -387,6 +388,7 @@ Replicate 固定をやめ、速度・費用・品質に応じて provider を比
 - ~~stale metadata cleanup の定期実行化~~ ✅
 - ~~daily / weekly SLO 自動スナップショット~~ ✅
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
+- [Production smoke results](./PRODUCTION_SMOKE_RESULTS.md)
 - [Story Quality Score / Quality Metrics](./QUALITY_METRICS.md)
 - 実データでの Scheduler 実行確認
 - Phase 2: Story & Illustration Quality 着手
