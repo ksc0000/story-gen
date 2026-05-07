@@ -96,6 +96,11 @@ service cloud.firestore {
         allow create: if isAdmin();
         allow update, delete: if false;
       }
+
+      match /runs/{runId} {
+        allow read: if isAdmin();
+        allow write: if false;
+      }
     }
 
     match /{document=**} {

@@ -6,6 +6,7 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   getDocs,
   limit,
   onSnapshot,
@@ -63,6 +64,29 @@ interface SloSnapshot extends Partial<SloMetrics> {
 }
 
 type SloSampleSize = 50 | 100 | 200;
+
+interface StaleCleanupStatus {
+  lastRunAtMs?: number;
+  lastSummary?: {
+    checkedPages: number;
+    checkedBooks: number;
+    updatedBooks: number;
+    updatedPages: number;
+    skippedBooks: number;
+    skippedPages: number;
+  };
+}
+
+interface StaleCleanupRun {
+  runKey: string;
+  createdAtMs: number;
+  checkedPages: number;
+  checkedBooks: number;
+  updatedBooks: number;
+  updatedPages: number;
+  skippedBooks: number;
+  skippedPages: number;
+}
 
 type AdminReviewForm = {
   adminTextQualityScore: string;
@@ -425,6 +449,9 @@ export default function AdminBookQualityReviewPage() {
   const [regenHistory, setRegenHistory] = useState<RegenerationHistoryEntry[]>([]);
   const [regenHistoryLoading, setRegenHistoryLoading] = useState(false);
   const [regenHistoryPageId, setRegenHistoryPageId] = useState<string | null>(null);
+  const [staleCleanupStatus, setStaleCleanupStatus] = useState<StaleCleanupStatus | null>(null);
+  const [staleCleanupRuns, setStaleCleanupRuns] = useState<StaleCleanupRun[]>([]);
+  const [staleCleanupLoading, setStaleCleanupLoading] = useState(false);
 
   function getPermissionHelpMessage(message: string) {
     if (!/Missing or insufficient permissions/i.test(message)) {
@@ -665,10 +692,34 @@ export default function AdminBookQualityReviewPage() {
     }
   };
 
+  const fetchStaleCleanupStatus = async () => {
+    setStaleCleanupLoading(true);
+    try {
+      const statusDoc = await getDoc(doc(db, "adminMetrics", "staleCleanup"));
+      if (statusDoc.exists()) {
+        setStaleCleanupStatus(statusDoc.data() as StaleCleanupStatus);
+      }
+      const runsQ = query(
+        collection(db, "adminMetrics", "staleCleanup", "runs"),
+        orderBy("createdAtMs", "desc"),
+        limit(10),
+      );
+      const runsSnap = await getDocs(runsQ);
+      setStaleCleanupRuns(
+        runsSnap.docs.map((d) => d.data() as StaleCleanupRun),
+      );
+    } catch (err) {
+      console.error("Failed to fetch stale cleanup status:", err);
+    } finally {
+      setStaleCleanupLoading(false);
+    }
+  };
+
   // Load snapshot history on mount (admin only)
   useEffect(() => {
     if (!isAdmin) return;
     fetchSnapshotHistory();
+    fetchStaleCleanupStatus();
   }, [isAdmin]);
 
   const handleSaveSnapshot = async () => {
@@ -1064,6 +1115,78 @@ export default function AdminBookQualityReviewPage() {
                     </>
                   )}
                 </div>
+              </div>
+
+              {/* Stale Cleanup Status */}
+              <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
+                <h3 className="mb-3 font-semibold text-amber-900">🧹 Stale Cleanup Status</h3>
+                {staleCleanupLoading ? (
+                  <p className="text-sm text-amber-700">読み込み中…</p>
+                ) : !staleCleanupStatus ? (
+                  <p className="text-sm text-amber-600">クリーンアップ実行履歴がありません</p>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <span className="text-amber-800">
+                        最終実行:{" "}
+                        <strong>
+                          {staleCleanupStatus.lastRunAtMs
+                            ? new Date(staleCleanupStatus.lastRunAtMs).toLocaleString("ja-JP")
+                            : "—"}
+                        </strong>
+                      </span>
+                      {staleCleanupStatus.lastSummary && (
+                        <>
+                          <span className="text-amber-800">
+                            修正ページ: <strong>{staleCleanupStatus.lastSummary.updatedPages}</strong>
+                          </span>
+                          <span className="text-amber-800">
+                            修正ブック: <strong>{staleCleanupStatus.lastSummary.updatedBooks}</strong>
+                          </span>
+                          <span className="text-amber-800">
+                            確認ページ: <strong>{staleCleanupStatus.lastSummary.checkedPages}</strong>
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {staleCleanupRuns.length > 0 && (
+                      <>
+                        <h4 className="text-xs font-medium text-amber-700">直近の実行履歴</h4>
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-amber-200 text-left text-xs text-amber-600">
+                              <th className="py-1 pr-3">日時</th>
+                              <th className="py-1 pr-3">確認P</th>
+                              <th className="py-1 pr-3">確認B</th>
+                              <th className="py-1 pr-3">修正P</th>
+                              <th className="py-1 pr-3">修正B</th>
+                              <th className="py-1 pr-3">スキップP</th>
+                              <th className="py-1 pr-3">スキップB</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {staleCleanupRuns.map((r) => (
+                              <tr key={r.runKey} className="border-b border-amber-100 text-amber-800">
+                                <td className="py-1 pr-3 text-xs">
+                                  {r.createdAtMs
+                                    ? new Date(r.createdAtMs).toLocaleDateString("ja-JP", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+                                    : "—"}
+                                </td>
+                                <td className="py-1 pr-3">{r.checkedPages ?? 0}</td>
+                                <td className="py-1 pr-3">{r.checkedBooks ?? 0}</td>
+                                <td className="py-1 pr-3 font-medium">{r.updatedPages ?? 0}</td>
+                                <td className="py-1 pr-3 font-medium">{r.updatedBooks ?? 0}</td>
+                                <td className="py-1 pr-3 text-amber-500">{r.skippedPages ?? 0}</td>
+                                <td className="py-1 pr-3 text-amber-500">{r.skippedBooks ?? 0}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
