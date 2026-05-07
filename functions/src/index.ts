@@ -11,3 +11,4 @@ export { testImageModels } from "./test-image-models";
 export { bootstrapAdmin } from "./bootstrap-admin";
 export { regeneratePageImage, checkBookCompletion } from "./regenerate-page-image";
 export { saveDailySloSnapshot } from "./save-daily-slo-snapshot";
+export { saveWeeklySloSnapshot } from "./save-weekly-slo-snapshot";
