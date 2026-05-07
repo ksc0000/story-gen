@@ -21,6 +21,7 @@ node_modules/
 *.pem
 service-account.json
 .firebase/
+.vscode/settings.json
 
 # debug
 npm-debug.log*
