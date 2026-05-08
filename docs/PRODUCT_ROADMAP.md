@@ -151,6 +151,19 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 18. Quality Task persistence Step 5: Admin UI にタスク一覧パネル追加 → **done**
 19. Quality Task persistence Step 6: Task 更新 UI (checklist toggle, status change, resolutionNote) → **done**
 20. Quality Task persistence Step 7: Task count badge (未完了タスク数表示) → **done**
+21. Cover Page Generation Design doc 作成 (`docs/COVER_PAGE_GENERATION_DESIGN.md`) → **done**
+
+### 次の実装予定: Cover Page / Reading Structure
+
+| Step | 内容 | Status |
+|------|------|--------|
+| A | Design doc + types | **done** |
+| B | titleSpreadText / openingNarration を story JSON に追加 + BookDoc 保存 | pending |
+| C | coverImagePrompt を生成 (画像生成なし) + Admin 表示 | pending |
+| D | Cover image generation + coverStatus + metrics | pending |
+| E | Reader UI に Cover / Title Spread 表示 | pending |
+| F | Cover image regeneration (admin) | pending |
+| G | Swipe / slide page navigation | pending |
 
 ### 含めるタスク
 
