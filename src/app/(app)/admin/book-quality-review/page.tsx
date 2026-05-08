@@ -46,6 +46,7 @@ import type {
 import { QualityReviewPanel } from "@/components/admin/QualityReviewPanel";
 import { QualityRecommendationPanel, QualityRecommendationBadge } from "@/components/admin/QualityRecommendationPanel";
 import type { QualityReviewForm, QualityReviewWithId } from "@/lib/quality-review";
+import type { QualityRecommendationIntent } from "@/lib/quality-review";
 import {
   normalizeQualityReviewForm,
   validateQualityReviewForm,
@@ -54,6 +55,7 @@ import {
   formatQualityScore,
   getQualityReviewStatusLabel,
   getQualityReviewStatusBadgeClass,
+  RECOMMENDATION_INTENT_DESCRIPTIONS,
 } from "@/lib/quality-review";
 
 type BookWithId = BookDoc & { id: string };
@@ -478,6 +480,7 @@ export default function AdminBookQualityReviewPage() {
   const [savingQualityReview, setSavingQualityReview] = useState(false);
   const [qualityReviewMessage, setQualityReviewMessage] = useState<string | null>(null);
   const [batchReviewMessage, setBatchReviewMessage] = useState<string | null>(null);
+  const [intentMessage, setIntentMessage] = useState<string | null>(null);
 
   function getPermissionHelpMessage(message: string) {
     if (!/Missing or insufficient permissions/i.test(message)) {
@@ -936,6 +939,26 @@ export default function AdminBookQualityReviewPage() {
     }
     scored.sort((a, b) => (a.overallQualityScore ?? 0) - (b.overallQualityScore ?? 0));
     setSelectedBookId(scored[0].id);
+  };
+
+  const handleIntentAction = (intent: QualityRecommendationIntent) => {
+    setIntentMessage(null);
+    const description = RECOMMENDATION_INTENT_DESCRIPTIONS[intent];
+
+    // Scroll to relevant section
+    const scrollTargets: Partial<Record<QualityRecommendationIntent, string>> = {
+      review_image_regeneration: "pages",
+      review_character_consistency: "pages",
+    };
+    const targetId = scrollTargets[intent];
+    if (targetId) {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    setIntentMessage(`💡 ${description}`);
   };
 
   const handleSaveQualityReview = async () => {
@@ -1986,7 +2009,7 @@ export default function AdminBookQualityReviewPage() {
                         </CardContent>
                       </Card>
 
-                      <Card>
+                      <Card id="pages">
                         <CardContent className="space-y-4 p-6">
                           <div className="flex items-center justify-between gap-3">
                             <h3 className="text-lg font-semibold text-purple-900">pages</h3>
@@ -2248,7 +2271,15 @@ export default function AdminBookQualityReviewPage() {
                         onSave={handleSaveQualityReview}
                       />
 
-                      <QualityRecommendationPanel book={selectedBook} />
+                      <QualityRecommendationPanel
+                        book={selectedBook}
+                        onIntentAction={(intent) => handleIntentAction(intent)}
+                      />
+                      {intentMessage && (
+                        <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs text-indigo-800">
+                          {intentMessage}
+                        </div>
+                      )}
 
                       <Card>
                         <CardContent className="p-6">

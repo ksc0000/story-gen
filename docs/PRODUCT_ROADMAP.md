@@ -140,6 +140,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 7. Quality Trend Dashboard / Regression Detection を追加する。 → **done**
 8. Rewrite / Regeneration Recommendation を追加する。 → **done**
 9. Recommendation Action Buttons（安全な導線のみ）を追加する。 → **done**
+10. Recommendation Intent Handler（message + scroll）を接続する。 → **done**
 
 ### 含めるタスク
 
