@@ -279,9 +279,10 @@ Gemini prompt に Cover 画像用の prompt 生成を依頼:
 ...
 ```
 
-- `hasCoverPage === true` の場合のみ表紙表示
+- `hasCoverPage === true` かつ `readingStructureVersion === "v2_cover_title_story"` の場合のみ表紙表示
 - それ以外は従来どおり page 0 から開始
 - BookViewer に reading structure 分岐を追加
+- Cover が表示される場合、`titleSpreadText` / `openingNarration` が未設定でも book title のみの Title Spread を表示する（本文 page 0 に急に入らない）
 
 ### Step F 詳細: Cover 再生成
 
@@ -297,12 +298,13 @@ Gemini prompt に Cover 画像用の prompt 生成を依頼:
 
 | 状態 | 表示順 |
 |------|--------|
-| `hasCoverPage=true` & cover 生成成功 | Cover → Title Spread → Pages |
+| `hasCoverPage=true` & `readingStructureVersion=v2` & cover 生成成功 | Cover → Title Spread → Pages |
+| `hasCoverPage=true` & `readingStructureVersion` なし/v1 | Pages (従来どおり) |
 | `hasCoverPage=true` & cover 未生成/失敗 | Pages (従来どおり) |
 | `hasCoverPage` なし (既存 book) | Pages (従来どおり) |
 
 - 表紙がある場合: 最初に Cover Image + Title を全画面表示
-- titleSpreadText / openingNarration がある場合: Cover と本文の間に表示
+- Cover 表示時は titleSpreadText / openingNarration の有無に関わらず Title Spread を挿入する（book title のみの導入ページとして機能し、本文 page 0 に急に入らない）
 - swipe / slide navigation は別 Step で実装
 
 ### Admin UI

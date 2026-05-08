@@ -40,7 +40,33 @@ describe("buildReadingItems", () => {
         pages: basePages,
         title: "テスト絵本",
         hasCoverPage: true,
+        readingStructureVersion: "v2_cover_title_story",
         coverStatus: "generating",
+        coverImageUrl: "https://example.com/cover.png",
+      });
+      expect(items).toHaveLength(3);
+      expect(items[0].kind).toBe("story_page");
+    });
+
+    it("returns only story pages when readingStructureVersion is undefined", () => {
+      const items = buildReadingItems({
+        pages: basePages,
+        title: "テスト絵本",
+        hasCoverPage: true,
+        coverStatus: "completed",
+        coverImageUrl: "https://example.com/cover.png",
+      });
+      expect(items).toHaveLength(3);
+      expect(items[0].kind).toBe("story_page");
+    });
+
+    it("returns only story pages when readingStructureVersion is v1_pages_only", () => {
+      const items = buildReadingItems({
+        pages: basePages,
+        title: "テスト絵本",
+        hasCoverPage: true,
+        readingStructureVersion: "v1_pages_only",
+        coverStatus: "completed",
         coverImageUrl: "https://example.com/cover.png",
       });
       expect(items).toHaveLength(3);
@@ -52,6 +78,7 @@ describe("buildReadingItems", () => {
         pages: basePages,
         title: "テスト絵本",
         hasCoverPage: true,
+        readingStructureVersion: "v2_cover_title_story",
         coverStatus: "completed",
         coverImageUrl: "",
       });
@@ -64,6 +91,7 @@ describe("buildReadingItems", () => {
         pages: basePages,
         title: "テスト絵本",
         hasCoverPage: true,
+        readingStructureVersion: "v2_cover_title_story",
         coverStatus: "completed",
       });
       expect(items).toHaveLength(3);
@@ -152,6 +180,7 @@ describe("buildReadingItems", () => {
         pages: [],
         title: "カバーのみ",
         hasCoverPage: true,
+        readingStructureVersion: "v2_cover_title_story",
         coverStatus: "completed",
         coverImageUrl: "https://example.com/cover.png",
       });

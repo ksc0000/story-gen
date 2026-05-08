@@ -34,6 +34,7 @@ export function buildReadingItems(props: BookViewerProps): ReadingItem[] {
     coverImageUrl,
     hasCoverPage,
     coverStatus,
+    readingStructureVersion,
     titleSpreadText,
     openingNarration,
   } = props;
@@ -42,6 +43,7 @@ export function buildReadingItems(props: BookViewerProps): ReadingItem[] {
 
   const showCover =
     hasCoverPage === true &&
+    readingStructureVersion === "v2_cover_title_story" &&
     coverStatus === "completed" &&
     typeof coverImageUrl === "string" &&
     coverImageUrl.length > 0;
