@@ -227,6 +227,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 ### 設計ドキュメント
 
 - [Template Mode Design](./TEMPLATE_MODE_DESIGN.md)
+- [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md)
 
 ### Phase T1: 既存テンプレート Cover 対応 + 品質改善（4 ページ × 4 本）
 
@@ -236,6 +237,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 | T1-B | 既存 4 テンプレートの seed に cover / title / narration テンプレート追加 | **done** |
 | T1-C | `generate-book.ts` で fixed_template の cover / title / narration をテンプレート展開 | **done** |
 | T1-D | 既存 4 テンプレートの `imagePromptTemplate` 強化 + `pageVisualRole` 追加 | **done** |
+| T1-Smoke | 既存4テンプレートの実生成 smoke checklist 実行 | |
 
 ### Phase T2: テンプレート拡充（4 ページ × 10 本目標）
 
@@ -259,7 +261,8 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 
 ### 完了条件
 
-- [ ] 既存 4 テンプレートが cover / title / narration 対応済み
+- [x] 既存 4 テンプレートが cover / title / narration 対応済み
+- [ ] 既存 4 テンプレートの smoke checklist が実行済み
 - [ ] 合計 10 本以上の 4 ページテンプレートが seed 済み
 - [ ] テンプレート生成の成功率 >= 99%
 - [ ] 8 ページテンプレートが 2 本以上利用可能
@@ -306,8 +309,8 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 
 ### Now（現在着手中〜次に着手）
 
-- [Template Mode Design](./TEMPLATE_MODE_DESIGN.md) — Phase T1 実装
-- Phase T1-E: (optional) ページ数バリエーション対応
+- [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md) — 既存4テンプレートの実生成確認
+- Phase T2-A: smoke確認後、テンプレート 5〜6 追加
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - production smoke evidence 確認
 
