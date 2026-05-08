@@ -68,9 +68,10 @@
 - 印刷注文
 - 本棚UI
 - サンプル絵本ギャラリー
-- swipe / slide page navigation
-- cover page generation
-- title spread / opening narration flow
+- ~~swipe / slide page navigation~~ → 実装済み（Step G: Framer Motion drag="x"）
+- ~~cover page generation~~ → 実装済み（Step D: coverImagePrompt + Replicate）
+- ~~title spread / opening narration flow~~ → 実装済み（Step B + E: titleSpreadText / openingNarration Reader UI 表示）
+- Template Mode 拡充（cover 対応 + テンプレート 10 本 + 8/12 ページ）
 - delete account / delete child profile
 - admin operation audit log
 - rate limit（API レベル）
@@ -217,6 +218,55 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 
 ---
 
+## 4. Phase 3: Template Mode — Reliability-First 生成
+
+### 目的
+
+最も失敗しにくく、品質が安定する生成モードとして Template Mode (`fixed_template`) を強化する。
+
+### 設計ドキュメント
+
+- [Template Mode Design](./TEMPLATE_MODE_DESIGN.md)
+
+### Phase T1: 既存テンプレート Cover 対応 + 品質改善（4 ページ × 4 本）
+
+| Step | 内容 | Status |
+|------|------|--------|
+| T1-A | `FixedStoryTemplate` に cover / title / narration テンプレートフィールド追加（型のみ） | **done** |
+| T1-B | 既存 4 テンプレートの seed に cover / title / narration テンプレート追加 | |
+| T1-C | `generate-book.ts` で fixed_template の cover / title / narration をテンプレート展開 | |
+| T1-D | 既存 4 テンプレートの `imagePromptTemplate` 強化 + `pageVisualRole` 追加 | |
+
+### Phase T2: テンプレート拡充（4 ページ × 10 本目標）
+
+| Step | 内容 | Status |
+|------|------|--------|
+| T2-A | テンプレート 5〜6 追加（memories + emotional-growth） | |
+| T2-B | テンプレート 7〜8 追加（bedtime + imagination） | |
+| T2-C | テンプレート 9〜10 追加（learning + favorite-worlds） | |
+| T2-D | テンプレートプレビュー画像の生成・設定 | |
+| T2-E | テーマ選択 UI のプレビュー画像表示 | |
+| T2-F | テンプレート品質のテスト生成・レビュー | |
+
+### Phase T3: 8/12 ページ + バリアント
+
+| Step | 内容 | Status |
+|------|------|--------|
+| T3-A | `TemplateData` に `availablePageCounts` / `variantOf` / `variantLabel` 追加 | |
+| T3-B | 人気テンプレート 2〜3 本の 8 ページ版作成 | |
+| T3-C | PlanConfig 更新: `light_paid` で 8 ページ fixed_template 許可 | |
+| T3-D | テーマ選択 UI でバリアント / ページ数選択対応 | |
+
+### 完了条件
+
+- [ ] 既存 4 テンプレートが cover / title / narration 対応済み
+- [ ] 合計 10 本以上の 4 ページテンプレートが seed 済み
+- [ ] テンプレート生成の成功率 >= 99%
+- [ ] 8 ページテンプレートが 2 本以上利用可能
+- [ ] テーマ選択画面にプレビュー画像が表示される
+
+---
+
 ## 6. Phase 5: Monetization
 
 (既存内容維持)
@@ -234,12 +284,13 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 - [ ] 本棚UI（作成済み絵本一覧）
 - [ ] 絵本閲覧UI（ページめくり）
 - [x] swipe / slide page navigation
+- [x] cover page / title spread / opening narration
 - [ ] animated page transition
 - [ ] 失敗ページ再生成導線（ユーザー向け）
 - [ ] 作成履歴（作成日表示）
 - [ ] feedback 送信UI
-- [ ] cover page / title spread 対応
-- [ ] opening narration flow
+- [x] cover page / title spread 対応
+- [x] opening narration flow
 
 ### 売り物化前 推奨
 
@@ -255,13 +306,11 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 
 ### Now（現在着手中〜次に着手）
 
+- [Template Mode Design](./TEMPLATE_MODE_DESIGN.md) — Phase T1 実装
+- Phase T1-B: 既存 4 テンプレートに cover / title / narration テンプレート追加
+- Phase T1-C: generate-book.ts で fixed_template の cover / title / narration テンプレート展開
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
-- [Production smoke results](./PRODUCTION_SMOKE_RESULTS.md)
-- [Quality Metrics / Phase 2 Review Rubric](./QUALITY_METRICS.md)
 - production smoke evidence 確認
-- Admin Quality Review UI 着手
-- manual quality score 保存
-- quality review history 保存
 
 ---
 

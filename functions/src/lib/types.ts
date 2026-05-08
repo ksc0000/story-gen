@@ -100,10 +100,14 @@ export interface FixedStoryPageTemplate {
   textTemplate: string;
   textTemplatesByAge?: Partial<Record<AgeBand, string>>;
   imagePromptTemplate: string;
+  pageVisualRole?: PageVisualRole;
 }
 
 export interface FixedStoryTemplate {
   titleTemplate: string;
+  coverImagePromptTemplate?: string;
+  titleSpreadTextTemplate?: string;
+  openingNarrationTemplate?: string;
   pages: FixedStoryPageTemplate[];
 }
 
