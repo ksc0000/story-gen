@@ -56,6 +56,8 @@ import {
   getQualityReviewStatusLabel,
   getQualityReviewStatusBadgeClass,
   RECOMMENDATION_INTENT_DESCRIPTIONS,
+  getPageHighlightLevel,
+  getSectionHighlights,
 } from "@/lib/quality-review";
 
 type BookWithId = BookDoc & { id: string };
@@ -481,6 +483,9 @@ export default function AdminBookQualityReviewPage() {
   const [qualityReviewMessage, setQualityReviewMessage] = useState<string | null>(null);
   const [batchReviewMessage, setBatchReviewMessage] = useState<string | null>(null);
   const [intentMessage, setIntentMessage] = useState<string | null>(null);
+  const [activeIntent, setActiveIntent] = useState<QualityRecommendationIntent | null>(null);
+
+  const sectionHighlights = getSectionHighlights(activeIntent);
 
   function getPermissionHelpMessage(message: string) {
     if (!/Missing or insufficient permissions/i.test(message)) {
@@ -945,20 +950,37 @@ export default function AdminBookQualityReviewPage() {
     setIntentMessage(null);
     const description = RECOMMENDATION_INTENT_DESCRIPTIONS[intent];
 
+    // Toggle: clicking the same intent again clears highlighting
+    if (activeIntent === intent) {
+      setActiveIntent(null);
+      setIntentMessage(null);
+      return;
+    }
+
+    setActiveIntent(intent);
+
     // Scroll to relevant section
-    const scrollTargets: Partial<Record<QualityRecommendationIntent, string>> = {
-      review_image_regeneration: "pages",
-      review_character_consistency: "pages",
-    };
-    const targetId = scrollTargets[intent];
-    if (targetId) {
-      const el = document.getElementById(targetId);
+    const sectionTargets = getSectionHighlights(intent);
+    const scrollId = sectionTargets.pages
+      ? "pages"
+      : sectionTargets.inputAndProfile
+        ? "input-and-profile"
+        : sectionTargets.storyText
+          ? "story-text"
+          : null;
+    if (scrollId) {
+      const el = document.getElementById(scrollId);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
 
     setIntentMessage(`💡 ${description}`);
+  };
+
+  const handleClearIntent = () => {
+    setActiveIntent(null);
+    setIntentMessage(null);
   };
 
   const handleSaveQualityReview = async () => {
@@ -1669,7 +1691,7 @@ export default function AdminBookQualityReviewPage() {
                             <button
                               key={book.id}
                               type="button"
-                              onClick={() => setSelectedBookId(book.id)}
+                              onClick={() => { setSelectedBookId(book.id); setActiveIntent(null); setIntentMessage(null); }}
                               className={`w-full rounded-2xl border p-4 text-left transition ${
                                 isSelected
                                   ? "border-purple-400 bg-purple-50"
@@ -1745,7 +1767,7 @@ export default function AdminBookQualityReviewPage() {
                     </Card>
                   ) : (
                     <>
-                      <Card>
+                      <Card className={sectionHighlights.bookDetail ? "ring-2 ring-amber-300" : ""}>
                         <CardContent className="space-y-5 p-6">
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
@@ -1907,7 +1929,7 @@ export default function AdminBookQualityReviewPage() {
                               </CardContent>
                             </Card>
 
-                            <Card className="border-violet-100">
+                            <Card id="input-and-profile" className={`border-violet-100${sectionHighlights.inputAndProfile ? " ring-2 ring-amber-300" : ""}`}>
                               <CardContent className="space-y-3 p-4">
                                 <h3 className="font-semibold text-purple-900">input / childProfileSnapshot</h3>
                                 <details className="rounded-xl border border-violet-100 p-3">
@@ -1922,7 +1944,7 @@ export default function AdminBookQualityReviewPage() {
                                     {compactJson(selectedBook.childProfileSnapshot ?? null)}
                                   </pre>
                                 </details>
-                                <details className="rounded-xl border border-violet-100 p-3">
+                                <details id="story-text" className={`rounded-xl border p-3${sectionHighlights.storyText ? " border-amber-300 bg-amber-50/50" : " border-violet-100"}`}>
                                   <summary className="cursor-pointer text-sm font-medium text-purple-900">generatedTextPreview</summary>
                                   <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-xs text-violet-800">
                                     {compactJson(selectedBook.generatedTextPreview ?? [])}
@@ -2009,7 +2031,7 @@ export default function AdminBookQualityReviewPage() {
                         </CardContent>
                       </Card>
 
-                      <Card id="pages">
+                      <Card id="pages" className={sectionHighlights.pages ? "ring-2 ring-amber-300" : ""}>
                         <CardContent className="space-y-4 p-6">
                           <div className="flex items-center justify-between gap-3">
                             <h3 className="text-lg font-semibold text-purple-900">pages</h3>
@@ -2023,8 +2045,16 @@ export default function AdminBookQualityReviewPage() {
                             <p className="text-sm text-violet-500">pages subcollection がまだありません。</p>
                           ) : (
                             <div className="space-y-4">
-                              {pages.map((page) => (
-                                <Card key={page.id} className="border-violet-100">
+                              {pages.map((page) => {
+                                const highlightLevel = getPageHighlightLevel(activeIntent, page);
+                                const pageHighlightClass =
+                                  highlightLevel === "strong"
+                                    ? "border-amber-400 bg-amber-50 ring-1 ring-amber-300"
+                                    : highlightLevel === "subtle"
+                                      ? "border-amber-200 bg-amber-50/40"
+                                      : "border-violet-100";
+                                return (
+                                <Card key={page.id} className={pageHighlightClass}>
                                   <CardContent className="space-y-4 p-4">
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                       <div>
@@ -2194,7 +2224,8 @@ export default function AdminBookQualityReviewPage() {
                                     </div>
                                   </CardContent>
                                 </Card>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </CardContent>
@@ -2276,8 +2307,15 @@ export default function AdminBookQualityReviewPage() {
                         onIntentAction={(intent) => handleIntentAction(intent)}
                       />
                       {intentMessage && (
-                        <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs text-indigo-800">
-                          {intentMessage}
+                        <div className="flex items-center justify-between gap-3 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs text-indigo-800">
+                          <span>{intentMessage}</span>
+                          <button
+                            type="button"
+                            onClick={handleClearIntent}
+                            className="shrink-0 rounded px-2 py-0.5 text-indigo-600 hover:bg-indigo-100"
+                          >
+                            ✕ クリア
+                          </button>
                         </div>
                       )}
 

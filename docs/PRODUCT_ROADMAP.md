@@ -141,6 +141,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 8. Rewrite / Regeneration Recommendation を追加する。 → **done**
 9. Recommendation Action Buttons（安全な導線のみ）を追加する。 → **done**
 10. Recommendation Intent Handler（message + scroll）を接続する。 → **done**
+11. Recommendation Candidate Highlighting（section / page highlight）を追加する。 → **done**
 
 ### 含めるタスク
 

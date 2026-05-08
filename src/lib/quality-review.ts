@@ -1,5 +1,6 @@
 import type {
   BookDoc,
+  PageDoc,
   QualityReview,
   QualityReviewScore,
   QualityReviewStatus,
@@ -324,3 +325,90 @@ export const RECOMMENDATION_INTENT_DESCRIPTIONS: Record<QualityRecommendationInt
   require_human_safety_review: "安全性に関する内容を目視で確認します",
   confirm_approval: "品質基準を満たしており、承認済みです",
 };
+
+// ---------------------------------------------------------------------------
+// Recommendation Candidate Highlighting
+// ---------------------------------------------------------------------------
+
+export type PageHighlightLevel = "strong" | "subtle" | "none";
+
+export type SectionHighlight = {
+  bookDetail: boolean;
+  inputAndProfile: boolean;
+  storyText: boolean;
+  pages: boolean;
+};
+
+const IMAGE_DURATION_WARN_MS = 120_000;
+
+/**
+ * Determine highlight level for a single page given the active intent.
+ * - "strong": this page likely needs attention (failed, fallback, slow)
+ * - "subtle": this page is in scope for review but not flagged
+ * - "none": no highlighting
+ */
+export function getPageHighlightLevel(
+  intent: QualityRecommendationIntent | null,
+  page: PageDoc,
+): PageHighlightLevel {
+  if (!intent) return "none";
+
+  switch (intent) {
+    case "review_image_regeneration": {
+      if (
+        page.status === "image_failed" ||
+        page.status === "fallback_completed" ||
+        (page.imageDurationMs ?? 0) > IMAGE_DURATION_WARN_MS ||
+        page.imageFallbackUsed
+      ) {
+        return "strong";
+      }
+      return "subtle";
+    }
+    case "review_character_consistency": {
+      if (
+        (page.appearingCharacterIds?.length ?? 0) > 0 ||
+        page.usedCharacterReference ||
+        page.focusCharacterId
+      ) {
+        return "strong";
+      }
+      return "subtle";
+    }
+    case "prepare_story_rewrite":
+    case "require_human_safety_review":
+      return "subtle";
+    default:
+      return "none";
+  }
+}
+
+/**
+ * Determine which sections of the book detail should be highlighted.
+ */
+export function getSectionHighlights(
+  intent: QualityRecommendationIntent | null,
+): SectionHighlight {
+  const none: SectionHighlight = {
+    bookDetail: false,
+    inputAndProfile: false,
+    storyText: false,
+    pages: false,
+  };
+  if (!intent) return none;
+
+  switch (intent) {
+    case "review_image_regeneration":
+      return { ...none, pages: true };
+    case "review_character_consistency":
+      return { ...none, pages: true };
+    case "prepare_story_rewrite":
+      return { ...none, storyText: true, bookDetail: true };
+    case "review_personalization_inputs":
+      return { ...none, inputAndProfile: true, bookDetail: true };
+    case "require_human_safety_review":
+      return { ...none, storyText: true, pages: true };
+    case "confirm_approval":
+      return none;
+  }
+}
