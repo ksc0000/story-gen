@@ -319,6 +319,8 @@ import {
   type SloMetrics,
 } from "@/lib/admin-slo-metrics";
 
+import { computeQualityTrend } from "@/lib/admin-quality-trend";
+
 function SloCard({
   label,
   value,
@@ -728,6 +730,8 @@ export default function AdminBookQualityReviewPage() {
     () => books.filter((book) => book.storyQualityReport?.ok === false).length,
     [books]
   );
+
+  const qualityTrend = useMemo(() => computeQualityTrend(books), [books]);
 
   const sloMetrics = useMemo(
     () => computeSloMetrics(books, allPagesMap),
@@ -1281,6 +1285,123 @@ export default function AdminBookQualityReviewPage() {
                     </>
                   )}
                 </div>
+              </div>
+
+              {/* Quality Trend Dashboard */}
+              <div className="space-y-4 rounded-2xl border border-indigo-200 bg-indigo-50/30 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-base font-semibold text-indigo-900">
+                    Quality Trend
+                    <span className="ml-2 text-xs font-normal text-indigo-500">
+                      {qualityTrend.totalReviewed}冊レビュー済み
+                    </span>
+                  </h3>
+                </div>
+
+                {qualityTrend.totalReviewed === 0 ? (
+                  <p className="text-sm text-indigo-500">レビューデータがありません</p>
+                ) : (
+                  <>
+                    {/* Regression Alerts */}
+                    {qualityTrend.regressions.length > 0 && (
+                      <div className="rounded-lg border border-rose-300 bg-rose-50 p-3">
+                        <p className="mb-1 text-xs font-semibold text-rose-800">⚠️ Regression Detected</p>
+                        {qualityTrend.regressions.map((r) => (
+                          <p key={r.axis} className="text-xs text-rose-700">
+                            <strong>{r.axis}</strong>: {r.previousAvg.toFixed(2)} → {r.currentAvg.toFixed(2)} (−{r.dropPct}%)
+                          </p>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Global Averages */}
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                      <div className="rounded-lg border border-indigo-200 bg-white p-2 text-center">
+                        <p className="text-[10px] text-indigo-500">Overall</p>
+                        <p className="text-lg font-bold text-indigo-800">{qualityTrend.avgOverall.toFixed(2)}</p>
+                      </div>
+                      <div className="rounded-lg border border-indigo-200 bg-white p-2 text-center">
+                        <p className="text-[10px] text-indigo-500">Story</p>
+                        <p className="text-lg font-bold text-indigo-800">{qualityTrend.avgStory.toFixed(2)}</p>
+                      </div>
+                      <div className="rounded-lg border border-indigo-200 bg-white p-2 text-center">
+                        <p className="text-[10px] text-indigo-500">Illustration</p>
+                        <p className="text-lg font-bold text-indigo-800">{qualityTrend.avgIllustration.toFixed(2)}</p>
+                      </div>
+                      <div className="rounded-lg border border-indigo-200 bg-white p-2 text-center">
+                        <p className="text-[10px] text-indigo-500">Character</p>
+                        <p className="text-lg font-bold text-indigo-800">{qualityTrend.avgCharacterConsistency.toFixed(2)}</p>
+                      </div>
+                      <div className="rounded-lg border border-indigo-200 bg-white p-2 text-center">
+                        <p className="text-[10px] text-indigo-500">Personal.</p>
+                        <p className="text-lg font-bold text-indigo-800">{qualityTrend.avgPersonalization.toFixed(2)}</p>
+                      </div>
+                      <div className="rounded-lg border border-indigo-200 bg-white p-2 text-center">
+                        <p className="text-[10px] text-indigo-500">Safety</p>
+                        <p className="text-lg font-bold text-indigo-800">{qualityTrend.avgSafety.toFixed(2)}</p>
+                      </div>
+                    </div>
+
+                    {/* Score Distribution */}
+                    <div>
+                      <p className="mb-1 text-xs font-semibold text-indigo-700">Score Distribution (overall rounded)</p>
+                      <div className="flex items-end gap-1">
+                        {([1, 2, 3, 4, 5] as const).map((score) => {
+                          const count = qualityTrend.scoreDistribution[score];
+                          const maxCount = Math.max(...Object.values(qualityTrend.scoreDistribution), 1);
+                          const height = Math.max((count / maxCount) * 60, 4);
+                          return (
+                            <div key={score} className="flex flex-col items-center gap-0.5">
+                              <span className="text-[10px] text-indigo-600">{count}</span>
+                              <div
+                                className="w-8 rounded-t bg-indigo-400"
+                                style={{ height: `${height}px` }}
+                              />
+                              <span className="text-[10px] text-indigo-500">{score}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Weekly Trend Table */}
+                    {qualityTrend.buckets.length > 0 && (
+                      <div>
+                        <p className="mb-1 text-xs font-semibold text-indigo-700">Weekly Trend</p>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="border-b border-indigo-200 text-left text-indigo-600">
+                                <th className="py-1 pr-3">Week</th>
+                                <th className="py-1 pr-3">N</th>
+                                <th className="py-1 pr-3">Overall</th>
+                                <th className="py-1 pr-3">Story</th>
+                                <th className="py-1 pr-3">Illust.</th>
+                                <th className="py-1 pr-3">Char.</th>
+                                <th className="py-1 pr-3">Person.</th>
+                                <th className="py-1 pr-3">Safety</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {qualityTrend.buckets.map((bucket) => (
+                                <tr key={bucket.startMs} className="border-b border-indigo-50 text-indigo-800">
+                                  <td className="py-1 pr-3">{bucket.label}</td>
+                                  <td className="py-1 pr-3">{bucket.count}</td>
+                                  <td className="py-1 pr-3 font-medium">{bucket.avgOverall.toFixed(2)}</td>
+                                  <td className="py-1 pr-3">{bucket.avgStory.toFixed(2)}</td>
+                                  <td className="py-1 pr-3">{bucket.avgIllustration.toFixed(2)}</td>
+                                  <td className="py-1 pr-3">{bucket.avgCharacterConsistency.toFixed(2)}</td>
+                                  <td className="py-1 pr-3">{bucket.avgPersonalization.toFixed(2)}</td>
+                                  <td className="py-1 pr-3">{bucket.avgSafety.toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {/* Stale Cleanup Status */}
