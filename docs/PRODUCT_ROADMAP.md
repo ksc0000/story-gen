@@ -143,6 +143,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 10. Recommendation Intent Handler（message + scroll）を接続する。 → **done**
 11. Recommendation Candidate Highlighting（section / page highlight）を追加する。 → **done**
 12. Recommendation Task Draft Panel（copyable task draft）を追加する。 → **done**
+13. Task Draft persistence design doc を作成する。 → **done** (`docs/QUALITY_TASKS_DESIGN.md`)
 
 ### 含めるタスク
 
