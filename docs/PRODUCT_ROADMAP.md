@@ -129,6 +129,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 2. manual quality score を Firestore に保存する。
 3. quality review history を保存する。
 4. Admin book list / detail で quality score を表示する。
+5. quality review filter / sort を追加する。 → **in progress**
 
 ### 含めるタスク
 

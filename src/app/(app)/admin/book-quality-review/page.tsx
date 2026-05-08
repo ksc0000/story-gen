@@ -62,6 +62,8 @@ type ReviewStatusFilter = "all" | "completed" | "partial_completed" | "failed";
 type ReviewQualityFilter = "all" | "ok" | "warning" | "failed";
 type ReviewPlanFilter = "all" | ProductPlan;
 type ReviewModelFilter = "all" | ImageModelProfile;
+type ReviewQualityReviewFilter = "all" | "not_reviewed" | "reviewed" | "needs_fix" | "approved";
+type ReviewQualitySortOrder = "default" | "low_first" | "high_first";
 
 interface SloSnapshot extends Partial<SloMetrics> {
   id: string;
@@ -444,6 +446,8 @@ export default function AdminBookQualityReviewPage() {
   const [planFilter, setPlanFilter] = useState<ReviewPlanFilter>("all");
   const [qualityFilter, setQualityFilter] = useState<ReviewQualityFilter>("all");
   const [modelFilter, setModelFilter] = useState<ReviewModelFilter>("all");
+  const [qualityReviewFilter, setQualityReviewFilter] = useState<ReviewQualityReviewFilter>("all");
+  const [qualitySortOrder, setQualitySortOrder] = useState<ReviewQualitySortOrder>("default");
   const [searchText, setSearchText] = useState("");
   const [reviewForm, setReviewForm] = useState<AdminReviewForm>(normalizeReviewForm());
   const [savingReview, setSavingReview] = useState(false);
@@ -548,11 +552,15 @@ export default function AdminBookQualityReviewPage() {
 
   const filteredBooks = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
-    return books.filter((book) => {
+    const filtered = books.filter((book) => {
       if (statusFilter !== "all" && book.status !== statusFilter) return false;
       if (planFilter !== "all" && book.productPlan !== planFilter) return false;
       if (qualityFilter !== "all" && getStoryQualityStatus(book) !== qualityFilter) return false;
       if (modelFilter !== "all" && resolveEffectiveImageModelProfile(book) !== modelFilter) return false;
+      if (qualityReviewFilter !== "all") {
+        const bookQrStatus = book.qualityReviewStatus ?? "not_reviewed";
+        if (bookQrStatus !== qualityReviewFilter) return false;
+      }
       if (!normalizedSearch) return true;
 
       const haystack = [book.id, book.title, book.userId, book.childId]
@@ -561,7 +569,13 @@ export default function AdminBookQualityReviewPage() {
         .toLowerCase();
       return haystack.includes(normalizedSearch);
     });
-  }, [books, modelFilter, planFilter, qualityFilter, searchText, statusFilter]);
+    if (qualitySortOrder === "low_first") {
+      filtered.sort((a, b) => (a.overallQualityScore ?? 0) - (b.overallQualityScore ?? 0));
+    } else if (qualitySortOrder === "high_first") {
+      filtered.sort((a, b) => (b.overallQualityScore ?? 0) - (a.overallQualityScore ?? 0));
+    }
+    return filtered;
+  }, [books, modelFilter, planFilter, qualityFilter, qualityReviewFilter, qualitySortOrder, searchText, statusFilter]);
 
   useEffect(() => {
     if (filteredBooks.length === 0) {
@@ -701,6 +715,14 @@ export default function AdminBookQualityReviewPage() {
   const summaryByPlan = useMemo(() => countByProductPlan(books), [books]);
   const summaryByQuality = useMemo(() => countByStoryQualityStatus(books), [books]);
   const summaryByModel = useMemo(() => countByImageModelProfile(books), [books]);
+  const qualityReviewSummary = useMemo(() => {
+    const counts = { not_reviewed: 0, reviewed: 0, needs_fix: 0, approved: 0 };
+    for (const book of books) {
+      const s = book.qualityReviewStatus ?? "not_reviewed";
+      if (s in counts) counts[s as keyof typeof counts]++;
+    }
+    return counts;
+  }, [books]);
   const qualityReportNgCount = useMemo(
     () => books.filter((book) => book.storyQualityReport?.ok === false).length,
     [books]
@@ -1360,6 +1382,43 @@ export default function AdminBookQualityReviewPage() {
                     onChange={(e) => setSearchText(e.target.value)}
                     placeholder="検索"
                   />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="qualityReviewFilter">qualityReviewStatus</Label>
+                  <select
+                    id="qualityReviewFilter"
+                    value={qualityReviewFilter}
+                    onChange={(e) => setQualityReviewFilter(e.target.value as ReviewQualityReviewFilter)}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="all">all ({books.length})</option>
+                    <option value="not_reviewed">not_reviewed ({qualityReviewSummary.not_reviewed})</option>
+                    <option value="reviewed">reviewed ({qualityReviewSummary.reviewed})</option>
+                    <option value="needs_fix">needs_fix ({qualityReviewSummary.needs_fix})</option>
+                    <option value="approved">approved ({qualityReviewSummary.approved})</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="qualitySortOrder">quality sort</Label>
+                  <select
+                    id="qualitySortOrder"
+                    value={qualitySortOrder}
+                    onChange={(e) => setQualitySortOrder(e.target.value as ReviewQualitySortOrder)}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="default">default (createdAt desc)</option>
+                    <option value="low_first">low quality first</option>
+                    <option value="high_first">high quality first</option>
+                  </select>
+                </div>
+                <div className="flex items-end gap-4 text-xs text-violet-700">
+                  <span>not reviewed: <strong>{qualityReviewSummary.not_reviewed}</strong></span>
+                  <span className="font-medium text-rose-600">needs fix: <strong>{qualityReviewSummary.needs_fix}</strong></span>
+                  <span>reviewed: <strong>{qualityReviewSummary.reviewed}</strong></span>
+                  <span className="text-emerald-700">approved: <strong>{qualityReviewSummary.approved}</strong></span>
                 </div>
               </div>
 
