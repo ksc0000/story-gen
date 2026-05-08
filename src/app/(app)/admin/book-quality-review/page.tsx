@@ -14,6 +14,7 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { PageTransition } from "@/components/page-transition";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,17 @@ import type {
   StoryQualityReportData,
   Timestamp,
 } from "@/lib/types";
+import { QualityReviewPanel } from "@/components/admin/QualityReviewPanel";
+import type { QualityReviewForm, QualityReviewWithId } from "@/lib/quality-review";
+import {
+  normalizeQualityReviewForm,
+  validateQualityReviewForm,
+  buildQualityReviewPayload,
+  buildQualitySummaryPayload,
+  formatQualityScore,
+  getQualityReviewStatusLabel,
+  getQualityReviewStatusBadgeClass,
+} from "@/lib/quality-review";
 
 type BookWithId = BookDoc & { id: string };
 type PageWithId = PageDoc & { id: string };
@@ -452,6 +464,12 @@ export default function AdminBookQualityReviewPage() {
   const [staleCleanupStatus, setStaleCleanupStatus] = useState<StaleCleanupStatus | null>(null);
   const [staleCleanupRuns, setStaleCleanupRuns] = useState<StaleCleanupRun[]>([]);
   const [staleCleanupLoading, setStaleCleanupLoading] = useState(false);
+  const [qualityReviewForm, setQualityReviewForm] = useState<QualityReviewForm>(normalizeQualityReviewForm());
+  const [qualityReviews, setQualityReviews] = useState<QualityReviewWithId[]>([]);
+  const [qualityReviewsLoading, setQualityReviewsLoading] = useState(false);
+  const [qualityReviewsError, setQualityReviewsError] = useState<string | null>(null);
+  const [savingQualityReview, setSavingQualityReview] = useState(false);
+  const [qualityReviewMessage, setQualityReviewMessage] = useState<string | null>(null);
 
   function getPermissionHelpMessage(message: string) {
     if (!/Missing or insufficient permissions/i.test(message)) {
@@ -567,7 +585,43 @@ export default function AdminBookQualityReviewPage() {
   useEffect(() => {
     setReviewForm(normalizeReviewForm(selectedBook ?? undefined));
     setSaveMessage(null);
+    setQualityReviewForm(normalizeQualityReviewForm());
+    setQualityReviewMessage(null);
   }, [selectedBook]);
+
+  // Quality reviews subscription
+  useEffect(() => {
+    if (!selectedBookId || !isAdmin) {
+      setQualityReviews([]);
+      setQualityReviewsLoading(false);
+      setQualityReviewsError(null);
+      return;
+    }
+    setQualityReviewsLoading(true);
+    setQualityReviewsError(null);
+    const qrQuery = query(
+      collection(db, "books", selectedBookId, "qualityReviews"),
+      orderBy("createdAtMs", "desc"),
+      limit(5)
+    );
+    const unsubscribe = onSnapshot(
+      qrQuery,
+      (snapshot) => {
+        const reviews = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as QualityReviewWithId[];
+        setQualityReviews(reviews);
+        setQualityReviewsLoading(false);
+      },
+      (err) => {
+        console.error("Failed to load quality reviews:", err);
+        setQualityReviewsError(err.message);
+        setQualityReviewsLoading(false);
+      }
+    );
+    return () => unsubscribe();
+  }, [selectedBookId, isAdmin]);
 
   useEffect(() => {
     if (!selectedBookId || !isAdmin) {
@@ -816,6 +870,47 @@ export default function AdminBookQualityReviewPage() {
       setSaveMessage(getPermissionHelpMessage(message));
     } finally {
       setSavingReview(false);
+    }
+  };
+
+  const handleSaveQualityReview = async () => {
+    if (!selectedBook || !user) return;
+    const validationError = validateQualityReviewForm(qualityReviewForm);
+    if (validationError) {
+      setQualityReviewMessage(validationError);
+      return;
+    }
+    setSavingQualityReview(true);
+    setQualityReviewMessage(null);
+    try {
+      const now = Date.now();
+      const reviewRef = doc(collection(db, "books", selectedBook.id, "qualityReviews"));
+      const bookRef = doc(db, "books", selectedBook.id);
+      const reviewPayload = buildQualityReviewPayload({
+        form: qualityReviewForm,
+        bookId: selectedBook.id,
+        reviewerId: user.uid,
+        now,
+        serverTimestamp: serverTimestamp() as unknown as Timestamp,
+      });
+      const summaryPayload = buildQualitySummaryPayload({
+        reviewId: reviewRef.id,
+        form: qualityReviewForm,
+        now,
+        serverTimestamp: serverTimestamp() as unknown as Timestamp,
+      });
+      const batch = writeBatch(db);
+      batch.set(reviewRef, reviewPayload);
+      batch.update(bookRef, summaryPayload);
+      await batch.commit();
+      setQualityReviewMessage("Quality review を保存しました");
+      setQualityReviewForm(normalizeQualityReviewForm());
+    } catch (error) {
+      console.error("Failed to save quality review:", error);
+      const message = error instanceof Error ? error.message : "保存に失敗しました";
+      setQualityReviewMessage(getPermissionHelpMessage(message));
+    } finally {
+      setSavingQualityReview(false);
     }
   };
 
@@ -1119,7 +1214,16 @@ export default function AdminBookQualityReviewPage() {
 
               {/* Stale Cleanup Status */}
               <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
-                <h3 className="mb-3 font-semibold text-amber-900">🧹 Stale Cleanup Status</h3>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="font-semibold text-amber-900">🧹 Stale Cleanup Status</h3>
+                  <button
+                    onClick={fetchStaleCleanupStatus}
+                    disabled={staleCleanupLoading}
+                    className="rounded border border-amber-300 bg-amber-100 px-2 py-0.5 text-xs text-amber-800 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {staleCleanupLoading ? "読み込み中…" : "Refresh"}
+                  </button>
+                </div>
                 {staleCleanupLoading ? (
                   <p className="text-sm text-amber-700">読み込み中…</p>
                 ) : !staleCleanupStatus ? (
@@ -1138,13 +1242,13 @@ export default function AdminBookQualityReviewPage() {
                       {staleCleanupStatus.lastSummary && (
                         <>
                           <span className="text-amber-800">
-                            修正ページ: <strong>{staleCleanupStatus.lastSummary.updatedPages}</strong>
+                            修正ページ: <strong>{staleCleanupStatus.lastSummary.updatedPages ?? 0}</strong>
                           </span>
                           <span className="text-amber-800">
-                            修正ブック: <strong>{staleCleanupStatus.lastSummary.updatedBooks}</strong>
+                            修正ブック: <strong>{staleCleanupStatus.lastSummary.updatedBooks ?? 0}</strong>
                           </span>
                           <span className="text-amber-800">
-                            確認ページ: <strong>{staleCleanupStatus.lastSummary.checkedPages}</strong>
+                            確認ページ: <strong>{staleCleanupStatus.lastSummary.checkedPages ?? 0}</strong>
                           </span>
                         </>
                       )}
@@ -1170,7 +1274,7 @@ export default function AdminBookQualityReviewPage() {
                               <tr key={r.runKey} className="border-b border-amber-100 text-amber-800">
                                 <td className="py-1 pr-3 text-xs">
                                   {r.createdAtMs
-                                    ? new Date(r.createdAtMs).toLocaleDateString("ja-JP", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+                                    ? new Date(r.createdAtMs).toLocaleString("ja-JP", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
                                     : "—"}
                                 </td>
                                 <td className="py-1 pr-3">{r.checkedPages ?? 0}</td>
@@ -1315,6 +1419,7 @@ export default function AdminBookQualityReviewPage() {
                                 <p>issues: {issueCount}</p>
                                 <p>warnings: {warningCount}</p>
                                 <p>reliability: {book.generationReliabilityStatus ?? "—"}</p>
+                                <p>Q score: {formatQualityScore(book.overallQualityScore)}{book.qualityReviewStatus ? ` (${getQualityReviewStatusLabel(book.qualityReviewStatus)})` : ""}</p>
                                 <p>img {book.imageSuccessCount ?? "?"}/{book.totalImageCount ?? "?"} avgTime:{formatMs(book.averageImageDurationMs)}</p>
                                 {book.status === "partial_completed" && (book.imageFailureCount ?? 0) > 0 && (
                                   <p className="font-medium text-rose-600">failed pages: {book.imageFailureCount} ({book.failedPageNumbers?.join(", ") ?? "?"})</p>
@@ -1402,6 +1507,17 @@ export default function AdminBookQualityReviewPage() {
                             <p><span className="font-medium text-purple-900">characterConsistencyMode:</span> {selectedBook.characterConsistencyMode ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">generationMode:</span> {selectedBook.generationMode ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">generationReliabilityStatus:</span> {selectedBook.generationReliabilityStatus ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">overallQualityScore:</span> {formatQualityScore(selectedBook.overallQualityScore)}</p>
+                            <p><span className="font-medium text-purple-900">qualityReviewStatus:</span>{" "}
+                              <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${getQualityReviewStatusBadgeClass(selectedBook.qualityReviewStatus)}`}>
+                                {getQualityReviewStatusLabel(selectedBook.qualityReviewStatus)}
+                              </span>
+                            </p>
+                            <p><span className="font-medium text-purple-900">storyQualityScore:</span> {formatQualityScore(selectedBook.storyQualityScore)}</p>
+                            <p><span className="font-medium text-purple-900">illustrationQualityScore:</span> {formatQualityScore(selectedBook.illustrationQualityScore)}</p>
+                            <p><span className="font-medium text-purple-900">characterConsistencyScore:</span> {formatQualityScore(selectedBook.characterConsistencyScore)}</p>
+                            <p><span className="font-medium text-purple-900">personalizationScore:</span> {formatQualityScore(selectedBook.personalizationScore)}</p>
+                            <p><span className="font-medium text-purple-900">safetyScore:</span> {formatQualityScore(selectedBook.safetyScore)}</p>
                             <p><span className="font-medium text-purple-900">imageSuccess/Total:</span> {selectedBook.imageSuccessCount ?? "—"} / {selectedBook.totalImageCount ?? "—"}
                               {selectedBook.status !== "generating" && (selectedBook.totalImageCount === 0 || selectedBook.totalImageCount == null) && (
                                 <span className="ml-1 text-xs font-semibold text-red-600">⚠ ページ0件</span>
@@ -1859,6 +1975,19 @@ export default function AdminBookQualityReviewPage() {
                           </div>
                         </CardContent>
                       </Card>
+
+                      {/* Quality Review Panel (Phase 2) */}
+                      <QualityReviewPanel
+                        book={selectedBook}
+                        qualityReviews={qualityReviews}
+                        loading={qualityReviewsLoading}
+                        error={qualityReviewsError}
+                        saving={savingQualityReview}
+                        message={qualityReviewMessage}
+                        form={qualityReviewForm}
+                        onFormChange={setQualityReviewForm}
+                        onSave={handleSaveQualityReview}
+                      />
 
                       <Card>
                         <CardContent className="p-6">

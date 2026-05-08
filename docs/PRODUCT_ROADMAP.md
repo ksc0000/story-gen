@@ -50,9 +50,9 @@
 - ~~SLO メトリクス集計ダッシュボード~~ → 実装済み（admin SLO Dashboard + Snapshot History）
 - ~~SLO 自動スナップショット~~ → 実装済み（Daily 03:00 JST / Weekly Mon 03:15 JST、idempotent）
 - ~~Stale metadata cleanup~~ → 実装済み（Daily 03:30 JST、collection group query + admin UI）
-- Admin Quality Review UI（Story / Illustration / Character / Personalization / Safety score）
-- manual quality score 保存
-- quality review history
+- Admin Quality Review UI（Story / Illustration / Character / Personalization / Safety score）→ **in progress**
+- manual quality score 保存 → **in progress**
+- quality review history → **in progress**
 - LLM auto review prototype
 - provider abstraction（ImageProvider インターフェース）
 - provider 比較・A/B テスト

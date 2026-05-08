@@ -24,7 +24,18 @@ service cloud.firestore {
         "adminReviewedAt",
         "adminReviewedBy",
         "adminQualityScore",
-        "adminImageConsistencyScore"
+        "adminImageConsistencyScore",
+        "latestQualityReviewId",
+        "qualityReviewStatus",
+        "storyQualityScore",
+        "illustrationQualityScore",
+        "characterConsistencyScore",
+        "personalizationScore",
+        "safetyScore",
+        "overallQualityScore",
+        "qualityReviewedAt",
+        "qualityReviewedAtMs",
+        "qualityReviewerType"
       ]);
     }
 
@@ -74,6 +85,21 @@ service cloud.firestore {
         allow read: if isAdmin() || isBookOwner(bookId);
         allow create, update: if isBookOwner(bookId);
         allow delete: if false;
+      }
+
+      match /qualityReviews/{reviewId} {
+        allow read: if isAdmin();
+        allow create: if isAdmin()
+          && request.resource.data.bookId == bookId
+          && request.resource.data.reviewerId == request.auth.uid
+          && request.resource.data.reviewerType == "human"
+          && request.resource.data.storyScore >= 1 && request.resource.data.storyScore <= 5
+          && request.resource.data.illustrationScore >= 1 && request.resource.data.illustrationScore <= 5
+          && request.resource.data.characterConsistencyScore >= 1 && request.resource.data.characterConsistencyScore <= 5
+          && request.resource.data.personalizationScore >= 1 && request.resource.data.personalizationScore <= 5
+          && request.resource.data.safetyScore >= 1 && request.resource.data.safetyScore <= 5
+          && request.resource.data.status in ["reviewed", "needs_fix", "approved"];
+        allow update, delete: if false;
       }
     }
 
