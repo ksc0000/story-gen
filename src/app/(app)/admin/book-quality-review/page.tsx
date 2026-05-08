@@ -45,6 +45,7 @@ import type {
 } from "@/lib/types";
 import { QualityReviewPanel } from "@/components/admin/QualityReviewPanel";
 import { QualityRecommendationPanel, QualityRecommendationBadge } from "@/components/admin/QualityRecommendationPanel";
+import { RecommendationTaskDraftPanel } from "@/components/admin/RecommendationTaskDraftPanel";
 import type { QualityReviewForm, QualityReviewWithId } from "@/lib/quality-review";
 import type { QualityRecommendationIntent } from "@/lib/quality-review";
 import {
@@ -2317,6 +2318,13 @@ export default function AdminBookQualityReviewPage() {
                             ✕ クリア
                           </button>
                         </div>
+                      )}
+                      {activeIntent && activeIntent !== "confirm_approval" && selectedBook && (
+                        <RecommendationTaskDraftPanel
+                          intent={activeIntent}
+                          book={selectedBook}
+                          pages={pages}
+                        />
                       )}
 
                       <Card>

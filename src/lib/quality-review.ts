@@ -412,3 +412,132 @@ export function getSectionHighlights(
       return none;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Recommendation Task Draft
+// ---------------------------------------------------------------------------
+
+export interface TaskDraftItem {
+  label: string;
+  detail: string;
+}
+
+export interface TaskDraft {
+  title: string;
+  intent: QualityRecommendationIntent;
+  checklist: TaskDraftItem[];
+  summary: string;
+}
+
+/**
+ * Build a copyable task draft for the given intent + book + pages.
+ * Pure function — no Firestore writes.
+ */
+export function buildTaskDraft(
+  intent: QualityRecommendationIntent,
+  book: BookDoc & { id: string },
+  pages: PageDoc[],
+): TaskDraft {
+  switch (intent) {
+    case "prepare_story_rewrite": {
+      const warnings = book.storyQualityWarnings ?? [];
+      const textPreviewCount = book.generatedTextPreview?.length ?? 0;
+      const checklist: TaskDraftItem[] = [
+        { label: "generatedTextPreview を確認", detail: `${textPreviewCount} ページ分のテキストを通読する` },
+        { label: "storyQualityWarnings を確認", detail: warnings.length > 0 ? warnings.join(", ") : "warning なし" },
+        { label: "storyGoal との整合性確認", detail: `storyGoal: ${book.storyGoal ?? "未設定"}` },
+        { label: "年齢適切性の確認", detail: `theme: ${book.theme}` },
+      ];
+      if (book.storyTextRewriteUsed) {
+        checklist.push({ label: "既に rewrite 実施済み", detail: `model: ${book.storyTextRewriteModel ?? "—"}, attempts: ${book.storyTextRewriteAttempts ?? "—"}` });
+      }
+      return {
+        title: "Story Rewrite 確認タスク",
+        intent,
+        checklist,
+        summary: `Book ${book.id} のストーリーテキストを確認し、書き直しが必要か判断する。`,
+      };
+    }
+
+    case "review_image_regeneration": {
+      const failedPages = pages.filter((p) => p.status === "image_failed");
+      const fallbackPages = pages.filter((p) => p.status === "fallback_completed" || p.imageFallbackUsed);
+      const slowPages = pages.filter((p) => (p.imageDurationMs ?? 0) > IMAGE_DURATION_WARN_MS);
+      const checklist: TaskDraftItem[] = [
+        { label: "image_failed ページ", detail: failedPages.length > 0 ? `page ${failedPages.map((p) => p.pageNumber + 1).join(", ")}` : "なし" },
+        { label: "fallback 使用ページ", detail: fallbackPages.length > 0 ? `page ${fallbackPages.map((p) => p.pageNumber + 1).join(", ")}` : "なし" },
+        { label: "生成時間 > 120s のページ", detail: slowPages.length > 0 ? `page ${slowPages.map((p) => p.pageNumber + 1).join(", ")}` : "なし" },
+        { label: "全体の画像成功率", detail: `${book.imageSuccessCount ?? "—"} / ${book.totalImageCount ?? "—"}` },
+      ];
+      return {
+        title: "画像再生成 確認タスク",
+        intent,
+        checklist,
+        summary: `Book ${book.id} の画像品質を確認し、再生成が必要なページを特定する。問題ページ: ${failedPages.length + fallbackPages.length + slowPages.length} 件。`,
+      };
+    }
+
+    case "review_character_consistency": {
+      const charPages = pages.filter((p) =>
+        (p.appearingCharacterIds?.length ?? 0) > 0 || p.usedCharacterReference || p.focusCharacterId,
+      );
+      const castCount = book.storyCast?.length ?? 0;
+      const checklist: TaskDraftItem[] = [
+        { label: "storyCast 登録数", detail: `${castCount} キャラクター` },
+        { label: "キャラクター登場ページ", detail: charPages.length > 0 ? `page ${charPages.map((p) => p.pageNumber + 1).join(", ")}` : "なし" },
+        { label: "characterConsistencyMode", detail: book.characterConsistencyMode ?? "未設定" },
+        { label: "各ページの focusCharacterId を比較", detail: "ページ間で描写が一貫しているか確認" },
+      ];
+      return {
+        title: "キャラクター一貫性 確認タスク",
+        intent,
+        checklist,
+        summary: `Book ${book.id} の ${castCount} キャラクターの描写一貫性を確認する。キャラクター登場ページ: ${charPages.length} 件。`,
+      };
+    }
+
+    case "review_personalization_inputs": {
+      const snapshot = book.childProfileSnapshot;
+      const childName = snapshot?.displayName ?? "未設定";
+      const checklist: TaskDraftItem[] = [
+        { label: "子どもの名前", detail: childName },
+        { label: "childProfileSnapshot を確認", detail: snapshot ? "設定あり — 内容を展開して確認" : "未設定" },
+        { label: "input を確認", detail: "作成時の入力パラメータを確認" },
+        { label: "personalizationScore", detail: `${book.personalizationScore ?? "未評価"} / 5` },
+      ];
+      return {
+        title: "パーソナライズ 確認タスク",
+        intent,
+        checklist,
+        summary: `Book ${book.id} のパーソナライズ反映を確認する。子ども: ${childName}。`,
+      };
+    }
+
+    case "require_human_safety_review": {
+      const safetyWarnings = (book.storyQualityWarnings ?? []).filter((w) =>
+        /safety|violence|inappropriate|harmful/i.test(w),
+      );
+      const checklist: TaskDraftItem[] = [
+        { label: "safetyScore", detail: `${book.safetyScore ?? "未評価"} / 5` },
+        { label: "safety 関連 warnings", detail: safetyWarnings.length > 0 ? safetyWarnings.join(", ") : "なし" },
+        { label: "全ページのテキストを目視確認", detail: `${pages.length} ページ` },
+        { label: "全ページの画像を目視確認", detail: `${pages.length} ページ` },
+        { label: "storyGoal との整合性", detail: `storyGoal: ${book.storyGoal ?? "未設定"}` },
+      ];
+      return {
+        title: "安全性 確認タスク",
+        intent,
+        checklist,
+        summary: `Book ${book.id} の安全性を人手で確認する。safetyScore: ${book.safetyScore ?? "未評価"}。`,
+      };
+    }
+
+    case "confirm_approval":
+      return {
+        title: "承認済み",
+        intent,
+        checklist: [],
+        summary: `Book ${book.id} は品質基準を満たしており、タスクはありません。`,
+      };
+  }
+}
