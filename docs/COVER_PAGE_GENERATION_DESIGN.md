@@ -385,7 +385,7 @@ Admin Book Detail の既存セクション:
 | **Step A** | Design doc + BookDoc types に optional fields 追加 | **done** |
 | **Step B** | Gemini prompt に titleSpreadText / openingNarration 追加 + BookDoc 保存 | **done** |
 | **Step C** | Gemini prompt に coverImagePrompt 追加 + BookDoc 保存 + Admin 表示 | **done** |
-| **Step D** | Cover image generation + coverStatus + metrics | pending |
+| **Step D** | Cover image generation + coverStatus + metrics | **done** |
 | **Step E** | Reader UI に Cover / Title Spread 表示 | pending |
 | **Step F** | Cover image regeneration (admin) | pending |
 | **Step G** | Swipe / slide page navigation (別件) | pending |
@@ -418,11 +418,11 @@ Admin Book Detail の既存セクション:
 
 ### Step D
 
-- [ ] Cover 画像が生成される
-- [ ] `coverStatus` が正しく遷移する
-- [ ] 失敗時にフォールバック動作する
-- [ ] metrics が保存される
-- [ ] 既存 page 生成に影響なし
+- [x] Cover 画像が生成される
+- [x] `coverStatus` が正しく遷移する
+- [x] 失敗時にフォールバック動作する
+- [x] metrics が保存される
+- [x] 既存 page 生成に影響なし
 
 ### Step E
 

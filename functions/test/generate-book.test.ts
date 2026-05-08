@@ -1454,3 +1454,86 @@ describe("shouldFailBookForQuality", () => {
     ).toBe(true);
   });
 });
+
+describe("cover image generation", () => {
+  let deps: ReturnType<typeof createMockDeps>;
+  beforeEach(() => { deps = createMockDeps(); });
+
+  const bookWithCoverPrompt: BookData = {
+    ...baseBookData,
+    coverImagePrompt: "A cheerful boy on a sunny park cover illustration",
+  };
+
+  it("generates cover image when coverImagePrompt and uploadCoverImage are present", async () => {
+    deps.uploadCoverImage = vi.fn().mockResolvedValue("https://storage.example.com/cover.png");
+    await processBookGeneration("book-cover-1", bookWithCoverPrompt, deps);
+
+    expect(deps.uploadCoverImage).toHaveBeenCalledWith("book-cover-1", expect.any(Buffer));
+    // cover URL should overwrite the page-0 fallback
+    expect(deps.updateBookCoverImage).toHaveBeenCalledWith("book-cover-1", "https://storage.example.com/cover.png");
+    expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
+      "book-cover-1",
+      expect.objectContaining({ coverStatus: "generating" })
+    );
+    expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
+      "book-cover-1",
+      expect.objectContaining({ coverStatus: "completed", coverGeneratedAtMs: expect.any(Number) })
+    );
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-cover-1", "completed");
+  });
+
+  it("skips cover generation when coverImagePrompt is absent", async () => {
+    deps.uploadCoverImage = vi.fn();
+    await processBookGeneration("book-no-prompt", baseBookData, deps);
+
+    expect(deps.uploadCoverImage).not.toHaveBeenCalled();
+  });
+
+  it("sets coverStatus failed when uploadCoverImage is not configured", async () => {
+    // deps.uploadCoverImage is undefined by default
+    await processBookGeneration("book-no-upload", bookWithCoverPrompt, deps);
+
+    expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
+      "book-no-upload",
+      expect.objectContaining({ coverStatus: "failed", coverFailureReason: "upload_not_configured" })
+    );
+    // pages still succeed → book not failed
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-no-upload", "completed");
+  });
+
+  it("does not fail book when cover image generation fails but pages succeed", async () => {
+    let callIndex = 0;
+    deps.imageClient.generateImage = vi.fn().mockImplementation(() => {
+      callIndex++;
+      // First 2 calls are page images (succeed), subsequent are cover (fail)
+      if (callIndex <= 2) return Promise.resolve(mockImageBuffer);
+      return Promise.reject(new Error("cover generation error"));
+    });
+    deps.uploadCoverImage = vi.fn();
+    await processBookGeneration("book-cover-fail", bookWithCoverPrompt, deps);
+
+    expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
+      "book-cover-fail",
+      expect.objectContaining({ coverStatus: "failed" })
+    );
+    // pages succeeded → book should be completed, not failed
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-cover-fail", "completed");
+  });
+
+  it("keeps page-0 coverImageUrl when cover upload fails", async () => {
+    deps.uploadCoverImage = vi.fn().mockRejectedValue(new Error("upload error"));
+    await processBookGeneration("book-upload-fail", bookWithCoverPrompt, deps);
+
+    // page 0 coverImageUrl should still be set from page upload
+    expect(deps.updateBookCoverImage).toHaveBeenCalledWith(
+      "book-upload-fail",
+      "https://storage.example.com/image.png"
+    );
+    // cover status should be failed but book is completed
+    expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
+      "book-upload-fail",
+      expect.objectContaining({ coverStatus: "failed", coverFailureReason: "upload_failed" })
+    );
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-upload-fail", "completed");
+  });
+});

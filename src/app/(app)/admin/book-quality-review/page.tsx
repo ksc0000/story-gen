@@ -1794,6 +1794,11 @@ export default function AdminBookQualityReviewPage() {
                             <p><span className="font-medium text-purple-900">titleSpreadText:</span> {selectedBook.titleSpreadText ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">openingNarration:</span> {selectedBook.openingNarration ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">coverImagePrompt:</span> {selectedBook.coverImagePrompt ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">coverStatus:</span> {selectedBook.coverStatus ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">coverImageDurationMs:</span> {selectedBook.coverImageDurationMs ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">coverImageModelProfile:</span> {selectedBook.coverImageModelProfile ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">coverImageFallbackUsed:</span> {selectedBook.coverImageFallbackUsed ? "true" : "—"}</p>
+                            <p><span className="font-medium text-purple-900">coverFailureReason:</span> {selectedBook.coverFailureReason ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">templateId:</span> {selectedBook.templateId ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">theme:</span> {selectedBook.theme}</p>
                             <p><span className="font-medium text-purple-900">categoryGroupId:</span> {selectedBook.categoryGroupId ?? "—"}</p>

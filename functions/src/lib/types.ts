@@ -2,6 +2,7 @@
 
 export type UserPlan = "free" | "premium";
 export type BookStatus = "generating" | "completed" | "partial_completed" | "failed";
+export type CoverStatus = "not_started" | "generating" | "completed" | "failed";
 export type PageStatus = "pending" | "generating" | "completed" | "image_failed" | "fallback_completed" | "failed";
 export type GenerationMode = "reliable_fast" | "quality";
 export type GenerationReliabilityStatus = "ok" | "partial" | "failed";
@@ -261,6 +262,12 @@ export interface BookData {
   status: BookStatus;
   progress: number;
   coverImageUrl?: string;
+  coverStatus?: CoverStatus;
+  coverGeneratedAtMs?: number;
+  coverFailureReason?: string;
+  coverImageModelProfile?: ImageModelProfile;
+  coverImageDurationMs?: number;
+  coverImageFallbackUsed?: boolean;
   storyQualityReport?: StoryQualityReportData;
   input: BookInput;
   createdAt: FirebaseFirestore.Timestamp;
