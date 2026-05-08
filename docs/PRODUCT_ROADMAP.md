@@ -150,6 +150,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 17. Quality Task persistence Step 4: コンポーネントテスト追加 (12/12 PASS) → **done**
 18. Quality Task persistence Step 5: Admin UI にタスク一覧パネル追加 → **done**
 19. Quality Task persistence Step 6: Task 更新 UI (checklist toggle, status change, resolutionNote) → **done**
+20. Quality Task persistence Step 7: Task count badge (未完了タスク数表示) → **done**
 
 ### 含めるタスク
 

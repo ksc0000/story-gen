@@ -157,17 +157,38 @@ export function QualityTasksPanel({ adminUid }: QualityTasksPanelProps) {
     updateTask(task.id, { resolutionNote: note });
   }
 
+  const openCount = tasks.filter((t) => t.status === "open").length;
+  const inProgressCount = tasks.filter((t) => t.status === "in_progress").length;
+  const unresolvedCount = openCount + inProgressCount;
+
   return (
     <Card>
       <CardContent className="space-y-4 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-purple-900">
-            Quality Tasks
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-purple-900">
+              Quality Tasks
+            </h2>
+            {unresolvedCount > 0 && (
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 border border-amber-300">
+                {unresolvedCount}
+              </span>
+            )}
+          </div>
           <span className="text-xs text-violet-500">
             {filteredTasks.length}/{tasks.length} 件
           </span>
         </div>
+
+        {/* Task counts */}
+        {!loading && tasks.length > 0 && (
+          <div className="flex flex-wrap gap-3 text-xs text-violet-600">
+            <span>Open: <strong>{openCount}</strong></span>
+            <span>In progress: <strong>{inProgressCount}</strong></span>
+            <span>Unresolved: <strong>{unresolvedCount}</strong></span>
+            <span>Total: <strong>{tasks.length}</strong></span>
+          </div>
+        )}
 
         {/* Status filter */}
         <div className="flex flex-wrap gap-2">

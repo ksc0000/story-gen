@@ -217,7 +217,7 @@ Admin Quality Review ページ
 | **Step 4** | Task 保存のテスト（Firestore emulator or mock） | No | **done** |
 | **Step 5** | Task 一覧 UI（Admin ページ内タブ or セクション） | Read only | **done** |
 | **Step 6** | Task 更新 UI（checklist toggle, status change） | **Yes** (update) | **done** |
-| **Step 7** | Task count badge（未完了タスク数の表示） | Read only | |
+| **Step 7** | Task count badge（未完了タスク数の表示） | Read only | **done** |
 
 ### Step 1–2 は安全（型 + rules のみ）
 
