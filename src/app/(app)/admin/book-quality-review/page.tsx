@@ -960,21 +960,15 @@ export default function AdminBookQualityReviewPage() {
 
     setActiveIntent(intent);
 
-    // Scroll to relevant section
-    const sectionTargets = getSectionHighlights(intent);
-    const scrollId = sectionTargets.pages
-      ? "pages"
-      : sectionTargets.inputAndProfile
-        ? "input-and-profile"
-        : sectionTargets.storyText
-          ? "story-text"
-          : null;
-    if (scrollId) {
-      const el = document.getElementById(scrollId);
+    // Scroll to draft panel area (below recommendation panel)
+    // so the user sees the task draft + save button immediately.
+    // Highlighted sections are marked with ring-2 ring-amber-300.
+    setTimeout(() => {
+      const el = document.getElementById("task-draft-area");
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    }
+    }, 50);
 
     setIntentMessage(`💡 ${description}`);
   };
@@ -2307,6 +2301,7 @@ export default function AdminBookQualityReviewPage() {
                         book={selectedBook}
                         onIntentAction={(intent) => handleIntentAction(intent)}
                       />
+                      <div id="task-draft-area">
                       {intentMessage && (
                         <div className="flex items-center justify-between gap-3 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs text-indigo-800">
                           <span>{intentMessage}</span>
@@ -2328,6 +2323,7 @@ export default function AdminBookQualityReviewPage() {
                           adminUid={user?.uid}
                         />
                       )}
+                      </div>
 
                       <Card>
                         <CardContent className="p-6">
