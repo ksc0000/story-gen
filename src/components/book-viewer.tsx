@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { PageDoc, CoverStatus, ReadingStructureVersion } from "@/lib/types";
@@ -68,10 +68,21 @@ export function buildReadingItems(props: BookViewerProps): ReadingItem[] {
 }
 
 const pageFlip: Variants = {
-  initial: { opacity: 0, x: 50 },
+  initial: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? 50 : -50,
+  }),
   animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] } },
-  exit: { opacity: 0, x: -50, transition: { duration: 0.3 } },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? -50 : 50,
+    transition: { duration: 0.3 },
+  }),
 };
+
+/** Swipe threshold (px) and velocity threshold (px/s). */
+export const SWIPE_OFFSET_THRESHOLD = 80;
+export const SWIPE_VELOCITY_THRESHOLD = 500;
 
 /* ------------------------------------------------------------------ */
 /*  Per-item renderers                                                 */
@@ -160,9 +171,32 @@ export function BookViewer(props: BookViewerProps) {
   const items = buildReadingItems(props);
 
   const [currentPage, setCurrentPage] = useState(0);
+  /** 1 = forward (next), -1 = backward (prev). Used for animation direction. */
+  const directionRef = useRef(1);
   const totalPages = items.length;
-  const goNext = () => setCurrentPage((p) => Math.min(p + 1, totalPages - 1));
-  const goPrev = () => setCurrentPage((p) => Math.max(p - 1, 0));
+
+  const goNext = useCallback(() => {
+    directionRef.current = 1;
+    setCurrentPage((p) => Math.min(p + 1, totalPages - 1));
+  }, [totalPages]);
+
+  const goPrev = useCallback(() => {
+    directionRef.current = -1;
+    setCurrentPage((p) => Math.max(p - 1, 0));
+  }, []);
+
+  const handleDragEnd = useCallback(
+    (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
+      const { offset, velocity } = info;
+      if (offset.x < -SWIPE_OFFSET_THRESHOLD || velocity.x < -SWIPE_VELOCITY_THRESHOLD) {
+        goNext();
+      } else if (offset.x > SWIPE_OFFSET_THRESHOLD || velocity.x > SWIPE_VELOCITY_THRESHOLD) {
+        goPrev();
+      }
+    },
+    [goNext, goPrev],
+  );
+
   const item = items[currentPage];
   if (!item) return null;
 
@@ -175,18 +209,28 @@ export function BookViewer(props: BookViewerProps) {
         ? "タイトル"
         : `${item.storyPageIndex + 1} / ${storyPageCount}`;
 
+  /** Shared drag props for swipe navigation. */
+  const dragProps = {
+    drag: "x" as const,
+    dragConstraints: { left: 0, right: 0 },
+    dragElastic: 0.18,
+    onDragEnd: handleDragEnd,
+  };
+
   return (
     <div>
       {/* Desktop: spread view */}
       <div className="hidden md:block">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" custom={directionRef.current}>
           <motion.div
             key={currentPage}
+            custom={directionRef.current}
             variants={pageFlip}
             initial="initial"
             animate="animate"
             exit="exit"
-            className={`overflow-hidden rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-white shadow-[0_8px_32px_rgba(167,139,250,0.15)] ${
+            {...dragProps}
+            className={`cursor-grab overflow-hidden rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-white shadow-[0_8px_32px_rgba(167,139,250,0.15)] active:cursor-grabbing ${
               item.kind === "story_page" ? "grid grid-cols-2 gap-0" : ""
             }`}
           >
@@ -197,7 +241,7 @@ export function BookViewer(props: BookViewerProps) {
                 <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
                   {item.page.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="h-full w-full object-cover" />
+                    <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="pointer-events-none h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full items-center justify-center text-violet-200">
                       <div className="text-6xl">○</div>
@@ -215,14 +259,16 @@ export function BookViewer(props: BookViewerProps) {
       </div>
       {/* Mobile: single page */}
       <div className="md:hidden">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" custom={directionRef.current}>
           <motion.div
             key={currentPage}
+            custom={directionRef.current}
             variants={pageFlip}
             initial="initial"
             animate="animate"
             exit="exit"
-            className="overflow-hidden rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-white shadow-[0_8px_32px_rgba(167,139,250,0.15)]"
+            {...dragProps}
+            className="cursor-grab overflow-hidden rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-white shadow-[0_8px_32px_rgba(167,139,250,0.15)] active:cursor-grabbing"
           >
             {item.kind === "cover" && <CoverMobile item={item} />}
             {item.kind === "title_spread" && <TitleSpreadMobile item={item} />}
@@ -231,7 +277,7 @@ export function BookViewer(props: BookViewerProps) {
                 <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
                   {item.page.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="h-full w-full object-cover" />
+                    <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="pointer-events-none h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full items-center justify-center text-violet-200">
                       <div className="text-6xl">○</div>

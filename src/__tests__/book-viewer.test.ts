@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildReadingItems } from "@/components/book-viewer";
+import { buildReadingItems, SWIPE_OFFSET_THRESHOLD, SWIPE_VELOCITY_THRESHOLD } from "@/components/book-viewer";
 import type { PageDoc } from "@/lib/types";
 
 function makePage(pageNumber: number, overrides?: Partial<PageDoc>): PageDoc {
@@ -188,5 +188,21 @@ describe("buildReadingItems", () => {
       expect(items[0].kind).toBe("cover");
       expect(items[1].kind).toBe("title_spread");
     });
+  });
+});
+
+describe("swipe thresholds", () => {
+  it("SWIPE_OFFSET_THRESHOLD is a positive number", () => {
+    expect(SWIPE_OFFSET_THRESHOLD).toBeGreaterThan(0);
+    expect(typeof SWIPE_OFFSET_THRESHOLD).toBe("number");
+  });
+
+  it("SWIPE_VELOCITY_THRESHOLD is a positive number", () => {
+    expect(SWIPE_VELOCITY_THRESHOLD).toBeGreaterThan(0);
+    expect(typeof SWIPE_VELOCITY_THRESHOLD).toBe("number");
+  });
+
+  it("offset threshold is less than velocity threshold", () => {
+    expect(SWIPE_OFFSET_THRESHOLD).toBeLessThan(SWIPE_VELOCITY_THRESHOLD);
   });
 });

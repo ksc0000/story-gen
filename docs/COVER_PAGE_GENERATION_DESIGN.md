@@ -390,7 +390,7 @@ Admin Book Detail の既存セクション:
 | **Step D** | Cover image generation + coverStatus + metrics | **done** |
 | **Step E** | Reader UI に Cover / Title Spread 表示 | **done** |
 | **Step F** | Cover image regeneration (admin) | pending |
-| **Step G** | Swipe / slide page navigation (別件) | pending |
+| **Step G** | Swipe / slide page navigation (別件) | **done** |
 
 ---
 
@@ -439,3 +439,11 @@ Admin Book Detail の既存セクション:
 - [ ] Admin から cover 再生成可能
 - [ ] 失敗→再生成→成功のフロー動作
 - [ ] metrics 更新
+
+### Step G
+
+- [x] Framer Motion `drag="x"` で横スワイプ対応 (Desktop / Mobile 両方)
+- [x] スワイプ方向に応じたアニメーション方向 (direction-aware pageFlip)
+- [x] 既存「前」「次」ボタンは維持
+- [x] 画像の drag 干渉防止 (`pointer-events-none`)
+- [x] swipe threshold テスト追加

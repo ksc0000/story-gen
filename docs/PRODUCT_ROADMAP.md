@@ -163,7 +163,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 | D | Cover image generation + coverStatus + metrics | **done** |
 | E | Reader UI に Cover / Title Spread 表示 | **done** |
 | F | Cover image regeneration (admin) | pending |
-| G | Swipe / slide page navigation | pending |
+| G | Swipe / slide page navigation | **done** |
 
 ### 含めるタスク
 
@@ -233,7 +233,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 
 - [ ] 本棚UI（作成済み絵本一覧）
 - [ ] 絵本閲覧UI（ページめくり）
-- [ ] swipe / slide page navigation
+- [x] swipe / slide page navigation
 - [ ] animated page transition
 - [ ] 失敗ページ再生成導線（ユーザー向け）
 - [ ] 作成履歴（作成日表示）
