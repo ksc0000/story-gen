@@ -38,7 +38,8 @@ function statusBadgeClass(status: QualityTaskStatus): string {
   }
 }
 
-function formatTimestamp(ms: number): string {
+function formatTimestamp(ms: unknown): string {
+  if (typeof ms !== "number" || !Number.isFinite(ms)) return "—";
   return new Date(ms).toLocaleString("ja-JP", {
     month: "2-digit",
     day: "2-digit",
@@ -138,8 +139,9 @@ export function QualityTasksPanel() {
         {!loading && filteredTasks.length > 0 && (
           <div className="space-y-3">
             {filteredTasks.map((task) => {
-              const checkedCount = task.checklist.filter((c) => c.checked).length;
-              const totalCount = task.checklist.length;
+              const checklist = Array.isArray(task.checklist) ? task.checklist : [];
+              const checkedCount = checklist.filter((c) => c.checked).length;
+              const totalCount = checklist.length;
               return (
                 <div
                   key={task.id}
