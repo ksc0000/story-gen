@@ -498,9 +498,9 @@ export function buildTaskDraft(
 
     case "review_personalization_inputs": {
       const snapshot = book.childProfileSnapshot;
-      const childName = snapshot?.displayName ?? "未設定";
+      const hasName = !!snapshot?.displayName;
       const checklist: TaskDraftItem[] = [
-        { label: "子どもの名前", detail: childName },
+        { label: "子どもの名前", detail: hasName ? "設定あり（画面上で確認）" : "未設定" },
         { label: "childProfileSnapshot を確認", detail: snapshot ? "設定あり — 内容を展開して確認" : "未設定" },
         { label: "input を確認", detail: "作成時の入力パラメータを確認" },
         { label: "personalizationScore", detail: `${book.personalizationScore ?? "未評価"} / 5` },
@@ -509,7 +509,7 @@ export function buildTaskDraft(
         title: "パーソナライズ 確認タスク",
         intent,
         checklist,
-        summary: `Book ${book.id} のパーソナライズ反映を確認する。子ども: ${childName}。`,
+        summary: `Book ${book.id} のパーソナライズ反映を確認する。`,
       };
     }
 
