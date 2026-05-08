@@ -135,18 +135,43 @@ export function buildCoverRegenerationSuccessPatch(params: {
   };
 }
 
+/** Check if a book already has a valid, displayable cover. */
+export function hasValidExistingCover(bookData: {
+  hasCoverPage?: boolean;
+  readingStructureVersion?: string;
+  coverStatus?: string;
+  coverImageUrl?: string;
+}): boolean {
+  return (
+    bookData.hasCoverPage === true &&
+    bookData.readingStructureVersion === "v2_cover_title_story" &&
+    bookData.coverStatus === "completed" &&
+    typeof bookData.coverImageUrl === "string" &&
+    bookData.coverImageUrl.length > 0
+  );
+}
+
 export function buildCoverRegenerationFailurePatch(params: {
   failureReason: string;
   usedProfile?: ImageModelProfile;
   durationMs?: number;
   fallbackUsed?: boolean;
+  hadValidCover?: boolean;
 }): Record<string, unknown> {
   const patch: Record<string, unknown> = {
-    coverStatus: "failed" as CoverStatus,
-    hasCoverPage: false,
-    readingStructureVersion: "v1_pages_only",
     coverFailureReason: params.failureReason,
   };
+
+  if (params.hadValidCover) {
+    // Preserve existing cover for Reader UI display
+    patch.coverStatus = "completed" as CoverStatus;
+    // hasCoverPage, readingStructureVersion, coverImageUrl are NOT overwritten
+  } else {
+    patch.coverStatus = "failed" as CoverStatus;
+    patch.hasCoverPage = false;
+    patch.readingStructureVersion = "v1_pages_only";
+  }
+
   if (params.usedProfile !== undefined) patch.coverImageModelProfile = params.usedProfile;
   if (params.durationMs !== undefined) patch.coverImageDurationMs = params.durationMs;
   if (params.fallbackUsed !== undefined) patch.coverImageFallbackUsed = params.fallbackUsed;
@@ -198,6 +223,9 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
       throw new HttpsError("failed-precondition", "coverImagePrompt が設定されていません。");
     }
 
+    /* ---------- Check if book already has a valid cover ---------- */
+    const hadValidCover = hasValidExistingCover(bookData);
+
     /* ---------- Mark generating ---------- */
     await bookRef.update({
       coverStatus: "generating" as CoverStatus,
@@ -221,7 +249,7 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
         error: err instanceof Error ? err.message : String(err),
       });
       await bookRef.update(
-        buildCoverRegenerationFailurePatch({ failureReason: "unexpected_error" }),
+        buildCoverRegenerationFailurePatch({ failureReason: "unexpected_error", hadValidCover }),
       );
       throw new HttpsError("internal", "カバー画像の再生成に失敗しました。");
     }
@@ -233,6 +261,7 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
         usedProfile: coverResult.primaryProfile,
         durationMs: coverResult.durationMs,
         fallbackUsed: coverResult.fallbackUsed,
+        hadValidCover,
       });
       await bookRef.update(failurePatch);
 
@@ -264,6 +293,7 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
           usedProfile: coverResult.usedProfile,
           durationMs: coverResult.durationMs,
           fallbackUsed: coverResult.fallbackUsed,
+          hadValidCover,
         }),
       );
       throw new HttpsError("internal", "カバー画像のアップロードに失敗しました。");

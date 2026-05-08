@@ -440,8 +440,10 @@ Admin Book Detail の既存セクション:
 - [x] 失敗→再生成→成功のフロー動作
 - [x] metrics 更新 (coverImageDurationMs, coverImageModelProfile, coverImageFallbackUsed)
 - [x] 失敗時に coverImageUrl を維持、book status を failed にしない
+- [x] 既存有効 cover がある場合、再生成失敗でも Reader UI 表示を維持 (`hadValidCover` ガード)
+- [x] `hasValidExistingCover` helper + テスト 9件
 - [x] Admin UI に「カバー画像を再生成」ボタン追加
-- [x] `buildCoverRegenerationSuccessPatch` / `buildCoverRegenerationFailurePatch` テスト 7件
+- [x] `buildCoverRegenerationSuccessPatch` / `buildCoverRegenerationFailurePatch` テスト 18件
 
 ### Step G
 
