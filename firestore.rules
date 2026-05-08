@@ -145,7 +145,18 @@ service cloud.firestore {
         && request.resource.data.status == "open"
         && request.resource.data.createdBy == request.auth.uid;
 
-      allow update: if isAdmin();
+      allow update: if isAdmin()
+        && request.resource.data.bookId == resource.data.bookId
+        && request.resource.data.intent == resource.data.intent
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAtMs == resource.data.createdAtMs
+        && request.resource.data.status in [
+          "open",
+          "in_progress",
+          "resolved",
+          "wont_fix"
+        ]
+        && request.resource.data.updatedAtMs is number;
 
       allow delete: if false;
     }

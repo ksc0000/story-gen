@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import {
   collection,
+  doc,
   getDocs,
   limit,
   orderBy,
   query,
+  serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +26,13 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "in_progress", label: "in_progress" },
   { value: "resolved", label: "resolved" },
   { value: "wont_fix", label: "wont_fix" },
+];
+
+const TASK_STATUS_OPTIONS: QualityTaskStatus[] = [
+  "open",
+  "in_progress",
+  "resolved",
+  "wont_fix",
 ];
 
 function statusBadgeClass(status: QualityTaskStatus): string {
@@ -48,11 +58,17 @@ function formatTimestamp(ms: unknown): string {
   });
 }
 
-export function QualityTasksPanel() {
+interface QualityTasksPanelProps {
+  adminUid?: string;
+}
+
+export function QualityTasksPanel({ adminUid }: QualityTasksPanelProps) {
   const [tasks, setTasks] = useState<TaskWithId[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,6 +105,53 @@ export function QualityTasksPanel() {
     statusFilter === "all"
       ? tasks
       : tasks.filter((t) => t.status === statusFilter);
+
+  // --- Update helpers ---
+
+  async function updateTask(taskId: string, updates: Partial<QualityTaskDoc>) {
+    setSaving(taskId);
+    try {
+      const ref = doc(db, "qualityTasks", taskId);
+      await updateDoc(ref, {
+        ...updates,
+        updatedAt: serverTimestamp(),
+        updatedAtMs: Date.now(),
+      });
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId ? { ...t, ...updates, updatedAtMs: Date.now() } : t
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update task");
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  function handleChecklistToggle(task: TaskWithId, index: number) {
+    const checklist = Array.isArray(task.checklist) ? [...task.checklist] : [];
+    if (!checklist[index]) return;
+    checklist[index] = { ...checklist[index], checked: !checklist[index].checked };
+    updateTask(task.id, { checklist });
+  }
+
+  function handleStatusChange(task: TaskWithId, newStatus: QualityTaskStatus) {
+    const updates: Partial<QualityTaskDoc> = { status: newStatus };
+    if ((newStatus === "resolved" || newStatus === "wont_fix") && adminUid) {
+      updates.resolvedBy = adminUid;
+      updates.resolvedAtMs = Date.now();
+    }
+    if (newStatus === "open" || newStatus === "in_progress") {
+      updates.resolvedBy = null;
+      updates.resolvedAtMs = null;
+    }
+    updateTask(task.id, updates);
+  }
+
+  function handleResolutionNoteChange(task: TaskWithId, note: string) {
+    updateTask(task.id, { resolutionNote: note });
+  }
 
   return (
     <Card>
@@ -142,12 +205,23 @@ export function QualityTasksPanel() {
               const checklist = Array.isArray(task.checklist) ? task.checklist : [];
               const checkedCount = checklist.filter((c) => c.checked).length;
               const totalCount = checklist.length;
+              const isExpanded = expandedTaskId === task.id;
+              const isSaving = saving === task.id;
               return (
                 <div
                   key={task.id}
-                  className="rounded-lg border border-violet-100 bg-violet-50/30 p-3"
+                  className={`rounded-lg border p-3 transition-colors ${
+                    isExpanded
+                      ? "border-purple-300 bg-purple-50/40"
+                      : "border-violet-100 bg-violet-50/30"
+                  }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
+                  {/* Summary row */}
+                  <button
+                    type="button"
+                    onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                    className="flex w-full items-start justify-between gap-2 text-left"
+                  >
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-purple-900 truncate">
                         {task.title}
@@ -175,6 +249,12 @@ export function QualityTasksPanel() {
                         </span>
                         <span>•</span>
                         <span>{formatTimestamp(task.createdAtMs)}</span>
+                        {isSaving && (
+                          <>
+                            <span>•</span>
+                            <span className="text-blue-600">saving…</span>
+                          </>
+                        )}
                       </div>
                     </div>
                     <Badge
@@ -183,7 +263,91 @@ export function QualityTasksPanel() {
                     >
                       {task.status}
                     </Badge>
-                  </div>
+                  </button>
+
+                  {/* Expanded detail */}
+                  {isExpanded && (
+                    <div className="mt-3 space-y-3 border-t border-violet-100 pt-3">
+                      {/* Status change */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-medium text-violet-700">Status:</span>
+                        {TASK_STATUS_OPTIONS.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            disabled={isSaving || task.status === s}
+                            onClick={() => handleStatusChange(task, s)}
+                            className={`rounded border px-2 py-0.5 text-xs transition-colors disabled:opacity-40 ${
+                              task.status === s
+                                ? "border-purple-400 bg-purple-100 text-purple-800"
+                                : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Checklist */}
+                      {checklist.length > 0 && (
+                        <div className="space-y-1">
+                          <span className="text-xs font-medium text-violet-700">Checklist:</span>
+                          {checklist.map((item, idx) => (
+                            <label
+                              key={idx}
+                              className="flex items-start gap-2 rounded px-1 py-0.5 text-xs text-violet-800 hover:bg-violet-50"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={item.checked}
+                                disabled={isSaving}
+                                onChange={() => handleChecklistToggle(task, idx)}
+                                className="mt-0.5 rounded border-gray-300"
+                              />
+                              <span className={item.checked ? "line-through opacity-60" : ""}>
+                                {item.label}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Resolution note */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-violet-700">
+                          Resolution note:
+                        </label>
+                        <textarea
+                          value={task.resolutionNote ?? ""}
+                          disabled={isSaving}
+                          onChange={(e) => {
+                            // Optimistic local update
+                            setTasks((prev) =>
+                              prev.map((t) =>
+                                t.id === task.id ? { ...t, resolutionNote: e.target.value } : t
+                              )
+                            );
+                          }}
+                          onBlur={(e) => {
+                            if (e.target.value !== (task.resolutionNote ?? "")) {
+                              handleResolutionNoteChange(task, e.target.value);
+                            }
+                          }}
+                          rows={2}
+                          className="w-full rounded border border-violet-200 bg-white px-2 py-1 text-xs text-violet-800 placeholder:text-violet-300 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                          placeholder="解決時のメモ…"
+                        />
+                      </div>
+
+                      {/* Metadata */}
+                      <div className="flex flex-wrap gap-3 text-xs text-violet-500">
+                        <span>id: {task.id.slice(0, 8)}…</span>
+                        {task.resolvedBy && <span>resolved by: {task.resolvedBy.slice(0, 8)}…</span>}
+                        {task.resolvedAtMs && <span>resolved: {formatTimestamp(task.resolvedAtMs)}</span>}
+                        <span>updated: {formatTimestamp(task.updatedAtMs)}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

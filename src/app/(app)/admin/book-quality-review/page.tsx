@@ -2350,7 +2350,7 @@ export default function AdminBookQualityReviewPage() {
                 </div>
               </div>
 
-              <QualityTasksPanel />
+              <QualityTasksPanel adminUid={user?.uid} />
             </>
           )}
         </CardContent>
