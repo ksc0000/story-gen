@@ -121,6 +121,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 ### 品質仕様
 
 - [Quality Metrics / Phase 2 Review Rubric](./QUALITY_METRICS.md)
+- [Manual Quality Review 実機確認チェックリスト](./PHASE2_MANUAL_QUALITY_REVIEW_CHECKLIST.md)
 
 ### 最初の実装タスク
 
