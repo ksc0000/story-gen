@@ -99,7 +99,7 @@ const categoryGroups: Record<string, CategoryGroupData> = {
   },
 };
 
-const templates: Record<string, TemplateData> = {
+export const SEED_TEMPLATES: Record<string, TemplateData> = {
   animals: {
     name: "どうぶつのおはなし",
     description: "ふわふわ動物たちと友だちになるやさしい物語",
@@ -280,6 +280,11 @@ const templates: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、家族の思い出をやさしく残す絵本です。",
     fixedStory: {
       titleTemplate: "{childName}とはじめてのどうぶつえん",
+      coverImagePromptTemplate:
+        "Picture book cover illustration: a young child standing at the bright entrance of a friendly Japanese zoo with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark",
+      titleSpreadTextTemplate: "{childName}と はじめての どうぶつえん",
+      openingNarrationTemplate:
+        "きょうは とくべつな日。{childName}は {familyMembers}と いっしょに、はじめての どうぶつえんへ でかけます。",
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は、{familyMembers}といっしょに{place}へでかけました。",
@@ -358,6 +363,11 @@ const templates: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、寝る前に安心して眠れる短い絵本を作ります。",
     fixedStory: {
       titleTemplate: "きょうもいい日だったね、{childName}",
+      coverImagePromptTemplate:
+        "Picture book cover illustration: a young child in cozy pajamas in a warm bedroom at dusk, soft moonlight through the window, favorite stuffed toy nearby, recurring small star motif, peaceful sleepy mood, soft watercolor style, child-safe gentle composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark",
+      titleSpreadTextTemplate: "きょうも いい日だったね、{childName}",
+      openingNarrationTemplate:
+        "よるが やさしく やってきました。{childName}の きょう一日を、ゆっくり ふりかえってみましょう。",
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は、きょうもたのしいじかんをすごしました。",
@@ -438,6 +448,11 @@ const templates: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、はみがきをやさしく応援する短い絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のはみがきできたよ",
+      coverImagePromptTemplate:
+        "Picture book cover illustration: a cheerful preschool child holding a toothbrush in a bright clean bathroom, fresh morning or evening light, friendly mirror reflection, recurring shining star motif, encouraging cheerful mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark",
+      titleSpreadTextTemplate: "{childName}の はみがき できたよ",
+      openingNarrationTemplate:
+        "きょうも はみがきの じかんが やってきました。{childName}は どんなふうに がんばるかな。",
       pages: [
         {
           textTemplate: "{childName}は、きょうもおくちをあーん。",
@@ -513,6 +528,11 @@ const templates: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、はじめてのクリスマスをやさしく残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のはじめてのクリスマス",
+      coverImagePromptTemplate:
+        "Picture book cover illustration: a young child celebrating Christmas with family in a cozy living room, soft warm fairy lights, decorated Christmas tree, gentle winter glow, recurring small golden bell motif, festive but calm storybook mood, soft watercolor style, child-safe tender composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark",
+      titleSpreadTextTemplate: "{childName}の はじめての クリスマス",
+      openingNarrationTemplate:
+        "きらきらの ひかりに つつまれた よる。{childName}と {familyMembers}の とくべつな クリスマスが はじまります。",
       pages: [
         {
           textTemplate: "{childName}は、{familyMembers}といっしょに、きらきらのクリスマスをむかえました。",
@@ -690,7 +710,7 @@ async function seed(): Promise<void> {
   for (const [id, data] of Object.entries(categoryGroups)) {
     batch.set(db.doc(`categoryGroups/${id}`), data);
   }
-  for (const [id, data] of Object.entries(templates)) {
+  for (const [id, data] of Object.entries(SEED_TEMPLATES)) {
     batch.set(db.doc(`templates/${id}`), {
       ...defaultTemplateMetadata,
       ...data,
@@ -701,7 +721,7 @@ async function seed(): Promise<void> {
     batch.set(db.doc(`templates/${id}`), { active: false }, { merge: true });
   }
   await batch.commit();
-  console.log(`Seeded ${Object.keys(templates).length} templates.`);
+  console.log(`Seeded ${Object.keys(SEED_TEMPLATES).length} templates.`);
 }
 
 export const seedTemplates = onCall(

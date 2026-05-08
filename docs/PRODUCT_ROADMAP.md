@@ -233,7 +233,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 | Step | 内容 | Status |
 |------|------|--------|
 | T1-A | `FixedStoryTemplate` に cover / title / narration テンプレートフィールド追加（型のみ） | **done** |
-| T1-B | 既存 4 テンプレートの seed に cover / title / narration テンプレート追加 | |
+| T1-B | 既存 4 テンプレートの seed に cover / title / narration テンプレート追加 | **done** |
 | T1-C | `generate-book.ts` で fixed_template の cover / title / narration をテンプレート展開 | |
 | T1-D | 既存 4 テンプレートの `imagePromptTemplate` 強化 + `pageVisualRole` 追加 | |
 
@@ -307,8 +307,8 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 ### Now（現在着手中〜次に着手）
 
 - [Template Mode Design](./TEMPLATE_MODE_DESIGN.md) — Phase T1 実装
-- Phase T1-B: 既存 4 テンプレートに cover / title / narration テンプレート追加
 - Phase T1-C: generate-book.ts で fixed_template の cover / title / narration テンプレート展開
+- Phase T1-D: 既存 4 テンプレートの imagePromptTemplate 強化 + pageVisualRole 追加
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - production smoke evidence 確認
 
