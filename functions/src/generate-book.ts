@@ -1122,7 +1122,9 @@ export async function processBookGeneration(
               coverGeneratedAtMs: Date.now(),
               coverImageModelProfile: coverResult.usedProfile,
               coverImageDurationMs: coverResult.durationMs,
-              coverImageFallbackUsed: coverResult.fallbackUsed || undefined,
+              coverImageFallbackUsed: coverResult.fallbackUsed,
+              hasCoverPage: true,
+              readingStructureVersion: "v2_cover_title_story",
             });
           } catch (uploadErr) {
             logger.error("Cover image upload failed", {
@@ -1133,6 +1135,10 @@ export async function processBookGeneration(
               coverStatus: "failed" as CoverStatus,
               coverFailureReason: "upload_failed",
               coverImageDurationMs: coverResult.durationMs,
+              coverImageModelProfile: coverResult.usedProfile,
+              coverImageFallbackUsed: coverResult.fallbackUsed,
+              hasCoverPage: false,
+              readingStructureVersion: "v1_pages_only",
             });
           }
         } else {
@@ -1141,7 +1147,9 @@ export async function processBookGeneration(
             coverFailureReason: coverResult.failureReason,
             coverImageModelProfile: coverResult.primaryProfile,
             coverImageDurationMs: coverResult.durationMs,
-            coverImageFallbackUsed: coverResult.fallbackUsed || undefined,
+            coverImageFallbackUsed: coverResult.fallbackUsed,
+            hasCoverPage: false,
+            readingStructureVersion: "v1_pages_only",
           });
         }
       } catch (err) {
@@ -1149,11 +1157,11 @@ export async function processBookGeneration(
           bookId,
           error: err instanceof Error ? err.message : String(err),
         });
-        coverMetadata = { coverStatus: "failed" as CoverStatus, coverFailureReason: "unexpected_error" };
+        coverMetadata = { coverStatus: "failed" as CoverStatus, coverFailureReason: "unexpected_error", hasCoverPage: false, readingStructureVersion: "v1_pages_only" as const };
       }
     } else if (coverImagePrompt && !deps.uploadCoverImage) {
       logger.warn("uploadCoverImage not configured, skipping cover generation", { bookId });
-      coverMetadata = { coverStatus: "failed" as CoverStatus, coverFailureReason: "upload_not_configured" };
+      coverMetadata = { coverStatus: "failed" as CoverStatus, coverFailureReason: "upload_not_configured", hasCoverPage: false, readingStructureVersion: "v1_pages_only" as const };
     }
 
     // Step 9: Compute book-level metrics and status

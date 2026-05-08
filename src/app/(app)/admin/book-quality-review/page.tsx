@@ -1797,8 +1797,10 @@ export default function AdminBookQualityReviewPage() {
                             <p><span className="font-medium text-purple-900">coverStatus:</span> {selectedBook.coverStatus ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">coverImageDurationMs:</span> {selectedBook.coverImageDurationMs ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">coverImageModelProfile:</span> {selectedBook.coverImageModelProfile ?? "—"}</p>
-                            <p><span className="font-medium text-purple-900">coverImageFallbackUsed:</span> {selectedBook.coverImageFallbackUsed ? "true" : "—"}</p>
+                            <p><span className="font-medium text-purple-900">coverImageFallbackUsed:</span> {typeof selectedBook.coverImageFallbackUsed === "boolean" ? String(selectedBook.coverImageFallbackUsed) : "—"}</p>
                             <p><span className="font-medium text-purple-900">coverFailureReason:</span> {selectedBook.coverFailureReason ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">hasCoverPage:</span> {typeof selectedBook.hasCoverPage === "boolean" ? String(selectedBook.hasCoverPage) : "—"}</p>
+                            <p><span className="font-medium text-purple-900">readingStructureVersion:</span> {selectedBook.readingStructureVersion ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">templateId:</span> {selectedBook.templateId ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">theme:</span> {selectedBook.theme}</p>
                             <p><span className="font-medium text-purple-900">categoryGroupId:</span> {selectedBook.categoryGroupId ?? "—"}</p>

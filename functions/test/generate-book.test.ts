@@ -1477,7 +1477,13 @@ describe("cover image generation", () => {
     );
     expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
       "book-cover-1",
-      expect.objectContaining({ coverStatus: "completed", coverGeneratedAtMs: expect.any(Number) })
+      expect.objectContaining({
+        coverStatus: "completed",
+        coverGeneratedAtMs: expect.any(Number),
+        hasCoverPage: true,
+        readingStructureVersion: "v2_cover_title_story",
+        coverImageFallbackUsed: false,
+      })
     );
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-cover-1", "completed");
   });
@@ -1495,7 +1501,12 @@ describe("cover image generation", () => {
 
     expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
       "book-no-upload",
-      expect.objectContaining({ coverStatus: "failed", coverFailureReason: "upload_not_configured" })
+      expect.objectContaining({
+        coverStatus: "failed",
+        coverFailureReason: "upload_not_configured",
+        hasCoverPage: false,
+        readingStructureVersion: "v1_pages_only",
+      })
     );
     // pages still succeed → book not failed
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-no-upload", "completed");
@@ -1514,7 +1525,11 @@ describe("cover image generation", () => {
 
     expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
       "book-cover-fail",
-      expect.objectContaining({ coverStatus: "failed" })
+      expect.objectContaining({
+        coverStatus: "failed",
+        hasCoverPage: false,
+        readingStructureVersion: "v1_pages_only",
+      })
     );
     // pages succeeded → book should be completed, not failed
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-cover-fail", "completed");
@@ -1532,7 +1547,13 @@ describe("cover image generation", () => {
     // cover status should be failed but book is completed
     expect(deps.updateBookStoryGenerationMetadata).toHaveBeenCalledWith(
       "book-upload-fail",
-      expect.objectContaining({ coverStatus: "failed", coverFailureReason: "upload_failed" })
+      expect.objectContaining({
+        coverStatus: "failed",
+        coverFailureReason: "upload_failed",
+        coverImageFallbackUsed: false,
+        hasCoverPage: false,
+        readingStructureVersion: "v1_pages_only",
+      })
     );
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-upload-fail", "completed");
   });
