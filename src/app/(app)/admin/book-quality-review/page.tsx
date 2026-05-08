@@ -1409,7 +1409,7 @@ export default function AdminBookQualityReviewPage() {
                     onChange={(e) => setQualitySortOrder(e.target.value as ReviewQualitySortOrder)}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="default">default (createdAt desc)</option>
+                    <option value="default">default (current order)</option>
                     <option value="low_first">low quality first</option>
                     <option value="high_first">high quality first</option>
                   </select>
