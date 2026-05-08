@@ -316,7 +316,7 @@ Bright, warm colors. Soft watercolor style. No text in image."
 | T1-A | `FixedStoryTemplate` に cover / title / narration テンプレートフィールド追加（型のみ） | `functions/src/lib/types.ts`, `src/lib/types.ts` | **done** |
 | T1-B | 既存 4 テンプレートの seed に `coverImagePromptTemplate`, `titleSpreadTextTemplate`, `openingNarrationTemplate` を追加 | `functions/src/seed-templates.ts` | **done** |
 | T1-C | `generate-book.ts` で `fixed_template` の cover / title / narration をテンプレート展開 | `functions/src/generate-book.ts` | **done** |
-| T1-D | 既存 4 テンプレートの `imagePromptTemplate` 強化 + `pageVisualRole` 追加 | `functions/src/seed-templates.ts` | |
+| T1-D | 既存 4 テンプレートの `imagePromptTemplate` 強化 + `pageVisualRole` 追加 | `functions/src/seed-templates.ts` | **done** |
 
 ### Phase T2: テンプレート拡充（推定 6 Steps）
 

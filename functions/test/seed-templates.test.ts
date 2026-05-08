@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { SEED_TEMPLATES } from "../src/seed-templates";
+import type { PageVisualRole } from "../src/lib/types";
 
 const FIXED_TEMPLATE_IDS = [
   "fixed-first-zoo",
@@ -15,6 +16,13 @@ const NEGATIVE_TEXT_TOKENS = [
   "no logo",
   "no watermark",
 ];
+
+const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
+  "fixed-first-zoo": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-bedtime-good-day": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-brush-teeth": ["opening_establishing", "action", "payoff", "quiet_ending"],
+  "fixed-first-christmas": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+};
 
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
   for (const id of FIXED_TEMPLATE_IDS) {
@@ -72,6 +80,59 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
           (p) => p.textTemplatesByAge && Object.keys(p.textTemplatesByAge).length > 0
         );
         expect(pagesWithAge.length).toBeGreaterThanOrEqual(3);
+      });
+
+      it("every page has a pageVisualRole", () => {
+        for (const page of template.fixedStory?.pages ?? []) {
+          expect(page.pageVisualRole).toBeTruthy();
+        }
+      });
+
+      it("pageVisualRole sequence matches expected pattern", () => {
+        const roles = (template.fixedStory?.pages ?? []).map((p) => p.pageVisualRole);
+        expect(roles).toEqual(EXPECTED_PAGE_ROLES[id]);
+      });
+
+      it("first page role is opening_establishing", () => {
+        expect(template.fixedStory?.pages[0]?.pageVisualRole).toBe("opening_establishing");
+      });
+
+      it("last page role is quiet_ending", () => {
+        const pages = template.fixedStory?.pages ?? [];
+        expect(pages[pages.length - 1]?.pageVisualRole).toBe("quiet_ending");
+      });
+
+      it("every imagePromptTemplate has negative text instructions", () => {
+        for (const page of template.fixedStory?.pages ?? []) {
+          const prompt = page.imagePromptTemplate.toLowerCase();
+          expect(prompt).toContain("no text");
+          expect(prompt).toContain("no letters");
+          expect(prompt).toContain("no japanese characters");
+          expect(prompt).toContain("no logo");
+          expect(prompt).toContain("no watermark");
+        }
+      });
+
+      it("every imagePromptTemplate is sufficiently detailed (>100 chars)", () => {
+        for (const page of template.fixedStory?.pages ?? []) {
+          expect(page.imagePromptTemplate.length).toBeGreaterThan(100);
+        }
+      });
+
+      it("every imagePromptTemplate mentions composition or framing", () => {
+        const framingTerms = ["shot", "close-up", "establishing", "viewed from", "back-view", "side view"];
+        for (const page of template.fixedStory?.pages ?? []) {
+          const prompt = page.imagePromptTemplate.toLowerCase();
+          const hasFraming = framingTerms.some((term) => prompt.includes(term));
+          expect(hasFraming).toBe(true);
+        }
+      });
+
+      it("every imagePromptTemplate mentions watercolor style", () => {
+        for (const page of template.fixedStory?.pages ?? []) {
+          const prompt = page.imagePromptTemplate.toLowerCase();
+          expect(prompt).toContain("watercolor");
+        }
       });
     });
   }

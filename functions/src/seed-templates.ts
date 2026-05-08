@@ -1,7 +1,7 @@
 import { onCall } from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import type { CategoryGroupData, TemplateData, FixedStoryPageTemplate } from "./lib/types";
+import type { CategoryGroupData, TemplateData, FixedStoryPageTemplate, PageVisualRole } from "./lib/types";
 
 if (getApps().length === 0) initializeApp();
 const db = getFirestore();
@@ -9,6 +9,7 @@ const db = getFirestore();
 function buildAgeSpecificPage(params: {
   textTemplate: string;
   imagePromptTemplate: string;
+  pageVisualRole?: PageVisualRole;
   baby_toddler?: string;
   preschool_3_4?: string;
   early_reader_5_6?: string;
@@ -29,6 +30,7 @@ function buildAgeSpecificPage(params: {
       ? textTemplatesByAge
       : undefined,
     imagePromptTemplate: params.imagePromptTemplate,
+    pageVisualRole: params.pageVisualRole,
   };
 }
 
@@ -295,8 +297,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_elementary_7_8:
             "{childName}は、{familyMembers}といっしょに{place}へでかけました。いりぐちに あった きいろい ほしの しるしを見つけて、きょうの ぼうけんには ひみつがありそうだと 感じます。",
           general_child: "{childName}は、{familyMembers}といっしょに{place}へでかけました。どんな どうぶつに あえるかな。",
+          pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            "Establishing wide shot of a young child arriving at a friendly Japanese zoo with family, entrance path and map visible, a small yellow star motif near the sign, rich but not cluttered background details, child-safe picture book illustration, no text, no letters, no readable signs, no watermark",
+            "Establishing wide shot of a young child arriving at a friendly Japanese zoo with family. The child stands center-left near the entrance path, looking up with excitement. Family members walk beside the child. A colorful zoo entrance arch frames the top. A small yellow star motif is tucked near the entrance sign. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, rounded child-safe shapes, rich but not cluttered background details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
         buildAgeSpecificPage({
           textTemplate: "大きなどうぶつ、小さなどうぶつ。{childName}の目はきらきらです。",
@@ -309,8 +312,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "大きなどうぶつ、小さなどうぶつ。{childName}は、うごきかたや くらしかたの ちがいに きづいて 夢中になります。さっき見つけた きいろい ほしの しるしが、ここにも そっと かくれていました。",
           general_child:
             "大きなどうぶつ、小さなどうぶつ。{childName}の目はきらきらです。つぎは どこを見ようかと こころが はずみます。",
+          pageVisualRole: "discovery",
           imagePromptTemplate:
-            "Medium action shot of a child safely watching friendly zoo animals, focus on curious eyes and nearby animal footprints, family members in the background, recurring yellow star motif hidden in the scene, rich but not cluttered environment details, child-safe picture book illustration, no text, no letters, no readable signs, no watermark",
+            "Medium shot of a child at a zoo animal enclosure, leaning forward with wide curious eyes. A friendly elephant or giraffe stands in the mid-ground, while small birds or butterflies add life to the foreground. The child points with one hand, the other holding a parent's hand. Family members stand behind the child, smiling. A small yellow star motif is hidden on a fence post. Warm daylight filtering through leaves. Soft watercolor picture book style, clear foreground-midground-background layering, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
         buildAgeSpecificPage({
           textTemplate: "いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。",
@@ -323,8 +327,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "いちばんうれしかったのは、{childName}が にっこり笑った そのしゅんかんでした。はじめは どきどきしていたけれど、よく見てみると どうぶつたちにも それぞれの やさしい しぐさが あると 分かったのでした。",
           general_child:
             "いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。みんなの こころも ぽかぽかに なります。",
+          pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
-            "Close-up emotional moment of the child smiling after a meaningful zoo discovery, focus on face and small hands holding a zoo keepsake, warm family reactions in the background, recurring yellow star motif, rich but not cluttered picture book scene, no text, no letters, no readable signs, no watermark",
+            "Close-up of the child's face beaming with a big joyful smile after a special zoo moment. The child holds a small zoo souvenir or leaf in both hands near their chest. Soft-focus background shows a friendly animal and family members reacting warmly. A small yellow star motif appears on the souvenir or nearby. Warm afternoon light with golden highlights on the child's cheeks. Soft watercolor picture book style, emotional warmth, intimate framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
         buildAgeSpecificPage({
           textTemplate: "{parentMessage}",
@@ -333,8 +338,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_reader_5_6: "{parentMessage}",
           early_elementary_7_8: "{parentMessage}",
           general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            "Warm ending back-view shot of the child and family leaving the zoo at golden hour, beautiful scenery, gentle path, recurring yellow star motif softly visible, rich but not cluttered, child-safe picture book finale, no text, no letters, no readable signs, no watermark",
+            "Back-view wide shot of the child and family walking away from the zoo toward a golden-hour sunset. A gentle tree-lined path stretches ahead. The child holds a parent's hand, looking slightly back with a content smile. A small yellow star motif glows softly in the evening sky or on a nearby lantern. Warm amber and soft pink sunset tones. Soft watercolor picture book style, peaceful farewell composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
       ],
     },
@@ -380,8 +386,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "{childName}は、きょうもたのしいじかんを すごしました。ゆっくり くらくなる まどのそとを見ながら、きょうの できごとを ひとつずつ こころの本だなへ しまっていきます。",
           general_child:
             "{childName}は、きょうもたのしいじかんをすごしました。おへやには やさしい よるが やってきます。",
+          pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            "Establishing wide shot of a cozy child bedroom at the end of a happy day, toys and books softly visible, moonlight beginning outside the window, a small star motif tucked into the room, rich but not cluttered, child-safe picture book illustration, no text, no letters, no readable signs, no watermark",
+            "Establishing wide shot of a cozy child bedroom at early evening. The child sits on the floor surrounded by toys and picture books, looking toward a window where dusk light streams in. A warm bedside lamp glows in the corner. Curtains frame the window with a deep blue-purple sky outside. A small star motif is tucked into the lampshade or blanket. Soft watercolor picture book style, warm amber and lavender tones, child-safe rounded shapes, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
         buildAgeSpecificPage({
           textTemplate: "うれしかったことを、ひとつずつこころにあつめます。",
@@ -394,8 +401,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "うれしかったことを、ひとつずつ こころに あつめます。ちいさな できごとにも それぞれの いろがあり、いちばん だいじにしたい しゅんかんが はっきりしてきました。",
           general_child:
             "うれしかったことを、ひとつずつ こころに あつめます。にこにこした ことが、まだ きらきらしています。",
+          pageVisualRole: "discovery",
           imagePromptTemplate:
-            "Medium shot of a child quietly remembering the day, warm lamp glow, small objects from the day visible in the room, focus on a star-shaped motif or keepsake, rich but not cluttered background, child-safe bedtime picture book scene, no text, no letters, no readable signs, no watermark",
+            "Medium shot of a child sitting cross-legged on a soft rug, holding a small keepsake from the day (a leaf, a drawing, or a toy). The child looks down at it with a gentle, reflective smile. A warm lamp casts a soft orange glow. Small meaningful objects from the day are scattered nearby. A glowing star motif appears on a cushion or picture frame. Soft watercolor picture book style, warm introspective mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
         buildAgeSpecificPage({
           textTemplate: "おふとんに入ると、こころがふわっとやわらかくなりました。",
@@ -408,8 +416,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "おふとんに入ると、こころが ふわっと やわらかくなりました。きょうの うれしさも ちょっぴりの くやしさも、あしたへ つながる だいじな きおくとして しずかに おさまっていきます。",
           general_child:
             "おふとんに入ると、こころが ふわっと やわらかくなりました。もう だいじょうぶ、おやすみの じかんです。",
+          pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
-            "Close-up of a child snuggling into bed, focus on small hands holding a favorite stuffed toy, moon and stars outside, recurring star motif, rich but not cluttered bedtime details, child-safe illustration, no text, no letters, no readable signs, no watermark",
+            "Close-up of a child snuggling into a fluffy blanket, hugging a favorite stuffed animal with both hands. Eyes half-closed with a peaceful, content expression. A pillow and soft sheets surround the child. Moonlight and stars are visible through a nearby window. A small star motif appears on the stuffed animal or pillowcase. Soft watercolor picture book style, intimate peaceful framing, warm ivory and soft blue tones, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
         buildAgeSpecificPage({
           textTemplate: "{parentMessage}",
@@ -418,8 +427,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_reader_5_6: "{parentMessage}",
           early_elementary_7_8: "{parentMessage}",
           general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            "Warm ending back-view or peaceful sleeping scene, gentle moonlight, calm room full of soft meaningful objects, recurring star motif near the window, rich but not cluttered, child-safe picture book finale, no text, no letters, no readable signs, no watermark",
+            "Wide peaceful shot of the child asleep in bed, viewed from slightly above. The room is bathed in soft moonlight. A favorite stuffed toy rests beside the child. Stars twinkle outside the window. A small star motif glows gently near the windowsill or on the blanket edge. Calm, serene nighttime atmosphere. Soft watercolor picture book style, quiet lullaby composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
       ],
     },
@@ -465,8 +475,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
               "{childName}は、きょうもおくちをあーん。きれいな はにするために、じぶんで はぶらしをにぎって はじめてみます。",
             general_child: "{childName}は、きょうもおくちをあーん。",
           },
+          pageVisualRole: "opening_establishing" as const,
           imagePromptTemplate:
-            "Establishing wide shot of a preschool child getting ready to brush teeth in a bright safe bathroom, toothbrush and cup visible, recurring shining star motif, rich but not cluttered background details, child-safe picture book mood, no text, no letters, no readable signs, no watermark",
+            "Establishing wide shot of a preschool child standing on a small step stool in a bright, clean bathroom. The child reaches for a colorful toothbrush in a cup on the sink counter. A friendly mirror reflects the child's eager face. Toothpaste, a rinse cup, and a hand towel are neatly arranged. A small shining star motif is tucked on the cup or mirror corner. Bright morning or evening light from a window. Soft watercolor picture book style, rounded child-safe shapes, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         },
         {
           textTemplate: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
@@ -479,8 +490,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
               "しゃかしゃか、こしこし。おくばや はのうらも わすれないように、かがみを見ながら ていねいに みがいていきます。",
             general_child: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
           },
+          pageVisualRole: "action" as const,
           imagePromptTemplate:
-            "Medium action shot of a child brushing teeth carefully, soft foam, focus on hand movement and mirror reflection, recurring shining star motif, rich but not cluttered child-safe bathroom details, no text, no letters, no readable signs, no watermark",
+            "Medium action shot of a child actively brushing teeth with concentration. The child holds the toothbrush with both small hands, mouth slightly open with gentle foam. A friendly mirror shows the child's focused expression from a slightly different angle. Soft bubbles float near the sink. A small shining star motif appears on the toothbrush handle or a nearby tile. Clean, bright bathroom setting with rounded edges. Soft watercolor picture book style, dynamic but gentle composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         },
         {
           textTemplate: "おわったあと、{childName}はちょっぴりうれしそうでした。",
@@ -493,13 +505,15 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
               "みがきおわると、{childName}は にっこりしました。すこし むずかしくても さいごまでできたことが、自信につながったのです。",
             general_child: "おわったあと、{childName}はちょっぴりうれしそうでした。",
           },
+          pageVisualRole: "payoff" as const,
           imagePromptTemplate:
-            "Close-up emotional moment of a child smiling with pride after brushing teeth, focus on expression and tiny toothbrush, warm daily routine success, recurring shining star motif, rich but not cluttered picture book illustration, no text, no letters, no readable signs, no watermark",
+            "Close-up of a child's proud, beaming smile after finishing brushing teeth. The child holds up the toothbrush triumphantly with one hand, the other hand on their hip. Sparkling clean teeth visible in a wide grin. The mirror behind reflects the happy moment. A small shining star motif glows near the child or on the mirror. Warm encouraging light. Soft watercolor picture book style, celebratory intimate framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         },
         {
           textTemplate: "{parentMessage}",
+          pageVisualRole: "quiet_ending" as const,
           imagePromptTemplate:
-            "Warm ending shot after brushing teeth, parent and child together in a calm bathroom doorway or bedtime hall, back view or side view, recurring shining star motif, child-safe rich but not cluttered picture book finale, no text, no letters, no readable signs, no watermark",
+            "Wide warm shot of a parent and child together at the bathroom doorway, seen from behind or side view. The child holds the parent's hand, looking up with a satisfied smile. The bathroom is tidy behind them, with the toothbrush cup neatly placed. A hallway or bedroom beckons warmly ahead. A small shining star motif is visible on a doorframe or nightlight. Soft evening glow. Soft watercolor picture book style, peaceful transition composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         },
       ],
     },
@@ -547,8 +561,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             general_child:
               "{childName}は、{familyMembers}といっしょに、きらきらのクリスマスをむかえました。",
           },
+          pageVisualRole: "opening_establishing" as const,
           imagePromptTemplate:
-            "Establishing wide shot of a preschool child celebrating Christmas with family in a cozy home, warm lights, tree, small golden bell motif, rich but not cluttered child-safe festive picture book scene, no text, no letters, no readable signs, no watermark",
+            "Establishing wide shot of a cozy living room decorated for Christmas. A young child stands near a sparkling Christmas tree, reaching up toward a low ornament with wide amazed eyes. Family members sit nearby on a sofa, smiling warmly. Soft fairy lights drape across the tree and mantle. Wrapped presents rest under the tree. A small golden bell motif hangs on a low branch. Warm candlelight and gentle winter evening tones. Soft watercolor picture book style, festive but calm atmosphere, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         },
         {
           textTemplate: "おへやには、やさしいひかりと、うれしいきもちがいっぱいです。",
@@ -561,8 +576,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
               "おへやには やさしいひかりが ひろがり、みんなの たのしい声が そっと かさなります。クリスマスの あたたかさが へやじゅうに ひろがっていました。",
             general_child: "おへやには、やさしいひかりと、うれしいきもちがいっぱいです。",
           },
+          pageVisualRole: "discovery" as const,
           imagePromptTemplate:
-            "Medium shot of a gentle Christmas room full of soft lights and festive warmth, focus on decorations and family objects, small golden bell motif hidden in the background, rich but not cluttered, safe magical picture book atmosphere, no text, no letters, no readable signs, no watermark",
+            "Medium shot of a festive Christmas room glowing with soft light. Focus on the child kneeling near the tree, carefully examining a shiny ornament or a small wrapped gift. Stockings hang from a mantle. Candles flicker on a side table. Family members are visible in soft focus behind the child. A small golden bell motif is hidden among the ornaments. Warm amber and red holiday tones. Soft watercolor picture book style, wonder-filled composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         },
         {
           textTemplate: "{childName}のにこにこえがおを見て、みんなもにっこりしました。",
@@ -575,13 +591,15 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
               "{childName}の うれしそうな えがおを見て、みんなも にっこりしました。たのしい気持ちは、そばにいる人へ ひろがっていくのだと分かるような時間でした。",
             general_child: "{childName}のにこにこえがおを見て、みんなもにっこりしました。",
           },
+          pageVisualRole: "emotional_closeup" as const,
           imagePromptTemplate:
-            "Close-up emotional moment of a happy child smiling during Christmas celebration, focus on expression and hands near a small gift or ornament, family sharing warm joy, golden bell motif, rich but not cluttered tender picture book composition, no text, no letters, no readable signs, no watermark",
+            "Close-up of the child's delighted face during Christmas celebration. The child holds a small gift or ornament with both hands near their chest, eyes sparkling with joy. Family members lean in close, sharing the moment with warm smiles. Soft fairy light bokeh in the background. A small golden bell motif is visible on the gift ribbon or nearby. Warm golden and soft white tones. Soft watercolor picture book style, intimate emotional framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         },
         {
           textTemplate: "{parentMessage}",
+          pageVisualRole: "quiet_ending" as const,
           imagePromptTemplate:
-            "Warm ending back-view or scenic Christmas night shot with family warmth, soft winter glow, golden bell motif, memorable gentle picture book finale, rich but not cluttered, no text, no letters, no readable signs, no watermark",
+            "Wide scenic shot of a family by a frosty window on Christmas night, viewed from behind. The child sits on a parent's lap, both gazing at softly falling snow outside. The Christmas tree glows gently in the background. A warm blanket drapes over them. A small golden bell motif catches the light near the windowsill. Quiet, magical winter night atmosphere with deep blue and warm gold tones. Soft watercolor picture book style, peaceful memorable finale, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         },
       ],
     },
