@@ -1849,6 +1849,15 @@ function buildStoryFromFixedTemplate(
 
   return {
     title: applyTemplateReplacements(fixedStory.titleTemplate, replacements),
+    coverImagePrompt: fixedStory.coverImagePromptTemplate
+      ? applyTemplateReplacements(fixedStory.coverImagePromptTemplate, replacements)
+      : undefined,
+    titleSpreadText: fixedStory.titleSpreadTextTemplate
+      ? applyTemplateReplacements(fixedStory.titleSpreadTextTemplate, replacements)
+      : undefined,
+    openingNarration: fixedStory.openingNarrationTemplate
+      ? applyTemplateReplacements(fixedStory.openingNarrationTemplate, replacements)
+      : undefined,
     characterBible: buildFixedCharacterBible(bookData, mergedInput),
     styleBible: buildFixedStyleBible(bookData, template),
     narrativeDevice: undefined,
@@ -1856,7 +1865,7 @@ function buildStoryFromFixedTemplate(
   };
 }
 
-function buildFixedTemplateReplacements(input: BookInput): Record<string, string> {
+export function buildFixedTemplateReplacements(input: BookInput): Record<string, string> {
   const fallbackParentMessage = "またひとつ、たいせつな思い出がふえました。";
 
   return {
@@ -1876,7 +1885,7 @@ function buildFixedTemplateReplacements(input: BookInput): Record<string, string
   };
 }
 
-function applyTemplateReplacements(template: string, replacements: Record<string, string>): string {
+export function applyTemplateReplacements(template: string, replacements: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) => replacements[key] ?? "");
 }
 
