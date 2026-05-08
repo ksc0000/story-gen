@@ -282,3 +282,45 @@ export function buildQualityRecommendations(
 
   return recs;
 }
+
+/* ------------------------------------------------------------------ */
+/*  Recommendation Intent (action button導線)                          */
+/* ------------------------------------------------------------------ */
+
+export type QualityRecommendationIntent =
+  | "prepare_story_rewrite"
+  | "review_image_regeneration"
+  | "review_character_consistency"
+  | "review_personalization_inputs"
+  | "require_human_safety_review"
+  | "confirm_approval";
+
+export const RECOMMENDATION_INTENT_MAP: Record<
+  QualityRecommendationAction,
+  QualityRecommendationIntent
+> = {
+  rewrite_story: "prepare_story_rewrite",
+  regenerate_images: "review_image_regeneration",
+  fix_character_consistency: "review_character_consistency",
+  improve_personalization: "review_personalization_inputs",
+  human_review_required: "require_human_safety_review",
+  approve: "confirm_approval",
+};
+
+export const RECOMMENDATION_INTENT_LABELS: Record<QualityRecommendationIntent, string> = {
+  prepare_story_rewrite: "Story 確認へ",
+  review_image_regeneration: "画像確認へ",
+  review_character_consistency: "キャラクター確認へ",
+  review_personalization_inputs: "パーソナライズ確認へ",
+  require_human_safety_review: "安全性確認へ",
+  confirm_approval: "承認済み",
+};
+
+export const RECOMMENDATION_INTENT_DESCRIPTIONS: Record<QualityRecommendationIntent, string> = {
+  prepare_story_rewrite: "ストーリーテキストを確認し、書き直しが必要か判断します",
+  review_image_regeneration: "画像を確認し、再生成が必要なページを特定します",
+  review_character_consistency: "各ページのキャラクター描写の一貫性を確認します",
+  review_personalization_inputs: "子どもの名前・好みなどのパーソナライズ反映を確認します",
+  require_human_safety_review: "安全性に関する内容を目視で確認します",
+  confirm_approval: "品質基準を満たしており、承認済みです",
+};

@@ -1,9 +1,14 @@
 "use client";
 
 import type { BookDoc } from "@/lib/types";
-import type { QualityRecommendation } from "@/lib/quality-review";
-import { buildQualityRecommendations } from "@/lib/quality-review";
-import { useMemo } from "react";
+import type { QualityRecommendation, QualityRecommendationIntent } from "@/lib/quality-review";
+import {
+  buildQualityRecommendations,
+  RECOMMENDATION_INTENT_MAP,
+  RECOMMENDATION_INTENT_LABELS,
+  RECOMMENDATION_INTENT_DESCRIPTIONS,
+} from "@/lib/quality-review";
+import { useMemo, useState } from "react";
 
 const ACTION_LABELS: Record<QualityRecommendation["action"], string> = {
   rewrite_story: "Rewrite Story",
@@ -26,14 +31,22 @@ const SEVERITY_BADGE_CLASSES: Record<QualityRecommendation["severity"], string> 
   low: "bg-emerald-200 text-emerald-900",
 };
 
+const INTENT_BUTTON_CLASSES: Record<QualityRecommendation["severity"], string> = {
+  high: "border-rose-400 bg-rose-100 text-rose-800 hover:bg-rose-200",
+  medium: "border-amber-400 bg-amber-100 text-amber-800 hover:bg-amber-200",
+  low: "border-emerald-400 bg-emerald-100 text-emerald-800 hover:bg-emerald-200",
+};
+
 interface QualityRecommendationPanelProps {
   book: BookDoc & { id: string };
+  onIntentAction?: (intent: QualityRecommendationIntent, book: BookDoc & { id: string }) => void;
 }
 
-export function QualityRecommendationPanel({ book }: QualityRecommendationPanelProps) {
+export function QualityRecommendationPanel({ book, onIntentAction }: QualityRecommendationPanelProps) {
   const recommendations = useMemo(() => buildQualityRecommendations(book), [book]);
   const isNeedsFix = book.qualityReviewStatus === "needs_fix";
   const hasHigh = recommendations.some((r) => r.severity === "high");
+  const [expandedIntent, setExpandedIntent] = useState<QualityRecommendationIntent | null>(null);
 
   if (recommendations.length === 0) {
     return (
@@ -55,20 +68,52 @@ export function QualityRecommendationPanel({ book }: QualityRecommendationPanelP
         <span className="ml-2 font-normal text-violet-500">{recommendations.length}件</span>
       </p>
       <div className="mt-2 space-y-2">
-        {recommendations.map((rec) => (
-          <div
-            key={rec.action}
-            className={`flex items-start gap-2 rounded-lg border px-3 py-2 ${SEVERITY_CLASSES[rec.severity]}`}
-          >
-            <span className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${SEVERITY_BADGE_CLASSES[rec.severity]}`}>
-              {rec.severity}
-            </span>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold">{ACTION_LABELS[rec.action]}</p>
-              <p className="text-xs opacity-80">{rec.reason}</p>
+        {recommendations.map((rec) => {
+          const intent = RECOMMENDATION_INTENT_MAP[rec.action];
+          const isExpanded = expandedIntent === intent;
+          return (
+            <div
+              key={rec.action}
+              className={`rounded-lg border ${SEVERITY_CLASSES[rec.severity]}`}
+            >
+              <div className="flex items-start gap-2 px-3 py-2">
+                <span className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${SEVERITY_BADGE_CLASSES[rec.severity]}`}>
+                  {rec.severity}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold">{ACTION_LABELS[rec.action]}</p>
+                  <p className="text-xs opacity-80">{rec.reason}</p>
+                </div>
+                {rec.action !== "approve" && (
+                  <button
+                    type="button"
+                    onClick={() => setExpandedIntent(isExpanded ? null : intent)}
+                    className={`shrink-0 rounded border px-2 py-1 text-[10px] font-bold ${INTENT_BUTTON_CLASSES[rec.severity]}`}
+                  >
+                    {RECOMMENDATION_INTENT_LABELS[intent]}
+                  </button>
+                )}
+              </div>
+              {isExpanded && (
+                <div className="border-t border-current/10 px-3 py-2">
+                  <p className="text-xs opacity-70">{RECOMMENDATION_INTENT_DESCRIPTIONS[intent]}</p>
+                  {onIntentAction && (
+                    <button
+                      type="button"
+                      onClick={() => onIntentAction(intent, book)}
+                      className={`mt-2 rounded border px-3 py-1 text-xs font-semibold ${INTENT_BUTTON_CLASSES[rec.severity]}`}
+                    >
+                      確認を開始 →
+                    </button>
+                  )}
+                  {!onIntentAction && (
+                    <p className="mt-1 text-[10px] italic opacity-50">（アクション実行は今後実装予定）</p>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
