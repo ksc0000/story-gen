@@ -464,6 +464,8 @@ export default function AdminBookQualityReviewPage() {
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [regeneratingPageIds, setRegeneratingPageIds] = useState<Set<string>>(new Set());
   const [regenerationMessages, setRegenerationMessages] = useState<Record<string, string>>({});
+  const [regeneratingCover, setRegeneratingCover] = useState(false);
+  const [coverRegenMessage, setCoverRegenMessage] = useState<string | null>(null);
   const [allPagesMap, setAllPagesMap] = useState<Map<string, PageWithId[]>>(new Map());
   const [allPagesLoading, setAllPagesLoading] = useState(false);
   const [savingSnapshot, setSavingSnapshot] = useState(false);
@@ -870,6 +872,22 @@ export default function AdminBookQualityReviewPage() {
         next.delete(page.id);
         return next;
       });
+    }
+  };
+
+  const handleRegenerateCover = async () => {
+    if (!selectedBookId || regeneratingCover) return;
+    setRegeneratingCover(true);
+    setCoverRegenMessage("カバー再生成中...");
+    try {
+      const regenerate = httpsCallable(functions, "regenerateCoverImage");
+      await regenerate({ bookId: selectedBookId });
+      setCoverRegenMessage("カバー再生成完了");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "カバー再生成に失敗しました";
+      setCoverRegenMessage(`失敗: ${message}`);
+    } finally {
+      setRegeneratingCover(false);
     }
   };
 
@@ -1801,6 +1819,23 @@ export default function AdminBookQualityReviewPage() {
                             <p><span className="font-medium text-purple-900">coverFailureReason:</span> {selectedBook.coverFailureReason ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">hasCoverPage:</span> {typeof selectedBook.hasCoverPage === "boolean" ? String(selectedBook.hasCoverPage) : "—"}</p>
                             <p><span className="font-medium text-purple-900">readingStructureVersion:</span> {selectedBook.readingStructureVersion ?? "—"}</p>
+                            {selectedBook.coverImagePrompt && (
+                              <div className="mt-2 flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={handleRegenerateCover}
+                                  disabled={regeneratingCover}
+                                  className="rounded-lg border border-violet-300 bg-white px-3 py-1.5 text-xs font-medium text-violet-700 transition hover:bg-violet-50 disabled:opacity-50"
+                                >
+                                  {regeneratingCover ? "カバー再生成中..." : "カバー画像を再生成"}
+                                </button>
+                                {coverRegenMessage && (
+                                  <span className={`text-xs ${coverRegenMessage.startsWith("失敗") ? "text-rose-600" : "text-emerald-600"}`}>
+                                    {coverRegenMessage}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                             <p><span className="font-medium text-purple-900">templateId:</span> {selectedBook.templateId ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">theme:</span> {selectedBook.theme}</p>
                             <p><span className="font-medium text-purple-900">categoryGroupId:</span> {selectedBook.categoryGroupId ?? "—"}</p>

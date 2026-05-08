@@ -162,7 +162,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 | C | coverImagePrompt を生成 (画像生成なし) + Admin 表示 | **done** |
 | D | Cover image generation + coverStatus + metrics | **done** |
 | E | Reader UI に Cover / Title Spread 表示 | **done** |
-| F | Cover image regeneration (admin) | pending |
+| F | Cover image regeneration (admin) | **done** |
 | G | Swipe / slide page navigation | **done** |
 
 ### 含めるタスク

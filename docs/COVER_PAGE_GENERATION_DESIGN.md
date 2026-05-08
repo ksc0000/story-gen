@@ -389,7 +389,7 @@ Admin Book Detail の既存セクション:
 | **Step C** | Gemini prompt に coverImagePrompt 追加 + BookDoc 保存 + Admin 表示 | **done** |
 | **Step D** | Cover image generation + coverStatus + metrics | **done** |
 | **Step E** | Reader UI に Cover / Title Spread 表示 | **done** |
-| **Step F** | Cover image regeneration (admin) | pending |
+| **Step F** | Cover image regeneration (admin) | **done** |
 | **Step G** | Swipe / slide page navigation (別件) | **done** |
 
 ---
@@ -436,9 +436,12 @@ Admin Book Detail の既存セクション:
 
 ### Step F
 
-- [ ] Admin から cover 再生成可能
-- [ ] 失敗→再生成→成功のフロー動作
-- [ ] metrics 更新
+- [x] Admin から cover 再生成可能 (`regenerateCoverImage` callable function)
+- [x] 失敗→再生成→成功のフロー動作
+- [x] metrics 更新 (coverImageDurationMs, coverImageModelProfile, coverImageFallbackUsed)
+- [x] 失敗時に coverImageUrl を維持、book status を failed にしない
+- [x] Admin UI に「カバー画像を再生成」ボタン追加
+- [x] `buildCoverRegenerationSuccessPatch` / `buildCoverRegenerationFailurePatch` テスト 7件
 
 ### Step G
 
