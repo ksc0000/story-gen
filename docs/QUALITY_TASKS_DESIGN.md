@@ -211,7 +211,7 @@ Admin Quality Review ページ
 
 | Step | 内容 | Firestore write |
 |---|---|---|
-| **Step 1** | `QualityTaskDoc` 型を `src/lib/types.ts` に追加 | No |
+| **Step 1** | `QualityTaskDoc` 型を `src/lib/types.ts` に追加 + payload builder + tests | No | **done** |
 | **Step 2** | Firestore rules に `qualityTasks` ルールを追加 | No (rules deploy) |
 | **Step 3** | `RecommendationTaskDraftPanel` に「タスクとして保存」ボタン追加 | **Yes** (create) |
 | **Step 4** | Task 保存のテスト（Firestore emulator or mock） | No |

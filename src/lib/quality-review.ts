@@ -5,6 +5,9 @@ import type {
   QualityReviewScore,
   QualityReviewStatus,
   QualityReviewerType,
+  QualityTaskChecklistItem,
+  QualityTaskDoc,
+  QualityTaskIntent,
   Timestamp,
 } from "@/lib/types";
 
@@ -540,4 +543,47 @@ export function buildTaskDraft(
         summary: `Book ${book.id} は品質基準を満たしており、タスクはありません。`,
       };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Quality Task Payload Builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a Firestore-ready payload for qualityTasks collection.
+ * Pure function — no Firestore writes.
+ * PII-safe: uses buildTaskDraft() which excludes displayName/nickname.
+ */
+export function buildQualityTaskPayload(
+  intent: QualityRecommendationIntent,
+  book: BookDoc & { id: string },
+  pages: PageDoc[],
+  adminUid: string,
+): Omit<QualityTaskDoc, "createdAt" | "updatedAt" | "resolvedAt"> {
+  const draft = buildTaskDraft(intent, book, pages);
+  const now = Date.now();
+
+  const checklist: QualityTaskChecklistItem[] = draft.checklist.map((item) => ({
+    label: item.label,
+    detail: item.detail,
+    checked: false,
+  }));
+
+  return {
+    bookId: book.id,
+    intent: intent as QualityTaskIntent,
+    title: draft.title,
+    checklist,
+    summary: draft.summary,
+    status: "open",
+    createdBy: adminUid,
+    assignedTo: null,
+    resolvedBy: null,
+    resolvedAtMs: null,
+    resolutionNote: "",
+    sourceOverallScore: book.overallQualityScore ?? null,
+    sourceQualityReviewStatus: book.qualityReviewStatus ?? null,
+    createdAtMs: now,
+    updatedAtMs: now,
+  };
 }

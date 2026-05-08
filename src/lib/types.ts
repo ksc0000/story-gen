@@ -111,6 +111,56 @@ export type QualityReview = {
   updatedAtMs: number;
 };
 
+export type QualityTaskStatus =
+  | "open"
+  | "in_progress"
+  | "resolved"
+  | "wont_fix";
+
+export type QualityTaskIntent =
+  | "prepare_story_rewrite"
+  | "review_image_regeneration"
+  | "review_character_consistency"
+  | "review_personalization_inputs"
+  | "require_human_safety_review"
+  | "confirm_approval";
+
+export interface QualityTaskChecklistItem {
+  label: string;
+  detail: string;
+  checked: boolean;
+}
+
+export interface QualityTaskDoc {
+  // Identity
+  bookId: string;
+  intent: QualityTaskIntent;
+
+  // Content
+  title: string;
+  checklist: QualityTaskChecklistItem[];
+  summary: string;
+
+  // Metadata
+  status: QualityTaskStatus;
+  createdBy: string;
+  assignedTo: string | null;
+  resolvedBy: string | null;
+  resolvedAt?: Timestamp | null;
+  resolvedAtMs: number | null;
+  resolutionNote: string;
+
+  // Source context snapshot
+  sourceOverallScore: number | null;
+  sourceQualityReviewStatus: QualityReviewStatus | null;
+
+  // Timestamps
+  createdAt?: Timestamp;
+  createdAtMs: number;
+  updatedAt?: Timestamp;
+  updatedAtMs: number;
+}
+
 export type IllustrationStyleProfile = {
   id: IllustrationStyle;
   name: string;

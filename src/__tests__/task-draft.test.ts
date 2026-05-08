@@ -128,7 +128,7 @@ describe("buildTaskDraft", () => {
           { characterId: "char-1" } as BookDoc["storyCast"] extends (infer T)[] | undefined ? T : never,
           { characterId: "char-2" } as BookDoc["storyCast"] extends (infer T)[] | undefined ? T : never,
         ],
-        characterConsistencyMode: "reference_image",
+        characterConsistencyMode: "all_pages",
       });
       const draft = buildTaskDraft("review_character_consistency", book, pages);
 

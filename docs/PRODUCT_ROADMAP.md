@@ -144,6 +144,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 11. Recommendation Candidate Highlighting（section / page highlight）を追加する。 → **done**
 12. Recommendation Task Draft Panel（copyable task draft）を追加する。 → **done**
 13. Task Draft persistence design doc を作成する。 → **done** (`docs/QUALITY_TASKS_DESIGN.md`)
+14. Quality Task persistence Step 1: 型 + payload builder + tests (10/10 PASS) → **done**
 
 ### 含めるタスク
 
