@@ -1,4 +1,5 @@
 import type {
+  BookDoc,
   QualityReview,
   QualityReviewScore,
   QualityReviewStatus,
@@ -200,4 +201,84 @@ export function buildQualitySummaryPayload(input: {
     qualityReviewedAtMs: input.now,
     qualityReviewerType: "human" as QualityReviewerType,
   };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Quality Recommendation                                             */
+/* ------------------------------------------------------------------ */
+
+export type QualityRecommendationAction =
+  | "rewrite_story"
+  | "regenerate_images"
+  | "fix_character_consistency"
+  | "improve_personalization"
+  | "human_review_required"
+  | "approve";
+
+export type QualityRecommendation = {
+  action: QualityRecommendationAction;
+  severity: "low" | "medium" | "high";
+  reason: string;
+};
+
+export function buildQualityRecommendations(
+  book: BookDoc,
+): QualityRecommendation[] {
+  // No scores yet → no recommendations
+  if (book.overallQualityScore == null) return [];
+
+  const recs: QualityRecommendation[] = [];
+
+  if ((book.safetyScore ?? 0) > 0 && book.safetyScore! <= 2) {
+    recs.push({
+      action: "human_review_required",
+      severity: "high",
+      reason: `Safety score が ${book.safetyScore} — 人間による安全性確認が必要です`,
+    });
+  }
+
+  if ((book.storyQualityScore ?? 0) > 0 && book.storyQualityScore! <= 2) {
+    recs.push({
+      action: "rewrite_story",
+      severity: "high",
+      reason: `Story score が ${book.storyQualityScore} — ストーリーの書き直しを推奨します`,
+    });
+  }
+
+  if ((book.illustrationQualityScore ?? 0) > 0 && book.illustrationQualityScore! <= 2) {
+    recs.push({
+      action: "regenerate_images",
+      severity: "high",
+      reason: `Illustration score が ${book.illustrationQualityScore} — 画像の再生成を推奨します`,
+    });
+  }
+
+  if ((book.characterConsistencyScore ?? 0) > 0 && book.characterConsistencyScore! <= 2) {
+    recs.push({
+      action: "fix_character_consistency",
+      severity: "high",
+      reason: `Character consistency score が ${book.characterConsistencyScore} — キャラクター一貫性の改善が必要です`,
+    });
+  }
+
+  if ((book.personalizationScore ?? 0) > 0 && book.personalizationScore! <= 2) {
+    recs.push({
+      action: "improve_personalization",
+      severity: "medium",
+      reason: `Personalization score が ${book.personalizationScore} — パーソナライズの改善を推奨します`,
+    });
+  }
+
+  if (
+    book.overallQualityScore >= 4.2 &&
+    book.qualityReviewStatus === "approved"
+  ) {
+    recs.push({
+      action: "approve",
+      severity: "low",
+      reason: `Overall score ${book.overallQualityScore} / Approved — 品質基準を満たしています`,
+    });
+  }
+
+  return recs;
 }

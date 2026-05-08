@@ -56,6 +56,7 @@
 - ~~quality review filter / sort~~ → 実装済み
 - ~~batch review workflow~~ → 実装済み
 - ~~Quality Trend Dashboard / Regression Detection~~ → 実装済み
+- ~~Rewrite / Regeneration Recommendation~~ → 実装済み
 - LLM auto review prototype
 - provider abstraction（ImageProvider インターフェース）
 - provider 比較・A/B テスト
@@ -135,6 +136,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 5. quality review filter / sort を追加する。 → **done**
 6. batch review workflow（Next Unreviewed / Next Needs Fix / Lowest Score / auto-next）を追加する。 → **done**
 7. Quality Trend Dashboard / Regression Detection を追加する。 → **done**
+8. Rewrite / Regeneration Recommendation を追加する。 → **done**
 
 ### 含めるタスク
 

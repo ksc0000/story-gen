@@ -44,6 +44,7 @@ import type {
   Timestamp,
 } from "@/lib/types";
 import { QualityReviewPanel } from "@/components/admin/QualityReviewPanel";
+import { QualityRecommendationPanel, QualityRecommendationBadge } from "@/components/admin/QualityRecommendationPanel";
 import type { QualityReviewForm, QualityReviewWithId } from "@/lib/quality-review";
 import {
   normalizeQualityReviewForm,
@@ -1677,7 +1678,7 @@ export default function AdminBookQualityReviewPage() {
                                 <p>issues: {issueCount}</p>
                                 <p>warnings: {warningCount}</p>
                                 <p>reliability: {book.generationReliabilityStatus ?? "—"}</p>
-                                <p>Q score: {formatQualityScore(book.overallQualityScore)}{book.qualityReviewStatus ? ` (${getQualityReviewStatusLabel(book.qualityReviewStatus)})` : ""}</p>
+                                <p>Q score: {formatQualityScore(book.overallQualityScore)}{book.qualityReviewStatus ? ` (${getQualityReviewStatusLabel(book.qualityReviewStatus)})` : ""} <QualityRecommendationBadge book={book} /></p>
                                 <p>img {book.imageSuccessCount ?? "?"}/{book.totalImageCount ?? "?"} avgTime:{formatMs(book.averageImageDurationMs)}</p>
                                 {book.status === "partial_completed" && (book.imageFailureCount ?? 0) > 0 && (
                                   <p className="font-medium text-rose-600">failed pages: {book.imageFailureCount} ({book.failedPageNumbers?.join(", ") ?? "?"})</p>
@@ -2246,6 +2247,8 @@ export default function AdminBookQualityReviewPage() {
                         onFormChange={setQualityReviewForm}
                         onSave={handleSaveQualityReview}
                       />
+
+                      <QualityRecommendationPanel book={selectedBook} />
 
                       <Card>
                         <CardContent className="p-6">
