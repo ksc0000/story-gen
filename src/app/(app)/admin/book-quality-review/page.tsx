@@ -2321,9 +2321,11 @@ export default function AdminBookQualityReviewPage() {
                       )}
                       {activeIntent && activeIntent !== "confirm_approval" && selectedBook && (
                         <RecommendationTaskDraftPanel
+                          key={`${selectedBook.id}-${activeIntent}`}
                           intent={activeIntent}
                           book={selectedBook}
                           pages={pages}
+                          adminUid={user?.uid}
                         />
                       )}
 
