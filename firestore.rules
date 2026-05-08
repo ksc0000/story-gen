@@ -129,6 +129,27 @@ service cloud.firestore {
       }
     }
 
+    match /qualityTasks/{taskId} {
+      allow read: if isAdmin();
+
+      allow create: if isAdmin()
+        && request.resource.data.bookId is string
+        && request.resource.data.intent in [
+          "prepare_story_rewrite",
+          "review_image_regeneration",
+          "review_character_consistency",
+          "review_personalization_inputs",
+          "require_human_safety_review",
+          "confirm_approval"
+        ]
+        && request.resource.data.status == "open"
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isAdmin();
+
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
