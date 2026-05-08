@@ -382,8 +382,8 @@ Admin Book Detail の既存セクション:
 
 | Step | 内容 | Status |
 |------|------|--------|
-| **Step A** | Design doc + BookDoc types に optional fields 追加 | **in progress** |
-| **Step B** | Gemini prompt に titleSpreadText / openingNarration 追加 + BookDoc 保存 | pending |
+| **Step A** | Design doc + BookDoc types に optional fields 追加 | **done** |
+| **Step B** | Gemini prompt に titleSpreadText / openingNarration 追加 + BookDoc 保存 | **done** |
 | **Step C** | Gemini prompt に coverImagePrompt 追加 + BookDoc 保存 + Admin 表示 | pending |
 | **Step D** | Cover image generation + coverStatus + metrics | pending |
 | **Step E** | Reader UI に Cover / Title Spread 表示 | pending |

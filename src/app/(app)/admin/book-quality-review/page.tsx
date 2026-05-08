@@ -1791,6 +1791,8 @@ export default function AdminBookQualityReviewPage() {
                             <p><span className="font-medium text-purple-900">storyGoal:</span> {selectedBook.storyGoal ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">mainQuestObject:</span> {selectedBook.mainQuestObject ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">forbiddenQuestObjects:</span> {selectedBook.forbiddenQuestObjects?.join(", ") ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">titleSpreadText:</span> {selectedBook.titleSpreadText ?? "—"}</p>
+                            <p><span className="font-medium text-purple-900">openingNarration:</span> {selectedBook.openingNarration ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">templateId:</span> {selectedBook.templateId ?? "—"}</p>
                             <p><span className="font-medium text-purple-900">theme:</span> {selectedBook.theme}</p>
                             <p><span className="font-medium text-purple-900">categoryGroupId:</span> {selectedBook.categoryGroupId ?? "—"}</p>

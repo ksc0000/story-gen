@@ -235,6 +235,8 @@ export interface BookData {
   storyGoal?: string;
   mainQuestObject?: string;
   forbiddenQuestObjects?: string[];
+  titleSpreadText?: string;
+  openingNarration?: string;
   storyTitleCandidate?: string;
   generatedTextPreview?: string[];
   createdAtMs?: number;
@@ -456,6 +458,8 @@ export interface GeneratedStory {
   storyGoal?: string;
   mainQuestObject?: string;
   forbiddenQuestObjects?: string[];
+  titleSpreadText?: string;
+  openingNarration?: string;
   narrativeDevice?: GeneratedStoryNarrativeDevice;
   cast?: StoryCharacter[];
   storyModel?: string;
