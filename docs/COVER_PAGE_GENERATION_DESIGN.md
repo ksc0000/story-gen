@@ -386,7 +386,7 @@ Admin Book Detail の既存セクション:
 | **Step B** | Gemini prompt に titleSpreadText / openingNarration 追加 + BookDoc 保存 | **done** |
 | **Step C** | Gemini prompt に coverImagePrompt 追加 + BookDoc 保存 + Admin 表示 | **done** |
 | **Step D** | Cover image generation + coverStatus + metrics | **done** |
-| **Step E** | Reader UI に Cover / Title Spread 表示 | pending |
+| **Step E** | Reader UI に Cover / Title Spread 表示 | **done** |
 | **Step F** | Cover image regeneration (admin) | pending |
 | **Step G** | Swipe / slide page navigation (別件) | pending |
 
@@ -426,9 +426,11 @@ Admin Book Detail の既存セクション:
 
 ### Step E
 
-- [ ] `hasCoverPage=true` の book で Cover → Title → Pages 表示
-- [ ] `hasCoverPage` なし/false の book で従来表示
-- [ ] Mobile / Desktop 両対応
+- [x] `hasCoverPage=true` の book で Cover → Title → Pages 表示
+- [x] `hasCoverPage` なし/false の book で従来表示
+- [x] Mobile / Desktop 両対応
+- [x] `coverStatus !== 'completed'` の場合は cover page を表示しない
+- [x] `buildReadingItems` pure function テスト追加
 
 ### Step F
 

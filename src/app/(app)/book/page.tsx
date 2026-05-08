@@ -122,7 +122,18 @@ function BookContent() {
         </div>
       )}
 
-      <div className="mt-6"><BookViewer pages={viewablePages} title={book.title} /></div>
+      <div className="mt-6">
+        <BookViewer
+          pages={viewablePages}
+          title={book.title}
+          coverImageUrl={book.coverImageUrl}
+          hasCoverPage={book.hasCoverPage}
+          coverStatus={book.coverStatus}
+          readingStructureVersion={book.readingStructureVersion}
+          titleSpreadText={book.titleSpreadText}
+          openingNarration={book.openingNarration}
+        />
+      </div>
 
       {(failedPages.length > 0 || generatingPages.length > 0) && (
         <div className="mt-8 space-y-4">
