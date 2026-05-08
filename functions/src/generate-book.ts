@@ -806,6 +806,7 @@ export async function processBookGeneration(
         forbiddenQuestObjects: story.forbiddenQuestObjects,
         titleSpreadText: story.titleSpreadText,
         openingNarration: story.openingNarration,
+        coverImagePrompt: story.coverImagePrompt,
         generatedTextPreview: story.pages.map((page) => page.text),
         imageModelProfile: normalizedBookData.imageModelProfile,
       });

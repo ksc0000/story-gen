@@ -159,7 +159,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 |------|------|--------|
 | A | Design doc + types | **done** |
 | B | titleSpreadText / openingNarration を story JSON に追加 + BookDoc 保存 | **done** |
-| C | coverImagePrompt を生成 (画像生成なし) + Admin 表示 | pending |
+| C | coverImagePrompt を生成 (画像生成なし) + Admin 表示 | **done** |
 | D | Cover image generation + coverStatus + metrics | pending |
 | E | Reader UI に Cover / Title Spread 表示 | pending |
 | F | Cover image regeneration (admin) | pending |

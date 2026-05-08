@@ -399,6 +399,7 @@ ${GOOD_TEXT_EXAMPLE}
   "forbiddenQuestObjects": ["すいか", "食べ物"],
   "titleSpreadText": "タイトル見開きに表示する導入テキスト（1〜2文・省略可）",
   "openingNarration": "読み聞かせの最初に読むナレーション（1文・省略可）",
+  "coverImagePrompt": "English prompt for generating the book cover image. Describe the main character, setting, mood, and key visual elements in a single scene that represents the story. Do not include any text or title in the image description.",
   "cast": [
     {
       "characterId": "magic_friend_01",
