@@ -130,6 +130,31 @@ service cloud.firestore {
     }
 
     match /qualityTasks/{taskId} {
+      function onlyQualityTaskUpdateFieldsChanged() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "status",
+          "checklist",
+          "assignedTo",
+          "resolvedBy",
+          "resolvedAt",
+          "resolvedAtMs",
+          "resolutionNote",
+          "updatedAt",
+          "updatedAtMs"
+        ]);
+      }
+
+      function isValidQualityTaskUpdate() {
+        return request.resource.data.status in [
+          "open",
+          "in_progress",
+          "resolved",
+          "wont_fix"
+        ]
+        && request.resource.data.updatedAtMs is number
+        && request.resource.data.checklist is list;
+      }
+
       allow read: if isAdmin();
 
       allow create: if isAdmin()
@@ -146,17 +171,8 @@ service cloud.firestore {
         && request.resource.data.createdBy == request.auth.uid;
 
       allow update: if isAdmin()
-        && request.resource.data.bookId == resource.data.bookId
-        && request.resource.data.intent == resource.data.intent
-        && request.resource.data.createdBy == resource.data.createdBy
-        && request.resource.data.createdAtMs == resource.data.createdAtMs
-        && request.resource.data.status in [
-          "open",
-          "in_progress",
-          "resolved",
-          "wont_fix"
-        ]
-        && request.resource.data.updatedAtMs is number;
+        && onlyQualityTaskUpdateFieldsChanged()
+        && isValidQualityTaskUpdate();
 
       allow delete: if false;
     }

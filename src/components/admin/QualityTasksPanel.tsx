@@ -137,6 +137,10 @@ export function QualityTasksPanel({ adminUid }: QualityTasksPanelProps) {
   }
 
   function handleStatusChange(task: TaskWithId, newStatus: QualityTaskStatus) {
+    if ((newStatus === "resolved" || newStatus === "wont_fix") && !adminUid) {
+      setError("Admin user is not ready.");
+      return;
+    }
     const updates: Partial<QualityTaskDoc> = { status: newStatus };
     if ((newStatus === "resolved" || newStatus === "wont_fix") && adminUid) {
       updates.resolvedBy = adminUid;
