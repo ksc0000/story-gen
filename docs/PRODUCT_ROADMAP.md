@@ -146,6 +146,9 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 13. Task Draft persistence design doc を作成する。 → **done** (`docs/QUALITY_TASKS_DESIGN.md`)
 14. Quality Task persistence Step 1: 型 + payload builder + tests (10/10 PASS) → **done**
 15. Quality Task persistence Step 2: Firestore rules に `qualityTasks` ルール追加 → **done**
+16. Quality Task persistence Step 3: 「タスクとして保存」ボタン追加 → **done**
+17. Quality Task persistence Step 4: コンポーネントテスト追加 (12/12 PASS) → **done**
+18. Quality Task persistence Step 5: Admin UI にタスク一覧パネル追加 → **done**
 
 ### 含めるタスク
 

@@ -214,8 +214,8 @@ Admin Quality Review ページ
 | **Step 1** | `QualityTaskDoc` 型を `src/lib/types.ts` に追加 + payload builder + tests | No | **done** |
 | **Step 2** | Firestore rules に `qualityTasks` ルールを追加 | No (rules deploy) | **done** |
 | **Step 3** | `RecommendationTaskDraftPanel` に「タスクとして保存」ボタン追加 | **Yes** (create) | **done** |
-| **Step 4** | Task 保存のテスト（Firestore emulator or mock） | No | |
-| **Step 5** | Task 一覧 UI（Admin ページ内タブ or セクション） | Read only | |
+| **Step 4** | Task 保存のテスト（Firestore emulator or mock） | No | **done** |
+| **Step 5** | Task 一覧 UI（Admin ページ内タブ or セクション） | Read only | **done** |
 | **Step 6** | Task 更新 UI（checklist toggle, status change） | **Yes** (update) | |
 | **Step 7** | Task count badge（未完了タスク数の表示） | Read only | |
 

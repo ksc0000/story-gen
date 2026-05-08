@@ -46,6 +46,7 @@ import type {
 import { QualityReviewPanel } from "@/components/admin/QualityReviewPanel";
 import { QualityRecommendationPanel, QualityRecommendationBadge } from "@/components/admin/QualityRecommendationPanel";
 import { RecommendationTaskDraftPanel } from "@/components/admin/RecommendationTaskDraftPanel";
+import { QualityTasksPanel } from "@/components/admin/QualityTasksPanel";
 import type { QualityReviewForm, QualityReviewWithId } from "@/lib/quality-review";
 import type { QualityRecommendationIntent } from "@/lib/quality-review";
 import {
@@ -2348,6 +2349,8 @@ export default function AdminBookQualityReviewPage() {
                   )}
                 </div>
               </div>
+
+              <QualityTasksPanel />
             </>
           )}
         </CardContent>
