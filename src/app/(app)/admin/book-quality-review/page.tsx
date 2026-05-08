@@ -474,6 +474,7 @@ export default function AdminBookQualityReviewPage() {
   const [qualityReviewsError, setQualityReviewsError] = useState<string | null>(null);
   const [savingQualityReview, setSavingQualityReview] = useState(false);
   const [qualityReviewMessage, setQualityReviewMessage] = useState<string | null>(null);
+  const [batchReviewMessage, setBatchReviewMessage] = useState<string | null>(null);
 
   function getPermissionHelpMessage(message: string) {
     if (!/Missing or insufficient permissions/i.test(message)) {
@@ -895,6 +896,43 @@ export default function AdminBookQualityReviewPage() {
     }
   };
 
+  const findNextUnreviewed = (excludeId?: string) => {
+    return books.find(
+      (b) => b.id !== excludeId && (!b.qualityReviewStatus || b.qualityReviewStatus === "not_reviewed")
+    );
+  };
+
+  const handleSelectNextUnreviewed = () => {
+    setBatchReviewMessage(null);
+    const next = findNextUnreviewed(selectedBookId ?? undefined);
+    if (next) {
+      setSelectedBookId(next.id);
+    } else {
+      setBatchReviewMessage("未レビューの book はありません");
+    }
+  };
+
+  const handleSelectNextNeedsFix = () => {
+    setBatchReviewMessage(null);
+    const next = books.find((b) => b.id !== selectedBookId && b.qualityReviewStatus === "needs_fix");
+    if (next) {
+      setSelectedBookId(next.id);
+    } else {
+      setBatchReviewMessage("needs_fix の book はありません");
+    }
+  };
+
+  const handleSelectLowestScore = () => {
+    setBatchReviewMessage(null);
+    const scored = books.filter((b) => b.id !== selectedBookId && b.overallQualityScore != null);
+    if (scored.length === 0) {
+      setBatchReviewMessage("quality score 付きの book はありません");
+      return;
+    }
+    scored.sort((a, b) => (a.overallQualityScore ?? 0) - (b.overallQualityScore ?? 0));
+    setSelectedBookId(scored[0].id);
+  };
+
   const handleSaveQualityReview = async () => {
     if (!selectedBook || !user) return;
     const validationError = validateQualityReviewForm(qualityReviewForm);
@@ -927,6 +965,17 @@ export default function AdminBookQualityReviewPage() {
       await batch.commit();
       setQualityReviewMessage("Quality review を保存しました");
       setQualityReviewForm(normalizeQualityReviewForm());
+
+      // Auto-next: when filter is "not_reviewed", jump to next unreviewed book
+      if (qualityReviewFilter === "not_reviewed") {
+        const next = findNextUnreviewed(selectedBook.id);
+        if (next) {
+          setSelectedBookId(next.id);
+          setBatchReviewMessage("次の未レビュー book に移動しました");
+        } else {
+          setBatchReviewMessage("全ての book をレビュー済みです 🎉");
+        }
+      }
     } catch (error) {
       console.error("Failed to save quality review:", error);
       const message = error instanceof Error ? error.message : "保存に失敗しました";
@@ -1420,6 +1469,35 @@ export default function AdminBookQualityReviewPage() {
                   <span>reviewed: <strong>{qualityReviewSummary.reviewed}</strong></span>
                   <span className="text-emerald-700">approved: <strong>{qualityReviewSummary.approved}</strong></span>
                 </div>
+              </div>
+
+              {/* Batch Review Workflow */}
+              <div className="flex flex-wrap items-center gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2">
+                <span className="text-xs font-semibold text-violet-800">Batch:</span>
+                <button
+                  type="button"
+                  onClick={handleSelectNextUnreviewed}
+                  className="rounded border border-violet-300 bg-white px-3 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
+                >
+                  Next Unreviewed
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSelectNextNeedsFix}
+                  className="rounded border border-rose-300 bg-white px-3 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50"
+                >
+                  Next Needs Fix
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSelectLowestScore}
+                  className="rounded border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50"
+                >
+                  Lowest Score
+                </button>
+                {batchReviewMessage && (
+                  <span className="text-xs text-violet-600">{batchReviewMessage}</span>
+                )}
               </div>
 
               <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">

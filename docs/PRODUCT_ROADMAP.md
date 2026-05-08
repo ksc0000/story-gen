@@ -50,9 +50,11 @@
 - ~~SLO メトリクス集計ダッシュボード~~ → 実装済み（admin SLO Dashboard + Snapshot History）
 - ~~SLO 自動スナップショット~~ → 実装済み（Daily 03:00 JST / Weekly Mon 03:15 JST、idempotent）
 - ~~Stale metadata cleanup~~ → 実装済み（Daily 03:30 JST、collection group query + admin UI）
-- Admin Quality Review UI（Story / Illustration / Character / Personalization / Safety score）→ **in progress**
-- manual quality score 保存 → **in progress**
-- quality review history → **in progress**
+- ~~Admin Quality Review UI（Story / Illustration / Character / Personalization / Safety score）~~ → 実装済み
+- ~~manual quality score 保存~~ → 実装済み
+- ~~quality review history~~ → 実装済み
+- ~~quality review filter / sort~~ → 実装済み
+- ~~batch review workflow~~ → 実装済み
 - LLM auto review prototype
 - provider abstraction（ImageProvider インターフェース）
 - provider 比較・A/B テスト
@@ -129,7 +131,8 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 2. manual quality score を Firestore に保存する。
 3. quality review history を保存する。
 4. Admin book list / detail で quality score を表示する。
-5. quality review filter / sort を追加する。 → **in progress**
+5. quality review filter / sort を追加する。 → **done**
+6. batch review workflow（Next Unreviewed / Next Needs Fix / Lowest Score / auto-next）を追加する。 → **done**
 
 ### 含めるタスク
 
