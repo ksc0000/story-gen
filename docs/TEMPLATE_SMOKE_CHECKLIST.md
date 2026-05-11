@@ -59,6 +59,23 @@
 | 全24ページに `pageVisualRole` がある | ☐ | ☐ | ☐ |  |
 | `.env` / Firebase env secrets が生成に必要な状態になっている | ☐ | ☐ | ☐ |  |
 
+### 2.1 Firestore投入スクリプトで6件作成する手順
+
+以下のスクリプトで、fixed_template 6本ぶんの BookDoc を `books` に新規作成できます。
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS="C:\path\to\service-account.json"
+npm run smoke:create-template-books
+```
+
+注意点:
+
+- `GOOGLE_APPLICATION_CREDENTIALS` 未設定時は処理を中止します。
+- 環境変数の値そのもの（パス文字列）はログ出力しません。
+- 作成件数は常に 6 件固定です（固定テンプレート6本のみ）。
+- 既存 BookDoc の更新は行いません（新規作成のみ）。
+- 生成された BookDoc には `smokeTestMetadata` が付与され、smoke作成データだと判別できます。
+
 ---
 
 ## 3. Build / Test Result
