@@ -283,7 +283,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     fixedStory: {
       titleTemplate: "{childName}とはじめてのどうぶつえん",
       coverImagePromptTemplate:
-        "Picture book cover illustration: a young child standing at the bright entrance of a friendly Japanese zoo with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark",
+        "Picture book cover illustration: a young child standing at the bright entrance of a friendly zoo with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark",
       titleSpreadTextTemplate: "{childName}と はじめての どうぶつえん",
       openingNarrationTemplate:
         "きょうは とくべつな日。{childName}は {familyMembers}と いっしょに、はじめての どうぶつえんへ でかけます。",

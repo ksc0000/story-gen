@@ -19,6 +19,8 @@ const NEGATIVE_TEXT_TOKENS = [
   "no watermark",
 ];
 
+const JAPANESE_SCRIPT_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/;
+
 const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-first-zoo": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-first-birthday": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
@@ -63,6 +65,11 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
         const prompt = (template.fixedStory?.coverImagePromptTemplate ?? "").toLowerCase();
         // Forbidden: positive instructions to write/render text or letters
         expect(prompt).not.toMatch(/\b(write|render|draw|show|display|with)\s+(the\s+)?(title|text|letters|japanese|logo|watermark)\b/);
+      });
+
+      it("coverImagePromptTemplate does not contain Japanese script characters", () => {
+        const prompt = template.fixedStory?.coverImagePromptTemplate ?? "";
+        expect(prompt).not.toMatch(JAPANESE_SCRIPT_RE);
       });
 
       it("has a non-empty titleSpreadTextTemplate", () => {
@@ -114,6 +121,12 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
           expect(prompt).toContain("no japanese characters");
           expect(prompt).toContain("no logo");
           expect(prompt).toContain("no watermark");
+        }
+      });
+
+      it("every imagePromptTemplate does not contain Japanese script characters", () => {
+        for (const page of template.fixedStory?.pages ?? []) {
+          expect(page.imagePromptTemplate).not.toMatch(JAPANESE_SCRIPT_RE);
         }
       });
 
