@@ -137,10 +137,34 @@ function buildBookPayload({ templateId, index, smokeRunId }) {
 }
 
 async function main() {
+  const args = process.argv.slice(2);
+  const dryRun = args.includes("--dry-run");
+  const write = args.includes("--write");
+
+  if (!dryRun && !write) {
+    console.error("[error] Specify --dry-run to preview or --write to create books.");
+    process.exit(1);
+  }
+
   if (TEMPLATE_IDS.length !== 6) {
     throw new Error("Template list size must be exactly 6.");
   }
 
+  if (dryRun) {
+    console.log("[dry-run] The following books would be created (no Firestore writes):");
+    const smokeRunId = buildSmokeRunId();
+    for (const [index, templateId] of TEMPLATE_IDS.entries()) {
+      const payload = buildBookPayload({ templateId, index, smokeRunId });
+      console.log(`  [${index + 1}/${TEMPLATE_IDS.length}] templateId=${templateId}`);
+      console.log(`         userId=${payload.userId}`);
+      console.log(`         input=${JSON.stringify(payload.input)}`);
+      console.log(`         runId=${smokeRunId}`);
+    }
+    console.log("[dry-run] done. Run with --write to create books.");
+    return;
+  }
+
+  // --write path
   ensureGoogleApplicationCredentials();
   const serviceAccount = loadServiceAccountFromEnvPath();
   if (serviceAccount.projectId !== TARGET_PROJECT_ID) {
