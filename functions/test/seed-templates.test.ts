@@ -21,6 +21,8 @@ const NEGATIVE_TEXT_TOKENS = [
 
 const FIXED_IMAGE_PROMPT_STANDARD_SUFFIX =
   "no readable writing anywhere, no signage, no storefront signs, no text-like marks";
+const FIXED_IMAGE_PROMPT_REF_ISOLATION_SUFFIX =
+  "use reference image for child's face and identity only, ignore reference image background and setting";
 const JAPANESE_SCRIPT_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/;
 const PROMPT_ANTIPATTERN_RE = /\b(storefront|shop|label|banner|poster|sign)\b/i;
 const PROMPT_NEGATIVE_CLAUSES = [
@@ -95,6 +97,11 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
         expect(prompt).toContain(FIXED_IMAGE_PROMPT_STANDARD_SUFFIX);
       });
 
+      it("coverImagePromptTemplate includes reference isolation instruction", () => {
+        const prompt = (template.fixedStory?.coverImagePromptTemplate ?? "").toLowerCase();
+        expect(prompt).toContain(FIXED_IMAGE_PROMPT_REF_ISOLATION_SUFFIX);
+      });
+
       it("coverImagePromptTemplate does not contain Japanese script characters", () => {
         const prompt = template.fixedStory?.coverImagePromptTemplate ?? "";
         expect(prompt).not.toMatch(JAPANESE_SCRIPT_RE);
@@ -158,6 +165,13 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
         }
       });
 
+      it("every imagePromptTemplate has reference isolation instruction", () => {
+        for (const page of template.fixedStory?.pages ?? []) {
+          const prompt = page.imagePromptTemplate.toLowerCase();
+          expect(prompt).toContain(FIXED_IMAGE_PROMPT_REF_ISOLATION_SUFFIX);
+        }
+      });
+
       it("every imagePromptTemplate does not contain Japanese script characters", () => {
         for (const page of template.fixedStory?.pages ?? []) {
           expect(page.imagePromptTemplate).not.toMatch(JAPANESE_SCRIPT_RE);
@@ -194,4 +208,36 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
       });
     });
   }
+});
+
+describe("fixed-first-zoo — IMG-002 scene lock (sandbox bleed prevention)", () => {
+  const template = SEED_TEMPLATES["fixed-first-zoo"];
+
+  it("every page prompt contains zoo scene keyword", () => {
+    for (const page of template.fixedStory?.pages ?? []) {
+      const prompt = page.imagePromptTemplate.toLowerCase();
+      expect(prompt).toContain("zoo");
+    }
+  });
+
+  it("every page prompt explicitly excludes sandbox background", () => {
+    for (const page of template.fixedStory?.pages ?? []) {
+      const prompt = page.imagePromptTemplate.toLowerCase();
+      expect(prompt).toContain("not a sandbox");
+    }
+  });
+
+  it("every page prompt explicitly excludes outdoor playground or play area", () => {
+    const playExclusionTerms = [
+      "not an outdoor playground",
+      "not a children's playground",
+      "not an outdoor play area",
+      "not a playground",
+    ];
+    for (const page of template.fixedStory?.pages ?? []) {
+      const prompt = page.imagePromptTemplate.toLowerCase();
+      const hasExclusion = playExclusionTerms.some((term) => prompt.includes(term));
+      expect(hasExclusion).toBe(true);
+    }
+  });
 });
