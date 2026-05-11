@@ -345,6 +345,95 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-first-birthday": {
+    name: "はじめてのたんじょうび",
+    description: "はじめての誕生日の思い出を、やさしく残せる固定テンプレート",
+    icon: "🎂",
+    categoryGroupId: "memories",
+    subcategoryId: "first-birthday",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName", "familyMembers"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["memory", "birthday", "family"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.png",
+    sampleImageAlt: "家族で誕生日をお祝いする子どものやさしい絵本イメージ",
+    visualDirection:
+      "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling.",
+    order: 4,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめての誕生日の思い出をやさしく残す絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}のはじめてのたんじょうび",
+      coverImagePromptTemplate:
+        "Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark",
+      titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
+      openingNarrationTemplate:
+        "きょうは とくべつな おいわいの日。{childName}と {familyMembers}の たんじょうびの思い出が はじまります。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、{familyMembers}といっしょにおたんじょうびのじゅんびをはじめました。",
+          baby_toddler: "{childName}、おたんじょうび。わくわく。",
+          preschool_3_4:
+            "{childName}は、{familyMembers}といっしょにおたんじょうびのじゅんびをはじめました。おへやが すこしずつ きらきらしてきます。",
+          early_reader_5_6:
+            "{childName}は、{familyMembers}といっしょに おたんじょうびの じゅんびを はじめました。ふうせんや かざりを 見ながら、どんな いちにちになるのか 胸が どきどきします。",
+          early_elementary_7_8:
+            "{childName}は、{familyMembers}といっしょに おたんじょうびの じゅんびを はじめました。いつもの へやが すこしずつ 特別な ばしょに 変わっていくのを見て、心が あたたかくなります。",
+          general_child:
+            "{childName}は、{familyMembers}といっしょにおたんじょうびのじゅんびをはじめました。おへやが すこしずつ きらきらしてきます。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy home living room before a birthday celebration. A young child stands near a low table while family members decorate with pastel balloons and paper garlands. Soft warm light fills the room. A tiny ribbon motif appears on one balloon knot. Picture-book watercolor style, layered foreground-midground-background, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ろうそくのひかりがゆれて、{childName}の目もきらきらひかりました。",
+          baby_toddler: "ろうそく きらきら。{childName}、にこっ。",
+          preschool_3_4:
+            "ろうそくのひかりがゆれて、{childName}の目も きらきらひかりました。みんなの えがおが まあるく あつまります。",
+          early_reader_5_6:
+            "ろうそくの ひかりが ゆれて、{childName}の目も きらきら ひかりました。ふーっと 息を すう前に、しあわせな きもちを ぎゅっと あつめます。",
+          early_elementary_7_8:
+            "ろうそくの ひかりが ゆれて、{childName}の目も きらきら ひかりました。みんなの まなざしが ひとつに 重なる その時間が、忘れたくない 記憶になります。",
+          general_child:
+            "ろうそくのひかりがゆれて、{childName}の目もきらきらひかりました。みんなの えがおが まあるく あつまります。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Medium shot of a child leaning toward a small birthday cake with softly glowing candles. Family members gather behind and beside the child, smiling with gentle anticipation. Warm candlelight highlights the child's eyes and cheeks. A tiny ribbon motif is tucked on a plate edge or cake stand. Soft watercolor picture book style, emotional family celebration framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おいわいのうたのあと、{childName}はとびきりのえがおを見せてくれました。",
+          baby_toddler: "{childName}、にこにこ。うれしいね。",
+          preschool_3_4:
+            "おいわいのうたのあと、{childName}は とびきりの えがおを見せてくれました。みんなの こころも ぽかぽかです。",
+          early_reader_5_6:
+            "おいわいのうたのあと、{childName}は とびきりの えがおを 見せてくれました。たくさんの「おめでとう」が、心のなかで ひかる ほしみたいに のこります。",
+          early_elementary_7_8:
+            "おいわいのうたのあと、{childName}は とびきりの えがおを 見せてくれました。みんなに だいじに 思われていることが、ことばよりも まっすぐに 伝わる しゅんかんでした。",
+          general_child:
+            "おいわいのうたのあと、{childName}はとびきりのえがおを見せてくれました。みんなの こころも ぽかぽかです。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Close-up of the child's delighted face after the birthday song, cheeks glowing and eyes bright. The child holds a small spoon or keepsake near the chest while family members lean in with warm smiles in soft focus. A tiny ribbon motif appears on nearby party decor. Golden warm light and gentle pastel accents. Soft watercolor picture book style, intimate emotional framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4: "{parentMessage}",
+          early_reader_5_6: "{parentMessage}",
+          early_elementary_7_8: "{parentMessage}",
+          general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Back-view quiet ending shot of child and family sitting together at the end of the birthday evening, looking at a few softly glowing decorations in a calm room. The child leans gently on a family member's shoulder. A tiny ribbon motif catches the last warm light near the table. Soft watercolor picture book style, peaceful after-celebration mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
   "fixed-bedtime-good-day": {
     name: "きょうもいい日だったね",
     description: "寝る前に短く読める、安心感のあるおやすみテンプレート",
@@ -601,6 +690,96 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           imagePromptTemplate:
             "Wide scenic shot of a family by a frosty window on Christmas night, viewed from behind. The child sits on a parent's lap, both gazing at softly falling snow outside. The Christmas tree glows gently in the background. A warm blanket drapes over them. A small golden bell motif catches the light near the windowsill. Quiet, magical winter night atmosphere with deep blue and warm gold tones. Soft watercolor picture book style, peaceful memorable finale, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         },
+      ],
+    },
+  },
+  "fixed-sharing-friends": {
+    name: "おともだちとわけっこできたね",
+    description: "やさしさと自信を育てる、わけっこテーマの固定テンプレート",
+    icon: "🤝",
+    categoryGroupId: "emotional-growth",
+    subcategoryId: "sharing-kindness",
+    parentIntent: "優しい子に育ってほしい。自信を持ってほしい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName", "lessonToTeach"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["emotional growth", "sharing", "kindness"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/emotional-growth.png",
+    sampleImageAlt: "おもちゃをわけっこして笑い合う子どもたちのやさしい絵本イメージ",
+    visualDirection:
+      "Warm emotional-growth picture-book mood with gentle eye contact, shared toys, supportive smiles, and a small kindness spark motif.",
+    order: 6,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、わけっこを通してやさしさと自信を育てる短い絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}のわけっこできたね",
+      coverImagePromptTemplate:
+        "Picture book cover illustration: two children sharing toys with warm smiles in a bright playroom, one child is the protagonist, gentle sunlight, recurring tiny kindness spark motif, tender emotional-growth mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark",
+      titleSpreadTextTemplate: "{childName}の わけっこ できたね",
+      openingNarrationTemplate:
+        "きょうの テーマは「{lessonToTeach}」。{childName}が ちいさな やさしさを 見つける おはなしです。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、だいすきなおもちゃであそんでいました。",
+          baby_toddler: "{childName}、だいすき おもちゃ。",
+          preschool_3_4:
+            "{childName}は、だいすきなおもちゃで あそんでいました。たのしくて、ぎゅっと だいじに もっています。",
+          early_reader_5_6:
+            "{childName}は、だいすきな おもちゃで あそんでいました。たのしい時間だからこそ、だれにも わたしたくない きもちも ありました。",
+          early_elementary_7_8:
+            "{childName}は、だいすきな おもちゃで あそんでいました。たいせつなものを ひとりで もっていたい気持ちと、だれかと 楽しみたい気持ちが 心のなかで ゆれていました。",
+          general_child:
+            "{childName}は、だいすきなおもちゃであそんでいました。たのしくて、ぎゅっと だいじに もっています。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a bright child playroom. The protagonist child sits on a soft rug, holding a favorite toy close with both hands. Shelves with books and plush animals are in the background. A second child is visible nearby, watching with interest. A tiny kindness spark motif appears on a cushion corner. Soft watercolor picture book style, balanced foreground-midground-background composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おともだちが「いっしょにあそびたいな」といいました。",
+          baby_toddler: "いっしょに あそぼ。どうしよう。",
+          preschool_3_4:
+            "おともだちが「いっしょにあそびたいな」と いいました。{childName}は すこしだけ まよいます。",
+          early_reader_5_6:
+            "おともだちが「いっしょにあそびたいな」と いいました。{childName}は ちょっぴり まよいながらも、どうしたら みんなが うれしいかを かんがえます。",
+          early_elementary_7_8:
+            "おともだちが「いっしょに あそびたいな」と いいました。{childName}は まよいながらも、じぶんの気持ちと 相手の気持ちの どちらも たいせつに できる方法を さがしはじめます。",
+          general_child:
+            "おともだちが「いっしょにあそびたいな」といいました。{childName}は すこしだけ まよいます。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Medium shot showing two children at eye level in a playroom. One child gently asks to join while the protagonist thinks for a moment, still holding the toy. Their facial expressions are soft and thoughtful, not upset. Warm daylight enters from a side window. A tiny kindness spark motif is tucked on a toy box edge. Soft watercolor picture book style, clear emotional storytelling framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、にっこりして「いっしょにあそぼ」といいました。",
+          baby_toddler: "いっしょに あそぼ。にこっ。",
+          preschool_3_4:
+            "{childName}は、にっこりして「いっしょにあそぼ」と いいました。おへやに やさしい えがおが ふえました。",
+          early_reader_5_6:
+            "{childName}は、にっこりして「いっしょにあそぼ」と いいました。わけっこしてみると、たのしさが ふたつに なって かえってきました。",
+          early_elementary_7_8:
+            "{childName}は、にっこりして「いっしょにあそぼ」と いいました。勇気をだして わけっこしたことで、こころが ふわっと あたたかくなり、自分への 自信も すこし育ちました。",
+          general_child:
+            "{childName}は、にっこりして「いっしょにあそぼ」といいました。おへやに やさしい えがおが ふえました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Close-up of two children smiling as they share a favorite toy together, hands gently touching the same object. The protagonist's expression shows pride and kindness. Background is softly blurred with warm playroom colors. A tiny kindness spark motif glows near their joined hands. Soft watercolor picture book style, intimate emotional framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4: "{parentMessage}",
+          early_reader_5_6: "{parentMessage}",
+          early_elementary_7_8: "{parentMessage}",
+          general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the two children sitting side by side after playtime, toys neatly shared between them. The room is calm in soft late-afternoon light. The protagonist leans comfortably with a peaceful smile. A tiny kindness spark motif appears near a bookshelf or rug edge. Soft watercolor picture book style, serene reflective composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
       ],
     },
   },

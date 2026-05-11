@@ -243,7 +243,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 
 | Step | 内容 | Status |
 |------|------|--------|
-| T2-A | テンプレート 5〜6 追加（memories + emotional-growth） | |
+| T2-A | テンプレート 5〜6 追加（memories + emotional-growth） | **done** |
 | T2-B | テンプレート 7〜8 追加（bedtime + imagination） | |
 | T2-C | テンプレート 9〜10 追加（learning + favorite-worlds） | |
 | T2-D | テンプレートプレビュー画像の生成・設定 | |
@@ -310,7 +310,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 ### Now（現在着手中〜次に着手）
 
 - [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md) — 既存4テンプレートの実生成確認
-- Phase T2-A: smoke確認後、テンプレート 5〜6 追加
+- Phase T2-B: テンプレート 7〜8 追加
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - production smoke evidence 確認
 

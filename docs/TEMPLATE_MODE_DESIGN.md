@@ -40,7 +40,7 @@
 | `FixedStoryTemplate` / `FixedStoryPageTemplate` | 定義済み |
 | `TemplateData.fixedStory` | 定義済み |
 | `TemplateData.creationMode` | 定義済み |
-| テンプレートシード | 4 本 seed 済み（`fixed-first-zoo`, `fixed-bedtime-good-day`, `fixed-brush-teeth`, `fixed-first-christmas`） |
+| テンプレートシード | 6 本 seed 済み（`fixed-first-zoo`, `fixed-first-birthday`, `fixed-bedtime-good-day`, `fixed-brush-teeth`, `fixed-first-christmas`, `fixed-sharing-friends`） |
 | `generateBook` 分岐 | `creationMode === "fixed_template" && template.fixedStory` → LLM スキップ |
 | `normalizeBookForGeneration` | `fixed_template` → `free` プラン + `fixedStory.pages.length` でページ数決定 |
 | `resolveScenePolicy` | `fixed_template` → `backgroundMode: "fixed"` |
@@ -285,8 +285,8 @@ Bright, warm colors. Soft watercolor style. No text in image."
 | 2 | `fixed-bedtime-good-day` | bedtime | きょうもいい日だったね | 既存 |
 | 3 | `fixed-brush-teeth` | growth-support | はみがきできたよ | 既存 |
 | 4 | `fixed-first-christmas` | seasonal-events | はじめてのクリスマス | 既存 |
-| 5 | `fixed-first-birthday` | memories | はじめてのたんじょうび | 候補 |
-| 6 | `fixed-sharing-friends` | emotional-growth | おともだちとわけっこ | 候補 |
+| 5 | `fixed-first-birthday` | memories | はじめてのたんじょうび | **done (T2-A)** |
+| 6 | `fixed-sharing-friends` | emotional-growth | おともだちとわけっこできたね | **done (T2-A)** |
 | 7 | `fixed-starry-night` | bedtime | おほしさまのよる | 候補 |
 | 8 | `fixed-rainy-day-adventure` | imagination | あめのひのぼうけん | 候補 |
 | 9 | `fixed-vegetable-garden` | learning | おやさいばたけ | 候補 |
@@ -322,7 +322,7 @@ Bright, warm colors. Soft watercolor style. No text in image."
 
 | Step | 内容 |
 |---|---|
-| T2-A | テンプレート 5〜6 を seed に追加（memories + emotional-growth） |
+| T2-A | テンプレート 5〜6 を seed に追加（memories + emotional-growth）**（done: `fixed-first-birthday`, `fixed-sharing-friends`）** |
 | T2-B | テンプレート 7〜8 を seed に追加（bedtime + imagination） |
 | T2-C | テンプレート 9〜10 を seed に追加（learning + favorite-worlds） |
 | T2-D | テンプレートプレビュー画像の生成・設定 |

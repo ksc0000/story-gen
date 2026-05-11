@@ -4,9 +4,11 @@ import type { PageVisualRole } from "../src/lib/types";
 
 const FIXED_TEMPLATE_IDS = [
   "fixed-first-zoo",
+  "fixed-first-birthday",
   "fixed-bedtime-good-day",
   "fixed-brush-teeth",
   "fixed-first-christmas",
+  "fixed-sharing-friends",
 ] as const;
 
 const NEGATIVE_TEXT_TOKENS = [
@@ -19,9 +21,11 @@ const NEGATIVE_TEXT_TOKENS = [
 
 const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-first-zoo": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-first-birthday": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-bedtime-good-day": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-brush-teeth": ["opening_establishing", "action", "payoff", "quiet_ending"],
   "fixed-first-christmas": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-sharing-friends": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
 };
 
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
