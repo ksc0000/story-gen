@@ -19,7 +19,30 @@ const NEGATIVE_TEXT_TOKENS = [
   "no watermark",
 ];
 
+const FIXED_IMAGE_PROMPT_STANDARD_SUFFIX =
+  "no readable writing anywhere, no signage, no storefront signs, no text-like marks";
 const JAPANESE_SCRIPT_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/;
+const PROMPT_ANTIPATTERN_RE = /\b(storefront|shop|label|banner|poster|sign)\b/i;
+const PROMPT_NEGATIVE_CLAUSES = [
+  "no readable writing anywhere",
+  "no signage",
+  "no storefront signs",
+  "no text-like marks",
+  "no readable signs",
+  "no text",
+  "no letters",
+  "no japanese characters",
+  "no logo",
+  "no watermark",
+];
+
+function getPositivePrompt(prompt: string): string {
+  let positivePrompt = prompt;
+  for (const clause of PROMPT_NEGATIVE_CLAUSES) {
+    positivePrompt = positivePrompt.replace(new RegExp(clause, "ig"), "");
+  }
+  return positivePrompt.replace(/\s+/g, " ").trim();
+}
 
 const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-first-zoo": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
@@ -67,9 +90,19 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
         expect(prompt).not.toMatch(/\b(write|render|draw|show|display|with)\s+(the\s+)?(title|text|letters|japanese|logo|watermark)\b/);
       });
 
+      it("coverImagePromptTemplate includes the standard no-text suffix", () => {
+        const prompt = (template.fixedStory?.coverImagePromptTemplate ?? "").toLowerCase();
+        expect(prompt).toContain(FIXED_IMAGE_PROMPT_STANDARD_SUFFIX);
+      });
+
       it("coverImagePromptTemplate does not contain Japanese script characters", () => {
         const prompt = template.fixedStory?.coverImagePromptTemplate ?? "";
         expect(prompt).not.toMatch(JAPANESE_SCRIPT_RE);
+      });
+
+      it("coverImagePromptTemplate keeps sign-like words out of the positive prompt", () => {
+        const prompt = getPositivePrompt(template.fixedStory?.coverImagePromptTemplate ?? "");
+        expect(prompt).not.toMatch(PROMPT_ANTIPATTERN_RE);
       });
 
       it("has a non-empty titleSpreadTextTemplate", () => {
@@ -116,6 +149,7 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
       it("every imagePromptTemplate has negative text instructions", () => {
         for (const page of template.fixedStory?.pages ?? []) {
           const prompt = page.imagePromptTemplate.toLowerCase();
+          expect(prompt).toContain(FIXED_IMAGE_PROMPT_STANDARD_SUFFIX);
           expect(prompt).toContain("no text");
           expect(prompt).toContain("no letters");
           expect(prompt).toContain("no japanese characters");
@@ -127,6 +161,13 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
       it("every imagePromptTemplate does not contain Japanese script characters", () => {
         for (const page of template.fixedStory?.pages ?? []) {
           expect(page.imagePromptTemplate).not.toMatch(JAPANESE_SCRIPT_RE);
+        }
+      });
+
+      it("every imagePromptTemplate keeps sign-like words out of the positive prompt", () => {
+        for (const page of template.fixedStory?.pages ?? []) {
+          const prompt = getPositivePrompt(page.imagePromptTemplate);
+          expect(prompt).not.toMatch(PROMPT_ANTIPATTERN_RE);
         }
       });
 
