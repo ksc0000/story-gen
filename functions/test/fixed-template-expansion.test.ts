@@ -69,9 +69,11 @@ describe("buildFixedTemplateReplacements", () => {
 describe("fixed_template cover / title / narration expansion", () => {
   const FIXED_IDS = [
     "fixed-first-zoo",
+    "fixed-first-birthday",
     "fixed-bedtime-good-day",
     "fixed-brush-teeth",
     "fixed-first-christmas",
+    "fixed-sharing-friends",
   ] as const;
 
   for (const id of FIXED_IDS) {
@@ -82,6 +84,7 @@ describe("fixed_template cover / title / narration expansion", () => {
         childName: "テスト太郎",
         childAge: 3,
         familyMembers: "ママ",
+        lessonToTeach: "わけっこ",
         place: "動物園",
         parentMessage: "だいすきだよ",
       };
@@ -125,6 +128,16 @@ describe("fixed_template cover / title / narration expansion", () => {
         expect(result).toContain("no text");
         expect(result).toContain("no letters");
         expect(result).toContain("no watermark");
+      });
+
+      it("fixed-sharing-friends opening narration includes expanded lessonToTeach", () => {
+        if (id !== "fixed-sharing-friends") return;
+        const result = applyTemplateReplacements(
+          fixedStory.openingNarrationTemplate!,
+          replacements
+        );
+        expect(result).toContain("わけっこ");
+        expect(result).not.toContain("{lessonToTeach}");
       });
     });
   }

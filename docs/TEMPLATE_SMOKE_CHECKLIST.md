@@ -2,22 +2,24 @@
 
 作成日: 2026-05-08  
 対象リポジトリ: `ksc0000/story-gen`  
-対象 Phase: Template Mode Phase T1 / fixed_template 既存4本
+対象 Phase: Template Mode Phase T1 + T2-A / fixed_template 6本
 
 ---
 
 ## 0. Overview
 
-このチェックリストは、Template Mode Phase T1 で強化した既存4テンプレートが、実際に安定して絵本生成できるかを確認するための smoke checklist です。
+このチェックリストは、Template Mode Phase T1 + T2-A の fixed_template 6本が、実際に安定して絵本生成できるかを確認するための smoke checklist です。
 
 対象テンプレート:
 
 | Template ID | Title | Category | Page count |
 |---|---|---|---:|
 | `fixed-first-zoo` | はじめてのどうぶつえん | memories | 4 |
+| `fixed-first-birthday` | はじめてのたんじょうび | memories | 4 |
 | `fixed-bedtime-good-day` | きょうもいい日だったね | bedtime | 4 |
 | `fixed-brush-teeth` | はみがきできたよ | growth-support | 4 |
 | `fixed-first-christmas` | はじめてのクリスマス | seasonal-events | 4 |
+| `fixed-sharing-friends` | おともだちとわけっこできたね | emotional-growth | 4 |
 
 確認目的:
 
@@ -26,7 +28,7 @@
 - page image prompts が強化済み seed 由来で使われること
 - 画像内文字を誘発しない prompt になっていること
 - Reader UI で Cover → Title Spread → Story pages の流れが確認できること
-- 既存4テンプレートを量産前の品質ゲートとして確認すること
+- fixed_template 6テンプレートを T2-B 着手前の品質ゲートとして確認すること
 
 ---
 
@@ -50,11 +52,11 @@
 | Check | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
 | 最新 `main` または対象branchが反映されている | ☐ | ☐ | ☐ |  |
-| `functions/src/seed-templates.ts` に既存4テンプレートが存在する | ☐ | ☐ | ☐ |  |
-| 既存4テンプレートに `coverImagePromptTemplate` がある | ☐ | ☐ | ☐ |  |
-| 既存4テンプレートに `titleSpreadTextTemplate` がある | ☐ | ☐ | ☐ |  |
-| 既存4テンプレートに `openingNarrationTemplate` がある | ☐ | ☐ | ☐ |  |
-| 全16ページに `pageVisualRole` がある | ☐ | ☐ | ☐ |  |
+| `functions/src/seed-templates.ts` に fixed_template 6テンプレートが存在する | ☐ | ☐ | ☐ |  |
+| fixed_template 6テンプレートに `coverImagePromptTemplate` がある | ☐ | ☐ | ☐ |  |
+| fixed_template 6テンプレートに `titleSpreadTextTemplate` がある | ☐ | ☐ | ☐ |  |
+| fixed_template 6テンプレートに `openingNarrationTemplate` がある | ☐ | ☐ | ☐ |  |
+| 全24ページに `pageVisualRole` がある | ☐ | ☐ | ☐ |  |
 | `.env` / Firebase env secrets が生成に必要な状態になっている | ☐ | ☐ | ☐ |  |
 
 ---
@@ -79,9 +81,11 @@
 | Check | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
 | `fixed-first-zoo` が `creationMode: "fixed_template"` | ☐ | ☐ | ☐ |  |
+| `fixed-first-birthday` が `creationMode: "fixed_template"` | ☐ | ☐ | ☐ |  |
 | `fixed-bedtime-good-day` が `creationMode: "fixed_template"` | ☐ | ☐ | ☐ |  |
 | `fixed-brush-teeth` が `creationMode: "fixed_template"` | ☐ | ☐ | ☐ |  |
 | `fixed-first-christmas` が `creationMode: "fixed_template"` | ☐ | ☐ | ☐ |  |
+| `fixed-sharing-friends` が `creationMode: "fixed_template"` | ☐ | ☐ | ☐ |  |
 | 各テンプレートが4ページを維持している | ☐ | ☐ | ☐ |  |
 | 既存 `textTemplate` が消えていない | ☐ | ☐ | ☐ |  |
 | 既存 `textTemplatesByAge` が維持されている | ☐ | ☐ | ☐ |  |
@@ -94,9 +98,11 @@
 | Template ID | coverImagePromptTemplate | titleSpreadTextTemplate | openingNarrationTemplate | Negative text instructions | PASS/FAIL | Notes |
 |---|---|---|---|---|---|---|
 | `fixed-first-zoo` | ☐ | ☐ | ☐ | ☐ |  |  |
+| `fixed-first-birthday` | ☐ | ☐ | ☐ | ☐ |  |  |
 | `fixed-bedtime-good-day` | ☐ | ☐ | ☐ | ☐ |  |  |
 | `fixed-brush-teeth` | ☐ | ☐ | ☐ | ☐ |  |  |
 | `fixed-first-christmas` | ☐ | ☐ | ☐ | ☐ |  |  |
+| `fixed-sharing-friends` | ☐ | ☐ | ☐ | ☐ |  |  |
 
 Expected negative text instructions:
 
@@ -116,13 +122,15 @@ Expected role sequence:
 | Template ID | Expected roles |
 |---|---|
 | `fixed-first-zoo` | `opening_establishing` → `discovery` → `emotional_closeup` → `quiet_ending` |
+| `fixed-first-birthday` | `opening_establishing` → `discovery` → `emotional_closeup` → `quiet_ending` |
 | `fixed-bedtime-good-day` | `opening_establishing` → `discovery` → `emotional_closeup` → `quiet_ending` |
 | `fixed-brush-teeth` | `opening_establishing` → `action` → `payoff` → `quiet_ending` |
 | `fixed-first-christmas` | `opening_establishing` → `discovery` → `emotional_closeup` → `quiet_ending` |
+| `fixed-sharing-friends` | `opening_establishing` → `discovery` → `emotional_closeup` → `quiet_ending` |
 
 | Check | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
-| 全16ページに `pageVisualRole` がある | ☐ | ☐ | ☐ |  |
+| 全24ページに `pageVisualRole` がある | ☐ | ☐ | ☐ |  |
 | 先頭ページが `opening_establishing` | ☐ | ☐ | ☐ |  |
 | 最終ページが `quiet_ending` | ☐ | ☐ | ☐ |  |
 | `fixed-brush-teeth` の3ページ目が `payoff` | ☐ | ☐ | ☐ |  |
@@ -134,13 +142,13 @@ Expected role sequence:
 
 | Check | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
-| 全16ページの `imagePromptTemplate` が100文字以上 | ☐ | ☐ | ☐ |  |
-| 全16ページに構図・画角表現がある | ☐ | ☐ | ☐ | `wide shot`, `medium shot`, `close-up`, etc. |
-| 全16ページに主人公の行動・表情がある | ☐ | ☐ | ☐ |  |
-| 全16ページに背景・照明・雰囲気がある | ☐ | ☐ | ☐ |  |
-| 全16ページに `watercolor` または `storybook` style がある | ☐ | ☐ | ☐ |  |
-| 全16ページに child-safe / gentle な方針がある | ☐ | ☐ | ☐ |  |
-| 全16ページに negative text instructions がある | ☐ | ☐ | ☐ |  |
+| 全24ページの `imagePromptTemplate` が100文字以上 | ☐ | ☐ | ☐ |  |
+| 全24ページに構図・画角表現がある | ☐ | ☐ | ☐ | `wide shot`, `medium shot`, `close-up`, etc. |
+| 全24ページに主人公の行動・表情がある | ☐ | ☐ | ☐ |  |
+| 全24ページに背景・照明・雰囲気がある | ☐ | ☐ | ☐ |  |
+| 全24ページに `watercolor` または `storybook` style がある | ☐ | ☐ | ☐ |  |
+| 全24ページに child-safe / gentle な方針がある | ☐ | ☐ | ☐ |  |
+| 全24ページに negative text instructions がある | ☐ | ☐ | ☐ |  |
 | 未展開 placeholder typo がない | ☐ | ☐ | ☐ |  |
 
 ---
@@ -152,9 +160,11 @@ Expected role sequence:
 | Template ID | Book ID | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|---|
 | `fixed-first-zoo` |  | ☐ | ☐ | ☐ |  |
+| `fixed-first-birthday` |  | ☐ | ☐ | ☐ |  |
 | `fixed-bedtime-good-day` |  | ☐ | ☐ | ☐ |  |
 | `fixed-brush-teeth` |  | ☐ | ☐ | ☐ |  |
 | `fixed-first-christmas` |  | ☐ | ☐ | ☐ |  |
+| `fixed-sharing-friends` |  | ☐ | ☐ | ☐ |  |
 
 Per-book checks:
 
@@ -256,7 +266,7 @@ Recommended score gate:
 
 Template smoke PASS の目安:
 
-- 既存4テンプレートすべて overall 4 以上
+- fixed_template 6テンプレートすべて overall 4 以上
 - safety は全テンプレート 5 推奨
 - 画像内文字混入が重大でないこと
 
