@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { PageDoc, CoverStatus, ReadingStructureVersion } from "@/lib/types";
@@ -160,6 +160,7 @@ export function BookViewer(props: BookViewerProps) {
   const [currentPage, setCurrentPage] = useState(0);
   /** 1 = forward (next), -1 = backward (prev). Used for animation direction. */
   const directionRef = useRef(1);
+  const touchStartXRef = useRef<number | null>(null);
   const totalPages = items.length;
 
   const goNext = useCallback(() => {
@@ -184,6 +185,28 @@ export function BookViewer(props: BookViewerProps) {
     [goNext, goPrev],
   );
 
+  // Fallback for mobile browsers where framer-motion drag events can be unreliable.
+  const handleTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    touchStartXRef.current = event.changedTouches[0]?.clientX ?? null;
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (event: TouchEvent<HTMLDivElement>) => {
+      const startX = touchStartXRef.current;
+      const endX = event.changedTouches[0]?.clientX;
+      touchStartXRef.current = null;
+      if (startX == null || endX == null) return;
+
+      const deltaX = endX - startX;
+      if (deltaX < -SWIPE_OFFSET_THRESHOLD) {
+        goNext();
+      } else if (deltaX > SWIPE_OFFSET_THRESHOLD) {
+        goPrev();
+      }
+    },
+    [goNext, goPrev],
+  );
+
   const item = items[currentPage];
   if (!item) return null;
 
@@ -200,6 +223,8 @@ export function BookViewer(props: BookViewerProps) {
     dragConstraints: { left: 0, right: 0 },
     dragElastic: 0.18,
     onDragEnd: handleDragEnd,
+    onTouchStart: handleTouchStart,
+    onTouchEnd: handleTouchEnd,
   };
 
   return (
