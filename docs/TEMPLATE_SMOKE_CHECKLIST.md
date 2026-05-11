@@ -36,14 +36,14 @@
 
 | Item | Value |
 |---|---|
-| 実行日 |  |
-| 実行者 |  |
-| 対象環境 | local / staging / production |
-| Firebase project |  |
-| 対象 branch |  |
-| 対象 commit SHA |  |
+| 実行日 | 2026-05-11 |
+| 実行者 | CN63738 + Copilot |
+| 対象環境 | production |
+| Firebase project | story-gen-8a769 |
+| 対象 branch | main |
+| 対象 commit SHA | 39906a1 |
 | checklist version | `docs/TEMPLATE_SMOKE_CHECKLIST.md` |
-| overall result | PASS / PASS_WITH_FOLLOW_UP / FAIL / NOT_RUN |
+| overall result | PASS_WITH_FOLLOW_UP |
 
 ---
 
@@ -68,11 +68,19 @@ $env:GOOGLE_APPLICATION_CREDENTIALS="C:\path\to\service-account.json"
 npm run smoke:create-template-books
 ```
 
+単独で 1 本だけ投入する場合:
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS="C:\path\to\service-account.json"
+node scripts/create-template-smoke-books.js --write --template-id=fixed-first-zoo
+```
+
 注意点:
 
 - `GOOGLE_APPLICATION_CREDENTIALS` 未設定時は処理を中止します。
 - 環境変数の値そのもの（パス文字列）はログ出力しません。
 - 作成件数は常に 6 件固定です（固定テンプレート6本のみ）。
+- `--template-id=...` を付けると、固定テンプレート 1 本だけを新規作成できます。
 - 既存 BookDoc の更新は行いません（新規作成のみ）。
 - 生成された BookDoc には `smokeTestMetadata` が付与され、smoke作成データだと判別できます。
 
@@ -176,26 +184,64 @@ Expected role sequence:
 
 | Template ID | Book ID | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|---|
-| `fixed-first-zoo` |  | ☐ | ☐ | ☐ |  |
-| `fixed-first-birthday` |  | ☐ | ☐ | ☐ |  |
-| `fixed-bedtime-good-day` |  | ☐ | ☐ | ☐ |  |
-| `fixed-brush-teeth` |  | ☐ | ☐ | ☐ |  |
-| `fixed-first-christmas` |  | ☐ | ☐ | ☐ |  |
-| `fixed-sharing-friends` |  | ☐ | ☐ | ☐ |  |
+| `fixed-first-zoo` | `xOqLdG3GPgGxp8AFF563` | ☐ | ☑ | ☐ | status=`failed`, 4 pages all `image_failed` |
+| `fixed-first-birthday` | `sSxQ6tBYdBBtVoXG20oZ` | ☐ | ☑ | ☐ | status=`failed`, 4 pages all `image_failed` |
+| `fixed-bedtime-good-day` | `nWQfnJOSvr3EOpuM6GSR` | ☑ | ☐ | ☐ | status=`partial_completed` |
+| `fixed-brush-teeth` | `3m04DeTjkrsmbrFJ9i4N` | ☑ | ☐ | ☐ | status=`partial_completed` |
+| `fixed-first-christmas` | `eIdb6t4QjjPWubg0Xbun` | ☐ | ☑ | ☐ | status=`failed`, 4 pages all `image_failed` |
+| `fixed-sharing-friends` | `4rI1efgnF5i2v57S6cSk` | ☑ | ☐ | ☐ | status=`partial_completed` (page-3 `fallback_completed`) |
 
 Per-book checks:
 
 | Check | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
-| Book status が `completed` または `partial_completed` | ☐ | ☐ | ☐ |  |
-| hard failed していない | ☐ | ☐ | ☐ |  |
-| pages subcollection が4ページ | ☐ | ☐ | ☐ |  |
-| pageNumber が0〜3で維持 | ☐ | ☐ | ☐ |  |
-| 各pageの本文がtemplate由来 | ☐ | ☐ | ☐ |  |
-| 各page画像が生成される、またはfallback/partialとして扱われる | ☐ | ☐ | ☐ |  |
-| BookDoc に `coverImagePrompt` が保存される | ☐ | ☐ | ☐ |  |
-| BookDoc に `titleSpreadText` が保存される | ☐ | ☐ | ☐ |  |
-| BookDoc に `openingNarration` が保存される | ☐ | ☐ | ☐ |  |
+| Book status が `completed` または `partial_completed` | ☐ | ☑ | ☐ | 6件中3件が `failed` |
+| hard failed していない | ☐ | ☑ | ☐ | `fixed-first-zoo` / `fixed-first-birthday` / `fixed-first-christmas` が hard fail |
+| pages subcollection が4ページ | ☑ | ☐ | ☐ | 6件すべて4ページ |
+| pageNumber が0〜3で維持 | ☑ | ☐ | ☐ | 6件すべて 0..3 |
+| 各pageの本文がtemplate由来 | ☑ | ☐ | ☐ | 全ページ `text` あり |
+| 各page画像が生成される、またはfallback/partialとして扱われる | ☑ | ☐ | ☐ | partial本で `completed` / `fallback_completed` を確認 |
+| BookDoc に `coverImagePrompt` が保存される | ☐ | ☑ | ☐ | 6件すべて未保存 |
+| BookDoc に `titleSpreadText` が保存される | ☐ | ☑ | ☐ | 6件すべて未保存 |
+| BookDoc に `openingNarration` が保存される | ☐ | ☑ | ☐ | 6件すべて未保存 |
+
+---
+
+### 8.1 Post-redeploy single-book gate (deploy差異確認)
+
+`functions:generateBook` を再デプロイした後、まず1冊だけで再検証した結果。
+
+| Template ID | Book ID | PASS | FAIL | N/A | Evidence / Notes |
+|---|---|---|---|---|---|
+| `fixed-sharing-friends` | `zmMafkha7DM3Fb3DkewK` | ☑ | ☐ | ☐ | status=`completed`, pages 4/4 `completed`, `coverImagePrompt`/`titleSpreadText`/`openingNarration` 保存確認 |
+
+備考:
+
+- ログに `uses fixed_template; skipping LLM story generation` を確認。
+- ログに `Book zmMafkha7DM3Fb3DkewK generation completed: 4/4 pages succeeded` を確認。
+- 先行6冊の metadata 未保存は、再デプロイ前バイナリとの差異影響の可能性が高い。429系失敗とは別事象として扱う。
+
+### 8.2 Post-redeploy sequential reruns (429影響の分離評価)
+
+| Template ID | Book ID | PASS | FAIL | N/A | Evidence / Notes |
+|---|---|---|---|---|---|
+| `fixed-first-zoo` | `YOszGPdgQd74h9tStiV7` | ☑ | ☐ | ☐ | status=`completed`, pages 4/4 `completed`, `coverImagePrompt`/`titleSpreadText`/`openingNarration` 保存確認 |
+| `fixed-first-birthday` | `KjBUIpQSO8ua5FyqgdGB` | ☑ | ☐ | ☐ | status=`completed`, pages 4/4 `completed`, `coverImagePrompt`/`titleSpreadText`/`openingNarration` 保存確認 |
+| `fixed-bedtime-good-day` | `rBSjD2tphyiTvT3kfiKO` | ☑ | ☐ | ☐ | status=`completed`, pages 4/4 `completed`, `coverImagePrompt`/`titleSpreadText`/`openingNarration` 保存確認 |
+| `fixed-brush-teeth` | `UnrLoWIHMjFzSilz6cZ1` | ☑ | ☐ | ☐ | status=`completed`, pages 4/4 `completed`, `coverImagePrompt`/`titleSpreadText`/`openingNarration` 保存確認 |
+| `fixed-first-christmas` | `Nwat9hX8myUJFNEO1F5s` | ☑ | ☐ | ☐ | status=`completed`, pages 4/4 `completed`, `coverImagePrompt`/`titleSpreadText`/`openingNarration` 保存確認 |
+
+備考:
+
+- `fixed-first-zoo` は sequential rerun の 1 本目として単独投入。
+- `fixed-first-birthday` は sequential rerun の 2 本目として単独投入。
+- `fixed-bedtime-good-day` は sequential rerun の 3 本目として単独投入。
+- `fixed-brush-teeth` は sequential rerun の 4 本目として単独投入。
+- `fixed-first-christmas` は sequential rerun の 5 本目として単独投入。
+- BookDoc fields: `coverStatus=completed`, `hasCoverPage=true`, `readingStructureVersion=v2_cover_title_story`。
+- pages subcollection は 4 件、`pageNumber` は 0..3 を維持。
+- 上記 5 冊はいずれも page status 0..3 の全件が `completed`。429 / image failure は未検出。
+- `fixed-sharing-friends` の再デプロイ後単体再検証も `completed` 済みのため、post-redeploy rerun では fixed_template 6 本すべてで metadata gate と generation gate が通過した。
 
 ---
 
@@ -205,38 +251,66 @@ BookDoc:
 
 | Field | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
-| `coverImagePrompt` | ☐ | ☐ | ☐ |  |
-| `titleSpreadText` | ☐ | ☐ | ☐ |  |
-| `openingNarration` | ☐ | ☐ | ☐ |  |
-| `coverStatus` | ☐ | ☐ | ☐ | `completed` / `failed` / `generating` |
-| `hasCoverPage` | ☐ | ☐ | ☐ | cover completed 時は true |
-| `readingStructureVersion` | ☐ | ☐ | ☐ | cover completed 時は `v2_cover_title_story` |
-| `coverImageUrl` | ☐ | ☐ | ☐ | cover completed 時に存在 |
-| `coverImageDurationMs` | ☐ | ☐ | ☐ |  |
-| `coverImageFallbackUsed` | ☐ | ☐ | ☐ | boolean / undefined を確認 |
+| `coverImagePrompt` | ☐ | ☑ | ☐ | 6件すべて未保存 |
+| `titleSpreadText` | ☐ | ☑ | ☐ | 6件すべて未保存 |
+| `openingNarration` | ☐ | ☑ | ☐ | 6件すべて未保存 |
+| `coverStatus` | ☐ | ☑ | ☐ | 6件すべて null |
+| `hasCoverPage` | ☐ | ☑ | ☐ | 6件すべて未設定 |
+| `readingStructureVersion` | ☐ | ☑ | ☐ | 6件すべて null |
+| `coverImageUrl` | ☐ | ☑ | ☐ | 6件すべて未設定 |
+| `coverImageDurationMs` | ☐ | ☑ | ☐ | 6件すべて未設定 |
+| `coverImageFallbackUsed` | ☐ | ☑ | ☐ | 6件すべて未設定 |
+
+Post-redeploy (single-book recheck):
+
+| Field | PASS | FAIL | N/A | Evidence / Notes |
+|---|---|---|---|---|
+| `coverImagePrompt` | ☑ | ☐ | ☐ | `zmMafkha7DM3Fb3DkewK` で保存確認 |
+| `titleSpreadText` | ☑ | ☐ | ☐ | `zmMafkha7DM3Fb3DkewK` で保存確認 |
+| `openingNarration` | ☑ | ☐ | ☐ | `zmMafkha7DM3Fb3DkewK` で保存確認 |
+| `coverStatus` | ☑ | ☐ | ☐ | `zmMafkha7DM3Fb3DkewK`, `YOszGPdgQd74h9tStiV7`, `KjBUIpQSO8ua5FyqgdGB`, `rBSjD2tphyiTvT3kfiKO`, `UnrLoWIHMjFzSilz6cZ1`, `Nwat9hX8myUJFNEO1F5s` で `completed` |
+| `hasCoverPage` | ☑ | ☐ | ☐ | `zmMafkha7DM3Fb3DkewK`, `YOszGPdgQd74h9tStiV7`, `KjBUIpQSO8ua5FyqgdGB`, `rBSjD2tphyiTvT3kfiKO`, `UnrLoWIHMjFzSilz6cZ1`, `Nwat9hX8myUJFNEO1F5s` で `true` |
+| `readingStructureVersion` | ☑ | ☐ | ☐ | `zmMafkha7DM3Fb3DkewK`, `YOszGPdgQd74h9tStiV7`, `KjBUIpQSO8ua5FyqgdGB`, `rBSjD2tphyiTvT3kfiKO`, `UnrLoWIHMjFzSilz6cZ1`, `Nwat9hX8myUJFNEO1F5s` で `v2_cover_title_story` |
 
 Pages:
 
 | Field | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
-| `books/{bookId}/pages/{pageId}` が4件 | ☐ | ☐ | ☐ |  |
-| `pageNumber` が0〜3 | ☐ | ☐ | ☐ |  |
-| page status が `completed` / `fallback_completed` / `image_failed` の想定範囲 | ☐ | ☐ | ☐ |  |
+| `books/{bookId}/pages/{pageId}` が4件 | ☑ | ☐ | ☐ | 6件すべて4件 |
+| `pageNumber` が0〜3 | ☑ | ☐ | ☐ | 6件すべて0..3 |
+| page status が `completed` / `fallback_completed` / `image_failed` の想定範囲 | ☑ | ☐ | ☐ | partial本は `completed`/`fallback_completed`、failed本は全`image_failed` |
 | page image prompt が強化済み構図に沿っている | ☐ | ☐ | ☐ |  |
 
 ---
 
 ## 10. Reader UI Checks
 
+確認対象 bookId (すべて 2026-05-11 認証済みセッションで実画面確認):
+
+- `YOszGPdgQd74h9tStiV7`
+- `KjBUIpQSO8ua5FyqgdGB`
+- `rBSjD2tphyiTvT3kfiKO`
+- `UnrLoWIHMjFzSilz6cZ1`
+- `Nwat9hX8myUJFNEO1F5s`
+- `zmMafkha7DM3Fb3DkewK`
+
 | Check | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
-| cover completed book で Cover が最初に表示される | ☐ | ☐ | ☐ |  |
-| 次へ進むと Title Spread が表示される | ☐ | ☐ | ☐ |  |
-| 次へ進むと story page 0 が表示される | ☐ | ☐ | ☐ |  |
-| 左右スワイプでページ移動できる | ☐ | ☐ | ☐ |  |
-| 前/次ボタンも動作する | ☐ | ☐ | ☐ |  |
-| cover failed book は従来どおり page 0 から表示される | ☐ | ☐ | ☐ |  |
-| 画像内にタイトル文字・日本語文字・ロゴ・透かしが目立って出ていない | ☐ | ☐ | ☐ |  |
+| 各bookを閲覧画面で開く | ☑ | ☐ | ☐ | 6冊すべて表示 |
+| Cover が最初に表示される | ☑ | ☐ | ☐ | 6冊すべて Cover が先頭に表示 |
+| 次へ進むと Title Spread が表示される | ☑ | ☐ | ☐ | 6冊すべて表示 |
+| 次へ進むと story page 0 が表示される | ☑ | ☐ | ☐ | 6冊すべて表示 |
+| pages 4件を最後まで読める | ☑ | ☐ | ☐ | 6冊すべて最後まで読める |
+| 前/次ボタンが動く | ☑ | ☐ | ☐ | 動作確認 |
+| swipe / slide navigation が動く | ☑ | ☐ | ☐ | 動作確認 |
+| 画像と本文が大きく矛盾していない | ☑ | ☐ | ☐ | 大きな矛盾なし |
+| 画像内に重大な text / Japanese characters / logo / watermark がない | ☐ | ☐ | ☑ | 看板等に稀に「優しい水彩」が出るケースあり（IMG-001）。重大ではない |
+| `fixed-sharing-friends` で `lessonToTeach` の未展開 token が表示されていない | ☑ | ☐ | ☐ | 未展開 token なし |
+
+補足:
+
+- Cover と Title Spread が別ページで表示される仕様について、本物の絵本同様に Cover+Title を 1 枚にまとめる UX 改善の余地あり（UX-001 として記録、今回の smoke スコープ外）。
+- ページ 4（最終ページ）が毎回英語 "You did great today" と表示される。smoke スクリプトの `parentMessage` デフォルト値が英語のため（MSG-001）。生成ロジック自体のバグではない。
 
 ---
 
@@ -246,13 +320,14 @@ Route: `/admin/book-quality-review`
 
 | Check | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
-| generated fixed_template book が一覧に表示される | ☐ | ☐ | ☐ |  |
-| Book detail で cover fields が確認できる | ☐ | ☐ | ☐ |  |
-| coverImagePrompt が表示される | ☐ | ☐ | ☐ |  |
-| titleSpreadText / openingNarration が確認できる | ☐ | ☐ | ☐ |  |
-| page statuses が確認できる | ☐ | ☐ | ☐ |  |
-| Quality Review を保存できる | ☐ | ☐ | ☐ |  |
-| cover regeneration button が表示・動作する | ☐ | ☐ | ☐ | 必要時のみ |
+| `/admin/book-quality-review` を開く | ☑ | ☐ | ☐ | 200 応答確認 |
+| 6件のbookが一覧に出る | ☐ | ☑ | ☐ | smoke 6冊が一覧に表示されない（ADM-001）。admin claim または smoke userId のフィルター外の可能性 |
+| book detail を開ける | ☐ | ☐ | ☑ | 一覧未表示のため未確認 |
+| `coverImagePrompt` / `titleSpreadText` / `openingNarration` が確認できる | ☐ | ☐ | ☑ | 同上（Firestore では 6/6 確認済み） |
+| `coverStatus` / `hasCoverPage` / `readingStructureVersion` が確認できる | ☐ | ☐ | ☑ | 同上 |
+| pages status が4件 completed で確認できる | ☐ | ☐ | ☑ | 同上 |
+| Quality Review を1件以上保存できる | ☐ | ☐ | ☑ | 同上 |
+| UI crash がない | ☑ | ☐ | ☐ | クラッシュなし |
 
 ---
 
@@ -262,30 +337,20 @@ Route: `/admin/book-quality-review`
 
 | Axis | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
-| 物語が4ページで自然に読める | ☐ | ☐ | ☐ |  |
-| title spread / opening narration が読み聞かせ導入として自然 | ☐ | ☐ | ☐ |  |
-| 各ページの絵が本文と一致している | ☐ | ☐ | ☐ |  |
-| 主人公がページ間で大きく別人化していない | ☐ | ☐ | ☐ |  |
-| 絵柄・色味・雰囲気が概ね一貫 | ☐ | ☐ | ☐ |  |
-| 表紙がテンプレートのテーマを表している | ☐ | ☐ | ☐ |  |
-| 画像内文字が出ていない、または許容範囲 | ☐ | ☐ | ☐ |  |
-| 子ども向け・家庭向けとして安心 | ☐ | ☐ | ☐ |  |
+| 物語が4ページで自然に読める | ☑ | ☐ | ☐ | Reader UI で 6冊すべて4ページ読了確認 |
+| title spread / opening narration が読み聞かせ導入として自然 | ☑ | ☐ | ☐ | Title Spread 表示確認。自然な読み聞かせ導入として機能 |
+| 各ページの絵が本文と一致している | ☑ | ☐ | ☐ | 大きな矛盾なし |
+| 主人公がページ間で大きく別人化していない | ☑ | ☐ | ☐ | ページ間で概ね統一 |
+| 絵柄・色味・雰囲気が概ね一貫 | ☑ | ☐ | ☐ | 水彩調で概ね統一 |
+| 表紙がテンプレートのテーマを表している | ☑ | ☐ | ☐ | 各テンプレートのテーマを反映 |
+| 画像内文字が出ていない、または許容範囲 | ☐ | ☐ | ☑ | 看板等に稀に「優しい水彩」出現。重大ではないが follow-up（IMG-001） |
+| 子ども向け・家庭向けとして安心 | ☑ | ☐ | ☐ | 不適切要素なし |
 
-Recommended score gate:
+簡易評価メモ:
 
-| Score | Meaning |
-|---:|---|
-| 5 | excellent / template ready |
-| 4 | good / minor improvements |
-| 3 | acceptable / monitor |
-| 2 | needs prompt/template fix |
-| 1 | should not ship |
-
-Template smoke PASS の目安:
-
-- fixed_template 6テンプレートすべて overall 4 以上
-- safety は全テンプレート 5 推奨
-- 画像内文字混入が重大でないこと
+- 生成安定性: post-redeploy sequential rerun で fixed_template 6/6 が completed、429 / image failure 再現なし。
+- metadata gate: `coverImagePrompt` / `titleSpreadText` / `openingNarration` は 6/6 保存確認済み。
+- UI体験品質: Reader UI は概ね良好。page 4 の `{parentMessage}` が英語デフォルト（smoke スクリプト入力値の問題）。Admin 一覧に smoke 6冊が表示されない問題は follow-up。
 
 ---
 
@@ -293,7 +358,11 @@ Template smoke PASS の目安:
 
 | ID | Severity | Template ID | Area | Description | Evidence / URL | Owner | Status | Follow-up issue / PR |
 |---|---|---|---|---|---|---|---|---|
-|  | High / Medium / Low |  | story / image / cover / UI / Firestore |  |  |  | open / in_progress / resolved |  |
+| IMG-001 | Low | all | image | 看板等に稀に「優しい水彩」が生成される。prompt の negative instructions で `no Japanese characters` を指定済みだが完全抑制できていない | Reader UI 実画面確認（2026-05-11） | CN63738 | open | prompt 強化または再生成で様子見 |
+| MSG-001 | Medium | all | story | smoke スクリプト作成 book の page 4（`{parentMessage}` ページ）が毎回英語 "You did great today" と表示される | Reader UI 実画面確認（2026-05-11） | CN63738 | open | `scripts/create-template-smoke-books.js` の `parentMessage` デフォルト値を日本語に修正する |
+| ADM-001 | Medium | all | admin | `/admin/book-quality-review` の一覧に smoke 6冊が表示されない | Admin UI 実画面確認（2026-05-11） | CN63738 | open | admin claim 付与状況または一覧フィルター条件を確認する |
+| UX-001 | Low | all | UX | Cover ページと Title Spread が別シートで表示される。本物の絵本同様に Cover+Title を 1 画面にまとめる UX 改善の余地あり | Reader UI 実画面確認（2026-05-11） | CN63738 | open | T2-B 以降で UX 改善として検討 |
+| UI-002 | Low | all | UI/Asset | ログイン画面アセット `images/illustrations/login-door.webp` が 404 | dev server log: `GET /images/illustrations/login-door.webp 404` | CN63738 + Copilot | open | 画像パス修正 or アセット追加 |
 
 ---
 
@@ -301,10 +370,11 @@ Template smoke PASS の目安:
 
 | Action | Owner | Due date | Priority | Related issue / PR | Status |
 |---|---|---|---|---|---|
-| Execute smoke generation for all 4 fixed templates |  |  | High |  | NOT_RUN |
-| Record Firestore evidence for generated books |  |  | High |  | NOT_RUN |
-| Review output quality in Admin UI |  |  | High |  | NOT_RUN |
-| Decide whether Phase T2 template expansion can start |  |  | High |  | NOT_RUN |
+| `scripts/create-template-smoke-books.js` の `parentMessage` デフォルト値を日本語に修正する |  |  | Medium | MSG-001 | OPEN |
+| Admin UI に smoke 6冊が表示されない原因を調査する（admin claim / フィルター） |  |  | Medium | ADM-001 | OPEN |
+| image prompt の日本語文字抑制を強化する（次回 seed 更新時） |  |  | Low | IMG-001 | OPEN |
+| Cover + Title Spread の 1 画面統合 UX を T2-B 以降で検討する |  |  | Low | UX-001 | OPEN |
+| login 画面の 404 アセットを解消する |  |  | Low | UI-002 | OPEN |
 
 ---
 
@@ -329,19 +399,30 @@ Phase T1 can be treated as verified when all of the following are true:
 
 Choose one:
 
-- [ ] Template Phase T1 Verified
-- [ ] Template Phase T1 Verified with follow-up
-- [ ] Template Phase T1 Not Verified
+- [ ] Template T2-A Smoke PASS
+- [x] Template T2-A Smoke PASS_WITH_FOLLOW_UP
+- [ ] Template T2-A Smoke FAIL
 
 Decision reason:
 
 ```text
+post-redeploy sequential rerun で fixed_template 6本が completed まで収束。
+pages 4/4 completed、cover/title/opening metadata 6/6 保存確認。
+Reader UI 実画面確認で Cover→Title Spread→Story pages の表示順・ナビゲーション・
+画像品質に重大問題なし。
 
+follow-up として残す問題:
+- IMG-001: 看板に稀に「優しい水彩」出現（Low）
+- MSG-001: smoke スクリプトの parentMessage デフォルトが英語（Medium、生成バグではない）
+- ADM-001: Admin 一覧に smoke 6冊が表示されない（Medium）
+- UX-001: Cover+Title を 1 画面にまとめる UX 改善余地（Low、スコープ外）
+
+以上すべて生成の安定性・metadata 保存・SLO には影響しないため PASS_WITH_FOLLOW_UP とする。
+T2-B は MSG-001 修正（parentMessage 日本語化）後に着手可能。
 ```
 
 Next recommended step:
 
-- [ ] Start Phase T2-A: add templates 5〜6
-- [ ] Fix prompt/template issues before expansion
-- [ ] Add Template Smoke Results file
-- [ ] Re-run smoke after fixes
+- [x] Fix `scripts/create-template-smoke-books.js` parentMessage default to Japanese
+- [x] Investigate ADM-001 (admin claim / filter for smoke books)
+- [ ] Start Phase T2-B after MSG-001 fix

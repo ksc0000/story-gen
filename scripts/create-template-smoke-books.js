@@ -68,7 +68,7 @@ function ensureAdminApp(serviceAccount) {
 function buildInputForTemplate(templateId, index) {
   const base = {
     childName: `SmokeKid${index + 1}`,
-    parentMessage: "You did great today.",
+    parentMessage: "きょうも、よくがんばったね。だいすきだよ。",
   };
 
   if (templateId === "fixed-first-zoo") {
@@ -103,7 +103,25 @@ function buildInputForTemplate(templateId, index) {
   return base;
 }
 
-function buildBookPayload({ templateId, index, smokeRunId }) {
+function parseTemplateIdArg(args) {
+  const matched = args.find((arg) => arg.startsWith("--template-id="));
+  if (!matched) {
+    return null;
+  }
+
+  const templateId = matched.slice("--template-id=".length).trim();
+  if (!templateId) {
+    throw new Error("--template-id requires a non-empty value.");
+  }
+
+  if (!TEMPLATE_IDS.includes(templateId)) {
+    throw new Error(`Unknown templateId: ${templateId}`);
+  }
+
+  return templateId;
+}
+
+function buildBookPayload({ templateId, index, smokeRunId, templateCount }) {
   const nowMs = Date.now();
 
   return {
@@ -130,7 +148,7 @@ function buildBookPayload({ templateId, index, smokeRunId }) {
       sourceScript: "scripts/create-template-smoke-books.js",
       templateId,
       templateIndex: index + 1,
-      templateCount: TEMPLATE_IDS.length,
+      templateCount,
       createdAtIso: new Date(nowMs).toISOString(),
     },
   };
@@ -140,6 +158,8 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes("--dry-run");
   const write = args.includes("--write");
+  const selectedTemplateId = parseTemplateIdArg(args);
+  const targetTemplateIds = selectedTemplateId ? [selectedTemplateId] : TEMPLATE_IDS;
 
   if (!dryRun && !write) {
     console.error("[error] Specify --dry-run to preview or --write to create books.");
@@ -153,9 +173,9 @@ async function main() {
   if (dryRun) {
     console.log("[dry-run] The following books would be created (no Firestore writes):");
     const smokeRunId = buildSmokeRunId();
-    for (const [index, templateId] of TEMPLATE_IDS.entries()) {
-      const payload = buildBookPayload({ templateId, index, smokeRunId });
-      console.log(`  [${index + 1}/${TEMPLATE_IDS.length}] templateId=${templateId}`);
+    for (const [index, templateId] of targetTemplateIds.entries()) {
+      const payload = buildBookPayload({ templateId, index, smokeRunId, templateCount: targetTemplateIds.length });
+      console.log(`  [${index + 1}/${targetTemplateIds.length}] templateId=${templateId}`);
       console.log(`         userId=${payload.userId}`);
       console.log(`         input=${JSON.stringify(payload.input)}`);
       console.log(`         runId=${smokeRunId}`);
@@ -175,19 +195,19 @@ async function main() {
   const db = getFirestore();
   const smokeRunId = buildSmokeRunId();
 
-  console.log(`[start] creating ${TEMPLATE_IDS.length} smoke books for ${TARGET_PROJECT_ID}`);
+  console.log(`[start] creating ${targetTemplateIds.length} smoke books for ${TARGET_PROJECT_ID}`);
   console.log(`[run] smoke run id: ${smokeRunId}`);
 
   const created = [];
-  for (const [index, templateId] of TEMPLATE_IDS.entries()) {
+  for (const [index, templateId] of targetTemplateIds.entries()) {
     const docRef = db.collection("books").doc();
-    const payload = buildBookPayload({ templateId, index, smokeRunId });
+    const payload = buildBookPayload({ templateId, index, smokeRunId, templateCount: targetTemplateIds.length });
     await docRef.create(payload);
     created.push({ templateId, bookId: docRef.id });
     console.log(`[created] template=${templateId} bookId=${docRef.id}`);
   }
 
-  console.log("[done] created 6 smoke books.");
+  console.log(`[done] created ${created.length} smoke books.`);
   for (const row of created) {
     console.log(`- ${row.templateId}: ${row.bookId}`);
   }
