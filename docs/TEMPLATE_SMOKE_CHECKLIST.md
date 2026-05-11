@@ -360,7 +360,7 @@ Route: `/admin/book-quality-review`
 | IMG-001 | Low | all | image | 看板等に稀に「優しい水彩」が生成される。prompt の negative instructions で `no Japanese characters` を指定済みだが完全抑制できていない | Reader UI 実画面確認（2026-05-11） | CN63738 | open | prompt 強化または再生成で様子見 |
 | MSG-001 | Medium | all | story | smoke スクリプト作成 book の page 4（`{parentMessage}` ページ）が毎回英語 "You did great today" と表示される | Reader UI 実画面確認（2026-05-11） | CN63738 | open | `scripts/create-template-smoke-books.js` の `parentMessage` デフォルト値を日本語に修正する |
 | ADMIN-001 | Medium | all | admin | `/admin/book-quality-review` の一覧に smoke 6冊が表示されない | Admin UI 実画面確認（2026-05-11） | CN63738 | open | admin claim 付与状況または一覧フィルター条件を確認する |
-| UX-001 | Low | all | UX | Cover + Title を 1シートで表示し、次ページから Story page 1 が始まるように統合済み | Reader UI 実画面確認（2026-05-11） | CN63738 | resolved | commit `32ddbd6`, `890f40d`; hosting deploy 反映済み |
+| UX-001 | Low | all | UX | Cover + Title を 1シートで表示し、次ページから Story page 1 が始まるように統合済み | Reader UI 実画面確認（2026-05-11） | CN63738 | resolved | commit `32ddbd6`, `890f40d`, `5f94181`; hosting deploy 反映済み |
 | UI-002 | Low | all | UI/Asset | ログイン画面アセット `images/illustrations/login-door.webp` が 404 | dev server log: `GET /images/illustrations/login-door.webp 404` | CN63738 + Copilot | open | 画像パス修正 or アセット追加 |
 
 ---
@@ -423,6 +423,5 @@ T2-B は MSG-001 修正（parentMessage 日本語化）後に着手可能。
 
 Next recommended step:
 
-- [x] Fix `scripts/create-template-smoke-books.js` parentMessage default to Japanese
-- [x] Investigate ADM-001 (admin claim / filter for smoke books)
-- [ ] Start Phase T2-B after MSG-001 fix
+- [ ] Investigate IMG-001 (image promptの日本語文字抑制の追加強化)
+- [ ] Investigate ADMIN-001 (admin claim / filter for smoke books)
