@@ -111,31 +111,30 @@ describe("buildReadingItems", () => {
       openingNarration: "ある日のこと",
     };
 
-    it("returns cover + title spread + story pages", () => {
+    it("returns single cover-title sheet + story pages", () => {
       const items = buildReadingItems(v2Props);
-      expect(items).toHaveLength(5); // cover + title + 3 pages
-      expect(items[0].kind).toBe("cover");
-      expect(items[1].kind).toBe("title_spread");
+      expect(items).toHaveLength(4); // cover+title + 3 pages
+      expect(items[0].kind).toBe("cover_title_spread");
+      expect(items[1].kind).toBe("story_page");
       expect(items[2].kind).toBe("story_page");
       expect(items[3].kind).toBe("story_page");
-      expect(items[4].kind).toBe("story_page");
     });
 
-    it("cover item has correct imageUrl and title", () => {
+    it("cover-title sheet item has correct imageUrl and title", () => {
       const items = buildReadingItems(v2Props);
       const cover = items[0];
-      expect(cover.kind).toBe("cover");
-      if (cover.kind === "cover") {
+      expect(cover.kind).toBe("cover_title_spread");
+      if (cover.kind === "cover_title_spread") {
         expect(cover.imageUrl).toBe("https://example.com/cover.png");
         expect(cover.title).toBe("テスト絵本");
       }
     });
 
-    it("title spread item carries titleSpreadText and openingNarration", () => {
+    it("cover-title sheet carries titleSpreadText and openingNarration", () => {
       const items = buildReadingItems(v2Props);
-      const ts = items[1];
-      expect(ts.kind).toBe("title_spread");
-      if (ts.kind === "title_spread") {
+      const ts = items[0];
+      expect(ts.kind).toBe("cover_title_spread");
+      if (ts.kind === "cover_title_spread") {
         expect(ts.title).toBe("テスト絵本");
         expect(ts.titleSpreadText).toBe("むかしむかし…");
         expect(ts.openingNarration).toBe("ある日のこと");
@@ -160,9 +159,9 @@ describe("buildReadingItems", () => {
         titleSpreadText: undefined,
         openingNarration: undefined,
       });
-      expect(items).toHaveLength(5);
-      const ts = items[1];
-      if (ts.kind === "title_spread") {
+      expect(items).toHaveLength(4);
+      const ts = items[0];
+      if (ts.kind === "cover_title_spread") {
         expect(ts.titleSpreadText).toBeUndefined();
         expect(ts.openingNarration).toBeUndefined();
       }
@@ -175,7 +174,7 @@ describe("buildReadingItems", () => {
       expect(items).toHaveLength(0);
     });
 
-    it("returns cover + title spread when no pages but cover exists", () => {
+    it("returns a single cover-title sheet when no pages but cover exists", () => {
       const items = buildReadingItems({
         pages: [],
         title: "カバーのみ",
@@ -184,9 +183,8 @@ describe("buildReadingItems", () => {
         coverStatus: "completed",
         coverImageUrl: "https://example.com/cover.png",
       });
-      expect(items).toHaveLength(2);
-      expect(items[0].kind).toBe("cover");
-      expect(items[1].kind).toBe("title_spread");
+      expect(items).toHaveLength(1);
+      expect(items[0].kind).toBe("cover_title_spread");
     });
   });
 });

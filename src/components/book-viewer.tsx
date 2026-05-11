@@ -11,8 +11,13 @@ import type { Variants } from "framer-motion";
 /* ------------------------------------------------------------------ */
 
 type ReadingItem =
-  | { kind: "cover"; imageUrl: string; title: string }
-  | { kind: "title_spread"; title: string; titleSpreadText?: string; openingNarration?: string }
+  | {
+      kind: "cover_title_spread";
+      imageUrl: string;
+      title: string;
+      titleSpreadText?: string;
+      openingNarration?: string;
+    }
   | { kind: "story_page"; page: PageDoc; storyPageIndex: number };
 
 interface BookViewerProps {
@@ -26,7 +31,7 @@ interface BookViewerProps {
   openingNarration?: string;
 }
 
-/** Build reading items: cover → title spread → story pages (when v2 is active). */
+/** Build reading items: cover+title spread (single sheet) → story pages (when v2 is active). */
 export function buildReadingItems(props: BookViewerProps): ReadingItem[] {
   const {
     pages,
@@ -49,11 +54,9 @@ export function buildReadingItems(props: BookViewerProps): ReadingItem[] {
     coverImageUrl.length > 0;
 
   if (showCover) {
-    items.push({ kind: "cover", imageUrl: coverImageUrl, title });
-
-    // Title spread is always inserted when cover is shown
     items.push({
-      kind: "title_spread",
+      kind: "cover_title_spread",
+      imageUrl: coverImageUrl,
       title,
       titleSpreadText,
       openingNarration,
@@ -88,7 +91,7 @@ export const SWIPE_VELOCITY_THRESHOLD = 500;
 /*  Per-item renderers                                                 */
 /* ------------------------------------------------------------------ */
 
-function CoverSpread({ item }: { item: Extract<ReadingItem, { kind: "cover" }> }) {
+function CoverSheetDesktop({ item }: { item: Extract<ReadingItem, { kind: "cover_title_spread" }> }) {
   return (
     <div className="flex items-center justify-center bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
       <div className="relative aspect-[3/4] w-full">
@@ -102,13 +105,23 @@ function CoverSpread({ item }: { item: Extract<ReadingItem, { kind: "cover" }> }
           <h2 className="text-2xl font-bold leading-tight text-white drop-shadow-lg md:text-3xl">
             {item.title}
           </h2>
+          {item.titleSpreadText && (
+            <p className="mt-3 max-w-md text-base leading-relaxed text-white/95 drop-shadow-lg">
+              {item.titleSpreadText}
+            </p>
+          )}
+          {item.openingNarration && (
+            <p className="mt-2 max-w-md text-sm italic leading-relaxed text-white/90 drop-shadow-lg">
+              {item.openingNarration}
+            </p>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function CoverMobile({ item }: { item: Extract<ReadingItem, { kind: "cover" }> }) {
+function CoverSheetMobile({ item }: { item: Extract<ReadingItem, { kind: "cover_title_spread" }> }) {
   return (
     <div className="relative aspect-[3/4] w-full bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -121,43 +134,17 @@ function CoverMobile({ item }: { item: Extract<ReadingItem, { kind: "cover" }> }
         <h2 className="text-xl font-bold leading-tight text-white drop-shadow-lg">
           {item.title}
         </h2>
+        {item.titleSpreadText && (
+          <p className="mt-2 text-sm leading-relaxed text-white/95 drop-shadow-lg">
+            {item.titleSpreadText}
+          </p>
+        )}
+        {item.openingNarration && (
+          <p className="mt-1 text-xs italic leading-relaxed text-white/90 drop-shadow-lg">
+            {item.openingNarration}
+          </p>
+        )}
       </div>
-    </div>
-  );
-}
-
-function TitleSpreadDesktop({ item }: { item: Extract<ReadingItem, { kind: "title_spread" }> }) {
-  return (
-    <div className="flex flex-col items-center justify-center p-12 text-center">
-      <h2 className="text-3xl font-bold leading-snug text-purple-900">{item.title}</h2>
-      {item.titleSpreadText && (
-        <p className="mt-6 max-w-md text-lg leading-relaxed text-violet-700">
-          {item.titleSpreadText}
-        </p>
-      )}
-      {item.openingNarration && (
-        <p className="mt-4 max-w-md text-base italic leading-relaxed text-violet-500">
-          {item.openingNarration}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function TitleSpreadMobile({ item }: { item: Extract<ReadingItem, { kind: "title_spread" }> }) {
-  return (
-    <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
-      <h2 className="text-2xl font-bold leading-snug text-purple-900">{item.title}</h2>
-      {item.titleSpreadText && (
-        <p className="mt-4 max-w-sm text-base leading-relaxed text-violet-700">
-          {item.titleSpreadText}
-        </p>
-      )}
-      {item.openingNarration && (
-        <p className="mt-3 max-w-sm text-sm italic leading-relaxed text-violet-500">
-          {item.openingNarration}
-        </p>
-      )}
     </div>
   );
 }
@@ -203,10 +190,8 @@ export function BookViewer(props: BookViewerProps) {
   /** Page label: cover/title spread show descriptive text, story pages show numbers. */
   const storyPageCount = props.pages.length;
   const pageLabel =
-    item.kind === "cover"
-      ? "表紙"
-      : item.kind === "title_spread"
-        ? "タイトル"
+    item.kind === "cover_title_spread"
+      ? "表紙・タイトル"
         : `${item.storyPageIndex + 1} / ${storyPageCount}`;
 
   /** Shared drag props for swipe navigation. */
@@ -234,8 +219,7 @@ export function BookViewer(props: BookViewerProps) {
               item.kind === "story_page" ? "grid grid-cols-2 gap-0" : ""
             }`}
           >
-            {item.kind === "cover" && <CoverSpread item={item} />}
-            {item.kind === "title_spread" && <TitleSpreadDesktop item={item} />}
+            {item.kind === "cover_title_spread" && <CoverSheetDesktop item={item} />}
             {item.kind === "story_page" && (
               <>
                 <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
@@ -270,8 +254,7 @@ export function BookViewer(props: BookViewerProps) {
             {...dragProps}
             className="cursor-grab overflow-hidden rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-white shadow-[0_8px_32px_rgba(167,139,250,0.15)] active:cursor-grabbing"
           >
-            {item.kind === "cover" && <CoverMobile item={item} />}
-            {item.kind === "title_spread" && <TitleSpreadMobile item={item} />}
+            {item.kind === "cover_title_spread" && <CoverSheetMobile item={item} />}
             {item.kind === "story_page" && (
               <>
                 <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
