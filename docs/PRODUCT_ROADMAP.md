@@ -229,6 +229,12 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 - [Template Mode Design](./TEMPLATE_MODE_DESIGN.md)
 - [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md)
 
+### Quality Follow-ups（Template Mode 画像品質）
+
+- IMG-001（短期・実施済み）: fixed template image prompts に no-text 制約を追加し、看板・文字混入を抑制
+- IMG-002（短期・実施済み）: prompt-level character reference isolation を追加し、参照画像の背景リーク（例: 砂場背景）を抑制
+- REF-001（中長期・設計）: identity-only reference strategy（neutral reference image + character sheet）を設計し、参照画像の背景・構図依存を段階的に縮小
+
 ### Phase T1: 既存テンプレート Cover 対応 + 品質改善（4 ページ × 4 本）
 
 | Step | 内容 | Status |
@@ -310,7 +316,9 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 ### Now（現在着手中〜次に着手）
 
 - [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md) — fixed_template 6テンプレートの実生成確認
-- Phase T2-B: テンプレート 7〜8 追加
+- IMG-002 verification（fixed_template 6本で背景リーク再発有無を継続確認）
+- REF-001 design（neutral character reference image / identity-only reference strategy の設計）
+- Phase T2-B: テンプレート 7〜8 追加（blocked ではないが、画像品質確認後に進めるのが望ましい）
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - production smoke evidence 確認
 

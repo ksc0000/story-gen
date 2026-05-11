@@ -244,6 +244,35 @@ Bright, warm colors. Soft watercolor style. No text in image."
 
 ## 5. テンプレート品質管理
 
+### 5.0 Image Prompt Policy（Character Reference Isolation）
+
+Template Mode の image prompt は、character reference の利用目的を明示的に制限する。
+
+- 基本方針: reference image は「子どもの identity（顔立ち・髪型・年齢感・体型の傾向）」にのみ使う
+- 禁止方針: reference image の背景・場所・構図・小物・砂場/遊具などの環境要素をコピーしない
+- scene lock: 各 `imagePromptTemplate` で scene/background を先頭で明示し、必要に応じて NOT 制約（例: NOT a sandbox）を入れる
+- no-text policy: IMG-001 で導入した no-text 制約（no readable writing / no signage / no storefront signs / no text-like marks）を維持する
+
+Preserve（保持する要素）:
+
+- 子どもの identity（顔立ち、髪型、年齢感、体型の傾向）
+- 主人公としての一貫した存在感（ページ間の同一人物性）
+
+Do not preserve（保持しない要素）:
+
+- 参照画像の背景（砂場、公園、室内レイアウト、壁や床の質感）
+- 参照画像のカメラ構図（画角、立ち位置、アングル）
+- 参照画像の場所固有オブジェクト（遊具、看板、ベンチ、地面パターン）
+
+### 5.0.1 Future: Neutral Character Reference Images（REF-001）
+
+中期対策として、character reference 入力自体を「背景非依存」に寄せる。
+
+- neutral reference image: 単色または低情報背景で撮影/生成した参照画像を優先
+- identity-only preprocessing: 背景情報を弱めた参照素材を用意（必要に応じて人物中心トリミング）
+- character sheet: 正面/斜め/表情違いをまとめた identity 専用シートを導入し、scene 指定とは分離する
+- 段階導入: prompt-level isolation（IMG-002）→ neutral reference（REF-001）→ character sheet 本格運用
+
 ### 5.1 テンプレート品質チェックリスト
 
 新規テンプレート追加時に確認する項目:
