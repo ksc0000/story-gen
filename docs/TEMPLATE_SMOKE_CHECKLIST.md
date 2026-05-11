@@ -297,9 +297,8 @@ Pages:
 | Check | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
 | 各bookを閲覧画面で開く | ☑ | ☐ | ☐ | 6冊すべて表示 |
-| Cover が最初に表示される | ☑ | ☐ | ☐ | 6冊すべて Cover が先頭に表示 |
-| 次へ進むと Title Spread が表示される | ☑ | ☐ | ☐ | 6冊すべて表示 |
-| 次へ進むと story page 0 が表示される | ☑ | ☐ | ☐ | 6冊すべて表示 |
+| Cover + Title が1シートで最初に表示される | ☑ | ☐ | ☐ | 6冊すべて先頭で表示 |
+| 次へ進むと Story page 1 が表示される | ☑ | ☐ | ☐ | 6冊すべて表示 |
 | pages 4件を最後まで読める | ☑ | ☐ | ☐ | 6冊すべて最後まで読める |
 | 前/次ボタンが動く | ☑ | ☐ | ☐ | 動作確認 |
 | swipe / slide navigation が動く | ☑ | ☐ | ☐ | 動作確認 |
@@ -309,7 +308,7 @@ Pages:
 
 補足:
 
-- Cover と Title Spread が別ページで表示される仕様について、本物の絵本同様に Cover+Title を 1 枚にまとめる UX 改善の余地あり（UX-001 として記録、今回の smoke スコープ外）。
+- UX-001（Cover+Title 1シート化）は 2026-05-11 に実装・hosting反映・実機確認まで完了。
 - ページ 4（最終ページ）が毎回英語 "You did great today" と表示される。smoke スクリプトの `parentMessage` デフォルト値が英語のため（MSG-001）。生成ロジック自体のバグではない。
 
 ---
@@ -361,7 +360,7 @@ Route: `/admin/book-quality-review`
 | IMG-001 | Low | all | image | 看板等に稀に「優しい水彩」が生成される。prompt の negative instructions で `no Japanese characters` を指定済みだが完全抑制できていない | Reader UI 実画面確認（2026-05-11） | CN63738 | open | prompt 強化または再生成で様子見 |
 | MSG-001 | Medium | all | story | smoke スクリプト作成 book の page 4（`{parentMessage}` ページ）が毎回英語 "You did great today" と表示される | Reader UI 実画面確認（2026-05-11） | CN63738 | open | `scripts/create-template-smoke-books.js` の `parentMessage` デフォルト値を日本語に修正する |
 | ADMIN-001 | Medium | all | admin | `/admin/book-quality-review` の一覧に smoke 6冊が表示されない | Admin UI 実画面確認（2026-05-11） | CN63738 | open | admin claim 付与状況または一覧フィルター条件を確認する |
-| UX-001 | Low | all | UX | Cover ページと Title Spread が別シートで表示される。本物の絵本同様に Cover+Title を 1 画面にまとめる UX 改善の余地あり | Reader UI 実画面確認（2026-05-11） | CN63738 | open | T2-B 以降で UX 改善として検討 |
+| UX-001 | Low | all | UX | Cover + Title を 1シートで表示し、次ページから Story page 1 が始まるように統合済み | Reader UI 実画面確認（2026-05-11） | CN63738 | resolved | commit `32ddbd6`, `890f40d`; hosting deploy 反映済み |
 | UI-002 | Low | all | UI/Asset | ログイン画面アセット `images/illustrations/login-door.webp` が 404 | dev server log: `GET /images/illustrations/login-door.webp 404` | CN63738 + Copilot | open | 画像パス修正 or アセット追加 |
 
 ---
@@ -373,7 +372,7 @@ Route: `/admin/book-quality-review`
 | `scripts/create-template-smoke-books.js` の `parentMessage` デフォルト値を日本語に修正する |  |  | Medium | MSG-001 | OPEN |
 | Admin UI に smoke 6冊が表示されない原因を調査する（admin claim / フィルター） |  |  | Medium | ADMIN-001 | OPEN |
 | image prompt の日本語文字抑制を強化する（次回 seed 更新時） |  |  | Low | IMG-001 | OPEN |
-| Cover + Title Spread の 1 画面統合 UX を T2-B 以降で検討する |  |  | Low | UX-001 | OPEN |
+| Cover + Title 1シート化の実装反映を smoke 6冊で再確認する | CN63738 + Copilot | 2026-05-11 | Low | UX-001 | VERIFIED |
 | login 画面の 404 アセットを解消する |  |  | Low | UI-002 | OPEN |
 
 ---
@@ -387,7 +386,7 @@ Phase T1 can be treated as verified when all of the following are true:
 - [ ] Each generated book has 4 story pages
 - [ ] `coverImagePrompt`, `titleSpreadText`, `openingNarration` are saved for each template
 - [ ] Cover image generation succeeds or fails non-fatally
-- [ ] Reader UI displays Cover → Title Spread → Story pages when cover is completed
+- [x] Reader UI displays Cover + Title (single sheet) → Story pages when cover is completed
 - [ ] Existing pageNumber / pages subcollection structure is unchanged
 - [ ] No major image text / logo / watermark issue is observed
 - [ ] Admin can inspect generated books and quality review them
@@ -415,7 +414,7 @@ follow-up として残す問題:
 - IMG-001: 看板に稀に「優しい水彩」出現（Low）
 - MSG-001: smoke スクリプト入力値の parentMessage default 改善（Medium、生成バグではない）
 - ADMIN-001: Admin 一覧に smoke 6冊が表示されない（Medium）
-- UX-001: Cover+Title を 1 画面にまとめる UX 改善余地（Low、スコープ外）
+- UX-001: resolved / verified（Cover+Title 1シート化を反映済み）
 - UI-002: login-door.webp 404 の解消（Low）
 
 以上すべて生成の安定性・metadata 保存・SLO には影響しないため PASS_WITH_FOLLOW_UP とする。

@@ -93,29 +93,33 @@ export const SWIPE_VELOCITY_THRESHOLD = 500;
 
 function CoverSheetDesktop({ item }: { item: Extract<ReadingItem, { kind: "cover_title_spread" }> }) {
   return (
-    <div className="flex items-center justify-center bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
-      <div className="relative aspect-[3/4] w-full">
+    <div className="grid grid-cols-2 gap-0">
+      <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.imageUrl}
           alt={`${item.title} - 表紙`}
           className="h-full w-full object-cover"
         />
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent px-6 pb-6 pt-12">
-          <h2 className="text-2xl font-bold leading-tight text-white drop-shadow-lg md:text-3xl">
-            {item.title}
-          </h2>
-          {item.titleSpreadText && (
-            <p className="mt-3 max-w-md text-base leading-relaxed text-white/95 drop-shadow-lg">
-              {item.titleSpreadText}
-            </p>
-          )}
-          {item.openingNarration && (
-            <p className="mt-2 max-w-md text-sm italic leading-relaxed text-white/90 drop-shadow-lg">
-              {item.openingNarration}
-            </p>
-          )}
-        </div>
+      </div>
+      <div className="flex flex-col justify-center bg-gradient-to-br from-[#fdf4ff] via-[#f8fafc] to-[#e0f2fe] p-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-500">Cover & Title</p>
+        <h2 className="mt-3 text-3xl font-bold leading-tight text-purple-900">
+          {item.title}
+        </h2>
+        {item.titleSpreadText && (
+          <p className="mt-5 text-lg leading-relaxed text-purple-800">
+            {item.titleSpreadText}
+          </p>
+        )}
+        {item.openingNarration && (
+          <p className="mt-4 text-base italic leading-relaxed text-violet-700">
+            {item.openingNarration}
+          </p>
+        )}
+        {!item.titleSpreadText && !item.openingNarration && (
+          <p className="mt-5 text-sm text-violet-500">この絵本のはじまり</p>
+        )}
       </div>
     </div>
   );
@@ -123,26 +127,32 @@ function CoverSheetDesktop({ item }: { item: Extract<ReadingItem, { kind: "cover
 
 function CoverSheetMobile({ item }: { item: Extract<ReadingItem, { kind: "cover_title_spread" }> }) {
   return (
-    <div className="relative aspect-[3/4] w-full bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={item.imageUrl}
-        alt={`${item.title} - 表紙`}
-        className="h-full w-full object-cover"
-      />
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent px-4 pb-4 pt-10">
-        <h2 className="text-xl font-bold leading-tight text-white drop-shadow-lg">
+    <div className="bg-white">
+      <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={item.imageUrl}
+          alt={`${item.title} - 表紙`}
+          className="h-full w-full object-cover"
+        />
+      </div>
+      <div className="bg-gradient-to-br from-[#fdf4ff] via-[#f8fafc] to-[#e0f2fe] p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-500">Cover & Title</p>
+        <h2 className="mt-2 text-xl font-bold leading-tight text-purple-900">
           {item.title}
         </h2>
         {item.titleSpreadText && (
-          <p className="mt-2 text-sm leading-relaxed text-white/95 drop-shadow-lg">
+          <p className="mt-3 text-sm leading-relaxed text-purple-800">
             {item.titleSpreadText}
           </p>
         )}
         {item.openingNarration && (
-          <p className="mt-1 text-xs italic leading-relaxed text-white/90 drop-shadow-lg">
+          <p className="mt-2 text-xs italic leading-relaxed text-violet-700">
             {item.openingNarration}
           </p>
+        )}
+        {!item.titleSpreadText && !item.openingNarration && (
+          <p className="mt-3 text-xs text-violet-500">この絵本のはじまり</p>
         )}
       </div>
     </div>
