@@ -231,7 +231,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 
 ### Quality Follow-ups（Template Mode 画像品質）
 
-- IMG-001（短期・実施済み）: fixed template image prompts に no-text 制約を追加し、看板・文字混入を抑制
+- IMG-001（短期・実施済み / minor follow-up継続）: fixed template image prompts に no-text / no-signage 制約を追加し、看板・文字混入を抑制。重大な可読文字混入は現状ブロッカーではなく、T2-B / T2-C / T3 の blocking ではない。次回 seed/prompt 更新時に sign / label / poster / banner / storefront sign など文字誘発語をさらに避ける。
 - IMG-002（短期・実施済み）: prompt-level character reference isolation を追加し、参照画像の背景リーク（例: 砂場背景）を抑制
 - REF-001（中長期・設計）: identity-only reference strategy（neutral reference image + character sheet）を設計し、参照画像の背景・構図依存を段階的に縮小
 
