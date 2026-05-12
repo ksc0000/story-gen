@@ -23,7 +23,12 @@ const ICON_MAP: Record<string, string> = {
   "🤖": "🤖",
 };
 
-interface ThemeCardProps { template: TemplateDoc & { id: string }; selected: boolean; onSelect: () => void; }
+interface ThemeCardProps {
+  template: TemplateDoc & { id: string };
+  selected: boolean;
+  onSelect: () => void;
+  categoryName?: string;
+}
 
 const PRICE_TIER_LABELS: Record<PriceTier, string> = {
   ume: "軽量",
@@ -54,10 +59,20 @@ function getModeSupportText(template: TemplateDoc): string | null {
   return null;
 }
 
-export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
+function getAgeLabel(template: TemplateDoc): string | null {
+  if (template.recommendedAgeMin == null && template.recommendedAgeMax == null) return null;
+  if (template.recommendedAgeMin != null && template.recommendedAgeMax != null) {
+    return `${template.recommendedAgeMin}-${template.recommendedAgeMax}歳`;
+  }
+  if (template.recommendedAgeMin != null) return `${template.recommendedAgeMin}歳+`;
+  return `~${template.recommendedAgeMax}歳`;
+}
+
+export function ThemeCard({ template, selected, onSelect, categoryName }: ThemeCardProps) {
   const iconSrc = ICON_MAP[template.icon];
   const [showSamples, setShowSamples] = useState(false);
   const hasQualitySamples = Boolean(template.sampleImages?.light || template.sampleImages?.premium);
+  const ageLabel = getAgeLabel(template);
 
   return (
     <AnimatedCard onClick={onSelect}>
@@ -87,6 +102,15 @@ export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
             {template.parentIntent ? (
               <p className="mt-2 text-[11px] leading-relaxed text-violet-400">{template.parentIntent}</p>
             ) : null}
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-violet-500">
+              {categoryName ? (
+                <span className="rounded-full bg-slate-100 px-2 py-1 font-medium text-slate-700">{categoryName}</span>
+              ) : null}
+              <span className="rounded-full bg-indigo-100 px-2 py-1 font-medium text-indigo-700">{template.fixedStory?.pages?.length ?? 4}ページ</span>
+              {ageLabel ? (
+                <span className="rounded-full bg-amber-100 px-2 py-1 font-medium text-amber-700">{ageLabel}</span>
+              ) : null}
+            </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {template.priceTier ? (
                 <span className="rounded-full bg-violet-100 px-2 py-1 text-[11px] font-medium text-violet-700">
@@ -98,7 +122,14 @@ export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
                   {STORY_COST_LABELS[template.storyCostLevel]}
                 </span>
               ) : null}
+              {template.creationMode === "fixed_template" ? (
+                <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-medium text-emerald-700">安定テンプレート</span>
+              ) : null}
+              {template.creationMode === "fixed_template" ? (
+                <span className="rounded-full bg-sky-100 px-2 py-1 text-[11px] font-medium text-sky-700">SMOKE済み</span>
+              ) : null}
             </div>
+            <p className="mt-2 break-all text-[10px] text-violet-400">id: {template.id}</p>
             {hasQualitySamples ? (
               <div className="mt-4 rounded-2xl bg-violet-50/80 p-3 text-left">
                 <Button

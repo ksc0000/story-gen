@@ -32,6 +32,10 @@ function ThemeSelectionPageContent() {
   const childId = searchParams.get("childId");
   const selectedMode = (searchParams.get("mode") as CreationMode | null) ?? "guided_ai";
   const selectedCategoryGroupId = searchParams.get("category") ?? "all";
+  const categoryGroupMap = useMemo(
+    () => new Map(categoryGroups.map((group) => [group.id, group])),
+    [categoryGroups]
+  );
 
   const filteredTemplates = useMemo(() => {
     return templates.filter((template) => {
@@ -47,6 +51,34 @@ function ThemeSelectionPageContent() {
       setSelectedId(filteredTemplates[0]?.id ?? null);
     }
   }, [filteredTemplates, selectedId]);
+
+  const groupedFixedTemplates = useMemo(() => {
+    if (selectedMode !== "fixed_template" || selectedCategoryGroupId !== "all") {
+      return [] as Array<{ groupId: string; groupName: string; groupIcon: string; templates: typeof filteredTemplates }>;
+    }
+    const buckets = new Map<string, typeof filteredTemplates>();
+    for (const template of filteredTemplates) {
+      const groupId = template.categoryGroupId ?? "uncategorized";
+      const current = buckets.get(groupId) ?? [];
+      current.push(template);
+      buckets.set(groupId, current);
+    }
+    return Array.from(buckets.entries())
+      .sort((a, b) => {
+        const ga = categoryGroupMap.get(a[0]);
+        const gb = categoryGroupMap.get(b[0]);
+        return (ga?.order ?? 999) - (gb?.order ?? 999);
+      })
+      .map(([groupId, templates]) => {
+        const group = categoryGroupMap.get(groupId);
+        return {
+          groupId,
+          groupName: group?.name ?? "未分類",
+          groupIcon: group?.icon ?? "📚",
+          templates,
+        };
+      });
+  }, [categoryGroupMap, filteredTemplates, selectedCategoryGroupId, selectedMode]);
 
   const updateQuery = (key: "mode" | "category", value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -127,6 +159,29 @@ function ThemeSelectionPageContent() {
           <p className="font-semibold">この条件に合うテーマはまだありません</p>
           <p className="mt-2 text-sm">作り方か目的を変えると、別の絵本が選べます。</p>
         </div>
+      ) : groupedFixedTemplates.length > 0 ? (
+        <div className="mt-6 space-y-6">
+          {groupedFixedTemplates.map((group) => (
+            <section key={group.groupId} className="space-y-3">
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-violet-100 bg-violet-50/50 px-4 py-2">
+                <h2 className="text-sm font-semibold text-purple-900">{group.groupIcon} {group.groupName}</h2>
+                <span className="text-xs text-violet-500">{group.templates.length}件</span>
+              </div>
+              <StaggerContainer className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {group.templates.map((template) => (
+                  <StaggerItem key={template.id}>
+                    <ThemeCard
+                      template={template}
+                      selected={selectedId === template.id}
+                      onSelect={() => setSelectedId(template.id)}
+                      categoryName={group.groupName}
+                    />
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            </section>
+          ))}
+        </div>
       ) : (
         <StaggerContainer className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filteredTemplates.map((template) => (
@@ -135,6 +190,7 @@ function ThemeSelectionPageContent() {
                 template={template}
                 selected={selectedId === template.id}
                 onSelect={() => setSelectedId(template.id)}
+                categoryName={categoryGroupMap.get(template.categoryGroupId ?? "")?.name}
               />
             </StaggerItem>
           ))}
