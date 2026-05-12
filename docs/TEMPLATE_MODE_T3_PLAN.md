@@ -175,14 +175,17 @@ Definition of done:
 
 実機確認ステータス:
 
-- `npm run dev` で localhost 起動は確認
-- ブラウザ実DOMの取得はこの実行環境では不可（`workbench.browser.enableChatTools` 未有効）
-- そのため、以下は user-side manual verification pending:
-	- fixed_template 10本の実表示
-	- PC/モバイルのレイアウト崩れ有無
-	- guided_ai / original_ai の実画面遷移確認
+- user-side manual visual verification: **verified (2026-05-12)**
+- 確認結果:
+	- fixed_template 10本表示: PASS
+	- category grouping: PASS
+	- category / pageCount / 推奨年齢 / templateId 表示: PASS
+	- 安定テンプレート / SMOKE済み badge 表示: PASS
+	- テンプレート選択後に `/create/input` へ進める: PASS
+	- PC / モバイルで大きなレイアウト崩れなし: PASS
+	- guided_ai / original_ai の表示・遷移維持: PASS
 
 判定:
 
 - **Implemented + Code-verified**
-- **Manual visual verification pending**
+- **Manual visual verification complete**

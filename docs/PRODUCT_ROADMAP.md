@@ -278,7 +278,7 @@ T3-1 status update (2026-05-12):
 - 実装: **done**（commit `6eeed5d`）
 - 実装内容: fixed_template category grouping、card metadata（category/pageCount/recommendedAge/templateId）、安定テンプレート/SMOKE済み badge
 - 検証: typecheck/lint/test は pass（lint は既存 warning のみ）
-- 実機目視: running environment の browser DOM 取得制約により、最終 visual verification は manual pending
+- 実機目視: **verified**（fixed_template 10本表示、category grouping、card metadata、badge、`/create/input` 遷移、PC/モバイル表示、guided_ai/original_ai 導線いずれも PASS）
 
 補足:
 
