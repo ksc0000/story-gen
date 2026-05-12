@@ -160,3 +160,22 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 - 本ドキュメントを T3-2 着手判断のインプットとする
 - 着手時は P1 項目 (`fixed-brush-teeth` visual role / sample image 重複) から段階適用する（P1-1, P1-2 は完了）
 - 各変更は smoke で `fixed_template` 個別検証 + Admin review で目視確認する
+
+---
+
+## 9. P1-2 Final Confirmation (2026-05-12)
+
+- P1-2 code commit: `d24efd789bf3f76b86594be2e8d79de31b4703b8`
+- P1-2 sync/docs commit: `8a9dabc053897ed91d026ce21b8619195e178558`
+- Firestore 同期: functions build 後に `template:sync:check -> template:sync:write -> template:sync:check` を実施し、`target templates count = 10` / drift なし
+- Firestore 実値確認:
+	- `fixed-first-birthday` => `/images/templates/food.png`
+	- `fixed-sleepy-moon-adventure` => `/images/templates/fantasy.png`
+	- `fixed-little-helper` => `/images/templates/emotional-growth.png`
+- UI 実装確認: theme card は `template.sampleImageUrl` を画像 src として使用
+
+実機確認メモ:
+
+- `/create/theme` のページ自体は起動済みローカル環境（localhost:3001）で開けることを確認
+- ただし、この実行環境では browser contents 取得が不可（`workbench.browser.enableChatTools` 未有効）なため、エージェント単独での最終目視判定は未実施
+- 最終目視は user-side 確認で確定する

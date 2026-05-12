@@ -232,3 +232,9 @@ Definition of done:
 	- `fixed-sleepy-moon-adventure` => `/images/templates/fantasy.png`
 	- `fixed-little-helper` => `/images/templates/emotional-growth.png`
 - UI 実装確認: theme card は `template.sampleImageUrl` を画像 src として使用
+
+P1-2 final confirmation note:
+
+- `/create/theme` は localhost:3001 で表示可能なことを確認
+- ただし、実行環境制約（`workbench.browser.enableChatTools` 未有効）によりエージェント単独での最終目視判定は不可
+- Firestore 実値と UI 実装参照（`template.sampleImageUrl`）までを確認済み
