@@ -63,6 +63,32 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-little-helper": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
 };
 
+const TEMPLATE_IMAGE_ASSET_URLS = new Set([
+  "/images/templates/adventure.png",
+  "/images/templates/animals.png",
+  "/images/templates/bedtime.png",
+  "/images/templates/daily-habits.png",
+  "/images/templates/educational.png",
+  "/images/templates/emotional-growth.png",
+  "/images/templates/fantasy.png",
+  "/images/templates/food.png",
+  "/images/templates/seasonal.png",
+  "/images/templates/vehicles-robots.png",
+]);
+
+const EXPECTED_FIXED_SAMPLE_IMAGES: Record<string, string> = {
+  "fixed-first-zoo": "/images/templates/animals.png",
+  "fixed-first-birthday": "/images/templates/food.png",
+  "fixed-bedtime-good-day": "/images/templates/bedtime.png",
+  "fixed-brush-teeth": "/images/templates/daily-habits.png",
+  "fixed-first-christmas": "/images/templates/seasonal.png",
+  "fixed-sharing-friends": "/images/templates/emotional-growth.png",
+  "fixed-sleepy-moon-adventure": "/images/templates/fantasy.png",
+  "fixed-cardboard-rocket": "/images/templates/adventure.png",
+  "fixed-rainy-day-puddle": "/images/templates/seasonal.png",
+  "fixed-little-helper": "/images/templates/emotional-growth.png",
+};
+
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
   it("Phase T2-C: fixed templates are expanded to 10", () => {
     expect(FIXED_TEMPLATE_IDS.length).toBe(10);
@@ -77,6 +103,15 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
       it("exists with creationMode fixed_template", () => {
         expect(template).toBeDefined();
         expect(template.creationMode).toBe("fixed_template");
+      });
+
+      it("uses a sampleImageUrl that points to an existing templates asset", () => {
+        expect(template.sampleImageUrl).toBeTruthy();
+        expect(TEMPLATE_IMAGE_ASSET_URLS.has(template.sampleImageUrl ?? "")).toBe(true);
+      });
+
+      it("has the expected sampleImageUrl mapping", () => {
+        expect(template.sampleImageUrl).toBe(EXPECTED_FIXED_SAMPLE_IMAGES[id]);
       });
 
       it("has a fixedStory block", () => {
