@@ -243,6 +243,29 @@ Per-book checks:
 - 上記 5 冊はいずれも page status 0..3 の全件が `completed`。429 / image failure は未検出。
 - `fixed-sharing-friends` の再デプロイ後単体再検証も `completed` 済みのため、post-redeploy rerun では fixed_template 6 本すべてで metadata gate と generation gate が通過した。
 
+### 8.3 IMG-002 regeneration check (single-book, 2026-05-12)
+
+| Template ID | Book ID | PASS | FAIL | N/A | Evidence / Notes |
+|---|---|---|---|---|---|
+| `fixed-first-zoo` | `M4zqk5RIAf6whchzNhNA` | ☑ | ☐ | ☐ | status=`completed`, coverStatus=`completed`, pages 4/4 `completed` |
+
+IMG-002観点の確認結果:
+
+- BookDoc / pages は生成完了（`completed`、4ページ生成）。
+- Reader URL は開けることを確認: `https://story-gen-8a769.web.app/book?id=M4zqk5RIAf6whchzNhNA`
+- ただしこの1冊では `inputReferenceCount=0`（全ページ）で、character reference 経路は未使用。
+- `templates/fixed-first-zoo` の Firestore 実データは旧prompt（`friendly Japanese zoo` を含む）で、commit `63ed561` の scene-lock / reference-isolation 文言が反映されていない。
+- 画像目視では明確な sandbox 背景リークは確認できなかったが、reference 未使用のため IMG-002 の本質シナリオ検証としては不十分。
+
+中間判定（IMG-002）:
+
+- **MITIGATED_WITH_FOLLOW_UP**
+
+追加で必要な確認:
+
+- `seedTemplates` を再実行して Firestore template データを最新化する
+- `inputReferenceCount > 0`（character reference 実使用）の再生成で再検証する
+
 ---
 
 ## 9. Firestore Document Checks
@@ -358,7 +381,7 @@ Route: `/admin/book-quality-review`
 | ID | Severity | Template ID | Area | Description | Evidence / URL | Owner | Status | Follow-up issue / PR |
 |---|---|---|---|---|---|---|---|---|
 | IMG-001 | Low | all | image | 看板等に稀に「優しい水彩」が生成される。prompt の negative instructions で `no Japanese characters` を指定済みだが完全抑制できていない | Reader UI 実画面確認（2026-05-11） | CN63738 | open | prompt 強化または再生成で様子見 |
-| IMG-002 | Medium | fixed-first-zoo（主） / all（横展開） | image | character reference image の背景（例: 砂場）が scene 指定より強く反映される場合がある。参照画像は identity のみに使い、背景・場所・構図のコピーを抑制する必要あり | zoo 系ページで sandbox 方向への背景寄りを観察（2026-05-11） | CN63738 | mitigation shipped / verification pending | prompt-level reference isolation + scene lock を seed prompts に追加（commit `63ed561`） |
+| IMG-002 | Medium | fixed-first-zoo（主） / all（横展開） | image | character reference image の背景（例: 砂場）が scene 指定より強く反映される場合がある。参照画像は identity のみに使い、背景・場所・構図のコピーを抑制する必要あり | 2026-05-11 観察 + 2026-05-12 single-book再生成（bookId=`M4zqk5RIAf6whchzNhNA`）で追加確認。今回は `inputReferenceCount=0` で reference 経路未使用。 | CN63738 | mitigated with follow-up (reference-path verification pending) | prompt-level reference isolation + scene lock を seed prompts に追加（commit `63ed561`）。Firestore template 最新化 + reference実使用ケースで再検証が必要。 |
 | MSG-001 | Medium | all | story | smoke スクリプト作成 book の page 4（`{parentMessage}` ページ）が毎回英語 "You did great today" と表示される | Reader UI 実画面確認（2026-05-11） | CN63738 | open | `scripts/create-template-smoke-books.js` の `parentMessage` デフォルト値を日本語に修正する |
 | ADMIN-001 | Medium | all | admin | `/admin/book-quality-review` の一覧に smoke 6冊が表示されない | Admin UI 実画面確認（2026-05-11） | CN63738 | open | admin claim 付与状況または一覧フィルター条件を確認する |
 | UX-001 | Low | all | UX | Cover + Title を 1シートで表示し、次ページから Story page 1 が始まるように統合済み | Reader UI 実画面確認（2026-05-11） | CN63738 | resolved | commit `32ddbd6`, `890f40d`, `5f94181`; hosting deploy 反映済み |
