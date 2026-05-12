@@ -182,6 +182,15 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
         expect(pagesWithAge.length).toBeGreaterThanOrEqual(3);
       });
 
+      it("keeps every declared textTemplatesByAge entry non-empty", () => {
+        for (const page of template.fixedStory?.pages ?? []) {
+          for (const value of Object.values(page.textTemplatesByAge ?? {})) {
+            expect(value).toBeTruthy();
+            expect(value?.trim().length ?? 0).toBeGreaterThan(0);
+          }
+        }
+      });
+
       it("every page has a pageVisualRole", () => {
         for (const page of template.fixedStory?.pages ?? []) {
           expect(page.pageVisualRole).toBeTruthy();
@@ -262,6 +271,18 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
 describe("fixed-rainy-day-puddle — safety policy", () => {
   const template = SEED_TEMPLATES["fixed-rainy-day-puddle"];
 
+  it("last page age templates preserve parentMessage placeholder", () => {
+    const lastPage = template.fixedStory?.pages.at(-1);
+    const ageTemplates = lastPage?.textTemplatesByAge;
+
+    expect(lastPage?.textTemplate).toContain("{parentMessage}");
+    expect(ageTemplates?.baby_toddler).toContain("{parentMessage}");
+    expect(ageTemplates?.preschool_3_4).toContain("{parentMessage}");
+    expect(ageTemplates?.early_reader_5_6).toContain("{parentMessage}");
+    expect(ageTemplates?.early_elementary_7_8).toContain("{parentMessage}");
+    expect(ageTemplates?.general_child).toContain("{parentMessage}");
+  });
+
   it("does not include close traffic or dangerous road crossing wording", () => {
     for (const page of template.fixedStory?.pages ?? []) {
       const prompt = page.imagePromptTemplate.toLowerCase();
@@ -273,6 +294,18 @@ describe("fixed-rainy-day-puddle — safety policy", () => {
 
 describe("fixed-little-helper — safety policy", () => {
   const template = SEED_TEMPLATES["fixed-little-helper"];
+
+  it("last page age templates preserve parentMessage placeholder", () => {
+    const lastPage = template.fixedStory?.pages.at(-1);
+    const ageTemplates = lastPage?.textTemplatesByAge;
+
+    expect(lastPage?.textTemplate).toContain("{parentMessage}");
+    expect(ageTemplates?.baby_toddler).toContain("{parentMessage}");
+    expect(ageTemplates?.preschool_3_4).toContain("{parentMessage}");
+    expect(ageTemplates?.early_reader_5_6).toContain("{parentMessage}");
+    expect(ageTemplates?.early_elementary_7_8).toContain("{parentMessage}");
+    expect(ageTemplates?.general_child).toContain("{parentMessage}");
+  });
 
   it("does not include knives, stove, or fire wording", () => {
     for (const page of template.fixedStory?.pages ?? []) {

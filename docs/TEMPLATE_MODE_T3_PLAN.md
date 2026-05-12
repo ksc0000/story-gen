@@ -256,3 +256,10 @@ T3-2 text quality review result:
 - P1: `fixed-rainy-day-puddle` / `fixed-little-helper` の page 4 `parentMessage` 反映一貫性、`fixed-sharing-friends` の opening narration 教材感
 - P2: `fixed-first-zoo` / `fixed-bedtime-good-day` / `fixed-sleepy-moon-adventure` の文長・語り自然化、全体語彙の散らし
 - No action: `fixed-first-birthday` / `fixed-brush-teeth` / `fixed-first-christmas` / `fixed-cardboard-rocket`
+
+T3-2 P1 text fix result:
+
+- 対象: `fixed-rainy-day-puddle`, `fixed-little-helper`
+- 実施: page 4 `textTemplatesByAge` の全 age bucket に `{parentMessage}` を保持
+- 非対象: `fixed-sharing-friends`, story structure, image prompt, UI, `generate-book.ts`
+- 期待効果: smoke script / user input の `parentMessage` が age band を問わず最終ページへ反映

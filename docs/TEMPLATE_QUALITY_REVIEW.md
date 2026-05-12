@@ -267,3 +267,18 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 2. `fixed-little-helper`: page 4 の age別文にも `parentMessage` を保持
 3. `fixed-sharing-friends`: opening narration を教材トーンから物語導入へ調整
 4. `fixed-first-zoo` または `fixed-bedtime-good-day`: 7-8歳向け文の短文化トライアル
+
+---
+
+## 12. P1 parentMessage consistency fix (2026-05-12)
+
+- 対象: `fixed-rainy-day-puddle`, `fixed-little-helper`
+- 修正内容:
+	- page 4 `textTemplatesByAge` の全 age bucket (`baby_toddler` / `preschool_3_4` / `early_reader_5_6` / `early_elementary_7_8` / `general_child`) に `{parentMessage}` を保持
+	- ageごとに短い接続句を変え、同一文の単純複製を避けながら読み聞かせしやすさを維持
+- 意図:
+	- smoke script / user input の `parentMessage` が最終ページで age band に依存せず反映されるようにする
+	- story structure / imagePromptTemplate / sampleImageUrl / cover / title / opening は非変更
+- テスト:
+	- `seed-templates.test.ts` に 2テンプレートの最終ページ age templates が `{parentMessage}` を含むことを追加
+	- 既存の placeholder 展開テストは維持し、展開側の回帰確認ラインは残す

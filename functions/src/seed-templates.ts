@@ -1057,15 +1057,15 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "おうちにもどって、{childName}は「雨の日もたのしかったね」とにっこりしました。{parentMessage}",
-          baby_toddler: "ただいま。あめの日 たのしかったね。",
+          baby_toddler: "ただいま。あめの日 たのしかったね。{parentMessage}",
           preschool_3_4:
-            "おうちにもどって、{childName}は「雨の日も たのしかったね」と にっこりしました。",
+            "おうちにもどって、{childName}は「雨の日も たのしかったね」と にっこりしました。さいごに、{parentMessage}",
           early_reader_5_6:
-            "おうちにもどって、{childName}は「雨の日も たのしかったね」と にっこり。ぬれた くつを ならべながら、また つぎの発見を たのしみにします。",
+            "おうちにもどって、{childName}は「雨の日も たのしかったね」と にっこり。ぬれた くつを ならべながら、{parentMessage}",
           early_elementary_7_8:
-            "おうちにもどって、{childName}は「雨の日も たのしかったね」と にっこりしました。何気ない一日でも、見つけ方しだいで すてきな思い出になると わかりました。",
+            "おうちにもどって、{childName}は「雨の日も たのしかったね」と にっこりしました。きょうの発見を 思い出しながら、{parentMessage}",
           general_child:
-            "おうちにもどって、{childName}は「雨の日もたのしかったね」とにっこりしました。",
+            "おうちにもどって、{childName}は「雨の日もたのしかったね」とにっこりしました。{parentMessage}",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
             "Wide quiet ending shot inside a cozy entryway after rain. The child has returned home, placing rain boots neatly by the door and smiling warmly while holding a small umbrella. Soft towel and warm indoor light suggest comfort and calm. A tiny raindrop motif appears on the umbrella handle. Peaceful reflective mood, child-safe home environment, watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
@@ -1150,15 +1150,15 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は「またおてつだいしたいな」と思いました。{parentMessage}",
-          baby_toddler: "また おてつだい したいな。",
+          baby_toddler: "また おてつだい したいな。{parentMessage}",
           preschool_3_4:
-            "{childName}は「また おてつだい したいな」と おもいました。",
+            "{childName}は「また おてつだい したいな」と おもいました。さいごに、{parentMessage}",
           early_reader_5_6:
-            "{childName}は「また おてつだい したいな」と おもいました。できることが ふえるたび、じぶんの こころも つよくなる気がします。",
+            "{childName}は「また おてつだい したいな」と おもいました。できることが ふえるたび、じぶんの こころも つよくなる気がします。さいごに、{parentMessage}",
           early_elementary_7_8:
-            "{childName}は「また おてつだい したいな」と おもいました。ちいさな行動が 家族の えがおに つながることを知って、あしたへの じしんが うまれます。",
+            "{childName}は「また おてつだい したいな」と おもいました。ちいさな行動が 家族の えがおに つながることを知って、{parentMessage}",
           general_child:
-            "{childName}は「またおてつだいしたいな」と思いました。",
+            "{childName}は「またおてつだいしたいな」と思いました。{parentMessage}",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
             "Wide quiet ending shot of a calm family room after the helper task is done. The child sits comfortably beside family, smiling with relaxed pride while a tidy basket rests nearby. A tiny heart-spark motif appears on a cushion seam. Warm evening light, peaceful home mood, safe and reassuring composition. Watercolor picture book style, reflective ending framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
