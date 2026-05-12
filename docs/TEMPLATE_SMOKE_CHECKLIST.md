@@ -496,7 +496,7 @@ Route: `/admin/book-quality-review`
 | MSG-001 | Medium | all | story | smoke スクリプト作成 book の page 4（`{parentMessage}` ページ）が毎回英語 "You did great today" と表示される | Reader UI 実画面確認（2026-05-11） | CN63738 | open | `scripts/create-template-smoke-books.js` の `parentMessage` デフォルト値を日本語に修正する |
 | ADMIN-001 | Medium | all | admin | `/admin/book-quality-review` の discoverability 改善（source filter / 検索拡張 / card識別） | 実装: commit `c4e202b` + 実機確認 2026-05-12（5/5 pass） | CN63738 | resolved | resolved with basic discoverability |
 | UX-001 | Low | all | UX | Cover + Title を 1シートで表示し、次ページから Story page 1 が始まるように統合済み | Reader UI 実画面確認（2026-05-11） | CN63738 | resolved | commit `32ddbd6`, `890f40d`, `5f94181`; hosting deploy 反映済み |
-| UI-002 | Low | all | UI/Asset | ログイン画面アセット `images/illustrations/login-door.webp` が 404 | dev server log: `GET /images/illustrations/login-door.webp 404` | CN63738 + Copilot | open | 画像パス修正 or アセット追加 |
+| UI-002 | Low | all | UI/Asset | ログイン画面アセット `images/illustrations/login-door.webp` が 404 | 原因: `/images/illustrations/login-door.webp` が `public` 配下に存在しない。修正: `src/app/(auth)/login/page.tsx` の参照を既存アセット `/images/templates/bedtime.png` に差し替え。commit `fc0b357`。 | CN63738 + Copilot | resolved | 型チェック / lint / test / diff check pass。build は `.next` の既存ロック `ENOTEMPTY` により完走ログ取得不可。 |
 
 ---
 
@@ -510,7 +510,7 @@ Route: `/admin/book-quality-review`
 | IMG-002 reference path verification: reference実使用かつ image generation成功の smoke book を生成し、生成画像を visual inspection で確認（background leakage なし） | CN63738 + Copilot | 2026-05-12 | Medium | IMG-002 | VERIFIED_WITH_MINOR_FOLLOW_UP |
 | REF-001 設計を作成する（neutral character reference image / identity-only reference strategy） |  |  | Medium | REF-001 | OPEN |
 | Cover + Title 1シート化の実装反映を smoke 6冊で再確認する | CN63738 + Copilot | 2026-05-11 | Low | UX-001 | VERIFIED |
-| login 画面の 404 アセットを解消する |  |  | Low | UI-002 | OPEN |
+| login 画面の 404 アセットを解消する | CN63738 + Copilot | 2026-05-12 | Low | UI-002 | COMPLETED |
 
 ---
 
@@ -553,7 +553,7 @@ follow-up として残す問題:
 - MSG-001: smoke スクリプト入力値の parentMessage default 改善（Medium、生成バグではない）
 - ADMIN-001: resolved with basic discoverability（commit `c4e202b`、実機確認 5/5 pass）
 - UX-001: resolved / verified（Cover+Title 1シート化を反映済み）
-- UI-002: login-door.webp 404 の解消（Low）
+- UI-002: resolved（`public/images/illustrations/login-door.webp` 不在。`src/app/(auth)/login/page.tsx` を `/images/templates/bedtime.png` へ差し替え、commit `fc0b357`）
 
 以上すべて生成の安定性・metadata 保存・SLO には直近の重大影響はないため PASS_WITH_FOLLOW_UP とする。
 T2-B は proceed 可。REF-001 は planned（design継続）であり、現時点では T2-B の blocking 要因ではない。
