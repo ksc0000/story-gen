@@ -9,14 +9,20 @@ const { initializeApp, cert, getApps } = functionsRequire("firebase-admin/app");
 const { FieldValue, getFirestore } = functionsRequire("firebase-admin/firestore");
 
 const TARGET_PROJECT_ID = "story-gen-8a769";
-const TEMPLATE_IDS = [
-  "fixed-first-zoo",
-  "fixed-first-birthday",
-  "fixed-bedtime-good-day",
-  "fixed-brush-teeth",
-  "fixed-first-christmas",
-  "fixed-sharing-friends",
-];
+
+function getSeedTemplatesFromCompiledModule() {
+  const compiled = require("../functions/lib/seed-templates.js");
+  if (!compiled || typeof compiled !== "object" || !compiled.SEED_TEMPLATES) {
+    throw new Error("Could not load SEED_TEMPLATES from functions/lib/seed-templates.js");
+  }
+  return compiled.SEED_TEMPLATES;
+}
+
+function getFixedTemplateIds(seedTemplates) {
+  return Object.entries(seedTemplates)
+    .filter(([, template]) => template?.creationMode === "fixed_template")
+    .map(([id]) => id);
+}
 
 function buildSmokeRunId() {
   const iso = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
@@ -188,7 +194,7 @@ function buildChildProfileSnapshot(index, referenceImageUrl) {
   return profileData;
 }
 
-function parseTemplateIdArg(args) {
+function parseTemplateIdArg(args, fixedTemplateIds) {
   const matched = args.find((arg) => arg.startsWith("--template-id="));
   if (!matched) {
     return null;
@@ -199,8 +205,10 @@ function parseTemplateIdArg(args) {
     throw new Error("--template-id requires a non-empty value.");
   }
 
-  if (!TEMPLATE_IDS.includes(templateId)) {
-    throw new Error(`Unknown templateId: ${templateId}`);
+  if (!fixedTemplateIds.includes(templateId)) {
+    throw new Error(
+      `Unknown templateId: ${templateId}. Available fixed templates: ${fixedTemplateIds.join(", ")}`
+    );
   }
 
   return templateId;
@@ -253,6 +261,22 @@ async function main() {
   const dryRun = args.includes("--dry-run");
   const write = args.includes("--write");
   const withReference = args.includes("--with-reference");
+  const listTemplates = args.includes("--list-templates");
+
+  const seedTemplates = getSeedTemplatesFromCompiledModule();
+  const fixedTemplateIds = getFixedTemplateIds(seedTemplates);
+
+  if (fixedTemplateIds.length === 0) {
+    throw new Error("No fixed_template entries found in SEED_TEMPLATES.");
+  }
+
+  if (listTemplates) {
+    console.log(`[templates] fixed_template count=${fixedTemplateIds.length}`);
+    for (const id of fixedTemplateIds) {
+      console.log(`- ${id}`);
+    }
+    return;
+  }
 
   // Parse reference image URL option
   const referenceUrlArg = args.find((arg) => arg.startsWith("--reference-image-url="));
@@ -267,16 +291,12 @@ async function main() {
     throw new Error("--reference-image-url requires --with-reference flag.");
   }
 
-  const selectedTemplateId = parseTemplateIdArg(args);
-  const targetTemplateIds = selectedTemplateId ? [selectedTemplateId] : TEMPLATE_IDS;
+  const selectedTemplateId = parseTemplateIdArg(args, fixedTemplateIds);
+  const targetTemplateIds = selectedTemplateId ? [selectedTemplateId] : fixedTemplateIds;
 
   if (!dryRun && !write) {
     console.error("[error] Specify --dry-run to preview or --write to create books.");
     process.exit(1);
-  }
-
-  if (TEMPLATE_IDS.length !== 6) {
-    throw new Error("Template list size must be exactly 6.");
   }
 
   // Check reference image URL reachability if provided
