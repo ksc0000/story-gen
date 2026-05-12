@@ -604,7 +604,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
               "しゃかしゃか、こしこし。おくばや はのうらも わすれないように、かがみを見ながら ていねいに みがいていきます。",
             general_child: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
           },
-          pageVisualRole: "action" as const,
+          pageVisualRole: "discovery" as const,
           imagePromptTemplate:
             withFixedImagePromptSafety("Medium action shot of a child actively brushing teeth with concentration. The child holds the toothbrush with both small hands, mouth slightly open with gentle foam. A friendly mirror shows the child's focused expression from a slightly different angle. Soft bubbles float near the sink. A small shining star motif appears on the toothbrush handle or a nearby tile. Clean, bright bathroom setting with rounded edges. Soft watercolor picture book style, dynamic but gentle composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         },
@@ -619,7 +619,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
               "みがきおわると、{childName}は にっこりしました。すこし むずかしくても さいごまでできたことが、自信につながったのです。",
             general_child: "おわったあと、{childName}はちょっぴりうれしそうでした。",
           },
-          pageVisualRole: "payoff" as const,
+          pageVisualRole: "emotional_closeup" as const,
           imagePromptTemplate:
             withFixedImagePromptSafety("Close-up of a child's proud, beaming smile after finishing brushing teeth. The child holds up the toothbrush triumphantly with one hand, the other hand on their hip. Sparkling clean teeth visible in a wide grin. The mirror behind reflects the happy moment. A small shining star motif glows near the child or on the mirror. Warm encouraging light. Soft watercolor picture book style, celebratory intimate framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         },

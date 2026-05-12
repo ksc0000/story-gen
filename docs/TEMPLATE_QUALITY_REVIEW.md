@@ -42,7 +42,7 @@
 | `fixed-first-zoo` | memories | はじめてのお出かけ思い出を素早く形に | 起承転結が明快、年齢別文が自然 | scene anchor 強（"NOT a sandbox..." 明示）、ref isolation OK | sampleImage が `animals.png` 流用で zoo 感はやや薄い | sampleImage の最適化は T3-2 内で検討（差し替え案出し） | P2 |
 | `fixed-first-birthday` | memories | はじめての誕生日の記念 | 文・流れともに自然 | 室内ろうそく光・家族距離感が明確、ref isolation OK | `sampleImageUrl: seasonal.png` がカテゴリ memories と不一致 | sampleImage を birthday 系画像に差し替え（既存資産で代用または将来追加） | **P1** |
 | `fixed-bedtime-good-day` | bedtime | 1日の振り返り + 安心して眠る | 4ページの流れが寝かしつけ用途に最適、closing が `parentMessage` で自然 | 寝室の establishing 〜 quiet_ending まで光源設計が一貫 | bedtime 2本との役割重複の説明が docs にないと UI で見分け辛い | T3-1 で表示済みのカテゴリ説明文 + テンプレ description の差別化を文章で強化 | P2 |
-| `fixed-brush-teeth` | growth-support | はみがき習慣を怒らず応援 | テンポの良い4ページ、達成感の payoff が明確 | bathroom scene anchor 明瞭、safety suffix 入り | **`pageVisualRole` が `action` / `payoff` で他9本（discovery / emotional_closeup）と非対称** | `pageVisualRole` を `discovery` / `emotional_closeup` に揃える（または「action/payoff」を許容として docs に明文化）→ コードに触らないなら T3-2 で議論決着 | **P1** |
+| `fixed-brush-teeth` | growth-support | はみがき習慣を怒らず応援 | テンポの良い4ページ、達成感の payoff が明確 | bathroom scene anchor 明瞭、safety suffix 入り | ~~`pageVisualRole` が `action` / `payoff` で他9本（discovery / emotional_closeup）と非対称~~ → **resolved (2026-05-12)** | — | Done |
 | `fixed-first-christmas` | seasonal-events | はじめてのクリスマスの記念 | 4ページとも家族/光/装飾の安心感あり | sampleImage が `seasonal.png` で整合、室内クリスマスのscene anchor明瞭 | 取り立てた懸念なし | No action（観察継続） | No action |
 | `fixed-sharing-friends` | emotional-growth | わけっこ→自己肯定 | `lessonToTeach` 受け取りが自然、感情曲線が明確 | playroom anchor 明瞭、表情指示が child-safe | `requiredInputs` に `lessonToTeach` があり、入力UI/プリセット文の整備が必要 | `lessonToTeach` のサジェスト/プリセットを UI 側で整備（T3-4 とも連動） | P2 |
 | `fixed-sleepy-moon-adventure` | bedtime | 月あかりで安心の眠り | 想像→安心→quiet ending の流れ良好 | dream symbol を overlay 表現に限定、安全配慮あり | `fixed-bedtime-good-day` と sampleImage が同一 (`bedtime.png`) で UI 上の差別化が弱い | UI上のサブタイトル/iconで差別化、または sampleImage の出し分け検討 | **P1** |
@@ -54,12 +54,12 @@
 
 ## 4. Issues Found
 
-### 4.1 Visual role naming inconsistency （優先度 P1）
+### 4.1 Visual role naming inconsistency （優先度 P1 → **resolved 2026-05-12**）
 
 - 9本: `opening_establishing` → `discovery` → `emotional_closeup` → `quiet_ending`
-- `fixed-brush-teeth` のみ: `opening_establishing` → `action` → `payoff` → `quiet_ending`
-- 影響: downstream の評価指標・ログ・将来の `pageVisualRole` ベース分岐で例外処理が必要になる
-- 判断: コード変更を伴うため、T3-2 のスコープ判断後に最小修正で揃える（or 設計として許容を明文化）
+- ~~`fixed-brush-teeth` のみ: `opening_establishing` → `action` → `payoff` → `quiet_ending`~~
+- 対応: `fixed-brush-teeth` の page 2 / page 3 を canonical sequence (`discovery` / `emotional_closeup`) に揃えた
+- 検証: `functions/test/seed-templates.test.ts` の `EXPECTED_PAGE_ROLES` も同じく揃えるよう更新、vitest 256 tests pass
 
 ### 4.2 Sample image duplication / mismatch （優先度 P1〜P2）
 
@@ -106,7 +106,7 @@
 | Priority | 件数 | 内容 |
 | --- | --- | --- |
 | P0 (すぐ修正) | 0 | なし |
-| **P1 (T3-2 で修正)** | **3 (項目)** | 4.1 brush-teeth の visual role 整合性 / 4.2 fixed-first-birthday の sampleImage / 4.2 fixed-sleepy-moon-adventure の sampleImage 差別化 / 4.2 fixed-little-helper の sampleImage 差別化 |
+| **P1 (T3-2 で修正)** | **3 (項目)** | ~~4.1 brush-teeth の visual role 整合性~~ **(resolved 2026-05-12)** / 4.2 fixed-first-birthday の sampleImage / 4.2 fixed-sleepy-moon-adventure の sampleImage 差別化 / 4.2 fixed-little-helper の sampleImage 差別化 |
 | P2 (後続で改善) | 4 | 4.3 bedtime 役割記述 / 4.4 parentMessage 仕様明記 / 4.5 7-8歳向け短文化 / 4.6 IMG-001 観測継続 |
 | No action | 2 | `fixed-first-christmas` / `fixed-cardboard-rocket` |
 
