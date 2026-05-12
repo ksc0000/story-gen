@@ -235,6 +235,11 @@ Definition of done:
 
 P1-2 final confirmation note:
 
-- `/create/theme` は localhost:3001 で表示可能なことを確認
-- ただし、実行環境制約（`workbench.browser.enableChatTools` 未有効）によりエージェント単独での最終目視判定は不可
-- Firestore 実値と UI 実装参照（`template.sampleImageUrl`）までを確認済み
+- `/create/theme` の user-side UI目視確認: **verified (2026-05-12)**
+- 確認結果:
+	- `fixed-first-birthday`: `/images/templates/food.png` のカード画像表示 PASS
+	- `fixed-sleepy-moon-adventure`: `/images/templates/fantasy.png` のカード画像表示 PASS
+	- `fixed-little-helper`: `/images/templates/emotional-growth.png` のカード画像表示 PASS
+	- 他 fixed_template カードの表示崩れなし
+	- category grouping 維持
+	- `/create/input` への遷移 OK

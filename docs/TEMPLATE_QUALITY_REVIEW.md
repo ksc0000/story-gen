@@ -176,6 +176,11 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 
 実機確認メモ:
 
-- `/create/theme` のページ自体は起動済みローカル環境（localhost:3001）で開けることを確認
-- ただし、この実行環境では browser contents 取得が不可（`workbench.browser.enableChatTools` 未有効）なため、エージェント単独での最終目視判定は未実施
-- 最終目視は user-side 確認で確定する
+- `/create/theme` の user-side UI目視確認: **verified (2026-05-12)**
+- 確認結果:
+	- `fixed-first-birthday`: `/images/templates/food.png` のカード画像表示 PASS
+	- `fixed-sleepy-moon-adventure`: `/images/templates/fantasy.png` のカード画像表示 PASS
+	- `fixed-little-helper`: `/images/templates/emotional-growth.png` のカード画像表示 PASS
+	- 他 fixed_template カードの表示崩れなし
+	- category grouping 維持
+	- `/create/input` への遷移 OK
