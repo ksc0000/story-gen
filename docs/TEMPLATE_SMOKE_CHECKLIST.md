@@ -298,6 +298,35 @@ IMG-002観点の確認結果:
 - no-text/no-signage artifact（小さな sign様要素）の継続観察（IMG-001側で継続）
 - REF-001 design（neutral reference strategy）の設計継続（実装は別トラック）
 
+### 8.4 T2-B template sync + smoke (2 templates only, 2026-05-12)
+
+Template sync execution:
+
+- 実行コマンド（指定手順）:
+  - `$env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\CN63738\secure\story-gen-8a769-service-account.json"`
+  - `npm run template:sync:check`
+  - `npm run template:sync:write`
+  - `npm run template:sync:check`
+- 上記3コマンドは成功。ただしデフォルト対象は既存6本。
+- T2-B 2本は個別に同期を実行:
+  - `node scripts/sync-fixed-template-seeds.js --write --template-id=fixed-sleepy-moon-adventure`
+  - `node scripts/sync-fixed-template-seeds.js --write --template-id=fixed-cardboard-rocket`
+- 個別 `--template-id` の再チェックで両方とも `[]`（driftなし）を確認。
+- `template:sync:write` の対象が `templates` collection のみであることを、`scripts/sync-fixed-template-seeds.js` の
+  `db.collection("templates").doc(id)` への `batch.set(..., { merge: true })` 実装で確認。
+
+T2-B smoke generation (only 2 templates):
+
+| Template ID | Book ID | PASS | FAIL | N/A | Evidence / Notes |
+|---|---|---|---|---|---|
+| `fixed-sleepy-moon-adventure` | `ePd4gz5GJkGqjUneKPn8` | ☑ | ☐ | ☐ | status=`completed`, pages 4/4 `completed`, `image_failed` なし |
+| `fixed-cardboard-rocket` | `DfNNvJxvKh8YMOnuT1HC` | ☑ | ☐ | ☐ | status=`completed`, pages 4/4 `completed`, `image_failed` なし |
+
+補足:
+
+- 本検証は T2-B追加2テンプレートのみを対象に実施（6本まとめ実行は未実施）。
+- smoke run id: `template-t2b-1778561030534`
+
 ---
 
 ## 9. Firestore Document Checks
