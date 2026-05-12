@@ -1,6 +1,6 @@
 # IMG-002 Reference Path Verification Results
 **Date:** 2026-05-12  
-**Status:** ✓ VISUAL VERIFICATION COMPLETED (fixed-first-zoo / 1 book)  
+**Status:** ✓ VERIFIED_WITH_MINOR_FOLLOW_UP (fixed-first-zoo / 1 book)  
 **Related commits:** 56f1193, 4f56a62
 
 ## Executive Summary
@@ -26,6 +26,13 @@ IMG-002 mitigation is **functionally working**:
 - zoo scene成立: PASS (zoo gate / zoo enclosure / animal viewing scenes are maintained)
 - child identity consistency: PASS_WITH_MINOR_VARIATION (same child impression maintained across pages with minor outfit/angle changes)
 - no-text / no-signage constraints: PARTIAL (readable large text not observed, but small signboard-like element appears in one page)
+
+### Final decision labels
+- IMG-002 reference path: VERIFIED
+- IMG-002 visual verification: VERIFIED_WITH_MINOR_FOLLOW_UP
+- T2-B: proceed allowed
+- REF-001: planned / design continues (not blocking T2-B)
+- IMG-001/no-text: minor follow-up remains
 
 ### Notes
 - The previous failed run (`s4e0U6sbNErXyIApJc10`) proved reference path behavior.
@@ -159,7 +166,7 @@ npm run smoke:inspect -- <bookId>
 
 ## Decision Gate: IMG-002 → T2-B
 
-**Current Status:** VISUAL VERIFICATION COMPLETED ✓
+**Current Status:** VERIFIED_WITH_MINOR_FOLLOW_UP ✓
 - Code implementation correct
 - Data flow validated
 - Prompts applied correctly
