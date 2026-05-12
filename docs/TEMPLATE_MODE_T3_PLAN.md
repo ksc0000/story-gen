@@ -147,3 +147,42 @@ Definition of done:
 - provider 変更はしない
 - 既存生成済み book を再生成しない
 - Firestore rules や Functions 実装には入らない
+
+---
+
+## 7. T3-1 Verification Result (2026-05-12)
+
+対象実装:
+
+- commit: `6eeed5d`
+- files:
+	- `src/app/(app)/create/theme/page.tsx`
+	- `src/components/theme-card.tsx`
+
+実装確認（コードベース）:
+
+- fixed_template + category=all で category grouping を表示
+- template card に category / pageCount / recommendedAge / templateId を表示
+- fixed_template に「安定テンプレート」「SMOKE済み」badge を表示
+- guided_ai / original_ai の分岐・遷移ロジックは既存維持
+- 遷移: `Next` ボタンで `/create/input?theme=...&mode=...` を維持
+
+検証コマンド結果:
+
+- `npx tsc --noEmit`: pass
+- `npx next lint`: pass（既存 warning のみ）
+- `npx vitest run src/__tests__/`: 69 pass
+
+実機確認ステータス:
+
+- `npm run dev` で localhost 起動は確認
+- ブラウザ実DOMの取得はこの実行環境では不可（`workbench.browser.enableChatTools` 未有効）
+- そのため、以下は user-side manual verification pending:
+	- fixed_template 10本の実表示
+	- PC/モバイルのレイアウト崩れ有無
+	- guided_ai / original_ai の実画面遷移確認
+
+判定:
+
+- **Implemented + Code-verified**
+- **Manual visual verification pending**

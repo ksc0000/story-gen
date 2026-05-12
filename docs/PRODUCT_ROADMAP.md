@@ -273,6 +273,13 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 - T3-2: 既存10テンプレート品質磨き込み（scene anchor / 読み聞かせ自然さ / IMG-001 minor follow-up）
 - T3-3: 8/12ページ対応（後続）
 
+T3-1 status update (2026-05-12):
+
+- 実装: **done**（commit `6eeed5d`）
+- 実装内容: fixed_template category grouping、card metadata（category/pageCount/recommendedAge/templateId）、安定テンプレート/SMOKE済み badge
+- 検証: typecheck/lint/test は pass（lint は既存 warning のみ）
+- 実機目視: running environment の browser DOM 取得制約により、最終 visual verification は manual pending
+
 補足:
 
 - T3-3 は生成時間・失敗率・コスト・運用手順への影響が大きいため、4ページ運用の UX/品質を先に固めてから着手する。
