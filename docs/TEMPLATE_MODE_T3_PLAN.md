@@ -189,3 +189,35 @@ Definition of done:
 
 - **Implemented + Code-verified**
 - **Manual visual verification complete**
+
+---
+
+## 8. T3-2 Quality Review Started (2026-05-12)
+
+対象: `fixed_template` 10本（`fixed-first-zoo` / `fixed-first-birthday` / `fixed-bedtime-good-day` / `fixed-brush-teeth` / `fixed-first-christmas` / `fixed-sharing-friends` / `fixed-sleepy-moon-adventure` / `fixed-cardboard-rocket` / `fixed-rainy-day-puddle` / `fixed-little-helper`）
+
+ステータス: **review-started (docs only)**
+
+成果物:
+
+- 棚卸し docs: [Template Quality Review](./TEMPLATE_QUALITY_REVIEW.md)
+- 観点: category fit / story structure / text quality / image prompt quality / visual role consistency / smoke readiness / product value
+
+優先度サマリ:
+
+- P0: 0
+- P1: 3 観点（`fixed-brush-teeth` の `pageVisualRole` 整合 / sampleImage の重複・カテゴリ不一致が `fixed-first-birthday` / `fixed-sleepy-moon-adventure` / `fixed-little-helper` に該当）
+- P2: 4 観点（bedtime 2本の役割記述 / `parentMessage` 空時のデフォルト仕様明記 / 7-8歳向け文の短文化 / IMG-001 観測継続）
+- No action: `fixed-first-christmas` / `fixed-cardboard-rocket`
+
+次アクション（T3-2 実装フェーズ着手時）:
+
+- T3-2a: `fixed-brush-teeth` の `pageVisualRole`（`action` / `payoff`）を canonical（`discovery` / `emotional_closeup`）へ揃えるか、`PageVisualRole` 型を拡張して許容を明文化
+- T3-2b: P1 該当テンプレの `sampleImageUrl` を既存資産で再アサイン
+- T3-2c: bedtime 2本の役割記述 / `parentMessage` デフォルト仕様の docs 反映
+- T3-2d: 代表テンプレで 7-8歳向け文の短文化トライアル
+
+判定:
+
+- **Review done (docs only)**
+- **Implementation pending — to start with P1 items**
