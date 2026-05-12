@@ -72,6 +72,12 @@
 
 - 影響: T3-1 で UI 上に sample が出る前提では、カードの視覚的識別性が弱い
 - 対応（P1-2）: `fixed-first-birthday` / `fixed-sleepy-moon-adventure` / `fixed-little-helper` は既存アセットで再アサイン済み
+- 同期（P1-2）: functions build 後に `template:sync:check -> template:sync:write -> template:sync:check` を実施し、`target templates count = 10` / drift なしを確認
+- Firestore 値確認:
+	- `fixed-first-birthday` => `/images/templates/food.png`
+	- `fixed-sleepy-moon-adventure` => `/images/templates/fantasy.png`
+	- `fixed-little-helper` => `/images/templates/emotional-growth.png`
+- UI 実装確認: theme card は `template.sampleImageUrl` を画像 src として使用
 - 残課題（P2）: `fixed-rainy-day-puddle` のカテゴリ整合は後続で再評価
 
 ### 4.3 Bedtime カテゴリ2本の役割重複 （優先度 P2）

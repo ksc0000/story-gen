@@ -221,3 +221,14 @@ Definition of done:
 
 - **Review done (docs only)**
 - **Implementation pending — to start with P1 items**
+
+追記: T3-2 P1-2 sync completed (2026-05-12)
+
+- 対象 commit: `d24efd789bf3f76b86594be2e8d79de31b4703b8`
+- 同期手順: functions build 後に `template:sync:check -> template:sync:write -> template:sync:check` を実施
+- 結果: `target templates count = 10`、10 fixed_template 全件 drift なし
+- Firestore 実値確認:
+	- `fixed-first-birthday` => `/images/templates/food.png`
+	- `fixed-sleepy-moon-adventure` => `/images/templates/fantasy.png`
+	- `fixed-little-helper` => `/images/templates/emotional-growth.png`
+- UI 実装確認: theme card は `template.sampleImageUrl` を画像 src として使用
