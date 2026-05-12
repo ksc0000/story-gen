@@ -316,6 +316,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 ### Now（現在着手中〜次に着手）
 
 - [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md) — fixed_template 6テンプレートの実生成確認
+- ADMIN-001（Admin discoverability）: **resolved**（commit `c4e202b`、実機確認 5/5 pass）
 - IMG-002 verification（fixed_template 6本で背景リーク再発有無を継続確認）
 - REF-001 design（neutral character reference image / identity-only reference strategy の設計）
 - Phase T2-C: テンプレート 9〜10 追加（learning + favorite-worlds）
