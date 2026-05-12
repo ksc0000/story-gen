@@ -40,7 +40,7 @@ export default function LoginPage() {
           <Card>
             <CardHeader className="text-center">
               <Image
-                src="/images/illustrations/login-door.webp"
+                src="/images/templates/bedtime.png"
                 alt="ログイン"
                 width={120}
                 height={90}
