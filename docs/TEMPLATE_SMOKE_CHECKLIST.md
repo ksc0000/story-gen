@@ -327,6 +327,37 @@ T2-B smoke generation (only 2 templates):
 - 本検証は T2-B追加2テンプレートのみを対象に実施（6本まとめ実行は未実施）。
 - smoke run id: `template-t2b-1778561030534`
 
+### 8.5 T2-C template sync + smoke (2 templates only, 2026-05-12)
+
+Template sync execution:
+
+- 実行コマンド:
+  - `$env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\CN63738\secure\story-gen-8a769-service-account.json"`
+  - `npm run template:sync:write`
+  - `npm run template:sync:check`
+- `functions/lib/seed-templates.js` が古い状態では default target が6件になったため、`cd functions && npm run build` 後に再実行。
+- 再実行後は default target が10件になり、`fixed-rainy-day-puddle` / `fixed-little-helper` を含む全10件で drift なしを確認。
+
+T2-C smoke generation (only 2 templates):
+
+- 既存 `scripts/create-template-smoke-books.js` は新ID未対応（`Unknown templateId`）だったため、T2-C 2本のみ一時スクリプトで BookDoc を新規投入して smoke を実施。
+
+| Template ID | Book ID | PASS | FAIL | N/A | Evidence / Notes |
+|---|---|---|---|---|---|
+| `fixed-rainy-day-puddle` | `yp6bZL9RiBr7uq6RCIhz` | ☑ | ☐ | ☐ | status=`completed`, pages 4/4 `completed`, `image_failed` なし |
+| `fixed-little-helper` | `XeHraYrSWprUkNs86RLa` | ☑ | ☐ | ☐ | status=`completed`, pages 4/4 `completed`, `image_failed` なし |
+
+Metadata checks:
+
+- 上記2冊とも `coverImagePrompt` / `titleSpreadText` / `openingNarration` の保存を確認（all true）。
+
+Reader UI checks:
+
+- Reader URL を開いて遷移可能なことを確認:
+  - `https://story-gen-8a769.web.app/book?id=yp6bZL9RiBr7uq6RCIhz`
+  - `https://story-gen-8a769.web.app/book?id=XeHraYrSWprUkNs86RLa`
+- この実行環境ではページ内容の目視取得ができないため、最終の人手目視は次ステップで実施。
+
 ---
 
 ## 9. Firestore Document Checks
