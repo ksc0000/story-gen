@@ -28,7 +28,7 @@
 - page image prompts が強化済み seed 由来で使われること
 - 画像内文字を誘発しない prompt になっていること
 - Reader UI で Cover → Title Spread → Story pages の流れが確認できること
-- fixed_template 6テンプレートを T2-B 着手前の品質ゲートとして確認すること
+- fixed_template 8テンプレートを T2-B 以降の品質ゲートとして確認すること
 
 ---
 
@@ -52,11 +52,11 @@
 | Check | PASS | FAIL | N/A | Evidence / Notes |
 |---|---|---|---|---|
 | 最新 `main` または対象branchが反映されている | ☐ | ☐ | ☐ |  |
-| `functions/src/seed-templates.ts` に fixed_template 6テンプレートが存在する | ☐ | ☐ | ☐ |  |
-| fixed_template 6テンプレートに `coverImagePromptTemplate` がある | ☐ | ☐ | ☐ |  |
-| fixed_template 6テンプレートに `titleSpreadTextTemplate` がある | ☐ | ☐ | ☐ |  |
-| fixed_template 6テンプレートに `openingNarrationTemplate` がある | ☐ | ☐ | ☐ |  |
-| 全24ページに `pageVisualRole` がある | ☐ | ☐ | ☐ |  |
+| `functions/src/seed-templates.ts` に fixed_template 8テンプレートが存在する | ☐ | ☐ | ☐ |  |
+| fixed_template 8テンプレートに `coverImagePromptTemplate` がある | ☐ | ☐ | ☐ |  |
+| fixed_template 8テンプレートに `titleSpreadTextTemplate` がある | ☐ | ☐ | ☐ |  |
+| fixed_template 8テンプレートに `openingNarrationTemplate` がある | ☐ | ☐ | ☐ |  |
+| 全32ページに `pageVisualRole` がある | ☐ | ☐ | ☐ |  |
 | `.env` / Firebase env secrets が生成に必要な状態になっている | ☐ | ☐ | ☐ |  |
 
 ### 2.1 Firestore投入スクリプトで6件作成する手順

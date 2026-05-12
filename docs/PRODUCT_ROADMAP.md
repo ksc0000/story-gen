@@ -250,7 +250,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 | Step | 内容 | Status |
 |------|------|--------|
 | T2-A | テンプレート 5〜6 追加（memories + emotional-growth） | **done** |
-| T2-B | テンプレート 7〜8 追加（bedtime + imagination） | |
+| T2-B | テンプレート 7〜8 追加（bedtime + imagination） | **done** |
 | T2-C | テンプレート 9〜10 追加（learning + favorite-worlds） | |
 | T2-D | テンプレートプレビュー画像の生成・設定 | |
 | T2-E | テーマ選択 UI のプレビュー画像表示 | |
@@ -318,7 +318,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 - [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md) — fixed_template 6テンプレートの実生成確認
 - IMG-002 verification（fixed_template 6本で背景リーク再発有無を継続確認）
 - REF-001 design（neutral character reference image / identity-only reference strategy の設計）
-- Phase T2-B: テンプレート 7〜8 追加（blocked ではないが、画像品質確認後に進めるのが望ましい）
+- Phase T2-C: テンプレート 9〜10 追加（learning + favorite-worlds）
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - production smoke evidence 確認
 

@@ -9,6 +9,8 @@ const FIXED_TEMPLATE_IDS = [
   "fixed-brush-teeth",
   "fixed-first-christmas",
   "fixed-sharing-friends",
+  "fixed-sleepy-moon-adventure",
+  "fixed-cardboard-rocket",
 ] as const;
 
 const NEGATIVE_TEXT_TOKENS = [
@@ -53,9 +55,17 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-brush-teeth": ["opening_establishing", "action", "payoff", "quiet_ending"],
   "fixed-first-christmas": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-sharing-friends": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-sleepy-moon-adventure": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-cardboard-rocket": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
 };
 
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
+  it("Phase T2-B: fixed templates are expanded to 8", () => {
+    expect(FIXED_TEMPLATE_IDS.length).toBe(8);
+    const existing = FIXED_TEMPLATE_IDS.filter((id) => SEED_TEMPLATES[id]);
+    expect(existing.length).toBe(8);
+  });
+
   for (const id of FIXED_TEMPLATE_IDS) {
     describe(id, () => {
       const template = SEED_TEMPLATES[id];

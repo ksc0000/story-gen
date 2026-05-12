@@ -316,8 +316,8 @@ Do not preserve（保持しない要素）:
 | 4 | `fixed-first-christmas` | seasonal-events | はじめてのクリスマス | 既存 |
 | 5 | `fixed-first-birthday` | memories | はじめてのたんじょうび | **done (T2-A)** |
 | 6 | `fixed-sharing-friends` | emotional-growth | おともだちとわけっこできたね | **done (T2-A)** |
-| 7 | `fixed-starry-night` | bedtime | おほしさまのよる | 候補 |
-| 8 | `fixed-rainy-day-adventure` | imagination | あめのひのぼうけん | 候補 |
+| 7 | `fixed-sleepy-moon-adventure` | bedtime | おつきさまと おやすみぼうけん | **done (T2-B)** |
+| 8 | `fixed-cardboard-rocket` | imagination | ダンボールロケットでしゅっぱつ | **done (T2-B)** |
 | 9 | `fixed-vegetable-garden` | learning | おやさいばたけ | 候補 |
 | 10 | `fixed-ocean-friends` | favorite-worlds | うみのなかまたち | 候補 |
 
@@ -352,7 +352,7 @@ Do not preserve（保持しない要素）:
 | Step | 内容 |
 |---|---|
 | T2-A | テンプレート 5〜6 を seed に追加（memories + emotional-growth）**（done: `fixed-first-birthday`, `fixed-sharing-friends`）** |
-| T2-B | テンプレート 7〜8 を seed に追加（bedtime + imagination） |
+| T2-B | テンプレート 7〜8 を seed に追加（bedtime + imagination）**（done: `fixed-sleepy-moon-adventure`, `fixed-cardboard-rocket`）** |
 | T2-C | テンプレート 9〜10 を seed に追加（learning + favorite-worlds） |
 | T2-D | テンプレートプレビュー画像の生成・設定 |
 | T2-E | テーマ選択 UI のプレビュー画像表示 |

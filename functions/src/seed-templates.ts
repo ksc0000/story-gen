@@ -800,6 +800,178 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-sleepy-moon-adventure": {
+    name: "おつきさまと おやすみぼうけん",
+    description: "寝る前に安心して眠れる、月あかりの固定テンプレート",
+    icon: "🌙",
+    categoryGroupId: "bedtime",
+    subcategoryId: "moon-adventure",
+    parentIntent: "今日も安心して眠ってほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["bedtime", "moon", "comfort"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/bedtime.png",
+    sampleImageAlt: "月あかりの部屋で安心して眠る子どもの絵本イメージ",
+    visualDirection:
+      "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination scenes, and calm reassuring expressions.",
+    order: 11,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、寝る前の安心感をやさしく描く絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}とおつきさまのおやすみぼうけん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a sleepy child in cozy pajamas looking at a bright moon from a bedroom window, soft blanket draped around shoulders, tiny glowing star motif, calm and reassuring bedtime mood, soft watercolor style, rounded child-safe composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "おつきさまと おやすみぼうけん",
+      openingNarrationTemplate:
+        "よるのしずかな へやで、{childName}は まどのむこうの おつきさまを みつけました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "ベッドのうえで、{childName}はまどのそとのおつきさまを見つけました。",
+          baby_toddler: "{childName}、おつきさま みーつけた。",
+          preschool_3_4:
+            "ベッドのうえで、{childName}は まどのそとの おつきさまを みつけました。",
+          early_reader_5_6:
+            "ベッドのうえで、{childName}は まどのそとの おつきさまを みつけました。しずかな ひかりが こころを やわらかくします。",
+          early_elementary_7_8:
+            "ベッドのうえで、{childName}は まどのそとの おつきさまを みつけました。やさしい ひかりに つつまれて、きょうの つかれが すこしずつ ほどけていきます。",
+          general_child: "ベッドのうえで、{childName}はまどのそとのおつきさまを見つけました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy bedroom at night. A child sits upright on bed under a soft blanket, gazing through a window at a bright round moon. Plush toys and a warm bedside lamp create a secure bedtime atmosphere. A tiny glowing star motif appears near the window curtain. Moonlight and warm lamp light blend softly. Watercolor picture book style, rich but uncluttered composition, child-safe rounded shapes. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、ふわふわの雲やきらきらの星をそうぞうしました。",
+          baby_toddler: "ふわふわ くも、きらきら ほし。",
+          preschool_3_4:
+            "{childName}は、ふわふわの くもや きらきらの ほしを そうぞうしました。",
+          early_reader_5_6:
+            "{childName}は、ふわふわの くもや きらきらの ほしを そうぞうしました。やさしい ぼうけんが こころのなかで ひろがります。",
+          early_elementary_7_8:
+            "{childName}は、ふわふわの くもや きらきらの ほしを そうぞうしました。へやにいながら、しずかな よるの そらを たびしている きぶんになります。",
+          general_child: "{childName}は、ふわふわの雲やきらきらの星をそうぞうしました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Medium discovery shot of a child smiling softly on bed while imagining cloud paths and star shapes floating gently around the room like dream symbols. The bedroom remains clear and cozy, with moonlight entering from the window. A small star motif appears among the symbolic floating shapes. Safe, calm pretend atmosphere with no danger elements. Soft watercolor picture book style, dreamy but grounded composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おつきさまが「きょうもだいじょうぶ」と見まもってくれているようでした。",
+          baby_toddler: "だいじょうぶ、って おつきさま。",
+          preschool_3_4:
+            "おつきさまが「きょうも だいじょうぶ」と 見まもってくれているようでした。",
+          early_reader_5_6:
+            "おつきさまが「きょうも だいじょうぶ」と 見まもってくれているようでした。{childName}の こころは ほっと あたたかくなります。",
+          early_elementary_7_8:
+            "おつきさまが「きょうも だいじょうぶ」と そっと 見まもってくれているようでした。{childName}は、じぶんの きもちが しずかに ととのっていくのを かんじます。",
+          general_child: "おつきさまが「きょうもだいじょうぶ」と見まもってくれているようでした。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of a child resting on pillow with peaceful eyes, moonlight softly illuminating the face. The child hugs a blanket edge with comfort. Outside window, the moon appears gentle and protective without human text or symbols. A tiny star motif glows near the pillow seam. Intimate calm framing, watercolor picture book style, warm reassurance and quiet confidence, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4: "{parentMessage}",
+          early_reader_5_6: "{parentMessage}",
+          early_elementary_7_8: "{parentMessage}",
+          general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child asleep comfortably in bed under a soft blanket. Moonlight paints gentle silver highlights across the room while warm ambient light remains subtle. Plush toy rests by the child's side. A tiny star motif appears on blanket edge. Serene bedtime stillness, safe and cozy environment, watercolor picture book style, balanced calm composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-cardboard-rocket": {
+    name: "ダンボールロケットでしゅっぱつ",
+    description: "ごっこ遊びの想像力をのばす、やさしい固定テンプレート",
+    icon: "🚀",
+    categoryGroupId: "imagination",
+    subcategoryId: "pretend-space",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["imagination", "pretend play", "rocket"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/adventure.png",
+    sampleImageAlt: "ダンボールロケットで想像の冒険をする子どもの絵本イメージ",
+    visualDirection:
+      "Warm imaginative playroom mood with cardboard rocket pretend play, symbolic stars and planets, and safe adventurous excitement.",
+    order: 12,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、安心できる想像の宇宙ごっこ絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}のダンボールロケットしゅっぱつ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child beside a handmade cardboard rocket in a cozy playroom, symbolic stars and planets floating as imagination motifs, tiny comet motif recurring, safe pretend-adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "ダンボールロケットで しゅっぱつ",
+      openingNarrationTemplate:
+        "あるひ、{childName}は へやで ダンボールロケットを みつけました。きょうは そうぞうの うちゅうへ しゅっぱつです。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はへやのすみで、ダンボールロケットを見つけました。",
+          baby_toddler: "{childName}、ロケット みつけた。",
+          preschool_3_4:
+            "{childName}は へやのすみで、ダンボールロケットを みつけました。",
+          early_reader_5_6:
+            "{childName}は へやのすみで、ダンボールロケットを みつけました。ここから どんな ぼうけんが はじまるのか むねが どきどきします。",
+          early_elementary_7_8:
+            "{childName}は へやのすみで、ダンボールロケットを みつけました。ふだんの へやが、これから うちゅうへの しゅっぱつちに かわっていきます。",
+          general_child: "{childName}はへやのすみで、ダンボールロケットを見つけました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy playroom with a handmade cardboard rocket near toy shelves and cushions. A child stands beside the rocket with surprised excitement, one hand touching the cardboard surface. A tiny comet motif appears on a nearby cushion. Warm indoor light and tidy safe environment emphasize pretend play. Watercolor picture book style, clear playroom context, rich but uncluttered composition. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ロケットにのりこんで、{childName}のそうぞうのうちゅうがひろがります。",
+          baby_toddler: "ロケット のって、しゅっぱつ。",
+          preschool_3_4:
+            "ロケットに のりこんで、{childName}の そうぞうの うちゅうが ひろがります。",
+          early_reader_5_6:
+            "ロケットに のりこんで、{childName}の そうぞうの うちゅうが ひろがります。へやの あかりも、まるで ほしの ひかりみたいに みえてきました。",
+          early_elementary_7_8:
+            "ロケットに のりこんで、{childName}の そうぞうの うちゅうが ひろがります。ふつうの へやの けしきが、わくわくする うちゅうステーションに かわっていきます。",
+          general_child: "ロケットにのりこんで、{childName}のそうぞうのうちゅうがひろがります。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot from inside or beside a cardboard rocket cockpit in a playroom. The child pretends to launch, smiling with focused excitement while symbolic stars and orbit lines appear as imagination overlays. The real room remains visible to keep the safe pretend-play context. Tiny comet motif appears near the rocket fin. Watercolor picture book style, dynamic but gentle framing, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "きらきらの星やまるい惑星を見て、{childName}は胸がわくわくしました。",
+          baby_toddler: "きらきら ほし、わくわく。",
+          preschool_3_4:
+            "きらきらの ほしや まるい わくせいを見て、{childName}は わくわくしました。",
+          early_reader_5_6:
+            "きらきらの ほしや まるい わくせいを見て、{childName}は むねが わくわくしました。みつけるたびに うれしい きもちが ふえていきます。",
+          early_elementary_7_8:
+            "きらきらの ほしや まるい わくせいを見て、{childName}は むねが わくわくしました。そうぞうの せかいで みつける ひとつひとつが、じぶんだけの たからものになります。",
+          general_child: "きらきらの星やまるい惑星を見て、{childName}は胸がわくわくしました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child inside the cardboard rocket, face lit by soft imaginative starlight effects. Symbolic planets and stars float around as dreamy overlays while maintaining a safe playful tone. The child's expression shows awe and joy without fear. Tiny comet motif appears near the control panel sticker area without readable text. Watercolor picture book style, intimate excitement framing, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4: "{parentMessage}",
+          early_reader_5_6: "{parentMessage}",
+          early_elementary_7_8: "{parentMessage}",
+          general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the playroom after pretend adventure. The child sits beside the cardboard rocket with a content smile, looking toward a cozy corner as if planning the next trip. Toys are neatly arranged, evening light is warm and calm. Tiny comet motif appears on the rocket side. Watercolor picture book style, gentle reflective composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
   "original-ai": {
     name: "オリジナル絵本",
     description: "自由に書いた内容から、AIが一から物語を作ります",
