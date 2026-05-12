@@ -7,14 +7,6 @@ const { initializeApp, cert, getApps } = functionsRequire("firebase-admin/app");
 const { getFirestore, FieldValue } = functionsRequire("firebase-admin/firestore");
 
 const TARGET_PROJECT_ID = "story-gen-8a769";
-const DEFAULT_TEMPLATE_IDS = [
-  "fixed-first-zoo",
-  "fixed-first-birthday",
-  "fixed-bedtime-good-day",
-  "fixed-brush-teeth",
-  "fixed-first-christmas",
-  "fixed-sharing-friends",
-];
 
 const REQUIRED_COMMON_TOKENS = [
   "no readable writing anywhere",
@@ -40,18 +32,23 @@ const REQUIRED_ZOO_ALTERNATE_TOKENS = [
 function parseArgs(argv) {
   const args = argv.slice(2);
   const write = args.includes("--write");
-  const dryRun = !write;
+  const dryRunFlag = args.includes("--dry-run");
+  const dryRun = dryRunFlag || !write;
+
+  if (write && dryRunFlag) {
+    throw new Error("--write and --dry-run cannot be used together");
+  }
 
   const templateArg = args.find((arg) => arg.startsWith("--template-id="));
-  const templateIds = templateArg
-    ? [templateArg.slice("--template-id=".length).trim()]
-    : DEFAULT_TEMPLATE_IDS;
+  const templateId = templateArg
+    ? templateArg.slice("--template-id=".length).trim()
+    : null;
 
-  if (templateIds.some((id) => !id)) {
+  if (templateId === "") {
     throw new Error("--template-id requires a non-empty value");
   }
 
-  return { write, dryRun, templateIds };
+  return { write, dryRun, templateId };
 }
 
 function ensureGoogleApplicationCredentials() {
@@ -125,6 +122,12 @@ function assertCompiledSeedHasImg002(seedTemplates) {
   if (allPrompts.toLowerCase().includes("friendly japanese zoo")) {
     throw new Error("Compiled seed appears stale (contains 'friendly Japanese zoo'). Run: cd functions && npm run build");
   }
+}
+
+function getDefaultFixedTemplateIds(seedTemplates) {
+  return Object.entries(seedTemplates)
+    .filter(([, template]) => template?.creationMode === "fixed_template")
+    .map(([id]) => id);
 }
 
 function pickTemplateWritePayload(seedTemplate) {
@@ -220,7 +223,7 @@ async function writeTemplates(db, templateIds, seedTemplates) {
 }
 
 async function main() {
-  const { write, dryRun, templateIds } = parseArgs(process.argv);
+  const { write, dryRun, templateId } = parseArgs(process.argv);
   const credentialPath = ensureGoogleApplicationCredentials();
   const serviceAccount = loadServiceAccount(credentialPath);
 
@@ -232,11 +235,22 @@ async function main() {
 
   const seedTemplates = getSeedTemplatesFromCompiledModule();
   assertCompiledSeedHasImg002(seedTemplates);
+  const defaultTemplateIds = getDefaultFixedTemplateIds(seedTemplates);
+
+  if (defaultTemplateIds.length === 0) {
+    throw new Error("No fixed_template entries found in SEED_TEMPLATES.");
+  }
+
+  const templateIds = templateId ? [templateId] : defaultTemplateIds;
+  if (templateId && !seedTemplates[templateId]) {
+    throw new Error(`Template id not found in SEED_TEMPLATES: ${templateId}`);
+  }
 
   ensureAdminApp(serviceAccount);
   const db = getFirestore();
 
   console.log(`[mode] ${dryRun ? "DRY_RUN" : "WRITE"}`);
+  console.log(`[target templates count] ${templateIds.length}`);
   console.log(`[target templates] ${templateIds.join(", ")}`);
 
   const before = await fetchTemplateDocs(db, templateIds);
