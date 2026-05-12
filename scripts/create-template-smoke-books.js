@@ -1,6 +1,8 @@
 const { createRequire } = require("module");
 const { resolve } = require("path");
 const { existsSync, readFileSync } = require("fs");
+const https = require("https");
+const { execFileSync } = require("child_process");
 
 const functionsRequire = createRequire(resolve(__dirname, "../functions/package.json"));
 const { initializeApp, cert, getApps } = functionsRequire("firebase-admin/app");
@@ -65,6 +67,57 @@ function ensureAdminApp(serviceAccount) {
   });
 }
 
+function redactUrl(url) {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url);
+    const pathParts = parsed.pathname.split("/").filter(Boolean);
+    const tail = pathParts.slice(-2).join("/");
+    return `${parsed.protocol}//${parsed.host}/.../${tail || "*"}`;
+  } catch {
+    return `${String(url).slice(0, 24)}...`;
+  }
+}
+
+function checkUrlReachable(url, timeoutMs = 8000) {
+  return new Promise((resolve) => {
+    let timedOut = false;
+    const req = https.request(url, { method: "HEAD" }, (res) => {
+      if (timedOut) return;
+      resolve({ ok: (res.statusCode || 0) >= 200 && (res.statusCode || 0) < 400, statusCode: res.statusCode || 0 });
+    });
+
+    req.setTimeout(timeoutMs, () => {
+      timedOut = true;
+      req.destroy(new Error("timeout"));
+      resolve({ ok: false, statusCode: 0 });
+    });
+
+    req.on("error", () => {
+      if (!timedOut) {
+        resolve({ ok: false, statusCode: 0 });
+      }
+    });
+
+    req.end();
+  });
+}
+
+function checkUrlReachableWithPowerShell(url, timeoutSec = 8) {
+  try {
+    const script = `$ErrorActionPreference='Stop'; $r=Invoke-WebRequest -Uri '${String(url).replace(/'/g, "''")}' -Method Head -TimeoutSec ${timeoutSec} -UseBasicParsing; Write-Output $r.StatusCode`;
+    const out = execFileSync("powershell", ["-NoProfile", "-Command", script], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: timeoutSec * 1000 + 2000,
+    }).trim();
+    const code = Number.parseInt(out, 10);
+    return { ok: Number.isFinite(code) && code >= 200 && code < 400, statusCode: Number.isFinite(code) ? code : 0 };
+  } catch {
+    return { ok: false, statusCode: 0 };
+  }
+}
+
 function buildInputForTemplate(templateId, index) {
   const base = {
     childName: `SmokeKid${index + 1}`,
@@ -103,16 +156,15 @@ function buildInputForTemplate(templateId, index) {
   return base;
 }
 
-function buildChildProfileSnapshot(index) {
+function buildChildProfileSnapshot(index, referenceImageUrl) {
   // Reference image for character consistency testing
   // IMG-002 Verification: Provides childProfileSnapshot.visualProfile.referenceImageUrl
   // This enables the character reference path (inputReferenceCount > 0) to verify
   // that the IMG-002 sandbox/playground background prevention prompts are working
   // when character reference is actually used in image generation.
-  // Using a simple placeholder image service for testing purposes.
-  const referenceImageUrl = "https://via.placeholder.com/200x300/fdbcb4/000000?text=Child+Face";
+  // referenceImageUrl is optional and only included if provided.
 
-  return {
+  const profileData = {
     displayName: `SmokeKid${index + 1}`,
     nickname: `Kid${index + 1}`,
     age: 5,
@@ -125,10 +177,15 @@ function buildChildProfileSnapshot(index) {
       characterLook: `A cheerful child with a unique style`,
       signatureItem: "special hat",
       colorMood: "warm and happy",
-      referenceImageUrl,
       version: 1,
     },
   };
+
+  if (referenceImageUrl) {
+    profileData.visualProfile.referenceImageUrl = referenceImageUrl;
+  }
+
+  return profileData;
 }
 
 function parseTemplateIdArg(args) {
@@ -149,10 +206,10 @@ function parseTemplateIdArg(args) {
   return templateId;
 }
 
-function buildBookPayload({ templateId, index, smokeRunId, templateCount }) {
+function buildBookPayload({ templateId, index, smokeRunId, templateCount, referenceImageUrl }) {
   const nowMs = Date.now();
 
-  return {
+  const payload = {
     userId: `smoke-user-${smokeRunId}-${index + 1}`,
     title: `[SMOKE] ${templateId}`,
     theme: templateId,
@@ -164,7 +221,6 @@ function buildBookPayload({ templateId, index, smokeRunId, templateCount }) {
     status: "generating",
     progress: 0,
     input: buildInputForTemplate(templateId, index),
-    childProfileSnapshot: buildChildProfileSnapshot(index),
     characterConsistencyMode: "all_pages",
     createdAt: FieldValue.serverTimestamp(),
     createdAtMs: nowMs,
@@ -180,14 +236,37 @@ function buildBookPayload({ templateId, index, smokeRunId, templateCount }) {
       templateIndex: index + 1,
       templateCount,
       createdAtIso: new Date(nowMs).toISOString(),
+      withReference: !!referenceImageUrl,
     },
   };
+
+  // Add childProfileSnapshot only if reference image URL is provided
+  if (referenceImageUrl) {
+    payload.childProfileSnapshot = buildChildProfileSnapshot(index, referenceImageUrl);
+  }
+
+  return payload;
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes("--dry-run");
   const write = args.includes("--write");
+  const withReference = args.includes("--with-reference");
+
+  // Parse reference image URL option
+  const referenceUrlArg = args.find((arg) => arg.startsWith("--reference-image-url="));
+  const referenceImageUrl = referenceUrlArg ? referenceUrlArg.split("=").slice(1).join("=") : null;
+
+  // Validate reference options
+  if ((withReference || referenceImageUrl) && !referenceImageUrl) {
+    throw new Error("--with-reference requires --reference-image-url=<url> to be specified.");
+  }
+
+  if (referenceImageUrl && !withReference) {
+    throw new Error("--reference-image-url requires --with-reference flag.");
+  }
+
   const selectedTemplateId = parseTemplateIdArg(args);
   const targetTemplateIds = selectedTemplateId ? [selectedTemplateId] : TEMPLATE_IDS;
 
@@ -200,13 +279,36 @@ async function main() {
     throw new Error("Template list size must be exactly 6.");
   }
 
+  // Check reference image URL reachability if provided
+  if (referenceImageUrl) {
+    console.log(`[check] Verifying reference image URL reachability: ${redactUrl(referenceImageUrl)}`);
+    let check = await checkUrlReachable(referenceImageUrl);
+    if (!check.ok && process.platform === "win32") {
+      check = checkUrlReachableWithPowerShell(referenceImageUrl);
+    }
+    if (!check.ok) {
+      throw new Error(`Reference image URL is not reachable (status=${check.statusCode || "network_error"}).`);
+    }
+    console.log("[check] ✓ Reference image URL is reachable.");
+  }
+
   if (dryRun) {
     console.log("[dry-run] The following books would be created (no Firestore writes):");
     const smokeRunId = buildSmokeRunId();
     for (const [index, templateId] of targetTemplateIds.entries()) {
-      const payload = buildBookPayload({ templateId, index, smokeRunId, templateCount: targetTemplateIds.length });
+      const payload = buildBookPayload({ 
+        templateId, 
+        index, 
+        smokeRunId, 
+        templateCount: targetTemplateIds.length,
+        referenceImageUrl 
+      });
       console.log(`  [${index + 1}/${targetTemplateIds.length}] templateId=${templateId}`);
       console.log(`         userId=${payload.userId}`);
+      console.log(`         withReference=${!!referenceImageUrl}`);
+      if (referenceImageUrl) {
+        console.log(`         referenceImageUrl=${redactUrl(referenceImageUrl)}`);
+      }
       console.log(`         input=${JSON.stringify(payload.input)}`);
       console.log(`         runId=${smokeRunId}`);
     }
@@ -226,12 +328,22 @@ async function main() {
   const smokeRunId = buildSmokeRunId();
 
   console.log(`[start] creating ${targetTemplateIds.length} smoke books for ${TARGET_PROJECT_ID}`);
+  console.log(`[info] withReference=${!!referenceImageUrl}`);
+  if (referenceImageUrl) {
+    console.log(`[info] referenceImageUrl=${redactUrl(referenceImageUrl)}`);
+  }
   console.log(`[run] smoke run id: ${smokeRunId}`);
 
   const created = [];
   for (const [index, templateId] of targetTemplateIds.entries()) {
     const docRef = db.collection("books").doc();
-    const payload = buildBookPayload({ templateId, index, smokeRunId, templateCount: targetTemplateIds.length });
+    const payload = buildBookPayload({ 
+      templateId, 
+      index, 
+      smokeRunId, 
+      templateCount: targetTemplateIds.length,
+      referenceImageUrl
+    });
     await docRef.create(payload);
     created.push({ templateId, bookId: docRef.id });
     console.log(`[created] template=${templateId} bookId=${docRef.id}`);

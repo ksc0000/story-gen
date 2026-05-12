@@ -8,6 +8,7 @@
     "smoke:create-template-books": "node scripts/create-template-smoke-books.js",
     "smoke:monitor": "node scripts/monitor-smoke-book.js",
     "smoke:inspect": "node scripts/inspect-smoke-book.js",
+    "smoke:upload-reference": "node scripts/setup-smoke-reference.js",
     "template:sync:check": "node scripts/sync-fixed-template-seeds.js",
     "template:sync:write": "node scripts/sync-fixed-template-seeds.js --write",
     "build": "next build",

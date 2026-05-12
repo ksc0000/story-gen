@@ -1,7 +1,7 @@
 # IMG-002 Reference Path Verification Results
 **Date:** 2026-05-12  
-**Status:** ✓ VERIFIED - Reference path working correctly  
-**Commit:** 56f1193
+**Status:** ✓ VISUAL VERIFICATION COMPLETED (fixed-first-zoo / 1 book)  
+**Related commits:** 56f1193, 4f56a62
 
 ## Executive Summary
 IMG-002 mitigation is **functionally working**:
@@ -9,6 +9,27 @@ IMG-002 mitigation is **functionally working**:
 - IMG-002 prevention prompts (REF_ISOLATION_SUFFIX) are applied to all pages
 - Reference usage is properly tracked (inputReferenceCount, usedCharacterReference)
 - Scene-lock constraints for fixed-first-zoo are enforced
+
+## Visual Verification Run (Completed)
+
+### Run configuration
+- Template: `fixed-first-zoo`
+- Book ID: `iLZPwQsU454SuvCmwrjd`
+- Mode: single-book smoke only (`--template-id=fixed-first-zoo`)
+- Reference: `--with-reference --reference-image-url=<reachable hosted image>`
+- Result: `completed` (4/4 pages completed)
+
+### Required checks and outcomes
+- `inputReferenceCount > 0`: PASS (all pages `1`)
+- `usedCharacterReference=true`: PASS (all pages `true`)
+- sandbox/playground background leakage: PASS (no sandbox/playground-like background observed)
+- zoo scene成立: PASS (zoo gate / zoo enclosure / animal viewing scenes are maintained)
+- child identity consistency: PASS_WITH_MINOR_VARIATION (same child impression maintained across pages with minor outfit/angle changes)
+- no-text / no-signage constraints: PARTIAL (readable large text not observed, but small signboard-like element appears in one page)
+
+### Notes
+- The previous failed run (`s4e0U6sbNErXyIApJc10`) proved reference path behavior.
+- This run (`iLZPwQsU454SuvCmwrjd`) completed end-to-end and closes visual verification for IMG-002.
 
 ## Investigation Results
 
@@ -127,22 +148,8 @@ npm run smoke:inspect -- <bookId>
 ## Remaining Tasks
 
 ### For Complete IMG-002 Verification
-1. **Use reliable reference image source**
-   - Current: placeholder.com (SSL issues)
-   - Options:
-     - Cloud Storage image URL
-     - Public CDN image
-     - Gemini-generated reference image
-
-2. **Generate successful book with reference**
-   - Overcome Replicate rate limiting
-   - Visual inspection of generated pages
-   - Verify no sandbox/playground background leakage
-
-3. **Document visual results**
-   - Screenshot or analyze image prompts
-   - Confirm scene-lock constraints applied
-   - Verify reference used only for face identity
+1. IMG-002 visual verification is complete for fixed-first-zoo single-book flow.
+2. Keep monitoring on future smoke runs for regression (especially signage artifacts).
 
 ### For Production Readiness
 1. Add reference image URL validation in smoke script
@@ -152,17 +159,14 @@ npm run smoke:inspect -- <bookId>
 
 ## Decision Gate: IMG-002 → T2-B
 
-**Current Status:** REFERENCE PATH VERIFIED ✓
+**Current Status:** VISUAL VERIFICATION COMPLETED ✓
 - Code implementation correct
 - Data flow validated
 - Prompts applied correctly
+- Reference-enabled generation completed (4/4 pages)
+- Visual outcome confirms sandbox/playground leakage is mitigated in this scenario
 
-**Next Gate:** Complete visual verification
-- Generate 1 book successfully with reference
-- Inspect images for sandbox/playground prevention
-- Document findings
-
-**Recommendation:** Proceed with T2-B planning while completing visual verification in parallel.
+**Recommendation:** T2-B 着手可（IMG-002 visual gate satisfied）。
 
 ## References
 - Issue: IMG-002 - Prevent character reference background leakage
