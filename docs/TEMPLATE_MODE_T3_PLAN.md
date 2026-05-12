@@ -243,3 +243,9 @@ P1-2 final confirmation note:
 	- 他 fixed_template カードの表示崩れなし
 	- category grouping 維持
 	- `/create/input` への遷移 OK
+
+P2 review result: `fixed-rainy-day-puddle` sampleImageUrl
+
+- 結論: **keep as-is** (`/images/templates/seasonal.png`)
+- 理由: 既存アセット群の中に雨・水たまり・日常発見テーマへ明確により近い画像がなく、代替候補は意味のズレや既存重複が強くなる
+- 実施内容: docs のみ更新、コード変更なし

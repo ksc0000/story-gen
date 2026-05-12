@@ -47,7 +47,7 @@
 | `fixed-sharing-friends` | emotional-growth | わけっこ→自己肯定 | `lessonToTeach` 受け取りが自然、感情曲線が明確 | playroom anchor 明瞭、表情指示が child-safe | `requiredInputs` に `lessonToTeach` があり、入力UI/プリセット文の整備が必要 | `lessonToTeach` のサジェスト/プリセットを UI 側で整備（T3-4 とも連動） | P2 |
 | `fixed-sleepy-moon-adventure` | bedtime | 月あかりで安心の眠り | 想像→安心→quiet ending の流れ良好 | dream symbol を overlay 表現に限定、安全配慮あり | ~~`fixed-bedtime-good-day` と sampleImage が同一 (`bedtime.png`) で UI 上の差別化が弱い~~ → `fantasy.png` に調整済み | — | Done |
 | `fixed-cardboard-rocket` | imagination | ごっこ遊び応援 | discovery→emotional の流れが自然、安全に寄せた pretend play | playroom anchor が常時可視で安全感あり | sampleImage が `adventure.png` 流用（許容範囲） | No action（観察継続） | No action |
-| `fixed-rainy-day-puddle` | daily-life | 雨の日の前向きな発見 | 4ページの心情変化が自然 | "no road hazard context" まで明示、scene anchor強 | `sampleImageUrl: seasonal.png` が daily-life カテゴリと不一致 | sampleImage の最適化を T3-2 内で検討 | P2 |
+| `fixed-rainy-day-puddle` | daily-life | 雨の日の前向きな発見 | 4ページの心情変化が自然 | "no road hazard context" まで明示、scene anchor強 | `sampleImageUrl: seasonal.png` は daily-life 専用ではないが、既存アセット内では許容範囲 | **Keep as-is**（より適切な既存画像なし） | Done |
 | `fixed-little-helper` | growth-support | 小さなお手伝いで自己効力感 | 4ページの達成感が自然、`parentMessage` 締めが効く | "no hazardous tools" 明示、安全配慮あり | ~~sampleImage が `daily-habits.png` で `fixed-brush-teeth` と重複~~ → `emotional-growth.png` に調整済み | — | Done |
 
 ---
@@ -68,7 +68,7 @@
 | ~~重複（bedtime内）~~ resolved | `fixed-bedtime-good-day` / `fixed-sleepy-moon-adventure` | `bedtime.png` / `fantasy.png` |
 | ~~重複（growth-support内）~~ resolved | `fixed-brush-teeth` / `fixed-little-helper` | `daily-habits.png` / `emotional-growth.png` |
 | ~~カテゴリ不一致~~ resolved | `fixed-first-birthday` | `/images/templates/food.png` |
-| カテゴリ不一致 | `fixed-rainy-day-puddle` | `/images/templates/seasonal.png` |
+| review result: keep as-is | `fixed-rainy-day-puddle` | `/images/templates/seasonal.png` |
 
 - 影響: T3-1 で UI 上に sample が出る前提では、カードの視覚的識別性が弱い
 - 対応（P1-2）: `fixed-first-birthday` / `fixed-sleepy-moon-adventure` / `fixed-little-helper` は既存アセットで再アサイン済み
@@ -78,7 +78,7 @@
 	- `fixed-sleepy-moon-adventure` => `/images/templates/fantasy.png`
 	- `fixed-little-helper` => `/images/templates/emotional-growth.png`
 - UI 実装確認: theme card は `template.sampleImageUrl` を画像 src として使用
-- 残課題（P2）: `fixed-rainy-day-puddle` のカテゴリ整合は後続で再評価
+- 再評価結果（P2）: `fixed-rainy-day-puddle` は **keep as-is**。理由は、既存アセットの中で `daily-habits.png` は歯みがき専用色が強く、`adventure.png` は冒険テーマへの誤読を招きやすく、`emotional-growth.png` は情緒/友情テーマへ寄りすぎるため。`seasonal.png` は厳密一致ではないが、屋外・天候・季節変化の連想を最も維持でき、副作用が最小。
 
 ### 4.3 Bedtime カテゴリ2本の役割重複 （優先度 P2）
 
@@ -114,7 +114,7 @@
 | --- | --- | --- |
 | P0 (すぐ修正) | 0 | なし |
 | **P1 (T3-2 で修正)** | **3 (項目)** | ~~4.1 brush-teeth の visual role 整合性~~ **(resolved 2026-05-12)** / ~~4.2 fixed-first-birthday の sampleImage~~ **(resolved 2026-05-12)** / ~~4.2 fixed-sleepy-moon-adventure の sampleImage 差別化~~ **(resolved 2026-05-12)** / ~~4.2 fixed-little-helper の sampleImage 差別化~~ **(resolved 2026-05-12)** |
-| P2 (後続で改善) | 5 | 4.2 fixed-rainy-day-puddle のカテゴリ整合 / 4.3 bedtime 役割記述 / 4.4 parentMessage 仕様明記 / 4.5 7-8歳向け短文化 / 4.6 IMG-001 観測継続 |
+| P2 (後続で改善) | 4 | 4.3 bedtime 役割記述 / 4.4 parentMessage 仕様明記 / 4.5 7-8歳向け短文化 / 4.6 IMG-001 観測継続 |
 | No action | 2 | `fixed-first-christmas` / `fixed-cardboard-rocket` |
 
 > 注: 4.2 は1項目だが、対象テンプレが複数なので影響は3〜4本に広がる。
@@ -184,3 +184,17 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 	- 他 fixed_template カードの表示崩れなし
 	- category grouping 維持
 	- `/create/input` への遷移 OK
+
+---
+
+## 10. P2 fixed-rainy-day-puddle sampleImageUrl Review Result (2026-05-12)
+
+- 対象: `fixed-rainy-day-puddle`
+- 現在値: `/images/templates/seasonal.png`
+- 結論: **Keep as-is**
+- 判断理由:
+	- 既存 `public/images/templates/` の中に、雨・水たまり・日常発見テーマへ明確により近い画像はない
+	- `daily-habits.png` は歯みがきテーマが強すぎ、`adventure.png` は冒険テーマへの誤読、`emotional-growth.png` は情緒成長テーマへの誤読を招きやすい
+	- `seasonal.png` は厳密な雨テーマではないが、屋外・天候・季節変化の連想を保てるため、既存候補の中では副作用が最小
+	- UI上の重複は `fixed-first-christmas` とあるが、P1項目ほどの誤認リスクはなく、P2としては許容範囲
+- 実施内容: **コード変更なし / docs のみ更新**
