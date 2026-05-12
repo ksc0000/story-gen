@@ -127,7 +127,7 @@ function checkUrlReachableWithPowerShell(url, timeoutSec = 8) {
 function buildInputForTemplate(templateId, index) {
   const base = {
     childName: `SmokeKid${index + 1}`,
-    parentMessage: "きょうも、よくがんばったね。だいすきだよ。",
+    parentMessage: "きょうもすてきな一日だったね",
   };
 
   if (templateId === "fixed-first-zoo") {

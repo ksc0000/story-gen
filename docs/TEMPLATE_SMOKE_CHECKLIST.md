@@ -439,7 +439,7 @@ Pages:
 補足:
 
 - UX-001（Cover+Title 1シート化）は 2026-05-11 に実装・hosting反映・実機確認まで完了。
-- ページ 4（最終ページ）が毎回英語 "You did great today" と表示される。smoke スクリプトの `parentMessage` デフォルト値が英語のため（MSG-001）。生成ロジック自体のバグではない。
+- ページ 4（最終ページ）の `{parentMessage}` は、smoke スクリプト default を日本語 `きょうもすてきな一日だったね` に修正済み（MSG-001 resolved）。
 
 ---
 
@@ -483,7 +483,7 @@ Route: `/admin/book-quality-review`
 
 - 生成安定性: post-redeploy sequential rerun で fixed_template 6/6 が completed、429 / image failure 再現なし。
 - metadata gate: `coverImagePrompt` / `titleSpreadText` / `openingNarration` は 6/6 保存確認済み。
-- UI体験品質: Reader UI は概ね良好。page 4 の `{parentMessage}` が英語デフォルト（smoke スクリプト入力値の問題）。Admin 一覧に smoke 6冊が表示されない問題は follow-up。
+- UI体験品質: Reader UI は概ね良好。page 4 の `{parentMessage}` default は日本語に修正済み。Admin 一覧の課題は ADMIN-001 で解消済み。
 
 ---
 
@@ -493,7 +493,7 @@ Route: `/admin/book-quality-review`
 |---|---|---|---|---|---|---|---|---|
 | IMG-001 | Low | all | image | 看板等に稀に「優しい水彩」が生成される。prompt の negative instructions で `no Japanese characters` を指定済みだが完全抑制できていない | Reader UI 実画面確認（2026-05-11） | CN63738 | open | prompt 強化または再生成で様子見 |
 | IMG-002 | Medium | fixed-first-zoo（主） / all（横展開） | image | character reference image の背景（例: 砂場）が scene 指定より強く反映される場合がある。参照画像は identity のみに使い、背景・場所・構図のコピーを抑制する必要あり | 2026-05-11 観察 + 2026-05-12 single-book再生成（bookId=`M4zqk5RIAf6whchzNhNA`、reference未使用）+ reference-enabled verification（bookId=`s4e0U6sbNErXyIApJc10`）+ visual verification completed（bookId=`iLZPwQsU454SuvCmwrjd`）。最終runで pages 4/4 completed、inputReferenceCount=1 / usedCharacterReference=true（全ページ）、sandbox/playground leakage 明確再現なし。 | CN63738 | VERIFIED_WITH_MINOR_FOLLOW_UP | prompt-level reference isolation + scene lock の有効性を確認。minor no-text/signage artifact は IMG-001 側 follow-up。REF-001 は planned（non-blocking）。 |
-| MSG-001 | Medium | all | story | smoke スクリプト作成 book の page 4（`{parentMessage}` ページ）が毎回英語 "You did great today" と表示される | Reader UI 実画面確認（2026-05-11） | CN63738 | open | `scripts/create-template-smoke-books.js` の `parentMessage` デフォルト値を日本語に修正する |
+| MSG-001 | Medium | all | story | smoke script の `parentMessage` default が英語固定で、page 4（`{parentMessage}` ページ）が不自然になる | 原因箇所を `scripts/create-template-smoke-books.js` で確認し、default を `きょうもすてきな一日だったね` に修正。dry-run で payload 反映を確認。 | CN63738 | resolved | smoke script default input 修正で解消 |
 | ADMIN-001 | Medium | all | admin | `/admin/book-quality-review` の discoverability 改善（source filter / 検索拡張 / card識別） | 実装: commit `c4e202b` + 実機確認 2026-05-12（5/5 pass） | CN63738 | resolved | resolved with basic discoverability |
 | UX-001 | Low | all | UX | Cover + Title を 1シートで表示し、次ページから Story page 1 が始まるように統合済み | Reader UI 実画面確認（2026-05-11） | CN63738 | resolved | commit `32ddbd6`, `890f40d`, `5f94181`; hosting deploy 反映済み |
 | UI-002 | Low | all | UI/Asset | ログイン画面アセット `images/illustrations/login-door.webp` が 404 | 原因: `/images/illustrations/login-door.webp` が `public` 配下に存在しない。修正: `src/app/(auth)/login/page.tsx` の参照を既存アセット `/images/templates/bedtime.png` に差し替え。commit `fc0b357`。 | CN63738 + Copilot | resolved | 型チェック / lint / test / diff check pass。build は `.next` の既存ロック `ENOTEMPTY` により完走ログ取得不可。 |
@@ -504,7 +504,7 @@ Route: `/admin/book-quality-review`
 
 | Action | Owner | Due date | Priority | Related issue / PR | Status |
 |---|---|---|---|---|---|
-| `scripts/create-template-smoke-books.js` の `parentMessage` デフォルト値を日本語に修正する |  |  | Medium | MSG-001 | OPEN |
+| `scripts/create-template-smoke-books.js` の `parentMessage` デフォルト値を日本語に修正する | CN63738 + Copilot | 2026-05-12 | Medium | MSG-001 | COMPLETED |
 | Admin UI discoverability 改善の実機確認（source/templateId/smokeRunId/card識別） | CN63738 | 2026-05-12 | Medium | ADMIN-001 | COMPLETED |
 | image prompt の日本語文字抑制を強化する（次回 seed 更新時） |  |  | Low | IMG-001 | OPEN |
 | IMG-002 reference path verification: reference実使用かつ image generation成功の smoke book を生成し、生成画像を visual inspection で確認（background leakage なし） | CN63738 + Copilot | 2026-05-12 | Medium | IMG-002 | VERIFIED_WITH_MINOR_FOLLOW_UP |
