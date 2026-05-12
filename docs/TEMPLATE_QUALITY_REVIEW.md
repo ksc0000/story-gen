@@ -282,3 +282,18 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 - テスト:
 	- `seed-templates.test.ts` に 2テンプレートの最終ページ age templates が `{parentMessage}` を含むことを追加
 	- 既存の placeholder 展開テストは維持し、展開側の回帰確認ラインは残す
+
+### 12.1 Firestore Sync / Smoke Verification (2026-05-12)
+
+- 実装 commit: `340eeed`
+- Firestore sync: `template:sync:check -> template:sync:write -> template:sync:check` を実施
+- 1回目 check: `fixed-rainy-day-puddle` / `fixed-little-helper` に drift
+- write 後 check: fixed_template 10本すべて drift なし
+- smoke generation:
+	- `fixed-rainy-day-puddle`: `6Bq2ZTTQdePwEaBXgzDC`
+	- `fixed-little-helper`: `RgKCsAYZY1T2BjTSwH4s`
+- smoke 結果:
+	- 両方 `status = completed` / `progress = 100`
+	- page 4 本文は `parentMessage` が反映され、未展開の `{parentMessage}` は残っていない
+	- `fixed-rainy-day-puddle` page 4: `おうちにもどって、SmokeKid1は「雨の日もたのしかったね」とにっこりしました。きょうもすてきな一日だったね`
+	- `fixed-little-helper` page 4: `SmokeKid1は「またおてつだいしたいな」と思いました。きょうもすてきな一日だったね`

@@ -263,3 +263,16 @@ T3-2 P1 text fix result:
 - 実施: page 4 `textTemplatesByAge` の全 age bucket に `{parentMessage}` を保持
 - 非対象: `fixed-sharing-friends`, story structure, image prompt, UI, `generate-book.ts`
 - 期待効果: smoke script / user input の `parentMessage` が age band を問わず最終ページへ反映
+
+T3-2 P1 text fix sync/smoke completed:
+
+- Firestore sync: `template:sync:check -> template:sync:write -> template:sync:check` 完了
+- 1回目 check: `fixed-rainy-day-puddle` / `fixed-little-helper` に drift
+- write 後 check: fixed_template 10本すべて drift なし
+- smoke book IDs:
+	- `fixed-rainy-day-puddle`: `6Bq2ZTTQdePwEaBXgzDC`
+	- `fixed-little-helper`: `RgKCsAYZY1T2BjTSwH4s`
+- smoke verification:
+	- 両方 `status = completed` / `progress = 100`
+	- page 4 に `parentMessage` が反映
+	- 未展開の `{parentMessage}` は残っていない
