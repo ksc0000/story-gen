@@ -103,6 +103,34 @@ function buildInputForTemplate(templateId, index) {
   return base;
 }
 
+function buildChildProfileSnapshot(index) {
+  // Reference image for character consistency testing
+  // IMG-002 Verification: Provides childProfileSnapshot.visualProfile.referenceImageUrl
+  // This enables the character reference path (inputReferenceCount > 0) to verify
+  // that the IMG-002 sandbox/playground background prevention prompts are working
+  // when character reference is actually used in image generation.
+  // Using a simple placeholder image service for testing purposes.
+  const referenceImageUrl = "https://via.placeholder.com/200x300/fdbcb4/000000?text=Child+Face";
+
+  return {
+    displayName: `SmokeKid${index + 1}`,
+    nickname: `Kid${index + 1}`,
+    age: 5,
+    genderExpression: "neutral",
+    personality: {
+      traits: ["curious", "friendly"],
+      favoriteThings: ["animals", "adventures"],
+    },
+    visualProfile: {
+      characterLook: `A cheerful child with a unique style`,
+      signatureItem: "special hat",
+      colorMood: "warm and happy",
+      referenceImageUrl,
+      version: 1,
+    },
+  };
+}
+
 function parseTemplateIdArg(args) {
   const matched = args.find((arg) => arg.startsWith("--template-id="));
   if (!matched) {
@@ -136,6 +164,8 @@ function buildBookPayload({ templateId, index, smokeRunId, templateCount }) {
     status: "generating",
     progress: 0,
     input: buildInputForTemplate(templateId, index),
+    childProfileSnapshot: buildChildProfileSnapshot(index),
+    characterConsistencyMode: "all_pages",
     createdAt: FieldValue.serverTimestamp(),
     createdAtMs: nowMs,
     updatedAt: FieldValue.serverTimestamp(),

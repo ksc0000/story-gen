@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkBookCompletion = exports.regeneratePageImage = exports.bootstrapAdmin = exports.testImageModels = exports.seedTemplates = exports.resetMonthlyQuota = exports.cleanupExpired = exports.generateChildCharacter = exports.generateBook = void 0;
+exports.cleanupStaleGeneration = exports.saveWeeklySloSnapshot = exports.saveDailySloSnapshot = exports.regenerateCoverImage = exports.checkBookCompletion = exports.regeneratePageImage = exports.bootstrapAdmin = exports.testImageModels = exports.seedTemplates = exports.resetMonthlyQuota = exports.cleanupExpired = exports.generateChildCharacter = exports.generateBook = void 0;
 const app_1 = require("firebase-admin/app");
 if ((0, app_1.getApps)().length === 0)
     (0, app_1.initializeApp)();
@@ -21,4 +21,12 @@ Object.defineProperty(exports, "bootstrapAdmin", { enumerable: true, get: functi
 var regenerate_page_image_1 = require("./regenerate-page-image");
 Object.defineProperty(exports, "regeneratePageImage", { enumerable: true, get: function () { return regenerate_page_image_1.regeneratePageImage; } });
 Object.defineProperty(exports, "checkBookCompletion", { enumerable: true, get: function () { return regenerate_page_image_1.checkBookCompletion; } });
+var regenerate_cover_image_1 = require("./regenerate-cover-image");
+Object.defineProperty(exports, "regenerateCoverImage", { enumerable: true, get: function () { return regenerate_cover_image_1.regenerateCoverImage; } });
+var save_daily_slo_snapshot_1 = require("./save-daily-slo-snapshot");
+Object.defineProperty(exports, "saveDailySloSnapshot", { enumerable: true, get: function () { return save_daily_slo_snapshot_1.saveDailySloSnapshot; } });
+var save_weekly_slo_snapshot_1 = require("./save-weekly-slo-snapshot");
+Object.defineProperty(exports, "saveWeeklySloSnapshot", { enumerable: true, get: function () { return save_weekly_slo_snapshot_1.saveWeeklySloSnapshot; } });
+var cleanup_stale_generation_1 = require("./cleanup-stale-generation");
+Object.defineProperty(exports, "cleanupStaleGeneration", { enumerable: true, get: function () { return cleanup_stale_generation_1.cleanupStaleGeneration; } });
 //# sourceMappingURL=index.js.map

@@ -412,6 +412,15 @@ function validateStory(data) {
             !obj.forbiddenQuestObjects.every((item) => typeof item === "string"))) {
         throw new Error("'forbiddenQuestObjects' must be a string array when provided");
     }
+    if (obj.titleSpreadText !== undefined && typeof obj.titleSpreadText !== "string") {
+        throw new Error("'titleSpreadText' must be a string when provided");
+    }
+    if (obj.openingNarration !== undefined && typeof obj.openingNarration !== "string") {
+        throw new Error("'openingNarration' must be a string when provided");
+    }
+    if (obj.coverImagePrompt !== undefined && typeof obj.coverImagePrompt !== "string") {
+        throw new Error("'coverImagePrompt' must be a string when provided");
+    }
     return {
         title: obj.title,
         characterBible: obj.characterBible,
@@ -419,6 +428,9 @@ function validateStory(data) {
         storyGoal: typeof obj.storyGoal === "string" ? obj.storyGoal : undefined,
         mainQuestObject: typeof obj.mainQuestObject === "string" ? obj.mainQuestObject : undefined,
         forbiddenQuestObjects: obj.forbiddenQuestObjects,
+        titleSpreadText: typeof obj.titleSpreadText === "string" ? obj.titleSpreadText : undefined,
+        openingNarration: typeof obj.openingNarration === "string" ? obj.openingNarration : undefined,
+        coverImagePrompt: typeof obj.coverImagePrompt === "string" ? obj.coverImagePrompt : undefined,
         cast,
         narrativeDevice: narrativeDevice,
         storyModel: typeof obj.storyModel === "string" ? obj.storyModel : undefined,
@@ -592,8 +604,8 @@ class GeminiClient {
             params.systemPrompt,
             "## Rewrite task",
             "Rewrite only pages[].text in natural Japanese picture-book prose.",
-            "Keep title, characterBible, styleBible, cast, narrativeDevice, imagePrompt, compositionHint, pageVisualRole, appearingCharacterIds, and focusCharacterId unchanged.",
-            "Keep storyGoal, mainQuestObject, and forbiddenQuestObjects unchanged.",
+            "Keep title, characterBible, styleBible, cast, narrativeDevice, titleSpreadText, openingNarration, coverImagePrompt, imagePrompt, compositionHint, pageVisualRole, appearingCharacterIds, and focusCharacterId unchanged.",
+            "Keep storyGoal, mainQuestObject, forbiddenQuestObjects, titleSpreadText, openingNarration, and coverImagePrompt unchanged.",
             "pages[].text only. Do not modify imagePrompt, pageVisualRole, cast, appearingCharacterIds, or focusCharacterId.",
             "For ages 3+, avoid sound-play-only text and meaningless invented words.",
             "For ages 3+, each page should usually have 3 to 5 sentences and around 80 to 140 Japanese characters when natural.",

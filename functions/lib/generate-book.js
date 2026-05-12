@@ -38,6 +38,8 @@ exports.sanitizeStoryCastForFirestore = sanitizeStoryCastForFirestore;
 exports.normalizeStoryCastWithChildProfile = normalizeStoryCastWithChildProfile;
 exports.processBookGeneration = processBookGeneration;
 exports.shouldFailBookForQuality = shouldFailBookForQuality;
+exports.buildFixedTemplateReplacements = buildFixedTemplateReplacements;
+exports.applyTemplateReplacements = applyTemplateReplacements;
 exports.shouldUseCharacterReferenceForPage = shouldUseCharacterReferenceForPage;
 const firestore_1 = require("firebase-functions/v2/firestore");
 const params_1 = require("firebase-functions/params");
@@ -485,6 +487,76 @@ async function runWithConcurrencyLimit(tasks, concurrency) {
     await Promise.all(workers);
     return results;
 }
+async function generateCoverImage(params) {
+    const primaryProfile = (0, replicate_1.resolveImageModelProfile)({
+        purpose: "book_cover",
+        imageQualityTier: params.imageQualityTier,
+        imageModelProfile: params.imageModelProfile,
+    });
+    const fallbackProfiles = (0, replicate_1.resolveImageFallbackProfiles)(primaryProfile);
+    const startMs = Date.now();
+    let totalAttempts = 0;
+    let lastFailureReason;
+    for (const profile of fallbackProfiles) {
+        const maxRetries = 2;
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            totalAttempts++;
+            try {
+                const buffer = await (0, replicate_1.withImageTimeout)(params.imageClient.generateImage(params.coverImagePrompt, {
+                    purpose: "book_cover",
+                    imageQualityTier: params.imageQualityTier,
+                    imageModelProfile: profile,
+                }), IMAGE_GENERATION_TIMEOUT_MS);
+                return {
+                    success: true,
+                    coverStatus: "completed",
+                    imageBuffer: buffer,
+                    usedProfile: profile,
+                    primaryProfile,
+                    fallbackUsed: profile !== primaryProfile,
+                    attemptCount: totalAttempts,
+                    durationMs: Date.now() - startMs,
+                };
+            }
+            catch (err) {
+                if (err instanceof replicate_1.ImageTimeoutError) {
+                    lastFailureReason = "image_timeout";
+                    logger.warn("Cover image generation timeout", {
+                        bookId: params.bookId,
+                        profile,
+                        attempt,
+                        timeoutMs: IMAGE_GENERATION_TIMEOUT_MS,
+                    });
+                    break;
+                }
+                const retryAfterMs = getRetryAfterMs(err);
+                lastFailureReason = err instanceof Error ? err.message : "unknown";
+                logger.warn("Cover image generation attempt failed", {
+                    bookId: params.bookId,
+                    profile,
+                    attempt,
+                    error: lastFailureReason,
+                });
+                if (attempt < maxRetries - 1) {
+                    if (retryAfterMs > 0) {
+                        await new Promise((resolve) => setTimeout(resolve, Math.min(retryAfterMs, 30_000)));
+                    }
+                    continue;
+                }
+                break;
+            }
+        }
+    }
+    return {
+        success: false,
+        coverStatus: "failed",
+        primaryProfile,
+        fallbackUsed: fallbackProfiles.length > 1,
+        attemptCount: totalAttempts,
+        durationMs: Date.now() - startMs,
+        failureReason: lastFailureReason,
+    };
+}
 async function processBookGeneration(bookId, bookData, deps) {
     const generationStartMs = Date.now();
     try {
@@ -624,6 +696,9 @@ async function processBookGeneration(bookId, bookData, deps) {
             storyGoal: story.storyGoal,
             mainQuestObject: story.mainQuestObject,
             forbiddenQuestObjects: story.forbiddenQuestObjects,
+            titleSpreadText: story.titleSpreadText,
+            openingNarration: story.openingNarration,
+            coverImagePrompt: story.coverImagePrompt,
             generatedTextPreview: story.pages.map((page) => page.text),
             imageModelProfile: normalizedBookData.imageModelProfile,
         });
@@ -789,6 +864,73 @@ async function processBookGeneration(bookId, bookData, deps) {
             return imageResult;
         });
         const pageResults = await runWithConcurrencyLimit(pageTasks, concurrency);
+        // Step 8.5: Generate cover image (independent of page results)
+        const coverImagePrompt = story.coverImagePrompt ?? normalizedBookData.coverImagePrompt;
+        let coverMetadata;
+        if (coverImagePrompt && deps.uploadCoverImage) {
+            try {
+                await deps.updateBookStoryGenerationMetadata(bookId, { coverStatus: "generating" });
+                const coverResult = await generateCoverImage({
+                    coverImagePrompt,
+                    imageClient: deps.imageClient,
+                    bookId,
+                    imageQualityTier: normalizedBookData.imageQualityTier ?? "light",
+                    imageModelProfile: normalizedBookData.imageModelProfile,
+                });
+                if (coverResult.success && coverResult.imageBuffer) {
+                    try {
+                        const coverUrl = await deps.uploadCoverImage(bookId, coverResult.imageBuffer);
+                        await deps.updateBookCoverImage(bookId, coverUrl);
+                        coverMetadata = (0, firestore_sanitize_1.removeUndefinedDeep)({
+                            coverStatus: "completed",
+                            coverGeneratedAtMs: Date.now(),
+                            coverImageModelProfile: coverResult.usedProfile,
+                            coverImageDurationMs: coverResult.durationMs,
+                            coverImageFallbackUsed: coverResult.fallbackUsed,
+                            hasCoverPage: true,
+                            readingStructureVersion: "v2_cover_title_story",
+                        });
+                    }
+                    catch (uploadErr) {
+                        logger.error("Cover image upload failed", {
+                            bookId,
+                            error: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
+                        });
+                        coverMetadata = (0, firestore_sanitize_1.removeUndefinedDeep)({
+                            coverStatus: "failed",
+                            coverFailureReason: "upload_failed",
+                            coverImageDurationMs: coverResult.durationMs,
+                            coverImageModelProfile: coverResult.usedProfile,
+                            coverImageFallbackUsed: coverResult.fallbackUsed,
+                            hasCoverPage: false,
+                            readingStructureVersion: "v1_pages_only",
+                        });
+                    }
+                }
+                else {
+                    coverMetadata = (0, firestore_sanitize_1.removeUndefinedDeep)({
+                        coverStatus: "failed",
+                        coverFailureReason: coverResult.failureReason,
+                        coverImageModelProfile: coverResult.primaryProfile,
+                        coverImageDurationMs: coverResult.durationMs,
+                        coverImageFallbackUsed: coverResult.fallbackUsed,
+                        hasCoverPage: false,
+                        readingStructureVersion: "v1_pages_only",
+                    });
+                }
+            }
+            catch (err) {
+                logger.error("Cover image generation unexpected error", {
+                    bookId,
+                    error: err instanceof Error ? err.message : String(err),
+                });
+                coverMetadata = { coverStatus: "failed", coverFailureReason: "unexpected_error", hasCoverPage: false, readingStructureVersion: "v1_pages_only" };
+            }
+        }
+        else if (coverImagePrompt && !deps.uploadCoverImage) {
+            logger.warn("uploadCoverImage not configured, skipping cover generation", { bookId });
+            coverMetadata = { coverStatus: "failed", coverFailureReason: "upload_not_configured", hasCoverPage: false, readingStructureVersion: "v1_pages_only" };
+        }
         // Step 9: Compute book-level metrics and status
         const successResults = pageResults.filter((r) => r.success);
         const failedResults = pageResults.filter((r) => !r.success);
@@ -822,6 +964,7 @@ async function processBookGeneration(bookId, bookData, deps) {
             await deps.updateBookFailure(bookId, "すべてのページの画像生成に失敗しました。しばらく経ってから再作成してください。");
             await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
                 ...bookMetrics,
+                ...coverMetadata,
                 failureStage: "image_generation",
                 failureProvider: "replicate",
                 failureReason: "unknown",
@@ -832,6 +975,7 @@ async function processBookGeneration(bookId, bookData, deps) {
         else {
             await deps.updateBookStoryGenerationMetadata(bookId, {
                 ...bookMetrics,
+                ...coverMetadata,
                 ...(bookStatus === "completed" ? createCompletedAtPatch() : createCompletedAtPatch()),
             });
         }
@@ -1288,6 +1432,15 @@ function buildStoryFromFixedTemplate(fixedStory, mergedInput, bookData, template
     }));
     return {
         title: applyTemplateReplacements(fixedStory.titleTemplate, replacements),
+        coverImagePrompt: fixedStory.coverImagePromptTemplate
+            ? applyTemplateReplacements(fixedStory.coverImagePromptTemplate, replacements)
+            : undefined,
+        titleSpreadText: fixedStory.titleSpreadTextTemplate
+            ? applyTemplateReplacements(fixedStory.titleSpreadTextTemplate, replacements)
+            : undefined,
+        openingNarration: fixedStory.openingNarrationTemplate
+            ? applyTemplateReplacements(fixedStory.openingNarrationTemplate, replacements)
+            : undefined,
         characterBible: buildFixedCharacterBible(bookData, mergedInput),
         styleBible: buildFixedStyleBible(bookData, template),
         narrativeDevice: undefined,
@@ -1488,6 +1641,21 @@ exports.generateBook = (0, firestore_1.onDocumentCreated)({
         uploadImage: async (bookId, pageNumber, buffer) => {
             const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");
             const filename = `books/${bookId}/page-${pageNumber}.png`;
+            const file = bucket.file(filename);
+            const downloadToken = (0, crypto_1.randomUUID)();
+            await file.save(buffer, {
+                contentType: "image/png",
+                metadata: {
+                    metadata: {
+                        firebaseStorageDownloadTokens: downloadToken,
+                    },
+                },
+            });
+            return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
+        },
+        uploadCoverImage: async (bookId, buffer) => {
+            const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");
+            const filename = `books/${bookId}/cover.png`;
             const file = bucket.file(filename);
             const downloadToken = (0, crypto_1.randomUUID)();
             await file.save(buffer, {

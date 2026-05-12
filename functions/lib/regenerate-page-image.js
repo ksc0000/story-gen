@@ -250,8 +250,25 @@ exports.regeneratePageImage = (0, https_1.onCall)({ secrets: [replicateApiToken]
 /**
  * Pure function to derive book status from page statuses.
  * Considers intermediate statuses (generating, pending) as incomplete.
+ *
+ * Empty pages array → failed. A book with 0 pages is an anomaly
+ * (pages subcollection missing or not yet created) and must NOT be
+ * promoted to "completed". This prevents checkBookCompletion from
+ * accidentally recovering an empty book.
  */
 function deriveBookMetrics(pages) {
+    // Guard: no pages means the book is in an invalid state.
+    if (pages.length === 0) {
+        return {
+            imageSuccessCount: 0,
+            imageFailureCount: 0,
+            totalImageCount: 0,
+            failedPageNumbers: [],
+            pendingPageNumbers: [],
+            generationReliabilityStatus: "failed",
+            bookStatus: "failed",
+        };
+    }
     const totalImageCount = pages.length;
     const successPages = pages.filter((p) => p.status === "completed" || p.status === "fallback_completed");
     const failedPages = pages.filter((p) => p.status === "image_failed" || p.status === "failed");
@@ -283,6 +300,9 @@ async function recalculateBookMetrics(bookId, bookRef) {
     const bookSnap = await bookRef.get();
     const previousStatus = bookSnap.data()?.status;
     const metrics = deriveBookMetrics(pages);
+    if (pages.length === 0) {
+        logger.warn("Book has 0 pages — pages subcollection may be missing", { bookId });
+    }
     const updateData = {
         imageSuccessCount: metrics.imageSuccessCount,
         imageFailureCount: metrics.imageFailureCount,
