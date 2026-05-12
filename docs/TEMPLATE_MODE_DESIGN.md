@@ -275,6 +275,8 @@ Do not preserve（保持しない要素）:
 - character sheet: 正面/斜め/表情違いをまとめた identity 専用シートを導入し、scene 指定とは分離する
 - 段階導入: prompt-level isolation（IMG-002）→ neutral reference（REF-001）→ character sheet 本格運用
 
+詳細設計は [Character Reference Strategy (REF-001)](./CHARACTER_REFERENCE_STRATEGY.md) を参照。
+
 ### 5.1 テンプレート品質チェックリスト
 
 新規テンプレート追加時に確認する項目:

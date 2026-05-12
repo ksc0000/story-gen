@@ -508,7 +508,7 @@ Route: `/admin/book-quality-review`
 | Admin UI discoverability 改善の実機確認（source/templateId/smokeRunId/card識別） | CN63738 | 2026-05-12 | Medium | ADMIN-001 | COMPLETED |
 | image prompt の日本語文字抑制を強化する（次回 seed 更新時） | CN63738 + Copilot |  | Low | IMG-001 | MITIGATED_WITH_MINOR_FOLLOW_UP |
 | IMG-002 reference path verification: reference実使用かつ image generation成功の smoke book を生成し、生成画像を visual inspection で確認（background leakage なし） | CN63738 + Copilot | 2026-05-12 | Medium | IMG-002 | VERIFIED_WITH_MINOR_FOLLOW_UP |
-| REF-001 設計を作成する（neutral character reference image / identity-only reference strategy） |  |  | Medium | REF-001 | OPEN |
+| REF-001 設計を作成する（neutral character reference image / identity-only reference strategy） | CN63738 + Copilot | 2026-05-12 | Medium | REF-001 | DESIGN_IN_PROGRESS（`docs/CHARACTER_REFERENCE_STRATEGY.md`） |
 | Cover + Title 1シート化の実装反映を smoke 6冊で再確認する | CN63738 + Copilot | 2026-05-11 | Low | UX-001 | VERIFIED |
 | login 画面の 404 アセットを解消する | CN63738 + Copilot | 2026-05-12 | Low | UI-002 | COMPLETED |
 

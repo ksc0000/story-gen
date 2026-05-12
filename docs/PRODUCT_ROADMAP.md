@@ -228,12 +228,13 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 
 - [Template Mode Design](./TEMPLATE_MODE_DESIGN.md)
 - [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md)
+- [Character Reference Strategy (REF-001)](./CHARACTER_REFERENCE_STRATEGY.md)
 
 ### Quality Follow-ups（Template Mode 画像品質）
 
 - IMG-001（短期・実施済み / minor follow-up継続）: fixed template image prompts に no-text / no-signage 制約を追加し、看板・文字混入を抑制。重大な可読文字混入は現状ブロッカーではなく、T2-B / T2-C / T3 の blocking ではない。次回 seed/prompt 更新時に sign / label / poster / banner / storefront sign など文字誘発語をさらに避ける。
 - IMG-002（短期・実施済み）: prompt-level character reference isolation を追加し、参照画像の背景リーク（例: 砂場背景）を抑制
-- REF-001（中長期・設計）: identity-only reference strategy（neutral reference image + character sheet）を設計し、参照画像の背景・構図依存を段階的に縮小
+- REF-001（中長期・設計 / planned-design）: identity-only reference strategy（neutral reference image + character sheet）を設計し、参照画像の背景・構図依存を段階的に縮小。現在は design-in-progress で、T2-B / T2-C / T3 の blocking ではない。
 
 ### Phase T1: 既存テンプレート Cover 対応 + 品質改善（4 ページ × 4 本）
 
@@ -318,7 +319,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 - [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md) — fixed_template 6テンプレートの実生成確認
 - ADMIN-001（Admin discoverability）: **resolved**（commit `c4e202b`、実機確認 5/5 pass）
 - IMG-002 verification（fixed_template 6本で背景リーク再発有無を継続確認）
-- REF-001 design（neutral character reference image / identity-only reference strategy の設計）
+- REF-001 design-in-progress（neutral character reference image / identity-only reference strategy の設計、[Character Reference Strategy](./CHARACTER_REFERENCE_STRATEGY.md)）
 - Phase T2-C: テンプレート 9〜10 追加（learning + favorite-worlds）
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - production smoke evidence 確認
