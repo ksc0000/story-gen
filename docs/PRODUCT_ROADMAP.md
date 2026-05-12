@@ -229,6 +229,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 - [Template Mode Design](./TEMPLATE_MODE_DESIGN.md)
 - [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md)
 - [Character Reference Strategy (REF-001)](./CHARACTER_REFERENCE_STRATEGY.md)
+- [Template Mode T3 Plan](./TEMPLATE_MODE_T3_PLAN.md)
 
 ### Quality Follow-ups（Template Mode 画像品質）
 
@@ -265,6 +266,17 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 | T3-B | 人気テンプレート 2〜3 本の 8 ページ版作成 | |
 | T3-C | PlanConfig 更新: `light_paid` で 8 ページ fixed_template 許可 | |
 | T3-D | テーマ選択 UI でバリアント / ページ数選択対応 | |
+
+### T3 実装前の推奨順序（pre-implementation plan）
+
+- T3-1: Template selection UI 改善（カテゴリ導線 / 推奨表示 / stable 概念）
+- T3-2: 既存10テンプレート品質磨き込み（scene anchor / 読み聞かせ自然さ / IMG-001 minor follow-up）
+- T3-3: 8/12ページ対応（後続）
+
+補足:
+
+- T3-3 は生成時間・失敗率・コスト・運用手順への影響が大きいため、4ページ運用の UX/品質を先に固めてから着手する。
+- 詳細は [Template Mode T3 Plan](./TEMPLATE_MODE_T3_PLAN.md) を参照。
 
 ### 完了条件
 
