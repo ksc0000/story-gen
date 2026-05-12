@@ -11,6 +11,8 @@ const FIXED_TEMPLATE_IDS = [
   "fixed-sharing-friends",
   "fixed-sleepy-moon-adventure",
   "fixed-cardboard-rocket",
+  "fixed-rainy-day-puddle",
+  "fixed-little-helper",
 ] as const;
 
 const NEGATIVE_TEXT_TOKENS = [
@@ -57,13 +59,15 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-sharing-friends": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-sleepy-moon-adventure": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-cardboard-rocket": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-rainy-day-puddle": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-little-helper": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
 };
 
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
-  it("Phase T2-B: fixed templates are expanded to 8", () => {
-    expect(FIXED_TEMPLATE_IDS.length).toBe(8);
+  it("Phase T2-C: fixed templates are expanded to 10", () => {
+    expect(FIXED_TEMPLATE_IDS.length).toBe(10);
     const existing = FIXED_TEMPLATE_IDS.filter((id) => SEED_TEMPLATES[id]);
-    expect(existing.length).toBe(8);
+    expect(existing.length).toBe(10);
   });
 
   for (const id of FIXED_TEMPLATE_IDS) {
@@ -218,6 +222,31 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
       });
     });
   }
+});
+
+describe("fixed-rainy-day-puddle — safety policy", () => {
+  const template = SEED_TEMPLATES["fixed-rainy-day-puddle"];
+
+  it("does not include close traffic or dangerous road crossing wording", () => {
+    for (const page of template.fixedStory?.pages ?? []) {
+      const prompt = page.imagePromptTemplate.toLowerCase();
+      expect(prompt).not.toContain("close traffic");
+      expect(prompt).not.toContain("dangerous road crossing");
+    }
+  });
+});
+
+describe("fixed-little-helper — safety policy", () => {
+  const template = SEED_TEMPLATES["fixed-little-helper"];
+
+  it("does not include knives, stove, or fire wording", () => {
+    for (const page of template.fixedStory?.pages ?? []) {
+      const prompt = page.imagePromptTemplate.toLowerCase();
+      expect(prompt).not.toContain("knives");
+      expect(prompt).not.toContain("stove");
+      expect(prompt).not.toContain("fire");
+    }
+  });
 });
 
 describe("fixed-first-zoo — IMG-002 scene lock (sandbox bleed prevention)", () => {

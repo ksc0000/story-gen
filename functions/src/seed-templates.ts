@@ -84,6 +84,14 @@ const categoryGroups: Record<string, CategoryGroupData> = {
     order: 4,
     active: true,
   },
+  "daily-life": {
+    name: "毎日のくらし",
+    description: "ふだんの日の小さな発見や気づきを楽しむ日に",
+    icon: "☔",
+    parentIntent: "毎日のくらしの中で前向きな気持ちを育てたい",
+    order: 9,
+    active: true,
+  },
   "favorite-worlds": {
     name: "好きな世界に入る",
     description: "その子の好きなものを伸ばしたい日に",
@@ -968,6 +976,192 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
             "Wide quiet ending shot of the playroom after pretend adventure. The child sits beside the cardboard rocket with a content smile, looking toward a cozy corner as if planning the next trip. Toys are neatly arranged, evening light is warm and calm. Tiny comet motif appears on the rocket side. Watercolor picture book style, gentle reflective composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-rainy-day-puddle": {
+    name: "あめの日の みずたまり",
+    description: "雨の日の小さな発見を、やさしく前向きに描く固定テンプレート",
+    icon: "☔",
+    categoryGroupId: "daily-life",
+    subcategoryId: "rainy-day-discovery",
+    parentIntent: "毎日のくらしの中で前向きな気持ちを育てたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["rainy day", "daily life", "discovery"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.png",
+    sampleImageAlt: "雨の日の水たまりに映る空を見つめる子どもの絵本イメージ",
+    visualDirection:
+      "Cozy rainy-day picture-book mood with reflective puddles, soft umbrellas, gentle outdoor light, and warm after-rain comfort.",
+    order: 13,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、雨の日でも楽しい発見を見つける絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}とあめの日のみずたまり",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a cheerful child in a bright raincoat standing beside a shimmering puddle on a safe garden path, soft drizzle and gentle umbrella shapes, cozy rainy-day mood, watercolor storybook style, recurring tiny raindrop motif, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "あめの日の みずたまり",
+      openingNarrationTemplate:
+        "そとは しとしと あめもよう。{childName}は まどのそとに きらりとひかる みずたまりを みつけました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "まどのそとには、やさしい雨がふっていました。{childName}は、きらきらのみずたまりを見つけます。",
+          baby_toddler: "あめ しとしと。みずたまり きらり。",
+          preschool_3_4:
+            "まどのそとには、やさしい雨がふっていました。{childName}は、きらきらの みずたまりを みつけます。",
+          early_reader_5_6:
+            "まどのそとには、やさしい雨が ふっていました。{childName}は、きらきらの みずたまりを 見つけて、ちょっと うれしい気持ちになります。",
+          early_elementary_7_8:
+            "まどのそとには、やさしい雨が ふっていました。{childName}は、灰色の空のしたで ひかる みずたまりを 見つけて、雨の日にも たのしい発見があると 気づきます。",
+          general_child:
+            "まどのそとには、やさしい雨がふっていました。{childName}は、きらきらの みずたまりを みつけます。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot from inside a cozy home looking toward a rainy garden path through a window. A child stands by the window with curious eyes, noticing a shimmering puddle outside. Soft indoor warm light contrasts with cool rainy daylight outdoors. A tiny raindrop motif appears near the window frame. Child-safe, calm atmosphere with no nearby vehicles and no road hazard context. Watercolor picture book style, layered foreground and background, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "レインコートをきて、{childName}はそっとそとへでました。みずたまりがまるで宝ものみたいです。",
+          baby_toddler: "レインコート きて、そとへ ぴょこん。",
+          preschool_3_4:
+            "レインコートをきて、{childName}は そっと そとへでました。みずたまりが きらきら しています。",
+          early_reader_5_6:
+            "レインコートをきて、{childName}は そっと そとへでました。みずたまりを ひとつ見つけるたび、わくわくが ふえていきます。",
+          early_elementary_7_8:
+            "レインコートをきて、{childName}は そっと そとへでました。雨の音を ききながら みずたまりを のぞくと、ふだんとちがう せかいが ひらいていきます。",
+          general_child:
+            "レインコートをきて、{childName}はそっとそとへでました。みずたまりがまるで宝ものみたいです。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Medium discovery shot of a child in a raincoat and rain boots standing on a safe garden walkway, gently approaching a puddle while holding an umbrella. Rain droplets create soft rings on water. A tiny raindrop motif is reflected near the puddle edge. The environment is child-safe, peaceful, and away from vehicle traffic or dangerous crossing context. Watercolor picture book style, clear emotional storytelling composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "みずたまりには空と{childName}のえがおがうつって、{childName}はうれしくなりました。",
+          baby_toddler: "みずたまりに そら。{childName} にこっ。",
+          preschool_3_4:
+            "みずたまりには そらと {childName}の えがおが うつって、{childName}は うれしくなりました。",
+          early_reader_5_6:
+            "みずたまりには そらと {childName}の えがおが うつっていました。{childName}は、雨の日の きれいな ひみつを 見つけた気分です。",
+          early_elementary_7_8:
+            "みずたまりには 空と {childName}の えがおが うつっていました。雨のしずくが つくる 小さなゆらぎを見て、{childName}は こころまで きらきら してきます。",
+          general_child:
+            "みずたまりには空と{childName}のえがおがうつって、{childName}はうれしくなりました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of a child crouching beside a puddle, smiling as reflection shows sky, clouds, and the child face in rippling water. Small raindrops create delicate circles across the reflection. A tiny raindrop motif appears in the reflected light pattern. Gentle rain ambiance, cozy and hopeful mood, child-safe setting. Watercolor picture book style, intimate framing with soft depth, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おうちにもどって、{childName}は「雨の日もたのしかったね」とにっこりしました。{parentMessage}",
+          baby_toddler: "ただいま。あめの日 たのしかったね。",
+          preschool_3_4:
+            "おうちにもどって、{childName}は「雨の日も たのしかったね」と にっこりしました。",
+          early_reader_5_6:
+            "おうちにもどって、{childName}は「雨の日も たのしかったね」と にっこり。ぬれた くつを ならべながら、また つぎの発見を たのしみにします。",
+          early_elementary_7_8:
+            "おうちにもどって、{childName}は「雨の日も たのしかったね」と にっこりしました。何気ない一日でも、見つけ方しだいで すてきな思い出になると わかりました。",
+          general_child:
+            "おうちにもどって、{childName}は「雨の日もたのしかったね」とにっこりしました。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot inside a cozy entryway after rain. The child has returned home, placing rain boots neatly by the door and smiling warmly while holding a small umbrella. Soft towel and warm indoor light suggest comfort and calm. A tiny raindrop motif appears on the umbrella handle. Peaceful reflective mood, child-safe home environment, watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-little-helper": {
+    name: "ちいさなおてつだい",
+    description: "小さなお手伝いで自己効力感を育てる、家族向け固定テンプレート",
+    icon: "🧺",
+    categoryGroupId: "growth-support",
+    subcategoryId: "little-helper",
+    parentIntent: "できるようになってほしい。でも怒らず応援したい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["helper", "family", "self-efficacy"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/daily-habits.png",
+    sampleImageAlt: "家族のお手伝いをして笑顔になる子どもの絵本イメージ",
+    visualDirection:
+      "Warm family home picture-book mood with safe helper tasks, gentle gratitude, and calm everyday confidence-building moments.",
+    order: 14,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、小さなお手伝いの達成感をやさしく描く絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}のちいさなおてつだい",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a smiling child carrying a small basket of folded towels in a cozy family room, warm family members nearby, gentle gratitude mood, recurring tiny heart-spark motif, watercolor storybook style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "ちいさなおてつだい",
+      openingNarrationTemplate:
+        "あるひの おうちで、{childName}は みんなの やくにたてる ちいさな おてつだいを さがしはじめました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "おうちでは、みんながおかたづけやじゅんびでいそがしそうです。{childName}はそれを見ていました。",
+          baby_toddler: "みんな じゅんび。{childName} みてる。",
+          preschool_3_4:
+            "おうちでは、みんながおかたづけや じゅんびで いそがしそうです。{childName}は それを 見ていました。",
+          early_reader_5_6:
+            "おうちでは、みんなが おかたづけや じゅんびで いそがしそうです。{childName}は、じぶんにも できることが あるかなと かんがえます。",
+          early_elementary_7_8:
+            "おうちでは、みんなが おかたづけや じゅんびで いそがしそうです。{childName}は、だれかの たすけに なることを してみたいと 思いました。",
+          general_child:
+            "おうちでは、みんながおかたづけやじゅんびでいそがしそうです。{childName}はそれを見ていました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy family room connected to a safe kitchen area. Family members organize cushions, laundry, and table items while a child watches with interest, ready to help. A tiny heart-spark motif appears on a basket handle. Warm daylight, calm home atmosphere, child-safe environment with no hazardous tools visible. Watercolor picture book style, layered composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、できそうなおてつだいを見つけました。小さなかごをもって、タオルをはこびます。",
+          baby_toddler: "おてつだい みつけた。はこぶよ。",
+          preschool_3_4:
+            "{childName}は、できそうな おてつだいを 見つけました。ちいさな かごをもって、タオルを はこびます。",
+          early_reader_5_6:
+            "{childName}は、できそうな おてつだいを 見つけました。ちいさな かごを しっかり もって、ていねいに タオルを はこびます。",
+          early_elementary_7_8:
+            "{childName}は、じぶんにも できる おてつだいを 見つけました。バランスを とりながら かごを はこんで、すこしずつ たのもしい うごきに かわっていきます。",
+          general_child:
+            "{childName}は、できそうなおてつだいを見つけました。小さなかごをもって、タオルをはこびます。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Medium discovery shot of a child carefully carrying a small basket with folded towels across a cozy room. Family member nearby offers a supportive smile at child eye level. A tiny heart-spark motif appears near the folded towels. Safe simple household task only, with no hazardous tools or heat-source context visible. Watercolor picture book style, clear action framing, warm and encouraging mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「ありがとう」と言われて、{childName}のこころはぽかぽかになりました。",
+          baby_toddler: "ありがとう。うれしいね。",
+          preschool_3_4:
+            "「ありがとう」と いわれて、{childName}の こころは ぽかぽかに なりました。",
+          early_reader_5_6:
+            "「ありがとう」と いわれて、{childName}の こころは ぽかぽかに なりました。だれかの 役に立てたことが、とても うれしかったのです。",
+          early_elementary_7_8:
+            "「ありがとう」と いわれて、{childName}の こころは ぽかぽかに なりました。小さな こうどうでも、だれかを たすけられるのだと 実感します。",
+          general_child:
+            "「ありがとう」と言われて、{childName}のこころはぽかぽかになりました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of a child receiving warm thanks from a family member, both smiling with soft eye contact. The child holds an empty basket proudly after helping. A tiny heart-spark motif glows near their hands. Cozy indoor lighting, gentle family connection, and safe environment. Watercolor picture book style, intimate emotional composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は「またおてつだいしたいな」と思いました。{parentMessage}",
+          baby_toddler: "また おてつだい したいな。",
+          preschool_3_4:
+            "{childName}は「また おてつだい したいな」と おもいました。",
+          early_reader_5_6:
+            "{childName}は「また おてつだい したいな」と おもいました。できることが ふえるたび、じぶんの こころも つよくなる気がします。",
+          early_elementary_7_8:
+            "{childName}は「また おてつだい したいな」と おもいました。ちいさな行動が 家族の えがおに つながることを知って、あしたへの じしんが うまれます。",
+          general_child:
+            "{childName}は「またおてつだいしたいな」と思いました。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of a calm family room after the helper task is done. The child sits comfortably beside family, smiling with relaxed pride while a tidy basket rests nearby. A tiny heart-spark motif appears on a cushion seam. Warm evening light, peaceful home mood, safe and reassuring composition. Watercolor picture book style, reflective ending framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
       ],
     },

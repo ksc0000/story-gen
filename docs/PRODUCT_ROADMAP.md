@@ -251,7 +251,7 @@ Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production e
 |------|------|--------|
 | T2-A | テンプレート 5〜6 追加（memories + emotional-growth） | **done** |
 | T2-B | テンプレート 7〜8 追加（bedtime + imagination） | **done** |
-| T2-C | テンプレート 9〜10 追加（learning + favorite-worlds） | |
+| T2-C | テンプレート 9〜10 追加（daily-life + growth-support） | **done** |
 | T2-D | テンプレートプレビュー画像の生成・設定 | |
 | T2-E | テーマ選択 UI のプレビュー画像表示 | |
 | T2-F | テンプレート品質のテスト生成・レビュー | |

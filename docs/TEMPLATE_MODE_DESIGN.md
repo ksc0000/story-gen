@@ -318,20 +318,19 @@ Do not preserve（保持しない要素）:
 | 6 | `fixed-sharing-friends` | emotional-growth | おともだちとわけっこできたね | **done (T2-A)** |
 | 7 | `fixed-sleepy-moon-adventure` | bedtime | おつきさまと おやすみぼうけん | **done (T2-B)** |
 | 8 | `fixed-cardboard-rocket` | imagination | ダンボールロケットでしゅっぱつ | **done (T2-B)** |
-| 9 | `fixed-vegetable-garden` | learning | おやさいばたけ | 候補 |
-| 10 | `fixed-ocean-friends` | favorite-worlds | うみのなかまたち | 候補 |
+| 9 | `fixed-rainy-day-puddle` | daily-life | あめの日の みずたまり | **done (T2-C)** |
+| 10 | `fixed-little-helper` | growth-support | ちいさなおてつだい | **done (T2-C)** |
 
 ### 6.2 テンプレートカテゴリ分布
 
 | カテゴリグループ | 既存 | Phase T2 追加 | 合計 |
 |---|---|---|---|
 | memories | 1 | 1 | 2 |
-| growth-support | 1 | 0 | 1 |
+| growth-support | 1 | 1 | 2 |
 | emotional-growth | 0 | 1 | 1 |
 | bedtime | 1 | 1 | 2 |
-| favorite-worlds | 0 | 1 | 1 |
+| daily-life | 0 | 1 | 1 |
 | imagination | 0 | 1 | 1 |
-| learning | 0 | 1 | 1 |
 | seasonal-events | 1 | 0 | 1 |
 
 ---
@@ -353,7 +352,7 @@ Do not preserve（保持しない要素）:
 |---|---|
 | T2-A | テンプレート 5〜6 を seed に追加（memories + emotional-growth）**（done: `fixed-first-birthday`, `fixed-sharing-friends`）** |
 | T2-B | テンプレート 7〜8 を seed に追加（bedtime + imagination）**（done: `fixed-sleepy-moon-adventure`, `fixed-cardboard-rocket`）** |
-| T2-C | テンプレート 9〜10 を seed に追加（learning + favorite-worlds） |
+| T2-C | テンプレート 9〜10 を seed に追加（daily-life + growth-support）**（done: `fixed-rainy-day-puddle`, `fixed-little-helper`）** |
 | T2-D | テンプレートプレビュー画像の生成・設定 |
 | T2-E | テーマ選択 UI のプレビュー画像表示 |
 | T2-F | テンプレート品質のテスト生成・レビュー |
