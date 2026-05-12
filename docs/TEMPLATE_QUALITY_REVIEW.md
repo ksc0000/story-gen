@@ -198,3 +198,72 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 	- `seasonal.png` は厳密な雨テーマではないが、屋外・天候・季節変化の連想を保てるため、既存候補の中では副作用が最小
 	- UI上の重複は `fixed-first-christmas` とあるが、P1項目ほどの誤認リスクはなく、P2としては許容範囲
 - 実施内容: **コード変更なし / docs のみ更新**
+
+---
+
+## 11. T3-2 Text Quality Review (2026-05-12)
+
+レビュー観点:
+
+- page 1〜4 の流れが自然か
+- page 4 の締めがテンプレートごとに自然か
+- `parentMessage` の入り方が違和感ないか
+- `textTemplatesByAge` の文量が長すぎないか
+- 3-4歳 / 5-6歳 / 7-8歳で難易度差が適切か
+- 読み聞かせ時に親が読みやすいか
+- 同じ表現が10本で繰り返されすぎていないか
+- ユーザーが「この本を選びたい」と思える本文になっているか
+
+### 11.1 Text Quality Review Table
+
+| templateId | story flow | closing quality | age text quality | parentMessage fit | risk | recommended action | priority |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-zoo` | はじめてのおでかけの高揚感から笑顔の思い出へ自然につながる | page 4 を `parentMessage` に委ねる構成は素直で自然 | 7-8歳向けはやや長めだが理解可能 | 問題なし | 「きらきら」「やさしい」が他テンプレと少し重なる | 7-8歳向けの文長を後続で軽く圧縮 | P2 |
+| `fixed-first-birthday` | 準備→ろうそく→祝福→締め が明快 | page 4 の余韻は自然 | 年齢差は十分、読みやすさも高い | 問題なし | 一部表現は定番だが許容範囲 | No action | No action |
+| `fixed-bedtime-good-day` | ふりかえり→安心→入眠 の流れが強い | page 4 の `parentMessage` 締めは寝かしつけ用途に合う | 7-8歳向けはやや抽象的で長め | 問題なし | 詩的で良いが、最年長帯は少し説明的 | 7-8歳向けを少し短文化する候補 | P2 |
+| `fixed-brush-teeth` | 導入→実践→達成感→締め が端的で読みやすい | page 4 は余韻として機能 | 年齢差は適切、3-4歳にも読みやすい | 問題なし | 語彙の伸びしろはあるが急ぎではない | No action | No action |
+| `fixed-first-christmas` | 祝祭感から家族の余韻まで自然 | page 4 を `parentMessage` に預ける形は相性が良い | 文量・難易度とも安定 | 問題なし | 「きらきら」系表現がやや多いがテーマ適合 | No action | No action |
+| `fixed-sharing-friends` | 葛藤→選択→共有→締め が自然 | 終わり方は穏やかで良い | 7-8歳向けはやや説明的、説話寄り | page 4 自体は問題なし | opening narration の「きょうのテーマは」が教材感を出す | opening narration を物語寄りにやわらげる候補 | **P1** |
+| `fixed-sleepy-moon-adventure` | 月の発見→想像→安心→入眠 が安定 | page 4 は寝かしつけとして自然 | 年齢差は適切、5-8歳も無理がない | 問題なし | page 3 の安心メッセージがやや直接的 | 文調は維持しつつ、必要なら page 3 を少しだけ自然化 | P2 |
+| `fixed-cardboard-rocket` | 発見→ごっこ→高揚→余韻 が明快 | page 4 の余韻も自然 | 各年齢帯で無理なく楽しい | 問題なし | 大きな課題なし | No action | No action |
+| `fixed-rainy-day-puddle` | 雨の発見→外へ→反射の喜び→帰宅 が自然 | page 4 の本文はよいが、年齢別 override では `parentMessage` が乗らない | 7-8歳向けも読みやすい | **age別文で `parentMessage` が実質消える** | user入力メッセージが年齢帯によって反映されない | page 4 の age別文でも `parentMessage` を保持する設計へ修正候補 | **P1** |
+| `fixed-little-helper` | 役に立ちたい→実践→感謝→次もやりたい が自然 | page 4 の締めは良いが、age別 override では `parentMessage` が乗らない | 7-8歳向けはやや説明的だが許容 | **age別文で `parentMessage` が実質消える** | user入力メッセージが年齢帯によって反映されない | page 4 の age別文でも `parentMessage` を保持する設計へ修正候補 | **P1** |
+
+### 11.2 Findings
+
+#### A. `parentMessage` fit の実装一貫性不足（優先度 P1）
+
+- `fixed-rainy-day-puddle` と `fixed-little-helper` は page 4 の `textTemplate` に `parentMessage` を含む一方、`textTemplatesByAge` 側の override 文では `parentMessage` を含まない
+- そのため、年齢別テキストを採用する実行経路では user の `parentMessage` が反映されない可能性がある
+- これは「page 4 の締めを親の言葉で残す」という fixed_template の価値を弱める
+
+#### B. opening narration / didactic tone（優先度 P1）
+
+- `fixed-sharing-friends` の `openingNarrationTemplate` は「きょうの テーマは…」で始まり、絵本というより教材・課題提示のトーンに寄る
+- テンプレートの価値自体は高いが、ユーザーが「選びたい本文」にするにはもう少し物語導入寄りが望ましい
+
+#### C. 7-8歳向け文長の微調整余地（優先度 P2）
+
+- `fixed-first-zoo` / `fixed-bedtime-good-day` / `fixed-sleepy-moon-adventure` は 7-8歳向け文がやや長めで、読み聞かせテンポが少し落ちる
+- 難語ではないため緊急度は低いが、1文削るだけで改善余地がある
+
+#### D. 表現の重複（優先度 P2）
+
+- 10本全体で「にっこり」「きらきら」「ぽかぽか」「やさしい」が繰り返し出る
+- ブランドトーンとしては許容範囲だが、代表テンプレから少しずつ語彙を散らす余地がある
+
+### 11.3 Priority Summary
+
+| Priority | 件数 | 内容 |
+| --- | --- | --- |
+| P0 | 0 | なし |
+| P1 | 3 | `fixed-rainy-day-puddle` page 4 の `parentMessage` 反映一貫性 / `fixed-little-helper` page 4 の `parentMessage` 反映一貫性 / `fixed-sharing-friends` opening narration の教材感 |
+| P2 | 4 | `fixed-first-zoo` の 7-8歳文長 / `fixed-bedtime-good-day` の 7-8歳文長 / `fixed-sleepy-moon-adventure` の語り自然化 / 全体の語彙重複緩和 |
+| No action | 4 | `fixed-first-birthday` / `fixed-brush-teeth` / `fixed-first-christmas` / `fixed-cardboard-rocket` |
+
+### 11.4 Recommended Next Fix Order
+
+1. `fixed-rainy-day-puddle`: page 4 の age別文にも `parentMessage` を保持
+2. `fixed-little-helper`: page 4 の age別文にも `parentMessage` を保持
+3. `fixed-sharing-friends`: opening narration を教材トーンから物語導入へ調整
+4. `fixed-first-zoo` または `fixed-bedtime-good-day`: 7-8歳向け文の短文化トライアル

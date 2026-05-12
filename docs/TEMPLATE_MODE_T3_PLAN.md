@@ -249,3 +249,10 @@ P2 review result: `fixed-rainy-day-puddle` sampleImageUrl
 - 結論: **keep as-is** (`/images/templates/seasonal.png`)
 - 理由: 既存アセット群の中に雨・水たまり・日常発見テーマへ明確により近い画像がなく、代替候補は意味のズレや既存重複が強くなる
 - 実施内容: docs のみ更新、コード変更なし
+
+T3-2 text quality review result:
+
+- 棚卸し完了: [Template Quality Review](./TEMPLATE_QUALITY_REVIEW.md) に本文品質レビューを追加
+- P1: `fixed-rainy-day-puddle` / `fixed-little-helper` の page 4 `parentMessage` 反映一貫性、`fixed-sharing-friends` の opening narration 教材感
+- P2: `fixed-first-zoo` / `fixed-bedtime-good-day` / `fixed-sleepy-moon-adventure` の文長・語り自然化、全体語彙の散らし
+- No action: `fixed-first-birthday` / `fixed-brush-teeth` / `fixed-first-christmas` / `fixed-cardboard-rocket`
