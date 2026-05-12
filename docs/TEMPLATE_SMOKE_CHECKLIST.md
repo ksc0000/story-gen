@@ -2,13 +2,13 @@
 
 作成日: 2026-05-08  
 対象リポジトリ: `ksc0000/story-gen`  
-対象 Phase: Template Mode Phase T1 + T2-A / fixed_template 6本
+対象 Phase: Template Mode Phase T1 + T2-A + T2-B + T2-C / fixed_template 10本
 
 ---
 
 ## 0. Overview
 
-このチェックリストは、Template Mode Phase T1 + T2-A の fixed_template 6本が、実際に安定して絵本生成できるかを確認するための smoke checklist です。
+このチェックリストは、Template Mode Phase T1 + T2-A + T2-B + T2-C の fixed_template 10本が、実際に安定して絵本生成できるかを確認するための smoke checklist です。
 
 対象テンプレート:
 
@@ -20,6 +20,10 @@
 | `fixed-brush-teeth` | はみがきできたよ | growth-support | 4 |
 | `fixed-first-christmas` | はじめてのクリスマス | seasonal-events | 4 |
 | `fixed-sharing-friends` | おともだちとわけっこできたね | emotional-growth | 4 |
+| `fixed-sleepy-moon-adventure` | おつきさまと おやすみぼうけん | bedtime | 4 |
+| `fixed-cardboard-rocket` | ダンボールロケットでしゅっぱつ | imagination | 4 |
+| `fixed-rainy-day-puddle` | あめの日の みずたまり | daily-life | 4 |
+| `fixed-little-helper` | ちいさなおてつだい | growth-support | 4 |
 
 確認目的:
 
@@ -59,30 +63,41 @@
 | 全40ページに `pageVisualRole` がある | ☐ | ☐ | ☐ |  |
 | `.env` / Firebase env secrets が生成に必要な状態になっている | ☐ | ☐ | ☐ |  |
 
-### 2.1 Firestore投入スクリプトで6件作成する手順
+### 2.1 Firestore投入スクリプトで fixed_template 全件を作成する手順
 
-以下のスクリプトで、fixed_template 6本ぶんの BookDoc を `books` に新規作成できます。
+`scripts/create-template-smoke-books.js` は `SEED_TEMPLATES` のうち `creationMode === "fixed_template"` の templateId を自動対象にして、BookDoc を `books` に新規作成します（現在は10本）。
+
+T2-A / T2-B / T2-C を経て fixed_template は10本体制になっているため、手動の許可リスト更新なしで追従します。
 
 ```powershell
-$env:GOOGLE_APPLICATION_CREDENTIALS="C:\path\to\service-account.json"
-npm run smoke:create-template-books
+$env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\CN63738\secure\story-gen-8a769-service-account.json"
+
+node scripts/create-template-smoke-books.js --list-templates
+
+node scripts/create-template-smoke-books.js --dry-run
+
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-rainy-day-puddle
+
+node scripts/create-template-smoke-books.js --write --template-id=fixed-rainy-day-puddle
 ```
 
-単独で 1 本だけ投入する場合:
+reference-enabled smoke（任意）:
 
 ```powershell
-$env:GOOGLE_APPLICATION_CREDENTIALS="C:\path\to\service-account.json"
-node scripts/create-template-smoke-books.js --write --template-id=fixed-first-zoo
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-first-zoo --with-reference --reference-image-url="https://..."
 ```
 
 注意点:
 
 - `GOOGLE_APPLICATION_CREDENTIALS` 未設定時は処理を中止します。
 - 環境変数の値そのもの（パス文字列）はログ出力しません。
-- 作成件数は常に 6 件固定です（固定テンプレート6本のみ）。
 - `--template-id=...` を付けると、固定テンプレート 1 本だけを新規作成できます。
+- `--list-templates` で現在対象の fixed_template 一覧を確認できます。
+- `--with-reference` / `--reference-image-url` は reference-enabled smoke 実行時に任意で使用できます。
 - 既存 BookDoc の更新は行いません（新規作成のみ）。
 - 生成された BookDoc には `smokeTestMetadata` が付与され、smoke作成データだと判別できます。
+- service account JSON はコミットしないでください。
+- `functions/lib` / generated images / local env files はコミットしないでください。
 
 ---
 
