@@ -71,6 +71,7 @@ type ReviewPlanFilter = "all" | ProductPlan;
 type ReviewModelFilter = "all" | ImageModelProfile;
 type ReviewQualityReviewFilter = "all" | "not_reviewed" | "reviewed" | "needs_fix" | "approved";
 type ReviewQualitySortOrder = "default" | "low_first" | "high_first";
+type ReviewSourceFilter = "all" | "fixed_template" | "smoke";
 
 interface SloSnapshot extends Partial<SloMetrics> {
   id: string;
@@ -455,6 +456,7 @@ export default function AdminBookQualityReviewPage() {
   const [planFilter, setPlanFilter] = useState<ReviewPlanFilter>("all");
   const [qualityFilter, setQualityFilter] = useState<ReviewQualityFilter>("all");
   const [modelFilter, setModelFilter] = useState<ReviewModelFilter>("all");
+  const [sourceFilter, setSourceFilter] = useState<ReviewSourceFilter>("all");
   const [qualityReviewFilter, setQualityReviewFilter] = useState<ReviewQualityReviewFilter>("all");
   const [qualitySortOrder, setQualitySortOrder] = useState<ReviewQualitySortOrder>("default");
   const [searchText, setSearchText] = useState("");
@@ -472,7 +474,7 @@ export default function AdminBookQualityReviewPage() {
   const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
   const [snapshotHistory, setSnapshotHistory] = useState<SloSnapshot[]>([]);
   const [snapshotHistoryLoading, setSnapshotHistoryLoading] = useState(false);
-  const [sloSampleSize, setSloSampleSize] = useState<SloSampleSize>(50);
+  const [sloSampleSize, setSloSampleSize] = useState<SloSampleSize>(200);
   const [regenHistory, setRegenHistory] = useState<RegenerationHistoryEntry[]>([]);
   const [regenHistoryLoading, setRegenHistoryLoading] = useState(false);
   const [regenHistoryPageId, setRegenHistoryPageId] = useState<string | null>(null);
@@ -573,13 +575,26 @@ export default function AdminBookQualityReviewPage() {
       if (planFilter !== "all" && book.productPlan !== planFilter) return false;
       if (qualityFilter !== "all" && getStoryQualityStatus(book) !== qualityFilter) return false;
       if (modelFilter !== "all" && resolveEffectiveImageModelProfile(book) !== modelFilter) return false;
+      if (sourceFilter === "fixed_template" && book.creationMode !== "fixed_template") return false;
+      if (sourceFilter === "smoke" && !book.smokeTestMetadata?.isSmokeTest) return false;
       if (qualityReviewFilter !== "all") {
         const bookQrStatus = book.qualityReviewStatus ?? "not_reviewed";
         if (bookQrStatus !== qualityReviewFilter) return false;
       }
       if (!normalizedSearch) return true;
 
-      const haystack = [book.id, book.title, book.userId, book.childId]
+      const haystack = [
+        book.id,
+        book.title,
+        book.userId,
+        book.childId,
+        book.templateId,
+        book.creationMode,
+        book.theme,
+        book.smokeTestMetadata?.suite,
+        book.smokeTestMetadata?.runId,
+        book.smokeTestMetadata?.sourceScript,
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -591,7 +606,7 @@ export default function AdminBookQualityReviewPage() {
       filtered.sort((a, b) => (b.overallQualityScore ?? 0) - (a.overallQualityScore ?? 0));
     }
     return filtered;
-  }, [books, modelFilter, planFilter, qualityFilter, qualityReviewFilter, qualitySortOrder, searchText, statusFilter]);
+  }, [books, modelFilter, planFilter, qualityFilter, qualityReviewFilter, qualitySortOrder, searchText, sourceFilter, statusFilter]);
 
   useEffect(() => {
     if (filteredBooks.length === 0) {
@@ -1095,7 +1110,7 @@ export default function AdminBookQualityReviewPage() {
             </div>
           ) : (
             <>
-              <div className="grid gap-3 md:grid-cols-5">
+              <div className="grid gap-4 md:grid-cols-6">
                 <BookStatCard label="total loaded" value={books.length} />
                 <BookStatCard label="completed" value={summaryByStatus.completed ?? 0} />
                 <BookStatCard label="partial_completed" value={summaryByStatus.partial_completed ?? 0} />
@@ -1605,7 +1620,20 @@ export default function AdminBookQualityReviewPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="searchText">title / userId / childId / bookId</Label>
+                  <Label htmlFor="sourceFilter">source</Label>
+                  <select
+                    id="sourceFilter"
+                    value={sourceFilter}
+                    onChange={(e) => setSourceFilter(e.target.value as ReviewSourceFilter)}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="all">all</option>
+                    <option value="fixed_template">fixed_template</option>
+                    <option value="smoke">smoke</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="searchText">bookId / title / templateId / runId / userId / childId</Label>
                   <Input
                     id="searchText"
                     value={searchText}
@@ -1724,11 +1752,18 @@ export default function AdminBookQualityReviewPage() {
                                   <span className={`rounded-full px-3 py-1 text-xs font-medium ${getQualityBadgeClass(qualityStatus)}`}>
                                     {qualityStatus}
                                   </span>
+                                  {book.smokeTestMetadata?.isSmokeTest ? (
+                                    <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
+                                      smoke
+                                    </span>
+                                  ) : null}
                                 </div>
                               </div>
                               <div className="mt-3 grid gap-2 text-xs text-violet-700 sm:grid-cols-2">
                                 <p>productPlan: {book.productPlan ?? "—"}</p>
                                 <p>creationMode: {book.creationMode ?? "—"}</p>
+                                  <p>templateId: {book.templateId ?? "—"}</p>
+                                  <p>smokeRunId: {book.smokeTestMetadata?.runId ?? "—"}</p>
                                 <p>imageTier: {book.imageQualityTier ?? "—"}</p>
                                 <p>modelProfile: {resolveEffectiveImageModelProfile(book)}</p>
                                 <p>storyModel: {book.storyModel ?? "—"}</p>

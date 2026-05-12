@@ -400,6 +400,17 @@ export interface BookDoc {
   qualityReviewedAt?: Timestamp;
   qualityReviewedAtMs?: number;
   qualityReviewerType?: QualityReviewerType;
+  smokeTestMetadata?: {
+    isSmokeTest?: boolean;
+    suite?: string;
+    runId?: string;
+    sourceScript?: string;
+    templateId?: string;
+    templateIndex?: number;
+    templateCount?: number;
+    createdAtIso?: string;
+    withReference?: boolean;
+  };
   errorMessage?: string;
   input: BookInput;
   createdAt: Timestamp;
