@@ -6,6 +6,8 @@
     "dev": "next dev",
     "clean": "node scripts/clean-build.mjs",
     "smoke:create-template-books": "node scripts/create-template-smoke-books.js",
+    "template:sync:check": "node scripts/sync-fixed-template-seeds.js",
+    "template:sync:write": "node scripts/sync-fixed-template-seeds.js --write",
     "build": "next build",
     "build:clean": "npm run clean && npm run build",
     "deploy:hosting": "npm run build:clean && firebase deploy --only hosting",
