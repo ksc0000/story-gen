@@ -747,7 +747,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         withFixedImagePromptSafety("Picture book cover illustration: two children sharing toys with warm smiles in a bright playroom, one child is the protagonist, gentle sunlight, recurring tiny kindness spark motif, tender emotional-growth mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}の わけっこ できたね",
       openingNarrationTemplate:
-        "きょうの テーマは「{lessonToTeach}」。{childName}が ちいさな やさしさを 見つける おはなしです。",
+        "きょうは、{childName}が おともだちと すごすなかで、{lessonToTeach}の あたたかさに そっと きづいていく おはなしです。",
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は、だいすきなおもちゃであそんでいました。",

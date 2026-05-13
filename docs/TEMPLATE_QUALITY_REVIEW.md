@@ -223,7 +223,7 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 | `fixed-bedtime-good-day` | ふりかえり→安心→入眠 の流れが強い | page 4 の `parentMessage` 締めは寝かしつけ用途に合う | 7-8歳向けはやや抽象的で長め | 問題なし | 詩的で良いが、最年長帯は少し説明的 | 7-8歳向けを少し短文化する候補 | P2 |
 | `fixed-brush-teeth` | 導入→実践→達成感→締め が端的で読みやすい | page 4 は余韻として機能 | 年齢差は適切、3-4歳にも読みやすい | 問題なし | 語彙の伸びしろはあるが急ぎではない | No action | No action |
 | `fixed-first-christmas` | 祝祭感から家族の余韻まで自然 | page 4 を `parentMessage` に預ける形は相性が良い | 文量・難易度とも安定 | 問題なし | 「きらきら」系表現がやや多いがテーマ適合 | No action | No action |
-| `fixed-sharing-friends` | 葛藤→選択→共有→締め が自然 | 終わり方は穏やかで良い | 7-8歳向けはやや説明的、説話寄り | page 4 自体は問題なし | opening narration の「きょうのテーマは」が教材感を出す | opening narration を物語寄りにやわらげる候補 | **P1** |
+| `fixed-sharing-friends` | 葛藤→選択→共有→締め が自然 | 終わり方は穏やかで良い | 7-8歳向けはやや説明的、説話寄り | page 4 自体は問題なし | ~~opening narration の「きょうのテーマは」が教材感を出す~~ → opening narration を物語導入トーンへ調整済み | opening narration を物語寄りにやわらげる対応を実施（2026-05-13） | **resolved-in-code** |
 | `fixed-sleepy-moon-adventure` | 月の発見→想像→安心→入眠 が安定 | page 4 は寝かしつけとして自然 | 年齢差は適切、5-8歳も無理がない | 問題なし | page 3 の安心メッセージがやや直接的 | 文調は維持しつつ、必要なら page 3 を少しだけ自然化 | P2 |
 | `fixed-cardboard-rocket` | 発見→ごっこ→高揚→余韻 が明快 | page 4 の余韻も自然 | 各年齢帯で無理なく楽しい | 問題なし | 大きな課題なし | No action | No action |
 | `fixed-rainy-day-puddle` | 雨の発見→外へ→反射の喜び→帰宅 が自然 | page 4 の本文はよいが、年齢別 override では `parentMessage` が乗らない | 7-8歳向けも読みやすい | **age別文で `parentMessage` が実質消える** | user入力メッセージが年齢帯によって反映されない | page 4 の age別文でも `parentMessage` を保持する設計へ修正候補 | **P1** |
@@ -237,10 +237,10 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 - そのため、年齢別テキストを採用する実行経路では user の `parentMessage` が反映されない可能性がある
 - これは「page 4 の締めを親の言葉で残す」という fixed_template の価値を弱める
 
-#### B. opening narration / didactic tone（優先度 P1）
+#### B. opening narration / didactic tone（優先度 P1 → **resolved 2026-05-13**）
 
-- `fixed-sharing-friends` の `openingNarrationTemplate` は「きょうの テーマは…」で始まり、絵本というより教材・課題提示のトーンに寄る
-- テンプレートの価値自体は高いが、ユーザーが「選びたい本文」にするにはもう少し物語導入寄りが望ましい
+- 対応前: `fixed-sharing-friends` の `openingNarrationTemplate` は「きょうの テーマは…」で始まり、絵本というより教材・課題提示のトーンに寄っていた
+- 対応後: opening narration を「やさしい物語導入」トーンへ調整し、`{lessonToTeach}` placeholder は維持
 
 #### C. 7-8歳向け文長の微調整余地（優先度 P2）
 
@@ -257,7 +257,7 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 | Priority | 件数 | 内容 |
 | --- | --- | --- |
 | P0 | 0 | なし |
-| P1 | 3 | `fixed-rainy-day-puddle` page 4 の `parentMessage` 反映一貫性 / `fixed-little-helper` page 4 の `parentMessage` 反映一貫性 / `fixed-sharing-friends` opening narration の教材感 |
+| P1 | 0 | 対象3件（`fixed-rainy-day-puddle` / `fixed-little-helper` / `fixed-sharing-friends`）はすべて code fix 済み |
 | P2 | 4 | `fixed-first-zoo` の 7-8歳文長 / `fixed-bedtime-good-day` の 7-8歳文長 / `fixed-sleepy-moon-adventure` の語り自然化 / 全体の語彙重複緩和 |
 | No action | 4 | `fixed-first-birthday` / `fixed-brush-teeth` / `fixed-first-christmas` / `fixed-cardboard-rocket` |
 
@@ -265,7 +265,7 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 
 1. `fixed-rainy-day-puddle`: page 4 の age別文にも `parentMessage` を保持
 2. `fixed-little-helper`: page 4 の age別文にも `parentMessage` を保持
-3. `fixed-sharing-friends`: opening narration を教材トーンから物語導入へ調整
+3. `fixed-sharing-friends`: opening narration を教材トーンから物語導入へ調整（完了 2026-05-13）
 4. `fixed-first-zoo` または `fixed-bedtime-good-day`: 7-8歳向け文の短文化トライアル
 
 ---
@@ -297,3 +297,18 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 	- page 4 本文は `parentMessage` が反映され、未展開の `{parentMessage}` は残っていない
 	- `fixed-rainy-day-puddle` page 4: `おうちにもどって、SmokeKid1は「雨の日もたのしかったね」とにっこりしました。きょうもすてきな一日だったね`
 	- `fixed-little-helper` page 4: `SmokeKid1は「またおてつだいしたいな」と思いました。きょうもすてきな一日だったね`
+
+---
+
+## 13. T3-2 P1 opening narration tone fix (2026-05-13)
+
+- 対象: `fixed-sharing-friends`
+- 修正内容:
+	- `openingNarrationTemplate` を教材説明寄りの導入から、読み聞かせ向けのやさしい物語導入トーンへ調整
+	- `{lessonToTeach}` placeholder は維持
+- 非対象:
+	- story text（各ページ本文）
+	- `imagePromptTemplate` / `sampleImageUrl` / `pageVisualRole`
+	- `generate-book.ts` / Reader UI / Admin UI / Firestore rules
+- テスト:
+	- `functions/test/seed-templates.test.ts` に `fixed-sharing-friends.openingNarrationTemplate` が `{lessonToTeach}` を含むことを確認するテストを追加

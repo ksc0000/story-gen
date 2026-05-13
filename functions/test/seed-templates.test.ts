@@ -317,6 +317,14 @@ describe("fixed-little-helper — safety policy", () => {
   });
 });
 
+describe("fixed-sharing-friends — lesson placeholder policy", () => {
+  const template = SEED_TEMPLATES["fixed-sharing-friends"];
+
+  it("openingNarrationTemplate preserves lessonToTeach placeholder", () => {
+    expect(template.fixedStory?.openingNarrationTemplate).toContain("{lessonToTeach}");
+  });
+});
+
 describe("fixed-first-zoo — IMG-002 scene lock (sandbox bleed prevention)", () => {
   const template = SEED_TEMPLATES["fixed-first-zoo"];
 

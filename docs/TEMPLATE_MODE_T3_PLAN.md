@@ -253,16 +253,20 @@ P2 review result: `fixed-rainy-day-puddle` sampleImageUrl
 T3-2 text quality review result:
 
 - 棚卸し完了: [Template Quality Review](./TEMPLATE_QUALITY_REVIEW.md) に本文品質レビューを追加
-- P1: `fixed-rainy-day-puddle` / `fixed-little-helper` の page 4 `parentMessage` 反映一貫性、`fixed-sharing-friends` の opening narration 教材感
+- P1: `fixed-rainy-day-puddle` / `fixed-little-helper` / `fixed-sharing-friends` は code fix 済み（2026-05-13 時点）
 - P2: `fixed-first-zoo` / `fixed-bedtime-good-day` / `fixed-sleepy-moon-adventure` の文長・語り自然化、全体語彙の散らし
 - No action: `fixed-first-birthday` / `fixed-brush-teeth` / `fixed-first-christmas` / `fixed-cardboard-rocket`
 
 T3-2 P1 text fix result:
 
-- 対象: `fixed-rainy-day-puddle`, `fixed-little-helper`
-- 実施: page 4 `textTemplatesByAge` の全 age bucket に `{parentMessage}` を保持
-- 非対象: `fixed-sharing-friends`, story structure, image prompt, UI, `generate-book.ts`
-- 期待効果: smoke script / user input の `parentMessage` が age band を問わず最終ページへ反映
+- 対象: `fixed-rainy-day-puddle`, `fixed-little-helper`, `fixed-sharing-friends`
+- 実施:
+	- `fixed-rainy-day-puddle` / `fixed-little-helper`: page 4 `textTemplatesByAge` の全 age bucket に `{parentMessage}` を保持
+	- `fixed-sharing-friends`: `openingNarrationTemplate` を教材トーンから物語導入トーンへ調整し、`{lessonToTeach}` を維持
+- 非対象: story structure, image prompt, sampleImageUrl, UI, `generate-book.ts`
+- 期待効果:
+	- smoke script / user input の `parentMessage` が age band を問わず最終ページへ反映
+	- `fixed-sharing-friends` の導入文が読み聞かせ向けの自然なトーンになる
 
 T3-2 P1 text fix sync/smoke completed:
 
