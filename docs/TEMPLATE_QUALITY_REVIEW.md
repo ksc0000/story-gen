@@ -312,3 +312,17 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 	- `generate-book.ts` / Reader UI / Admin UI / Firestore rules
 - テスト:
 	- `functions/test/seed-templates.test.ts` に `fixed-sharing-friends.openingNarrationTemplate` が `{lessonToTeach}` を含むことを確認するテストを追加
+
+### 13.1 Sync / Smoke Verification (2026-05-13)
+
+- 実装 commit: `228f681`
+- Firestore sync:
+	- `template:sync:check -> template:sync:write -> template:sync:check` を実施
+	- 結果: `target templates count = 10`、`fixed-sharing-friends` を含む fixed_template 10本すべて drift なし
+- 単体 smoke:
+	- template: `fixed-sharing-friends`
+	- bookId: `IVNDnyyajAMmxLvuCKoz`
+	- status: `completed` / pages: 4 / page status: all `completed`
+	- openingNarration 実値: `きょうは、SmokeKid1が おともだちと すごすなかで、sharingの あたたかさに そっと きづいていく おはなしです。`
+	- page 4 実値: `きょうもすてきな一日だったね`
+	- 未展開 placeholder 残存: なし（`{lessonToTeach}` は openingNarration で展開済み）

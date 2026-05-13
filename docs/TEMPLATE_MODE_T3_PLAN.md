@@ -280,3 +280,16 @@ T3-2 P1 text fix sync/smoke completed:
 	- 両方 `status = completed` / `progress = 100`
 	- page 4 に `parentMessage` が反映
 	- 未展開の `{parentMessage}` は残っていない
+
+T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
+
+- 対象 commit: `228f681`
+- Firestore sync: `template:sync:check -> template:sync:write -> template:sync:check` 完了
+- sync 結果: `target templates count = 10`、fixed_template 10本すべて drift なし
+- 単体 smoke:
+	- template: `fixed-sharing-friends`
+	- bookId: `IVNDnyyajAMmxLvuCKoz`
+	- status: `completed` / pages: 4 / page status: all `completed`
+	- openingNarration（実測）: `きょうは、SmokeKid1が おともだちと すごすなかで、sharingの あたたかさに そっと きづいていく おはなしです。`
+	- page 4（実測）: `きょうもすてきな一日だったね`
+	- placeholder 展開: `{lessonToTeach}` は openingNarration で展開済み、未展開残存なし
