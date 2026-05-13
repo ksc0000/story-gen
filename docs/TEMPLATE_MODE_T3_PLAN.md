@@ -1936,6 +1936,76 @@ Reason:
 - Keep creative image quality and story composition review as a separate task.
 - Use production observations before adding more 8-page fixed_template variants.
 
+## T3-3h-3 Post-rollout Monitoring Record
+
+### Status
+
+monitoring.
+
+### Purpose
+
+Record post-rollout monitoring signals for the controlled 8-page fixed_template rollout.
+
+### Current Rollout State
+
+| item | result | notes |
+| --- | --- | --- |
+| Controlled rollout execution | Go | T3-3h-2 completed. |
+| Build | pass | `npm --prefix functions run build` passed. |
+| Sync check | pass | target templates count: `12`, drift: none. |
+| Smoke | pass | Both 8p templates completed with 8 pages. |
+| Inspect | pass | Both expected 8 / actual 8. |
+| Existing 4p regression spot-check | pass | Existing 4p templates remain active and 4 pages. |
+
+### Initial Monitoring Baseline
+
+| template | smoke bookId | pages | status | failed | fallback | inspect | placeholders | page numbers |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | `SLCwHBiveY7bxGZ7OtYD` | 8 | completed | 0 | 0 | pass | none | `0..7` |
+| `fixed-first-zoo-8p` | `Dg0VVej8As2NwcTai9Zy` | 8 | completed | 0 | 0 | pass | none | `0..7` |
+
+### Real User-facing Observation
+
+| item | result | notes |
+| --- | --- | --- |
+| first real user-facing 8p creation | not yet observed | Record when available. |
+| user-facing Reader check | not yet observed | Record when available. |
+| user-facing Create selection check | not yet observed | Record when available. |
+| Admin Review check after user-facing creation | not yet observed | Record when available. |
+| user-reported issue | none observed | No issue recorded at this point. |
+
+### Monitoring Checklist
+
+| area | signal | current result | hold condition |
+| --- | --- | --- | --- |
+| Create | 8p template selectable | baseline pass | template missing or confusing |
+| Generation | generated book has 8 pages | baseline pass | actual pages != 8 |
+| Generation | all page statuses completed | baseline pass | failed page generation |
+| Image generation | fallback count | baseline pass: 0 | fallback unexpectedly high |
+| Reader | page 1 to page 8 navigation | baseline pass | navigation fails |
+| Reader | final page visible | baseline pass | final page missing or unreadable |
+| Admin | 8 pages visible | baseline pass | admin cannot inspect 8p book |
+| Existing 4p | existing templates still active | baseline pass | 4p regression |
+| Errors | P0/P1 | none observed | any P0/P1 appears |
+
+### Rollout Monitoring Decision
+
+**Rollout status:** Go / Monitoring
+
+Reason:
+- Controlled rollout execution passed.
+- Both 8p smoke books completed and inspected successfully.
+- Existing 4p templates remain active and unchanged.
+- No P0/P1 blocker has been observed.
+- Real user-facing observation is not yet available and should be recorded when available.
+
+### Follow-up
+
+- Record first real user-facing 8p creation result when available.
+- Record Admin Review observation for the first real user-facing 8p book.
+- Consider separate creative quality review for image quality and story composition.
+- Decide whether to expand additional 8-page fixed_template variants after monitoring.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
