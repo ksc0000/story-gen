@@ -428,39 +428,31 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 
 ### 14.4 散らし候補（将来の改善候補）
 
-#### 【候補 A】Opening 「きょうは とくべつな日」構文の連続 ★★★
+#### 【候補 A】Opening 「きょうは とくべつな日」構文の連続 ★★★ → **resolved-in-code (2026-05-13)**
 
 対象: `fixed-first-zoo` / `fixed-first-birthday` / `fixed-first-christmas`
 
-現状:
-- fixed-first-zoo opening: 「きょうは **とくべつな日**。{childName}は {familyMembers}と いっしょに、はじめての どうぶつえんへ でかけます。」
-- fixed-first-birthday opening: 「きょうは **とくべつな おいわいの日**。{childName}と {familyMembers}の たんじょうびの思い出が はじまります。」
-- fixed-first-christmas opening: 「きらきらの ひかりに つつまれた よる。{childName}と {familyMembers}の **とくべつな** クリスマスが はじまります。」
+実装（`fixed-first-birthday` のみ修正）:
+- 変更前: 「きょうは とくべつな おいわいの日。{childName}と {familyMembers}の たんじょうびの思い出が はじまります。」
+- 変更後: 「ろうそくの あかりが、そっと ゆれる日。{childName}と {familyMembers}の たんじょうびの思い出が はじまります。」
+- `fixed-first-christmas` は opening が「きらきらのひかりにつつまれた よる」で独自トーンがあり変更不要
 
-問題: 「memories / seasonal」カテゴリ3本の opening が「とくべつ」「はじまります」の共通語で始まる。ユーザーが「はじめて系」テンプレを複数読む場面で冒頭の印象が似る。
-
-改善方向:
-- `fixed-first-birthday`: 「{childName}の たんじょうびの朝。おへやに ふうせんが ならんで、{familyMembers}の えがおが あつまります。」のように「とくべつな日」を使わずに特別感を表現
-- `fixed-first-christmas`: 現状 opening が「きらきらのひかりにつつまれた よる」で独自トーンがあるため優先度低
-
-優先度: **P2**（1〜2本の opening 修正で効果が出る）
+優先度: ~~**P2**~~ → **resolved-in-code**
 
 ---
 
-#### 【候補 B】P3「みんなのこころもぽかぽかになります」ほぼ同一文 ★★★
+#### 【候補 B】P3「みんなのこころもぽかぽかになります」ほぼ同一文 ★★★ → **resolved-in-code (2026-05-13)**
 
 対象: `fixed-first-zoo` P3 preschool_3_4 / general_child  ↔  `fixed-first-birthday` P3 preschool_3_4 / general_child
 
-現状:
-- fixed-first-zoo P3 preschool_3_4: 「いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。**みんなの こころも ぽかぽかに なります。**」
-- fixed-first-birthday P3 preschool_3_4: 「おいわいのうたのあと、{childName}はとびきりのえがおを見せてくれました。**みんなの こころも ぽかぽかです。**」
+実装（`fixed-first-birthday` のみ修正）:
+- 変更前 preschool_3_4: 「おいわいのうたのあと、{childName}は とびきりの えがおを見せてくれました。みんなの こころも ぽかぽかです。」
+- 変更後 preschool_3_4: 「おいわいのうたのあと、{childName}は とびきりの えがおを見せてくれました。みんなの えがおが、ろうそくのひかりみたいに ひろがります。」
+- 変更前 general_child: 「おいわいのうたのあと、{childName}はとびきりのえがおを見せてくれました。みんなの こころも ぽかぽかです。」
+- 変更後 general_child: 「おいわいのうたのあと、{childName}はとびきりのえがおを見せてくれました。みんなの えがおが、ろうそくのひかりみたいに ひろがります。」
+- `fixed-first-zoo` は変更なし
 
-問題: preschool_3_4 / general_child バケットで P3 の締め句がほぼ同一（「みんなのこころも ぽかぽか」）。「はじめて系」2本を連続して読む家庭では新鮮さが薄れる。
-
-改善方向:
-- `fixed-first-birthday` preschool_3_4 / general_child: 「{childName}の えがおが、みんなの いちばんの たからものです。」などに変更することで差別化が可能
-
-優先度: **P2**（2バケット・1テンプレの小差分で済む）
+優先度: ~~**P2**~~ → **resolved-in-code**
 
 ---
 
@@ -518,14 +510,14 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 
 ### 14.5 まとめ
 
-| 候補 | 内容 | 対象テンプレ | 優先度 | 推奨タイミング |
+| 候補 | 内容 | 対象テンプレ | 優先度 | 状態 |
 | --- | --- | --- | --- | --- |
-| A | Opening「とくべつな日」構文 | first-birthday（1本主対象） | P2 | T3-2 完了後、次イテレーション |
-| B | P3「みんなのこころもぽかぽか」重複 | first-zoo / first-birthday（2本） | P2 | T3-2 完了後、個別修正 |
-| C | 「〜をみつけました」連続 | 4本 | P3 | T3-3 以降の計画的な散らし |
-| D | 「きらきら」多用 | 8本 | P3 | T3-3 以降、文脈別で個別対応 |
-| E | P3「にっこり」連続 | 5〜6本 | P3 | T3-3 以降（優先度低） |
+| A | Opening「とくべつな日」構文 | first-birthday（1本主対象） | P2 | **resolved-in-code (2026-05-13)** |
+| B | P3「みんなのこころもぽかぽか」重複 | first-zoo / first-birthday（2本） | P2 | **resolved-in-code (2026-05-13)** |
+| C | 「〜をみつけました」連続 | 4本 | P3 | 記録済み / T3-3 以降 |
+| D | 「きらきら」多用 | 8本 | P3 | 記録済み / T3-3 以降 |
+| E | P3「にっこり」連続 | 5〜6本 | P3 | 記録済み / T3-3 以降（優先度低） |
 
-**今回の棚卸しで確認された最重要点**:
-- **P2 対応推奨**: 候補 A（first-birthday opening）と 候補 B（P3 ぽかぽか）の 2 点。変更は 1〜2本・1〜2 バケット程度で小さく、読み聞かせ体験の差別化効果が高い
-- **P3 候補（記録のみ）**: 候補 C〜E は T3-2 スコープ外として記録。テンプレート本数が増える前に着手することが望ましい
+**T3-2 P2 vocab 棚卸し結果**:
+- **候補 A・B**: `fixed-first-birthday` 側の opening / P3（preschool_3_4 / general_child）を修正。`fixed-first-zoo` は変更なし
+- **P3 候補（C〜E）**: T3-2 スコープ外として記録。テンプレート本数が増える前に着手することが望ましい

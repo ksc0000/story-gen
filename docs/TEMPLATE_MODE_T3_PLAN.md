@@ -281,6 +281,22 @@ T3-2 P1 text fix sync/smoke completed:
 	- page 4 に `parentMessage` が反映
 	- 未展開の `{parentMessage}` は残っていない
 
+---
+
+## T3-2 P2 vocabulary dispersion: fixed-first-birthday (2026-05-13)
+
+- 対象: `fixed-first-birthday` のみ（`fixed-first-zoo` は変更なし）
+- 実装 commit: （後記）
+- 変更内容:
+  - Candidate A — `openingNarrationTemplate`:
+    - 変更前: 「きょうは とくべつな おいわいの日。{childName}と {familyMembers}の たんじょうびの思い出が はじまります。」
+    - 変更後: 「ろうそくの あかりが、そっと ゆれる日。{childName}と {familyMembers}の たんじょうびの思い出が はじまります。」
+  - Candidate B — P3 `emotional_closeup` / `preschool_3_4` / `general_child`:
+    - 変更前（両バケット共通末尾）: 「みんなの こころも ぽかぽかです。」
+    - 変更後: 「みんなの えがおが、ろうそくのひかりみたいに ひろがります。」
+- 非対象: imagePromptTemplate / pageVisualRole / sampleImageUrl / generate-book.ts / Reader UI / Admin UI
+
+
 T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
 
 - 対象 commit: `228f681`

@@ -398,7 +398,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         withFixedImagePromptSafety("Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
       openingNarrationTemplate:
-        "きょうは とくべつな おいわいの日。{childName}と {familyMembers}の たんじょうびの思い出が はじまります。",
+        "ろうそくの あかりが、そっと ゆれる日。{childName}と {familyMembers}の たんじょうびの思い出が はじまります。",
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は、{familyMembers}といっしょにおたんじょうびのじゅんびをはじめました。",
@@ -434,13 +434,13 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           textTemplate: "おいわいのうたのあと、{childName}はとびきりのえがおを見せてくれました。",
           baby_toddler: "{childName}、にこにこ。うれしいね。",
           preschool_3_4:
-            "おいわいのうたのあと、{childName}は とびきりの えがおを見せてくれました。みんなの こころも ぽかぽかです。",
+            "おいわいのうたのあと、{childName}は とびきりの えがおを見せてくれました。みんなの えがおが、ろうそくのひかりみたいに ひろがります。",
           early_reader_5_6:
             "おいわいのうたのあと、{childName}は とびきりの えがおを 見せてくれました。たくさんの「おめでとう」が、心のなかで ひかる ほしみたいに のこります。",
           early_elementary_7_8:
             "おいわいのうたのあと、{childName}は とびきりの えがおを 見せてくれました。みんなに だいじに 思われていることが、ことばよりも まっすぐに 伝わる しゅんかんでした。",
           general_child:
-            "おいわいのうたのあと、{childName}はとびきりのえがおを見せてくれました。みんなの こころも ぽかぽかです。",
+            "おいわいのうたのあと、{childName}はとびきりのえがおを見せてくれました。みんなの えがおが、ろうそくのひかりみたいに ひろがります。",
           pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
             withFixedImagePromptSafety("Close-up of the child's delighted face after the birthday song, cheeks glowing and eyes bright. The child holds a small spoon or keepsake near the chest while family members lean in with warm smiles in soft focus. A tiny ribbon motif appears on nearby party decor. Golden warm light and gentle pastel accents. Soft watercolor picture book style, intimate emotional framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
