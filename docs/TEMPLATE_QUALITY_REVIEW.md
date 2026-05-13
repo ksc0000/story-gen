@@ -371,3 +371,161 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 	- image generation: page 0: 30,045ms / page 1: 17,064ms / page 2: 16,094ms / page 3: 18,796ms (all successful)
 	- characterConsistencyMode: all_pages ✓
 	- 語り自然化テキスト: page 3 `early_elementary_7_8` のみ置換済み、無エラー完了
+
+---
+
+## 14. T3-2 P2 語彙・表現重複棚卸し（docs-only review、2026-05-13）
+
+### 14.1 背景と方針
+
+- T3-2 P2 個別テンプレ改善（fixed-first-zoo / fixed-bedtime-good-day / fixed-sleepy-moon-adventure）はコード fix 済み（2026-05-13）
+- 残タスク「全体語彙の散らし / 表現重複緩和」を docs-only で実施
+- 対象: `functions/src/seed-templates.ts` 固定テンプレ10本の `textTemplatesByAge` 全バケット・`openingNarrationTemplate`
+- 本セクションはコード変更なし。将来の改善候補を記録する
+
+---
+
+### 14.2 出現頻度の高い語彙一覧
+
+| 語彙 | 出現本数 / 10 | 主な使用箇所 |
+| --- | --- | --- |
+| きらきら | 8/10 | P1〜P3 視覚描写・目の輝き・星・光・opening |
+| やさしい | 9/10 | 光・雨・夜・月光・表情など広範囲 |
+| うれしい / うれしくなりました | 9/10 | P2〜P3 感情描写（全バケット） |
+| にっこり | 6/10 | P3 感情クライマックスの笑顔描写 |
+| こころが〜になりました | 5/10 | P3 感情締め句（ぽかぽか / ふわっと / やわらかく など） |
+| ぽかぽか | 4/10 | P3「こころはぽかぽかになりました」 |
+| まどのそと | 3/10 | P1 establishing 冒頭（sleepy-moon / bedtime-good-day / rainy-day-puddle） |
+| とくべつな日 / とくべつ | 3/10 | opening（first-zoo / first-birthday / first-christmas） |
+| 〜をみつけました | 4/10 | P1 冒頭（sleepy-moon / cardboard-rocket / rainy-day-puddle / little-helper） |
+| ふわっと | 2/10 | bedtime 系 P3「こころがふわっとやわらかく」 |
+
+---
+
+### 14.3 絵本らしい反復として維持してよい表現
+
+#### 「やさしい」
+- 各テンプレで形容対象が異なる（光・雨・夜・月光・まなざし）。同語が出現しても文脈干渉は小さい。
+- 判定: **維持**
+
+#### 「うれしい / うれしくなりました」
+- 子どもへの読み聞かせで絵本が繰り返す核心語。各テンプレで喜びの対象が異なる（発見・誕生日・手伝いの感謝など）。
+- 判定: **維持**
+
+#### 「ふわっと」（bedtime 系 2本: fixed-bedtime-good-day / fixed-sharing-friends P3）
+- 就寝・安心感に特化した用途。bedtime カテゴリ内での重複は「このジャンルらしさ」として機能する。
+- 判定: **維持**（bedtime カテゴリ内に留まる限り許容）
+
+#### 「ぽかぽか」（baby_toddler / preschool_3_4 バケット）
+- 幼児向けバケットでの身体感覚語として定番。年齢別定型表現として機能する。
+- 判定: **維持**（ただし P3 構文重複は後述の候補 B で緩和推奨）
+
+#### page 4「{parentMessage}」統一（全10本）
+- quiet_ending ページが全10本で `{parentMessage}` 単体になっているのは仕様。親のメッセージを引き立てる無色な構成として意図的。
+- 判定: **仕様として維持**
+
+---
+
+### 14.4 散らし候補（将来の改善候補）
+
+#### 【候補 A】Opening 「きょうは とくべつな日」構文の連続 ★★★
+
+対象: `fixed-first-zoo` / `fixed-first-birthday` / `fixed-first-christmas`
+
+現状:
+- fixed-first-zoo opening: 「きょうは **とくべつな日**。{childName}は {familyMembers}と いっしょに、はじめての どうぶつえんへ でかけます。」
+- fixed-first-birthday opening: 「きょうは **とくべつな おいわいの日**。{childName}と {familyMembers}の たんじょうびの思い出が はじまります。」
+- fixed-first-christmas opening: 「きらきらの ひかりに つつまれた よる。{childName}と {familyMembers}の **とくべつな** クリスマスが はじまります。」
+
+問題: 「memories / seasonal」カテゴリ3本の opening が「とくべつ」「はじまります」の共通語で始まる。ユーザーが「はじめて系」テンプレを複数読む場面で冒頭の印象が似る。
+
+改善方向:
+- `fixed-first-birthday`: 「{childName}の たんじょうびの朝。おへやに ふうせんが ならんで、{familyMembers}の えがおが あつまります。」のように「とくべつな日」を使わずに特別感を表現
+- `fixed-first-christmas`: 現状 opening が「きらきらのひかりにつつまれた よる」で独自トーンがあるため優先度低
+
+優先度: **P2**（1〜2本の opening 修正で効果が出る）
+
+---
+
+#### 【候補 B】P3「みんなのこころもぽかぽかになります」ほぼ同一文 ★★★
+
+対象: `fixed-first-zoo` P3 preschool_3_4 / general_child  ↔  `fixed-first-birthday` P3 preschool_3_4 / general_child
+
+現状:
+- fixed-first-zoo P3 preschool_3_4: 「いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。**みんなの こころも ぽかぽかに なります。**」
+- fixed-first-birthday P3 preschool_3_4: 「おいわいのうたのあと、{childName}はとびきりのえがおを見せてくれました。**みんなの こころも ぽかぽかです。**」
+
+問題: preschool_3_4 / general_child バケットで P3 の締め句がほぼ同一（「みんなのこころも ぽかぽか」）。「はじめて系」2本を連続して読む家庭では新鮮さが薄れる。
+
+改善方向:
+- `fixed-first-birthday` preschool_3_4 / general_child: 「{childName}の えがおが、みんなの いちばんの たからものです。」などに変更することで差別化が可能
+
+優先度: **P2**（2バケット・1テンプレの小差分で済む）
+
+---
+
+#### 【候補 C】「〜をみつけました」P1 冒頭句の連続 ★★
+
+対象: `fixed-sleepy-moon-adventure` / `fixed-cardboard-rocket` / `fixed-rainy-day-puddle` / `fixed-little-helper`（P2）
+
+現状:
+- fixed-sleepy-moon-adventure P1 textTemplate: 「ベッドのうえで、{childName}はまどのそとのおつきさまを**見つけました**。」
+- fixed-cardboard-rocket P1 textTemplate: 「{childName}はへやのすみで、ダンボールロケットを**見つけました**。」
+- fixed-rainy-day-puddle P1 textTemplate: 「まどのそとには、やさしい雨がふっていました。{childName}は、きらきらのみずたまりを**見つけます**。」
+- fixed-little-helper P2 textTemplate: 「{childName}は、できそうなおてつだいを**見つけました**。」
+
+問題: 4本が「〜をみつけました / みつけます」でページを開く。各テンプレ内では自然だが、テンプレ横断で比較すると冒頭語彙パターンが重なる。
+
+改善方向:
+- `fixed-cardboard-rocket` P1: 「{childName}は、へやのすみの ダンボールロケットに 目をとめました。」
+- `fixed-little-helper` P2: 「{childName}は、ちょっと できそうな おてつだいに 気づきました。」
+
+優先度: **P3**（テンプレ横断での印象差別化。将来の計画的な散らし対応）
+
+---
+
+#### 【候補 D】「きらきら」の多用 ★★
+
+対象: 8/10本（fixed-first-zoo / fixed-first-birthday / fixed-bedtime-good-day / fixed-first-christmas / fixed-sleepy-moon-adventure / fixed-cardboard-rocket / fixed-rainy-day-puddle / fixed-little-helper opening 除き）
+
+現状の分布:
+- 目の輝き（視覚的瞬間）: first-zoo P2 / first-birthday P2（ろうそく）/ bedtime-good-day P2（にこにこ）
+- 星・夜空（想像・冒険）: sleepy-moon P2 / cardboard-rocket P2・P3
+- クリスマス装飾: first-christmas P1 / opening
+- 水たまり: rainy-day-puddle P1
+
+問題: 8/10本に登場するため、EhonAI 全体の絵本が「きらきら」で埋まる印象になりうる。ただし文脈（目の輝き・星・光・水面）ごとに意味が異なるため単純削減は不自然。
+
+改善方向:
+- 「目の輝き」文脈で first-zoo P2 と first-birthday P2 が重なるのが最も近い重複。どちらかを「かがやきます」「ぱっと 明るくなりました」などに差し替えると印象が変わる
+- 星・夜空文脈（sleepy-moon / cardboard-rocket）は用途が独立しており維持でよい
+
+優先度: **P3**（機能語として広く使われており、文脈別の最適語への個別置き換えが望ましい。将来 individual fix 候補として記録）
+
+---
+
+#### 【候補 E】P3「にっこり」+ 締め句の連続 ★
+
+対象: first-zoo P3 / brush-teeth P3 / first-christmas P3 / sharing-friends P3 / rainy-day-puddle P4（計5〜6本）
+
+問題: P3（emotional_closeup）の結びが「にっこり」「にこにこ」で締まるテンプレが多数存在する。各テンプレ内では最も自然な笑顔語だが、構造的に同じポジションで繰り返す。
+
+改善方向: 「えがおを みせてくれました」「うれしそうに わらいました」などバリエーションを設けることで読み聞かせ体験の差別化が可能。ただし「にっこり」の完全排除は不自然。
+
+優先度: **P3**（差別化効果は小さい。全体的な均質化防止の観点のみで記録）
+
+---
+
+### 14.5 まとめ
+
+| 候補 | 内容 | 対象テンプレ | 優先度 | 推奨タイミング |
+| --- | --- | --- | --- | --- |
+| A | Opening「とくべつな日」構文 | first-birthday（1本主対象） | P2 | T3-2 完了後、次イテレーション |
+| B | P3「みんなのこころもぽかぽか」重複 | first-zoo / first-birthday（2本） | P2 | T3-2 完了後、個別修正 |
+| C | 「〜をみつけました」連続 | 4本 | P3 | T3-3 以降の計画的な散らし |
+| D | 「きらきら」多用 | 8本 | P3 | T3-3 以降、文脈別で個別対応 |
+| E | P3「にっこり」連続 | 5〜6本 | P3 | T3-3 以降（優先度低） |
+
+**今回の棚卸しで確認された最重要点**:
+- **P2 対応推奨**: 候補 A（first-birthday opening）と 候補 B（P3 ぽかぽか）の 2 点。変更は 1〜2本・1〜2 バケット程度で小さく、読み聞かせ体験の差別化効果が高い
+- **P3 候補（記録のみ）**: 候補 C〜E は T3-2 スコープ外として記録。テンプレート本数が増える前に着手することが望ましい

@@ -254,7 +254,7 @@ T3-2 text quality review result:
 
 - 棚卸し完了: [Template Quality Review](./TEMPLATE_QUALITY_REVIEW.md) に本文品質レビューを追加
 - P1: `fixed-rainy-day-puddle` / `fixed-little-helper` / `fixed-sharing-friends` は code fix 済み（2026-05-13 時点）
-- P2: ~~`fixed-first-zoo` / `fixed-bedtime-good-day` / `fixed-sleepy-moon-adventure` の文長・語り自然化~~ は code fix 済み（2026-05-13）。残タスクは全体語彙の散らし
+- P2: ~~`fixed-first-zoo` / `fixed-bedtime-good-day` / `fixed-sleepy-moon-adventure` の文長・語り自然化~~ は code fix 済み（2026-05-13）。全体語彙の散らしは docs-only 棚卸し完了（2026-05-13、Section 14 参照）
 - No action: `fixed-first-birthday` / `fixed-brush-teeth` / `fixed-first-christmas` / `fixed-cardboard-rocket`
 
 T3-2 P1 text fix result:
@@ -361,3 +361,32 @@ T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
 	- image generation: page 0: 30,045ms / page 1: 17,064ms / page 2: 16,094ms / page 3: 18,796ms (all successful, no failures)
 	- characterConsistencyMode: all_pages ✓
 	- 結果: 語り自然化テキストで問題なく生成完了
+
+---
+
+## T3-2 P2 全体語彙棚卸し（docs-only、2026-05-13）
+
+- 対象: `functions/src/seed-templates.ts` fixed_template 10本の全 `textTemplatesByAge` バケット・`openingNarrationTemplate`
+- 実施内容: docs-only 棚卸し（コード変更なし）
+- 棚卸し結果詳細: [TEMPLATE_QUALITY_REVIEW.md Section 14](./TEMPLATE_QUALITY_REVIEW.md)
+
+### 維持判定（絵本らしい反復）
+
+- 「やさしい」「うれしい」: 各テンプレで対象が異なるため文脈干渉なし → **維持**
+- 「ふわっと」: bedtime カテゴリ内に収まる → **維持**
+- 「ぽかぽか」（baby_toddler / preschool_3_4）: 幼児向け定型語 → **維持**
+- page 4 `{parentMessage}` 統一: 仕様 → **維持**
+
+### 散らし候補サマリ
+
+| 候補 | 対象 | 優先度 |
+| --- | --- | --- |
+| A: Opening「とくべつな日」構文 | first-birthday（1本主対象） | P2 |
+| B: P3「みんなのこころもぽかぽか」重複 | first-zoo / first-birthday（2本） | P2 |
+| C: 「〜をみつけました」連続 | 4本 | P3 |
+| D: 「きらきら」多用（8/10本） | 8本 | P3 |
+| E: P3「にっこり」連続 | 5〜6本 | P3 |
+
+- P2 候補（A・B）: T3-2 完了後、次イテレーションで個別修正推奨
+- P3 候補（C〜E）: T3-3 以降の計画的な散らし対応として記録
+
