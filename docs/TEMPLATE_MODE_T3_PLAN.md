@@ -1734,6 +1734,129 @@ Reason:
 - Consider a separate creative quality review for image quality and story composition.
 - Use rollout observations to decide whether to add more 8-page fixed_template variants.
 
+## T3-3h-1 Controlled Production Rollout Execution Prep
+
+### Status
+
+completed.
+
+### Purpose
+
+Identify the concrete execution path for controlled production rollout of the validated 8-page fixed_template pilots without executing production exposure in this task.
+
+### Current Rollout Readiness
+
+| item | result | notes |
+| --- | --- | --- |
+| T3-3g-5 manual QA | pass | Manual admin browser QA passed. |
+| T3-3h rollout plan | ready | Production rollout readiness is `Ready for controlled rollout`. |
+| Production candidate | Go | 8-page fixed_template pilots passed display and interaction QA. |
+
+### Rollout Target
+
+| template | expected pages | current registration | rollout exposure status | notes |
+| --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | 8 | source registered; compiled seed artifact stale | visible in T3-3g-5 manual Create UI QA; target sync still needs execution-time check | `functions/src/seed-templates.ts` has `active: true`, `pageCount: 8`, and `layoutVariant: "8_page"`. |
+| `fixed-first-zoo-8p` | 8 | source registered; compiled seed artifact stale | visible in T3-3g-5 manual Create UI QA; target sync still needs execution-time check | `functions/src/seed-templates.ts` has `active: true`, `pageCount: 8`, and `layoutVariant: "8_page"`. |
+
+### Findings
+
+#### Template registration / seed status
+
+- `functions/src/seed-templates.ts` includes both `fixed-first-birthday-8p` and `fixed-first-zoo-8p`.
+- Both 8p source templates are `creationMode: "fixed_template"`, `active: true`, and use `fixedStory.pageCount: 8` plus `fixedStory.layoutVariant: "8_page"`.
+- Both 8p source templates keep the existing 4p variants (`fixed-first-birthday`, `fixed-first-zoo`) unchanged.
+- `functions/test/seed-templates.test.ts` includes both 8p templates in `FIXED_TEMPLATE_IDS`, expected page-role sequences, expected sample images, and the page-count / layout-variant contract.
+- No template-level `hidden`, `visibility`, `candidate`, or production flag was found for fixed templates. The effective exposure gate is the Firestore `templates` document being `active: true`.
+- `scripts/sync-fixed-template-seeds.js` reads `SEED_TEMPLATES` from `functions/lib/seed-templates.js`, validates page count / layout variant, and writes only `templates/*`.
+- Local compiled seed artifact is stale in this workspace: `node scripts/create-template-smoke-books.js --list-templates` listed 6 fixed templates and did not include either 8p template. The rollout execution task must rebuild `functions/lib` before seed sync or smoke creation scripts use the 8p source data.
+- `functions/lib` is generated output and must not be committed after that rebuild.
+
+#### Create UI exposure
+
+- `src/lib/hooks/use-templates.ts` loads Firestore `templates` where `active == true`, ordered by `order`.
+- `src/app/(app)/create/theme/page.tsx` filters by `creationMode` and category, then renders matching templates; there is no additional 8p-specific hidden flag or feature flag.
+- `src/components/theme-card.tsx` is used for template cards; 4p / 8p distinction comes from template name/description/metadata and was manually verified in T3-3g-5.
+- `src/app/(app)/create/input/page.tsx` derives fixed template page count from `fixedStory.pageCount` or `fixedStory.pages.length`, displays `{fixedTemplatePageCount}ページ構成`, and does not allow manual page-count override for fixed templates.
+- `src/app/(app)/create/style/page.tsx` uses `template.fixedStory.pages.length` for fixed-template `pageCount` and writes that value into the created book payload.
+- Therefore, once the 8p template documents are active in the target Firestore environment, Create UI exposure does not require a new code change.
+
+#### Reader / Admin dependency
+
+- `src/components/book-viewer.tsx` builds reader items dynamically from the `pages` array and labels story pages as `current / storyPageCount`; it is not hard-coded to 4 pages.
+- `src/app/(app)/book/page.tsx` passes book/page data into `BookViewer`; T3-3g-5 already verified both 8p smoke books in an authenticated manual browser session.
+- `src/app/(app)/admin/book-quality-review/page.tsx` renders page status cards by mapping the loaded `pages` collection and includes a page-specific regeneration action.
+- T3-3g-5 verified Admin Review for both 8p smoke books. No Reader/Admin implementation change is required for rollout prep.
+- Regeneration or DB-mutating Admin actions must remain out of scope during rollout verification unless explicitly approved in a separate execution task.
+
+#### Deployment / sync operations
+
+- `package.json` exposes `template:sync:check`, `template:sync:write`, `smoke:create-template-books`, `smoke:inspect`, and `deploy:hosting`.
+- `functions/package.json` exposes `npm run build`, which refreshes generated `functions/lib` artifacts used by the seed sync and smoke scripts.
+- `scripts/sync-fixed-template-seeds.js` requires `GOOGLE_APPLICATION_CREDENTIALS`, validates the service account project id against `story-gen-8a769`, and can dry-run by default or write with `--write`.
+- Service account JSON contents, credentials, tokens, cookies, and email addresses must not be documented or committed.
+- `service-account.json` is ignored by `.gitignore` and was not read.
+- No production exposure, seed sync write, smoke write, deploy, image regeneration, or DB update was executed in this prep task.
+
+### Required Changes for Controlled Rollout
+
+| area | required change | required now? | notes |
+| --- | --- | --- | --- |
+| seed templates | No source change; rebuild generated `functions/lib` before execution because the local compiled seed is stale | yes, as an execution pre-step | Do not commit generated `functions/lib` files. |
+| Create UI | No code change identified | no | UI already renders active Firestore templates and fixed page count metadata. |
+| Reader | No code change identified | no | Dynamic pages array handling passed T3-3g-5. |
+| Admin Review | No code change identified | no | Page list/status UI passed T3-3g-5; do not trigger regeneration during rollout verification. |
+| docs | Record execution prep and later rollout results | yes | This section records prep; execution results should be separate. |
+| deploy/sync | Sync/check active template docs in target environment after rebuilding compiled seed | yes | Use dry-run check before write. Hosting/functions deploy only if target environment is not already on the validated code. |
+
+### Proposed Execution Steps
+
+| step | action | command / route | expected result |
+| --- | --- | --- | --- |
+| 1 | Confirm clean working tree | `git status --short` | clean |
+| 2 | Confirm latest rollout plan commits | `git log --oneline --decorate -12` | `0d33296` and `536c09f` or later present |
+| 3 | Rebuild compiled functions artifacts for local execution only | `npm --prefix functions run build` | `functions/lib/seed-templates.js` includes both 8p templates |
+| 4 | Confirm 8p templates are present in compiled seed | `node scripts/create-template-smoke-books.js --list-templates` | both `fixed-first-birthday-8p` and `fixed-first-zoo-8p` listed |
+| 5 | Dry-run template sync for birthday 8p | `npm run template:sync:check -- --template-id=fixed-first-birthday-8p` | before report is clean or shows only expected drift |
+| 6 | Dry-run template sync for zoo 8p | `npm run template:sync:check -- --template-id=fixed-first-zoo-8p` | before report is clean or shows only expected drift |
+| 7 | Write 8p template sync only if dry-runs are acceptable | `npm run template:sync:write -- --template-id=fixed-first-birthday-8p`; `npm run template:sync:write -- --template-id=fixed-first-zoo-8p` | target Firestore `templates/*` has both active 8p templates |
+| 8 | Confirm Create UI exposure in authenticated manual browser | `/create/theme?mode=fixed_template` and `/create/input?...` | 4p / 8p variants are distinguishable |
+| 9 | Create or reuse controlled 8p smoke books as approved | `npm run smoke:create-template-books -- --template-id=<template-id> --dry-run` before any `--write` | no unintended write during planning; write only in rollout execution |
+| 10 | Inspect generated or existing 8p smoke book page count | `node scripts/inspect-template-smoke-book.js <bookId> --expected-page-count=8` | `pagesCount` is 8 and page statuses are complete |
+| 11 | Manual Reader / Create / Admin spot-check | Reader URLs, Create route, Admin review route | no regression |
+| 12 | Restore generated artifacts before commit | `git restore functions/lib/seed-templates.js functions/lib/seed-templates.js.map` if modified | no generated artifacts in commit |
+| 13 | Record rollout execution results | `docs/TEMPLATE_MODE_T3_PLAN.md` | Go / Hold / Conditional |
+
+### Rollback / Hold Execution Path
+
+| trigger | action |
+| --- | --- |
+| 8p template cannot be selected | hold 8p exposure and keep existing 4p templates active |
+| compiled seed still does not include 8p after build | hold rollout and inspect functions build/source state |
+| template sync dry-run reports unexpected drift | hold write and inspect target Firestore template docs |
+| generated 8p book does not have 8 pages | hold rollout and inspect seed/runtime source |
+| Reader navigation fails | hold rollout and keep 8p hidden or unpromoted |
+| Admin cannot inspect 8p books | hold broader rollout |
+| existing 4p template regression | roll back exposure immediately and keep 4p templates active |
+| generated files or secrets appear in git status | do not commit; restore generated files and remove secrets from the commit scope |
+
+### Decision
+
+**Controlled rollout execution readiness:** Conditional
+
+Reason:
+- Source registration, Create UI, Reader, and Admin paths are ready based on T3-3g-5 and code inspection.
+- No code/config implementation change is required for controlled rollout exposure.
+- However, the local compiled seed artifact used by rollout scripts is stale and does not currently include the two 8p templates.
+- Controlled rollout execution can proceed only after refreshing `functions/lib` locally, verifying both 8p templates are present in the compiled seed, and keeping generated artifacts out of the commit.
+
+### Follow-up
+
+- Execute T3-3h-2 Controlled Production Rollout based on the concrete execution path above.
+- Rebuild `functions/lib` locally for the execution task, then restore generated files before committing docs.
+- Record post-rollout monitoring results.
+- Consider a separate creative quality review for image quality and story composition.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
