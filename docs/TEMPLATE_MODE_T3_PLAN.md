@@ -254,7 +254,7 @@ T3-2 text quality review result:
 
 - 棚卸し完了: [Template Quality Review](./TEMPLATE_QUALITY_REVIEW.md) に本文品質レビューを追加
 - P1: `fixed-rainy-day-puddle` / `fixed-little-helper` / `fixed-sharing-friends` は code fix 済み（2026-05-13 時点）
-- P2: `fixed-first-zoo` / `fixed-bedtime-good-day` / `fixed-sleepy-moon-adventure` の文長・語り自然化、全体語彙の散らし
+- P2: ~~`fixed-first-zoo` / `fixed-bedtime-good-day` / `fixed-sleepy-moon-adventure` の文長・語り自然化~~ は code fix 済み（2026-05-13）。残タスクは全体語彙の散らし
 - No action: `fixed-first-birthday` / `fixed-brush-teeth` / `fixed-first-christmas` / `fixed-cardboard-rocket`
 
 T3-2 P1 text fix result:
@@ -339,3 +339,25 @@ T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
 	- image generation: 17,332–30,653 ms (all successful, no failures)
 	- characterConsistencyMode: all_pages ✓
 	- 結果: 短文化・入眠感優先のテキストで問題なく生成完了
+
+---
+
+## T3-2 P2 narrative naturalization: fixed-sleepy-moon-adventure (2026-05-13)
+
+- 対象: `fixed-sleepy-moon-adventure` page 3（`emotional_closeup`）の `early_elementary_7_8` テキスト
+- 修正内容:
+	- 変更前: `おつきさまが「きょうも だいじょうぶ」と そっと 見まもってくれているようでした。{childName}は、じぶんの きもちが しずかに ととのっていくのを かんじます。`
+	- 変更後: `おつきさまが「きょうも だいじょうぶ」と そっと 見まもってくれているようでした。{childName}の こころは、しずかに ほぐれていきます。`
+- 目的: 直接的な説明感を弱め、寝る前に読みやすい余韻へ自然化
+- 非対象: story structure / openingNarrationTemplate / imagePromptTemplate / sampleImageUrl / pageVisualRole / generate-book.ts
+- 検証: functions tsc / npm test / root tsc / lint / vitest すべて pass
+- 対象 commit: `4a89eea`
+- Firestore sync: `template:sync:check -> template:sync:write -> template:sync:check` 完了
+- sync 結果: `target templates count = 10`、fixed_template 10本すべて drift なし
+- 単体 smoke:
+	- template: `fixed-sleepy-moon-adventure`
+	- bookId: `j9TMKRxoaPVNnaR3QClU`
+	- status: `completed` / progress: `100` / pages: 4 / page status: all `completed`
+	- image generation: page 0: 30,045ms / page 1: 17,064ms / page 2: 16,094ms / page 3: 18,796ms (all successful, no failures)
+	- characterConsistencyMode: all_pages ✓
+	- 結果: 語り自然化テキストで問題なく生成完了
