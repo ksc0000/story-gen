@@ -473,6 +473,107 @@ docs-only audit completed.
 
 判断: 生成パイプライン（`generate-book.ts`）は `fixedStory.pages` を動的処理しており、ラスボスではない。先に sync/test/smoke/create UI の4ページ固定前提を設計で解消すれば、T3-3b に進行可能。
 
+---
+
+## T3-3b Data Model Proposal: Page Count Contract (2026-05-13)
+
+### Status
+
+docs-only proposal.
+
+### Decision Summary
+
+| decision | value |
+| --- | --- |
+| runtime source of truth | `fixedStory.pages.length` |
+| optional metadata | `pageCount?: 4 | 8 | 12` |
+| optional layout metadata | `layoutVariant?: "4_page" | "8_page" | "12_page"` |
+| compatibility | metadata なし既存テンプレは `fixedStory.pages.length` から解釈 |
+| validation | `pageCount` が存在する場合、`fixedStory.pages.length` と一致必須 |
+| allowed counts | T3-3 時点では 4 / 8 / 12 のみ |
+| existing books | migration 不要（bookごとに pages を保持済み） |
+
+### Proposed Type Contract (design only)
+
+```ts
+type FixedTemplateLayoutVariant = "4_page" | "8_page" | "12_page";
+
+interface FixedStoryTemplate {
+	pages: FixedStoryPageTemplate[];
+	pageCount?: 4 | 8 | 12;
+	layoutVariant?: FixedTemplateLayoutVariant;
+}
+```
+
+補足:
+- ここは設計案。実際の型名・配置は `functions/src/lib/types.ts` に合わせて実装時に調整。
+- runtime は引き続き `fixedStory.pages.length` を使用し、metadata は契約チェックと可読性のために付加。
+
+### Validation Rules
+
+| rule | behavior |
+| --- | --- |
+| `fixedStory.pages.length` must be one of 4 / 8 / 12 | invalid otherwise |
+| if `fixedStory.pageCount` exists, it must equal `fixedStory.pages.length` | invalid otherwise |
+| if `layoutVariant` exists, it must match page count (`4_page`/`8_page`/`12_page`) | invalid otherwise |
+| existing templates without metadata | accepted; infer count from `fixedStory.pages.length` |
+| future 8/12 templates | metadata 推奨。ただし runtime source は `pages.length` |
+
+### Implementation Impact
+
+| area | change |
+| --- | --- |
+| sync script | `pages.length !== 4` を allowed-count contract 検証へ置換 |
+| seed tests | `toBe(4)` 固定を contract-based 検証へ置換 |
+| smoke create | `--page-count` 追加、または template から count を推論 |
+| smoke inspect | expected/actual page count の表示を任意追加 |
+| create UI | 固定文言「4ページ構成」を動的表示へ変更 |
+| `generate-book.ts` | 原則変更不要（すでに `fixedStory.pages.length` runtime） |
+| Reader UI | 構造変更は不要見込み |
+| Admin UI | 構造変更は不要見込み |
+
+### Mapping from T3-3a Findings
+
+| finding | proposed resolution |
+| --- | --- |
+| T3-3a-F6 create UI copy | T3-3b-3 dynamic page count copy + role label pageVisualRole-first |
+| T3-3a-F7 sync/check `pages.length !== 4` | T3-3b-1 allowed-count validation |
+| T3-3a-F8 smoke create `pageCount: 4` | T3-3b-2 `--page-count` and/or template inferred count |
+| T3-3a-F9 seed tests `toBe(4)` | T3-3b-1 contract-based tests |
+
+### T3-3b Implementation Slice Recommendation
+
+#### T3-3b-1 sync/test contract
+
+- `scripts/sync-fixed-template-seeds.js` を contract 検証へ更新
+- `functions/test/seed-templates.test.ts` を 4固定検証から契約検証へ更新
+- テンプレ本文は変更しない
+
+#### T3-3b-2 smoke script page count support
+
+- `scripts/create-template-smoke-books.js` に `--page-count` 追加
+- inspect系に `--expected-page-count`（または同等）を追加
+- デフォルトは 4 を維持して後方互換
+
+#### T3-3b-3 create UI dynamic copy
+
+- `src/app/(app)/create/input/page.tsx` の「4ページ構成」固定文言を撤廃
+- role label は `pageVisualRole` 優先の表示へ
+
+#### T3-3b-4 docs/test verification
+
+- compatibility policy を docs に明記
+- 回帰テスト + 8-page fixture テスト追加
+
+### Go / No-go for T3-3c Pilot
+
+T3-3c pilot（8-page template）開始条件:
+
+- sync が 4/8/12 を受理
+- seed tests が「全 fixed template = 4 pages」前提を持たない
+- smoke が expected 8 pages を作成・検証可能
+- create UI が fixed_template を一律4ページと説明しない
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
