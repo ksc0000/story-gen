@@ -1,3 +1,4 @@
+| `fixed-bedtime-good-day` | 寝前の子どもの気持ちをやさしく受け入れる | 親のことばによる end-of-day 締め括りがシンプルで素直 | 7-8歳向けはやや説明的だがリズムは悪くない | 問題なし | ~~「ぽかぽか」は冬向けかも（季節性）~~ → 7-8歳向け文を短文化し入眠感優先に改善済み（2026-05-13） | 7-8歳向け文の説明性・抽象度を軽く調整対応済み | resolved-in-code |
 # Fixed Template Quality Review (T3-2 起点)
 
 作成日: 2026-05-12
@@ -341,3 +342,17 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 	- image generation: page 0: 19,389ms / page 1: 20,851ms / page 2: 18,802ms / page 3: 18,265ms (all successful)
 	- characterConsistencyMode: all_pages ✓
 	- 短文化テキスト: 3ページで置換済み、無エラー完了
+
+	- 実装 commit: `61859ec`
+	- Firestore sync:
+		- `template:sync:check -> npm run build (functions) -> template:sync:write -> template:sync:check` を実施
+		- 結果: `target templates count = 10`、`fixed-bedtime-good-day` を含む fixed_template 10本すべて drift なし
+	- 単体 smoke:
+		- template: `fixed-bedtime-good-day`
+		- bookId: `KXXxdD2NhVb9Fh6OK3kM`
+		- status: `generating` (progress 100%) / pages: 4 / page status: all `completed`
+		- image generation: page 0: 25,815ms / page 1: 20,387ms / page 2: 17,332ms / page 3: 30,653ms (all successful)
+		- characterConsistencyMode: all_pages ✓
+		- 短文化テキスト: 3ページで置換済み、入眠感優先で無エラー完了
+
+### 13.3 T3-2 P2 fixed-bedtime-good-day Sync / Smoke Verification (2026-05-13)

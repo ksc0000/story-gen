@@ -316,3 +316,37 @@ T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
 	- image generation: 18,802–20,851 ms (all successful, no failures)
 	- characterConsistencyMode: all_pages ✓
 	- 結果: 短文化されたテキストで問題なく生成完了
+
+	- 対象 commit: `c8bd59c`
+	- Firestore sync: `template:sync:check -> template:sync:write -> template:sync:check` 完了
+	- sync 結果: `target templates count = 10`、fixed_template 10本すべて drift なし
+	- 単体 smoke:
+		- template: `fixed-first-zoo`
+		- bookId: `vMgnPuYNNdkzM71PTB37`
+		- status: `completed` / pages: 4 / page status: all `completed`
+		- image generation: 18,802–20,851 ms (all successful, no failures)
+		- characterConsistencyMode: all_pages ✓
+		- 結果: 短文化されたテキストで問題なく生成完了
+
+---
+
+## T3-2 P2 early_elementary_7_8 shortening: fixed-bedtime-good-day (2026-05-13)
+
+- 対象: `fixed-bedtime-good-day` の 3ページ（page 0, 1, 2）の `early_elementary_7_8` テキスト
+- 修正内容:
+	- page 0: 抽象的な「こころの本だなへ しまっていきます」を削除し、感覚的な「こころが やさしくなっていきます」に変更
+	- page 1: 説明文「それぞれの いろがあり...はっきりしてきました」を削除し、視覚的「ふんわり 光っています」に簡潔化
+	- page 2: 未来志向「あしたへ つながる だいじな...」を削除し、現在の入眠感「やさしい くものような ことばで つつまれていきます」に変更
+- 目的: 寝る前の読み聞かせに合う、静かで安心感のあるテンポ改善
+- 非対象: story structure / openingNarrationTemplate / imagePromptTemplate / sampleImageUrl / pageVisualRole / generate-book.ts
+- 検証: functions tsc / npm test / root tsc / lint / vitest すべて pass
+- 対象 commit: `61859ec`
+- Firestore sync: `template:sync:check -> template:sync:write -> template:sync:check` 完了
+- sync 結果: `target templates count = 10`、fixed_template 10本すべて drift なし
+- 単体 smoke:
+	- template: `fixed-bedtime-good-day`
+	- bookId: `KXXxdD2NhVb9Fh6OK3kM`
+	- status: `generating` (progress 100%) / pages: 4 / page status: all `completed`
+	- image generation: 17,332–30,653 ms (all successful, no failures)
+	- characterConsistencyMode: all_pages ✓
+	- 結果: 短文化・入眠感優先のテキストで問題なく生成完了
