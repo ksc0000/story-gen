@@ -542,3 +542,23 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 	- P3 preschool_3_4 / general_child の「みんなのこころも ぽかぽか」が「みんなのえがおが、ろうそくのひかりみたいに ひろがります。」へ変更済み
 	- `fixed-first-zoo` は変更なし
 
+---
+
+## Section 15: T3-2 Review Status (2026-05-13)
+
+**T3-2 review status: closed**
+
+| item | count |
+| --- | --- |
+| P0 blockers | 0 |
+| P1 blockers | 0 |
+| P2 blockers | 0 |
+| P3 deferred items | 3（Candidates C / D / E） |
+
+**Deferred items (P3, T3-3 以降):**
+- Candidate C: 「〜をみつけました」連続（4本）
+- Candidate D: 「きらきら」多用（8本）
+- Candidate E: P3「にっこり」連続（5〜6本）
+
+次のアクション: T3-3a code audit（実装なし）を参照。
+

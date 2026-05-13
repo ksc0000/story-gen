@@ -304,6 +304,129 @@ T3-2 P1 text fix sync/smoke completed:
 	- status: `completed` / progress: `100` / pages: 4 / page status: all `completed`
 	- image generation: page 0: 29,210ms / page 1: 24,143ms / page 2: 15,518ms / page 3: 17,349ms (all successful)
 	- characterConsistencyMode: all_pages ✓
+	- hasOpeningNarration: true / placeholder 未展開残存: なし
+
+---
+
+## T3-2 Closure Summary (2026-05-13)
+
+**Status: completed**
+
+### Completed scope
+
+| task | details | commit(s) |
+| --- | --- | --- |
+| P1 text correctness / placeholder consistency | fixed-rainy-day-puddle / fixed-little-helper parentMessage 修正 | `340eeed` |
+| P1 opening narration tone fix | fixed-sharing-friends `openingNarrationTemplate` 修正 | `228f681` |
+| P2 older-child text shortening | fixed-first-zoo 3ページ `early_elementary_7_8` 短縮 | `c8bd59c` |
+| P2 bedtime text shortening | fixed-bedtime-good-day 3ページ `early_elementary_7_8` 短縮・自然化 | `61859ec` |
+| P2 reassurance line naturalization | fixed-sleepy-moon-adventure page 3 語り自然化 | `4a89eea` |
+| P2 vocabulary redundancy review | 全10本 docs-only 棚卸し（候補 A〜E 整理） | `0d6ae5d` |
+| P2 vocabulary dispersion A/B | fixed-first-birthday opening / P3 散らし実装 | `9f1eb8b` |
+
+### Verification method (all tasks)
+
+- functions tsc + `seed-templates.test.ts` (289 tests) pass
+- root tsc + `next lint` + `vitest run src/__tests__/` (69 tests) pass
+- Firestore `template:sync:check → write → check` で drift なし
+- 変更テンプレートごとに単体 smoke 完了
+
+### Smoke coverage
+
+| template | bookId | status |
+| --- | --- | --- |
+| fixed-rainy-day-puddle | `6Bq2ZTTQdePwEaBXgzDC` | completed |
+| fixed-little-helper | `RgKCsAYZY1T2BjTSwH4s` | completed |
+| fixed-sharing-friends | `IVNDnyyajAMmxLvuCKoz` | completed |
+| fixed-first-zoo | `vMgnPuYNNdkzM71PTB37` | completed |
+| fixed-bedtime-good-day | `KXXxdD2NhVb9Fh6OK3kM` | completed |
+| fixed-sleepy-moon-adventure | `j9TMKRxoaPVNnaR3QClU` | completed |
+| fixed-first-birthday | `w5OMyZd6ox74K4wGzjva` | completed |
+
+### Remaining non-blocking items
+
+- vocabulary Candidate C（「〜をみつけました」連続 / 4本）: P3 / T3-3 以降
+- vocabulary Candidate D（「きらきら」多用 / 8本）: P3 / T3-3 以降
+- vocabulary Candidate E（P3「にっこり」連続 / 5〜6本）: P3 / T3-3 以降
+- P0/P1/P2 blockers: **0**。T3-2 正式クローズ
+
+---
+
+## T3-3 Kickoff Plan: Fixed Template Expansion Design (2026-05-13)
+
+### Goal
+
+既存 4-page fixed_template を壊さずに、8-page / 12-page variants をサポートする安全な拡張パスを設計する。
+
+### Non-goals (この段階では実施しない)
+
+- 8/12 ページテンプレートの実装
+- `generate-book.ts` の変更
+- Reader UI の変更
+- Firestore rules の変更
+- 既存 seed templates の変更
+
+### Design Questions
+
+| area | question | initial direction |
+| --- | --- | --- |
+| data model | `fixedStory.pages.length` を暗黙のページ数とするか、`pageCount` / `layoutVariant` を明示的に持つか | 後方互換性を保つ optional metadata を優先 |
+| pricing | 4/8/12 ページを `priceTier` / `storyCostLevel` にどう対応させるか | 現行 4-page Ume をベースに将来 mapping を定義 |
+| generation | `generate-book.ts` は任意の `fixedStory.pages` 長を既に扱えるか | 実装前に audit で確認（T3-3a） |
+| smoke | smoke script はページ数を expected count でチェックできるか | expected-page-count checks を後で追加 |
+| UI | Reader UI は 4 ページ固定を前提にしているか | 実装前に audit（T3-3a） |
+| admin | Admin UI は 4 ページ固定を前提にしているか | 実装前に audit（T3-3a） |
+| sync | template sync スクリプトは長い pages 配列を扱えるか | dry-run で確認（T3-3b） |
+| compatibility | 既存生成済み book への影響は | pages は book ごとに保存されるため migration 不要 |
+
+### Proposed Phases
+
+#### T3-3a: Code audit only（次の推奨アクション）
+
+以下を読むだけで変更しない:
+
+- `generate-book.ts` の page ループが `pages.length` に依存しているか
+- Reader UI のページレンダリングが `pages.length === 4` を前提にしているか
+- Admin UI のテンプレート表示が 4 ページ固定か
+- `scripts/create-template-smoke-books.js` / `inspect-template-smoke-book.js` のページ数検証ロジック
+- `functions/test/seed-templates.test.ts` の page count 検証テスト
+
+#### T3-3b: Data model proposal
+
+- optional `pageCount` フィールド（backward-compatible）
+- optional `layoutVariant`: `"4_page"` / `"8_page"` / `"12_page"`
+- optional `expansionLevel` の検討
+- breaking changes なし
+
+#### T3-3c: One pilot 8-page template
+
+- リスクの低いテンプレート 1 本を選択
+- 候補: `fixed-first-birthday` または `fixed-first-zoo`
+- 既存 `fixed_template` パスを維持したまま実装
+
+#### T3-3d: Smoke and UX verification
+
+- Firestore sync
+- 単体 smoke（page count の確認）
+- Reader UI 手動確認
+- テキストペーシングレビュー
+
+### Risk Register
+
+| risk | impact | mitigation |
+| --- | --- | --- |
+| UI が 4 ページを前提 | Reader が壊れる | T3-3a audit 先行 |
+| smoke script が 4 ページ前提 | 誤検知 failure | expected count の追加 |
+| ページ数増加で生成コスト増加 | コスト影響 | priceTier/storyCostLevel との対応定義 |
+| ストーリーペーシングが薄くなる | 品質低下 | page role plan を先に設計してから本文を書く |
+| 多ページでの画像一貫性低下 | ビジュアルドリフト | `characterConsistencyMode` の動作確認 |
+
+### Recommended Next Action
+
+**T3-3a code audit** から開始。`generate-book.ts` / Reader UI / Admin UI / smoke scripts の 4 ページ前提箇所を洗い出してリスト化。実装は audit 完了後。
+
+	- image generation: page 0: 29,210ms / page 1: 24,143ms / page 2: 15,518ms / page 3: 17,349ms (all successful)
+	- characterConsistencyMode: all_pages ✓
 	- hasOpeningNarration: true / placeholder 展開: 未展開残存なし
 
 
