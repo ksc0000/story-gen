@@ -1,4 +1,3 @@
-| `fixed-bedtime-good-day` | 寝前の子どもの気持ちをやさしく受け入れる | 親のことばによる end-of-day 締め括りがシンプルで素直 | 7-8歳向けはやや説明的だがリズムは悪くない | 問題なし | ~~「ぽかぽか」は冬向けかも（季節性）~~ → 7-8歳向け文を短文化し入眠感優先に改善済み（2026-05-13） | 7-8歳向け文の説明性・抽象度を軽く調整対応済み | resolved-in-code |
 # Fixed Template Quality Review (T3-2 起点)
 
 作成日: 2026-05-12
@@ -221,7 +220,7 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `fixed-first-zoo` | はじめてのおでかけの高揚感から笑顔の思い出へ自然につながる | page 4 を `parentMessage` に委ねる構成は素直で自然 | 7-8歳向けはやや長めだが理解可能 | 問題なし | ~~「きらきら」「やさしい」が他テンプレと少し重なる~~ → 7-8歳向け文を短文化し読み聞かせリズム改善済み（2026-05-13） | 7-8歳向けの文長を後続で軽く圧縮対応済み | resolved-in-code |
 | `fixed-first-birthday` | 準備→ろうそく→祝福→締め が明快 | page 4 の余韻は自然 | 年齢差は十分、読みやすさも高い | 問題なし | 一部表現は定番だが許容範囲 | No action | No action |
-| `fixed-bedtime-good-day` | ふりかえり→安心→入眠 の流れが強い | page 4 の `parentMessage` 締めは寝かしつけ用途に合う | 7-8歳向けはやや抽象的で長め | 問題なし | 詩的で良いが、最年長帯は少し説明的 | 7-8歳向けを少し短文化する候補 | P2 |
+| `fixed-bedtime-good-day` | ふりかえり→安心→入眠 の流れが強い | page 4 の `parentMessage` 締めは寝かしつけ用途に合う | ~~7-8歳向けはやや抽象的で長め~~ → 短文化・自然化済み（2026-05-13） | 問題なし | 寝る前の読み聞かせに合う静かな語りへ改善済み | 7-8歳向け短文化対応済み | resolved-in-code |
 | `fixed-brush-teeth` | 導入→実践→達成感→締め が端的で読みやすい | page 4 は余韻として機能 | 年齢差は適切、3-4歳にも読みやすい | 問題なし | 語彙の伸びしろはあるが急ぎではない | No action | No action |
 | `fixed-first-christmas` | 祝祭感から家族の余韻まで自然 | page 4 を `parentMessage` に預ける形は相性が良い | 文量・難易度とも安定 | 問題なし | 「きらきら」系表現がやや多いがテーマ適合 | No action | No action |
 | `fixed-sharing-friends` | 葛藤→選択→共有→締め が自然 | 終わり方は穏やかで良い | 7-8歳向けはやや説明的、説話寄り | page 4 自体は問題なし | ~~opening narration の「きょうのテーマは」が教材感を出す~~ → opening narration を物語導入トーンへ調整済み | opening narration を物語寄りにやわらげる対応を実施（2026-05-13） | **resolved-in-code** |
@@ -343,16 +342,16 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 	- characterConsistencyMode: all_pages ✓
 	- 短文化テキスト: 3ページで置換済み、無エラー完了
 
-	- 実装 commit: `61859ec`
-	- Firestore sync:
-		- `template:sync:check -> npm run build (functions) -> template:sync:write -> template:sync:check` を実施
-		- 結果: `target templates count = 10`、`fixed-bedtime-good-day` を含む fixed_template 10本すべて drift なし
-	- 単体 smoke:
-		- template: `fixed-bedtime-good-day`
-		- bookId: `KXXxdD2NhVb9Fh6OK3kM`
-		- status: `generating` (progress 100%) / pages: 4 / page status: all `completed`
-		- image generation: page 0: 25,815ms / page 1: 20,387ms / page 2: 17,332ms / page 3: 30,653ms (all successful)
-		- characterConsistencyMode: all_pages ✓
-		- 短文化テキスト: 3ページで置換済み、入眠感優先で無エラー完了
-
 ### 13.3 T3-2 P2 fixed-bedtime-good-day Sync / Smoke Verification (2026-05-13)
+
+- 実装 commit: `61859ec`
+- Firestore sync:
+	- `template:sync:check -> npm run build (functions) -> template:sync:write -> template:sync:check` を実施
+	- 結果: `target templates count = 10`、`fixed-bedtime-good-day` を含む fixed_template 10本すべて drift なし
+- 単体 smoke:
+	- template: `fixed-bedtime-good-day`
+	- bookId: `KXXxdD2NhVb9Fh6OK3kM`
+	- status: `completed` / progress: `100` / pages: 4 / page status: all `completed`
+	- image generation: page 0: 25,815ms / page 1: 20,387ms / page 2: 17,332ms / page 3: 30,653ms (all successful)
+	- characterConsistencyMode: all_pages ✓
+	- 短文化テキスト: 3ページで置換済み、入眠感優先で無エラー完了

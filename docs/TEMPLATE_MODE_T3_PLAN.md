@@ -317,17 +317,6 @@ T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
 	- characterConsistencyMode: all_pages ✓
 	- 結果: 短文化されたテキストで問題なく生成完了
 
-	- 対象 commit: `c8bd59c`
-	- Firestore sync: `template:sync:check -> template:sync:write -> template:sync:check` 完了
-	- sync 結果: `target templates count = 10`、fixed_template 10本すべて drift なし
-	- 単体 smoke:
-		- template: `fixed-first-zoo`
-		- bookId: `vMgnPuYNNdkzM71PTB37`
-		- status: `completed` / pages: 4 / page status: all `completed`
-		- image generation: 18,802–20,851 ms (all successful, no failures)
-		- characterConsistencyMode: all_pages ✓
-		- 結果: 短文化されたテキストで問題なく生成完了
-
 ---
 
 ## T3-2 P2 early_elementary_7_8 shortening: fixed-bedtime-good-day (2026-05-13)
@@ -346,7 +335,7 @@ T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
 - 単体 smoke:
 	- template: `fixed-bedtime-good-day`
 	- bookId: `KXXxdD2NhVb9Fh6OK3kM`
-	- status: `generating` (progress 100%) / pages: 4 / page status: all `completed`
+	- status: `completed` / progress: `100` / pages: 4 / page status: all `completed`
 	- image generation: 17,332–30,653 ms (all successful, no failures)
 	- characterConsistencyMode: all_pages ✓
 	- 結果: 短文化・入眠感優先のテキストで問題なく生成完了
