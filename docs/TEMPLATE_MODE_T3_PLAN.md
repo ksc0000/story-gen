@@ -306,3 +306,13 @@ T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
 - 目的: 読み聞かせテンポの改善、親が読み上げる際のリズム自然化
 - 非対象: story structure / openingNarrationTemplate / imagePromptTemplate / sampleImageUrl / pageVisualRole / generate-book.ts
 - 検証: functions tsc / npm test / root tsc / lint / vitest すべて pass
+- 対象 commit: `c8bd59c`
+- Firestore sync: `template:sync:check -> template:sync:write -> template:sync:check` 完了
+- sync 結果: `target templates count = 10`、fixed_template 10本すべて drift なし
+- 単体 smoke:
+	- template: `fixed-first-zoo`
+	- bookId: `vMgnPuYNNdkzM71PTB37`
+	- status: `completed` / pages: 4 / page status: all `completed`
+	- image generation: 18,802–20,851 ms (all successful, no failures)
+	- characterConsistencyMode: all_pages ✓
+	- 結果: 短文化されたテキストで問題なく生成完了

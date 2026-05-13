@@ -327,3 +327,17 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 	- openingNarration 実値: `きょうは、SmokeKid1が おともだちと すごすなかで、sharingの あたたかさに そっと きづいていく おはなしです。`
 	- page 4 実値: `きょうもすてきな一日だったね`
 	- 未展開 placeholder 残存: なし（`{lessonToTeach}` は openingNarration で展開済み）
+
+### 13.2 T3-2 P2 fixed-first-zoo Sync / Smoke Verification (2026-05-13)
+
+- 実装 commit: `c8bd59c`
+- Firestore sync:
+	- `template:sync:check -> npm run build (functions) -> template:sync:write -> template:sync:check` を実施
+	- 結果: `target templates count = 10`、`fixed-first-zoo` を含む fixed_template 10本すべて drift なし
+- 単体 smoke:
+	- template: `fixed-first-zoo`
+	- bookId: `vMgnPuYNNdkzM71PTB37`
+	- status: `completed` / pages: 4 / page status: all `completed`
+	- image generation: page 0: 19,389ms / page 1: 20,851ms / page 2: 18,802ms / page 3: 18,265ms (all successful)
+	- characterConsistencyMode: all_pages ✓
+	- 短文化テキスト: 3ページで置換済み、無エラー完了
