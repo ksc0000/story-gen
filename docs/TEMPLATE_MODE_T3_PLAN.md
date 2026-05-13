@@ -838,6 +838,108 @@ Go to second 8-page pilot only if:
 
 Run manual QA against smoke book `cOhH25oa7cex7C0yEqB9`.
 
+## T3-3d-1 Manual QA Execution Result
+
+### Status
+
+partial.
+
+### Date
+
+2026-05-13
+
+### Target
+
+- template: `fixed-first-birthday-8p`
+- smoke bookId: `cOhH25oa7cex7C0yEqB9`
+- expected page count: 8
+
+### Summary
+
+- Data QA: pass
+- Reader QA: partial
+- Create UI QA: not run
+- Admin / Review QA: not run
+- P0/P1 blocker: none found in the checked paths
+
+### Data QA Result
+
+| check | expected | result |
+| --- | --- | --- |
+| book document page count | `pageCount=8` | pass |
+| pages subcollection count | 8 pages exist | pass |
+| page numbering | pageNumber is 1〜8 or existing spec remains consistent | pass |
+| page status coverage | all 8 pages are present and readable | pass |
+| all page status | completed | pass |
+
+Evidence:
+
+- `inspect-smoke-book.js` PASS (`pagesCount=8`, `expectedPageCount=8`, `pageCountCheck=PASS`)
+- `inspect-template-smoke-book.js` PASS
+- page numbers observed: `0..7`
+- all 8 pages status: `completed`
+
+### Reader QA Result
+
+| check | expected | result |
+| --- | --- | --- |
+| book opens | Reader loads without error | pass |
+| total page count | shows 8 pages or equivalent progress | not run |
+| next navigation | can move from page 1 to page 8 | not run |
+| previous navigation | can move backward without error | not run |
+| final page | parent message closing displays naturally | not run |
+| progress indicator | reflects 8-page sequence | not run |
+| image rendering | all 8 images visible | not run |
+| text rendering | all 8 page texts visible without severe overflow | not run |
+| mobile viewport | no severe layout break | not run |
+
+Evidence:
+
+- `http://localhost:3000/book/?id=cOhH25oa7cex7C0yEqB9` returned `200` for the initial shell.
+- `BookViewer` uses `props.pages.length` for `totalPages` and page label generation, and navigation clamps to `[0, totalPages - 1]`.
+
+### Create UI QA Result
+
+| check | expected | result |
+| --- | --- | --- |
+| 4-page template display | `fixed-first-birthday` shows 4-page copy | not run |
+| 8-page template display | `fixed-first-birthday-8p` shows 8-page copy | not run |
+| page role labels | preview uses pageVisualRole-based labels | not run |
+| template selection | both birthday templates are distinguishable | not run |
+
+Evidence:
+
+- `create/input` initial shell returned `200`.
+- Source review confirms `getFixedTemplatePageCount()` accepts `4 | 8 | 12` and `getFixedPageRoleLabel()` prefers `pageVisualRole`.
+
+### Admin / Review QA Result
+
+| check | expected | result |
+| --- | --- | --- |
+| book page list | 8 pages are visible | not run |
+| page status | all 8 completed statuses visible | not run |
+| regeneration action | page-level action does not assume 4 pages | not run |
+| quality review | 8-page book can be reviewed without layout issue | not run |
+
+Evidence:
+
+- `admin/book-quality-review` initial shell returned `200`.
+- Source review confirms page queries are ordered by `pageNumber`, regeneration uses `page.pageNumber`, and review panel itself is page-count agnostic.
+
+### Follow-up
+
+- Run actual browser interaction for Reader page turning, mobile layout, Create UI template comparison, and Admin page list rendering once the browser agent/chat tool is enabled.
+
+### Go / No-go Result
+
+**Go / No-go:** Hold
+
+Reason:
+
+- Data QA passed and no P0/P1 blocker was found in the inspected paths.
+- However, the interactive Reader / Create / Admin UI checks were not fully exercised in-browser, so the manual QA checklist is not complete yet.
+- The code paths inspected are compatible with 8 pages, but the remaining UI confirmations still need a real browser pass.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
