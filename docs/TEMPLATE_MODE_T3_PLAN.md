@@ -1312,6 +1312,72 @@ Reason:
 - Re-run T3-3g interactive QA with an authenticated local session or a documented QA auth path.
 - After Reader / Create / Admin checks pass, update this section and reconsider `Production candidate: Go`.
 
+## T3-3g-2 Authenticated Interactive QA Execution
+
+### Status
+
+blocked by auth.
+
+### Target
+
+| template | smoke bookId | expected pages |
+| --- | --- | --- |
+| `fixed-first-birthday-8p` | `cOhH25oa7cex7C0yEqB9` | 8 |
+| `fixed-first-zoo-8p` | `esAcMbgjjN6Tj5IIg3Sy` | 8 |
+
+### Authenticated Session
+
+| item | result | notes |
+| --- | --- | --- |
+| local app started | pass | Next.js dev server started on `http://localhost:3000` |
+| authenticated session available | blocked | Normal Google login flow was attempted from `/login/`, but Firebase returned `auth/popup-blocked`; no credentials, tokens, cookies, or service account details were recorded |
+| unauthenticated redirect from T3-3g-1 resolved | blocked | Protected routes still redirect to `/login/` because an authenticated session could not be established |
+
+### Reader QA Result
+
+| template | R1 open | R2 progress | R3 next to final | R4 prev to first | R5 final message | R6 images | R7 text | R8 mobile | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | authenticated session unavailable; Reader route remains protected by login |
+| `fixed-first-zoo-8p` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | authenticated session unavailable; Reader route remains protected by login |
+
+### Create UI QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| C1 create input page loads | blocked | authenticated session unavailable; `/create/input` remains protected by login |
+| C2 birthday 4p copy | blocked | create UI could not be reached after auth popup was blocked |
+| C3 birthday 8p copy | blocked | create UI could not be reached after auth popup was blocked |
+| C4 zoo 4p copy | blocked | create UI could not be reached after auth popup was blocked |
+| C5 zoo 8p copy | blocked | create UI could not be reached after auth popup was blocked |
+| C6 page role labels | blocked | create UI could not be reached after auth popup was blocked |
+| C7 variant distinction | blocked | create UI could not be reached after auth popup was blocked |
+
+### Admin / Review QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| A1 admin review page loads/auth gate documented | pass | admin route auth gate remains documented by redirect to `/login/` |
+| A2 birthday book 8 pages visible | blocked | authenticated admin session unavailable |
+| A3 zoo book 8 pages visible | blocked | authenticated admin session unavailable |
+| A4 all 8 completed statuses visible | blocked | authenticated admin session unavailable |
+| A5 page-level regeneration action | blocked | authenticated admin session unavailable; no side-effecting action was attempted |
+| A6 layout with 8 pages | blocked | authenticated admin session unavailable |
+
+### Go / No-go
+
+**Production candidate:** Hold
+
+Reason:
+- T3-3g-2 confirmed that the local app can start, but an authenticated browser session could not be established because the Google auth popup was blocked.
+- Required Reader / Create / Admin interactive checks could not be rerun in authenticated state.
+- No new P0/P1 8-page rendering issue was observed; the current blocker is authenticated QA access.
+
+### Follow-up
+
+- Re-run T3-3g authenticated QA from a browser/session where Google auth popups are allowed, or provide a documented QA auth path.
+- If Reader and Create pass but Admin is blocked only by admin permission/search path, update the production decision to `Conditional`.
+- If Reader, Create, and Admin all pass, update the production decision to `Go`.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
