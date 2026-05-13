@@ -459,6 +459,157 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-first-birthday-8p": {
+    name: "はじめてのたんじょうび（8ページ）",
+    description: "はじめての誕生日を、準備からお祝いの余韻までゆっくり描く8ページ版です。",
+    icon: "🎂",
+    categoryGroupId: "memories",
+    subcategoryId: "first-birthday",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName", "familyMembers"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["memory", "birthday", "family", "pilot-8-page"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/food.png",
+    sampleImageAlt: "家族で誕生日をお祝いする子どものやさしい絵本イメージ（8ページ版）",
+    visualDirection:
+      "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling over a gentle 8-page rhythm.",
+    order: 4.5,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめての誕生日の思い出を8ページでゆっくり残す絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}のはじめてのたんじょうび",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
+      openingNarrationTemplate:
+        "あさの ひかりの なかで、きょうは ちょっと とくべつ。{childName}と {familyMembers}の たんじょうびの いちにちが はじまります。",
+      pageCount: 8,
+      layoutVariant: "8_page",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "あさのおへやに、たんじょうびのけはいがそっとひろがりました。",
+          baby_toddler: "あさだよ。おたんじょうび、わくわく。",
+          preschool_3_4:
+            "あさのおへやに、たんじょうびの けはいが そっと ひろがりました。{childName}の えがおも ぽっと ひかります。",
+          early_reader_5_6:
+            "あさのおへやに、たんじょうびの けはいが そっと ひろがりました。{childName}は いつもより はやく めがさめて、きょうの たのしみを かぞえます。",
+          early_elementary_7_8:
+            "あさのおへやに、たんじょうびの けはいが そっと ひろがりました。{childName}は ひとつ 大きくなる日の くうきを、胸の おくで しずかに かんじます。",
+          general_child:
+            "あさのおへやに、たんじょうびの けはいが そっと ひろがりました。{childName}の えがおも ぽっと ひかります。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Establishing wide shot of a cozy home living room in gentle morning light on birthday day. A young child in pajamas stands near a curtain with soft sunlight. Family members prepare quietly in the background with pastel decorations not fully arranged yet. A tiny ribbon motif appears on a folded garland. Soft watercolor picture book style, layered foreground-midground-background, warm and clean composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{familyMembers}といっしょに、かざりつけのじゅんびをたのしくすすめます。",
+          baby_toddler: "ふうせん ぽん。いっしょに じゅんび。",
+          preschool_3_4:
+            "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。おへやが すこしずつ きらきらに なります。",
+          early_reader_5_6:
+            "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。{childName}も ふうせんを そっと ささえて、できたを ふやしていきます。",
+          early_elementary_7_8:
+            "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。{childName}は じぶんの 手で きょうの ぶたいを つくっていることが うれしくなりました。",
+          general_child:
+            "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。おへやが すこしずつ きらきらに なります。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Medium-wide action shot of a child and family decorating a living room with pastel balloons and paper chains. The child reaches up with help from family to place a decoration on a wall. Warm indoor daylight and soft shadows. A tiny ribbon motif appears on a balloon knot near the child. Soft watercolor picture book style, lively but gentle movement, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ケーキとろうそくを見つけた{childName}の目は、きらきらかがやきました。",
+          baby_toddler: "ケーキ みつけた。ろうそく きらり。",
+          preschool_3_4:
+            "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。うれしい こえが ふわっと ひろがります。",
+          early_reader_5_6:
+            "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。ふーっと する前の どきどきが、胸のなかで 小さく はねます。",
+          early_elementary_7_8:
+            "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。うれしさと すこしの きんちょうが まざる しゅんかんです。",
+          general_child:
+            "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。うれしい こえが ふわっと ひろがります。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Medium shot of a child discovering a birthday cake with softly glowing candles on a table. Family members stand nearby with delighted expressions, hands gently clasped. Warm candlelight reflects in the child's eyes. A tiny ribbon motif appears on a cake stand edge. Soft watercolor picture book style, discovery-focused framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "みんなの「おめでとう」があつまって、おへやいっぱいにひろがりました。",
+          baby_toddler: "おめでとう。にこにこ いっぱい。",
+          preschool_3_4:
+            "みんなの「おめでとう」が あつまって、おへや いっぱいに ひろがりました。{childName}も にこっと わらいます。",
+          early_reader_5_6:
+            "みんなの「おめでとう」が あつまって、おへや いっぱいに ひろがりました。{childName}は 手を たたきながら、しあわせな 音を きいています。",
+          early_elementary_7_8:
+            "みんなの「おめでとう」が あつまって、おへや いっぱいに ひろがりました。{childName}は みんなの きもちが ひとつに なる あたたかさを かんじました。",
+          general_child:
+            "みんなの「おめでとう」が あつまって、おへや いっぱいに ひろがりました。{childName}も にこっと わらいます。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Wide celebration shot of child and family clapping and smiling around the birthday table after candle moment. Confetti-like pastel paper bits drift softly in the air. Everyone faces the child with joyful expressions. A tiny ribbon motif appears on tableware near the center. Soft watercolor picture book style, clear celebratory composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "だいじなプレゼントをそっと手にもって、{childName}はうれしそうに見つめました。",
+          baby_toddler: "プレゼント だいじ。ぎゅっ。",
+          preschool_3_4:
+            "だいじな プレゼントを そっと 手に もって、{childName}は うれしそうに 見つめました。",
+          early_reader_5_6:
+            "だいじな プレゼントを そっと 手に もって、{childName}は うれしそうに 見つめました。どんな たからものに なるかなと 思いえがきます。",
+          early_elementary_7_8:
+            "だいじな プレゼントを そっと 手に もって、{childName}は うれしそうに 見つめました。ものに こもる 気持ちまで 受けとったようでした。",
+          general_child:
+            "だいじな プレゼントを そっと 手に もって、{childName}は うれしそうに 見つめました。",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Object-detail close shot of the child holding a small wrapped present or keepsake toy carefully with both hands. The present texture, ribbon, and tiny fingers are in focus. Family smiles appear softly in the background. A tiny ribbon motif appears on the present corner. Soft watercolor picture book style, object-focused intimate framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、ひとつ大きくなった気もちを胸にそっとしまいました。",
+          baby_toddler: "{childName}、ちょっぴり おにいさん おねえさん。",
+          preschool_3_4:
+            "{childName}は、ひとつ 大きくなった きもちを 胸に そっと しまいました。",
+          early_reader_5_6:
+            "{childName}は、ひとつ 大きくなった きもちを 胸に そっと しまいました。できたことを 思いだすと、こころが まっすぐに のびていきます。",
+          early_elementary_7_8:
+            "{childName}は、ひとつ 大きくなった きもちを 胸に そっと しまいました。きょうの ひかりが、これからの じぶんを そっと おしてくれるようでした。",
+          general_child:
+            "{childName}は、ひとつ 大きくなった きもちを 胸に そっと しまいました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Close-up emotional shot of a child resting a hand on chest with a soft proud smile, seated near warm birthday lights after celebration. Family members are nearby in gentle soft focus, watching with affection. A tiny ribbon motif appears on a cushion beside the child. Soft watercolor picture book style, tender introspective framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "みんなのえがおが、よるのやさしいひかりのなかでゆっくりほどけていきます。",
+          baby_toddler: "えがお ぽかぽか。よる しずか。",
+          preschool_3_4:
+            "みんなの えがおが、よるの やさしい ひかりの なかで ゆっくり ほどけていきます。",
+          early_reader_5_6:
+            "みんなの えがおが、よるの やさしい ひかりの なかで ゆっくり ほどけていきます。たのしかった きょうの けしきが、こころに そっと のこります。",
+          early_elementary_7_8:
+            "みんなの えがおが、よるの やさしい ひかりの なかで ゆっくり ほどけていきます。にぎやかな 時間の あとに くる しずけさまで、だいじな 思い出に なりました。",
+          general_child:
+            "みんなの えがおが、よるの やさしい ひかりの なかで ゆっくり ほどけていきます。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Wide quiet ending shot of child and family sitting together on a sofa in a softly lit evening room after birthday celebration. Decorations are still visible but calm, with warm amber light and gentle shadows. A tiny ribbon motif appears on a folded napkin on the table. Soft watercolor picture book style, peaceful afterglow composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4: "{parentMessage}",
+          early_reader_5_6: "{parentMessage}",
+          early_elementary_7_8: "{parentMessage}",
+          general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Back-view gentle closing shot of the child leaning on family at the end of birthday night, looking toward soft lights and a calm room. Mood is peaceful, affectionate, and reflective. A tiny ribbon motif catches the final warm light near the table edge. Soft watercolor picture book style, serene closing framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+      ],
+    },
+  },
   "fixed-bedtime-good-day": {
     name: "きょうもいい日だったね",
     description: "寝る前に短く読める、安心感のあるおやすみテンプレート",

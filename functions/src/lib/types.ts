@@ -108,6 +108,8 @@ export interface FixedStoryTemplate {
   coverImagePromptTemplate?: string;
   titleSpreadTextTemplate?: string;
   openingNarrationTemplate?: string;
+  pageCount?: PageCount;
+  layoutVariant?: "4_page" | "8_page" | "12_page";
   pages: FixedStoryPageTemplate[];
 }
 

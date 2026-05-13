@@ -5,6 +5,7 @@ import type { PageVisualRole } from "../src/lib/types";
 const FIXED_TEMPLATE_IDS = [
   "fixed-first-zoo",
   "fixed-first-birthday",
+  "fixed-first-birthday-8p",
   "fixed-bedtime-good-day",
   "fixed-brush-teeth",
   "fixed-first-christmas",
@@ -53,6 +54,16 @@ function getPositivePrompt(prompt: string): string {
 const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-first-zoo": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-first-birthday": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-first-birthday-8p": [
+    "opening_establishing",
+    "action",
+    "discovery",
+    "payoff",
+    "object_detail",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending",
+  ],
   "fixed-bedtime-good-day": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-brush-teeth": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-first-christmas": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
@@ -79,6 +90,7 @@ const TEMPLATE_IMAGE_ASSET_URLS = new Set([
 const EXPECTED_FIXED_SAMPLE_IMAGES: Record<string, string> = {
   "fixed-first-zoo": "/images/templates/animals.png",
   "fixed-first-birthday": "/images/templates/food.png",
+  "fixed-first-birthday-8p": "/images/templates/food.png",
   "fixed-bedtime-good-day": "/images/templates/bedtime.png",
   "fixed-brush-teeth": "/images/templates/daily-habits.png",
   "fixed-first-christmas": "/images/templates/seasonal.png",
@@ -118,10 +130,10 @@ function assertFixedStoryPageCountContract(fixedStory: {
 }
 
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
-  it("Phase T2-C: fixed templates are expanded to 10", () => {
-    expect(FIXED_TEMPLATE_IDS.length).toBe(10);
+  it("Phase T3-3c: fixed templates are expanded to 11 (10 legacy + 1 pilot)", () => {
+    expect(FIXED_TEMPLATE_IDS.length).toBe(11);
     const existing = FIXED_TEMPLATE_IDS.filter((id) => SEED_TEMPLATES[id]);
-    expect(existing.length).toBe(10);
+    expect(existing.length).toBe(11);
   });
 
   for (const id of FIXED_TEMPLATE_IDS) {

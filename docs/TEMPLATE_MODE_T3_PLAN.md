@@ -694,6 +694,38 @@ Non-goals for T3-3c:
 - do not add 12-page yet
 - do not change pricing beyond documenting assumptions
 
+## T3-3c Pilot: fixed-first-birthday-8p
+
+### Scope
+
+- Added one 8-page pilot fixed template: `fixed-first-birthday-8p`.
+- Existing `fixed-first-birthday` 4-page template remains unchanged.
+- Added `fixedStory.pageCount: 8`.
+- Added `fixedStory.layoutVariant: "8_page"`.
+- No 12-page template added.
+- No pricing change.
+
+### Pilot Scene Plan
+
+| page | role | scene |
+| --- | --- | --- |
+| 1 | opening_establishing | birthday morning |
+| 2 | action | decoration / preparation |
+| 3 | discovery | cake / candle discovery |
+| 4 | payoff | family celebration |
+| 5 | object_detail | present / birthday object |
+| 6 | emotional_closeup | feeling a little bigger |
+| 7 | quiet_ending | smiles and afterglow |
+| 8 | quiet_ending | parent message closing |
+
+### Verification Plan
+
+- functions tsc
+- seed-templates.test.ts
+- template sync check
+- smoke create with `--template-id=fixed-first-birthday-8p --page-count=8 --write`
+- inspect with `--expected-page-count=8`
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
