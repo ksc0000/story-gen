@@ -19,7 +19,14 @@ import {
   PLAN_CONFIGS,
 } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
-import type { CreationMode, OutfitMode, ProductPlan } from "@/lib/types";
+import type {
+  CreationMode,
+  FixedStoryPageTemplate,
+  OutfitMode,
+  PageVisualRole,
+  ProductPlan,
+  TemplateDoc,
+} from "@/lib/types";
 
 const PAGE_COUNT_OPTIONS = [
   { value: 4, label: "短い（4ページ）" },
@@ -60,6 +67,37 @@ const TEMPLATE_PREVIEW_PLACEHOLDERS: Record<string, string> = {
   "{parentMessage}": "親からのメッセージ",
 };
 
+const ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS = [4, 8, 12] as const;
+
+const PAGE_VISUAL_ROLE_LABELS: Record<PageVisualRole, string> = {
+  opening_establishing: "おはなしのはじまり",
+  discovery: "発見シーン",
+  action: "行動シーン",
+  emotional_closeup: "気持ちのシーン",
+  object_detail: "だいじなもののシーン",
+  setback_or_question: "困りごと・問いのシーン",
+  payoff: "締めのシーン",
+  quiet_ending: "おやすみシーン",
+};
+
+function isAllowedFixedTemplatePageCount(value: number): value is 4 | 8 | 12 {
+  return ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS.includes(value as 4 | 8 | 12);
+}
+
+function getFixedTemplatePageCount(template?: (TemplateDoc & { id: string }) | null): number {
+  const metadataPageCount = (template?.fixedStory as { pageCount?: number } | undefined)?.pageCount;
+  if (typeof metadataPageCount === "number" && isAllowedFixedTemplatePageCount(metadataPageCount)) {
+    return metadataPageCount;
+  }
+
+  const pagesLength = Array.isArray(template?.fixedStory?.pages) ? template.fixedStory.pages.length : 0;
+  if (isAllowedFixedTemplatePageCount(pagesLength)) {
+    return pagesLength;
+  }
+
+  return 4;
+}
+
 function formatTemplatePreviewText(text: string) {
   const replaced = Object.entries(TEMPLATE_PREVIEW_PLACEHOLDERS).reduce(
     (current, [placeholder, label]) => current.replaceAll(placeholder, label),
@@ -73,7 +111,12 @@ function shortenTemplatePreview(text: string, maxLength = 42) {
   return text.length <= maxLength ? text : `${text.slice(0, maxLength).trim()}…`;
 }
 
-function getFixedPageRoleLabel(textTemplate: string, index: number, total: number) {
+function getFixedPageRoleLabel(page: FixedStoryPageTemplate, index: number, total: number) {
+  if (page.pageVisualRole) {
+    return PAGE_VISUAL_ROLE_LABELS[page.pageVisualRole] ?? `ページ ${index + 1}`;
+  }
+
+  const textTemplate = page.textTemplate ?? "";
   if (textTemplate.includes("{parentMessage}") || index === total - 1) {
     return "親からのメッセージ";
   }
@@ -86,7 +129,7 @@ function getFixedPageRoleLabel(textTemplate: string, index: number, total: numbe
   if (index === 2) {
     return "うれしかった瞬間";
   }
-  return `場面 ${index + 1}`;
+  return `ページ ${index + 1}`;
 }
 
 function shouldShowTemplateField(field: string, requiredInputs: string[], optionalInputs: string[]) {
@@ -128,6 +171,7 @@ function InputPageContent() {
   const template = templates.find((item) => item.id === theme);
   const creationMode = template?.creationMode ?? mode;
   const fixedStoryPages = template?.fixedStory?.pages ?? [];
+  const fixedTemplatePageCount = getFixedTemplatePageCount(template);
   const storyPlaceholder = STORY_REQUEST_PLACEHOLDERS[template?.categoryGroupId ?? ""] ?? "例：うちの子らしい冒険のおはなし";
   const requiredInputs = useMemo(() => template?.requiredInputs ?? [], [template]);
   const optionalInputs = useMemo(() => template?.optionalInputs ?? [], [template]);
@@ -332,13 +376,13 @@ function InputPageContent() {
               </p>
               <div className="rounded-2xl bg-violet-50 p-4 text-sm text-violet-600">
                 <p className="font-medium text-purple-900">{primaryFieldLabel}</p>
-                <p className="mt-1">このテンプレートは、決まった物語にお子さんの名前や思い出を差し込んで作ります。4ページ構成で、ストーリー確認済み。早く・安定して作れます。</p>
+                <p className="mt-1">このテンプレートは、決まった物語にお子さんの名前や思い出を差し込んで作ります。{fixedTemplatePageCount}ページ構成で、ストーリー確認済み。早く・安定して作れます。</p>
               </div>
               {fixedStoryPages.length ? (
                 <div className="rounded-2xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.95)] p-4">
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-purple-700">
-                      {fixedStoryPages.length}ページ構成
+                      {fixedTemplatePageCount}ページ構成
                     </span>
                     <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-violet-600">
                       ストーリー確認済み
@@ -355,7 +399,7 @@ function InputPageContent() {
                         return (
                           <div key={`${theme || "template"}-preview-${index}`} className="rounded-2xl bg-white/90 p-3">
                             <p className="text-xs font-semibold text-purple-700">
-                              {index + 1}ページ目: {getFixedPageRoleLabel(page.textTemplate, index, fixedStoryPages.length)}
+                              {index + 1}ページ目: {getFixedPageRoleLabel(page, index, fixedStoryPages.length)}
                             </p>
                             <p className="mt-1 text-sm leading-relaxed text-violet-600">{previewText}</p>
                           </div>
@@ -473,7 +517,7 @@ function InputPageContent() {
 
               {creationMode === "fixed_template" ? (
                 <div className="rounded-2xl bg-violet-50 p-3 text-sm text-violet-600">
-                  このテンプレートは{fixedStoryPages.length || selectedPlanConfig.defaultPageCount}ページ構成です
+                  このテンプレートは{fixedTemplatePageCount}ページ構成です
                 </div>
               ) : (
                 <div>

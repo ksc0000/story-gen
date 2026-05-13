@@ -621,6 +621,26 @@ T3-3c pilot（8-page template）開始条件:
 - `--expected-page-count=8` fails with non-zero exit against existing 4-page smoke book
 - template sync check: pass
 
+## T3-3b-3 Implementation: Create UI Dynamic Page Count Copy (2026-05-13)
+
+### Scope
+
+- Replaced hard-coded fixed template copy (`4ページ構成`) with dynamic page count copy.
+- Page count resolution order in create UI:
+	1. `fixedStory.pageCount`
+	2. `fixedStory.pages.length`
+	3. fallback `4`
+- Updated fixed template page role labels to prefer `pageVisualRole`.
+- Fallback role labeling keeps current behavior for existing 4-page templates.
+- No seed template text changes.
+- No generation / smoke / sync changes in this slice.
+
+### Verification
+
+- root tsc: pass
+- next lint: existing warnings only
+- frontend vitest (`src/__tests__/`): pass
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
