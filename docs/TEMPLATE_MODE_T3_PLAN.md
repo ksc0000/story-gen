@@ -726,6 +726,15 @@ Non-goals for T3-3c:
 - smoke create with `--template-id=fixed-first-birthday-8p --page-count=8 --write`
 - inspect with `--expected-page-count=8`
 
+### T3-3c Smoke Verification
+
+- template: `fixed-first-birthday-8p`
+- bookId: `cOhH25oa7cex7C0yEqB9`
+- sync: completed / target templates count 11 / driftなし
+- smoke: completed / progress 100 / pages 8 / all completed
+- inspect: `--expected-page-count=8` PASS
+- placeholder: 未展開残りなし（title/opening/pages確認）
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
