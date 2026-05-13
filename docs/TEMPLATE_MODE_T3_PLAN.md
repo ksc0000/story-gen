@@ -2327,6 +2327,127 @@ Reason:
 - **Conditional on safe environment:** Compare new smoke outputs against T3-3i review rubric (story structure, text quality, illustration quality, etc.) to verify that specific place context improves creative review signal.
 - **Next implementation:** Continue to T3-3i-3 Text-like Artifact Prompt Refinement Plan.
 
+## T3-3i-3 Text-like Artifact Prompt Refinement Plan
+
+### Status
+
+planned.
+
+### Purpose
+
+Plan prompt refinement work to reduce text-like visual artifacts observed in 8-page fixed_template smoke outputs.
+
+This task does not change code, seed templates, image prompts, smoke scripts, generated books, Firestore data, or Firebase/Auth behavior.
+
+### Background
+
+T3-3i creative review found P2 text-like visual artifacts in decorative/background/signage-like regions.
+
+T3-3i-1 identified text-like artifact reduction as the second creative follow-up workstream after smoke input coverage.
+
+T3-3i-2 completed explicit 8p smoke input coverage, so the next low-risk planning step is prompt refinement planning.
+
+### Target Finding
+
+| finding | severity | affected templates | current rollout blocking? | notes |
+| --- | --- | --- | --- | --- |
+| Text-like visual artifacts in backgrounds/signage/decorations | P2 | both 8p pilots | no | Should reduce before broader 8p expansion. |
+
+### Current Prompt Constraint Inventory
+
+| area | current constraint | observed gap | notes |
+| --- | --- | --- | --- |
+| common safety wrapper (`withFixedImagePromptSafety`) | Appends `FIXED_IMAGE_PROMPT_STANDARD_SUFFIX`: `"no readable writing anywhere, no signage, no storefront signs, no text-like marks"` plus ref-isolation suffix. Applied to every fixed template image prompt via `buildAgeSpecificPage`. | Suffix is broad but does not enumerate specific artifact-prone objects (banners, entrance signs, cards, boards). Does not instruct the model to replace text-prone objects with text-free alternatives. | Strengthening this wrapper affects all fixed templates (4p and 8p). |
+| prompt-builder runtime (`buildImagePrompt`) | Line 248: `"Do not add readable text, signs, labels, logos, brand marks, numbers, watermarks, or random symbols."` Line 636: `"wordless picture book illustration, no written text anywhere, no letters, no captions, no speech bubbles, no labels, no signage, no readable marks, no watermark. Use plain objects and unlabeled backgrounds."` Line 159: regex strips text-related words from prompts. | Runtime layer already provides strong negative constraints. Artifacts persist because the seed prompt describes objects that invite text generation (entrance arch, banners, party decor, souvenir). | Modifying runtime affects all templates including AI-generated stories. Avoid changes here unless targeted 8p fixes prove insufficient. |
+| birthday 8p image prompts | Each page prompt includes inline `"No text, no letters, no Japanese characters, no readable signs, no logo, no watermark"` plus wrapper suffix. | Prompts describe `"paper garlands"`, `"party decor"`, `"confetti-like pastel paper bits"`, `"wrapped present"` — objects that can trigger decorative pseudo-text. No explicit instruction to keep these objects text-free or replace them with plain alternatives. | Targeted prompt refinement on artifact-prone object descriptions is safer than adding more negative constraints. |
+| zoo 8p image prompts | Each page prompt includes inline no-text constraints plus wrapper suffix. Zoo entrance page (page 1) has the most extensive inline constraints including `"No readable writing anywhere, no signage, no storefront signs, no text-like marks"`. | Prompts describe `"decorative entrance arch"`, `"zoo souvenir"`, `"lantern"` — objects strongly associated with signage. Despite heavy negative constraints on entrance page, arch description still invites text-like marks. Other pages have less explicit object-level guidance. | Replacing signage-heavy object descriptions (arch → leafy gateway, souvenir → natural keepsake) may be more effective than adding more negative words. |
+
+### Artifact-prone Elements
+
+| element | affected template | risk | suggested direction |
+| --- | --- | --- | --- |
+| paper garlands / paper chains | `fixed-first-birthday-8p` | medium | Prefer plain fabric garlands, ribbon loops, or balloon clusters without lettering. |
+| party decor / confetti | `fixed-first-birthday-8p` | low-medium | Keep confetti as abstract shapes; avoid flat paper with symbol-like marks. |
+| wrapped present / keepsake | `fixed-first-birthday-8p` | medium | Describe wrapping as plain colored paper with ribbon; avoid gift tags or labels. |
+| decorative entrance arch | `fixed-first-zoo-8p` | high | Replace with leafy natural archway, vine-covered gate, or animal-shaped topiary — no flat signboard surface. |
+| zoo souvenir / leaf keepsake | `fixed-first-zoo-8p` | medium | Prefer natural objects (leaf, pebble, feather) over manufactured souvenirs that may have labels. |
+| lantern / fence post details | `fixed-first-zoo-8p` | low-medium | Keep lanterns plain and glowing; avoid panel-like surfaces that invite pseudo-text. |
+| background decorative marks | both | medium | Add explicit instruction: `"all decorative elements should be plain patterns, natural textures, or simple geometric shapes without letter-like marks"`. |
+
+### Refinement Strategy Options
+
+| option | scope | expected benefit | risk | recommendation |
+| --- | --- | --- | --- | --- |
+| Strengthen common no-text wrapper | all fixed templates using wrapper | Broadly reduces pseudo-text | May over-constrain all images; regression risk across 4p and 8p | evaluate carefully; defer until targeted fixes are tested |
+| Add 8p-specific no-text constraints | only 8p target prompts | Targeted improvement | More template maintenance | recommended first |
+| Replace artifact-prone objects in prompts | specific image prompts | Removes source of pseudo-text at the description level | May change scene composition slightly | recommended for signage-heavy pages (zoo entrance, birthday decor) |
+| Add creative QA checklist notes only | docs/test expectation | Clarifies evaluation criteria | Does not reduce artifacts | supportive only |
+| Runtime prompt builder change | generation path | Centralized control | Broad regression risk across all template types and AI-generated stories | avoid until targeted fixes prove insufficient |
+
+### Proposed Implementation Plan
+
+| order | candidate | target files / areas | validation |
+| --- | --- | --- | --- |
+| 1 | Replace signage-heavy wording in zoo entrance prompt | `fixed-first-zoo-8p` page 1 imagePromptTemplate: change `"decorative entrance arch"` to leafy/natural archway description | build, smoke, inspect, creative review |
+| 2 | Replace souvenir/lantern descriptions in zoo closing pages | `fixed-first-zoo-8p` pages 6-7 imagePromptTemplate | build, smoke, inspect |
+| 3 | Replace paper garland/card/present descriptions in birthday prompts | `fixed-first-birthday-8p` pages 1, 4, 5 imagePromptTemplate: prefer plain fabric/ribbon/colored paper | build, smoke, inspect |
+| 4 | Add explicit plain-decoration instruction to remaining 8p pages | Both 8p templates: append `"all decorative elements plain patterns without letter-like marks"` where not already present | build, smoke, inspect |
+| 5 | Consider common wrapper strengthening only if repeated across templates | `withFixedImagePromptSafety` / `FIXED_IMAGE_PROMPT_STANDARD_SUFFIX` | broader regression check across 4p and 8p |
+| 6 | Re-run creative review on new smoke outputs | docs review | confirm P2 artifact reduction |
+
+### Validation Plan for Future Implementation
+
+| validation | expected result |
+| --- | --- |
+| TypeScript/functions build (`cd functions && npx tsc`) | pass |
+| `node --check` for affected scripts if any | pass |
+| compiled seed includes target 8p templates | pass |
+| smoke creation for `fixed-first-birthday-8p` | completed, 8 pages, failed 0 |
+| smoke creation for `fixed-first-zoo-8p` | completed, 8 pages, failed 0 |
+| inspect for both 8p smoke books | expected 8 / actual 8, placeholders none |
+| creative review: text-like artifact comparison | text-like artifacts reduced or no worse than baseline |
+| existing 4p spot-check | no regression if common wrapper changed |
+
+### Non-goals
+
+- Do not change prompts in this planning task.
+- Do not regenerate images in this planning task.
+- Do not modify runtime prompt builder unless future evidence justifies it.
+- Do not roll back current 8p pilots.
+- Do not block current Go / Monitoring rollout state unless P0/P1 emerges.
+
+### Investigation Summary
+
+| investigated file / area | key finding |
+| --- | --- |
+| `functions/src/seed-templates.ts` lines 9-24 | `withFixedImagePromptSafety` wrapper and `FIXED_IMAGE_PROMPT_STANDARD_SUFFIX` confirmed; applied to all fixed template image prompts via `buildAgeSpecificPage`. |
+| `functions/src/seed-templates.ts` lines 462-611 | `fixed-first-birthday-8p`: 8 pages + cover; all use wrapper; artifact-prone objects: paper garlands, party decor, confetti, wrapped present. |
+| `functions/src/seed-templates.ts` lines 613-762 | `fixed-first-zoo-8p`: 8 pages + cover; all use wrapper; artifact-prone objects: decorative entrance arch, zoo souvenir, lantern. |
+| `functions/src/lib/prompt-builder.ts` lines 159, 248, 344, 436, 602-610, 636 | Runtime prompt builder adds strong no-text constraints globally; regex strips text-related words; fixed template prompts pass through `buildImagePrompt` at runtime. |
+| `functions/src/generate-book.ts` lines 991-1012, 1840-1860 | Fixed template image prompts go through `applyTemplateReplacements` then `buildImagePrompt`; no additional fixed-template-specific filtering at this layer. |
+| `docs/TEMPLATE_MODE_T3_PLAN.md` T3-3i section | P2 text-like artifacts confirmed for both 8p pilots; not rollout-blocking; improvement recommended before broader 8p expansion. |
+| `docs/TEMPLATE_MODE_T3_PLAN.md` T3-3i-1 section | Text-like artifact reduction identified as second creative follow-up workstream; recommended after smoke input coverage. |
+
+### Decision
+
+**Text-like artifact refinement readiness:** Ready for targeted implementation planning
+
+Reason:
+- P2 text-like artifacts are actionable and non-blocking for current rollout.
+- Three layers of no-text constraints already exist (seed wrapper, inline prompt, runtime builder), but artifacts persist because prompts describe objects that invite text generation.
+- The root cause is in seed template object descriptions, not runtime — targeted 8p prompt refinement is safer and more effective than broad runtime changes.
+- T3-3i-2 resolved smoke input specificity, so prompt artifact reduction is the next creative improvement.
+- Future implementation should validate with smoke, inspect, and creative review before broader 8p expansion.
+- No P0/P1 creative blockers found during this investigation.
+
+### Follow-up
+
+- Create `T3-3i-3a Targeted 8p Prompt Artifact Reduction` (implementation task).
+- Re-run 8p smoke creation after prompt changes.
+- Re-run creative review on updated smoke outputs.
+- Continue to registered-child/reference-flow creative review after artifact reduction.
+- Use findings for T3-4 additional 8p variant planning.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
