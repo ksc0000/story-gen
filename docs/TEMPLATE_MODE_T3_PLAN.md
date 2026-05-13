@@ -1531,6 +1531,83 @@ Reason:
 - If popup login cannot be made available in the in-app browser, treat this as a QA environment issue rather than an 8-page template implementation issue.
 - If Admin access still requires separate privilege after successful user login, record the Admin portion as `blocked by admin auth`.
 
+## T3-3g-5 Manual Browser Auth Session Interactive QA
+
+### Status
+
+pass.
+
+### Scope
+
+Manual browser authenticated QA for 8-page fixed_template display and navigation.
+
+Creative quality and full story composition were not evaluated in this QA scope.
+
+### Target
+
+| template | smoke bookId | expected pages |
+| --- | --- | --- |
+| `fixed-first-birthday-8p` | `cOhH25oa7cex7C0yEqB9` | 8 |
+| `fixed-first-zoo-8p` | `esAcMbgjjN6Tj5IIg3Sy` | 8 |
+
+### Manual Auth Session
+
+| check | result | notes |
+| --- | --- | --- |
+| local app started | pass | `npm run dev` succeeded |
+| popup-enabled browser session | pass | Google login worked in a manual browser session |
+| authenticated user session established | pass | Admin-authorized account was logged in; no credentials, tokens, cookies, service account details, or email address were recorded |
+| Reader route reachable without `/login` redirect | pass | Both smoke book URLs opened |
+| Create route reachable without `/login` redirect | pass | `/create/input` opened |
+| Admin route reachable or auth gate documented | pass | Admin-authorized account could access the review route |
+
+### Reader QA Result
+
+| template | R1 open | R2 progress | R3 next to final | R4 prev to first | R5 final message | R6 images | R7 text | R8 mobile | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | pass | pass | pass | pass | pass | pass | pass | pass | All display and navigation checks passed |
+| `fixed-first-zoo-8p` | pass | pass | pass | pass | pass | pass | pass | pass | All display and navigation checks passed |
+
+### Create UI QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| C1 create input page loads | pass |  |
+| C2 fixed-first-birthday shows 4-page copy | pass |  |
+| C3 fixed-first-birthday-8p shows 8-page copy | pass |  |
+| C4 fixed-first-zoo shows 4-page copy | pass |  |
+| C5 fixed-first-zoo-8p shows 8-page copy | pass |  |
+| C6 page role labels are understandable and not index-hardcoded | pass |  |
+| C7 4p and 8p variants are distinguishable | pass |  |
+
+### Admin / Review QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| A1 admin review page loads/auth gate documented | pass | Admin-authorized account used |
+| A2 birthday smoke book shows 8 pages | pass |  |
+| A3 zoo smoke book shows 8 pages | pass |  |
+| A4 all 8 completed statuses visible | pass |  |
+| A5 page-level regeneration action is page-specific | pass | UI confirmation only; regeneration was not executed and no DB update was attempted |
+| A6 no severe layout break with 8 pages | pass |  |
+
+### Observed Issues
+
+- P0/P1: None observed.
+- P2/P3: None observed in this QA scope.
+- Creative quality and story composition were not evaluated in this interactive QA.
+
+### Go / No-go
+
+**Production candidate:** Go
+
+Reason:
+- Manual browser authentication succeeded with an admin-authorized account.
+- Reader QA passed for both 8-page smoke books.
+- Create UI QA passed for 4p / 8p template distinction.
+- Admin Review QA passed for both 8-page smoke books.
+- No P0/P1 blocker was observed.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
