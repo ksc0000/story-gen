@@ -1378,6 +1378,91 @@ Reason:
 - If Reader and Create pass but Admin is blocked only by admin permission/search path, update the production decision to `Conditional`.
 - If Reader, Create, and Admin all pass, update the production decision to `Go`.
 
+## T3-3g-3 QA Auth Path Definition
+
+### Status
+
+completed.
+
+### Background
+
+T3-3g-1 confirmed that unauthenticated access redirects Reader, Create, and Admin routes to `/login/`.
+
+T3-3g-2 attempted authenticated QA, but the session could not be established because Firebase Auth returned `auth/popup-blocked` during the Google login flow.
+
+Therefore, before re-running Reader / Create / Admin QA, the QA authentication path must be documented.
+
+### Current Auth Behavior
+
+| item | result | notes |
+| --- | --- | --- |
+| unauthenticated Reader access | redirect to `/login/` | observed in T3-3g-1; app layout guards protected app routes |
+| unauthenticated Create access | redirect to `/login/` | observed in T3-3g-1; app layout guards protected app routes |
+| unauthenticated Admin access | redirect to `/login/` | observed in T3-3g-1; admin review page also links to `/admin/login` |
+| Google login attempt | blocked | T3-3g-2 observed Firebase `auth/popup-blocked`; app currently calls `signInWithPopup`, not redirect login |
+| authenticated session | not established | Reader / Create / Admin QA remained blocked in T3-3g-2 |
+| Admin auth path | documented | `/admin/login/` plus admin claim bootstrap is documented in `docs/admin-claim-bootstrap.md` |
+
+### Required QA Auth Path
+
+Use one of the following documented paths before re-running T3-3g QA:
+
+| path | expected use | status | notes |
+| --- | --- | --- | --- |
+| Popup-enabled browser session | Local manual QA | available | Browser popups must be allowed for `localhost:3000`; current app auth path uses `signInWithPopup`. |
+| Redirect-based login path | Local manual QA fallback | not implemented | `signInWithRedirect` is not present in current codebase. Do not implement in this task. |
+| Existing documented QA account/session | Local manual QA | pending | Specific QA credentials/session are not stored in repo docs. Arrange account access out-of-band and do not record secrets here. |
+| Admin-authorized QA account | Admin Review QA | pending | `/admin/login/` flow is documented, but the allowed email must already be included in Functions `ADMIN_EMAILS`. Do not record credentials in docs. |
+
+### Recommended Execution Order
+
+1. Start the local app with normal auth enabled. Do not use demo mode for this QA.
+2. Open `/login/` in a popup-enabled browser session and complete Google login manually.
+3. Confirm protected app routes no longer redirect to `/login/`.
+4. For Admin QA, open `/admin/login/` and enable admin claim if the signed-in account is authorized.
+5. Re-open `/admin/book-quality-review` only after admin claim is reflected.
+
+### Pre-flight Checklist for T3-3g-4
+
+Before re-running authenticated QA:
+
+| check | required result | notes |
+| --- | --- | --- |
+| local app starts | pass | `npm run dev` |
+| browser popup allowed for localhost | pass | Required because the app currently uses popup login |
+| user session established | pass | Confirm app no longer redirects to `/login/` |
+| Reader route reachable | pass | Test with the birthday / zoo book IDs |
+| Create route reachable | pass | Confirm `/create/input` loads |
+| Admin route reachable or admin auth gate documented | pass / blocked by admin auth | Admin review may require separate claim activation |
+| admin claim reflected in ID token | pass / blocked by admin auth | `/admin/login/` calls bootstrap + token refresh; if not reflected, document the block |
+| demo mode disabled for real QA | pass | Demo mode bypass is not valid evidence for real authenticated 8-page QA |
+| no secrets recorded | pass | Do not document credentials, tokens, cookies, or service account details |
+
+### Next Execution Target
+
+T3-3g-4 should re-run authenticated interactive QA after the QA auth path is satisfied.
+
+Target routes:
+
+| area | URL |
+| --- | --- |
+| Reader birthday | `http://localhost:3000/book/?id=cOhH25oa7cex7C0yEqB9` |
+| Reader zoo | `http://localhost:3000/book/?id=esAcMbgjjN6Tj5IIg3Sy` |
+| Create UI | `http://localhost:3000/create/input` |
+| Admin Review | `http://localhost:3000/admin/book-quality-review` |
+
+### Go / No-go
+
+**Production candidate:** Hold
+
+Reason:
+- Authenticated QA is still blocked until a reproducible QA auth path is available and exercised.
+
+### Follow-up
+
+- Re-run Reader / Create / Admin QA in T3-3g-4 using a popup-enabled browser session or another documented QA auth path.
+- If Admin access requires a separate role, record it as `blocked by admin auth` unless an admin-authorized QA account is available.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
