@@ -641,6 +641,59 @@ T3-3c pilot（8-page template）開始条件:
 - next lint: existing warnings only
 - frontend vitest (`src/__tests__/`): pass
 
+## T3-3b-4 Compatibility Verification / 8-page Pilot Readiness Check
+
+### Status
+
+completed.
+
+### Verification Matrix
+
+| area | check | result |
+| --- | --- | --- |
+| sync | accepts 4/8/12 page count contract | pass |
+| tests | seed template tests no longer assume all templates are exactly 4 pages | pass |
+| smoke create | `--page-count=4` and `--page-count=8` accepted | pass |
+| smoke create | invalid `--page-count=6` rejected | pass |
+| smoke inspect | `--expected-page-count=4` passes on existing 4-page book | pass |
+| smoke inspect | `--expected-page-count=8` fails on existing 4-page book | pass |
+| create UI | fixed template copy uses dynamic page count | pass |
+| create UI | page role label prefers `pageVisualRole` | pass |
+
+### Remaining Known Defaults
+
+- `default 4` remains intentionally for backward compatibility.
+- Existing fixed templates remain 4-page.
+- No 8-page seed template has been added yet.
+
+### Go / No-go
+
+**Go for T3-3c pilot 8-page template.**
+
+Reason:
+- High blockers: 0
+- sync/test/smoke/create UI are no longer hard-blocked by a 4-page-only assumption
+- generation path was already `pages.length` based from T3-3a audit
+- reader/admin were already dynamic enough for pilot verification
+
+### Recommended T3-3c Pilot
+
+Start with one low-risk 8-page template variant.
+
+Recommended candidate:
+- `fixed-first-birthday`
+
+Reason:
+- already recently cleaned up in T3-2
+- simple narrative arc
+- birthday scenes naturally split into more beats
+- smoke and UI verification history exists
+
+Non-goals for T3-3c:
+- do not convert all templates
+- do not add 12-page yet
+- do not change pricing beyond documenting assumptions
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
