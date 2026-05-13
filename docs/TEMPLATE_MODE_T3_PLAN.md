@@ -2217,6 +2217,116 @@ Reason:
 - Create implementation task: `T3-3i-4 Registered-child Reference Flow Creative Review`.
 - Use the results before starting `T3-4 Additional 8-page Variant Planning`.
 
+## T3-3i-2 Smoke Input Coverage for 8-page Creative QA
+
+### Status
+
+completed.
+
+### Purpose
+
+Add explicit smoke input coverage for the 8-page fixed_template variants so creative QA does not fall back to generic placeholder values.
+
+### Background
+
+T3-3i found that `fixed-first-zoo-8p` smoke output used fallback `{place}` value `たのしい場所`, weakening creative review specificity.
+
+T3-3i-1 identified smoke input coverage as the lowest-risk first follow-up before broader 8-page variant expansion.
+
+### Scope
+
+This task updates only smoke input coverage and docs.
+
+It does not change:
+- seed template story content
+- image prompts
+- text prompts
+- parent messages
+- generation runtime
+- Firestore rules
+- Firebase/Auth behavior
+
+### Target Templates
+
+| template | issue | target result |
+| --- | --- | --- |
+| `fixed-first-birthday-8p` | explicit 8p fixture coverage needed | dedicated 8p smoke input |
+| `fixed-first-zoo-8p` | `{place}` fallback used `たのしい場所` | dedicated 8p smoke input with specific place |
+
+### Implementation Summary
+
+| area | result | notes |
+| --- | --- | --- |
+| smoke input fixture lookup | pass | `scripts/create-template-smoke-books.js` buildInputForTemplate now checks both 4p and 8p variant IDs. |
+| `fixed-first-birthday-8p` explicit input | pass | Added case: `if (templateId === "fixed-first-birthday-8p")` with `familyMembers: "family"` |
+| `fixed-first-zoo-8p` explicit input | pass | Added case: `if (templateId === "fixed-first-zoo-8p")` with `place: "city zoo"` and `familyMembers: "family"` |
+| `fixed-first-zoo-8p` specific `place` | pass | `place: "city zoo"` is now explicit in fixture, not fallback `たのしい場所`. |
+| existing 4p fixture behavior | pass | Existing `fixed-first-birthday` and `fixed-first-zoo` cases remain unchanged. No 4p regression. |
+
+### Changes Made
+
+**File:** `scripts/create-template-smoke-books.js` (lines 142-163)
+
+Added two new conditional branches in `buildInputForTemplate`:
+
+1. `fixed-first-zoo-8p` case:
+   ```javascript
+   if (templateId === "fixed-first-zoo-8p") {
+     return {
+       ...base,
+       place: "city zoo",
+       familyMembers: "family",
+     };
+   }
+   ```
+
+2. `fixed-first-birthday-8p` case:
+   ```javascript
+   if (templateId === "fixed-first-birthday-8p") {
+     return {
+       ...base,
+       familyMembers: "family",
+     };
+   }
+   ```
+
+Both cases are inserted immediately after their 4p counterparts, maintaining parallel structure and clarity.
+
+### Validation Result
+
+| check | result | notes |
+| --- | --- | --- |
+| `node --check scripts/create-template-smoke-books.js` | pass | No syntax errors. |
+| `git diff --check` | pass | No trailing whitespace or line-ending issues. |
+| smoke creation | not run | Existing safe credentials/environment not verified for this session. Recommend re-running smoke creation with confirmed safe credentials before re-running creative review. |
+| generated files | pass | No generated files or build artifacts included in this commit. |
+| secrets | pass | No credentials, tokens, cookies, or service account JSON recorded in code or docs. |
+
+### Creative QA Impact
+
+| item | expected improvement |
+| --- | --- |
+| `fixed-first-zoo-8p` place specificity | Future smoke books created with `--template-id=fixed-first-zoo-8p` will now use `place: "city zoo"` instead of fallback `たのしい場所`. |
+| `fixed-first-birthday-8p` fixture coverage | Smoke books created with `--template-id=fixed-first-birthday-8p` now receive explicit 8p input fixture. |
+| 8p creative review signal | Review outputs for both 8p templates should better represent the intended template context. |
+| Additional 8p planning | Smoke input infrastructure is now ready for T3-4 additional 8-page variant planning; no future variants will inadvertently fall back to generic values. |
+
+### Decision
+
+**Smoke input coverage status:** Go
+
+Reason:
+- 8p fixture addition completed and syntax-validated.
+- `fixed-first-zoo-8p` fallback issue resolved: `place: "city zoo"` is now explicit.
+- Existing 4p fixtures remain unchanged; no regression.
+- Ready to proceed to T3-3i-3 Text-like Artifact Prompt Refinement.
+
+### Follow-up
+
+- **Recommended:** Re-run smoke creation with `--template-id=fixed-first-birthday-8p` and `--template-id=fixed-first-zoo-8p` if safe credentials/environment are confirmed, and use output for re-running creative review in T3-3i-4.
+- **Conditional on safe environment:** Compare new smoke outputs against T3-3i review rubric (story structure, text quality, illustration quality, etc.) to verify that specific place context improves creative review signal.
+- **Next implementation:** Continue to T3-3i-3 Text-like Artifact Prompt Refinement Plan.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）

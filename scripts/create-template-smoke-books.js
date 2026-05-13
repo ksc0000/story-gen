@@ -139,7 +139,22 @@ function buildInputForTemplate(templateId, index) {
     };
   }
 
+  if (templateId === "fixed-first-zoo-8p") {
+    return {
+      ...base,
+      place: "city zoo",
+      familyMembers: "family",
+    };
+  }
+
   if (templateId === "fixed-first-birthday") {
+    return {
+      ...base,
+      familyMembers: "family",
+    };
+  }
+
+  if (templateId === "fixed-first-birthday-8p") {
     return {
       ...base,
       familyMembers: "family",
