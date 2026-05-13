@@ -2105,6 +2105,118 @@ Reason:
 - Run a creative review with a real registered child/reference path before using character consistency as a final product-quality signal.
 - Use this review as an input before `T3-4 Additional 8-page Variant Planning`.
 
+## T3-3i-1 Creative Follow-up Planning
+
+### Status
+
+planned.
+
+### Purpose
+
+Plan follow-up work for P2 creative findings from T3-3i before expanding additional 8-page fixed_template variants.
+
+This task does not change code, seed text, image prompts, smoke scripts, generated books, Firestore data, or Firebase/Auth behavior.
+
+### Background
+
+T3-3i completed creative quality review for the two 8-page fixed_template pilots.
+
+| item | result |
+| --- | --- |
+| Creative rollout status | Conditional |
+| P0/P1 creative blocker | none |
+| Current 8p pilot rollback needed | no |
+| Broader 8p expansion | should address P2 findings first |
+
+### Investigation Summary
+
+**Investigation date:** 2026-05-14
+
+**Investigated areas:**
+1. Creative review findings from T3-3i (T3-3i Decision and Follow-up sections)
+2. 8-page template definitions in `functions/src/seed-templates.ts`
+3. Smoke input fixtures in `scripts/create-template-smoke-books.js`
+4. Prompt safety constraints in `functions/src/seed-templates.ts`
+5. Reference image handling in `functions/src/generate-book.ts`
+
+**Key findings:**
+
+| finding | location | current state | notes |
+| --- | --- | --- | --- |
+| 8p smoke fixture for `fixed-first-birthday-8p` | `scripts/create-template-smoke-books.js` | **missing** | Uses default values; no template-specific input. |
+| 8p smoke fixture for `fixed-first-zoo-8p` | `scripts/create-template-smoke-books.js` | **missing** | Uses default values; `{place}` falls back to untranslated `たのしい場所` |
+| Image prompt safety wrapper | `functions/src/seed-templates.ts` lines 8-24 | present | Already adds "no readable writing", "no signage", "no storefront signs", "no text-like marks" |
+| No-text prompt in `fixed-first-birthday-8p` | `functions/src/seed-templates.ts` lines 491-511 | present | Explicit "no text, no letters, no Japanese characters, no readable signs" in multiple imagePromptTemplate blocks |
+| No-text prompt in `fixed-first-zoo-8p` | `functions/src/seed-templates.ts` lines 642-760 | present | Explicit "no text, no letters, no Japanese characters, no readable signs" in multiple imagePromptTemplate blocks |
+| Reference image for character consistency | `functions/src/generate-book.ts` lines 153-211 | configured | Smoke generation path does not use reference image; registered-user flow uses `visualProfile.referenceImageUrl` if available |
+| Page role for quiet endings in `fixed-first-birthday-8p` | `functions/src/seed-templates.ts` page 6 & page 8 | both "quiet_ending" | Page 6: `pageVisualRole: "emotional_closeup"` → actually "emotional_closeup", not "quiet_ending". Page 8: `pageVisualRole: "quiet_ending"` |
+| {place} placeholder in `fixed-first-zoo-8p` | `functions/src/seed-templates.ts` line 637 | required input | Zoo page 2 uses `{place}` textTemplate. Smoke fixture missing: place is not provided to buildInputForTemplate. |
+
+### Target Findings
+
+| finding | severity | affected templates | blocking current rollout? | notes |
+| --- | --- | --- | --- | --- |
+| Character consistency drift across pages | P2 | both 8p pilots | no | Smoke books did not use child reference image flow. |
+| Text-like visual artifacts in backgrounds/signage/decorations | P2 | both 8p pilots | no | Despite prompt safety wrapper and no-text constraints, decorative pseudo-text still appears. Should reduce before broader 8p expansion. |
+| 8p smoke input specificity | P2 | especially `fixed-first-zoo-8p` | no | `{place}` placeholder not provided in smoke fixture; falls back to untranslated `たのしい場所`. |
+| Page role overlap in quiet closing beats | P3 | `fixed-first-birthday-8p` | no | Page 6 is "emotional_closeup", page 8 is "quiet_ending". Actual structure is reasonable; template definition review shows no actual overlap. |
+| Slightly unrealistic animal scene | P3 | `fixed-first-zoo-8p` | no | Not blocking; track as prompt refinement candidate. |
+
+### Follow-up Workstreams
+
+| workstream | goal | priority | proposed owner | implementation task needed? |
+| --- | --- | --- | --- | --- |
+| Smoke input coverage | Ensure 8p variant IDs receive specific smoke inputs; avoid fallback values | P2 | engineering | yes |
+| Text-like artifact reduction | Reduce generated letters/signage/decorative pseudo-text in image generation | P2 | template/prompt | yes |
+| Character consistency review | Separate smoke-only limitations from registered-child reference flow; validate reference-flow consistency | P2 | product/ML | yes |
+| Page role documentation | Clarify that `fixed-first-birthday-8p` page roles do not actually overlap; update if needed | P3 | template/editorial | optional |
+| Creative QA checklist reuse | Prepare T3-3i rubric for reuse on future 8p variant reviews | P3 | product | optional |
+
+### Proposed Implementation Candidates
+
+| candidate | scope | candidate files / areas | expected effect | risk | notes |
+| --- | --- | --- | --- | --- |
+| Add explicit 8p smoke input fixtures | smoke scripts only | `scripts/create-template-smoke-books.js` lines 128-158 (`buildInputForTemplate` function) | Avoid fallback values such as `たのしい場所`; improve signal quality for future smoke review and creative QA | low | Add `if (templateId === "fixed-first-birthday-8p")` and `if (templateId === "fixed-first-zoo-8p")` cases with specific `place` and other inputs. |
+| Strengthen no-text visual prompt constraints | template/image prompt area | `functions/src/seed-templates.ts` lines 8-24 (FIXED_IMAGE_PROMPT_STANDARD_SUFFIX) or individual imagePromptTemplate blocks | Reduce pseudo-text artifacts in signs/decor/backgrounds | medium | Consider expanding FIXED_IMAGE_PROMPT_STANDARD_SUFFIX with more specific no-text/no-symbol guidance, or add template-specific prompts for 8p variants. |
+| Add creative smoke notes for reference-less character drift | docs/test expectation | `docs/TEMPLATE_MODE_T3_PLAN.md` and future smoke review checklist | Avoid misclassifying smoke-only identity drift as registered-user blocker | low | Document that smoke books use no reference image; reference-flow reviews should be separate validation. |
+| Add registered-child/reference-flow creative review task | future QA task | Reader/Create/Admin manual QA + generated book review | Validate identity consistency in realistic user flow | medium | Plan a follow-up review with a real registered child profile and reference image enabled. |
+| Track page role guidance for future 8p variants | template planning docs | Future T3-4 or variant planning section | Improve pacing in additional 8p templates | low | Document that even two "quiet" pages can work if they serve different purposes (emotional reflection vs. closing scene). |
+
+### Recommended Execution Order
+
+| order | task | reason | ownership |
+| --- | --- | --- | --- |
+| 1 | Add explicit 8p smoke input coverage | Lowest risk; improves signal quality for future smoke/review immediately. | engineering |
+| 2 | Plan no-text artifact prompt refinement | Addresses recurring visual issue before broader expansion. | template/prompt |
+| 3 | Run registered-child/reference-flow creative review | Determines whether character drift is smoke-only or product-flow issue. | product/QA |
+| 4 | Re-run creative review on updated smoke outputs | Confirms P2 findings are reduced. | product |
+| 5 | Use findings as input for T3-4 additional 8p variant planning | Prevents multiplying known issues into new templates. | product |
+
+### Non-goals
+
+- Do not roll back the current 8p pilots.
+- Do not block current Go / Monitoring rollout state unless P0/P1 emerges.
+- Do not modify seed text or prompts in this planning task.
+- Do not regenerate images in this planning task.
+- Do not add new 8p variants in this planning task.
+
+### Decision
+
+**Creative follow-up readiness:** Ready for implementation planning
+
+Reason:
+- T3-3i found no P0/P1 blocker.
+- P2 findings are actionable and should be addressed before broader 8p expansion.
+- Investigation confirmed that missing 8p smoke fixtures and existing no-text constraints are the primary implementation candidates.
+- The safest next implementation is smoke input coverage, followed by prompt refinement and reference-flow review.
+
+### Follow-up
+
+- Create implementation task: `T3-3i-2 Smoke Input Coverage for 8-page Creative QA`.
+- Create implementation task: `T3-3i-3 Text-like Artifact Prompt Refinement Plan`.
+- Create implementation task: `T3-3i-4 Registered-child Reference Flow Creative Review`.
+- Use the results before starting `T3-4 Additional 8-page Variant Planning`.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
