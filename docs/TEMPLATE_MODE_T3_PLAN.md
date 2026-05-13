@@ -1857,6 +1857,85 @@ Reason:
 - Record post-rollout monitoring results.
 - Consider a separate creative quality review for image quality and story composition.
 
+## T3-3h-2 Controlled Production Rollout Execution
+
+### Status
+
+completed.
+
+### Purpose
+
+Execute the controlled rollout validation path for the validated 8-page fixed_template pilots.
+
+### Target
+
+| template | expected pages | rollout target |
+| --- | --- | --- |
+| `fixed-first-birthday-8p` | 8 | controlled rollout |
+| `fixed-first-zoo-8p` | 8 | controlled rollout |
+
+### Build Result
+
+| check | result | notes |
+| --- | --- | --- |
+| `npm --prefix functions run build` | pass | `tsc` completed successfully. |
+| compiled `fixed-first-birthday-8p` present | pass | Found in `functions/lib/seed-templates.js` after build. |
+| compiled `fixed-first-zoo-8p` present | pass | Found in `functions/lib/seed-templates.js` after build. |
+| compiled `pageCount: 8` present | pass | Two `pageCount: 8` entries found for the 8p templates. |
+| compiled `layoutVariant: "8_page"` present | pass | Two `layoutVariant: "8_page"` entries found for the 8p templates. |
+| generated files restored before commit | pass | `functions/lib/seed-templates.js` and `.map` were restored and not committed. |
+
+### Template Sync Result
+
+| check | result | notes |
+| --- | --- | --- |
+| sync check | pass | Initial run without credentials was blocked by missing `GOOGLE_APPLICATION_CREDENTIALS`; rerun with local ignored credentials succeeded. No credential contents were recorded. |
+| sync write | not run | Dry-run reported no drift, so no write was required. |
+| birthday 8p included | pass | `fixed-first-birthday-8p` included in sync target. |
+| zoo 8p included | pass | `fixed-first-zoo-8p` included in sync target. |
+| target template count | pass | `target templates count = 12`. |
+| drift/write result | pass | All 12 target templates reported empty issue arrays; write skipped. |
+
+### Smoke Result
+
+| template | smoke bookId | status | progress | pages | failed | imageFallbackUsed | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | `SLCwHBiveY7bxGZ7OtYD` | completed | 100 | 8 | 0 | 0 | Created with `--page-count=8 --write`; all pages completed. |
+| `fixed-first-zoo-8p` | `Dg0VVej8As2NwcTai9Zy` | completed | 100 | 8 | 0 | 0 | Created with `--page-count=8 --write`; all pages completed. |
+
+### Inspect Result
+
+| template | bookId | expected pages | actual pages | result | page statuses | placeholders | page numbers | reading structure | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | `SLCwHBiveY7bxGZ7OtYD` | 8 | 8 | pass | all completed | none | `0,1,2,3,4,5,6,7` | `v2_cover_title_story` | `coverStatus=completed`, `hasCoverPage=true`. |
+| `fixed-first-zoo-8p` | `Dg0VVej8As2NwcTai9Zy` | 8 | 8 | pass | all completed | none | `0,1,2,3,4,5,6,7` | `v2_cover_title_story` | `coverStatus=completed`, `hasCoverPage=true`. |
+
+### Existing 4p Regression Spot-check
+
+| template | result | notes |
+| --- | --- | --- |
+| `fixed-first-birthday` | pass | Firestore template exists, `active=true`, `creationMode=fixed_template`, `fixedStory.pages.length=4`. |
+| `fixed-first-zoo` | pass | Firestore template exists, `active=true`, `creationMode=fixed_template`, `fixedStory.pages.length=4`. |
+
+### Rollout Execution Decision
+
+**Controlled rollout execution:** Go
+
+Reason:
+- Functions build refreshed the local compiled seed and confirmed both 8p templates are present.
+- Template sync dry-run included both 8p templates and reported no drift across 12 fixed templates.
+- Sync write was not needed because target templates were already in sync.
+- Controlled smoke creation completed for both 8p templates.
+- Inspect confirmed both generated books have exactly 8 pages, all page statuses completed, page numbers `0..7`, no placeholder remnants, no image fallback use, and `v2_cover_title_story` reading structure.
+- Existing 4-page birthday and zoo templates remain active with 4 fixedStory pages.
+- Generated `functions/lib` artifacts were restored before commit.
+
+### Follow-up
+
+- Record post-rollout monitoring after the first real user-facing 8p creations.
+- Keep creative image quality and story composition review as a separate task.
+- Use production observations before adding more 8-page fixed_template variants.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
