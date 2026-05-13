@@ -765,6 +765,79 @@ completed.
 - Page 7 and page 8 intentionally both close the story, but with different emphasis: afterglow scene, then parent message closing.
 - No code changes were required for this review pass.
 
+## T3-3d Manual QA Checklist: 8-page Reader/UI
+
+### Status
+
+planned.
+
+### Target
+
+- template: `fixed-first-birthday-8p`
+- smoke bookId: `cOhH25oa7cex7C0yEqB9`
+- expected page count: 8
+
+### Preconditions
+
+- Firestore sync completed
+- smoke completed / progress 100
+- inspect `--expected-page-count=8` PASS
+- no P0/P1 blocker from T3-3c-2 review
+
+### Data QA
+
+| check | expected | result |
+| --- | --- | --- |
+| book document page count | `pageCount=8` | pending |
+| pages subcollection count | 8 pages exist | pending |
+| page numbering | pageNumber is 1〜8 or existing spec remains consistent | pending |
+| page status coverage | all 8 pages are present and readable | pending |
+
+### Reader QA
+
+| check | expected | result |
+| --- | --- | --- |
+| book opens | Reader loads without error | pending |
+| total page count | shows 8 pages or equivalent progress | pending |
+| next navigation | can move from page 1 to page 8 | pending |
+| previous navigation | can move backward without error | pending |
+| final page | parent message closing displays naturally | pending |
+| progress indicator | reflects 8-page sequence | pending |
+| image rendering | all 8 images visible | pending |
+| text rendering | all 8 page texts visible without overflow | pending |
+| mobile viewport | no severe layout break | pending |
+
+### Create UI QA
+
+| check | expected | result |
+| --- | --- | --- |
+| 4-page template display | `fixed-first-birthday` shows 4-page copy | pending |
+| 8-page template display | `fixed-first-birthday-8p` shows 8-page copy | pending |
+| page role labels | preview uses pageVisualRole-based labels | pending |
+| template selection | both birthday templates are distinguishable | pending |
+
+### Admin / Review QA
+
+| check | expected | result |
+| --- | --- | --- |
+| book page list | 8 pages are visible | pending |
+| page status | all 8 completed statuses visible | pending |
+| regeneration action | page-level action does not assume 4 pages | pending |
+| quality review | 8-page book can be reviewed without layout issue | pending |
+
+### Go / No-go Criteria
+
+Go to second 8-page pilot only if:
+
+- Reader can navigate all 8 pages
+- Create UI correctly differentiates 4p vs 8p template
+- Admin/review UI does not hide pages 5〜8
+- No P0/P1 layout or data issue
+
+### Recommended Next Step
+
+Run manual QA against smoke book `cOhH25oa7cex7C0yEqB9`.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
