@@ -6,6 +6,7 @@ const FIXED_TEMPLATE_IDS = [
   "fixed-first-zoo",
   "fixed-first-birthday",
   "fixed-first-birthday-8p",
+  "fixed-first-zoo-8p",
   "fixed-bedtime-good-day",
   "fixed-brush-teeth",
   "fixed-first-christmas",
@@ -64,6 +65,16 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
     "quiet_ending",
     "quiet_ending",
   ],
+  "fixed-first-zoo-8p": [
+    "opening_establishing",
+    "discovery",
+    "discovery",
+    "object_detail",
+    "setback_or_question",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending",
+  ],
   "fixed-bedtime-good-day": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-brush-teeth": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-first-christmas": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
@@ -91,6 +102,7 @@ const EXPECTED_FIXED_SAMPLE_IMAGES: Record<string, string> = {
   "fixed-first-zoo": "/images/templates/animals.png",
   "fixed-first-birthday": "/images/templates/food.png",
   "fixed-first-birthday-8p": "/images/templates/food.png",
+  "fixed-first-zoo-8p": "/images/templates/animals.png",
   "fixed-bedtime-good-day": "/images/templates/bedtime.png",
   "fixed-brush-teeth": "/images/templates/daily-habits.png",
   "fixed-first-christmas": "/images/templates/seasonal.png",
@@ -130,10 +142,10 @@ function assertFixedStoryPageCountContract(fixedStory: {
 }
 
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
-  it("Phase T3-3c: fixed templates are expanded to 11 (10 legacy + 1 pilot)", () => {
-    expect(FIXED_TEMPLATE_IDS.length).toBe(11);
+  it("Phase T3-3e: fixed templates are expanded to 12 (10 legacy + 2 pilots)", () => {
+    expect(FIXED_TEMPLATE_IDS.length).toBe(12);
     const existing = FIXED_TEMPLATE_IDS.filter((id) => SEED_TEMPLATES[id]);
-    expect(existing.length).toBe(11);
+    expect(existing.length).toBe(12);
   });
 
   for (const id of FIXED_TEMPLATE_IDS) {

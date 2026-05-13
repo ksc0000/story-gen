@@ -610,6 +610,157 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-first-zoo-8p": {
+    name: "はじめてのどうぶつえん（8ページ）",
+    description: "はじめての動物園を、出発の朝から発見、少し成長した帰り道までゆっくり描く8ページ版です。",
+    icon: "🦁",
+    categoryGroupId: "memories",
+    subcategoryId: "first-time",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName", "place", "familyMembers"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["memory", "zoo", "first outing", "pilot-8-page"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/animals.png",
+    sampleImageAlt: "家族と動物園を楽しむ子どものやさしい絵本イメージ（8ページ版）",
+    visualDirection:
+      "Gentle family memory picture-book cover with warm daylight, friendly zoo atmosphere, soft smiles, and a keepsake-photo feeling over a gentle 8-page rhythm.",
+    order: 3.5,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめての動物園の思い出を8ページでゆっくり残す絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}とはじめてのどうぶつえん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a young child standing beside a decorative zoo entrance arch without readable text, with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "{childName}と はじめての どうぶつえん",
+      openingNarrationTemplate:
+        "きょうは とくべつな日。{childName}は {familyMembers}と いっしょに、はじめての どうぶつえんへ でかけます。どんな であいが まっているかな。",
+      pageCount: 8,
+      layoutVariant: "8_page",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "どうぶつえんの あさは、でかける まえから わくわくがいっぱいです。",
+          baby_toddler: "でかけるよ。わくわく。どうぶつえん。",
+          preschool_3_4:
+            "どうぶつえんの あさは、でかける まえから わくわくが いっぱいです。{childName}は てばやく じゅんびを すませます。",
+          early_reader_5_6:
+            "どうぶつえんの あさは、でかける まえから わくわくが いっぱいです。{childName}は まどから そとを みながら、どんな どうぶつと あえるかを かぞえます。",
+          early_elementary_7_8:
+            "どうぶつえんの あさは、でかける まえから わくわくが いっぱいです。{childName}は {familyMembers}と いっしょに でかける まえの その じかんまで たのしく なります。",
+          general_child:
+            "どうぶつえんの あさは、でかける まえから わくわくが いっぱいです。{childName}は てばやく じゅんびを すませます。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Setting: cozy home in morning light before a zoo outing, NOT a zoo, NOT an animal exhibit. Establishing wide shot of a young child in a sunlit room ready to go out, wearing a backpack or hat, standing near the front door with family. Family members are smiling and preparing to leave. Warm golden morning light streams through a window. A small yellow star motif is tucked on the child's bag strap or hat. Soft watercolor picture book style, gentle anticipation mood, layered foreground-midground-background, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。",
+          baby_toddler: "{place}に ついたよ。いりぐち、おおきい。",
+          preschool_3_4:
+            "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。たかい ゲートを みあげて、こころが はずみます。",
+          early_reader_5_6:
+            "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。いりぐちの ちずを みながら、つぎは どこへ いこうかと そうぞうが ひろがります。",
+          early_elementary_7_8:
+            "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。はじめての ばしょの においと おとが、{childName}のまわりをつつみます。",
+          general_child:
+            "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。たかい ゲートを みあげて、こころが はずみます。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Setting: zoo entrance grounds with decorative arch and tree-lined paths — NOT a sandbox, NOT an outdoor playground, NOT a park. Wide establishing shot of a young child arriving at a friendly zoo entrance with family. The child stands near a tree-lined path just inside the entrance, looking up with excitement at the arch. Family members walk beside the child. A decorative entrance arch without readable text frames the top. A small yellow star motif is tucked into the arch decoration. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, rounded child-safe shapes, rich but not cluttered background details. No readable writing anywhere, no signage, no storefront signs, no text-like marks, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おおきな どうぶつを みつけた{childName}は、声も でないほど びっくりしました。",
+          baby_toddler: "ぞうさん、おおきい。びっくり。",
+          preschool_3_4:
+            "おおきな どうぶつを みつけた{childName}は、声も でないほど びっくりしました。でも、すぐに もっと みたくて まえへ すすみます。",
+          early_reader_5_6:
+            "おおきな どうぶつを みつけた{childName}は、声も でないほど びっくりしました。こんなに おおきな いきものが よこに いることが、ふしぎで うれしくて なりませんでした。",
+          early_elementary_7_8:
+            "おおきな どうぶつを みつけた{childName}は、声も でないほど びっくりしました。その おおきさと やさしさが おなじ いきものに あることを、{childName}は からだで かんじます。",
+          general_child:
+            "おおきな どうぶつを みつけた{childName}は、声も でないほど びっくりしました。でも、すぐに もっと みたくて まえへ すすみます。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Setting: zoo elephant or giraffe enclosure — NOT a sandbox, NOT a playground. Medium shot of a child at a zoo animal enclosure, leaning forward with wide eyes looking up at a large friendly elephant or giraffe in the mid-ground. The child points with one hand, the other holding a parent's hand. Family members stand behind with smiles. A small yellow star motif is tucked on a fence post nearby. Warm daylight filtering through leafy trees. Soft watercolor picture book style, clear foreground-midground-background layering, sense of wonder and scale, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ちいさな どうぶつたちの うごきに、{childName}の 目が くぎづけになりました。",
+          baby_toddler: "ちいさい。かわいい。みてみて。",
+          preschool_3_4:
+            "ちいさな どうぶつたちの うごきに、{childName}の 目が くぎづけになりました。すこしも じっと してくれません。",
+          early_reader_5_6:
+            "ちいさな どうぶつたちの うごきに、{childName}の 目が くぎづけになりました。ぴょんと とびはねる たびに、{childName}も おなじように からだが うごきます。",
+          early_elementary_7_8:
+            "ちいさな どうぶつたちの うごきに、{childName}の 目が くぎづけになりました。おおきさは ちがうけれど、どうぶつたちも せいいっぱい いきているのだと きがつきます。",
+          general_child:
+            "ちいさな どうぶつたちの うごきに、{childName}の 目が くぎづけになりました。すこしも じっと してくれません。",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate:
+            "Setting: zoo small animal area with rabbits, meerkats, or birds — NOT a playground. Object-detail shot showing a small lively animal close up — a bunny, meerkat, or small colorful bird — in sharp focus, while the child leans in with bright curious eyes in the foreground. The animal is mid-movement: hopping, standing, or tilting its head. A small yellow star motif is visible on a pebble or log in the enclosure. Soft warm daylight. Soft watercolor picture book style, lively but gentle close-detail framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "あるどうぶつの まえで、{childName}は すこし どきどきしました。",
+          baby_toddler: "どきどき。でも、だいじょうぶ。",
+          preschool_3_4:
+            "あるどうぶつの まえで、{childName}は すこし どきどきしました。{familyMembers}の てを ぎゅっと にぎります。",
+          early_reader_5_6:
+            "あるどうぶつの まえで、{childName}は すこし どきどきしました。こえや うごきが おもっていたより おおきくて、いっぽ うしろへ さがります。",
+          early_elementary_7_8:
+            "あるどうぶつの まえで、{childName}は すこし どきどきしました。それでも にげず、そこに いつづけた {childName}は、すこし ゆうきが でた きがしました。",
+          general_child:
+            "あるどうぶつの まえで、{childName}は すこし どきどきしました。{familyMembers}の てを ぎゅっと にぎります。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Setting: zoo enclosure with a louder or larger animal such as a lion, bear, or peacock — NOT a playground. Medium shot of the child taking a small step back or gripping a family member's hand, eyes wide and uncertain, while a large animal in the mid-ground makes a movement or sound. Family member crouches beside the child with a reassuring gentle expression. A small yellow star motif is on the fence post. Soft watercolor picture book style, gentle tension without fear, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "よく みると、どうぶつたちは みんな やさしい めを していました。",
+          baby_toddler: "やさしい め。なかよし。",
+          preschool_3_4:
+            "よく みると、どうぶつたちは みんな やさしい めを していました。{childName}の どきどきが、すうっと やわらいでいきます。",
+          early_reader_5_6:
+            "よく みると、どうぶつたちは みんな やさしい めを していました。こわいと おもっていた どうぶつも、じっと みつめると まるで ともだちに なれそうな きがします。",
+          early_elementary_7_8:
+            "よく みると、どうぶつたちは みんな やさしい めを していました。{childName}は、みかけで きめつけないで よかったと、こころの なかで うなずきます。",
+          general_child:
+            "よく みると、どうぶつたちは みんな やさしい めを していました。{childName}の どきどきが、すうっと やわらいでいきます。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Setting: zoo enclosure, emotional turning point — NOT a playground. Close-up shot focused on the gentle eyes of a friendly animal — a giraffe, deer, or calm elephant — filling the left side of the frame. The child's face appears in soft foreground on the right, looking at the animal with wonder and growing warmth, no longer afraid. A small yellow star motif appears on a nearby leaf or rock. Warm afternoon light. Soft watercolor picture book style, intimate eye-to-eye emotional framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "かえりみちに、きょう みた けしきを {childName}は こころに しまいました。",
+          baby_toddler: "かえろ。たのしかった。ぽかぽか。",
+          preschool_3_4:
+            "かえりみちに、きょう みた けしきを {childName}は こころに しまいました。また きたいな、と そっと つぶやきます。",
+          early_reader_5_6:
+            "かえりみちに、きょう みた けしきを {childName}は こころに しまいました。どのどうぶつが いちばん すきだったかを {familyMembers}に はなしながら あるきます。",
+          early_elementary_7_8:
+            "かえりみちに、きょう みた けしきを {childName}は こころに しまいました。はじめて みるものが、ずっと のこる たからものに なるのだと {childName}は しりました。",
+          general_child:
+            "かえりみちに、きょう みた けしきを {childName}は こころに しまいました。また きたいな、と そっと つぶやきます。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Setting: zoo exit path lined with trees at golden hour — NOT a playground. Back-view wide shot of the child and family walking away from the zoo toward a golden-hour sunset. A gentle tree-lined path stretches ahead. The child holds a parent's hand, looking slightly back with a content smile. A small yellow star motif glows softly in the evening sky. Warm amber and soft pink sunset tones. Soft watercolor picture book style, peaceful farewell composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4: "{parentMessage}",
+          early_reader_5_6: "{parentMessage}",
+          early_elementary_7_8: "{parentMessage}",
+          general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Setting: zoo exit path or home doorway at dusk — peaceful closing moment. Back-view wide shot of the child leaning gently on a family member's shoulder at the end of the zoo day, looking toward a soft sunset or warm home light ahead. The child holds a small souvenir leaf or zoo keepsake in one hand. A small yellow star motif glows near a lantern or evening sky. Soft amber and violet dusk tones. Soft watercolor picture book style, serene and affectionate closing framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
   "fixed-bedtime-good-day": {
     name: "きょうもいい日だったね",
     description: "寝る前に短く読める、安心感のあるおやすみテンプレート",

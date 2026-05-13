@@ -1044,6 +1044,45 @@ Evidence:
 - Regeneration: `handleRegeneratePage(page)` uses `page.pageNumber` (not index-based)
 - No `pages.slice(0, 4)` or `if (pageNumber < 4)` conditions detected
 
+## T3-3e Pilot: fixed-first-zoo-8p
+
+### Scope
+
+- Added second 8-page pilot fixed template: `fixed-first-zoo-8p`.
+- Existing `fixed-first-zoo` 4-page template remains unchanged.
+- Added `fixedStory.pageCount: 8`.
+- Added `fixedStory.layoutVariant: "8_page"`.
+- No 12-page template added.
+- No pricing change.
+- Production rollout remains Hold until interactive QA is completed.
+
+### Pilot Scene Plan
+
+| page | role | scene |
+| --- | --- | --- |
+| 1 | opening_establishing | 出発前の朝、でかける前のわくわく |
+| 2 | discovery | 動物園の入り口・初めての景色 |
+| 3 | discovery | 大きな動物との出会い |
+| 4 | object_detail | 小さな動物のかわいい動き |
+| 5 | setback_or_question | 少しどきどきする瞬間 |
+| 6 | emotional_closeup | よく見るとやさしい目に気づく |
+| 7 | quiet_ending | 帰り道・今日の発見を心にしまう |
+| 8 | quiet_ending | parentMessage 締め |
+
+### Changes
+
+- `functions/src/seed-templates.ts`: `fixed-first-zoo-8p` テンプレート追加（`fixed-first-birthday-8p` の直後）
+- `functions/test/seed-templates.test.ts`: `FIXED_TEMPLATE_IDS` に追加、フェーズ説明を 11→12 に更新、page roles / sample image マッピング追加
+
+### Verification Plan
+
+- `cd functions && npx tsc --noEmit`
+- `npm test -- test/seed-templates.test.ts`
+- `npm run template:sync:check`
+- `node scripts/create-template-smoke-books.js --template-id=fixed-first-zoo-8p --page-count=8 --write`
+- `node scripts/inspect-smoke-book.js <bookId> --expected-page-count=8`
+- `node scripts/inspect-template-smoke-book.js <bookId> --expected-page-count=8`
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
