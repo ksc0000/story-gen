@@ -286,7 +286,7 @@ T3-2 P1 text fix sync/smoke completed:
 ## T3-2 P2 vocabulary dispersion: fixed-first-birthday (2026-05-13)
 
 - 対象: `fixed-first-birthday` のみ（`fixed-first-zoo` は変更なし）
-- 実装 commit: （後記）
+- 実装 commit: `9f1eb8b`
 - 変更内容:
   - Candidate A — `openingNarrationTemplate`:
     - 変更前: 「きょうは とくべつな おいわいの日。{childName}と {familyMembers}の たんじょうびの思い出が はじまります。」
@@ -295,6 +295,16 @@ T3-2 P1 text fix sync/smoke completed:
     - 変更前（両バケット共通末尾）: 「みんなの こころも ぽかぽかです。」
     - 変更後: 「みんなの えがおが、ろうそくのひかりみたいに ひろがります。」
 - 非対象: imagePromptTemplate / pageVisualRole / sampleImageUrl / generate-book.ts / Reader UI / Admin UI
+- 検証: functions tsc / npm test (289 pass) / root tsc / lint / vitest (69 pass) すべて pass
+- Firestore sync: `template:sync:check → npm run build → template:sync:write → template:sync:check` 完了
+- sync 結果: `target templates count = 10`、fixed_template 10本すべて drift なし
+- 単体 smoke:
+	- template: `fixed-first-birthday`
+	- bookId: `w5OMyZd6ox74K4wGzjva`
+	- status: `completed` / progress: `100` / pages: 4 / page status: all `completed`
+	- image generation: page 0: 29,210ms / page 1: 24,143ms / page 2: 15,518ms / page 3: 17,349ms (all successful)
+	- characterConsistencyMode: all_pages ✓
+	- hasOpeningNarration: true / placeholder 展開: 未展開残存なし
 
 
 T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):

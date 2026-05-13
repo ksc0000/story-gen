@@ -521,3 +521,24 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 **T3-2 P2 vocab 棚卸し結果**:
 - **候補 A・B**: `fixed-first-birthday` 側の opening / P3（preschool_3_4 / general_child）を修正。`fixed-first-zoo` は変更なし
 - **P3 候補（C〜E）**: T3-2 スコープ外として記録。テンプレート本数が増える前に着手することが望ましい
+
+---
+
+### 14.6 T3-2 P2 vocabulary dispersion implementation: fixed-first-birthday Sync / Smoke Verification (2026-05-13)
+
+- 実装 commit: `9f1eb8b`
+- Firestore sync:
+	- `template:sync:check → functions build → template:sync:write → template:sync:check` を実施
+	- 結果: `target templates count = 10`、fixed_template 10本すべて drift なし
+- 単体 smoke:
+	- template: `fixed-first-birthday`
+	- bookId: `w5OMyZd6ox74K4wGzjva`
+	- status: `completed` / progress: `100` / pages: 4 / page status: all `completed`
+	- image generation: page 0: 29,210ms / page 1: 24,143ms / page 2: 15,518ms / page 3: 17,349ms (all successful)
+	- characterConsistencyMode: all_pages ✓
+	- hasOpeningNarration: true / hasCoverPage: true / placeholder 未展開残存: なし
+- 確認:
+	- opening が「きょうは とくべつな〜」から「ろうそくのあかりが〜」へ変更済み
+	- P3 preschool_3_4 / general_child の「みんなのこころも ぽかぽか」が「みんなのえがおが、ろうそくのひかりみたいに ひろがります。」へ変更済み
+	- `fixed-first-zoo` は変更なし
+
