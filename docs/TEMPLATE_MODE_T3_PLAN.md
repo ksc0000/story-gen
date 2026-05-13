@@ -2006,6 +2006,105 @@ Reason:
 - Consider separate creative quality review for image quality and story composition.
 - Decide whether to expand additional 8-page fixed_template variants after monitoring.
 
+## T3-3i Creative Quality Review for 8-page fixed_template
+
+### Status
+
+completed.
+
+### Purpose
+
+Review the 8-page fixed_template pilots from a creative quality perspective after functional QA and controlled rollout execution have passed.
+
+### Review Scope
+
+This review evaluates:
+- story structure
+- text quality
+- illustration quality
+- text-illustration relationship
+- product readiness for additional 8-page variants
+
+This review does not change code, seed text, image prompts, generated books, Firestore data, or Firebase/Auth behavior.
+
+### Target
+
+| template | bookId | expected pages | source |
+| --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | `SLCwHBiveY7bxGZ7OtYD` | 8 | T3-3h-2 smoke |
+| `fixed-first-zoo-8p` | `Dg0VVej8As2NwcTai9Zy` | 8 | T3-3h-2 smoke |
+
+### Review Method
+
+| item | result | notes |
+| --- | --- | --- |
+| Reader review | not run | Browser UI was not reopened; T3-3g-5 already covered Reader display/navigation. |
+| Seed/template text review | pass | Generated page text and template structure were reviewed read-only. |
+| Image review | pass | Generated smoke page images were reviewed read-only from temporary local copies. |
+| No code/seed changes | pass | No source edits were made. |
+| No image regeneration | pass | Existing T3-3h-2 smoke images were used. |
+| No secrets recorded | pass | No credentials, tokens, cookies, service account contents, or image URLs were documented. |
+
+### Story Structure Review
+
+| template | S1 structure | S2 flow | S3 page roles | S4 ending | S5 parent-child readability | notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | pass | pass | pass / minor | pass | pass | Clear morning prep -> decoration -> cake -> celebration -> gift -> growth feeling -> evening -> parent message arc. Pages 6 and 8 are both quiet ending beats, but the sequence still reads naturally. |
+| `fixed-first-zoo-8p` | pass | pass | pass | pass | pass | Outing prep -> arrival -> large animal -> small animal -> nervous moment -> reassurance -> return path -> parent message gives a readable 8-page arc. |
+
+### Text Quality Review
+
+| template | T1 read-aloud | T2 text volume | T3 natural expression | T4 placeholders | T5 parentMessage | notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | pass | pass | pass | pass | pass | Text is short, warm, and easy to read aloud. Parent message is generic in smoke input but functions as a closing line. |
+| `fixed-first-zoo-8p` | pass | pass | pass / minor | pass | pass | Text is age-appropriate and readable. The smoke book used fallback `たのしい場所` for `{place}`, which is less specific than a real user input but not a placeholder failure. |
+
+### Illustration Quality Review
+
+| template | I1 text match | I2 consistency | I3 subject clarity | I4 artifacts | I5 page variety | notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | pass | P2 | pass | P2 | pass | Images match birthday beats and have good variety. Character appearance shifts noticeably across pages, and a few background decorations contain text-like marks. |
+| `fixed-first-zoo-8p` | pass / minor | P2 | pass | P2 | pass | Animal scenes are varied and readable. Character appearance shifts across pages; zoo entrance/sign areas include readable or text-like marks, and one animal scene feels slightly over-fantastical. |
+
+### Text-Illustration Relationship Review
+
+| template | X1 complement | X2 non-interference | X3 visual rhythm | X4 final harmony | notes |
+| --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | pass | pass / minor | pass | pass | Text and images support each other well. Final image is calm and affectionate, though the background text-like artifact should be reduced in future prompt tuning. |
+| `fixed-first-zoo-8p` | pass / minor | pass / minor | pass | pass | Visual rhythm works from home to zoo to return path. The fallback place text and signage artifacts slightly weaken specificity, but do not block the story. |
+
+### Product Readiness Review
+
+| template | creative blocker | severity | recommendation | notes |
+| --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | none blocking | P2 | Keep rollout; improve character consistency/text-like artifact tendency before broad 8p expansion. | No P0/P1 issue observed. |
+| `fixed-first-zoo-8p` | none blocking | P2 | Keep rollout; improve smoke input specificity and reduce signage/text artifacts before broad 8p expansion. | No P0/P1 issue observed. |
+
+### Cross-template Findings
+
+- Both 8p pilots have coherent story arcs and readable parent-child pacing.
+- Text volume is appropriate for 8 pages and does not feel overloaded.
+- The smoke generation path did not use a child reference image, so visual character identity drift is visible across pages. This is a creative QA concern for no-reference smoke books, not a confirmed blocker for registered-child user flows.
+- Decorative text-like artifacts appear in some generated images despite no-text prompt guidance. This is not blocking in the reviewed smoke books, but should be tracked before adding more 8-page variants.
+- `fixed-first-zoo-8p` smoke creation used fallback `たのしい場所` because the smoke input did not provide a specific place for the 8p variant; future smoke inputs should cover 8p variant IDs explicitly.
+
+### Creative Quality Decision
+
+**Creative rollout status:** Conditional
+
+Reason:
+- No P0/P1 creative blocker was observed.
+- Story structure, text quality, and text-image relationship are good enough to keep the current controlled rollout in Go / Monitoring.
+- P2 creative improvements were found around character consistency, text-like image artifacts, and 8p smoke input specificity.
+- These issues should be addressed before broad additional 8-page variant expansion, but they do not require rolling back the current two 8p pilots.
+
+### Follow-up
+
+- Add a follow-up to improve 8p smoke input coverage for `fixed-first-birthday-8p` and `fixed-first-zoo-8p`.
+- Review prompt guidance to further reduce text-like marks in decorations, signs, books, and framed background objects.
+- Run a creative review with a real registered child/reference path before using character consistency as a final product-quality signal.
+- Use this review as an input before `T3-4 Additional 8-page Variant Planning`.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
