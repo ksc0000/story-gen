@@ -1249,6 +1249,69 @@ Fail / Hold:
 
 8-page fixed templates can move from `Engineering validation: Go` to `Production candidate: Go` only after all required interactive QA steps pass or are explicitly accepted as non-blocking.
 
+## T3-3g-1 Interactive QA Execution Result
+
+### Status
+
+blocked by auth.
+
+### Target
+
+| template | smoke bookId | expected pages |
+| --- | --- | --- |
+| `fixed-first-birthday-8p` | `cOhH25oa7cex7C0yEqB9` | 8 |
+| `fixed-first-zoo-8p` | `esAcMbgjjN6Tj5IIg3Sy` | 8 |
+
+### Environment
+
+- Local app: `http://localhost:3000`
+- Dev server: Next.js ready on localhost
+- Browser state: unauthenticated session redirected protected routes to `/login/`
+
+### Reader QA Result
+
+| template | R1 open | R2 progress | R3 next to final | R4 prev to first | R5 final message | R6 images | R7 text | R8 mobile | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | `http://localhost:3000/book/?id=cOhH25oa7cex7C0yEqB9` redirected to `/login/` |
+| `fixed-first-zoo-8p` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | `http://localhost:3000/book/?id=esAcMbgjjN6Tj5IIg3Sy` redirected to `/login/` |
+
+### Create UI QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| C1 create input page loads | blocked | `http://localhost:3000/create/input` redirected to `/login/` |
+| C2 birthday 4p copy | blocked | protected route could not be reached in unauthenticated browser session |
+| C3 birthday 8p copy | blocked | protected route could not be reached in unauthenticated browser session |
+| C4 zoo 4p copy | blocked | protected route could not be reached in unauthenticated browser session |
+| C5 zoo 8p copy | blocked | protected route could not be reached in unauthenticated browser session |
+| C6 page role labels | blocked | protected route could not be reached in unauthenticated browser session |
+| C7 variant distinction | blocked | protected route could not be reached in unauthenticated browser session |
+
+### Admin / Review QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| A1 admin review page loads/auth gate documented | pass | `http://localhost:3000/admin/book-quality-review` redirected to `/login/`; auth gate observed |
+| A2 birthday book 8 pages visible | blocked | admin review UI could not be reached in unauthenticated browser session |
+| A3 zoo book 8 pages visible | blocked | admin review UI could not be reached in unauthenticated browser session |
+| A4 all 8 completed statuses visible | blocked | admin review UI could not be reached in unauthenticated browser session |
+| A5 page-level regeneration action | blocked | admin review UI could not be reached in unauthenticated browser session |
+| A6 layout with 8 pages | blocked | admin review UI could not be reached in unauthenticated browser session |
+
+### Go / No-go
+
+**Production candidate:** Hold
+
+Reason:
+- The required interactive Reader / Create / Admin checks could not be completed from the current unauthenticated browser session.
+- No new P0/P1 product issue was observed; the blocker is test-environment access/auth, not a confirmed 8-page rendering failure.
+- Existing engineering validation remains Go based on sync / smoke / inspect results for both 8-page pilot books.
+
+### Follow-up
+
+- Re-run T3-3g interactive QA with an authenticated local session or a documented QA auth path.
+- After Reader / Create / Admin checks pass, update this section and reconsider `Production candidate: Go`.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
@@ -1396,4 +1459,3 @@ T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
 
 - P2 候補（A・B）: T3-2 完了後、次イテレーションで個別修正推奨
 - P3 候補（C〜E）: T3-3 以降の計画的な散らし対応として記録
-
