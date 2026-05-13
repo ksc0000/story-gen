@@ -1095,6 +1095,79 @@ Evidence:
 - pageNumbers: [0, 1, 2, 3, 4, 5, 6, 7]
 - readingStructureVersion: v2_cover_title_story
 
+## T3-3f 8-page Pilot Pair Review / Readiness Recheck
+
+### Status
+
+completed.
+
+### Scope
+
+Reviewed the two current 8-page pilot fixed templates:
+
+- `fixed-first-birthday-8p`
+- `fixed-first-zoo-8p`
+
+No code changes were made in this review.
+
+### Pilot Comparison
+
+| area | `fixed-first-birthday-8p` | `fixed-first-zoo-8p` | result |
+| --- | --- | --- | --- |
+| story type | birthday / family celebration | zoo / discovery adventure | complementary coverage |
+| pageCount | 8 | 8 | pass |
+| layoutVariant | `8_page` | `8_page` | pass |
+| existing 4-page template | unchanged | unchanged | pass |
+| final parentMessage | present | present | pass |
+| pageVisualRole flow | opening_establishing → action → discovery → payoff → object_detail → emotional_closeup → quiet_ending → quiet_ending | opening_establishing → discovery → discovery → object_detail → setback_or_question → emotional_closeup → quiet_ending → quiet_ending | pass |
+| smoke bookId | `cOhH25oa7cex7C0yEqB9` | `esAcMbgjjN6Tj5IIg3Sy` | — |
+| smoke status | completed | completed | pass |
+| expected page count inspect | PASS | PASS | pass |
+| image generation | 8/8 completed | 8/8 completed | pass |
+| placeholder expansion | no unresolved placeholders | no unresolved placeholders | pass |
+
+### Readiness Assessment
+
+| layer | result | notes |
+| --- | --- | --- |
+| data model | pass | `pageCount` / `layoutVariant` working for 8-page pilots |
+| seed templates | pass | 2 distinct 8-page pilots added (birthday + zoo) |
+| tests | pass | fixed template count 12 / page count contract supports 4\|8\|12 |
+| sync | pass | Firestore target template count 12 / drift なし |
+| smoke create | pass | both 8-page templates can be created |
+| smoke inspect | pass | `--expected-page-count=8` passes for both |
+| Reader interactive QA | not completed | required before production rollout |
+| Create UI interactive QA | not completed | required before production rollout |
+| Admin / Review interactive QA | not completed | required before production rollout |
+
+### Decision
+
+**Engineering validation for 8-page fixed_template:** Go
+**Production rollout:** Hold
+
+Reason:
+- Two different story types (birthday celebration + zoo discovery) now work as 8-page fixed templates.
+- Sync / tests / smoke / inspect all pass for both templates.
+- No P0/P1 data or generation blocker is known.
+- Interactive UI QA remains incomplete and is still required before broad rollout.
+
+### Recommended Next Step
+
+Prioritize interactive QA before adding more 8-page templates.
+
+Recommended order:
+1. Reader browser QA against both smoke books (`cOhH25oa7cex7C0yEqB9` / `esAcMbgjjN6Tj5IIg3Sy`).
+2. Create UI comparison: 4p vs 8p birthday and zoo templates.
+3. Admin / Review UI page list check for both 8-page books.
+4. If all pass, convert Conditional Go to Production Candidate.
+5. Then decide whether to add a third 8-page pilot.
+
+### Known Non-goals
+
+- No 12-page templates yet.
+- No pricing changes yet.
+- No broad production rollout yet.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
