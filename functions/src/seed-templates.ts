@@ -874,7 +874,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_reader_5_6:
             "おつきさまが「きょうも だいじょうぶ」と 見まもってくれているようでした。{childName}の こころは ほっと あたたかくなります。",
           early_elementary_7_8:
-            "おつきさまが「きょうも だいじょうぶ」と そっと 見まもってくれているようでした。{childName}は、じぶんの きもちが しずかに ととのっていくのを かんじます。",
+            "おつきさまが「きょうも だいじょうぶ」と そっと 見まもってくれているようでした。{childName}の こころは、しずかに ほぐれていきます。",
           general_child: "おつきさまが「きょうもだいじょうぶ」と見まもってくれているようでした。",
           pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
