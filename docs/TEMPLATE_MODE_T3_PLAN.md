@@ -293,3 +293,16 @@ T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
 	- openingNarration（実測）: `きょうは、SmokeKid1が おともだちと すごすなかで、sharingの あたたかさに そっと きづいていく おはなしです。`
 	- page 4（実測）: `きょうもすてきな一日だったね`
 	- placeholder 展開: `{lessonToTeach}` は openingNarration で展開済み、未展開残存なし
+
+---
+
+## T3-2 P2 early_elementary_7_8 shortening: fixed-first-zoo (2026-05-13)
+
+- 対象: `fixed-first-zoo` の 3ページ（page 0, 1, 2）の `early_elementary_7_8` テキスト
+- 修正内容:
+	- page 0: 黄色い星の詳細説明を削除し、シンプルな期待感に「きょうの ぼうけんが はじまります。」
+	- page 1: 動き方・暮らし方の違い・黄色い星の補足を削除「大きなどうぶつ、小さなどうぶつ。{childName}は 夢中になります。」
+	- page 2: 迷いから発見への長い流れを、結果に焦点を当てて短縮「いちばんうれしかったのは、{childName}が にっこり笑った そのしゅんかんでした。どうぶつたちの やさしさが 分かったのです。」
+- 目的: 読み聞かせテンポの改善、親が読み上げる際のリズム自然化
+- 非対象: story structure / openingNarrationTemplate / imagePromptTemplate / sampleImageUrl / pageVisualRole / generate-book.ts
+- 検証: functions tsc / npm test / root tsc / lint / vitest すべて pass

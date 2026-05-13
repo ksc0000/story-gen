@@ -320,7 +320,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_reader_5_6:
             "{childName}は、{familyMembers}といっしょに{place}へでかけました。いりぐちの ちずを見ながら、つぎは どこへいこうかと うれしそうに そうぞうします。",
           early_elementary_7_8:
-            "{childName}は、{familyMembers}といっしょに{place}へでかけました。いりぐちに あった きいろい ほしの しるしを見つけて、きょうの ぼうけんには ひみつがありそうだと 感じます。",
+            "{childName}は、{familyMembers}といっしょに{place}へでかけました。きょうの ぼうけんが はじまります。",
           general_child: "{childName}は、{familyMembers}といっしょに{place}へでかけました。どんな どうぶつに あえるかな。",
           pageVisualRole: "opening_establishing",
           imagePromptTemplate:
@@ -334,7 +334,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_reader_5_6:
             "大きなどうぶつ、小さなどうぶつ。{childName}の目は きらきらです。とおくで ゆれる しっぽや、ちいさな あしあとまで 見つけて、つぎつぎに しらせてくれました。",
           early_elementary_7_8:
-            "大きなどうぶつ、小さなどうぶつ。{childName}は、うごきかたや くらしかたの ちがいに きづいて 夢中になります。さっき見つけた きいろい ほしの しるしが、ここにも そっと かくれていました。",
+            "大きなどうぶつ、小さなどうぶつ。{childName}は 夢中になります。",
           general_child:
             "大きなどうぶつ、小さなどうぶつ。{childName}の目はきらきらです。つぎは どこを見ようかと こころが はずみます。",
           pageVisualRole: "discovery",
@@ -349,7 +349,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_reader_5_6:
             "いちばんうれしかったのは、{childName}が にっこり笑った そのしゅんかんでした。さっき ちょっぴり こわかった どうぶつにも、もう一ど あってみたいと 言えたのです。",
           early_elementary_7_8:
-            "いちばんうれしかったのは、{childName}が にっこり笑った そのしゅんかんでした。はじめは どきどきしていたけれど、よく見てみると どうぶつたちにも それぞれの やさしい しぐさが あると 分かったのでした。",
+            "いちばんうれしかったのは、{childName}が にっこり笑った そのしゅんかんでした。どうぶつたちの やさしさが 分かったのです。",
           general_child:
             "いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。みんなの こころも ぽかぽかに なります。",
           pageVisualRole: "emotional_closeup",

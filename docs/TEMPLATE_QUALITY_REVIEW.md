@@ -218,7 +218,7 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 
 | templateId | story flow | closing quality | age text quality | parentMessage fit | risk | recommended action | priority |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `fixed-first-zoo` | はじめてのおでかけの高揚感から笑顔の思い出へ自然につながる | page 4 を `parentMessage` に委ねる構成は素直で自然 | 7-8歳向けはやや長めだが理解可能 | 問題なし | 「きらきら」「やさしい」が他テンプレと少し重なる | 7-8歳向けの文長を後続で軽く圧縮 | P2 |
+| `fixed-first-zoo` | はじめてのおでかけの高揚感から笑顔の思い出へ自然につながる | page 4 を `parentMessage` に委ねる構成は素直で自然 | 7-8歳向けはやや長めだが理解可能 | 問題なし | ~~「きらきら」「やさしい」が他テンプレと少し重なる~~ → 7-8歳向け文を短文化し読み聞かせリズム改善済み（2026-05-13） | 7-8歳向けの文長を後続で軽く圧縮対応済み | resolved-in-code |
 | `fixed-first-birthday` | 準備→ろうそく→祝福→締め が明快 | page 4 の余韻は自然 | 年齢差は十分、読みやすさも高い | 問題なし | 一部表現は定番だが許容範囲 | No action | No action |
 | `fixed-bedtime-good-day` | ふりかえり→安心→入眠 の流れが強い | page 4 の `parentMessage` 締めは寝かしつけ用途に合う | 7-8歳向けはやや抽象的で長め | 問題なし | 詩的で良いが、最年長帯は少し説明的 | 7-8歳向けを少し短文化する候補 | P2 |
 | `fixed-brush-teeth` | 導入→実践→達成感→締め が端的で読みやすい | page 4 は余韻として機能 | 年齢差は適切、3-4歳にも読みやすい | 問題なし | 語彙の伸びしろはあるが急ぎではない | No action | No action |
@@ -258,15 +258,16 @@ T3-2 の最小スコープ案（コード変更を含む段階に移行する場
 | --- | --- | --- |
 | P0 | 0 | なし |
 | P1 | 0 | 対象3件（`fixed-rainy-day-puddle` / `fixed-little-helper` / `fixed-sharing-friends`）はすべて code fix 済み |
-| P2 | 4 | `fixed-first-zoo` の 7-8歳文長 / `fixed-bedtime-good-day` の 7-8歳文長 / `fixed-sleepy-moon-adventure` の語り自然化 / 全体の語彙重複緩和 |
+| P2 | 3 | ~~`fixed-first-zoo` の 7-8歳文長~~ → resolved-in-code（2026-05-13）/ `fixed-bedtime-good-day` の 7-8歳文長 / `fixed-sleepy-moon-adventure` の語り自然化 / 全体の語彙重複緩和 |
 | No action | 4 | `fixed-first-birthday` / `fixed-brush-teeth` / `fixed-first-christmas` / `fixed-cardboard-rocket` |
 
 ### 11.4 Recommended Next Fix Order
 
-1. `fixed-rainy-day-puddle`: page 4 の age別文にも `parentMessage` を保持
-2. `fixed-little-helper`: page 4 の age別文にも `parentMessage` を保持
-3. `fixed-sharing-friends`: opening narration を教材トーンから物語導入へ調整（完了 2026-05-13）
-4. `fixed-first-zoo` または `fixed-bedtime-good-day`: 7-8歳向け文の短文化トライアル
+1. ~~`fixed-rainy-day-puddle`: page 4 の age別文にも `parentMessage` を保持~~ → 完了（2026-05-12）
+2. ~~`fixed-little-helper`: page 4 の age別文にも `parentMessage` を保持~~ → 完了（2026-05-12）
+3. ~~`fixed-sharing-friends`: opening narration を教材トーンから物語導入へ調整~~ → 完了（2026-05-13）
+4. ~~`fixed-first-zoo`: 7-8歳向け文の短文化トライアル~~ → 完了（2026-05-13）
+5. `fixed-bedtime-good-day` または `fixed-sleepy-moon-adventure`: 次の P2 対象
 
 ---
 
