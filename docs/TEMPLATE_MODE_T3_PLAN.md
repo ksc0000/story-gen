@@ -940,23 +940,63 @@ Reason:
 - However, the interactive Reader / Create / Admin UI checks were not fully exercised in-browser, so the manual QA checklist is not complete yet.
 - The code paths inspected are compatible with 8 pages, but the remaining UI confirmations still need a real browser pass.
 
-## T3-3d-2 In-browser Manual QA Result
+## T3-3d-2 Conditional Go Decision: 8-page Pilot Expansion
 
 ### Status
 
-partial (code path confirmed, interactive not run).
+completed.
 
-### Date
+### Decision Summary
 
-2026-05-13
+| area | result | decision |
+| --- | --- | --- |
+| Data QA | pass | usable for pilot continuation |
+| Code path review | pass | no known 8-page hard blocker |
+| Reader interactive QA | partial / not fully run | required before production rollout |
+| Create UI interactive QA | not run | required before production rollout |
+| Admin / Review interactive QA | not run | required before production rollout |
 
-### Target
+### Go / No-go
 
-- template: `fixed-first-birthday-8p`
-- smoke bookId: `cOhH25oa7cex7C0yEqB9`
-- expected page count: 8
+**Second 8-page pilot:** Conditional Go  
+**Production rollout:** Hold
 
-### Reader QA Result
+Reason:
+- `fixed-first-birthday-8p` successfully generated, synced, and inspected as an 8-page book.
+- Existing code path review indicates Reader/Create/Admin are not obviously blocked by a 4-page-only assumption.
+- However, browser interaction for full Reader navigation, Create UI comparison, and Admin Review display has not been completed.
+- Therefore, adding one more pilot template is acceptable as an engineering validation step, but production rollout remains blocked until interactive QA is completed.
+
+### Required Production Gate
+
+Before enabling 8-page templates broadly:
+- Reader manual QA: page 1 → 8 → 1 navigation
+- Reader mobile QA
+- Create UI 4p / 8p comparison
+- Admin / Review 8-page list display
+- No P0/P1 layout or data issue
+
+### Recommended Next Engineering Step
+
+Add one more low-risk 8-page pilot:
+
+- **recommended template:** `fixed-first-zoo-8p`
+
+Reason:
+- simple scene progression
+- clear discovery/adventure structure
+- good contrast with birthday template
+- useful to validate 8-page support across a non-birthday story type
+
+### Non-goals
+
+- Do not roll out 8-page templates broadly yet.
+- Do not add 12-page templates yet.
+- Do not change pricing yet.
+
+### Detailed QA Evidence (T3-3d-2 Supporting Data)
+
+#### Reader QA Result
 
 | check | expected | result | evidence |
 | --- | --- | --- | --- |
@@ -971,18 +1011,11 @@ partial (code path confirmed, interactive not run).
 | mobile viewport | no severe layout break | not run | interactive only |
 
 Evidence:
+- BookViewer component source confirms dynamic page count via `totalPages = items.length`
+- Navigation safely clamped to `[0, totalPages - 1]`
+- No hardcoded 4-page assumption detected
 
-- Initial HTML shell loads successfully (HTTP 200).
-- BookViewer component source confirms:
-  - `totalPages = items.length` (dynamic array length)
-  - Page navigation clamped to `[0, totalPages - 1]`
-  - Page label: `${item.storyPageIndex + 1} / ${storyPageCount}`
-  - goNext/goPrev callbacks correctly implement boundary checks
-  - No hardcoded 4-page assumption detected
-- Cover + title spread + 8 story pages = 9 items total in reading order
-- Desktop/mobile conditional rendering both present (no explicit 4-page assumption)
-
-### Create UI QA Result
+#### Create UI QA Result
 
 | check | expected | result | evidence |
 | --- | --- | --- | --- |
@@ -992,19 +1025,11 @@ Evidence:
 | template selection | both birthday templates are distinguishable | not run | interactive only |
 
 Evidence:
-
-- Initial HTML shell loads successfully (HTTP 200).
-- Create/input page source confirms:
-  - `getFixedTemplatePageCount()` checks `fixedStory.pageCount` first (backward-compatible)
-  - Falls back to `template.fixedStory.pages.length`
-  - Accepts `4 | 8 | 12` page counts (type validation)
-  - `getFixedPageRoleLabel()` uses `pageVisualRole` when available
-  - No hardcoded 4-page assumption detected
+- `getFixedTemplatePageCount()` accepts `4 | 8 | 12` page counts (type validation)
 - `fixed-first-birthday-8p` has `pageCount: 8` and `layoutVariant: "8_page"`
-- `fixed-first-birthday` (4-page) untouched
-- PAGE_VISUAL_ROLE_LABELS mapping is comprehensive
+- No hardcoded 4-page assumption detected
 
-### Admin / Review QA Result
+#### Admin / Review QA Result
 
 | check | expected | result | evidence |
 | --- | --- | --- | --- |
@@ -1014,37 +1039,10 @@ Evidence:
 | quality review | 8-page book can be reviewed without layout issue | partial | QualityReviewPanel is page-count agnostic, rows/flex grid responsive |
 
 Evidence:
-
-- Initial HTML shell loads successfully (HTTP 200).
-- Admin/book-quality-review page source confirms:
-  - Pages query: `orderBy("pageNumber", "asc")` (no limit or slice)
-  - Page rendering: `pages.map((page) => ...)` (all items rendered)
-  - Regeneration: `handleRegeneratePage(page)` uses `page.pageNumber` (not index-based)
-  - No `pages.slice(0, 4)` or `if (pageNumber < 4)` conditions detected
-  - QualityReviewPanel and QualityRecommendationPanel use generic list rendering
-  - No hardcoded 4-page assumption detected
-- Admin auth may be required for full feature access (not tested in this run)
-
-### Go / No-go Result
-
-**Go / No-go:** Go
-
-Reason:
-
-- Data QA: PASS (8 pages in Firestore, all completed)
-- Code path audit: PASS (no hardcoded 4-page assumptions in Reader / Create / Admin)
-  - Reader: Dynamic page count via array length, boundary-safe navigation
-  - Create: Accepts 4/8/12 page counts, pageVisualRole-based labels
-  - Admin: Dynamic page queries, no limiting conditions for page count
-- Interactive UI behavior (page turning, rendering, mobile) not fully exercised, but source code confirms implementation compatibility
-- No P0/P1 blockers found
-- Risk assessment: 8-page pilot is code-ready and data-ready; interactive testing deferred to full deployment or manual QA phase
-
-### Follow-up
-
-- Next: Proceed with second 8-page pilot (`fixed-first-zoo-8p`) or full manual browser QA if required before production
-- If Go decision requires full interactive testing, schedule follow-up browser session with Playwright or manual smoke testing
-- Consider adding automated E2E test coverage for 8-page Reader navigation (out of scope for this QA)
+- Pages query: `orderBy("pageNumber", "asc")` (no limit or slice)
+- Page rendering: `pages.map((page) => ...)` (all items rendered)
+- Regeneration: `handleRegeneratePage(page)` uses `page.pageNumber` (not index-based)
+- No `pages.slice(0, 4)` or `if (pageNumber < 4)` conditions detected
 
 #### T3-3b: Data model proposal
 
