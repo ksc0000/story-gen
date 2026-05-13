@@ -391,6 +391,88 @@ T3-2 P1 text fix sync/smoke completed:
 - `scripts/create-template-smoke-books.js` / `inspect-template-smoke-book.js` のページ数検証ロジック
 - `functions/test/seed-templates.test.ts` の page count 検証テスト
 
+---
+
+## T3-3a Code Audit: 4-page Assumption Inventory (2026-05-13)
+
+### Status
+
+docs-only audit completed.
+
+### Audit Scope
+
+| area | files inspected | result |
+| --- | --- | --- |
+| generation | `functions/src/generate-book.ts` | **low**（主要ループは `story.pages.length` 基準、4固定なし） |
+| types / plans | `functions/src/lib/types.ts`, `functions/src/lib/plans.ts`, `src/lib/plans.ts` | **low**（`PageCount=4|8|12` 前提で拡張余地あり） |
+| reader UI | `src/components/book-viewer.tsx`, `src/app/(app)/book/page.tsx`, `src/components/generation-progress.tsx`, `src/app/(app)/generating/page.tsx` | **low**（閲覧は動的、進捗表示も `pageCount`/配列長ベース） |
+| create UI / template preview | `src/app/(app)/create/input/page.tsx`, `src/app/(app)/create/style/page.tsx` | **medium**（文言・役割ラベルが4ページ前提の表現を含む） |
+| admin UI | `src/app/(app)/admin/book-quality-review/page.tsx` | **low**（page subcollection を動的取得） |
+| smoke scripts | `scripts/create-template-smoke-books.js`, `scripts/inspect-template-smoke-book.js`, `scripts/inspect-smoke-book.js`, `scripts/sync-fixed-template-seeds.js` | **medium**（sync/check が `pages.length===4` を強制） |
+| tests | `functions/test/seed-templates.test.ts`, `functions/test/generate-book.test.ts`, `src/__tests__/book-viewer.test.ts` | **medium**（seed系で4ページ固定テストが強い） |
+
+### Findings
+
+| id | area | file | finding | risk | recommendation |
+| --- | --- | --- | --- | --- | --- |
+| T3-3a-F1 | generation | `functions/src/generate-book.ts` | 画像生成タスクは `story.pages.map` で生成し、`totalPages = story.pages.length` を進捗/一貫性計算に使用。 | low | 生成パイプライン本体は現状維持。T3-3bで `fixedStory.pages.length` を source of truth と明記。 |
+| T3-3a-F2 | generation | `functions/src/generate-book.ts` | fixed template の `pageCount` は `template.fixedStory?.pages.length` から正規化。ただし `isValidPageCount` は 4/8/12 のみ許可。 | low | T3-3b では 8/12 を正式対象として扱う（将来 16+ が必要なら別Decision）。 |
+| T3-3a-F3 | generation/storage | `functions/src/generate-book.ts` | pages 保存は `books/{bookId}/pages/page-{pageNumber}`、`pageNumber` は 0-based。ループ由来なので任意ページ数に追従。 | low | 互換性維持のため 0-based のまま。UI側は表示時に +1 を継続。 |
+| T3-3a-F4 | generation/text | `functions/src/generate-book.ts` | age別本文は `ageBand -> general_child -> textTemplate` のフォールバック。ページ数依存ロジックなし。 | low | 8/12 でも同フォールバックを維持。 |
+| T3-3a-F5 | reader | `src/components/book-viewer.tsx` | `items.length` と `props.pages.length` でナビゲーション/表示を計算し、4固定なし。cover/title spread も独立項目化済み。 | low | Readerは大改修不要。8/12でUXのみ微調整。 |
+| T3-3a-F6 | create UI | `src/app/(app)/create/input/page.tsx` | fixed_template の説明文が「4ページ構成で…」固定。`getFixedPageRoleLabel` も 0/1/2/last を前提。 | medium | 文言を pages.length 参照に変更し、role label を `pageVisualRole` 優先に置換。 |
+| T3-3a-F7 | smoke/sync | `scripts/sync-fixed-template-seeds.js` | `pages.length !== 4` を issue として扱い、sync check/write 完了判定が4ページ前提。 | medium | `expectedPageCount`（4/8/12）導入、または `template.fixedStory.pages.length >= 1` + policy判定へ変更。 |
+| T3-3a-F8 | smoke/create | `scripts/create-template-smoke-books.js` | 作成payloadの `pageCount: 4` が固定。 | medium | `--page-count` 引数追加（デフォルト4）、template由来値優先。 |
+| T3-3a-F9 | tests | `functions/test/seed-templates.test.ts` | `preserves 4 pages` など 4固定アサーションがあり、8/12導入時に失敗予定。 | medium | 共通契約を「`fixedStory.pages.length === declaredPageCount`」へ置換し、4/8両fixture追加。 |
+| T3-3a-F10 | tests | `functions/test/generate-book.test.ts` | 一部は `fixedStory.pages.length` で動的検証済み、拡張耐性あり。 | low | 既存動的テストを維持しつつ 8-page fixed template ケースを追加。 |
+
+### 4-page Hard Assumptions
+
+| area | file | assumption | impact for 8/12 page |
+| --- | --- | --- | --- |
+| sync validation | `scripts/sync-fixed-template-seeds.js` | `pages.length !== 4` をエラー扱い | sync check/write が常時NGになる |
+| seed tests | `functions/test/seed-templates.test.ts` | `expect(template.fixedStory?.pages.length).toBe(4)` | CI失敗（template変更がマージ不能） |
+| create UI copy | `src/app/(app)/create/input/page.tsx` | fixed_template説明文に「4ページ構成」固定文言 | 実装後もUI説明が誤案内 |
+| smoke create script | `scripts/create-template-smoke-books.js` | smoke payload の `pageCount: 4` 固定 | 8/12 template smoke が作成不能 |
+
+### Dynamic / Already-compatible Areas
+
+| area | file | reason |
+| --- | --- | --- |
+| story->page generation | `functions/src/generate-book.ts` | `story.pages.map` / `totalPages=story.pages.length` で動的処理 |
+| character reference policy | `functions/src/generate-book.ts` | `totalPages` から emotional peak / last page を計算 |
+| page persistence | `functions/src/generate-book.ts` | `pageNumber` はループindex由来で任意ページ数対応 |
+| reader navigation | `src/components/book-viewer.tsx` | `items.length` で prev/next と表示制御 |
+| generating screen | `src/app/(app)/generating/page.tsx`, `src/components/generation-progress.tsx` | `book.pageCount` / `pages.length` ベースの進捗表示 |
+| admin page list | `src/app/(app)/admin/book-quality-review/page.tsx` | pages subcollectionを `orderBy(pageNumber)` で動的取得 |
+| inspect output | `scripts/inspect-template-smoke-book.js`, `scripts/inspect-smoke-book.js` | pages.size / docs配列で可変ページ数を表示 |
+
+### Recommended T3-3b Direction
+
+- data model:
+	- add optional `pageCount` on fixed template metadata (document-level)
+	- add optional `layoutVariant` (`"4_page" | "8_page" | "12_page"`)
+	- keep runtime source of truth as `fixedStory.pages.length`
+- smoke:
+	- add expected page count validation (`--expected-page-count`)
+	- add `--page-count` to smoke create script
+- tests:
+	- keep 4-page regression tests
+	- add one 8-page fixed fixture path (sync + generation + reader)
+- UI:
+	- replace hard-coded copy "4ページ構成" with dynamic copy
+	- move preview role label logic to `pageVisualRole`-first
+
+### Go / No-go
+
+**Go for T3-3b**
+
+- high-risk blocker: **0**
+- medium-risk findings: **4**（sync/test/smoke/create UI copy）
+- low-risk findings: **6**
+
+判断: 生成パイプライン（`generate-book.ts`）は `fixedStory.pages` を動的処理しており、ラスボスではない。先に sync/test/smoke/create UI の4ページ固定前提を設計で解消すれば、T3-3b に進行可能。
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
