@@ -735,6 +735,36 @@ Non-goals for T3-3c:
 - inspect: `--expected-page-count=8` PASS
 - placeholder: 未展開残りなし（title/opening/pages確認）
 
+## T3-3c-2 Review: fixed-first-birthday-8p Quality / Hardening
+
+### Status
+
+completed.
+
+### Review Result
+
+| area | result | notes |
+| --- | --- | --- |
+| page count metadata | pass | `pageCount=8`, `layoutVariant=8_page` |
+| page count | pass | 8 pages |
+| parent message | pass | final page includes `{parentMessage}` |
+| placeholder expansion | pass | no unresolved placeholders in smoke |
+| image prompts | pass / minor | scene variation confirmed |
+| read-aloud pacing | pass / minor | 8-page pacing acceptable |
+| pageVisualRole | pass | valid roles only |
+| existing 4-page template | pass | unchanged |
+
+### Decision
+
+- No P0/P1 blockers.
+- T3-3c pilot remains valid.
+- Recommended next step: choose whether to add one more 8-page pilot or proceed to Reader/UI manual QA.
+
+### Notes
+
+- Page 7 and page 8 intentionally both close the story, but with different emphasis: afterglow scene, then parent message closing.
+- No code changes were required for this review pass.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
