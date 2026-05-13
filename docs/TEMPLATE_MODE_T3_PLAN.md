@@ -1608,6 +1608,132 @@ Reason:
 - Admin Review QA passed for both 8-page smoke books.
 - No P0/P1 blocker was observed.
 
+## T3-3h Production Rollout Plan for 8-page fixed_template
+
+### Status
+
+planned.
+
+### Background
+
+T3-3g closed the interactive QA gate for the 8-page fixed_template pilots.
+
+The latest manual browser authenticated QA passed for:
+
+| area | result |
+| --- | --- |
+| Manual auth session | pass |
+| Reader QA | pass |
+| Create UI QA | pass |
+| Admin Review QA | pass |
+| P0/P1 blocker | none observed |
+
+Therefore, the 8-page fixed_template pilots can be treated as production candidates.
+
+### Production Candidate Scope
+
+| template | smoke bookId | expected pages | status |
+| --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | `cOhH25oa7cex7C0yEqB9` | 8 | candidate |
+| `fixed-first-zoo-8p` | `esAcMbgjjN6Tj5IIg3Sy` | 8 | candidate |
+
+Existing 4-page templates remain unchanged:
+
+| template | status |
+| --- | --- |
+| `fixed-first-birthday` | unchanged |
+| `fixed-first-zoo` | unchanged |
+
+### Rollout Goal
+
+Promote the validated 8-page fixed_template pilots from engineering validation to production availability while preserving the existing 4-page template behavior.
+
+### Rollout Non-goals
+
+- Do not modify seed template story content in this rollout task.
+- Do not modify `generate-book.ts`.
+- Do not modify Firestore rules.
+- Do not change Firebase Auth behavior.
+- Do not regenerate images as part of rollout planning.
+- Do not evaluate creative quality or story composition in this rollout plan.
+
+### Rollout Preconditions
+
+| check | required result | notes |
+| --- | --- | --- |
+| T3-3g-5 manual QA | pass | Manual admin browser QA completed. |
+| Reader QA | pass | Both 8-page smoke books readable. |
+| Create UI QA | pass | 4p / 8p variants distinguishable. |
+| Admin Review QA | pass | Both 8-page smoke books visible in review UI. |
+| P0/P1 blocker | none | No blocker observed in interactive QA. |
+| Existing 4p templates | unchanged | No regression expected. |
+| Generated files | clean | `functions/lib` must not be committed. |
+| Secrets | absent | No service account JSON, token, cookie, or credentials. |
+
+### Rollout Plan
+
+| step | action | owner | expected result |
+| --- | --- | --- | --- |
+| 1 | Confirm latest `main` includes T3-3g-5 docs commit | engineering | `0d33296` or later is present. |
+| 2 | Confirm seed sync target includes both 8p templates | engineering | `fixed-first-birthday-8p` and `fixed-first-zoo-8p` are available. |
+| 3 | Keep existing 4p templates available | engineering | Existing user paths remain unchanged. |
+| 4 | Expose 8p templates as production candidates | engineering/product | Users can distinguish 4p and 8p variants. |
+| 5 | Monitor first production creations | engineering/product | No page-count, generation, reader, or admin review regression. |
+| 6 | Review post-rollout observations | engineering/product | Decide Go / Hold for broader 8p template expansion. |
+
+### Monitoring Checklist
+
+| area | signal | expected |
+| --- | --- | --- |
+| Creation | 8p template selection succeeds | No create flow regression. |
+| Generation | generated book has 8 pages | `pages.length === 8`. |
+| Generation | all page statuses complete | No failed page generation. |
+| Reader | page 1 to page 8 navigation works | No navigation regression. |
+| Reader | final page renders parent message | Final page visible and readable. |
+| Admin | 8 page statuses visible | Admin review remains usable. |
+| Existing templates | 4p templates still work | No regression to existing templates. |
+| Errors | no new P0/P1 errors | Rollout remains healthy. |
+
+### Rollback / Hold Criteria
+
+Rollback or hold rollout if any of the following occurs:
+
+| severity | condition | action |
+| --- | --- | --- |
+| P0 | 8p book cannot be created or opened | Hold rollout immediately. |
+| P0 | Existing 4p template flow regresses | Roll back or disable 8p exposure. |
+| P1 | 8p generation creates fewer or more than 8 pages | Hold rollout and investigate. |
+| P1 | Reader navigation fails for 8p books | Hold rollout and investigate. |
+| P1 | Admin review cannot inspect 8p books | Hold broader rollout. |
+| P2/P3 | Minor copy or layout issue | Track follow-up; do not block unless user impact is high. |
+
+### Rollback Options
+
+| option | when to use | notes |
+| --- | --- | --- |
+| Hide 8p templates from production selection | Create UI issue or user confusion | Existing 4p templates remain available. |
+| Revert rollout exposure commit | Rollout exposure causes regression | Use only if exposure is code/config based. |
+| Keep templates seeded but mark as non-promoted | Need investigation without deleting data | Avoid destructive data changes. |
+| Document follow-up and keep Hold | QA or monitoring incomplete | Do not promote broader expansion. |
+
+### Production Rollout Decision
+
+**Production rollout readiness:** Ready for controlled rollout
+
+Reason:
+- T3-3g-5 manual admin browser QA passed.
+- Reader / Create / Admin interactive QA all passed.
+- Existing 4-page templates remain unchanged.
+- No P0/P1 blocker was observed.
+- Rollout can proceed as controlled production exposure with monitoring and rollback criteria.
+
+### Follow-up
+
+- Execute controlled production rollout in a separate task, such as `T3-3h-1 Controlled Production Rollout Execution`.
+- Record post-rollout monitoring results.
+- Consider a separate creative quality review for image quality and story composition.
+- Use rollout observations to decide whether to add more 8-page fixed_template variants.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
