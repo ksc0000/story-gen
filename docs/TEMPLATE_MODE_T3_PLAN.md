@@ -1083,6 +1083,18 @@ Evidence:
 - `node scripts/inspect-smoke-book.js <bookId> --expected-page-count=8`
 - `node scripts/inspect-template-smoke-book.js <bookId> --expected-page-count=8`
 
+### T3-3e Smoke Verification
+
+- template: `fixed-first-zoo-8p`
+- bookId: `esAcMbgjjN6Tj5IIg3Sy`
+- sync: completed / target templates count 12 / drift なし
+- smoke: completed / progress 100 / pages 8 / all completed
+- inspect: `--expected-page-count=8` PASS
+- image generation: pages 0..7 all completed / failed 0/8 / imageFallbackUsed なし
+- placeholder 展開: 未展開残存なし（SmokeKid1 展開済み）
+- pageNumbers: [0, 1, 2, 3, 4, 5, 6, 7]
+- readingStructureVersion: v2_cover_title_story
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
