@@ -89,6 +89,34 @@ const EXPECTED_FIXED_SAMPLE_IMAGES: Record<string, string> = {
   "fixed-little-helper": "/images/templates/emotional-growth.png",
 };
 
+const ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS = [4, 8, 12] as const;
+const LAYOUT_VARIANT_BY_PAGE_COUNT = {
+  4: "4_page",
+  8: "8_page",
+  12: "12_page",
+} as const;
+
+function assertFixedStoryPageCountContract(fixedStory: {
+  pages: unknown[];
+  pageCount?: number;
+  layoutVariant?: string;
+}) {
+  const actualPageCount = fixedStory.pages.length;
+  expect(ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS).toContain(actualPageCount as 4 | 8 | 12);
+
+  if (fixedStory.pageCount !== undefined) {
+    expect(fixedStory.pageCount).toBe(actualPageCount);
+  }
+
+  if (fixedStory.layoutVariant !== undefined) {
+    const expectedLayoutVariant =
+      LAYOUT_VARIANT_BY_PAGE_COUNT[
+        actualPageCount as keyof typeof LAYOUT_VARIANT_BY_PAGE_COUNT
+      ];
+    expect(fixedStory.layoutVariant).toBe(expectedLayoutVariant);
+  }
+}
+
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
   it("Phase T2-C: fixed templates are expanded to 10", () => {
     expect(FIXED_TEMPLATE_IDS.length).toBe(10);
@@ -171,8 +199,14 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
         expect((template.fixedStory?.openingNarrationTemplate ?? "").length).toBeGreaterThan(0);
       });
 
-      it("preserves 4 pages", () => {
-        expect(template.fixedStory?.pages.length).toBe(4);
+      it("validates fixed template page count contract", () => {
+        const fixedStory = template.fixedStory;
+        expect(fixedStory).toBeDefined();
+        assertFixedStoryPageCountContract({
+          pages: fixedStory?.pages ?? [],
+          pageCount: (fixedStory as { pageCount?: number } | undefined)?.pageCount,
+          layoutVariant: (fixedStory as { layoutVariant?: string } | undefined)?.layoutVariant,
+        });
       });
 
       it("preserves textTemplatesByAge on at least 3 pages", () => {

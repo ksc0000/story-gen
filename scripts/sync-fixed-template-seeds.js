@@ -29,6 +29,13 @@ const REQUIRED_ZOO_ALTERNATE_TOKENS = [
   "NOT a sandbox or an outdoor playground",
 ];
 
+const ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS = [4, 8, 12];
+const LAYOUT_VARIANT_BY_PAGE_COUNT = {
+  4: "4_page",
+  8: "8_page",
+  12: "12_page",
+};
+
 function parseArgs(argv) {
   const args = argv.slice(2);
   const write = args.includes("--write");
@@ -142,6 +149,36 @@ function hasRequiredCommonTokens(prompt) {
   return REQUIRED_COMMON_TOKENS.every((token) => prompt.includes(token));
 }
 
+function validateFixedStoryPageCount(templateId, fixedStory, issues) {
+  const pages = Array.isArray(fixedStory.pages) ? fixedStory.pages : [];
+  const actualPageCount = pages.length;
+
+  if (!ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS.includes(actualPageCount)) {
+    issues.push(
+      `${templateId}: fixedStory.pages.length must be one of 4/8/12, got ${actualPageCount}`
+    );
+    return pages;
+  }
+
+  if (fixedStory.pageCount !== undefined && fixedStory.pageCount !== actualPageCount) {
+    issues.push(
+      `${templateId}: fixedStory.pageCount ${fixedStory.pageCount} does not match pages.length ${actualPageCount}`
+    );
+  }
+
+  const expectedLayoutVariant = LAYOUT_VARIANT_BY_PAGE_COUNT[actualPageCount];
+  if (
+    fixedStory.layoutVariant !== undefined &&
+    fixedStory.layoutVariant !== expectedLayoutVariant
+  ) {
+    issues.push(
+      `${templateId}: fixedStory.layoutVariant ${fixedStory.layoutVariant} does not match pages.length ${actualPageCount}`
+    );
+  }
+
+  return pages;
+}
+
 function evaluateTemplateSync(templateId, templateDoc) {
   const issues = [];
 
@@ -169,10 +206,7 @@ function evaluateTemplateSync(templateId, templateDoc) {
     issues.push("coverImagePromptTemplate still contains 'friendly Japanese zoo'");
   }
 
-  const pages = Array.isArray(fixedStory.pages) ? fixedStory.pages : [];
-  if (pages.length !== 4) {
-    issues.push(`pages length is ${pages.length}`);
-  }
+  const pages = validateFixedStoryPageCount(templateId, fixedStory, issues);
 
   pages.forEach((page, index) => {
     const prompt = page?.imagePromptTemplate || "";

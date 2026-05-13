@@ -574,6 +574,30 @@ T3-3c pilot（8-page template）開始条件:
 - smoke が expected 8 pages を作成・検証可能
 - create UI が fixed_template を一律4ページと説明しない
 
+## T3-3b-1 Implementation: Sync/Test Page Count Contract (2026-05-13)
+
+### Scope
+
+- Updated sync validation from fixed 4-page assumption to allowed page count contract.
+- Updated seed template tests from `toBe(4)` to contract-based validation.
+- Existing 10 fixed templates remain 4-page.
+- No seed template text changes.
+- Smoke script and create UI remain future slices.
+
+### Contract
+
+- Runtime source of truth: `fixedStory.pages.length`
+- Allowed counts: `4 / 8 / 12`
+- Optional `pageCount` must match `fixedStory.pages.length`
+- Optional `layoutVariant` must match page count (`4_page` / `8_page` / `12_page`)
+- Existing metadata-less 4-page templates remain valid
+
+### Verification
+
+- functions tsc: pass
+- seed-templates.test.ts: pass
+- template sync check: pass
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
