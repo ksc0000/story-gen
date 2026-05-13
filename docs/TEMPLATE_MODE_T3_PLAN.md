@@ -598,6 +598,29 @@ T3-3c pilot（8-page template）開始条件:
 - seed-templates.test.ts: pass
 - template sync check: pass
 
+## T3-3b-2 Implementation: Smoke Script Page Count Support (2026-05-13)
+
+### Scope
+
+- Added `--page-count` support to smoke create script.
+- Added `--expected-page-count` support to smoke inspect scripts.
+- Page count resolution order in create script:
+	1. explicit `--page-count`
+	2. `fixedStory.pageCount`
+	3. `fixedStory.pages.length`
+	4. default `4`
+- Existing 4-page smoke flows remain backward-compatible.
+- No seed template text changes.
+- Sync script unchanged in this slice.
+
+### Validation
+
+- `--page-count=4` accepted
+- invalid `--page-count=6` rejected
+- `--expected-page-count=4` passes against existing 4-page smoke book
+- `--expected-page-count=8` fails with non-zero exit against existing 4-page smoke book
+- template sync check: pass
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）

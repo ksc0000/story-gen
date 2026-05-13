@@ -7,6 +7,22 @@ const { initializeApp, cert, getApps } = functionsRequire("firebase-admin/app");
 const { getFirestore } = functionsRequire("firebase-admin/firestore");
 
 const TARGET_PROJECT_ID = "story-gen-8a769";
+const ALLOWED_PAGE_COUNTS = [4, 8, 12];
+
+function parseExpectedPageCountArg(args) {
+  const matched = args.find((arg) => arg.startsWith("--expected-page-count="));
+  if (!matched) {
+    return null;
+  }
+
+  const raw = matched.slice("--expected-page-count=".length).trim();
+  const expectedPageCount = Number.parseInt(raw, 10);
+  if (!Number.isFinite(expectedPageCount) || !ALLOWED_PAGE_COUNTS.includes(expectedPageCount)) {
+    throw new Error(`--expected-page-count must be one of 4/8/12, got ${raw}`);
+  }
+
+  return expectedPageCount;
+}
 
 function loadServiceAccountFromEnvPath() {
   const credentialPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -35,7 +51,7 @@ function ensureAdminApp(serviceAccount) {
   });
 }
 
-async function inspectBook(bookId) {
+async function inspectBook(bookId, expectedPageCount) {
   const credentialPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (!credentialPath || !existsSync(credentialPath)) {
     throw new Error("GOOGLE_APPLICATION_CREDENTIALS not set or file not found.");
@@ -103,14 +119,26 @@ async function inspectBook(bookId) {
 
   // Summary
   const allPages = pagesCol.docs;
+  const actualPageCount = allPages.length;
   const completedPages = allPages.filter(d => d.data().status === "completed").length;
   const failedPages = allPages.filter(d => d.data().status === "image_failed").length;
   const referencedPages = allPages.filter(d => d.data().inputReferenceCount > 0).length;
 
   console.log(`\n[summary]`);
-  console.log(`  Completed pages: ${completedPages}/${allPages.length}`);
-  console.log(`  Failed pages: ${failedPages}/${allPages.length}`);
-  console.log(`  Pages with reference: ${referencedPages}/${allPages.length}`);
+  console.log(`  Completed pages: ${completedPages}/${actualPageCount}`);
+  console.log(`  Failed pages: ${failedPages}/${actualPageCount}`);
+  console.log(`  Pages with reference: ${referencedPages}/${actualPageCount}`);
+
+  if (expectedPageCount !== null) {
+    const pass = actualPageCount === expectedPageCount;
+    console.log(`  Expected page count: ${expectedPageCount}`);
+    console.log(`  Actual page count: ${actualPageCount}`);
+    console.log(`  Page count check: ${pass ? "PASS" : "FAIL"}`);
+
+    if (!pass) {
+      throw new Error(`Expected page count ${expectedPageCount}, but got ${actualPageCount}.`);
+    }
+  }
   
   if (referencedPages > 0) {
     console.log(`  ✓ Reference path IS BEING USED`);
@@ -121,12 +149,14 @@ async function inspectBook(bookId) {
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.error("[usage] npm run inspect-smoke -- <bookId>");
+  console.error("[usage] npm run inspect-smoke -- <bookId> [--expected-page-count=4|8|12]");
   process.exit(1);
 }
 
 const bookId = args[0];
-inspectBook(bookId).catch((error) => {
+const expectedPageCount = parseExpectedPageCountArg(args);
+
+inspectBook(bookId, expectedPageCount).catch((error) => {
   console.error("[error]", error instanceof Error ? error.message : "unknown error");
   process.exit(1);
 });

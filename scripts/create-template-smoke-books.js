@@ -9,6 +9,7 @@ const { initializeApp, cert, getApps } = functionsRequire("firebase-admin/app");
 const { FieldValue, getFirestore } = functionsRequire("firebase-admin/firestore");
 
 const TARGET_PROJECT_ID = "story-gen-8a769";
+const ALLOWED_PAGE_COUNTS = [4, 8, 12];
 
 function getSeedTemplatesFromCompiledModule() {
   const compiled = require("../functions/lib/seed-templates.js");
@@ -214,7 +215,53 @@ function parseTemplateIdArg(args, fixedTemplateIds) {
   return templateId;
 }
 
-function buildBookPayload({ templateId, index, smokeRunId, templateCount, referenceImageUrl }) {
+function parsePageCountArg(args) {
+  const matched = args.find((arg) => arg.startsWith("--page-count="));
+  if (!matched) {
+    return null;
+  }
+
+  const raw = matched.slice("--page-count=".length).trim();
+  const pageCount = Number.parseInt(raw, 10);
+  if (!Number.isFinite(pageCount) || !ALLOWED_PAGE_COUNTS.includes(pageCount)) {
+    throw new Error(`--page-count must be one of 4/8/12, got ${raw}`);
+  }
+
+  return pageCount;
+}
+
+function resolveTemplatePageCount(seedTemplates, templateId) {
+  const template = seedTemplates[templateId];
+  const fixedStory = template?.fixedStory;
+
+  if (!fixedStory || typeof fixedStory !== "object") {
+    return 4;
+  }
+
+  if (fixedStory.pageCount !== undefined) {
+    const pageCount = Number.parseInt(String(fixedStory.pageCount), 10);
+    if (!ALLOWED_PAGE_COUNTS.includes(pageCount)) {
+      throw new Error(
+        `${templateId}: fixedStory.pageCount must be one of 4/8/12, got ${fixedStory.pageCount}`
+      );
+    }
+    return pageCount;
+  }
+
+  const pages = Array.isArray(fixedStory.pages) ? fixedStory.pages : [];
+  if (pages.length > 0) {
+    if (!ALLOWED_PAGE_COUNTS.includes(pages.length)) {
+      throw new Error(
+        `${templateId}: fixedStory.pages.length must be one of 4/8/12, got ${pages.length}`
+      );
+    }
+    return pages.length;
+  }
+
+  return 4;
+}
+
+function buildBookPayload({ templateId, index, smokeRunId, templateCount, referenceImageUrl, pageCount }) {
   const nowMs = Date.now();
 
   const payload = {
@@ -225,7 +272,7 @@ function buildBookPayload({ templateId, index, smokeRunId, templateCount, refere
     creationMode: "fixed_template",
     productPlan: "free",
     style: "soft_watercolor",
-    pageCount: 4,
+    pageCount,
     status: "generating",
     progress: 0,
     input: buildInputForTemplate(templateId, index),
@@ -262,6 +309,7 @@ async function main() {
   const write = args.includes("--write");
   const withReference = args.includes("--with-reference");
   const listTemplates = args.includes("--list-templates");
+  const requestedPageCount = parsePageCountArg(args);
 
   const seedTemplates = getSeedTemplatesFromCompiledModule();
   const fixedTemplateIds = getFixedTemplateIds(seedTemplates);
@@ -316,15 +364,18 @@ async function main() {
     console.log("[dry-run] The following books would be created (no Firestore writes):");
     const smokeRunId = buildSmokeRunId();
     for (const [index, templateId] of targetTemplateIds.entries()) {
+      const pageCount = requestedPageCount ?? resolveTemplatePageCount(seedTemplates, templateId);
       const payload = buildBookPayload({ 
         templateId, 
         index, 
         smokeRunId, 
         templateCount: targetTemplateIds.length,
-        referenceImageUrl 
+        referenceImageUrl,
+        pageCount,
       });
       console.log(`  [${index + 1}/${targetTemplateIds.length}] templateId=${templateId}`);
       console.log(`         userId=${payload.userId}`);
+      console.log(`         pageCount=${payload.pageCount}`);
       console.log(`         withReference=${!!referenceImageUrl}`);
       if (referenceImageUrl) {
         console.log(`         referenceImageUrl=${redactUrl(referenceImageUrl)}`);
@@ -349,6 +400,9 @@ async function main() {
 
   console.log(`[start] creating ${targetTemplateIds.length} smoke books for ${TARGET_PROJECT_ID}`);
   console.log(`[info] withReference=${!!referenceImageUrl}`);
+  if (requestedPageCount) {
+    console.log(`[info] requestedPageCount=${requestedPageCount}`);
+  }
   if (referenceImageUrl) {
     console.log(`[info] referenceImageUrl=${redactUrl(referenceImageUrl)}`);
   }
@@ -357,21 +411,23 @@ async function main() {
   const created = [];
   for (const [index, templateId] of targetTemplateIds.entries()) {
     const docRef = db.collection("books").doc();
+    const pageCount = requestedPageCount ?? resolveTemplatePageCount(seedTemplates, templateId);
     const payload = buildBookPayload({ 
       templateId, 
       index, 
       smokeRunId, 
       templateCount: targetTemplateIds.length,
-      referenceImageUrl
+      referenceImageUrl,
+      pageCount,
     });
     await docRef.create(payload);
-    created.push({ templateId, bookId: docRef.id });
-    console.log(`[created] template=${templateId} bookId=${docRef.id}`);
+    created.push({ templateId, bookId: docRef.id, pageCount });
+    console.log(`[created] template=${templateId} pageCount=${pageCount} bookId=${docRef.id}`);
   }
 
   console.log(`[done] created ${created.length} smoke books.`);
   for (const row of created) {
-    console.log(`- ${row.templateId}: ${row.bookId}`);
+    console.log(`- ${row.templateId} (pageCount=${row.pageCount}): ${row.bookId}`);
   }
 }
 
