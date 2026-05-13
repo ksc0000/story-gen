@@ -1463,6 +1463,74 @@ Reason:
 - Re-run Reader / Create / Admin QA in T3-3g-4 using a popup-enabled browser session or another documented QA auth path.
 - If Admin access requires a separate role, record it as `blocked by admin auth` unless an admin-authorized QA account is available.
 
+## T3-3g-4 Authenticated Interactive QA Re-run
+
+### Status
+
+blocked by popup-blocked.
+
+### Target
+
+| template | smoke bookId | expected pages |
+| --- | --- | --- |
+| `fixed-first-birthday-8p` | `cOhH25oa7cex7C0yEqB9` | 8 |
+| `fixed-first-zoo-8p` | `esAcMbgjjN6Tj5IIg3Sy` | 8 |
+
+### Pre-flight Result
+
+| check | result | notes |
+| --- | --- | --- |
+| local app started | pass | `npm run dev` started successfully on `http://localhost:3000` |
+| popup-enabled browser session | blocked | Google login was retried from `/login/`, but Firebase again returned `auth/popup-blocked` |
+| authenticated user session established | blocked | No credentials, tokens, cookies, or service account details were recorded |
+| Reader route reachable without `/login` redirect | blocked | birthday Reader route redirected back to `/login/` |
+| Create route reachable without `/login` redirect | blocked | `/create/input` redirected back to `/login/` |
+| Admin route reachable or auth gate documented | pass | `/admin/book-quality-review` redirected to `/login/`; auth gate remains documented |
+
+### Reader QA Result
+
+| template | R1 open | R2 progress | R3 next to final | R4 prev to first | R5 final message | R6 images | R7 text | R8 mobile | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | authenticated session not established; requested route returned to `/login/` |
+| `fixed-first-zoo-8p` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | authenticated session not established; requested route returned to `/login/` |
+
+### Create UI QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| C1 create input page loads | blocked | authenticated session not established; `/create/input` redirected to `/login/` |
+| C2 birthday 4p copy | not run | create UI could not be reached |
+| C3 birthday 8p copy | not run | create UI could not be reached |
+| C4 zoo 4p copy | not run | create UI could not be reached |
+| C5 zoo 8p copy | not run | create UI could not be reached |
+| C6 page role labels | not run | create UI could not be reached |
+| C7 variant distinction | not run | create UI could not be reached |
+
+### Admin / Review QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| A1 admin review page loads/auth gate documented | pass | unauthenticated access to `/admin/book-quality-review` redirected to `/login/`; auth gate remains documented |
+| A2 birthday book 8 pages visible | blocked | authenticated admin session not established |
+| A3 zoo book 8 pages visible | blocked | authenticated admin session not established |
+| A4 all 8 completed statuses visible | blocked | authenticated admin session not established |
+| A5 page-level regeneration action | blocked | authenticated admin session not established; no side-effecting action was attempted |
+| A6 layout with 8 pages | blocked | authenticated admin session not established |
+
+### Go / No-go
+
+**Production candidate:** Hold
+
+Reason:
+- The authenticated QA rerun could not proceed because the documented popup login path still failed with Firebase `auth/popup-blocked`.
+- Reader, Create, and Admin routes remain protected and redirect to `/login/` without an authenticated session.
+
+### Follow-up
+
+- Re-run T3-3g authenticated QA from a popup-allowed manual browser session, then resume with Codex after the session is already established.
+- If popup login cannot be made available in the in-app browser, treat this as a QA environment issue rather than an 8-page template implementation issue.
+- If Admin access still requires separate privilege after successful user login, record the Admin portion as `blocked by admin auth`.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
