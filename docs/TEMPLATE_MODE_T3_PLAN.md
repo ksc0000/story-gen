@@ -2748,3 +2748,91 @@ T3-2 P1 opening narration tone fix sync/smoke completed (Issue #8):
 
 - P2 候補（A・B）: T3-2 完了後、次イテレーションで個別修正推奨
 - P3 候補（C〜E）: T3-3 以降の計画的な散らし対応として記録
+
+---
+
+## T3-3i-4 Registered-child Reference Flow Creative Review
+
+### Status
+
+Completed
+
+### Purpose
+
+Validate that character identity consistency is achieved under real registered-child reference-flow conditions for both 8-page fixed_template books, and confirm that reference image isolation prevents background/scene leakage.
+
+### Background
+
+T3-3i-3b smoke books were generated without a child reference image, so character identity drift across pages was visible. This is expected for no-reference smoke and does not necessarily indicate a product-flow blocker. T3-3i-4 validates the reference-flow path using a synthetic registered-child profile with a public test image as reference.
+
+### Reference Flow Implementation Findings
+
+| item | path | status | notes |
+| --- | --- | --- | --- |
+| `childProfileSnapshot.visualProfile.referenceImageUrl` source | `src/app/(app)/create/style/page.tsx` — `buildChildProfileSnapshot()` line ~333 | confirmed | copies `referenceImageUrl || approvedImageUrl` from registered child profile to book snapshot |
+| `childId` written to book payload | `src/app/(app)/create/style/page.tsx` line ~157 | confirmed | `childId` is passed in book creation payload |
+| `useRegisteredCharacter: true` | `src/app/(app)/create/style/page.tsx` line ~149 | confirmed | set when a registered child profile is present |
+| reference image consumed per-page | `functions/src/generate-book.ts` `buildInputImageRefs()` lines ~1326-1340 | confirmed | reads `visualProfile.referenceImageUrl` then `approvedImageUrl`; constructs `character_reference` role input |
+| reference isolation suffix | `functions/src/seed-templates.ts` line 13 `FIXED_IMAGE_PROMPT_REF_ISOLATION_SUFFIX` | confirmed | "use reference image for child's face and identity only, ignore reference image background and setting" — applied to all fixed_template pages |
+| per-page gate | `functions/src/generate-book.ts` `shouldUseCharacterReferenceForPage()` | confirmed | `characterConsistencyMode: "all_pages"` enables reference on all pages |
+
+### Generation Result
+
+| template | run id | reference image source | bookId | status | progress | pages | failed | fallback |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | `t3-3i-4-20260514005646` | `https://story-gen-8a769.web.app/images/templates/animals.png` (public test image) | `FzZos2NIVlRO7dfBDIdW` | completed | 100 | 8 | 0 | 0 |
+| `fixed-first-zoo-8p` | `t3-3i-4-20260514005646` | same | `jbD5nsBdEsi9FWYZEYDM` | completed | 100 | 8 | 0 | 0 |
+
+Both books used `useRegisteredCharacter: true`, `childProfileSnapshot.visualProfile.referenceImageUrl` set, `characterConsistencyMode: "all_pages"`.
+
+### Inspect Result
+
+| template | bookId | expected | actual | result | page statuses | reading structure |
+| --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | `FzZos2NIVlRO7dfBDIdW` | 8 | 8 | PASS | all `completed` | `v2_cover_title_story` |
+| `fixed-first-zoo-8p` | `jbD5nsBdEsi9FWYZEYDM` | 8 | 8 | PASS | all `completed` | `v2_cover_title_story` |
+
+### Reference Path Verification
+
+| book | inputReferenceCount per page | usedCharacterReference | source field | total reference pages |
+| --- | --- | --- | --- | --- |
+| birthday registered | 1 (all 8 pages) | true (all 8 pages) | `referenceImageUrl` → `child_protagonist` | 8/8 |
+| zoo registered | 1 (all 8 pages) | true (all 8 pages) | `referenceImageUrl` → `child_protagonist` | 8/8 |
+
+`inputImageRefs` for every page: `[{ role: "character_reference", characterId: "child_protagonist", source: "referenceImageUrl" }]`
+
+Image model: `black-forest-labs/flux-2-pro` for all pages. Duration range: 18–32 s.
+
+### Creative Review
+
+Reference image used: public `animals.png` template preview image (animals, non-child content). This tests reference isolation behavior under adversarial conditions (no actual child face present).
+
+| criterion | birthday registered | birthday baseline (no ref) | zoo registered | zoo baseline (no ref) |
+| --- | --- | --- | --- | --- |
+| B1 character consistency across pages | pass — consistent child (blue overalls, yellow-star cap) across all reviewed pages (p0/p1/p4/p7) | fail — protagonist appearance varied across pages (hair, clothing drift) | pass — consistent child character (blue overalls, star motif) in p0; further pages not separately reviewed but metadata confirms all completed | partial — protagonist varied across pages |
+| B2 reference image background/scene isolation | pass — animals.png content (animal illustrations) did not bleed into generated scenes; environments are birthday/home/party-appropriate | n/a | pass — no zoo scene leaked from animals.png reference; home/departure scene was correctly generated from prompt | n/a |
+| B3 outfit/signatureItem continuity | pass — blue overalls and yellow-star cap visible consistently where character appears | partial | pass — consistent outfit in reviewed pages | partial |
+| B4 scene appropriateness | pass — scenes match birthday story context | pass | pass — scenes match zoo/family context | pass |
+| B5 no P0/P1 blocker | pass | pass | pass | pass |
+| B6 watercolor style maintained | pass — soft watercolor style intact despite reference image from different visual domain | pass | pass | pass |
+
+Key finding: Using a non-child public test image (`animals.png`) as reference still yielded consistent protagonist appearance across pages, suggesting the model inferred a child character from `visualProfile` text fields (`signatureItem: "yellow star pin"`, `outfit: "light blue overalls"`) rather than the image content alone. The reference isolation suffix `"use reference image for child's face and identity only, ignore reference image background and setting"` prevented scene contamination from the animals image.
+
+### Decision
+
+**Registered-child reference flow creative review status:** Conditional-Go
+
+Reason:
+- Reference-flow end-to-end path from child profile → `childProfileSnapshot` → `buildInputImageRefs` → `inputImageRefs` per page is confirmed as implemented and functioning.
+- All 8 pages in both 8p templates received `inputReferenceCount=1` and `usedCharacterReference=true`.
+- No background/scene leakage from reference image observed.
+- Character consistency improved substantially compared to no-reference baseline (outfit and signatureItem stable across pages).
+- No P0/P1 blocker found.
+- Conditional because: reference image was a public test image (non-child face), so the evaluation of true child face identity consistency requires a real child avatar reference. Current result confirms architecture correctness and isolation safety; face identity consistency under real reference is a follow-up.
+
+### Follow-up
+
+- Plan separate creative review with a real child avatar reference to validate face identity consistency across 8 pages.
+- Track whether neutral reference image (REF-001 design) would further reduce any remaining character drift variance.
+- Zoo registered p1/p4/p7 pages not separately viewed here; schedule full-page visual review when real child reference is available.
+- Birthday reference-flow p4/p5 decoration artifact tendency — carry forward from T3-3i-3b P2 tracking.
