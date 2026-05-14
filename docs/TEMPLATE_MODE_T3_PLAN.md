@@ -3588,3 +3588,92 @@ Reason:
   - `npm run smoke:create-template-books -- --template-id=fixed-brush-teeth-8p --page-count=8 --write`
   - `node scripts/inspect-template-smoke-book.js <bookId> --expected-page-count=8`
 - **If Blocked:** Configure Firebase service account credentials outside the repository, then rerun this preflight.
+
+## T3-4c-credentials-setup-checklist Firebase Credentials Setup
+
+### Status
+
+planned.
+
+### Purpose
+
+Define the local credentials setup checklist required before retrying Firestore template sync, smoke creation, and inspect for `fixed-brush-teeth-8p`.
+
+### Background
+
+T3-4c, T3-4c-env-sync-smoke, and T3-4c-credential-preflight were blocked because `GOOGLE_APPLICATION_CREDENTIALS` was not set.
+
+The `fixed-brush-teeth-8p` seed implementation and compiled seed checks are passing. The remaining blocker is environment setup, not code.
+
+### Security Rules
+
+| rule | requirement |
+| --- | --- |
+| service account JSON | must remain outside the repository |
+| JSON contents | never paste into chat, docs, logs, or commits |
+| private key | never display or record |
+| service account email | do not record |
+| project_id | do not record in docs |
+| credential file path | do not record in docs |
+| environment variable value | do not record in docs |
+| git status before commit | must not include JSON, credentials, tmp secrets, or generated files |
+
+### Human Setup Checklist
+
+| step | action | expected result |
+| --- | --- | --- |
+| 1 | Place service account JSON outside the repo | JSON is not under `C:\Users\CN63738\story-gen` |
+| 2 | Open a new PowerShell session for this repo | Session-local env var can be set safely |
+| 3 | Set `GOOGLE_APPLICATION_CREDENTIALS` for the session only | Env var is available to node processes |
+| 4 | Confirm env var is set without printing the value | Output only says set / not set |
+| 5 | Confirm credential file exists without printing the path | Output only says exists / missing |
+| 6 | Run Firebase Admin read-only check | No writes performed |
+| 7 | Run `git status --short` | No credential file or secret appears |
+| 8 | Proceed to T3-4c-sync-smoke-retry only if preflight passes | Sync/smoke can run safely |
+
+### Safe PowerShell Pattern
+
+Do not paste the actual path into docs.
+
+```powershell
+# In local terminal only; do not commit or document the value.
+$env:GOOGLE_APPLICATION_CREDENTIALS = "<local-path-outside-repo>"
+
+if ($env:GOOGLE_APPLICATION_CREDENTIALS) {
+	"GOOGLE_APPLICATION_CREDENTIALS is set"
+} else {
+	"GOOGLE_APPLICATION_CREDENTIALS is not set"
+}
+
+if ($env:GOOGLE_APPLICATION_CREDENTIALS -and (Test-Path $env:GOOGLE_APPLICATION_CREDENTIALS)) {
+	"credential file exists"
+} else {
+	"credential file missing"
+}
+```
+
+### Preflight Gate
+
+| gate | required result |
+| --- | --- |
+| env var set | pass |
+| credential file exists | pass |
+| Firebase Admin read-only check | pass |
+| git status clean of secrets | pass |
+| functions/lib restored | pass |
+
+### Decision
+
+Credentials setup readiness: Awaiting human setup
+
+Reason:
+
+- `fixed-brush-teeth-8p` code and compiled seed checks pass.
+- Firestore sync / smoke / inspect are blocked only by missing local credentials.
+- Credentials must be configured outside the repository before retrying.
+
+### Follow-up
+
+- Human sets `GOOGLE_APPLICATION_CREDENTIALS` in local PowerShell session.
+- Re-run T3-4c-credential-preflight.
+- If Ready, run T3-4c-sync-smoke-retry.
