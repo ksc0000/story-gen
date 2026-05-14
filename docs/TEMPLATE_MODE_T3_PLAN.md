@@ -4845,3 +4845,97 @@ Run a read-only audit for `fixed-brush-teeth-8p` child-facing text fields agains
 - T3-4k-1: audit `fixed-brush-teeth-8p` child-facing text fields for orthography compliance.
 - T3-4k-2: implement minimal hiragana-first cleanup if needed (source only, no smoke run yet).
 - T3-4k-3: run text-focused smoke verification to confirm no regressions.
+
+---
+
+## T3-4k-1 fixed-brush-teeth-8p Child-facing Text Audit
+
+### Status
+
+completed (read-only audit)
+
+### Purpose
+
+Audit the child-facing text fields in `fixed-brush-teeth-8p` against the T3-4k Japanese orthography policy before making any seed text changes.
+
+This step is read-only and docs-only. It does not modify seed text, prompts, generated books, database records, Admin state, or reference-flow behavior.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| policy source | T3-4k Japanese Orthography Policy for Fixed Templates |
+| code changes | none |
+| seed text changes | none |
+| prompt changes | none |
+| smoke generation | not run |
+| DB/Admin side effects | none |
+| reference-flow | not run |
+
+### Field Audit Result
+
+| field | result | notes |
+| --- | --- | --- |
+| `textTemplate` | violation | Contains kanji on all pages 0–6 (e.g., 朝, 顔, 歯, 楽, 前, 奥, 探検, 様子, 仕上, 口). Used as cross-age fallback and rendering baseline. |
+| `textTemplatesByAge.preschool_3_4` | violation | Mirrors `textTemplate` kanji issues with minimal additional hiragana. Each page carries multiple OR-2 violations. |
+| `textTemplatesByAge.baby_toddler` | pass | Already hiragana-first across all pages. No kanji or English. |
+| `textTemplatesByAge.general_child` | violation | Same as `textTemplate` in most pages; kanji present. |
+| `textTemplatesByAge.early_reader_5_6` | accepted | Mixed kanji appropriate for age band. Out of scope for this audit. |
+| `textTemplatesByAge.early_elementary_7_8` | accepted | Kanji-rich appropriate for age band. Out of scope for this audit. |
+| final page child-facing text | needs clarification | Page 7 uses `{parentMessage}` in all age variants. Rendered display is parent-authored content. If shown to the child in the rendered book view, hiragana-first policy should apply. If parent-only display, out of scope. |
+| `imagePromptTemplate` | out-of-scope | Generation instruction, not child-facing book text. |
+| metadata/admin/docs | out-of-scope | Not part of rendered child-facing story text. |
+
+### Orthography Findings
+
+| check | result | detail |
+| --- | --- | --- |
+| kanji in `preschool_3_4` text | **violation (P2)** | All pages 0–6 contain kanji in the preschool_3_4 variant. See per-page breakdown below. |
+| English in child-facing text | **pass** | No English words in any child-facing text. `{childName}` placeholder is correct. |
+| unnecessary katakana | **pass** | No katakana found in child-facing text. Onomatopoeia uses hiragana (ぐずぐず, しゃかしゃか, ぐちゅぐちゅ). |
+| word-internal spacing | **pass** | No word-internal spacing found. |
+| phrase-level spacing | **pass** | Spacing is phrase-level and used for read-aloud rhythm (e.g., "気持ちを こめて 磨きます"). |
+| placeholder preservation | **pass** | `{childName}` is intact across all pages and all age variants. No broken or partially modified placeholders. |
+| punctuation consistency | **pass** | Uses Japanese 。and 、consistently. No mixed punctuation issues. |
+| `parentMessage` (page 7) | **needs clarification** | All variants render `{parentMessage}` directly. Rendered book behavior must be confirmed before applying OR-1. |
+
+### Per-page Kanji Violations in `preschool_3_4`
+
+| page | role | kanji found | severity |
+| --- | --- | --- | --- |
+| 0 | opening_establishing | 朝, 水, 顔, 洗 | P2 |
+| 1 | setback_or_question | 歯, 音 | P2 |
+| 2 | discovery | 握, 出, 楽, 目, 光 | P2 |
+| 3 | action | 前, 歯, 頑張, 気持, 磨 | P2 |
+| 4 | object_detail | 奥, 歯, 探検, 汚, 見, 鏡, 覗, 一生懸命 | P2 (most violations) |
+| 5 | emotional_closeup | 様子, 見守, 視線, 気, 頑張, 思 | P2 |
+| 6 | payoff | 仕上, 口, 最後, 気合 | P2 |
+| 7 | quiet_ending | n/a (`{parentMessage}`) | see parentMessage note |
+
+### Note on `textTemplate` Field
+
+The `textTemplate` field is used as the age-default rendering baseline across all age groups and is kanji-heavy on all pages 0–6. If the app renders `textTemplate` as the fallback for preschool_3_4 when no age-specific variant resolves, this also constitutes a violation. However, per current implementation, `preschool_3_4` variant is explicitly defined and takes precedence.
+
+### Decision
+
+**Child-facing text audit status:** Conditional-Go
+
+Reason:
+- Kanji violations in `preschool_3_4` are found on all 7 content pages (pages 0–6). This is a material P2 finding under OR-2.
+- `baby_toddler` variant is already fully hiragana-first and requires no changes.
+- `early_reader_5_6` and `early_elementary_7_8` variants are age-appropriate and out of scope.
+- No English, unnecessary katakana, word-internal spacing, or placeholder issues were found.
+- `parentMessage` (page 7) usage requires a separate rendered-output confirmation before policy is applied.
+- A minimal hiragana-first cleanup limited to `preschool_3_4` (and `textTemplate` if used as fallback) is recommended before broad variant expansion.
+
+### Recommended Next Step
+
+- Run T3-4k-2 as a minimal `preschool_3_4` hiragana-first seed text cleanup for pages 0–6.
+- Clarify whether `{parentMessage}` is rendered child-facing or parent-only; if child-facing, include page 7 in T3-4k-2.
+- Do not change `early_reader_5_6`, `early_elementary_7_8`, or `baby_toddler` variants in T3-4k-2.
+
+### Follow-up
+
+- T3-4k-2: implement minimal `preschool_3_4` hiragana-first cleanup for pages 0–6 (source only, no smoke run yet).
+- T3-4k-3: run text-focused smoke verification to confirm no regressions after cleanup.
