@@ -4340,3 +4340,52 @@ Reason:
 
 - 次タスクで T3-4i-1（`fixed-brush-teeth-8p` 限定 prompt guardrail 実装）を実施。
 - 実装後に brush-teeth 限定で creative re-review を行い、T3-4f closure 判定を更新する。
+
+## T3-4i-1 BF-3/BF-4 Minimal Image Prompt Guardrail Implementation
+
+### Status
+
+completed (code + docs, minimal delta).
+
+### Purpose
+
+T3-4i の docs plan に従い、`fixed-brush-teeth-8p` 限定で BF-3/BF-4 低減用の template-local prompt guardrail を最小差分で実装する。
+
+### Scope
+
+- 対象テンプレート: `fixed-brush-teeth-8p` のみ
+- 対象ページ: pages 1-8 の `imagePromptTemplate`
+- 非対象: global suffix 変更、reference-flow 変更、runtime normalization、再生成/DB更新/Admin操作
+
+### Implementation Summary
+
+1. `functions/src/seed-templates.ts` に `fixed-brush-teeth-8p` 専用 guardrail 句を追加。
+2. pages 1-8 の `imagePromptTemplate` を `withFixedImagePromptSafety(...)` から `withBrushTeeth8pImagePromptGuardrail(...)` に置換。
+3. guardrail で以下を同時に付与。
+	- BF-3 向け: 同一主人公の連続性アンカー（年齢帯/髪型/服主色/顔印象の一貫性）
+	- BF-4 向け: 洗面台周辺小物の no-text/no-label 指定（plain, solid-color, unlabeled containers）
+4. 既存共通 safety suffix（standard + ref isolation）は変更せず維持。
+
+### Constraints Check
+
+| item | result | notes |
+| --- | --- | --- |
+| global suffix unchanged | pass | `withFixedImagePromptSafety` の既存 suffix 定義は未変更 |
+| template-local delta only | pass | `fixed-brush-teeth-8p` pages 1-8 のみ変更 |
+| reference-flow untouched | pass | 参照画像フロー関連の実装変更なし |
+| no regeneration / DB update / Admin mutation | pass | 本タスクで未実施 |
+| unrelated template/code untouched | pass | 他テンプレートの prompt は未変更 |
+
+### Decision
+
+**T3-4i-1 status:** complete
+
+Reason:
+
+- BF-3/BF-4 向けの最小 guardrail を、計画どおり template-local に限定して実装した。
+- 既存の共通 safety 仕様や reference-flow を変えず、no-reference smoke 改善に必要な最小差分に留めた。
+
+### Follow-up
+
+- T3-4i-2 で brush-teeth 限定の sync/check + smoke + creative re-review を実施し、改善度を確認する。
+- T3-4i-3 で T3-4f readiness 判定を更新する。
