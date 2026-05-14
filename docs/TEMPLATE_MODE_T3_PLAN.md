@@ -4661,3 +4661,64 @@ Reason:
 
 - T3-4i-5 で BF-4 の残課題を page-local prompt wording の微調整候補として整理する（広範囲修正は行わない）。
 - T3-4f readiness 再判定では「BF-3 改善確認済み、BF-4 は軽微残課題あり」として反映する。
+
+## T3-4j BF-4 Targeted Prompt Cleanup Plan
+
+### Status
+
+completed (docs-only planning)
+
+### Purpose
+
+Plan a targeted follow-up for the remaining BF-4 bathroom no-text artifact issues observed in the `fixed-brush-teeth-8p` no-reference smoke QA.
+
+This step is docs-only and does not change prompts, regenerate images, update database records, run Admin actions, or execute reference-flow.
+
+### Source
+
+| item | value |
+| --- | --- |
+| previous QA | `T3-4i-4 fixed-brush-teeth-8p Manual Visual QA` |
+| reviewed bookId | `SMG1N62tUFjnYxbD4bnr` |
+| previous decision | `Conditional-Go` |
+| severity | `P2` |
+| BF-3 status | improved; no immediate follow-up |
+| BF-4 status | partial; targeted follow-up required |
+
+### Remaining BF-4 Issue
+
+| area | observation | impact |
+| --- | --- | --- |
+| terminal/late pages | readable-ish text-like marks remain around bathroom-related objects | P2; does not block, but should be cleaned before broad variant expansion |
+| toothpaste/cup/bottle/shelf context | no-text guardrail reduced issue but did not fully eliminate it | requires targeted prompt tightening |
+| poster/chart/label-like objects | should be minimized or removed in bathroom background | reduces text induction risk |
+
+### Cleanup Strategy
+
+| id | strategy | scope | priority |
+| --- | --- | --- | --- |
+| BF4-C1 | Add stronger page-local no-text constraints to late-page image prompts where text-like marks remain. | template-local / page-local | P2 |
+| BF4-C2 | Replace label-prone background objects with plain, unlabeled shapes or remove them. | template-local / page-local | P2 |
+| BF4-C3 | Explicitly avoid posters, charts, written notes, product labels, brand marks, letters, and numbers in bathroom scenes. | template-local | P2 |
+| BF4-C4 | Preserve the BF-3 character anchor without further changing character descriptors. | template-local | P3 |
+| BF4-C5 | Re-run no-reference smoke only after the targeted prompt change is reviewed. | QA follow-up | P2 |
+
+### Acceptance Criteria
+
+| id | criteria |
+| --- | --- |
+| AC-BF4-1 | Late-page bathroom objects show no readable text, pseudo-labels, letters, numbers, or logo-like marks. |
+| AC-BF4-2 | Toothpaste, cups, bottles, shelves, mirrors, and counters remain visually clear but unlabeled. |
+| AC-BF4-3 | No posters, charts, labels, or written notes appear as prominent background elements. |
+| AC-BF4-4 | Child identity consistency is not regressed by the BF-4 cleanup. |
+| AC-BF4-5 | No P0/P1 issues appear after the follow-up smoke. |
+
+### Recommended Next Step
+
+Implement a minimal BF-4-only template-local / page-local prompt cleanup for `fixed-brush-teeth-8p`, then run a new no-reference smoke QA.
+
+### Follow-up
+
+- T3-4j-1: implement BF-4-only prompt cleanup.
+- T3-4j-2: run no-reference smoke generation after cleanup.
+- T3-4j-3: manual visual QA for BF-4 regression/improvement.
