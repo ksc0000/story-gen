@@ -3817,3 +3817,73 @@ Reason:
 
 - Run manual visual QA in browser for R2-R9, C2-C7, A2-A6.
 - T3-4e: creative QA and reference-flow QA for `fixed-brush-teeth-8p`.
+
+## T3-4d-manual-browser-qa Manual Browser Interactive QA for fixed-brush-teeth-8p
+
+### Status
+
+completed.
+
+### Purpose
+
+Complete the visual and interaction checks that were blocked in T3-4d by using a manual browser session.
+
+### Target
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| smoke bookId | `MvSyoUU2L2rC3JaOEpCa` |
+| expected pages | 8 |
+| source | T3-4c-sync-smoke-retry |
+
+### Manual Reader QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| MR1 book opens | pass | Manual browser QA confirmed normal open without login/error blocker. |
+| MR2 8-page display/progress | pass | Manual browser QA confirmed 8-page progress/display. |
+| MR3 page 1 to page 8 navigation | pass | Manual browser QA confirmed forward navigation through all pages. |
+| MR4 page 8 to page 1 navigation | pass | Manual browser QA confirmed backward navigation through all pages. |
+| MR5 final page parentMessage | pass | Manual browser QA confirmed final page rendering is natural. |
+| MR6 all 8 images render | pass | Manual browser QA confirmed all page images are visible. |
+| MR7 texts visible/no severe overflow | pass | Manual browser QA confirmed text remains readable without severe overflow. |
+| MR8 mobile responsive | pass | Manual browser QA confirmed mobile responsive behavior is acceptable. |
+| MR9 no brush-teeth layout break | pass | Manual browser QA confirmed no severe template-specific layout break. |
+
+### Manual Create UI QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| MC1 create input page loads | pass | Manual browser QA confirmed create page loads. |
+| MC2 existing 4p brush-teeth available | pass | Manual browser QA confirmed 4-page variant remains available. |
+| MC3 8p brush-teeth selectable/visible | pass | Manual browser QA confirmed 8-page variant is visible/selectable in current flow. |
+| MC4 4p/8p distinguishable | pass | Manual browser QA confirmed variants are distinguishable. |
+| MC5 required input contract minimal | pass | Manual browser QA confirmed minimal required input remains understandable. |
+| MC6 optional parentMessage understandable | pass | Manual browser QA confirmed optional parentMessage handling is understandable. |
+| MC7 no confusion with birthday/zoo 8p | pass | Manual browser QA confirmed no notable selection confusion. |
+
+### Manual Admin / Review QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| MA1 admin page loads/auth gate documented | pass | Manual browser QA confirmed admin review surface is reachable for this check. |
+| MA2 smoke book found | pass | Manual browser QA confirmed target smoke book was found. |
+| MA3 8 pages visible | pass | Manual browser QA confirmed 8 pages are visible. |
+| MA4 all 8 completed statuses visible | pass | Manual browser QA confirmed completed statuses across all pages. |
+| MA5 page-level regeneration action page-specific | pass | Manual browser QA confirmed page-specific regeneration affordance is visible; action not executed. |
+| MA6 no severe 8p layout break | pass | Manual browser QA confirmed no severe 8-page layout issue. |
+| MA7 no accidental mutation during QA | pass | Manual QA was limited to read-only observation; no mutation action executed. |
+
+### Decision
+
+**Manual Interactive QA status:** Go
+
+Reason:
+- Manual browser QA completed the visual and interaction checks that were blocked in T3-4d.
+- Reader, Create UI, and Admin Review checks all passed.
+- No P0/P1 issue, severe brush-teeth layout break, or unintended mutation was observed.
+
+### Follow-up
+
+- T3-4e: creative QA and reference-flow QA for `fixed-brush-teeth-8p`.
