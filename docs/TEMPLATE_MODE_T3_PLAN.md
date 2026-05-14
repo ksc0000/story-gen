@@ -3999,3 +3999,80 @@ Reason:
 - Tighten bathroom-object no-text guardrails to reduce label/logo-like marks on cups, bottles, and shelf items.
 - Re-run brush-teeth reference-flow QA with a reachable safe public test reference or approved synthetic child reference.
 - T3-4f: Brush Teeth Rollout Readiness / First Variant Closure.
+
+## T3-4f Brush Teeth Rollout Readiness / First Variant Closure
+
+### Status
+
+planned (docs-only planning based on T3-4e review results).
+
+### Purpose
+
+Define closure criteria and rollout-readiness decision for `fixed-brush-teeth-8p` after T3-4e creative review, without code/runtime changes in this step.
+
+### Inputs
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| smoke bookId | `MvSyoUU2L2rC3JaOEpCa` |
+| upstream QA | T3-4c sync/smoke/inspect = Go, T3-4d-manual-browser-qa = Go |
+| creative QA status | Conditional |
+| severity | P2 |
+| P0/P1 blocker | none |
+
+### T3-4e Carry-over Findings (P2)
+
+| id | finding | impact |
+| --- | --- | --- |
+| F1 | Final page parentMessage locale mismatch (English mixed into Japanese story flow) | weakens emotional closure/read-aloud consistency |
+| F2 | Mid-word spacing artifacts in multiple lines (`楽し い`, `歯のひ とつひとつ`, `見つける ぞ`) | reduces read-aloud rhythm and text polish |
+| F3 | Protagonist visual drift across pages (outfit/age-impression/face variation) | consistency quality debt in no-reference flow |
+| F4 | Mild text-like artifacts on bathroom objects (cup/bottle/shelf pseudo-labels) | no-text quality debt |
+| F5 | Brush-teeth-specific reference-flow QA blocked by test reference reachability (`network_error`) | identity consistency under reference-flow remains unverified for this template |
+
+### Closure Strategy
+
+| track | objective | owner lane | evidence for closure |
+| --- | --- | --- | --- |
+| Text closure | remove locale mismatch and spacing artifacts from read-aloud output quality | template/content QA | updated smoke review notes showing Japanese closure and no spacing anomalies |
+| Image polish | reduce visible text-like object artifacts while preserving scene clarity | prompt/image QA | no severe readable labels in sink-area objects on re-review samples |
+| Consistency verification | separate no-reference drift from reference-flow capability for brush-teeth variant | product/QA | brush-teeth-specific reference-flow verification result recorded (pass or explicit blocker rationale) |
+| Rollout decision | finalize first-variant closure recommendation | PM/review | explicit Go/Conditional/Hold decision with severity and rationale |
+
+### Rollout Readiness Gates
+
+| gate | target | current | result |
+| --- | --- | --- | --- |
+| Functional stability | sync/smoke/inspect pass, 8 pages, no failed/fallback blocker | satisfied | pass |
+| Interactive UX | Reader/Create/Admin manual QA all pass | satisfied | pass |
+| Creative blocker | no P0/P1 creative blocker | satisfied | pass |
+| Text polish | no locale mismatch in closure, no obvious spacing artifacts | not yet satisfied | partial |
+| No-text artifact tolerance | no severe readable labels/logos in key bathroom props | partially satisfied | partial |
+| Brush-teeth reference-flow verification | template-specific evidence recorded | not yet satisfied | blocked |
+
+### Readiness Assessment
+
+**T3-4f readiness status:** Conditional-Go (controlled rollout continue, first-variant closure pending P2 cleanup and/or explicit risk acceptance).
+
+Reason:
+- Functional and interactive quality gates are already green.
+- No P0/P1 blocker was found.
+- Remaining issues are P2-level quality debt and do not force rollback.
+- Final closure for this first additional 8-page variant should include a documented decision on F1-F5 treatment (fixed now vs accepted risk with follow-up).
+
+### Exit Criteria for First Variant Closure
+
+| criteria | done when |
+| --- | --- |
+| C1 decision clarity | explicit closure decision recorded: Go or Conditional-Go with accepted residual risks |
+| C2 text quality treatment | F1/F2 resolved or explicitly accepted with rationale and timeline |
+| C3 no-text artifact treatment | F4 reduced or explicitly accepted as non-blocking with monitoring note |
+| C4 reference-flow treatment | F5 resolved (verified) or explicitly documented as blocked with safe next action |
+| C5 handoff | next-phase task (additional 8p variant expansion) references this closure decision |
+
+### Follow-up
+
+- Execute focused P2 cleanup planning for text closure and spacing artifacts before broad 8-page expansion.
+- Re-attempt brush-teeth reference-flow QA only when a reachable safe test reference path is confirmed.
+- Proceed to first-variant closure sign-off once C1-C5 are satisfied.
