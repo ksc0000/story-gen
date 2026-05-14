@@ -3745,3 +3745,75 @@ Reason:
 ### Follow-up
 
 - T3-4d Interactive QA for `fixed-brush-teeth-8p`.
+
+## T3-4d Interactive QA for fixed-brush-teeth-8p
+
+### Status
+
+partial.
+
+### Purpose
+
+Validate the newly generated `fixed-brush-teeth-8p` smoke book through Reader, Create UI, and Admin Review surfaces.
+
+### Target
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| smoke bookId | `MvSyoUU2L2rC3JaOEpCa` |
+| expected pages | 8 |
+| source | T3-4c-sync-smoke-retry |
+
+### Reader QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| R1 book opens | pass | `GET /book/?id=MvSyoUU2L2rC3JaOEpCa` returned `200`; page opened in local browser. |
+| R2 8-page display/progress | blocked | Browser DOM inspection is unavailable in this agent session; backend inspect from T3-4c confirms 8 pages completed. |
+| R3 page 1 to page 8 navigation | blocked | Navigation click flow cannot be executed without browser chat tools/DOM control. |
+| R4 page 8 to page 1 navigation | blocked | Same as R3. |
+| R5 final page parentMessage | blocked | Final rendered text cannot be visually inspected in current tooling mode. |
+| R6 all 8 images render | blocked | Image render visibility cannot be verified without DOM/screenshot access. |
+| R7 texts visible/no severe overflow | blocked | Visual overflow check requires interactive viewport inspection. |
+| R8 mobile responsive | not run | Mobile viewport simulation is not available in current tooling mode. |
+| R9 no brush-teeth layout break | blocked | Requires interactive visual QA. |
+
+### Create UI QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| C1 create input page loads | pass | `GET /create/input/` returned `200`; route reachable. |
+| C2 existing 4p brush-teeth available | blocked | Template cards/options cannot be enumerated without DOM inspection. |
+| C3 8p brush-teeth selectable/visible | blocked | Same as C2. |
+| C4 4p/8p distinguishable | blocked | Same as C2. |
+| C5 required input contract minimal | blocked | Form field-level validation requires interactive UI access. |
+| C6 optional parentMessage understandable | blocked | UX copy check requires visual inspection. |
+| C7 no confusion with birthday/zoo 8p | blocked | Comparative UI card review requires interactive inspection. |
+
+### Admin / Review QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| A1 admin page loads/auth gate documented | pass | `GET /admin/book-quality-review/` returned `200`; route reachable. |
+| A2 smoke book found | blocked by search | Search/list interaction is not executable without DOM control. |
+| A3 8 pages visible | blocked | Page list rendering cannot be inspected visually in current tooling mode. |
+| A4 all 8 completed statuses visible | blocked | Status chips/rows cannot be confirmed without interactive UI access. |
+| A5 page-level regeneration action page-specific | blocked | Button-level interaction cannot be executed in current mode. |
+| A6 no severe 8p layout break | blocked | Visual layout check requires interactive viewport inspection. |
+| A7 no accidental mutation during QA | pass | No write/regeneration commands were executed during T3-4d QA steps. |
+
+### Decision
+
+**Interactive QA status:** Conditional
+
+Reason:
+- Route-level reachability for Reader/Create/Admin is confirmed (`200`).
+- Smoke/inspect backend state remains healthy for target book (`8/8 completed`, no placeholder, no failed pages).
+- Core visual/interactivity checks are blocked in this agent session because browser DOM interaction is disabled (`workbench.browser.enableChatTools` not available).
+- No P0/P1 failure was observed from executable checks, but visual acceptance remains pending.
+
+### Follow-up
+
+- Run manual visual QA in browser for R2-R9, C2-C7, A2-A6.
+- T3-4e: creative QA and reference-flow QA for `fixed-brush-teeth-8p`.
