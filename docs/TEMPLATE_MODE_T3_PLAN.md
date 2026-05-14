@@ -3252,3 +3252,99 @@ Reason:
 - Add explicit smoke fixture for `fixed-brush-teeth-8p` in `scripts/create-template-smoke-books.js`.
 - Run build, smoke, inspect, interactive QA, creative QA, and reference-flow QA after implementation.
 - If any P0/P1 is found during implementation or QA, record as blocker — do not ship without resolution.
+
+## T3-4b Implement fixed-brush-teeth-8p Seed Template
+
+### Status
+
+completed
+
+### Purpose
+
+Implement the first additional 8-page fixed_template variant based on the T3-4a spec.
+
+### Scope
+
+This task changes:
+- `functions/src/seed-templates.ts`
+- `scripts/create-template-smoke-books.js`
+- this docs file
+
+This task must not change:
+- existing 4-page templates
+- existing 8-page birthday/zoo templates
+- `generate-book.ts`
+- `functions/src/lib/prompt-builder.ts`
+- Firestore rules
+- Firebase/Auth behavior
+- generated `functions/lib`
+
+### Implemented Variant
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| categoryGroupId | `growth-support` |
+| subcategoryId | `daily-habit` |
+| requiredInputs | `childName` |
+| optionalInputs | `parentMessage` |
+| expected pages | 8 |
+| pageCount | 8 |
+| layoutVariant | `8_page` |
+| active | true |
+
+### Page Structure
+
+| page | pageVisualRole | story beat | notes |
+| --- | --- | --- | --- |
+| 1 | opening_establishing | 朝だ。{childName}は、お水をながして顔を洗います。 | bright bathroom, morning energy |
+| 2 | setback_or_question | でも、歯みがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。 | child's reluctance, empathetic |
+| 3 | discovery | でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。 | playful bubbles, transformation moment |
+| 4 | action | しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。 | focused brushing, sound words |
+| 5 | object_detail | さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。 | mini-adventure at back teeth, abstract safety |
+| 6 | emotional_closeup | その様子を、おかあさん（またはおとうさん）が、やさしく見守っていました。 | family support, warm presence |
+| 7 | payoff | 仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。 | accomplishment, freshness |
+| 8 | quiet_ending | {parentMessage} | calm close, family moment |
+
+### Smoke Fixture
+
+```json
+{
+  "childName": "Mika",
+  "parentMessage": "You did it little by little. Your smile is shining."
+}
+```
+
+### Validation Result
+
+| check | result | notes |
+| --- | --- | --- |
+| npm --prefix functions run build | pass | tsc completed without errors |
+| node --check scripts/create-template-smoke-books.js | pass | syntax validation passed |
+| compiled fixed-brush-teeth-8p present | pass | found at functions/lib/seed-templates.js:765 |
+| compiled pageCount: 8 present | pass | found at functions/lib/seed-templates.js:791 |
+| compiled layoutVariant: "8_page" present | pass | found at functions/lib/seed-templates.js:792 |
+| git diff --check | pass | no whitespace errors in modified files |
+| generated functions/lib restored before commit | pass | git restore applied, only source files in diff |
+| existing 4p templates unchanged | pass | fixed-brush-teeth 4p confirmed at line 853 |
+| existing birthday/zoo 8p templates unchanged | pass | fixed-first-birthday-8p and fixed-first-zoo-8p confirmed at lines 462, 613 |
+
+### Decision
+
+**Seed implementation status:** Go
+
+Reason:
+
+- Seed implementation complete: `fixed-brush-teeth-8p` added with correct structure.
+- Build validation passed: TypeScript compilation without errors.
+- Static validation passed: smoke fixture syntax correct.
+- Compiled verification passed: all 8-page configurations present in generated output.
+- No regressions: existing 4p/8p templates unchanged.
+- Generated files properly restored: only source files staged for commit.
+- Ready for follow-up seed sync, smoke creation, and interactive QA.
+
+### Follow-up
+
+- T3-4c: run seed sync / smoke creation / inspect for fixed-brush-teeth-8p.
+- T3-4d: interactive QA for Reader / Create / Admin.
+- T3-4e: creative QA and reference-flow QA.

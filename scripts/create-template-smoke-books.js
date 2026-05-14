@@ -161,6 +161,13 @@ function buildInputForTemplate(templateId, index) {
     };
   }
 
+  if (templateId === "fixed-brush-teeth-8p") {
+    return {
+      childName: "Mika",
+      parentMessage: "You did it little by little. Your smile is shining.",
+    };
+  }
+
   if (templateId === "fixed-first-christmas") {
     return {
       ...base,
