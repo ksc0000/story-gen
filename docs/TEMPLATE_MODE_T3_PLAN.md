@@ -4545,3 +4545,51 @@ Reason:
 - 実行環境で `GOOGLE_APPLICATION_CREDENTIALS` を設定し、同条件で no-reference smoke を再実行する。
 - 再実行後に本セクションの Smoke Output Record を実測値で更新し、T3-4i-4 画像QAへ接続する。
 - docs-only 最終化前に `functions/lib` のローカル生成差分を restore し、コミット対象を docs のみに制限する。
+
+## T3-4i-3 Retry fixed-brush-teeth-8p No-Reference Smoke Generation
+
+### Status
+
+blocked (credential file not configured).
+
+### Purpose
+
+前回 T3-4i-3 の blocked 要因（`GOOGLE_APPLICATION_CREDENTIALS` 未設定）を解消したうえで、`fixed-brush-teeth-8p` の no-reference smoke generation を再実行し、bookId と生成結果を取得する。
+
+### Retry Execution Facts
+
+| check | result | notes |
+| --- | --- | --- |
+| repo state | pass | 作業開始時に clean を確認 |
+| HEAD | pass | `1b6abc4` を確認 |
+| `GOOGLE_APPLICATION_CREDENTIALS` | blocked | `NOT_SET` |
+| Admin SDK JSON discovery (workspace + common local dirs) | blocked | 利用可能候補なし |
+| smoke retry execution | not run | 認証条件未達のため再実行を停止 |
+
+### Smoke Output Record (Retry)
+
+| templateId | smoke bookId | generatedAt | pageCount | completed pages | image_failed pages | fallback pages | overall status | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| fixed-brush-teeth-8p | none | 2026-05-15 | 8 | 0 | unknown | unknown | blocked | Credential file not configured; no Firestore write executed |
+
+### Safety / Constraint Check
+
+- DB write: not executed
+- Admin operation: not executed
+- reference-flow generation: not executed
+- existing smoke overwrite: none
+- secrets / service account content / service account path: not recorded
+
+### Decision
+
+**T3-4i-3 Retry status:** blocked
+
+Reason:
+
+- 認証ファイル未設定のため、no-reference smoke generation を安全に実行できる前提が満たされなかった。
+- bookId が未発行のため、T3-4i-4 画像QAには未接続。
+
+### Follow-up
+
+- 認証環境を有効化したセッションで再度同条件の no-reference smoke を実行する。
+- 実行後に Retry の Smoke Output Record を実測値へ更新し、T3-4i-4 へ引き渡す。
