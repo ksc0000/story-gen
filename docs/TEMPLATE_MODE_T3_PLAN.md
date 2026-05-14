@@ -4122,3 +4122,94 @@ Reason:
 
 - Re-run brush-teeth smoke generation/inspection in a controlled QA pass to validate BF-1 Japanese closing output.
 - For BF-2, capture canonical raw text samples (non-wrapped export path) and only then decide on any normalization rule.
+
+## T3-4h BF-2 Raw Text / Rendering Path Verification
+
+### Status
+
+completed (docs-only, read-only verification).
+
+### Purpose
+
+BF-2（語中スペース崩れ）について、修正を入れる前に以下を切り分ける。
+
+- 保存済み raw text 側で崩れているか
+- Reader の表示経路で崩れているか
+
+対象:
+
+- templateId: `fixed-brush-teeth-8p`
+- smoke bookId: `MvSyoUU2L2rC3JaOEpCa`
+- baseline commit: `9c1be24` 以降
+
+### Constraints and Safety
+
+- docs-only
+- read-only 実行のみ（生成・再生成・DB更新・Admin mutation なし）
+- 認証情報、token、cookie、メール、private URL などの秘匿情報は記録しない
+
+### Verification Method
+
+| track | method | result |
+| --- | --- | --- |
+| raw book snapshot | `node scripts/inspect-template-smoke-book.js MvSyoUU2L2rC3JaOEpCa --expected-page-count=8` | pass |
+| raw text extraction | read-only Node script で `books/{bookId}` と `pages` を直接取得し、title/opening/page text を JSON 出力 | pass |
+| exact pattern check | `楽し い` / `歯のひ とつひとつ` / `見つける ぞ` の exact contains を照合 | pass（すべて false） |
+| whitespace codepoint check | 日本語文字間スペースのコードポイントを抽出 | U+0020（半角スペース）のみ |
+| rendering path audit | `src/lib/hooks/use-generation-progress.ts` / `src/app/(app)/book/page.tsx` / `src/components/book-viewer.tsx` 読み取り | pass |
+
+### Raw Text Findings (Target Book)
+
+対象 book の保存済み text では、BF-2 報告の 3 パターンは raw として再現しなかった。
+
+- page 2: `あ、楽しい。`
+- page 3: `歯のひとつひとつに`
+- page 4: `見つけるぞ。`
+- page 5: `見守っていました。`
+
+補足:
+
+- 日本語可読性のための語間スペースは存在する（例: `ふわっと 出てきました`）
+- 文字コードとしては U+0020（通常半角スペース）で、不可視特殊空白は検出されなかった
+
+### Rendering Path Findings (Reader)
+
+Reader 表示経路で、`page.text` を変換する処理は確認されなかった。
+
+- `src/lib/hooks/use-generation-progress.ts`
+  - Firestore `onSnapshot` で `PageDoc` を取得して state へ格納
+  - `text` の置換・正規化処理なし
+- `src/app/(app)/book/page.tsx`
+  - `viewablePages` は status filter + sort のみ
+  - `text` の加工なし
+- `src/components/book-viewer.tsx`
+  - `item.page.text` を `<p>` にそのまま描画
+  - `replace` / normalize / whitespace collapse を行う独自コードなし
+
+### BF-2 Verification Conclusion
+
+| item | result | notes |
+| --- | --- | --- |
+| raw data corruption hypothesis | not supported | target book raw text では報告3パターンを確認できず |
+| Reader transformation hypothesis | not supported | Reader path に text 正規化/置換処理なし |
+| most likely explanation | likely | 観察時の折返し・コピー経路・表示上の見え方と、意図的語間スペースが混在した可能性 |
+
+### Additional Observation (BF-1 Context)
+
+- `MvSyoUU2L2rC3JaOEpCa` の最終ページは依然として英語 closing を保持している（既存 book データ）。
+- これは `9c1be24` の smoke fixture 修正前に生成された既存データで説明可能。
+- 本タスクでは read-only 原則により再生成/更新は未実施。
+
+### Decision
+
+**T3-4h status:** complete (verification only)
+
+Reason:
+
+- BF-2 は「保存データ崩れ」および「Reader 変換崩れ」の両仮説を、対象 smoke book / 現行 Reader コードで支持しなかった。
+- runtime normalization は引き続き未導入（方針維持）。
+
+### Follow-up (No Code Change in This Task)
+
+- BF-1 実データ確認は、`9c1be24` 以降に新規生成した brush-teeth smoke book を別タスクで inspect して実施。
+- BF-2 は、今後の報告時に「raw JSON（折返しなし）」と「UI上の見え方」を同時取得して比較する運用で再判定する。
