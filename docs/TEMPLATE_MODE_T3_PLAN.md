@@ -2277,11 +2277,108 @@ Added two new conditional branches in `buildInputForTemplate`:
        place: "city zoo",
        familyMembers: "family",
      };
-   }
-   ```
+## T3-4c-env-sync-smoke Firestore Sync / Smoke / Inspect for fixed-brush-teeth-8p
 
-2. `fixed-first-birthday-8p` case:
-   ```javascript
+### Status
+
+blocked
+
+### Purpose
+
+Complete the Firestore sync, smoke creation, and inspect steps that were blocked in T3-4c due to missing credentials.
+
+Execution environment: Local dev (C:\Users\CN63738\story-gen)
+
+### Credentials Check
+
+| check | result | notes |
+| --- | --- | --- |
+| `GOOGLE_APPLICATION_CREDENTIALS` set | ❌ blocked | Environment variable not configured in this dev session; no value displayed for security |
+| service account JSON committed | ✅ no | Never committed; remains secure |
+| credential contents recorded | ✅ no | No paths, JSON contents, or secrets recorded in this document |
+
+### Build / Compiled Seed Result
+
+| check | result | notes |
+| --- | --- | --- |
+| `npm --prefix functions run build` | ✅ pass | tsc completed without errors |
+| compiled `fixed-brush-teeth-8p` present | ✅ pass | found at functions/lib/seed-templates.js:765 |
+| compiled `pageCount: 8` present | ✅ pass | found at functions/lib/seed-templates.js:426 |
+| compiled `layoutVariant: "8_page"` present | ✅ pass | found at functions/lib/seed-templates.js:427 |
+| generated `functions/lib` restored before commit | ✅ pass | git restore applied; no generated files in final diff |
+
+### Template Sync Result
+
+| check | result | notes |
+| --- | --- | --- |
+| sync check | ⏸️ not run | blocked by missing GOOGLE_APPLICATION_CREDENTIALS |
+| sync write | ⏸️ not run | blocked by missing GOOGLE_APPLICATION_CREDENTIALS |
+| `fixed-brush-teeth-8p` included | ⏸️ unknown | cannot determine without sync check execution |
+| target template count | ⏸️ unknown | cannot determine without sync check execution |
+| drift/write result | ⏸️ blocked | Requires `npm run template:sync:check` in authenticated environment |
+| destructive change | ✅ none expected | Seed only adds new template; no destructive changes predicted |
+
+### Smoke Result
+
+| template | smoke bookId | status | progress | pages | failed | fallback | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-brush-teeth-8p` | ⏸️ not generated | blocked | 0% | 0 of 8 | unknown | unknown | Blocked by missing GOOGLE_APPLICATION_CREDENTIALS; requires `npm run smoke:create-template-books -- --template-id=fixed-brush-teeth-8p --page-count=8 --write` in authenticated environment |
+
+### Inspect Result
+
+| template | bookId | expected pages | actual pages | result | page statuses | placeholders | page numbers | reading structure | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-brush-teeth-8p` | ⏸️ none | 8 | 0 (not generated) | blocked | not inspected | not inspected | not inspected | not inspected | Smoke book not generated due to credentials blocker; `node scripts/inspect-template-smoke-book.js <bookId> --expected-page-count=8` cannot execute without bookId |
+
+### Next Steps to Unblock
+
+To proceed with sync/smoke/inspect in this or another environment:
+
+1. **Set up Firebase service account:**
+	- Obtain service account JSON from Firebase Console (story-gen-8a769 project)
+	- Securely store the file
+
+2. **Configure credentials in terminal session:**
+	```powershell
+	$env:GOOGLE_APPLICATION_CREDENTIALS = "<path-to-service-account.json>"
+	```
+	(Do not commit, do not record path)
+
+3. **Re-execute from this directory:**
+	```powershell
+	npm run template:sync:check       # Verify drift
+	npm run template:sync:write       # Sync if needed
+	npm run smoke:create-template-books -- --template-id=fixed-brush-teeth-8p --page-count=8 --write
+	node scripts/inspect-template-smoke-book.js <bookId> --expected-page-count=8
+	```
+
+4. **Update docs** with resulting bookId and inspection details
+
+### Decision
+
+**Seed sync / smoke / inspect status:** Blocked (credentials not configured in this execution)
+
+Reason:
+
+- Build and compiled seed verification: ✅ **PASS** - `fixed-brush-teeth-8p` correctly compiled with 8-page structure (verified in T3-4c and re-verified here)
+- Seed implementation itself: ✅ **Complete and valid** - Implemented in T3-4b, source code correct
+- Credentials availability: ❌ **Blocked** - `GOOGLE_APPLICATION_CREDENTIALS` not set in current environment
+- Firestore sync/smoke/inspect: ❌ **Blocked** - Cannot execute without valid Firebase admin credentials
+- **Status determination:** Blocked because environment credentials are not configured
+
+**Recommendation:** 
+This is an environment setup issue, not a code defect. The seed implementation is correct and ready. Set up Firebase service account credentials in an authenticated environment (CI/CD or local dev machine) and re-run sync/smoke/inspect steps.
+
+### Follow-up
+
+- T3-4c-env-sync-smoke-retry: In authenticated environment with GOOGLE_APPLICATION_CREDENTIALS configured, re-execute:
+  - `npm run template:sync:check`
+  - `npm run template:sync:write` (if write needed)
+  - `npm run smoke:create-template-books -- --template-id=fixed-brush-teeth-8p --page-count=8 --write`
+  - `node scripts/inspect-template-smoke-book.js <bookId> --expected-page-count=8`
+  - Update T3-4c-env-sync-smoke docs with results and bookId
+- T3-4d: After smoke/inspect complete: interactive QA for Reader / Create / Admin with bookId
+- T3-4e: creative QA and reference-flow QA
    if (templateId === "fixed-first-birthday-8p") {
      return {
        ...base,
