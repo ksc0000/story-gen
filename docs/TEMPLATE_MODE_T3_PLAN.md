@@ -3887,3 +3887,115 @@ Reason:
 ### Follow-up
 
 - T3-4e: creative QA and reference-flow QA for `fixed-brush-teeth-8p`.
+
+## T3-4e Creative QA and Reference-flow QA for fixed-brush-teeth-8p
+
+### Status
+
+completed.
+
+### Purpose
+
+Evaluate `fixed-brush-teeth-8p` as an 8-page picture book from creative, text, image, no-text artifact, and reference-flow perspectives.
+
+### Target
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| smoke bookId | `MvSyoUU2L2rC3JaOEpCa` |
+| expected pages | 8 |
+| source | T3-4c-sync-smoke-retry |
+
+### Creative Review Method
+
+| item | result | notes |
+| --- | --- | --- |
+| Reader creative review | pass | Existing smoke book text and images were reviewed read-only; T3-4d-manual-browser-qa already confirmed Reader usability. |
+| Story/text review | partial | Story arc is coherent, but final parentMessage is in English and several lines contain awkward mid-word spacing. |
+| Image review | partial | Bathroom scenes are readable and gentle, but protagonist appearance/clothing drift is visible across pages. |
+| No-text artifact review | partial | No severe artifact blocker, but shelf/cup/bottle details include mild readable or text-like marks. |
+| Reference-flow feasibility check | blocked | Optional brush-teeth reference-flow smoke attempt failed at test reference image reachability (`network_error`). |
+| No code/seed changes | pass | Review only; no source/template edits made. |
+| No image regeneration unless explicitly recorded | pass | Existing smoke images were reviewed; one optional reference-flow generation attempt was recorded and failed before book creation. |
+| No secrets recorded | pass | No credentials, tokens, URLs, or private data were documented. |
+
+### Story Structure Review
+
+| check | result | notes |
+| --- | --- | --- |
+| S1 8-page beginning/middle/end | pass | Morning wash-up -> reluctance -> brushing effort -> rinse -> warm close reads as a complete 8-page arc. |
+| S2 resistance-to-achievement flow | pass | Child starts reluctant, then discovers fun/effort, and finishes with a positive payoff. |
+| S3 page role distinction | partial | Pages 2-6 are all sink-side brushing beats, so progression exists but some middle-page roles feel close together. |
+| S4 final page closure | partial | Final page image is warm, but the closing line shifts to English and weakens the otherwise Japanese story closure. |
+| S5 parent-child readability | partial | Read-aloud flow is mostly clear, though mid-word spacing artifacts and English closing text reduce polish. |
+
+### Text Quality Review
+
+| check | result | notes |
+| --- | --- | --- |
+| T1 read-aloud rhythm | partial | Sentences are short and readable, but strings like `楽し い`, `歯のひ とつひとつ`, `見つける ぞ` interrupt rhythm. |
+| T2 text volume | pass | Per-page volume stays light enough for 8 pages. |
+| T3 non-preachy habit framing | pass | Tone is encouraging rather than scolding; brushing is framed as discovery and achievement. |
+| T4 placeholders/variables | pass | No unresolved placeholders were found. |
+| T5 parentMessage closure | partial | Closing message sentiment is positive, but locale mismatch (English in Japanese book) weakens the ending. |
+
+### Image Quality Review
+
+| check | result | notes |
+| --- | --- | --- |
+| I1 text-image match | pass | Sink, toothbrush, foam, rinsing, and caregiver support align with the page beats. |
+| I2 visual consistency | partial | Character identity stays child-like and gentle, but outfit, age impression, and face shape drift across pages. |
+| I3 toothbrushing elements clear | pass | Toothbrush, sink, mirror, foam, rinsing, and bathroom context are consistently legible. |
+| I4 no scary dental imagery | pass | Mouth/teeth are stylized and non-medical; no unpleasant clinical feeling observed. |
+| I5 no severe artifacts | partial | No black fills or broken anatomy, but page 3 shelf text (`BIKO`) and minor label-like marks remain visible. |
+| I6 visual variety | pass | Composition varies across close-up, mirror, caregiver, rinse, and final payoff scenes despite shared bathroom setting. |
+
+### No-text Artifact Review
+
+| check | result | notes |
+| --- | --- | --- |
+| X1 no readable labels/logos | partial | Page 3 includes readable `BIKO`-like lettering on a shelf item; other pages are mostly clean. |
+| X2 text-prone objects controlled | partial | Cups, bottles, and bathroom items are generally safe, but a few cup/bottle details still invite pseudo-label marks. |
+| X3 text-like marks acceptable | partial | Artifacts are mild and non-blocking, but visible enough to keep as P2 quality debt. |
+| X4 guardrail reusable | partial | Current guardrail is usable for future 8p variants, but brush/bathroom object prompts still need tighter no-text suppression. |
+
+### Reference-flow QA Result
+
+| check | result | notes |
+| --- | --- | --- |
+| safe test reference available | blocked | Existing public test-reference pattern is documented, but current optional run failed before safe reachability was confirmed. |
+| reference-flow generation/observation | blocked | `smoke:create-template-books --with-reference` failed at reference image reachability check (`network_error`). |
+| generated/observed bookId | not run | No brush-teeth reference-flow book was created in this task. |
+| expected/actual pages | not run | No brush-teeth reference-flow book available to inspect. |
+| failed/fallback | not run | Same as above. |
+| identity consistency | not run | Baseline smoke book shows no-reference drift; brush-teeth-specific reference-flow improvement remains unverified. |
+| reference isolation | not run | Brush-teeth-specific observation not available; prior T3-3i-4 verified isolation on other 8p templates. |
+| no P0/P1 | pass | No P0/P1 blocker was observed in the reviewed no-reference smoke book. |
+
+### Product Readiness Review
+
+| check | result | notes |
+| --- | --- | --- |
+| creative blocker | pass | No rollout-blocking creative defect observed. |
+| severity | P2 | Main issues are locale mismatch in closing text, mid-word spacing, character drift, and mild text-like artifacts. |
+| recommendation | conditional keep | Keep current variant available, but address polish issues before broader 8p expansion. |
+| expansion readiness | partial | Strong parent utility remains, but next additional variant should inherit tighter text/no-text quality guardrails. |
+
+### Decision
+
+**Creative QA status:** Conditional
+
+Reason:
+- Story structure and overall read-aloud intent are strong enough for continued controlled rollout.
+- No P0/P1 blocker, no scary dental imagery, and no severe image failure were observed.
+- P2 issues remain: English closing message in an otherwise Japanese book, awkward text spacing in several lines, no-reference character drift, and mild text-like bathroom-object artifacts.
+- Brush-teeth-specific reference-flow generation could not be completed in this task because the public test reference image failed reachability validation.
+
+### Follow-up
+
+- Normalize `fixed-brush-teeth-8p` closing parentMessage locale/tone so Japanese smoke output ends naturally.
+- Review why mid-word spacing artifacts entered several generated lines and tighten text quality expectations before the next 8p rollout task.
+- Tighten bathroom-object no-text guardrails to reduce label/logo-like marks on cups, bottles, and shelf items.
+- Re-run brush-teeth reference-flow QA with a reachable safe public test reference or approved synthetic child reference.
+- T3-4f: Brush Teeth Rollout Readiness / First Variant Closure.
