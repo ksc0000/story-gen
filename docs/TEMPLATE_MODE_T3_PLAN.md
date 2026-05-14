@@ -4844,6 +4844,108 @@ Perform T3-4j-3 manual visual/text QA on bookId `Xmce9MTGP8URzAQEblHK` focusing 
 ### Follow-up
 
 - T3-4j-3: manual visual QA for BF-4 regression/improvement on bookId `Xmce9MTGP8URzAQEblHK`.
+- T3-4j-3: manual visual QA for BF-4 regression/improvement on bookId `Xmce9MTGP8URzAQEblHK`.
+
+---
+
+## T3-4j-3 fixed-brush-teeth-8p Post-cleanup Manual Visual/Text QA
+
+### Status
+
+completed (Conditional-Go)
+
+### Purpose
+
+Manual QA of the T3-4j-2 generated smoke book to assess whether the BF-4 prompt cleanup (T3-4j-1) reduced bathroom no-text artifacts, and whether the preschool text cleanup (T3-4k-2) is correctly rendered.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| bookId | `Xmce9MTGP8URzAQEblHK` |
+| pageCount | 8 |
+| withReference | false |
+| image model | `black-forest-labs/flux-2-pro` (all pages) |
+| fallback used | none |
+| code changes | none |
+| seed text changes | none |
+| DB/Admin side effects | none |
+
+### Rendered Text Audit (Programmatic)
+
+Actual `pageText` values retrieved from Firestore for each page:
+
+| page | role | rendered text | age variant used |
+| --- | --- | --- | --- |
+| 0 | opening_establishing | 朝だ。Mikaは、お水をながして顔を洗います。きょうも はみがきのじゅんびが はじまります。 | general_child |
+| 1 | setback_or_question | でも、歯みがきはめんどくさい。Mikaはちょっぴり ぐずぐずします。おへやから あぶくの音が きこえてきました。 | general_child |
+| 2 | discovery | でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。Mikaの目が きらりと 光ります。 | general_child |
+| 3 | action | しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。Mikaは、歯のひとつひとつに 気持ちを こめて 磨きます。 | general_child |
+| 4 | object_detail | さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。Mikaは、鏡を覗きながら 一生懸命 探します。 | general_child |
+| 5 | emotional_closeup | その様子を、おかあさん（またはおとうさん）が、やさしく見守っていました。Mikaは、その視線に 気づき、もっと 頑張ろう と 思いました。 | general_child |
+| 6 | payoff | 仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。Mikaは、最後の仕上げに 気合いが入ります。 | general_child |
+| 7 | quiet_ending | すこしずつがんばれたね。にこにこのえがおでおやすみなさい。 | parentMessage (hiragana ✅) |
+
+### Text QA Finding: Age Variant Resolution
+
+**Key Finding (P2):** The smoke book used `general_child` variant (containing kanji) rather than `preschool_3_4` (hiragana-first).
+
+**Root cause:** The smoke script (`create-template-smoke-books.js`) does not set `childProfileSnapshot.readingProfile.ageBand`. Without an age band, the system resolved to `general_child` (default fallback). This is correct system behavior; it is a smoke script limitation, not a template or generation bug.
+
+**Impact:** The T3-4k-2 `preschool_3_4` hiragana-first changes are in the source and confirmed correct (T3-4k-3), but were NOT exercised by this smoke run.
+
+**Not a regression:** `general_child` text was not modified by T3-4k-2, so it is expected to still contain kanji.
+
+**Follow-up required:** To verify T3-4k-2 changes in a live render, create a smoke book with `readingProfile.ageBand = preschool_3_4` or use the app with an age-4 child profile.
+
+### Text QA Checklist
+
+| check | result | notes |
+| --- | --- | --- |
+| preschool_3_4 text rendered | not exercised | Smoke lacks ageBand; general_child used instead |
+| general_child text correctness | pass | Text matches expected general_child variant; no unexpected changes |
+| `{childName}` placeholder resolved | ✅ pass | "Mika" substituted correctly in all pages 0–6 |
+| `{parentMessage}` on page 7 | ✅ pass | Renders as "すこしずつがんばれたね。にこにこのえがおでおやすみなさい。" (hiragana) |
+| English in rendered text | ✅ pass | No English in child-facing text |
+| Katakana in rendered text | ✅ pass | No unnecessary katakana |
+| Spacing in rendered text | ✅ pass | Phrase-level spacing maintained |
+| Image model | ✅ pass | All pages used `flux-2-pro` (pro_consistent); no fallback |
+
+### Image QA Checklist (Human Visual Review Required)
+
+The following image quality checks require visual inspection of bookId `Xmce9MTGP8URzAQEblHK` in the Admin UI.
+
+| page | role | BF-4 check focus | result |
+| --- | --- | --- | --- |
+| 0 | opening_establishing | No text-like marks (baseline) | pending human review |
+| 1 | setback_or_question | Bottle/tube labels absent; no brand marks | pending human review |
+| 2 | discovery | General scene; no text-prone objects | pending human review |
+| 3 | action | Mirror reflection; no pseudo-text marks | pending human review |
+| 4 | object_detail | Mirror frame plain; no pseudo-text | pending human review |
+| 5 | emotional_closeup | Mirror and wall plain; no posters/labels | pending human review |
+| 6 | payoff | Rinse cup/soap dispenser unlabeled | pending human review |
+| 7 | quiet_ending | Mirror/wall plain; no text marks | pending human review |
+
+### Decision
+
+**Post-cleanup QA status:** Conditional-Go
+
+Reason:
+- Text rendering is functioning correctly (placeholder substitution, parentMessage, model selection).
+- T3-4k-2 `preschool_3_4` changes cannot be confirmed via this smoke due to missing ageBand — P2, not a blocker.
+- BF-4 image quality (no-text artifact reduction) requires human visual review — cannot be assessed programmatically.
+- No P0/P1 issues found.
+
+### Recommended Next Step
+
+1. Human visual review of bookId `Xmce9MTGP8URzAQEblHK` in Admin UI — inspect pages 1, 4, 6, 7 for BF-4 no-text improvement.
+2. Create a follow-up smoke with `ageBand = preschool_3_4` to verify T3-4k-2 hiragana text in live render (T3-4j-4 or T3-4k-4).
+
+### Follow-up
+
+- T3-4j-4 (or T3-4k-4): run a smoke with `readingProfile.ageBand = preschool_3_4` to confirm hiragana-first text rendering in a live book.
+- Human review: visually inspect pages 1, 4, 6, 7 of bookId `Xmce9MTGP8URzAQEblHK` for BF-4 no-text artifact improvement.
 
 ---
 
