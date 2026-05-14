@@ -4076,3 +4076,49 @@ Reason:
 - Execute focused P2 cleanup planning for text closure and spacing artifacts before broad 8-page expansion.
 - Re-attempt brush-teeth reference-flow QA only when a reachable safe test reference path is confirmed.
 - Proceed to first-variant closure sign-off once C1-C5 are satisfied.
+
+## T3-4f-BF-1/BF-2 Minimal Investigation and Fix
+
+### Status
+
+completed.
+
+### Scope
+
+Text quality only.
+
+- BF-1: closing parentMessage locale mismatch in smoke fixture.
+- BF-2: suspected Japanese intra-word spacing collapse issue (`楽し い`, `歯のひ とつひとつ`, `見つける ぞ`) root-cause check.
+
+No image quality, character drift, no-text artifact, reference-flow generation, or Admin mutation actions were executed in this task.
+
+### BF-1 Result (implemented)
+
+| item | result | notes |
+| --- | --- | --- |
+| root cause | pass | `scripts/create-template-smoke-books.js` had English `parentMessage` hardcoded for `fixed-brush-teeth-8p` smoke input fixture. |
+| fix | pass | Replaced English message with natural Japanese closing line for smoke fixture. |
+| affected scope | minimal | Smoke input fixture only; seed/template runtime logic unchanged. |
+
+### BF-2 Result (investigation)
+
+| item | result | notes |
+| --- | --- | --- |
+| seed template text check | pass | `functions/src/seed-templates.ts` `fixed-brush-teeth-8p` strings do not contain the reported exact broken forms. |
+| fixed-template runtime path check | pass | `generate-book.ts` fixed_template path uses `buildStoryFromFixedTemplate` and `applyTemplateReplacements`; no text rewrite pass is applied for fixed templates. |
+| stored-book text pattern check | partial | Reported exact patterns were not directly reproducible as exact substrings in target smoke book text. |
+| conclusion | partial | BF-2 likely includes output-view/copy representation artifacts mixed with intentional readability spacing; no safe minimal runtime fix was identified without risking broader Japanese spacing style regression. |
+
+### Decision
+
+**BF-1/BF-2 minimal implementation status:** Partial complete
+
+Reason:
+- BF-1 is fixed with a minimal, localized smoke-fixture change.
+- BF-2 was investigated; a deterministic, low-risk code fix was not identified in this pass.
+- To avoid broad text-normalization side effects, BF-2 remains as follow-up investigation under controlled samples.
+
+### Follow-up
+
+- Re-run brush-teeth smoke generation/inspection in a controlled QA pass to validate BF-1 Japanese closing output.
+- For BF-2, capture canonical raw text samples (non-wrapped export path) and only then decide on any normalization rule.
