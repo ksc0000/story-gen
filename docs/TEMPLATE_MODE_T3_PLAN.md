@@ -4550,7 +4550,7 @@ Reason:
 
 ### Status
 
-blocked (credential file not configured).
+in_progress (book generated, image generation ongoing).
 
 ### Purpose
 
@@ -4561,20 +4561,20 @@ blocked (credential file not configured).
 | check | result | notes |
 | --- | --- | --- |
 | repo state | pass | 作業開始時に clean を確認 |
-| HEAD | pass | `1b6abc4` を確認 |
-| `GOOGLE_APPLICATION_CREDENTIALS` | blocked | `NOT_SET` |
-| Admin SDK JSON discovery (workspace + common local dirs) | blocked | 利用可能候補なし |
-| smoke retry execution | not run | 認証条件未達のため再実行を停止 |
+| HEAD | pass | `4491d64` を確認 |
+| `GOOGLE_APPLICATION_CREDENTIALS` | pass | `SET_AND_FILE_EXISTS` を確認（値・パスは非記録） |
+| template sync write | pass | `fixed-brush-teeth-8p` を含む target templates の sync 完了 |
+| smoke retry execution | pass | no-reference / `--write` で新規 book 作成開始 |
 
 ### Smoke Output Record (Retry)
 
 | templateId | smoke bookId | generatedAt | pageCount | completed pages | image_failed pages | fallback pages | overall status | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| fixed-brush-teeth-8p | none | 2026-05-15 | 8 | 0 | unknown | unknown | blocked | Credential file not configured; no Firestore write executed |
+| fixed-brush-teeth-8p | SMG1N62tUFjnYxbD4bnr | 2026-05-15 | 8 | 8 | 0 | 0 | generating | `inspect-template-smoke-book` 最終確認で pageCountCheck=PASS（8/8 completed）。coverStatus は `generating` のため book 全体 status は `generating` のまま |
 
 ### Safety / Constraint Check
 
-- DB write: not executed
+- DB write: executed (new smoke book create only)
 - Admin operation: not executed
 - reference-flow generation: not executed
 - existing smoke overwrite: none
@@ -4582,14 +4582,14 @@ blocked (credential file not configured).
 
 ### Decision
 
-**T3-4i-3 Retry status:** blocked
+**T3-4i-3 Retry status:** in progress
 
 Reason:
 
-- 認証ファイル未設定のため、no-reference smoke generation を安全に実行できる前提が満たされなかった。
-- bookId が未発行のため、T3-4i-4 画像QAには未接続。
+- 認証環境を有効化した同一セッションで no-reference smoke の新規作成に成功し、bookId を取得した。
+- 本文ページは 8/8 completed となり、T3-4i-4 manual visual QA へ引き渡し可能な最小条件を満たした。
 
 ### Follow-up
 
-- 認証環境を有効化したセッションで再度同条件の no-reference smoke を実行する。
-- 実行後に Retry の Smoke Output Record を実測値へ更新し、T3-4i-4 へ引き渡す。
+- T3-4i-4 では bookId `SMG1N62tUFjnYxbD4bnr` を対象に BF-3/BF-4 の manual visual QA を実施する。
+- 必要に応じて cover 生成状態のみ別観点で追跡する（本文ページQAとは分離）。
