@@ -4593,3 +4593,71 @@ Reason:
 
 - T3-4i-4 では bookId `SMG1N62tUFjnYxbD4bnr` を対象に BF-3/BF-4 の manual visual QA を実施する。
 - 必要に応じて cover 生成状態のみ別観点で追跡する（本文ページQAとは分離）。
+
+## T3-4i-4 fixed-brush-teeth-8p No-Reference Smoke Manual Visual QA
+
+### Status
+
+completed (manual visual QA on body pages only).
+
+### Purpose
+
+T3-4i-1 で導入した BF-3/BF-4 guardrail の効果を、T3-4i-3 Retry で生成した no-reference smoke book の本文 8 ページで目視評価する。
+
+### Input Snapshot
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| smoke bookId | `SMG1N62tUFjnYxbD4bnr` |
+| reference image | not used |
+| body pages | 8/8 completed |
+| image_failed | 0 |
+| fallback | 0 |
+| book status | generating |
+| coverStatus | generating |
+
+### Scope Note
+
+- QA 対象は本文 8 ページのみ。
+- cover は生成中のため visual 判定対象外（status 注記のみ）。
+
+### Manual Visual Findings (BF-3 / BF-4)
+
+| page | BF-3 character continuity | BF-4 text-like artifact | notes |
+| --- | --- | --- | --- |
+| 0 | pass | pass | 主人公の髪型/服色/年齢印象は安定。洗面小物は無地中心で読める文字なし。 |
+| 1 | pass | partial | 主人公の連続性は維持。ボトル/チューブにラベル風領域があるが可読文字は判別困難。 |
+| 2 | pass | pass | 主人公の顔立ちは近似範囲で連続。小物に強い文字ノイズなし。 |
+| 3 | pass | pass | 主人公の衣装・体格・年齢印象は一貫。可読文字は確認できず。 |
+| 4 | pass | partial | 主人公連続性は維持。鏡枠付近に微小な文字様マークがあり、軽微ノイズとして観測。 |
+| 5 | pass | pass | 親子シーンでも主人公連続性は維持。可読文字なし。 |
+| 6 | pass | partial | 主人公連続性は維持。写真フレーム等に文字様ディテールが散発。強い可読文字は未確認。 |
+| 7 | pass | issue | 鏡付近に可読な文字風表現（例: 短い手書き語）が観測され、no-text 観点で明確な残課題。 |
+
+### QA Summary
+
+| axis | result | judgment |
+| --- | --- | --- |
+| BF-3 character drift | 8ページ通読で同一主人公認識は維持（髪型/服主色/年齢印象の揺れは軽微） | improved / pass |
+| BF-4 text-like artifact | 全体として軽減したが、一部ページで文字様ノイズが残存。終盤ページで可読寄り表現を確認 | partial / needs follow-up |
+| reliability context | 本文ページは 8/8 completed、image_failed=0、fallback=0 | stable |
+
+### Severity Decision
+
+**T3-4i-4 severity:** P2 (BF-4 residual)
+
+Reason:
+
+- BF-3 は guardrail 効果により no-reference 条件でも実用上の連続性を維持。
+- BF-4 は改善傾向だが、可読寄り artifact が散発するため「軽微完全解消」には未到達。
+- 崩壊画像や広範囲反復などの P0/P1 条件は今回の本文 8 ページでは確認しなかった。
+
+### Decision
+
+**T3-4i-4 manual visual QA status:** Conditional-Go (P2 with targeted follow-up)
+
+### Follow-up
+
+- T3-4i-5 で BF-4 の残課題を page-local prompt wording の微調整候補として整理する（広範囲修正は行わない）。
+- T3-4f readiness 再判定では「BF-3 改善確認済み、BF-4 は軽微残課題あり」として反映する。
