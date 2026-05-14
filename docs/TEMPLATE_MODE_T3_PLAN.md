@@ -2528,6 +2528,79 @@ Reason:
 - Re-run creative review on updated smoke outputs.
 - Continue to registered-child/reference-flow creative review after updated smoke review.
 
+## T3-3i-3b Updated Smoke Creative Review
+
+### Status
+
+partial.
+
+### Purpose
+
+Validate whether the targeted 8-page prompt artifact reduction from T3-3i-3a improves updated smoke outputs.
+
+### Background
+
+T3-3i-3a applied targeted 8p image prompt changes to reduce text-like visual artifacts while keeping existing 4p templates and runtime prompt builder unchanged.
+
+### Target
+
+| template | expected pages | source |
+| --- | --- | --- |
+| `fixed-first-birthday-8p` | 8 | updated smoke after T3-3i-3a |
+| `fixed-first-zoo-8p` | 8 | updated smoke after T3-3i-3a |
+
+### Build / Compiled Seed Result
+
+| check | result | notes |
+| --- | --- | --- |
+| `npm --prefix functions run build` | pass | Functions build passed. |
+| compiled `fixed-first-birthday-8p` present | pass | Found in `functions/lib/seed-templates.js`. |
+| compiled `fixed-first-zoo-8p` present | pass | Found in `functions/lib/seed-templates.js`. |
+| compiled `layoutVariant: "8_page"` present | pass | Found for both 8p templates. |
+| targeted replacement phrases present | pass | Found `folded ribbon loop decoration`, `solid-color ribbon loops`, `small plain keepsake toy`, `leafy animal-shaped arch`, `leaf-shaped keepsake toy`, `round paper light`. |
+| generated `functions/lib` restored before commit | pass | Restored `functions/lib/seed-templates.js` and `.map` after verification. |
+
+### Updated Smoke Result
+
+| template | updated smoke bookId | status | progress | pages | failed | fallback | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | `4EqLCCRA2WDzsjCR8HDw` | completed | 100 | 8 | 0 | `fallbackPages=0` | smoke create command succeeded with `--page-count=8 --write`. |
+| `fixed-first-zoo-8p` | `2kgfP0i4AsWOsL6iimBc` | completed | 100 | 8 | 0 | `fallbackPages=0` | smoke create command succeeded with `--page-count=8 --write`. |
+
+### Inspect Result
+
+| template | bookId | expected pages | actual pages | result | page statuses | placeholders | page numbers | reading structure | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | `4EqLCCRA2WDzsjCR8HDw` | 8 | 8 | pass | all `completed` | none observed | `0,1,2,3,4,5,6,7` | `v2_cover_title_story` | `coverStatus=completed`, `hasCoverPage=true` |
+| `fixed-first-zoo-8p` | `2kgfP0i4AsWOsL6iimBc` | 8 | 8 | pass | all `completed` | none observed | `0,1,2,3,4,5,6,7` | `v2_cover_title_story` | `coverStatus=completed`, `hasCoverPage=true` |
+
+### Creative Review Result
+
+| template | A1 artifact reduction | A2 birthday objects | A3 zoo objects | A4 scene meaning | A5 visual variety | A6 no P0/P1 | A7 story flow | A8 read-aloud | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | partial | partial | n/a | pass | pass | pass | pass | pass | Updated output still showed some text-like decorative marks in parts of party decoration; reduction was not consistently clear versus baseline. |
+| `fixed-first-zoo-8p` | pass | n/a | pass | pass | pass | pass | pass | pass | Entrance and closing objects remained readable as scene elements and did not show new obvious signage-like pseudo-text in reviewed pages. |
+
+Notes:
+- Local Reader routes were opened (`/book/?id=<bookId>`), but in-tool page-content introspection was unavailable in this environment.
+- Creative review was executed via read-only comparison of generated smoke page images (baseline vs updated) for the changed object areas.
+
+### Decision
+
+**Updated smoke creative review status:** Conditional
+
+Reason:
+- Build, updated smoke creation, and inspect all passed for both 8p templates.
+- No P0/P1 creative blocker was found.
+- Zoo-side artifact tendency was improved/no-worse in reviewed changed areas.
+- Birthday-side text-like artifact reduction was mixed (not consistently improved), so a full Go decision is deferred.
+
+### Follow-up
+
+- Re-run targeted birthday 8p smoke with multiple seeds and compare changed pages (p0/p1/p4) against this run to confirm stability of artifact reduction.
+- Keep current rollout as Go / Monitoring (no P0/P1), but track birthday decoration artifact tendency as P2.
+- Proceed to `T3-3i-4 Registered-child Reference Flow Creative Review` to validate character consistency with reference-flow conditions.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
