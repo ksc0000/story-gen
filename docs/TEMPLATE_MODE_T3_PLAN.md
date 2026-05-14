@@ -2836,3 +2836,419 @@ Reason:
 - Track whether neutral reference image (REF-001 design) would further reduce any remaining character drift variance.
 - Zoo registered p1/p4/p7 pages not separately viewed here; schedule full-page visual review when real child reference is available.
 - Birthday reference-flow p4/p5 decoration artifact tendency — carry forward from T3-3i-3b P2 tracking.
+---
+
+## T3-4 Additional 8-page Variant Planning
+
+### Status
+
+Completed (docs-only planning)
+
+### Purpose
+
+Decide which additional fixed_template 8-page variants should be added next, without implementing them yet.
+
+### Planning Inputs
+
+- T3-3g manual authenticated browser QA: pass
+- T3-3h rollout readiness / execution / monitoring: Go for controlled rollout, current status Go / Monitoring
+- T3-3i creative review: Conditional, with no P0/P1 blocker
+- T3-3i-2 smoke input specificity issue: resolved
+- T3-3i-3a / T3-3i-3b: targeted 8p prompt artifact reduction improved zoo, birthday remained partial but non-blocking
+- T3-3i-4: registered-child reference flow worked and substantially improved protagonist consistency; real child avatar face-identity review remains follow-up
+
+### Planning Principles
+
+- Do not add more `memories` variants first; that category already has two validated 8p pilots (`fixed-first-birthday-8p`, `fixed-first-zoo-8p`).
+- Prefer categories that expand parent-facing value coverage, not just template count.
+- Prefer stories with a natural 8-page rhythm: setup -> progression -> emotional turn -> calm ending.
+- Favor candidates with low input complexity and low pseudo-text / scene-leakage risk.
+- Avoid multiplying known weak patterns first: dense decorations, signage-like props, or highly didactic placeholder-heavy copy.
+
+### Portfolio Gap Summary
+
+| category | current 8p coverage | parent need gap | T3-4 priority |
+| --- | --- | --- | --- |
+| `growth-support` | none | habits / helpful behavior / repeatable family use | highest |
+| `bedtime` | none | slower wind-down, re-readable calming books | high |
+| `imagination` | none | longer pretend-play arc, higher delight value | high |
+| `emotional-growth` | none | social-emotional coaching use case | medium |
+| `daily-life` | none | ordinary-day delight / weather mood | medium |
+| `seasonal-events` | none | giftable seasonal memory use case | medium-low |
+| `memories` | birthday + zoo already live | already covered by 2 pilots | low |
+
+### Recommended Priority Order
+
+1. `fixed-brush-teeth-8p`
+2. `fixed-cardboard-rocket-8p`
+3. `fixed-sleepy-moon-adventure-8p`
+4. `fixed-little-helper-8p`
+5. `fixed-sharing-friends-8p`
+6. `fixed-first-christmas-8p`
+7. `fixed-rainy-day-puddle-8p`
+8. `fixed-bedtime-good-day-8p`
+
+Reason for this order:
+
+- `fixed-brush-teeth` is the strongest low-risk expansion candidate: high repeat-use parent value, simple input contract, clear stepwise progression, and limited scene variability.
+- `fixed-cardboard-rocket` is the best non-routine delight candidate: 8 pages can add adventure beats without heavy input or family-scene dependence.
+- `fixed-sleepy-moon-adventure` covers a major bedtime need while avoiding direct overlap with the more literal routine-oriented bedtime variant.
+- `fixed-little-helper` has strong family value, but domestic-scene repetition and closing-message warmth need closer pacing design.
+- `fixed-sharing-friends` is valuable, but `lessonToTeach` raises copy-quality and anti-didactic-tone risk for an 8p format.
+- `fixed-first-christmas` and `fixed-rainy-day-puddle` are viable later, but each has narrower timing or lower repeat utility.
+- `fixed-bedtime-good-day` is intentionally last because it overlaps most with `fixed-sleepy-moon-adventure` while offering less visual range for an 8p arc.
+
+### Candidate Planning Table
+
+| candidate | category / use case | parent need | product value | technical risk | creative risk | inputs | verification focus | recommendation |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-brush-teeth-8p` | `growth-support` / bedtime routine habit | make brushing feel positive and repeatable | very high repeat utility; easy to position in product | low | low-medium | required: `childName`; optional: `parentMessage` | 8-step pacing without redundancy, bathroom continuity, cheerful no-text details, satisfying payoff | **Next best candidate** |
+| `fixed-cardboard-rocket-8p` | `imagination` / pretend play adventure | encourage self-directed imaginative play | high delight value; broad age span | low-medium | medium | required: `childName`; optional: `parentMessage` | safe pretend-vs-real balance, page-to-page visual variety, no pseudo-instrument labels, strong emotional midpoint | **Add early** |
+| `fixed-sleepy-moon-adventure-8p` | `bedtime` / calming imaginative wind-down | longer soothing pre-sleep read | high bedtime retention value | low-medium | medium | required: `childName`; optional: `parentMessage` | calm pacing across 8 pages, not too repetitive, moon/dream imagery stays gentle, real child reference face consistency when available | **Add early** |
+| `fixed-little-helper-8p` | `growth-support` / helping at home | build pride in contribution without pressure | high family resonance | medium | medium | required: `childName`; optional: `parentMessage` | chore progression stays warm not didactic, home-task continuity, avoid repetitive domestic frames, ending lands emotionally | **Add after first three** |
+| `fixed-sharing-friends-8p` | `emotional-growth` / sharing with peers | social coaching through story | high educational value if tone stays natural | medium | medium-high | required: `childName`, `lessonToTeach`; optional: `parentMessage` | `lessonToTeach` specificity quality, anti-preachy copy, peer character consistency, emotionally believable conflict / repair arc | **Promising but not first wave** |
+| `fixed-first-christmas-8p` | `seasonal-events` / family holiday gift | commemorative seasonal book | high seasonal gift value, lower year-round reuse | medium | medium-high | required: `childName`, `familyMembers`; optional: `parentMessage` | decoration pseudo-text risk, tree/gift scene variety, family group consistency, seasonality messaging | **Later seasonal wave** |
+| `fixed-rainy-day-puddle-8p` | `daily-life` / cozy weather outing | turn small day into a positive memory | moderate charm, lower urgency | low-medium | medium | required: `childName`; optional: `parentMessage` | rain-day visual variety, safety framing, muddy/wet scene continuity, ending warmth without repetitive �grain is fun�h beats | **Later filler candidate** |
+| `fixed-bedtime-good-day-8p` | `bedtime` / literal end-of-day reflection | simple soothing bedtime routine | moderate value, but overlaps with stronger bedtime candidate | low | medium | required: `childName`; optional: `parentMessage` | enough 8-page variety in one room / one routine, reflective pacing, not repetitive versus `sleepy-moon-adventure` | **Defer** |
+
+### Candidate Notes
+
+#### 1. `fixed-brush-teeth-8p`
+
+Why prioritize:
+
+- Strongest parent utility among unexpanded templates.
+- 8 pages can map cleanly to preparation, first try, technique support, progress, confidence, finish, transition, and warm ending.
+- Input contract is minimal and already proven stable in 4p.
+
+Risks to watch:
+
+- Bathroom scene repetition could make the book feel visually flat if every page stays at the sink.
+- Toothbrush / mirror / tile details could invite pseudo-text if prompts introduce labels or packaging.
+
+Expected input profile:
+
+- Required: `childName`
+- Optional: `parentMessage`
+- No new input fields should be introduced for the variant.
+
+Validation points:
+
+- page-to-page scene progression feels cumulative, not duplicated
+- bathroom geography remains coherent
+- smile/payoff lands by page 6-7, not too early
+- no text-like artifact on mirror, cup, toothpaste, tiles
+- closing page remains affectionate rather than instructional
+
+#### 2. `fixed-cardboard-rocket-8p`
+
+Why prioritize:
+
+- Expands beyond memory/routine into delight-driven creation.
+- 8 pages naturally support launch-prep, imagination lift-off, discovery beats, and gentle landing.
+- Works with existing low-complexity input model.
+
+Risks to watch:
+
+- Imagination overlays can become visually noisy or too close to sci-fi UI text / controls.
+- Need to keep �gpretend play in a safe room�h readable so the tone stays grounded for younger users.
+
+Expected input profile:
+
+- Required: `childName`
+- Optional: `parentMessage`
+
+Validation points:
+
+- real playroom context remains visible across pages
+- symbolic space elements never become dangerous or intense
+- no pseudo-text on control panels, stickers, or rocket surfaces
+- 8-page arc feels expansive enough to justify the longer format
+
+#### 3. `fixed-sleepy-moon-adventure-8p`
+
+Why prioritize:
+
+- Bedtime is a core parent use case still missing in 8p.
+- This variant has more visual elasticity than `fixed-bedtime-good-day`, making 8 pages easier to justify.
+- Reference-flow gains from T3-3i-4 should help child identity continuity across calm close-up pages.
+
+Risks to watch:
+
+- Dream imagery may collapse into pages that feel too similar.
+- If the pages get too abstract, the book may lose the secure bedtime-room anchor.
+
+Expected input profile:
+
+- Required: `childName`
+- Optional: `parentMessage`
+
+Validation points:
+
+- clear mix of room-anchor, imagination, and calm close-up pages
+- no scary or uncanny moon imagery
+- child face / pajamas / comfort-item continuity across pages
+- quiet ending remains distinct from earlier calm pages
+
+#### 4. `fixed-little-helper-8p`
+
+Why consider soon:
+
+- High parent resonance for pride, competence, and family contribution.
+- Can become a meaningful �gI can help�h book if the pacing adds escalating participation instead of repeating chores.
+
+Risks to watch:
+
+- Domestic action can become visually repetitive.
+- Copy tone can slip from warm encouragement into overt instruction if the 8-page structure over-explains the lesson.
+
+Expected input profile:
+
+- Required: `childName`
+- Optional: `parentMessage`
+
+Validation points:
+
+- each page shows a distinct helping beat
+- adult presence feels supportive, not supervisory
+- ending emotion feels earned and warm
+- no household tool / packaging pseudo-text artifacts
+
+#### 5. `fixed-sharing-friends-8p`
+
+Why not first wave:
+
+- The use case is valuable, but `lessonToTeach` makes writing quality more sensitive than the top candidates.
+- Social-conflict pacing is harder to keep natural across 8 pages without sounding preachy.
+
+Expected input profile:
+
+- Required: `childName`, `lessonToTeach`
+- Optional: `parentMessage`
+
+Validation points:
+
+- `lessonToTeach` remains specific but child-natural
+- peer expressions and body language carry the emotional arc
+- resolution feels relational, not moralizing
+
+#### 6. `fixed-first-christmas-8p`
+
+Why defer:
+
+- Good gift potential, but narrower calendar utility than the top candidates.
+- Decorations, lights, cards, gift wrap, and ornaments are all pseudo-text-prone surfaces.
+
+Expected input profile:
+
+- Required: `childName`, `familyMembers`
+- Optional: `parentMessage`
+
+Validation points:
+
+- no pseudo-text on gifts, ornaments, decor, stockings
+- family group consistency stays stable across multi-character pages
+- story beats justify 8 pages beyond �gpretty festive scenes�h
+
+#### 7. `fixed-rainy-day-puddle-8p`
+
+Why defer:
+
+- Pleasant everyday value, but weaker differentiation than the top candidates.
+- Risk of scenic repetition is high unless the 8-page plan introduces changing weather moments and home-return payoff.
+
+Expected input profile:
+
+- Required: `childName`
+- Optional: `parentMessage`
+
+Validation points:
+
+- visual rhythm alternates outdoor discovery and cozy return moments
+- safety framing remains obvious
+- puddle / umbrella / raincoat props do not dominate every page the same way
+
+#### 8. `fixed-bedtime-good-day-8p`
+
+Why defer behind `fixed-sleepy-moon-adventure`:
+
+- It serves the same bedtime parent need, but its current concept is more reflective and less visually elastic.
+- The risk is not failure, but a longer book that feels like a stretched 4-page template.
+
+Expected input profile:
+
+- Required: `childName`
+- Optional: `parentMessage`
+
+Validation points:
+
+- enough distinct end-of-day beats to justify 8 pages
+- strong contrast between recollection pages and sleep pages
+- no overlap confusion in UI positioning versus `fixed-sleepy-moon-adventure`
+
+### Recommended T3-4 Output for Implementation Queue
+
+First implementation wave after planning approval:
+
+1. `fixed-brush-teeth-8p`
+2. `fixed-cardboard-rocket-8p`
+3. `fixed-sleepy-moon-adventure-8p`
+
+Second wave after first-wave creative review:
+
+1. `fixed-little-helper-8p`
+2. `fixed-sharing-friends-8p`
+
+Later / seasonal wave:
+
+1. `fixed-first-christmas-8p`
+2. `fixed-rainy-day-puddle-8p`
+3. `fixed-bedtime-good-day-8p`
+
+### Cross-cutting Verification Requirements for Any New 8p Variant
+
+- `pageCount=8` / `layoutVariant="8_page"` sync and inspect pass
+- create UI distinguishes 4p and 8p variants clearly
+- reader page order / progress / navigation all pass
+- admin review can inspect all 8 pages without layout issue
+- smoke input fixture exists for the exact `-8p` template id before creative review
+- targeted creative review checks for text-like artifacts on variant-specific props
+- registered-child reference-flow review is repeated on at least one people-centric new variant once a real child avatar reference is available
+
+### P0/P1 Review Result
+
+- No new T3-4 planning-stage P0/P1 blocker identified.
+- Existing carry-forward follow-ups remain:
+  - real child avatar reference review for face identity consistency
+  - birthday-family-decoration pseudo-text tendency remains P2-quality follow-up pattern to avoid when choosing next variants
+
+### Decision
+
+**T3-4 planning status:** Go
+
+Reason:
+
+- Current 8p foundation is good enough to expand carefully.
+- The next best expansion path is not �gmore memory books,�h but broader category coverage with low-input, low-regression variants.
+- `growth-support`, `imagination`, and `bedtime` offer the best mix of user value, implementation safety, and creative headroom for the next 8-page additions.
+
+## T3-4a First Additional 8-page Variant Spec - fixed-brush-teeth-8p
+
+### Status
+
+planned.
+
+### Purpose
+
+Define the first additional 8-page fixed_template variant before implementation.
+
+This task is docs-only. It does not change code, seed templates, image prompts, text prompts, smoke scripts, generated books, Firestore data, or Firebase/Auth behavior.
+
+### Target Variant
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| categoryGroupId | `growth-support` |
+| subcategoryId | `daily-habit` |
+| expected pages | 8 |
+| layoutVariant | `8_page` |
+| base 4p template | `fixed-brush-teeth` |
+| implementation status | not started |
+
+### Product Intent
+
+| perspective | intent |
+| --- | --- |
+| parent | Make toothbrushing feel positive and repeatable without scolding. Support bedtime/morning routines so the child wants to participate willingly. |
+| child | Experience the toothbrush not as a scary or tedious obligation but as an adventure tool. Feel a small "I did it" success at the end. |
+
+### Required / Optional Inputs
+
+| input | required? | purpose | notes |
+| --- | --- | --- | --- |
+| `childName` | yes | protagonist personalization | same as 4p base |
+| `parentMessage` | optional | warm closing message from parent | same as 4p base |
+
+Rationale: The existing 4p `fixed-brush-teeth` requires only `childName` with optional `parentMessage`. The 8p variant should maintain the same minimal input contract to keep Create UI lightweight. Additional inputs like `routineTime`, `toothbrushColor`, or `favoriteBuddy` are intentionally excluded from the required/optional schema to avoid UI complexity. These concepts may appear as creative elements in the story design but are not user-facing inputs.
+
+### Smoke Fixture Proposal
+
+The following fixture should be used for smoke testing once implementation begins. It is recorded here for traceability; actual implementation belongs to a follow-up task.
+
+```json
+{
+  "childName": "Mika",
+  "parentMessage": "You did it little by little. Your smile is shining."
+}
+```
+
+Notes:
+- Fixture matches the `requiredInputs` / `optionalInputs` contract exactly.
+- `parentMessage` is included to exercise the optional path.
+- No extra fields beyond the template schema.
+
+### 8-page Story Structure
+
+| page | pageVisualRole | story beat | text direction | visual direction |
+| --- | --- | --- | --- | --- |
+| 1 | `opening_establishing` | Toothbrushing time arrives | Short, rhythmic intro. "It's time!" energy without pressure. | Bright bathroom, plain toothbrush and cup ready. Warm light, no labels on objects. |
+| 2 | `setback_or_question` | Small hesitation or reluctance | Empathize with the child's "don't wanna" feeling. Keep light, not dramatic. | Child's uncertain expression, slightly turned away. Same bathroom, soft shadows. |
+| 3 | `discovery` | A helper or playful element appears | Bubbles, sparkles, or a tiny imaginary friend make brushing feel like a game. No lecturing. | Whimsical bubbles or star motif around plain toothbrush. Abstract encouragement, no text. |
+| 4 | `action` | First brushing attempt — front teeth | Sound words (shaka-shaka). Focus on motion and rhythm, not correctness. | Close-up of child brushing with a smile starting. Water droplets, plain mirror surface. |
+| 5 | `object_detail` | Exploring further — back teeth, tongue | Frame as a mini-adventure: "What's back here?" Playful curiosity. | Slightly wider view showing discovery posture. Sparkle or light motifs inside mouth depicted abstractly (no anatomical detail). |
+| 6 | `emotional_closeup` | Family watches warmly | A parent or sibling smiles nearby. Brief, warm. No instruction. | Gentle family presence in doorway or beside child. Soft focus, warm palette. |
+| 7 | `payoff` | Done! Mouth feels fresh and clean | Celebratory feeling: "I did it!" Simple, triumphant. | Bright smile, sparkling effect around mouth/face. Mirror reflection shows happy child. Plain mirror, no text. |
+| 8 | `quiet_ending` | Transition to next moment — goodnight or good morning | Calm, affectionate close. parentMessage if provided. | Child heading to bed or starting the day with a fresh smile. Soft light, warm tones, peaceful. |
+
+### Creative Guardrails
+
+| risk | mitigation |
+| --- | --- |
+| Scary or unpleasant mouth/dental imagery | Never show realistic mouth interior. Use external expressions, cheek puffing, and abstract sparkle motifs to convey brushing without anatomical teeth/gum close-ups. |
+| Preachy habit instruction tone | No "you must brush properly" language. Use playful invitations: "let's try," sound words, rhythm. Keep adult voice encouraging, not corrective. |
+| Text-like artifacts from bathroom objects | Explicitly avoid toothpaste tube labels, bathroom posters, charts, logos, mirror writing, and packaging text. All props must be plain and unmarked. |
+| Repetitive single-room scenes | Vary camera angle, lighting, and framing across pages. Use close-ups (page 4-5), medium shots (page 1-2, 6), and wider emotional shots (page 7-8) to maintain visual rhythm. |
+| Character consistency drift | Use registered-child reference flow when available. Smoke-only books will not have reference images; note this limitation in creative QA. |
+| Toothbrush/bubble personification becoming frightening | If helper characters are used, keep them small, round, and non-threatening. No sharp teeth, no menacing expressions. Prefer abstract sparkle/star motifs over full anthropomorphization. |
+
+### No-text Artifact Guardrails
+
+- Avoid toothpaste tube labels, product logos, brand names, and readable packaging of any kind.
+- Avoid bathroom posters, brushing charts, reward stickers with text, wall signs, and mirror writing.
+- Avoid flat sign-like or label-like surfaces unless explicitly plain and unmarked.
+- Prefer plain toothbrush, plain cup, plain towel, simple water droplets, abstract bubbles, soft sparkles.
+- All mirror surfaces must be reflection-only with no text, stickers, or written content.
+- Tiles and bathroom walls must be plain pattern only — no decorative text tiles, no alphabet tiles.
+
+### Validation Plan
+
+| phase | check |
+| --- | --- |
+| implementation | seed template added with `pageCount: 8` and `layoutVariant: "8_page"` |
+| build | `npm --prefix functions run build` pass |
+| smoke | explicit smoke fixture (`childName: "Mika"`) used via `create-template-smoke-books.js` |
+| inspect | expected pages: 8 / actual: 8 |
+| interactive QA | Reader page navigation, Create flow, Admin review all pass |
+| creative QA | no P0/P1, no severe text-like artifacts on bathroom props |
+| reference-flow QA | child identity consistency acceptable across 8 pages when reference image is available |
+
+### Decision
+
+**First additional variant spec status:** Ready for implementation
+
+Reason:
+
+- `fixed-brush-teeth-8p` has the strongest parent utility value among expansion candidates.
+- The 8-page story arc maps cleanly to a stepwise progression (hesitation → playful engagement → first try → discovery → encouragement → success → calm close).
+- The input contract remains minimal (`childName` required, `parentMessage` optional), identical to the existing 4p base.
+- Known T3-3 creative risks (text-like artifacts, character drift) have explicit mitigations at the spec level.
+- Implementation can proceed as one isolated new variant without modifying existing 4p or existing 8p templates.
+- Category placement (`growth-support` / `daily-habit`) is confirmed by the existing 4p template structure.
+
+### Follow-up
+
+- T3-4b: Implement `fixed-brush-teeth-8p` seed template in `functions/src/seed-templates.ts`.
+- Add explicit smoke fixture for `fixed-brush-teeth-8p` in `scripts/create-template-smoke-books.js`.
+- Run build, smoke, inspect, interactive QA, creative QA, and reference-flow QA after implementation.
+- If any P0/P1 is found during implementation or QA, record as blocker — do not ship without resolution.
