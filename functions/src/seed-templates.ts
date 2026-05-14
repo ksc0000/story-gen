@@ -504,7 +504,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "あさのおへやに、たんじょうびの けはいが そっと ひろがりました。{childName}の えがおも ぽっと ひかります。",
           pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Establishing wide shot of a cozy home living room in gentle morning light on birthday day. A young child in pajamas stands near a curtain with soft sunlight. Family members prepare quietly in the background with pastel decorations not fully arranged yet. A tiny ribbon motif appears on a folded garland. Soft watercolor picture book style, layered foreground-midground-background, warm and clean composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withFixedImagePromptSafety("Establishing wide shot of a cozy home living room in gentle morning light on birthday day. A young child in pajamas stands near a curtain with soft sunlight. Family members prepare quietly in the background with pastel decorations not fully arranged yet. A tiny ribbon motif appears on a folded ribbon loop decoration. Soft watercolor picture book style, layered foreground-midground-background, warm and clean composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{familyMembers}といっしょに、かざりつけのじゅんびをたのしくすすめます。",
@@ -519,7 +519,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。おへやが すこしずつ きらきらに なります。",
           pageVisualRole: "action",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Medium-wide action shot of a child and family decorating a living room with pastel balloons and paper chains. The child reaches up with help from family to place a decoration on a wall. Warm indoor daylight and soft shadows. A tiny ribbon motif appears on a balloon knot near the child. Soft watercolor picture book style, lively but gentle movement, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withFixedImagePromptSafety("Medium-wide action shot of a child and family decorating a living room with pastel balloons and solid-color ribbon loops. The child reaches up with help from family to place a decoration on a wall. Warm indoor daylight and soft shadows. A tiny ribbon motif appears on a balloon knot near the child. Soft watercolor picture book style, lively but gentle movement, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "ケーキとろうそくを見つけた{childName}の目は、きらきらかがやきました。",
@@ -564,7 +564,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "だいじな プレゼントを そっと 手に もって、{childName}は うれしそうに 見つめました。",
           pageVisualRole: "object_detail",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Object-detail close shot of the child holding a small wrapped present or keepsake toy carefully with both hands. The present texture, ribbon, and tiny fingers are in focus. Family smiles appear softly in the background. A tiny ribbon motif appears on the present corner. Soft watercolor picture book style, object-focused intimate framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withFixedImagePromptSafety("Object-detail close shot of the child holding a small plain keepsake toy carefully with both hands. The soft texture, ribbon, and tiny fingers are in focus. Family smiles appear softly in the background. A tiny ribbon motif appears on the toy corner. Soft watercolor picture book style, object-focused intimate framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、ひとつ大きくなった気もちを胸にそっとしまいました。",
@@ -635,7 +635,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     fixedStory: {
       titleTemplate: "{childName}とはじめてのどうぶつえん",
       coverImagePromptTemplate:
-        withFixedImagePromptSafety("Picture book cover illustration: a young child standing beside a decorative zoo entrance arch without readable text, with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+        withFixedImagePromptSafety("Picture book cover illustration: a young child standing beside a leafy zoo entrance arch with animal silhouettes and no panels, with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}と はじめての どうぶつえん",
       openingNarrationTemplate:
         "きょうは とくべつな日。{childName}は {familyMembers}と いっしょに、はじめての どうぶつえんへ でかけます。どんな であいが まっているかな。",
@@ -670,7 +670,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。たかい ゲートを みあげて、こころが はずみます。",
           pageVisualRole: "discovery",
           imagePromptTemplate:
-            "Setting: zoo entrance grounds with decorative arch and tree-lined paths — NOT a sandbox, NOT an outdoor playground, NOT a park. Wide establishing shot of a young child arriving at a friendly zoo entrance with family. The child stands near a tree-lined path just inside the entrance, looking up with excitement at the arch. Family members walk beside the child. A decorative entrance arch without readable text frames the top. A small yellow star motif is tucked into the arch decoration. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, rounded child-safe shapes, rich but not cluttered background details. No readable writing anywhere, no signage, no storefront signs, no text-like marks, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+            "Setting: zoo entrance grounds with a leafy animal-shaped arch and tree-lined paths — NOT a sandbox, NOT an outdoor playground, NOT a park. Wide establishing shot of a young child arriving at a friendly zoo entrance with family. The child stands near a tree-lined path just inside the entrance, looking up with excitement at the arch. Family members walk beside the child. A leafy entrance arch with animal silhouettes and no panels frames the top. A small yellow star motif is tucked into the arch decoration. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, rounded child-safe shapes, rich but not cluttered background details. No readable writing anywhere, no signage, no storefront signs, no text-like marks, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
         buildAgeSpecificPage({
           textTemplate: "おおきな どうぶつを みつけた{childName}は、声も でないほど びっくりしました。",
@@ -756,7 +756,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           general_child: "{parentMessage}",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            "Setting: zoo exit path or home doorway at dusk — peaceful closing moment. Back-view wide shot of the child leaning gently on a family member's shoulder at the end of the zoo day, looking toward a soft sunset or warm home light ahead. The child holds a small souvenir leaf or zoo keepsake in one hand. A small yellow star motif glows near a lantern or evening sky. Soft amber and violet dusk tones. Soft watercolor picture book style, serene and affectionate closing framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+            "Setting: zoo exit path or home doorway at dusk — peaceful closing moment. Back-view wide shot of the child leaning gently on a family member's shoulder at the end of the zoo day, looking toward a soft sunset or warm home light ahead. The child holds a small leaf-shaped keepsake toy in one hand. A small yellow star motif glows near a round paper light or evening sky. Soft amber and violet dusk tones. Soft watercolor picture book style, serene and affectionate closing framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
         }),
       ],
     },

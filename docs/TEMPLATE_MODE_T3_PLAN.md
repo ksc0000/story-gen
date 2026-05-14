@@ -2448,6 +2448,86 @@ Reason:
 - Continue to registered-child/reference-flow creative review after artifact reduction.
 - Use findings for T3-4 additional 8p variant planning.
 
+## T3-3i-3a Targeted 8p Prompt Artifact Reduction
+
+### Status
+
+completed.
+
+### Purpose
+
+Apply targeted 8-page fixed_template prompt refinements to reduce text-like visual artifacts without changing runtime prompt behavior or existing 4-page templates.
+
+### Background
+
+T3-3i-3 found that no-text constraints already exist at multiple layers, but artifact-prone object descriptions remain in 8p seed prompts.
+
+The safest next step is targeted 8p prompt refinement, not broad runtime changes.
+
+### Scope
+
+This task changed:
+- `functions/src/seed-templates.ts` image prompt text for `fixed-first-birthday-8p`
+- `functions/src/seed-templates.ts` image prompt text for `fixed-first-zoo-8p`
+- this docs file
+
+This task did not change:
+- existing 4-page templates
+- story text
+- parent messages
+- page count
+- layoutVariant
+- `generate-book.ts`
+- `functions/src/lib/prompt-builder.ts`
+- Firestore rules
+- Firebase/Auth behavior
+- generated `functions/lib`
+
+### Targeted Changes
+
+| template | area | artifact-prone wording | replacement direction | result |
+| --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | page 1, page 2, page 5 | `folded garland`, `paper chains`, `wrapped present or keepsake toy` | shift to ribbon-loop and plain keepsake objects without tag-like or panel-like surfaces | updated to `folded ribbon loop decoration`, `solid-color ribbon loops`, and `small plain keepsake toy` |
+| `fixed-first-zoo-8p` | cover, page 2, page 8 | `decorative zoo entrance arch`, `decorative entrance arch`, `small souvenir leaf or zoo keepsake`, `lantern` | shift to leafy animal-shaped entrance landmarks and plain closing objects without panel/sign surfaces | updated to `leafy zoo entrance arch with animal silhouettes and no panels`, `leafy animal-shaped arch`, `leaf-shaped keepsake toy`, and `round paper light` |
+
+### Validation Result
+
+| check | result | notes |
+| --- | --- | --- |
+| `npm --prefix functions run build` | pass | TypeScript build passed after seed prompt updates. |
+| compiled 8p templates present | pass | Confirmed `fixed-first-birthday-8p`, `fixed-first-zoo-8p`, and `layoutVariant: "8_page"` in compiled seed output before restore. |
+| `git diff --check` | pass | No whitespace or patch formatting issues detected. |
+| `functions/lib` restored before commit | pass | Restored `functions/lib/seed-templates.js` and `functions/lib/seed-templates.js.map` after compiled verification. |
+| smoke creation | not run | Safe credentials/env and execution path were not confirmed in this task. |
+| inspect | not run | Not run because smoke creation was not executed in this task. |
+| existing 4p templates unchanged | pass | Final code diff is limited to the 8p birthday and 8p zoo prompt strings. |
+| runtime prompt builder unchanged | pass | No diff in `functions/src/lib/prompt-builder.ts`. |
+
+### Expected Creative Impact
+
+| item | expected effect |
+| --- | --- |
+| Birthday decorations/cards/backgrounds | Lower chance of pseudo-text marks in ribbon-like decorations and gift-like objects. |
+| Zoo entrance/signage/backgrounds | Lower chance of pseudo-text marks in entrance structures and closing-scene keepsake/light objects. |
+| Current rollout | No rollback required. |
+| Future 8p expansion | Better baseline before adding more variants. |
+
+### Decision
+
+**Targeted prompt artifact reduction status:** Conditional
+
+Reason:
+- Targeted 8p prompt reduction was implemented with minimal seed-only edits.
+- Functions build passed and generated `functions/lib` artifacts were restored.
+- Existing 4p templates and runtime prompt builder remained unchanged.
+- Smoke creation and inspect were not run in this task because safe execution credentials/env were not confirmed.
+
+### Follow-up
+
+- Re-run 8p smoke creation and inspect if safe credentials/env are available.
+- Re-run creative review on updated smoke outputs.
+- Continue to registered-child/reference-flow creative review after updated smoke review.
+
 #### T3-3b: Data model proposal
 
 - optional `pageCount` フィールド（backward-compatible）
