@@ -3348,3 +3348,91 @@ Reason:
 - T3-4c: run seed sync / smoke creation / inspect for fixed-brush-teeth-8p.
 - T3-4d: interactive QA for Reader / Create / Admin.
 - T3-4e: creative QA and reference-flow QA.
+
+## T3-4c Seed Sync / Smoke / Inspect for fixed-brush-teeth-8p
+
+### Status
+
+conditional
+
+### Purpose
+
+Validate that the newly implemented `fixed-brush-teeth-8p` seed template can be synced, smoke-generated, and inspected as an 8-page fixed_template book.
+
+### Target
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| expected pages | 8 |
+| layoutVariant | `8_page` |
+| smoke fixture | explicit (childName: "Mika", parentMessage: "You did it...") |
+
+### Build / Compiled Seed Result
+
+| check | result | notes |
+| --- | --- | --- |
+| `npm --prefix functions run build` | pass | tsc completed without errors |
+| compiled `fixed-brush-teeth-8p` present | pass | found at functions/lib/seed-templates.js:765 |
+| compiled `pageCount: 8` present | pass | found at functions/lib/seed-templates.js:791 |
+| compiled `layoutVariant: "8_page"` present | pass | found at functions/lib/seed-templates.js:792 |
+| generated `functions/lib` restored before final commit | pending | planned after all checks complete |
+
+### Template Sync Result
+
+| check | result | notes |
+| --- | --- | --- |
+| sync check | blocked | GOOGLE_APPLICATION_CREDENTIALS environment variable not set; requires Firebase service account |
+| sync write | not run | blocked by credentials/env — Firebase admin SDK requires service account for Firestore write |
+| `fixed-brush-teeth-8p` included | unknown | Blocked; cannot verify without sync check execution |
+| target template count | unknown | Blocked; cannot verify without sync check execution |
+| drift/write result | blocked by credentials/env | Requires service account JSON to be set in environment |
+| destructive change | none expected | Seed only adds new template; no destructive changes predicted |
+
+### Smoke Result
+
+| template | smoke bookId | status | progress | pages | failed | fallback | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-brush-teeth-8p` | not generated | blocked | 0% | 0 of 8 | unknown | unknown | Blocked by credentials/env — smoke:create-template-books requires Firebase authentication (GOOGLE_APPLICATION_CREDENTIALS) and Firestore write access |
+
+### Inspect Result
+
+| template | bookId | expected pages | actual pages | result | page statuses | placeholders | page numbers | reading structure | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-brush-teeth-8p` | none | 8 | 0 (not generated) | blocked | not inspected | not inspected | not inspected | not inspected | Smoke book was not generated due to credentials/env blocker; inspect cannot proceed without bookId |
+
+### Environment Constraints
+
+| constraint | status | details |
+| --- | --- | --- |
+| GOOGLE_APPLICATION_CREDENTIALS | not set | Required for Firebase Admin SDK (Firestore sync/write and Cloud Firestore operations) |
+| service account JSON | not available | Must be provided via environment variable for Firestore operations |
+| Firebase project ID | requires auth | Project ID `story-gen-8a769` is known from code, but operations require authenticated admin context |
+
+### Decision
+
+**Seed sync / smoke / inspect status:** Conditional
+
+Reason:
+
+- Build and compiled seed verification: ✅ **PASS** - `fixed-brush-teeth-8p` is correctly compiled with 8-page structure.
+- Seed implementation itself: ✅ **Complete and valid** - From T3-4b, the seed is properly implemented in source and compiled correctly.
+- Firestore sync operations: ⏸️ **Blocked** - GOOGLE_APPLICATION_CREDENTIALS not set in current environment. This is a local dev environment constraint, not a code issue.
+- Smoke generation and inspection: ⏸️ **Blocked** - Cannot proceed without Firebase authentication.
+- **Status determination:**  Conditional because:
+  1. Build and compiled seed are fully validated ✅
+  2. Smoke/inspect require environment credentials which are blocked in this execution context
+  3. This is not a code defect; it's an environment setup constraint
+  4. Seed is ready for smoke testing in an environment with proper Firebase service account credentials
+
+**Recommendation:**
+- In CI/CD or authenticated dev environment: Execute `npm run template:sync:check` and `npm run template:sync:write` to sync seed with Firestore.
+- Then execute smoke creation script with generated explicit fixture to validate 8-page generation and inspection.
+
+### Follow-up
+
+- T3-4c-env: Set up GOOGLE_APPLICATION_CREDENTIALS in an authenticated environment (CI/CD or local dev with service account).
+- T3-4c-sync: Execute template sync check/write in that environment to reflect `fixed-brush-teeth-8p` in Firestore.
+- T3-4c-smoke: Run smoke creation and inspection in that environment to validate 8-page generation.
+- T3-4d: After T3-4c-smoke completes: interactive QA for Reader / Create / Admin.
+- T3-4e: creative QA and reference-flow QA.
