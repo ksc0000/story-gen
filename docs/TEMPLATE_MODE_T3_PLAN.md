@@ -4947,6 +4947,83 @@ Reason:
 - T3-4j-4 (or T3-4k-4): run a smoke with `readingProfile.ageBand = preschool_3_4` to confirm hiragana-first text rendering in a live book.
 - Human review: visually inspect pages 1, 4, 6, 7 of bookId `Xmce9MTGP8URzAQEblHK` for BF-4 no-text artifact improvement.
 
+## T3-4j-4 fixed-brush-teeth-8p BF-4 Visual-only QA (existing book)
+
+### Status
+
+completed (Conditional-Go)
+
+### Date
+
+2026-05-15
+
+### Purpose
+
+Execute manual **visual-only** QA for BF-4 on the existing post-cleanup smoke book to confirm whether T3-4j-1 prompt cleanup reduced no-text artifacts in bathroom scenes.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| bookId | `Xmce9MTGP8URzAQEblHK` |
+| pageCount | 8 |
+| final status | `completed` |
+| failed pages | 0 |
+| image model | `flux-2-pro` (all pages) |
+| fallback used | none |
+| reference image | not used |
+| QA target | BF-4 visual no-text artifacts only |
+| out of scope | text variant / ageBand verification |
+| side effects | none (no regeneration, no DB/Admin update) |
+
+### Method
+
+- Reviewed the existing 8 page images read-only.
+- Evaluated only visible text-like artifacts (labels, letters, numbers, pseudo-text marks) in scene objects and backgrounds.
+- Did not evaluate text rendering correctness for `preschool_3_4` in this task.
+
+### Page-by-page Visual Findings (BF-4)
+
+| page | BF-4 result | observation |
+| --- | --- | --- |
+| 0 | issue | Readable Latin-like label text appears on bathroom bottle objects. |
+| 1 | partial | Tube/bottle area still has label-like markings, but readability is limited. |
+| 2 | pass | No strong readable text-like artifact observed. |
+| 3 | issue | Multiple product containers show readable/almost-readable label text; residual BF-4 issue is clear. |
+| 4 | issue | Tube object shows readable Latin-like text and line patterns consistent with label artifacts. |
+| 5 | pass | No prominent readable label/text artifact observed. |
+| 6 | pass | No prominent readable label/text artifact observed. |
+| 7 | partial | Bottle labels remain with faint readable-like strings; less severe than issue pages. |
+
+### Visual QA Summary
+
+| axis | result | judgment |
+| --- | --- | --- |
+| completion/reliability context | 8/8 completed, failed 0, fallback none | stable |
+| BF-4 no-text artifact reduction | Some pages are cleaner, but readable label artifacts remain on multiple pages | partial |
+| rollout readiness from visual-only BF-4 view | Not a hard fail, but still requires targeted follow-up | Conditional-Go |
+
+### Decision
+
+**T3-4j-4 visual-only QA status:** Conditional-Go (P2 residual)
+
+Reason:
+
+- No P0/P1 failure pattern was observed (all pages generated, no fallback).
+- BF-4 cleanup effect is partial: page quality is mixed, and readable/almost-readable label artifacts remain on pages 0/3/4 (and lightly on 1/7).
+- Therefore, BF-4 is improved from hard failure context but not fully resolved.
+
+### Explicit Separation: text/ageBand follow-up
+
+- This task intentionally did **not** validate `preschool_3_4` rendered text.
+- `general_child` vs `preschool_3_4` verification remains a separate follow-up task after ageBand-capable smoke/run setup.
+
+### Follow-up
+
+- Keep BF-4 follow-up scoped to targeted prompt/object wording for label-prone bathroom objects (no broad runtime changes).
+- Run separate ageBand verification task for `preschool_3_4` text rendering (out of scope for T3-4j-4).
+
 ---
 
 ## T3-4k Japanese Orthography Policy for Fixed Templates
