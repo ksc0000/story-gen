@@ -4765,3 +4765,83 @@ Applied BF4-C1 and BF4-C2 strategies (page-local constraints and object descript
 **File Modified:**
 
 - `functions/src/seed-templates.ts` (source file only; compiled output functions/lib/seed-templates.js restored before commit)
+
+---
+
+## T3-4k Japanese Orthography Policy for Fixed Templates
+
+### Status
+
+completed (docs-only planning)
+
+### Purpose
+
+Define the Japanese orthography policy for fixed-template picture-book text before applying broad seed text changes.
+
+This step clarifies which seed-template fields should use child-facing hiragana-first wording, and which fields are out of scope because they are prompts, metadata, docs, or parent/admin-facing text.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| target template family | fixed-template picture books |
+| immediate audit target | `fixed-brush-teeth-8p` |
+| target age baseline | preschool / 3-4 |
+| code changes | none |
+| seed text changes | none |
+| smoke generation | not run |
+| DB/Admin side effects | none |
+
+### Field Classification
+
+| field type | policy | notes |
+| --- | --- | --- |
+| child-facing body text | hiragana-first | Applies to `textTemplate` and `textTemplatesByAge.preschool_3_4` in picture book pages. |
+| child-facing closing text | hiragana-first | If shown as part of the rendered picture book page, use child-readable wording. If `parentMessage` is displayed to the child, it should follow this policy. |
+| parent-only message | mixed Japanese allowed | If explicitly parent-facing and not shown to the child in the rendered book, kanji and mixed orthography are acceptable. |
+| image prompt | out of scope | `imagePromptTemplate` may remain English because it is a generation instruction, not book text. |
+| metadata/admin/docs | out of scope | Do not force hiragana for internal fields, template names, or documentation. |
+| childName placeholder | preserve placeholder | Do not alter `{childName}`; surrounding particles should be natural Japanese and follow hiragana-first rules. |
+
+### Orthography Rules
+
+| rule | guidance |
+| --- | --- |
+| OR-1 | For preschool 3-4 child-facing body text, prefer hiragana-first wording. |
+| OR-2 | Avoid kanji in child-facing text unless a future age band (e.g., early_reader_5_6) explicitly allows it. |
+| OR-3 | Use katakana only when necessary and age-appropriate (e.g., unavoidable onomatopoeia or modern concepts). |
+| OR-4 | Avoid English words in child-facing Japanese body text, except for `{childName}` placeholder or proper names. |
+| OR-5 | Use phrase-level spacing only where it improves read-aloud clarity; avoid unnatural word-internal spacing. |
+| OR-6 | Keep punctuation simple and consistent (periods, commas as natural pauses). |
+| OR-7 | Do not change image prompts or metadata as part of orthography cleanup. |
+| OR-8 | Preserve all age-specific variants (`baby_toddler`, `preschool_3_4`, `early_reader_5_6`, `early_elementary_7_8`) as they are independently scoped. |
+
+### Fixed Brush Teeth 8p Audit Targets
+
+| target | audit question | example |
+| --- | --- | --- |
+| `textTemplate` | Does the child-facing text contain kanji, English, or unnecessary katakana? | "朝だ。{childName}は、お水をながして顔を洗います。" (contains 朝 kanji; consider "あさだ") |
+| `preschool_3_4` variant | Is the preschool version hiragana-first and read-aloud friendly? | "朝だ。{childName}は、お水をながして顔を洗います。きょうも はみがきのじゅんびが はじまります。" |
+| final page text | Is the closing line child-readable if displayed in the book? | Verify `{parentMessage}` usage and whether it appears in rendered output. |
+| katakana usage | Are katakana characters necessary and age-appropriate? | "あぶく" (bubbles) is acceptable; "フォーム" would not be. |
+| spacing | Are spaces phrase-level rather than word-internal? | "お水を ながして" (phrase-level) vs "お 水 を な が し て" (harmful). |
+| tests | Do existing tests expect exact text snapshots that would need updates? | Check `test/seed-templates.test.ts` for snapshot dependencies. |
+
+### Decision
+
+**Orthography policy status:** Go (docs-only planning)
+
+Reason:
+- Establishing a policy before broad text changes avoids accidental rewrites across prompts, metadata, and parent-facing fields.
+- Clear field classification prevents scope creep into image prompts, metadata, and admin-only text.
+- `fixed-brush-teeth-8p` should be audited next, with child-facing body text treated as hiragana-first.
+
+### Recommended Next Step
+
+Run a read-only audit for `fixed-brush-teeth-8p` child-facing text fields against OR-1 through OR-8, then implement a minimal text cleanup only where the rendered book text violates this policy.
+
+### Follow-up
+
+- T3-4k-1: audit `fixed-brush-teeth-8p` child-facing text fields for orthography compliance.
+- T3-4k-2: implement minimal hiragana-first cleanup if needed (source only, no smoke run yet).
+- T3-4k-3: run text-focused smoke verification to confirm no regressions.
