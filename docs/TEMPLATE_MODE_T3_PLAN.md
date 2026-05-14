@@ -3677,3 +3677,71 @@ Reason:
 - Human sets `GOOGLE_APPLICATION_CREDENTIALS` in local PowerShell session.
 - Re-run T3-4c-credential-preflight.
 - If Ready, run T3-4c-sync-smoke-retry.
+
+## T3-4c-sync-smoke-retry Firestore Sync / Smoke / Inspect Retry for fixed-brush-teeth-8p
+
+### Status
+
+completed.
+
+### Purpose
+
+Retry Firestore sync, smoke creation, and inspect for `fixed-brush-teeth-8p` after Firebase Admin credentials are available.
+
+### Credential Readiness
+
+| check | result | notes |
+| --- | --- | --- |
+| `GOOGLE_APPLICATION_CREDENTIALS` set | pass | Value/path not recorded. |
+| credential file exists | pass | Path not recorded. |
+| Firebase Admin read-only check | pass | `firebase_admin_read_check:pass`; no write operation performed. |
+| credential contents recorded | no | Kept out of docs/logs/commits. |
+| service account JSON committed | no | Kept outside tracked files. |
+
+### Build / Compiled Seed Result
+
+| check | result | notes |
+| --- | --- | --- |
+| `npm --prefix functions run build` | pass | `tsc` completed without errors. |
+| compiled `fixed-brush-teeth-8p` present | pass | Found in compiled seed. |
+| compiled `pageCount: 8` present | pass | Found in compiled seed. |
+| compiled `layoutVariant: "8_page"` present | pass | Found in compiled seed. |
+| generated `functions/lib` restored before commit | pass | Restored via `git restore` before final commit. |
+
+### Template Sync Result
+
+| check | result | notes |
+| --- | --- | --- |
+| sync check | pass (with actionable drift) | DRY_RUN detected `fixed-brush-teeth-8p: document missing`. |
+| sync write | run | WRITE completed; target templates synced from local seed. |
+| `fixed-brush-teeth-8p` included | pass | Included in target templates and synchronized. |
+| target template count | pass | `13` |
+| drift/write result | pass | Re-check after write returned clean (no drift). |
+| destructive change | none | Sync output indicates normal template sync only. |
+
+### Smoke Result
+
+| template | smoke bookId | status | progress | pages | failed | fallback | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-brush-teeth-8p` | `MvSyoUU2L2rC3JaOEpCa` | completed | 100 | 8 | 0 | `imageFallbackUsed=false`, `fallbackPages=0` | Smoke create command succeeded in write mode. |
+
+### Inspect Result
+
+| template | bookId | expected pages | actual pages | result | page statuses | placeholders | page numbers | reading structure | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-brush-teeth-8p` | `MvSyoUU2L2rC3JaOEpCa` | 8 | 8 | PASS | all `completed` (8/8) | none (`placeholderCount=0`) | `0..7` | `v2_cover_title_story` | cover status `completed`; page count check PASS |
+
+### Decision
+
+**Seed sync / smoke / inspect retry status:** Go
+
+Reason:
+- Credential readiness checks all passed (env set, file exists, Firebase Admin read-only pass).
+- Build and compiled seed checks passed for `fixed-brush-teeth-8p`.
+- Sync drift (`document missing`) was resolved by sync write; post-write check is clean.
+- Smoke generation completed with 8 pages, failed pages `0`, fallback `0`.
+- Inspect passed with expected/actual page count match and no placeholders.
+
+### Follow-up
+
+- T3-4d Interactive QA for `fixed-brush-teeth-8p`.
