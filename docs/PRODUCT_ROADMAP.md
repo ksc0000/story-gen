@@ -288,6 +288,14 @@ T3-2 status update (2026-05-12):
 - 優先度: P0=0 / P1=3観点 (`fixed-brush-teeth` の `pageVisualRole` 整合、`fixed-first-birthday` / `fixed-sleepy-moon-adventure` / `fixed-little-helper` の sampleImage 重複・カテゴリ不一致) / P2=4観点 / No action=2本
 - 次アクション: P1 項目から段階適用（T3-2a〜T3-2d を docs に列挙済み）
 
+T3-4j / T3-4k status update (2026-05-15):
+
+- T3-4j-1: **completed** — `fixed-brush-teeth-8p` BF-4 targeted prompt cleanup（page 1, 4, 6, 7 の bathroom no-text constraints 強化）
+- T3-4k: **completed (docs-only)** — fixed-template 絵本文言 Japanese Orthography Policy 策定（OR-1〜OR-8、field classification 定義）
+- T3-4k-1: **completed (read-only audit)** — preschool_3_4 page 0〜6 に漢字違反を確認
+- T3-4k-2: **completed** — preschool_3_4 page 0〜6 をひらがな-first に最小限 cleanup（commit `cd3c946`）
+- T3-4k-3: **completed (static verification)** — 全 page の preschool_3_4 text に漢字なし・placeholder 正常を確認、Go 判定
+
 補足:
 
 - T3-3 は生成時間・失敗率・コスト・運用手順への影響が大きいため、4ページ運用の UX/品質を先に固めてから着手する。
