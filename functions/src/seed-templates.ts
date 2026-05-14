@@ -987,7 +987,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           textTemplate: "朝だ。{childName}は、お水をながして顔を洗います。",
           baby_toddler: "あさだ。ぱしゃぱしゃ。きれいきれい。",
           preschool_3_4:
-            "朝だ。{childName}は、お水をながして顔を洗います。きょうも はみがきのじゅんびが はじまります。",
+            "あさだ。{childName}は、おみずをながして かおを あらいます。きょうも はみがきのじゅんびが はじまります。",
           early_reader_5_6:
             "朝だ。{childName}は、お水をながして顔を洗います。鏡に映った自分を見ると、今日も がんばろう という きもちに なります。",
           early_elementary_7_8:
@@ -1002,7 +1002,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           textTemplate: "でも、歯みがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。",
           baby_toddler: "めんどくさい。ぐずぐず。",
           preschool_3_4:
-            "でも、歯みがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。おへやから あぶくの音が きこえてきました。",
+            "でも、はみがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。おへやから あぶくの おとが きこえてきました。",
           early_reader_5_6:
             "でも、歯みがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。でも、{childName}は知っています。やってみると たのしいことを。",
           early_elementary_7_8:
@@ -1017,7 +1017,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           textTemplate: "でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。",
           baby_toddler: "あぶく。ふわっ。たのしい。",
           preschool_3_4:
-            "でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。{childName}の目が きらりと 光ります。",
+            "でも、はぶらしを にぎると、あぶくが ふわっと でてきました。あ、たのしい。{childName}の めが きらりと ひかります。",
           early_reader_5_6:
             "でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。小さな星のような あぶくが、{childName}の 心も ぷくぷくと 膨らませます。",
           early_elementary_7_8:
@@ -1032,7 +1032,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           textTemplate: "しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。",
           baby_toddler: "しゃかしゃか。ぴかぴか。",
           preschool_3_4:
-            "しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。{childName}は、歯のひとつひとつに 気持ちを こめて 磨きます。",
+            "しゃかしゃか。まえばを もっと がんばる。ぴかぴかになれ。{childName}は、はの ひとつひとつに きもちを こめて みがきます。",
           early_reader_5_6:
             "しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。{childName}は、小さな手で せいいっぱい 磨いています。",
           early_elementary_7_8:
@@ -1047,7 +1047,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           textTemplate: "さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。",
           baby_toddler: "奥歯も。そっと。きれいきれい。",
           preschool_3_4:
-            "さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。{childName}は、鏡を覗きながら 一生懸命 探します。",
+            "さらに、おくばも、そっと たんけんする。ここにも よごれがあるのか。みつけるぞ。{childName}は、かがみを のぞきながら いっしょうけんめい さがします。",
           early_reader_5_6:
             "さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。{childName}は、自分の歯の中を 小さな冒険者のように 探検しています。",
           early_elementary_7_8:
@@ -1062,7 +1062,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           textTemplate: "その様子を、おかあさん（またはおとうさん）が、やさしく見守っていました。",
           baby_toddler: "ママも見てる。やさしい。",
           preschool_3_4:
-            "その様子を、おかあさん（またはおとうさん）が、やさしく見守っていました。{childName}は、その視線に 気づき、もっと 頑張ろう と 思いました。",
+            "そのようすを、おかあさん（またはおとうさん）が、やさしく みまもっていました。{childName}は、その しせんに きづき、もっと がんばろうと おもいました。",
           early_reader_5_6:
             "その様子を、家族が、やさしく見守っていました。{childName}は、その暖かい視線を感じて、一人じゃないんだと 思いました。",
           early_elementary_7_8:
@@ -1077,7 +1077,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           textTemplate: "仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。",
           baby_toddler: "ぐちゅぐちゅ。ぴかぴか。できた。",
           preschool_3_4:
-            "仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。{childName}は、最後の仕上げに 気合いが入ります。",
+            "しあげに、くちをゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。{childName}は、さいごの しあげに きあいが はいります。",
           early_reader_5_6:
             "仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。{childName}は、水のぬくもりを感じながら、全部 終わったという 喜びが こみ上げます。",
           early_elementary_7_8:
