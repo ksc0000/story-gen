@@ -4213,3 +4213,130 @@ Reason:
 
 - BF-1 実データ確認は、`9c1be24` 以降に新規生成した brush-teeth smoke book を別タスクで inspect して実施。
 - BF-2 は、今後の報告時に「raw JSON（折返しなし）」と「UI上の見え方」を同時取得して比較する運用で再判定する。
+
+## T3-4i BF-3/BF-4 Image Guardrail Plan
+
+### Status
+
+completed (docs-only planning).
+
+### Purpose
+
+`fixed-brush-teeth-8p` に残る Image Quality P2（BF-3/BF-4）を、追加 8p variant 展開前に最小修正で抑えるための guardrail 方針を定義する。
+
+対象:
+
+- BF-3: 8ページ間の protagonist character drift（服装、年齢印象、顔立ちの揺れ）
+- BF-4: 洗面台周辺オブジェクトの pseudo-label / text-like artifact
+
+### Inputs / Baseline
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| baseline smoke bookId | `MvSyoUU2L2rC3JaOEpCa` |
+| upstream references | T3-4e (creative QA), T3-4f (readiness), T3-4h (BF-2 cut) |
+| current severity | P2 |
+| blocker level | no P0/P1 blocker confirmed |
+
+### Constraints and Non-goals
+
+- docs-only（本タスクでコード変更なし）
+- 生成・再生成・DB更新・Admin mutation・reference-flow生成は実施しない
+- Firebase Auth / Firestore rules / runtime pipeline の広範囲修正は今回対象外
+- BF-3/BF-4 以外（BF-1/BF-2）の再対応は今回対象外
+
+### Problem Definition
+
+| id | problem | observed impact |
+| --- | --- | --- |
+| BF-3 | ページ間で主人公の服色・顔立ち・年齢印象が揺れる | 読み手に「同一人物の連続場面」認識が弱まる |
+| BF-4 | コップ・ボトル・棚小物に文字様のノイズが出る | no-text品質が低下し、画面上の没入感を阻害 |
+
+### Guardrail Strategy (Minimal)
+
+#### Track A: BF-3 Character Continuity Guardrail
+
+目的:
+
+- no-reference smoke でも「同じ子」に見える確率を引き上げる
+
+最小方針（実装時）:
+
+1. Character Anchor Phrase を `fixed-brush-teeth-8p` の全ページ `imagePromptTemplate` に明示統一
+2. Anchor は identity-safe な視覚特徴のみ（年齢帯、髪型、服の主色、体格、雰囲気）
+3. ページごとの scene 記述は維持し、anchor は先頭または中盤で一貫注入
+4. 「同一人物を毎ページ継続」の明示文を追加（ただし reference-flow 依存はしない）
+
+Anchor 設計ルール（docs contract）:
+
+- child-specific PII を使わない
+- 顔の固有識別情報を過度に固定しない（一般化された child anchor）
+- 衣装は「色・形」の範囲で固定し、過剰なディテール固定を避ける
+- 既存の safety suffix（no readable writing / reference isolation）と衝突しない文面にする
+
+#### Track B: BF-4 No-Text Bathroom Object Guardrail
+
+目的:
+
+- 洗面台周辺の text-like artifact を減らす
+
+最小方針（実装時）:
+
+1. Text-prone object blacklist を prompt に追加（cup, bottle, tube, label, sticker, shelf package）
+2. 「plain / unlabeled / solid-color containers」の肯定指定を追加
+3. 鏡面・棚面の「文字らしき装飾禁止」を再強調
+4. 既存 no-text suffix は維持し、template固有の object-level guardrail を上乗せ
+
+Object guardrail 設計ルール（docs contract）:
+
+- 否定指定だけでなく、望ましい代替（無地容器）を必ず併記
+- scene の自然さを壊すほど小物を削りすぎない
+- 「読める文字禁止」と「文字風模様の抑制」を分けて記述する
+
+### Proposed Prompt Contract Delta (Design Only)
+
+| scope | delta type | intent |
+| --- | --- | --- |
+| `fixed-brush-teeth-8p` pages 1-8 | shared character anchor clause | BF-3 低減 |
+| `fixed-brush-teeth-8p` pages 1-8 | bathroom object no-text clause | BF-4 低減 |
+| global suffix | no change | 既存の共通 safety suffix は維持 |
+
+### Validation Plan (Future Task, Not Executed Here)
+
+| check | pass criteria | severity gate |
+| --- | --- | --- |
+| character continuity review | 8ページ通読で服色・年齢印象・顔立ちの揺れが「軽微」以下 | P2改善確認 |
+| no-text artifact review | 洗面台/棚小物に readable text / 強い pseudo-label が出ない | P2改善確認 |
+| story-image alignment | 既存 scene 意図（行動/発見/しめくくり）が維持される | 回帰なし |
+| failure profile | image failure/fallback が悪化しない | reliability 非悪化 |
+
+### Rollout Decision Rule (for First Variant Closure)
+
+| condition | decision |
+| --- | --- |
+| BF-3/BF-4 が軽微まで改善、他品質を悪化させない | T3-4f closure を Go 寄りに更新 |
+| どちらかが改善不十分だが P2 範囲内 | Conditional-Go 維持 + follow-up 期限設定 |
+| 新規 P0/P1（崩壊画像や重大な可読文字混入）が発生 | Hold、広範囲修正せず原因記録と最小再計画 |
+
+### Implementation Slice Recommendation (Next)
+
+| slice | scope | expected blast radius |
+| --- | --- | --- |
+| T3-4i-1 | `fixed-brush-teeth-8p` のみ prompt guardrail 追加 | low |
+| T3-4i-2 | sync/check + smoke + creative re-review（brush-teeth限定） | medium |
+| T3-4i-3 | T3-4f readiness 再判定更新（docs） | low |
+
+### Decision
+
+**T3-4i status:** complete (planning only)
+
+Reason:
+
+- BF-3/BF-4 を追加 variant 展開前に抑えるための最小 guardrail 方針を定義した。
+- 本計画は template-local prompt delta を前提とし、runtime normalization や広範囲実装修正を要求しない。
+
+### Follow-up
+
+- 次タスクで T3-4i-1（`fixed-brush-teeth-8p` 限定 prompt guardrail 実装）を実施。
+- 実装後に brush-teeth 限定で creative re-review を行い、T3-4f closure 判定を更新する。
