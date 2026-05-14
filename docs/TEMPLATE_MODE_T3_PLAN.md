@@ -4389,3 +4389,109 @@ Reason:
 
 - T3-4i-2 で brush-teeth 限定の sync/check + smoke + creative re-review を実施し、改善度を確認する。
 - T3-4i-3 で T3-4f readiness 判定を更新する。
+
+## T3-4i-2 fixed-brush-teeth-8p Image Guardrail Smoke Validation Plan
+
+### Status
+
+planned (docs-only).
+
+### Purpose
+
+T3-4i-1（commit: `4521b0f`）で導入した BF-3/BF-4 guardrail について、次回の no-reference smoke と画像 QA を安全に実施するための手順・判定・記録ルールを固定する。
+
+### Scope
+
+- 対象テンプレート: `fixed-brush-teeth-8p` のみ
+- 対象評価: no-reference smoke で生成された 8 ページ画像の BF-3/BF-4 改善確認
+- 非対象: コード変更、画像再生成操作、DB更新、Admin mutation、reference-flow 生成
+
+### Preconditions (Execution Readiness)
+
+| check | requirement | action if not met |
+| --- | --- | --- |
+| branch/HEAD | `main` かつ `4521b0f` 以降を含む最新状態 | 状態差分を整理してから実行 |
+| template scope | `fixed-brush-teeth-8p` のみを対象化 | 他テンプレート評価は別タスクへ分離 |
+| credential handling | 認証情報の値・パスを docs へ記録しない | 値は非記録、状態のみ記録 |
+| repo hygiene | `functions/lib` と generated files をコミット対象に含めない | 差分発生時は restore してから commit |
+
+### No-Reference Smoke Validation Workflow (Plan)
+
+1. 実行前チェック
+	- 作業ツリーがクリーンであることを確認する。
+	- 実行対象が `fixed-brush-teeth-8p` のみであることを確認する。
+2. smoke 生成（no-reference）
+	- 生成は no-reference 条件で 1 book（8 pages）を基本単位とする。
+	- reference-flow の生成は今回行わない。
+3. inspect / QA 観察
+	- 各ページの画像を BF-3/BF-4 観点で評価する。
+	- page status / fallback / failure の有無を併せて記録する。
+4. 判定記録
+	- P0/P1/P2 ルールで severity を決定する。
+	- P0/P1 検出時も広範囲修正は行わず、review result と follow-up を記録する。
+
+### New Smoke bookId Recording Policy
+
+| item | policy |
+| --- | --- |
+| 記録対象 | 今回新規生成した no-reference smoke bookId（`fixed-brush-teeth-8p` のみ） |
+| 記録先 | 本ドキュメント内の T3-4i-2 結果セクション（次回実行時に追加） |
+| 記録形式 | `bookId`, generatedAt(YYYY-MM-DD), templateId, pageCount, status, notes |
+| 非記録項目 | private URL / storage path / image URL / child name / email / token / credential 値 |
+| 取り扱い | bookId は運用識別子として最小限記録し、PII を含む補助情報は記録しない |
+
+推奨記録テンプレート（次回実行時利用）:
+
+| templateId | smoke bookId | generatedAt | pageCount | completed pages | image_failed pages | fallback pages | overall status | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| fixed-brush-teeth-8p | TBD | TBD | 8 | TBD | TBD | TBD | TBD | guardrail post-check |
+
+### Image QA Rubric (BF-3/BF-4 Fixed Viewpoints)
+
+| axis | review point | pass threshold |
+| --- | --- | --- |
+| BF-3 character continuity | 8ページ通読で同一主人公認識が維持されるか（髪型、服主色、年齢印象、顔立ちの一貫性） | 「揺れは軽微」以下 |
+| BF-3 scene consistency | scene 変化があっても identity anchor が崩れないか | 重大な別人化が 0 件 |
+| BF-4 object artifact | コップ/ボトル/チューブ/棚小物/鏡面に readable text または強い pseudo-label がないか | readable text 0 件、強い artifact 0 件 |
+| BF-4 naturalness | 無地容器化により scene 自然さが破綻していないか | 過度な無機質化なし |
+| regression check | BF-1/BF-2 既知観点や story-image alignment の悪化がないか | 新規重大回帰なし |
+
+### Severity Classification Rule (P0/P1/P2)
+
+| level | definition in this validation | required action |
+| --- | --- | --- |
+| P0 | 画像崩壊、読書体験が成立しない重大欠陥、または広範囲で可読文字混入 | rollout hold。広範囲修正はせず、結果記録と最小 follow-up 起票 |
+| P1 | ユーザー体験を明確に損なう欠陥（複数ページで顕著な別人化、明確な text artifact の反復） | Conditional-Go 停止寄り。最小修正方針を別タスクで定義 |
+| P2 | 軽微〜中程度の品質揺れ（散発的 drift、弱い text-like artifact） | Conditional-Go 維持可。期限付き改善タスクを追加 |
+
+### Commit and Security Hygiene Rule (Must)
+
+1. docs-only タスクでは最終差分を `docs/TEMPLATE_MODE_T3_PLAN.md` のみに限定する。
+2. `functions/lib` 差分が発生した場合は commit 前に restore する。
+3. generated files、service account JSON、credentials 関連ファイルを commit しない。
+4. docs には認証情報の中身、private URL、storage path、image URL、個人情報を記載しない。
+5. Admin での再生成や副作用操作は本タスクで実施しない。
+
+### Exit Criteria for T3-4i-2 (Next Execution)
+
+| check | pass condition |
+| --- | --- |
+| smoke completion | no-reference smoke 1 book（8 pages）が生成・観察可能 |
+| BF-3 | 同一主人公認識の揺れが「軽微」以下 |
+| BF-4 | readable text / 強い pseudo-label が実質解消 |
+| reliability | image failure/fallback が悪化しない |
+| documentation | bookId と QA 結果を本ドキュメントに秘匿ルール順守で記録 |
+
+### Decision
+
+**T3-4i-2 plan status:** ready (docs-only)
+
+Reason:
+
+- guardrail 適用後の smoke 検証手順、bookId 記録方針、QA 観点、severity ルール、commit 衛生ルールを一貫した形式で固定した。
+- 次回はこの計画に従って実行結果のみを追記すれば、T3-4i-3 の readiness 再判定へ接続できる。
+
+### Follow-up
+
+- 次タスクで本計画に沿って no-reference smoke 実行結果と QA 判定を追記する。
+- 追記結果を入力として T3-4i-3（T3-4f readiness 再判定更新）を実施する。
