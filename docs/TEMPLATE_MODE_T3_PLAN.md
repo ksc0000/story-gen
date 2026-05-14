@@ -4722,3 +4722,46 @@ Implement a minimal BF-4-only template-local / page-local prompt cleanup for `fi
 - T3-4j-1: implement BF-4-only prompt cleanup.
 - T3-4j-2: run no-reference smoke generation after cleanup.
 - T3-4j-3: manual visual QA for BF-4 regression/improvement.
+
+---
+
+## T3-4j-1 BF-4-Only Targeted Prompt Cleanup Implementation
+
+### Status
+
+completed
+
+### Implementation Summary
+
+Implemented BF-4-only targeted prompt refinements for `fixed-brush-teeth-8p` template focused on reducing bathroom no-text artifacts in pages prone to text induction.
+
+**Changes Made:**
+
+| page | role | modification |
+| --- | --- | --- |
+| page 1 | setback_or_question | Added "with no labels, no brand marks, no text" to toothbrush and toothpaste tube description on counter |
+| page 4 | object_detail | Added "The mirror is plain with a simple frame and no pseudo-text marks or decorative patterns" to mirror description |
+| page 6 | emotional_closeup | Added "The mirror frame is plain and simplified with no decorative patterns or pseudo-text marks. The bathroom wall behind the mirror is plain solid color with no posters, charts, or label-like objects" to scene description |
+| page 7 | quiet_ending | Added "The mirror is plain with a simple frame and no pseudo-text or decorative marks. The wall around the mirror is plain solid color—no posters, charts, written notes, product labels, brand marks, or label-like objects" to scene description |
+
+**Preserved Elements (Non-modified):**
+
+- BF-3 character anchor clause (no changes to BRUSH_TEETH_8P_CHARACTER_ANCHOR_CLAUSE constant or references)
+- Global safety suffix (withFixedImagePromptSafety remains unchanged)
+- Page text templates (all Japanese and age-bracket variations preserved)
+- Page visual roles (opening_establishing, setback_or_question, discovery, action, object_detail, emotional_closeup, payoff, quiet_ending)
+- All other prompts (pages 0, 2, 3, 5 unchanged)
+
+**Implementation Strategy:**
+
+Applied BF4-C1 and BF4-C2 strategies (page-local constraints and object description refinement) to reduce text-like artifact induction on late pages while preserving character continuity (BF-3) and global safety baseline.
+
+**Build Verification:**
+
+- TypeScript compilation: ✅ pass
+- Functions unit tests (345 tests): ✅ all pass
+- No new eslint warnings: ✅ verified
+
+**File Modified:**
+
+- `functions/src/seed-templates.ts` (source file only; compiled output functions/lib/seed-templates.js restored before commit)
