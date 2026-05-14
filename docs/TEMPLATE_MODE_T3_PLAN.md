@@ -3533,3 +3533,58 @@ Reason:
 - T3-4c-smoke: Run smoke creation and inspection in that environment to validate 8-page generation.
 - T3-4d: After T3-4c-smoke completes: interactive QA for Reader / Create / Admin.
 - T3-4e: creative QA and reference-flow QA.
+
+## T3-4c-credential-preflight Firebase Admin Credential Check
+
+### Status
+
+blocked
+
+### Purpose
+
+Verify whether the local environment can safely run Firebase Admin SDK read operations before retrying template sync, smoke creation, and inspect for `fixed-brush-teeth-8p`.
+
+Execution environment: Local dev (C:\Users\CN63738\story-gen)
+
+### Credential Check Result
+
+| check | result | notes |
+| --- | --- | --- |
+| `GOOGLE_APPLICATION_CREDENTIALS` set | ❌ blocked | Environment variable not configured in this session. Do not record value or path. |
+| credential file exists | ⏭️ not run | Skipped because environment variable is not set. |
+| Firebase Admin read-only initialization | ⏭️ not run | Skipped because environment variable is not set; no initialization attempted. |
+| credential contents recorded | ✅ no | Must remain no. |
+| service account JSON committed | ✅ no | Must remain no. |
+
+### Build / Compiled Seed Quick Check
+
+| check | result | notes |
+| --- | --- | --- |
+| `npm --prefix functions run build` | ✅ pass | tsc completed without errors |
+| compiled `fixed-brush-teeth-8p` present | ✅ pass | found at functions/lib/seed-templates.js:765 |
+| compiled `pageCount: 8` present | ✅ pass | found at functions/lib/seed-templates.js:426 |
+| compiled `layoutVariant: "8_page"` present | ✅ pass | found at functions/lib/seed-templates.js:427 |
+| generated `functions/lib` restored before commit | ✅ pass | git restore applied; no generated files in final diff |
+
+### Decision
+
+**Credential preflight status:** Blocked
+
+Reason:
+- `GOOGLE_APPLICATION_CREDENTIALS` environment variable is not set in the current session
+- Firebase Admin SDK read check cannot be executed without valid credentials
+- This is an environment setup constraint, not a code or seed implementation issue
+- Seed implementation (`fixed-brush-teeth-8p`) is correct and compile is passing
+
+### Follow-up
+
+- **Unblock:** Configure Firebase service account credentials in the environment:
+  - Obtain service account JSON from Firebase Console (story-gen-8a769 project)
+  - Set `$env:GOOGLE_APPLICATION_CREDENTIALS = "<path-to-service-account.json>"` in terminal session (do not commit path or file)
+  - Re-run this preflight check
+- **If Ready:** Execute `T3-4c-sync-smoke-retry`:
+  - `npm run template:sync:check`
+  - `npm run template:sync:write`
+  - `npm run smoke:create-template-books -- --template-id=fixed-brush-teeth-8p --page-count=8 --write`
+  - `node scripts/inspect-template-smoke-book.js <bookId> --expected-page-count=8`
+- **If Blocked:** Configure Firebase service account credentials outside the repository, then rerun this preflight.
