@@ -4495,3 +4495,53 @@ Reason:
 
 - 次タスクで本計画に沿って no-reference smoke 実行結果と QA 判定を追記する。
 - 追記結果を入力として T3-4i-3（T3-4f readiness 再判定更新）を実施する。
+
+## T3-4i-3 fixed-brush-teeth-8p No-Reference Smoke Generation
+
+### Status
+
+blocked (environment credentials).
+
+### Purpose
+
+T3-4i-1 で実装した BF-3/BF-4 guardrail の効果確認に向けて、`fixed-brush-teeth-8p` の no-reference smoke book（8 pages）を新規生成し、bookId と生成結果を記録する。
+
+### Execution Summary
+
+| step | command intent | result | notes |
+| --- | --- | --- | --- |
+| 1 | no-reference smoke create | failed | `fixed-brush-teeth-8p` が利用可能テンプレート一覧に未反映 |
+| 2 | local compiled seed refresh (`functions` build) | pass | `tsc` 成功、ローカル compiled seed は更新可能 |
+| 3 | no-reference smoke create (retry) | failed | `GOOGLE_APPLICATION_CREDENTIALS is not set` |
+
+### Smoke Output Record
+
+| templateId | smoke bookId | generatedAt | pageCount | completed pages | image_failed pages | fallback pages | overall status | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| fixed-brush-teeth-8p | none | 2026-05-15 | 8 | 0 | unknown | unknown | blocked | Environment credentials missing (`GOOGLE_APPLICATION_CREDENTIALS` not set) |
+
+### Observations
+
+- no-reference 条件での実行を維持し、reference-flow や private reference image は使用していない。
+- 既存 smoke book の上書きや Admin 再生成操作は実施していない。
+- ブロッカーはコード不整合ではなく、実行環境の認証設定不足。
+
+### Risk / Severity Note
+
+- 今回は smoke book 未生成のため BF-3/BF-4 の画像品質判定（P0/P1/P2）は未実施。
+- 品質判定は T3-4i-4 へ持ち越し（bookId 発行後に実施）。
+
+### Decision
+
+**T3-4i-3 execution status:** blocked
+
+Reason:
+
+- no-reference smoke 生成の実行自体は開始できたが、最終的に認証環境不足で Firestore write が成立しなかった。
+- 生成結果（bookId, pages, failed, fallback）の実測値を確定できないため、次工程 QA へは未接続。
+
+### Follow-up
+
+- 実行環境で `GOOGLE_APPLICATION_CREDENTIALS` を設定し、同条件で no-reference smoke を再実行する。
+- 再実行後に本セクションの Smoke Output Record を実測値で更新し、T3-4i-4 画像QAへ接続する。
+- docs-only 最終化前に `functions/lib` のローカル生成差分を restore し、コミット対象を docs のみに制限する。
