@@ -4768,6 +4768,85 @@ Applied BF4-C1 and BF4-C2 strategies (page-local constraints and object descript
 
 ---
 
+## T3-4j-2 fixed-brush-teeth-8p No-reference Smoke Generation (post BF-4 cleanup)
+
+### Status
+
+completed
+
+### Purpose
+
+Generate a new no-reference smoke book for `fixed-brush-teeth-8p` after the T3-4j-1 BF-4 prompt cleanup and T3-4k preschool text cleanup, and record generation metrics to provide evidence for T3-4j-3 manual visual/text QA.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| bookId | `Xmce9MTGP8URzAQEblHK` |
+| pageCount | 8 |
+| withReference | false (no-reference) |
+| childName | Mika (smoke input) |
+| parentMessage | すこしずつがんばれたね。にこにこのえがおでおやすみなさい。 |
+| smoke run id | `template-t2a-20260514222208` |
+| creationMode | fixed_template |
+| productPlan | free |
+| style | soft_watercolor |
+| code changes | none |
+| seed text changes | none |
+| DB/Admin side effects | smoke book written to Firestore only |
+
+### Generation Result
+
+| metric | value |
+| --- | --- |
+| final book status | `completed` |
+| final progress | 100 |
+| completed pages | 8 / 8 |
+| failed pages | 0 / 8 |
+| pages with reference | 0 / 8 |
+| fallback used | none |
+
+### Per-page Metrics
+
+| page | role | status | imageDurationMs | attempts | fallback |
+| --- | --- | --- | --- | --- | --- |
+| 0 | opening_establishing | completed | 19,243 | 1 | no |
+| 1 | setback_or_question | completed | 18,507 | 1 | no |
+| 2 | discovery | completed | 42,784 | 1 | no |
+| 3 | action | completed | 30,610 | 1 | no |
+| 4 | object_detail | completed | 27,158 | 1 | no |
+| 5 | emotional_closeup | completed | 19,888 | 1 | no |
+| 6 | payoff | completed | 23,076 | 1 | no |
+| 7 | quiet_ending | completed | 19,160 | 1 | no |
+
+Total image generation time (sum): ≈ 200,426 ms
+p95 estimate: ≤ 43 s (max single page: 42,784 ms)
+
+### Decision
+
+**Smoke generation status:** Go (proceed to T3-4j-3 manual QA)
+
+Reason:
+- All 8 pages generated successfully with no failures.
+- No fallback used on any page.
+- p95 image duration ≤ 43 s, well within 120 s SLO target.
+- Smoke book is ready for T3-4j-3 manual visual/text QA.
+
+### Recommended Next Step
+
+Perform T3-4j-3 manual visual/text QA on bookId `Xmce9MTGP8URzAQEblHK` focusing on:
+1. BF-4 improvement: are readable text-like marks reduced on pages 1, 4, 6, 7?
+2. preschool text: does the rendered book text show hiragana-first content?
+3. BF-3: is child character consistency maintained?
+4. No regression from T3-4j-1 / T3-4k changes.
+
+### Follow-up
+
+- T3-4j-3: manual visual QA for BF-4 regression/improvement on bookId `Xmce9MTGP8URzAQEblHK`.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
