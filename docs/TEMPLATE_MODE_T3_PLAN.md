@@ -5575,6 +5575,80 @@ Reason:
 - Keep `fixed-first-zoo-8p` closed unless a future smoke/manual QA run shows a new BF-4 or BF-3 regression above the current documented P3 limitation.
 - Treat outfit color drift as a watch item, not a reopen condition, unless it begins to break child identity continuity.
 
+## T3-6 Next Fixed-template Rollout Candidate Selection
+
+### Status
+
+completed (docs-only candidate selection)
+
+### Date
+
+2026-05-15
+
+### Purpose
+
+Select the next fixed-template rollout / QA candidate after `fixed-first-zoo-8p` reached rollout closure Go in T3-5-5e.
+
+This step is docs-only. It does not change prompts, seed templates, Firestore state, generated books, Admin state, or authentication flow.
+
+### Source
+
+| item | value |
+| --- | --- |
+| latest closed variant commit | `d176070` |
+| latest closed variant | `fixed-first-zoo-8p` |
+| latest closure status | Go |
+| previously closed variant | `fixed-brush-teeth-8p` |
+| candidate review basis | source seed inventory + prior T3/T4/T5 audit and QA records |
+
+### Current Fixed-template Inventory
+
+| scope | templates |
+| --- | --- |
+| fixed-template IDs currently present in seed | `fixed-first-zoo`, `fixed-first-birthday`, `fixed-first-birthday-8p`, `fixed-first-zoo-8p`, `fixed-bedtime-good-day`, `fixed-brush-teeth`, `fixed-brush-teeth-8p`, `fixed-first-christmas`, `fixed-sharing-friends`, `fixed-sleepy-moon-adventure`, `fixed-cardboard-rocket`, `fixed-rainy-day-puddle`, `fixed-little-helper` |
+| 8p fixed-template subset in seed | `fixed-first-birthday-8p`, `fixed-first-zoo-8p`, `fixed-brush-teeth-8p` |
+| already closed | `fixed-brush-teeth-8p`, `fixed-first-zoo-8p` |
+| remaining unclosed 8p candidate | `fixed-first-birthday-8p` |
+
+### Candidate Comparison
+
+| templateId | closure state | BF-4 outlook | BF-3 outlook | text / ageBand outlook | smoke suitability | overall readiness | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-brush-teeth-8p` | closed | resolved; watch P3 only | low residual risk | verified through preschool sync + smoke chain | baseline only | not a new candidate | Keep as regression reference, not for next rollout slot. |
+| `fixed-first-zoo-8p` | closed | resolved from initial fail to pass in T3-5-5d | P3 outfit palette drift accepted | verified through T3-5 audits + smoke + closure | baseline only | not a new candidate | Already closed in T3-5-5e; keep closed unless regression appears. |
+| `fixed-first-birthday-8p` | open | medium | medium | good | high | **recommended** | Prior review showed no P0/P1 blocker, coherent 8-page story, readable text, and stable smoke path; remaining risk centers on decorative text-like marks and child consistency drift. |
+
+### Detailed Review of Recommended Candidate
+
+| dimension | `fixed-first-birthday-8p` assessment | evidence |
+| --- | --- | --- |
+| seed presence | pass | Present in `functions/src/seed-templates.ts` with `pageCount: 8` and `layoutVariant: "8_page"`. |
+| BF-4 risk | medium | Prior creative review recorded text-like marks in some background decorations, but fewer sign/exhibit surfaces than zoo. |
+| BF-3 risk | medium | Prior creative review recorded visible child appearance drift across pages in no-reference smoke. |
+| text quality | pass | Prior T3-3i review marked read-aloud, volume, expression, placeholders, and `parentMessage` as pass. |
+| ageBand suitability | pass | Uses age-specific page construction like the already-closed 8p variants; no ageBand blocker is currently recorded. |
+| smoke suitability | high | Existing 8p fixed-template smoke path already worked for birthday in earlier controlled rollout evidence; template-specific smoke input can be tightened later if needed. |
+| rollout learning value | high | Extends the closure pattern to a second family-memory indoor template and validates whether BF-4/BF-3 cleanup lessons transfer outside zoo/bathroom contexts. |
+
+### Decision
+
+**Next rollout candidate selection:** Go with `fixed-first-birthday-8p`
+
+Reason:
+- The seed currently contains three 8-page fixed templates, and two are already closed (`fixed-brush-teeth-8p`, `fixed-first-zoo-8p`), leaving `fixed-first-birthday-8p` as the only unclosed 8p fixed-template candidate.
+- `fixed-first-birthday-8p` already has favorable preconditions from prior review: coherent 8-page structure, passing child-facing text review, age-specific page support, and no recorded P0/P1 blocker.
+- Its BF-4/BF-3 risk profile is meaningful but manageable: decoration-induced pseudo-text and no-reference character drift remain worth testing, while the overall scene set is operationally simpler than zoo and should be suitable for the established staged rollout gate.
+- Choosing birthday next broadens coverage across fixed-template families without reopening already-closed variants.
+
+### Recommended Next Slice
+
+- Start T3-6-1 as a docs-only seed / source audit for `fixed-first-birthday-8p`, then reuse the established gate sequence: text/ageBand audit → prompt/BF-4 audit → no-reference smoke → manual BF-4/BF-3 QA → closure decision.
+
+### Follow-up
+
+- Keep `fixed-brush-teeth-8p` and `fixed-first-zoo-8p` closed as regression baselines only.
+- If `fixed-first-birthday-8p` shows the same decoration-text tendency in first smoke, treat it as the first BF-4 checkpoint before any broader candidate expansion.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
