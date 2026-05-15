@@ -9615,3 +9615,246 @@ Result: **do not treat this smoke as visually approved**.
 ### Next steps
 
 - Next recommended slice: remediation design / prompt-hardening for `fixed-sleepy-moon-adventure-8p`, then re-smoke after fixes.
+
+---
+
+## T3-8g fixed-sleepy-moon-adventure-8p remediation design / prompt hardening plan
+
+### Status
+
+completed (2026-05-16)
+
+### Purpose
+
+Define a docs-only remediation plan for the T3-8f failures in `fixed-sleepy-moon-adventure-8p`, with emphasis on page-7 BF-4 suppression and sequence-wide BF-3 continuity hardening. The goal is to produce a minimal, targeted implementation plan for T3-8h without changing unrelated templates or shared flows.
+
+### Problem summary from T3-8f
+
+| failure area | observed issue | impact |
+| --- | --- | --- |
+| BF-4 page 7 blocker | clear rendered Japanese text inside a cloud-like thought/speech area | hard visual fail |
+| BF-4 page 7 secondary issue | line-and-star shapes became symbol-like rather than loose ambient points/wisps | increases text/symbol drift risk |
+| BF-3 identity drift | child face, hair silhouette, and age impression changed page to page | sequence-level continuity fail |
+| BF-3 costume drift | pajama style/color changed across pages | sequence-level continuity fail |
+| BF-3 prop drift | stuffed toy changed across pages | sequence-level continuity fail |
+| BF-3 peak risk page | page 3 dreamscape diverged most from the shared room / child anchor | strongest continuity failure point |
+
+### Root-cause hypothesis
+
+#### BF-4 root cause
+
+- The current shared dream-symbol clause blocks several text-like patterns, but it does not explicitly forbid:
+  - speech bubbles
+  - thought bubbles
+  - caption clouds
+  - writing panels
+  - quote-card / message-cloud compositions
+- Page 7 combines a quiet ending scene with a broad open composition and ambient cloud/wisp motifs, which likely left enough ambiguity for the model to invent a message-bearing cloud.
+- The current clause also allows "curved cloud wisps" in a way that may be too permissive for the final page, where clouds can drift toward bubble-like framing.
+
+#### BF-3 root cause
+
+- The current character anchor clause is directionally right, but still too high-level for a no-reference sequence.
+- It requests the same child / same pajamas / same stuffed toy, but does not tightly specify:
+  - haircut shape
+  - pajama motif simplicity
+  - toy species/form constraint
+  - what must remain unchanged even during imagination scenes
+- Page-local prompts introduce enough local decorative freedom that the model keeps re-casting the child and comfort object instead of treating them as fixed assets.
+- Page 3 is most exposed because the dreamscape prompt shifts framing and scene logic substantially while only weakly restating the "real room" anchor.
+
+### Remediation goals
+
+1. Eliminate message-bearing cloud / bubble behavior, especially on page 7.
+2. Tighten same-child continuity for no-reference generation.
+3. Tighten same-pajama continuity by simplifying and stabilizing pajama description.
+4. Tighten same-stuffed-toy continuity by fixing one toy form and repeating it explicitly.
+5. Preserve the gentle bedtime mood and successful parts of pages 2-5 without broad refactors.
+
+### Prompt-hardening scope
+
+Result: targeted prompt hardening only.
+
+#### In scope for T3-8h
+
+- Update `SLEEPY_MOON_8P_CHARACTER_ANCHOR_CLAUSE`
+- Update `SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE`
+- Add one new sleepy-moon-specific no-bubble / no-message clause if needed
+- Apply small page-local prompt rewrites to selected pages within `fixed-sleepy-moon-adventure-8p`
+- Add or update tests only where needed to lock the new clause language
+
+#### Out of scope for T3-8h
+
+- Changes to unrelated templates
+- Changes to generic image pipeline code
+- Changes to Firestore sync scripts
+- Changes to smoke-generation scripts
+- Reference-flow specific prompting
+- Large structural rewrite of the 8-page narrative
+
+### Minimal code-change design
+
+#### 1. Harden the shared character anchor clause
+
+Current problem:
+
+- "same face / same age impression / same hairstyle and hair color / same cozy pajama style and color / same stuffed toy" was not strong enough.
+
+Design direction:
+
+- Replace the current clause with a more concrete, no-reference-friendly anchor that fixes:
+  - short dark-brown bob haircut with straight silhouette
+  - same preschool-age face proportions across all pages
+  - same pajama base color family and same simple pattern language across all pages
+  - same single small teddy-bear plush across all pages
+- Add explicit anti-drift wording such as:
+  - do not change the child into a different child
+  - do not change haircut shape
+  - do not swap pajamas
+  - do not replace the teddy bear with a different plush animal or pillow toy
+
+Rationale:
+
+- The T3-8f drift was not subtle. We need concrete anchors, not just thematic continuity.
+
+#### 2. Harden the shared dream no-text clause
+
+Current problem:
+
+- The clause blocks constellation/map/arrow/letter/glyph behavior, but page 7 still invented a cloud text panel.
+
+Design direction:
+
+- Extend the clause to explicitly forbid:
+  - speech bubbles
+  - thought bubbles
+  - text balloons
+  - caption clouds
+  - message clouds
+  - writing panels
+  - any floating framed area intended to hold words or symbols
+- Keep the already-successful exclusions for connecting lines / constellation-map patterns / glyph-like forms.
+
+Rationale:
+
+- Page 7 failure was not just "text happened"; a text container happened. The container must be directly disallowed.
+
+#### 3. Add a page-7 specific ending-page suppression clause
+
+Current problem:
+
+- The ending page needs stronger control than the mid-sequence dream pages.
+
+Design direction:
+
+- Introduce a tiny page-local clause only for page 7, appended inside that page's `imagePromptTemplate`, for example in meaning:
+  - no speech bubble
+  - no thought cloud
+  - no dream caption area
+  - no writing in the air
+  - stars only as scattered tiny points, not arranged symbols
+- Keep this page-local rather than pushing every restriction into the global helper.
+
+Rationale:
+
+- Page 7 is the actual blocker. We should fix the highest-risk page without over-constraining all 8 pages.
+
+#### 4. Simplify pajama / toy descriptions inside page-local prompts
+
+Current problem:
+
+- Page prompts sometimes allow decorative drift because they mention cozy mood but not the exact recurring costume/prop identity strongly enough.
+
+Design direction:
+
+- On pages 0-7, lightly normalize phrasing toward:
+  - same pale blue pajamas with a small simple repeating star pattern
+  - same small tan teddy bear plush
+- Remove or avoid page-local wording that implies alternate plush forms or extra decorative toy interpretations.
+
+Rationale:
+
+- Shared clauses help, but local prompts still need to stop opening alternate visual branches.
+
+#### 5. Strengthen page 3 room-grounding language
+
+Current problem:
+
+- Page 3 had the worst continuity break because the dream cloud scene detached too far from the bedroom anchor.
+
+Design direction:
+
+- Keep the cloud adventure, but strengthen the page-local grounding to mean:
+  - the child is still clearly in the same bedroom
+  - the cloud is an imagination layer hovering over the same bed scene, not a new world
+  - same pajamas and same teddy bear remain clearly visible
+- Prefer "bedroom still clearly recognizable" over merely "faintly visible at the edges."
+
+Rationale:
+
+- We want imagination without identity reset.
+
+### Proposed implementation shape for T3-8h
+
+| target | change type | expected size |
+| --- | --- | --- |
+| `functions/src/seed-templates.ts` | update sleepy-moon-specific clauses + selected page prompt strings | small |
+| `functions/test/seed-templates.test.ts` | add/update assertions for hardened clause presence if needed | small |
+| `docs/TEMPLATE_MODE_T3_PLAN.md` | execution log after implementation and re-smoke | docs follow-up only |
+
+### T3-8h implementation plan
+
+1. Update the sleepy-moon 8p shared guardrail constants in `functions/src/seed-templates.ts`.
+2. Add page-7-specific no-bubble / no-message suppression wording.
+3. Tighten page 3 grounding wording.
+4. Normalize recurring pajama / teddy-bear wording across page prompts.
+5. Run `npm run guard:hygiene`.
+6. Run `npm --prefix functions run build`.
+7. Run `npm --prefix functions test -- test/seed-templates.test.ts`.
+8. Firestore sync target template only.
+9. Re-run no-reference smoke for `preschool_3_4`.
+10. Re-run manual visual QA focused on page 3 and page 7 first.
+
+### Acceptance criteria for post-remediation re-smoke
+
+#### BF-4 acceptance
+
+- No rendered readable text on any page.
+- No speech/thought bubble or message-cloud composition on page 7.
+- No symbol-like line clusters that read as writing or diagrams on page 7.
+
+#### BF-3 acceptance
+
+- Same child reads consistently across all 8 pages.
+- Same haircut silhouette across the full sequence.
+- Same pajama color/pattern across the full sequence.
+- Same single teddy-bear plush remains the primary comfort object across the full sequence.
+- Page 3 still reads as the same room / same child, not a separate recast dream world.
+
+### Risk note
+
+- Over-hardening all dream pages could flatten the charming imagination layer that already partially worked on pages 2-4.
+- For that reason, the design intentionally uses:
+  - one stronger shared character anchor
+  - one stronger shared no-text clause
+  - one page-7-specific suppression clause
+  - one page-3-specific continuity reinforcement
+- This keeps the remediation narrow and avoids unnecessary collateral changes.
+
+### Conclusion
+
+- T3-8f failures are explainable by prompt ambiguity rather than by generation infrastructure failure.
+- The smallest reasonable fix is prompt hardening inside `fixed-sleepy-moon-adventure-8p`, not a pipeline change.
+- T3-8h should implement targeted seed/prompt edits only, then re-sync and re-smoke.
+
+### Exclusions (this slice)
+
+- No code / seed / prompt modifications.
+- No Firestore sync, smoke generation, image generation, or Admin regeneration.
+- No reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+
+### Next steps
+
+- T3-8h: implement the sleepy-moon-8p prompt hardening changes, then run targeted validation + re-smoke.
