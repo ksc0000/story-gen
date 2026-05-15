@@ -6318,6 +6318,102 @@ Reason:
 
 ---
 
+## T3-5-3 fixed-first-zoo-8p Prompt / BF-4 Audit
+
+### Status
+
+completed.
+
+### Purpose
+
+Audit `imagePromptTemplate` coverage and BF-4/BF-3 prompt risks for `fixed-first-zoo-8p` before template sync or smoke generation.
+
+This step is docs-only and read-only. It does not change prompts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| text audit commit | `8f47cd9` |
+| selected template | `fixed-first-zoo-8p` |
+| expected page count | 8 |
+| audit type | prompt / BF-4 read-only |
+
+### Prompt Surface Inventory
+
+| page | visual role | prompt surface focus | sign/text-like exposure | notes |
+| --- | --- | --- | --- | --- |
+| page 0 | opening_establishing | home departure scene | low | 自宅導入。施設看板面は少ない。 |
+| page 1 | discovery | zoo entrance / arch / path | high | entrance文脈で gate/sign/map/panel 系の混入余地が最も高い。 |
+| page 2 | discovery | elephant/giraffe enclosure | medium-high | 柵周辺の案内板・展示ラベル風オブジェクト混入リスク。 |
+| page 3 | object_detail | small animal close-detail area | medium | 背景に小型案内板や展示情報片が入りやすい。 |
+| page 4 | setback_or_question | louder/larger animal enclosure | high | 注意表示・規制表示・説明パネル風の生成リスクが高い。 |
+| page 5 | emotional_closeup | close animal eye contact | medium | 背景比率は低いが、柵/岩/葉の記号化ノイズは残る。 |
+| page 6 | quiet_ending | zoo exit path | medium-high | 退出導線で gate/board/sign の混入余地あり。 |
+| page 7 | quiet_ending | zoo exit path or home doorway dusk | medium | exit側を引いた場合、標識や掲示物風の背景要素が出る可能性。 |
+
+### Shared Prompt Safety Check
+
+| item | result | notes |
+| --- | --- | --- |
+| withFixedImagePromptSafety usage | pass | `buildAgeSpecificPage` 経由で全ページに共通 safety suffix が適用される構造。 |
+| global no-text suffix coverage | pass | `no readable writing anywhere, no signage, no storefront signs, no text-like marks` が共通付与される。 |
+| reference isolation suffix coverage | pass | child identityのみ参照する suffix が共通付与される。 |
+| need to modify global suffix | no | 現時点は global 変更より page-local 補強が安全。 |
+| need to modify shared helper | no | helper変更は他テンプレート横断影響が大きいため本段では非推奨。 |
+
+### BF-4 Prompt Risk Audit (Page-level)
+
+| page | risk | result | notes |
+| --- | --- | --- | --- |
+| page 0 | low | watch | 自宅内で低リスクだが、衣類/バッグの擬似ロゴ化は watch。 |
+| page 1 | high | needs page-local hardening | entrance/gate/path 文脈で sign/map/board 系 artifact が出やすい。 |
+| page 2 | medium-high | needs page-local hardening | enclosure周辺の説明板・ラベル風要素の発生を想定。 |
+| page 3 | medium | watch | object-detail 構図で背景案内物が出た場合に文字化け化しやすい。 |
+| page 4 | high | needs page-local hardening | 大型動物展示文脈で caution/panel 風 artifact が最も懸念。 |
+| page 5 | medium | watch | close-up主体だが、背景小物の記号化リスクは残る。 |
+| page 6 | medium-high | needs page-local hardening | exit導線で標識/案内板生成を抑える追加制約が有効。 |
+| page 7 | medium | watch | zoo exit path 分岐時に掲示物混入の可能性あり。 |
+
+### BF-3 Prompt Risk Audit (Page-level)
+
+| page | risk | result | notes |
+| --- | --- | --- | --- |
+| page 0 | medium | watch | 出発シーン基準顔を維持できるか確認点。 |
+| page 1 | medium-high | watch | 構図が広く背景比率が高いため主役同一性が薄れやすい。 |
+| page 2 | high | needs focused QA | 大型動物優先で child face/outfit consistency が崩れやすい。 |
+| page 3 | medium | watch | 近接構図で主役を保持しやすいが被写体比率の揺れに注意。 |
+| page 4 | high | needs focused QA | 緊張シーンで表情・年齢印象のブレが起きやすい。 |
+| page 5 | medium | watch | emotional closeup は安定しやすいが動物寄り構図時に要注意。 |
+| page 6 | medium-high | watch | 夕景遠景で主役解像度が下がる可能性。 |
+| page 7 | medium-high | watch | back-view中心で identity continuity の確認が難しい。 |
+
+### Cleanup Need
+
+| item | result | notes |
+| --- | --- | --- |
+| page-local prompt cleanup needed before smoke | yes | page 1/2/4/6 を優先に no-sign/no-board/no-map/no-panel 制約を明示する計画が妥当。 |
+| global suffix update needed | no | 既存共通 suffix は有効。横断副作用回避のため据え置き。 |
+| shared prompt helper update needed | no | helper変更はスコープ過大。今回の主対象は zooページ局所。 |
+| proceed T3-5-4 no-reference smoke immediately | no | 先に page-local cleanup plan を定義してから smoke 実施が安全。 |
+| BF-4/BF-3 blocker for planning | no | docs-only planning継続は可能。ただし smoke前に cleanup計画を挟む。 |
+
+### Decision
+
+**Prompt / BF-4 audit status:** Conditional
+
+Reason:
+- 共通 safety suffix は存在し、global レイヤーは一定有効。
+- ただし zoo 固有の entrance/exhibit/exit 文脈により、page 1/2/4/6 で BF-4 artifact 発生確率が高い。
+- BF-3 でも明示的な character anchor clause 不在のまま多シーン遷移するため、smoke前に page-local 補強方針を確定するのが妥当。
+
+### Recommended Next Step
+
+- T3-5-3a: draft page-local prompt cleanup plan (page 1/2/4/6 prioritized, page 3/5/7 watch).
+- T3-5-4: run no-reference smoke only after T3-5-3a planning is completed.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
