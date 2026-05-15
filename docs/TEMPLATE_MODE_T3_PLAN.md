@@ -5716,6 +5716,97 @@ Reason:
 
 ---
 
+## T3-4j-8 fixed-brush-teeth-8p Manual BF-4 Visual QA
+
+### Status
+
+completed.
+
+### Purpose
+
+Review the post-BF-4-residual-cleanup no-reference smoke book and determine whether the page-local prompt cleanup reduced readable-ish bathroom label artifacts on page 0, page 3, and page 4.
+
+### Target
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| bookId | `OZmjFEZxVnW0vpRD0uuH` |
+| Reader URL | `http://localhost:3000/book/?id=OZmjFEZxVnW0vpRD0uuH` |
+| source smoke commit | `c18dee3` |
+| pages | 8 / 8 completed |
+| failed | 0 |
+| fallback | 0 |
+| image model | `black-forest-labs/flux-2-pro` |
+| reference image | not used |
+
+### BF-4 No-text Artifact Review
+
+| check | result | notes |
+| --- | --- | --- |
+| page 0 sink/mirror/counter/background no readable text | pass | No readable text found on sink, mirror, counter, wall, or background props. |
+| page 0 no product labels/logos/written marks | pass | Containers appear unlabeled; no logo-like brand marks observed. |
+| page 3 toothbrush/tube/cup/mirror/counter no labels | fail | Readable text appears on toothpaste tube (`おとな`) and label-like printing is visible. |
+| page 3 no brand marks/product labels/readable markings | fail | Clear readable marking remains on product surface, so BF-4 residual is not fully resolved. |
+| page 4 mirror/object detail no pseudo-text | pass | Close-up mirror/object detail shows no readable or pseudo-readable text artifacts. |
+| page 4 no decorative symbols/label-like marks/letters/numbers | pass | Only non-text sparkle motif is present; no letter/number-like marks. |
+| page 1 watch-only | pass | No readable text artifacts detected in watch-only check. |
+| page 7 watch-only | pass | Minor abstract packaging marks exist but no clearly readable text. |
+| page 2/5/6 no regression | pass | No newly obvious readable text artifacts compared with expected visual baseline. |
+
+### Visual Safety / Quality Review
+
+| check | result | notes |
+| --- | --- | --- |
+| no scary dental imagery | pass | Tone remains soft and reassuring throughout all checked pages. |
+| no medical-looking mouth close-up | pass | Close-ups are child-friendly brushing scenes, not clinical/medical imagery. |
+| no black/broken images | pass | All 8 pages render normally. |
+| no severe anatomy/artifact issue | pass | No severe anatomy breakage observed. |
+| child-friendly tone | pass | Pastel color tone and expressions remain age-appropriate. |
+
+### BF-3 Regression Check
+
+| check | result | notes |
+| --- | --- | --- |
+| same child impression | pass | Same child identity impression is preserved across all pages. |
+| hair/face/outfit consistency acceptable | pass | Hair shape, face style, and pajamas are consistently maintained. |
+| no obvious regression from BF-4 cleanup | pass | No broad style/consistency regression observed from cleanup changes. |
+
+### Story/Image Match Review
+
+| check | result | notes |
+| --- | --- | --- |
+| toothbrush visible where expected | pass | Toothbrush appears in key action/payoff moments. |
+| sink/mirror/counter context clear | pass | Bathroom context is clearly established and maintained. |
+| parent support visible where expected | pass | Parent appears in support scenes (notably later pages), matching intended flow. |
+| image matches page intent | pass | Scene progression aligns with brushing narrative intent. |
+| visual variety across 8 pages | pass | Framing alternates between establishing, action, close-up, and payoff scenes. |
+
+### Product Readiness
+
+| item | result | notes |
+| --- | --- | --- |
+| P0/P1 blocker | fail | Readable text artifact on page 3 is a blocker for BF-4 no-text acceptance. |
+| BF-4 residual after cleanup | fail | Improved on page 0/page 4, but page 3 still contains readable product text. |
+| BF-3 regression | pass | No BF-3-level consistency regression found. |
+| visual expansion readiness | hold | Resolve page 3 residual first before variant expansion. |
+
+### Decision
+
+**Manual BF-4 visual QA status:** Hold
+
+Reason:
+- Page 0 and page 4 look clean for BF-4 no-text intent.
+- Page 3 still includes readable text on toothpaste packaging, which violates the no-readable-text visual target.
+- Safety and consistency are acceptable, but BF-4 residual is not yet practically resolved on all target pages.
+
+### Follow-up
+
+- Run a focused page-local cleanup iteration for page 3 object surfaces (toothpaste tube/cup/container) with stricter no-text/no-label constraints.
+- Re-run no-reference smoke and repeat manual BF-4 visual QA with the same target pages (0/3/4) plus watch-only/regression pages.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
