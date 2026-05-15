@@ -4977,6 +4977,72 @@ Execute manual **visual-only** QA for BF-4 on the existing post-cleanup smoke bo
 | out of scope | text variant / ageBand verification |
 | side effects | none (no regeneration, no DB/Admin update) |
 
+---
+
+## T3-5-4 fixed-first-zoo-8p Template Sync + No-reference Smoke (post page-local BF-4/BF-3 cleanup)
+
+### Status
+
+completed
+
+### Date
+
+2026-05-15
+
+### Purpose
+
+Execute Firestore template sync and a new no-reference smoke generation for `fixed-first-zoo-8p` after T3-5-3b page-local prompt cleanup (source commit: `6cbbcec`), and hand off a verified bookId to T3-5-5 manual visual QA.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-first-zoo-8p` |
+| source implementation commit | `6cbbcec` |
+| ageBand | `preschool_3_4` |
+| expected childAge | 4 |
+| pageCount | 8 |
+| reference image | not used (no-reference) |
+| write mode | `--write` |
+| generated bookId | `mR3lsI7AF2P8n11mMRxS` |
+| smoke run id | `template-t2a-20260515050333` |
+| code changes in this task | none |
+| seed/prompt changes in this task | none |
+
+### Execution Log Summary
+
+| step | command | result |
+| --- | --- | --- |
+| 1 | `npm --prefix functions run build` | pass |
+| 2 | `npm run template:sync:check -- --template-id=fixed-first-zoo-8p` | pass (no drift) |
+| 3 | `npm run template:sync:write -- --template-id=fixed-first-zoo-8p` | pass |
+| 4 | `npm run template:sync:check -- --template-id=fixed-first-zoo-8p` | pass (post-write no drift) |
+| 5 | `npm run smoke:create-template-books -- --template-id=fixed-first-zoo-8p --age-band=preschool_3_4 --page-count=8 --write` | pass (new book created) |
+| 6 | `npm run smoke:monitor -- mR3lsI7AF2P8n11mMRxS` | final `status=completed`, `progress=100` |
+| 7 | `npm run smoke:inspect -- mR3lsI7AF2P8n11mMRxS --expected-page-count=8` | pass (`actual page count=8`) |
+
+### Verification Checklist (T3-5-4)
+
+| check | result | evidence |
+| --- | --- | --- |
+| 1. Firestore template sync reflects T3-5-3b cleanup | pass | target template check/write/check all clean (`[]`) |
+| 2. New no-reference smoke book generated | pass | created `bookId=mR3lsI7AF2P8n11mMRxS` |
+| 3. Existing books not overwritten | pass | smoke script created a new document ID via create-path |
+| 4. Reference image not used | pass | `withReference=false`, `childProfileSnapshot: NO`, all pages `inputReferenceCount=0` |
+| 5. Page count is 8 | pass | inspect expected 8 / actual 8 |
+| 6. Failed/fallback presence | pass | page status all `completed`; no `image_failed` observed; model stayed primary (`flux-2-pro`) on all pages |
+| 7. Image model | pass | all pages `black-forest-labs/flux-2-pro` |
+| 8. Generated bookId | pass | `mR3lsI7AF2P8n11mMRxS` |
+| 9. Input childAge is 4 | pass | smoke creation log: `requestedAgeBand=preschool_3_4 -> childAge=4` |
+| 10. Ready for T3-5-5 manual QA handoff | pass | completed 8/8 no-reference smoke evidence recorded |
+
+### Handoff to T3-5-5
+
+- target template: `fixed-first-zoo-8p`
+- QA target bookId: `mR3lsI7AF2P8n11mMRxS`
+- QA mode: no-reference visual BF-4/BF-3 manual review
+- note: this task intentionally did not perform manual visual judgment; it only prepared and validated the handoff artifact.
+
 ### Method
 
 - Reviewed the existing 8 page images read-only.
