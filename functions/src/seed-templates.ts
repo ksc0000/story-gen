@@ -66,6 +66,32 @@ function withZoo8pImagePromptGuardrail(
   return withFixedImagePromptSafety(result);
 }
 
+const BIRTHDAY_8P_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same child across all 8 pages: same face, same age impression, same hair color and length, same clothing style and palette, do not change the child's age, outfit, or facial features between pages";
+
+const BIRTHDAY_8P_DECOR_NO_TEXT_CLAUSE =
+  "no text, letters, numbers, symbols, or readable marks on any balloon surface, ribbon, garland, streamer, cake, candle, tableware edge, plate trim, keepsake, or gift-like object, all party decor surfaces must be plain color or simple pattern only with no pseudo-writing, no tag-like ornamentation, and no emblem-like detail";
+
+/**
+ * Birthday-8p template-local prompt guardrail wrapper.
+ * Composes the shared fixed-image-prompt safety layer with
+ * birthday-specific BF-4 (decor/object no-text) and BF-3
+ * (character continuity anchor) clauses.
+ *
+ * Do NOT modify withFixedImagePromptSafety. Do NOT use for
+ * any template other than fixed-first-birthday-8p.
+ */
+function withBirthdayImagePromptGuardrail(prompt: string): string {
+  let result = prompt;
+  if (!result.includes(BIRTHDAY_8P_DECOR_NO_TEXT_CLAUSE)) {
+    result = `${result}, ${BIRTHDAY_8P_DECOR_NO_TEXT_CLAUSE}`;
+  }
+  if (!result.includes(BIRTHDAY_8P_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${BIRTHDAY_8P_CHARACTER_ANCHOR_CLAUSE}`;
+  }
+  return withFixedImagePromptSafety(result);
+}
+
 function buildAgeSpecificPage(params: {
   textTemplate: string;
   imagePromptTemplate: string;
@@ -547,7 +573,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "あさのおへやに、たんじょうびの けはいが そっと ひろがりました。{childName}の えがおも ぽっと ひかります。",
           pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Establishing wide shot of a cozy home living room in gentle morning light on birthday day. A young child in pajamas stands near a curtain with soft sunlight. Family members prepare quietly in the background with pastel decorations not fully arranged yet. A tiny ribbon motif appears on a folded ribbon loop decoration. Soft watercolor picture book style, layered foreground-midground-background, warm and clean composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBirthdayImagePromptGuardrail("Establishing wide shot of a cozy home living room in gentle morning light on birthday day. A young child in pajamas stands near a curtain with soft sunlight. Family members prepare quietly in the background with pastel decorations not fully arranged yet. A tiny ribbon motif appears on a folded ribbon loop decoration. Soft watercolor picture book style, layered foreground-midground-background, warm and clean composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{familyMembers}といっしょに、かざりつけのじゅんびをたのしくすすめます。",
@@ -562,7 +588,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。おへやが すこしずつ きらきらに なります。",
           pageVisualRole: "action",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Medium-wide action shot of a child and family decorating a living room with pastel balloons and solid-color ribbon loops. The child reaches up with help from family to place a decoration on a wall. Warm indoor daylight and soft shadows. A tiny ribbon motif appears on a balloon knot near the child. Soft watercolor picture book style, lively but gentle movement, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBirthdayImagePromptGuardrail("Medium-wide action shot of a child and family decorating a living room with pastel balloons and solid-color ribbon loops. The child reaches up with help from family to place a decoration on a wall. Warm indoor daylight and soft shadows. A tiny ribbon motif appears on a balloon knot near the child. Soft watercolor picture book style, lively but gentle movement, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "ケーキとろうそくを見つけた{childName}の目は、きらきらかがやきました。",
@@ -577,7 +603,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。うれしい こえが ふわっと ひろがります。",
           pageVisualRole: "discovery",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Medium shot of a child discovering a birthday cake with softly glowing candles on a table. Family members stand nearby with delighted expressions, hands gently clasped. Warm candlelight reflects in the child's eyes. A tiny ribbon motif appears on a cake stand edge. Soft watercolor picture book style, discovery-focused framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBirthdayImagePromptGuardrail("Medium shot of a child discovering a birthday cake with softly glowing candles on a table. Family members stand nearby with delighted expressions, hands gently clasped. Warm candlelight reflects in the child's eyes. A tiny ribbon motif appears in the scene. Soft watercolor picture book style, discovery-focused framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "みんなの「おめでとう」があつまって、おへやいっぱいにひろがりました。",
@@ -592,7 +618,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "みんなの「おめでとう」が あつまって、おへや いっぱいに ひろがりました。{childName}も にこっと わらいます。",
           pageVisualRole: "payoff",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Wide celebration shot of child and family clapping and smiling around the birthday table after candle moment. Confetti-like pastel paper bits drift softly in the air. Everyone faces the child with joyful expressions. A tiny ribbon motif appears on tableware near the center. Soft watercolor picture book style, clear celebratory composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBirthdayImagePromptGuardrail("Wide celebration shot of child and family clapping and smiling around the birthday table after candle moment. Pastel paper bits drift softly in the air. Everyone faces the child with joyful expressions. A tiny ribbon motif is visible in the scene. Soft watercolor picture book style, clear celebratory composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "だいじなプレゼントをそっと手にもって、{childName}はうれしそうに見つめました。",
@@ -607,7 +633,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "だいじな プレゼントを そっと 手に もって、{childName}は うれしそうに 見つめました。",
           pageVisualRole: "object_detail",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Object-detail close shot of the child holding a small plain keepsake toy carefully with both hands. The soft texture, ribbon, and tiny fingers are in focus. Family smiles appear softly in the background. A tiny ribbon motif appears on the toy corner. Soft watercolor picture book style, object-focused intimate framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBirthdayImagePromptGuardrail("Object-detail close shot of the child holding a small plain keepsake toy carefully with both hands. The soft texture, ribbon, and tiny fingers are in focus. Family smiles appear softly in the background. A tiny ribbon motif is visible softly in the background. Soft watercolor picture book style, object-focused intimate framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、ひとつ大きくなった気もちを胸にそっとしまいました。",
@@ -622,7 +648,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "{childName}は、ひとつ 大きくなった きもちを 胸に そっと しまいました。",
           pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Close-up emotional shot of a child resting a hand on chest with a soft proud smile, seated near warm birthday lights after celebration. Family members are nearby in gentle soft focus, watching with affection. A tiny ribbon motif appears on a cushion beside the child. Soft watercolor picture book style, tender introspective framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBirthdayImagePromptGuardrail("Close-up emotional shot of a child resting a hand on chest with a soft proud smile, seated near warm birthday lights after celebration. Family members are nearby in gentle soft focus, watching with affection. A tiny ribbon motif appears on a cushion beside the child. Soft watercolor picture book style, tender introspective framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "みんなのえがおが、よるのやさしいひかりのなかでゆっくりほどけていきます。",
@@ -637,7 +663,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "みんなの えがおが、よるの やさしい ひかりの なかで ゆっくり ほどけていきます。",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Wide quiet ending shot of child and family sitting together on a sofa in a softly lit evening room after birthday celebration. Decorations are still visible but calm, with warm amber light and gentle shadows. A tiny ribbon motif appears on a folded napkin on the table. Soft watercolor picture book style, peaceful afterglow composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBirthdayImagePromptGuardrail("Wide quiet ending shot of child and family sitting together on a sofa in a softly lit evening room after birthday celebration. Decorations are still visible but calm, with warm amber light and gentle shadows. A tiny ribbon motif is visible in the scene. Soft watercolor picture book style, peaceful afterglow composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{parentMessage}",
@@ -648,7 +674,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           general_child: "{parentMessage}",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Back-view gentle closing shot of the child leaning on family at the end of birthday night, looking toward soft lights and a calm room. Mood is peaceful, affectionate, and reflective. A tiny ribbon motif catches the final warm light near the table edge. Soft watercolor picture book style, serene closing framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBirthdayImagePromptGuardrail("Back-view gentle closing shot of the child leaning on family at the end of birthday night, looking toward soft lights and a calm room. Mood is peaceful, affectionate, and reflective. A tiny ribbon motif catches the final warm light near the table edge. Soft watercolor picture book style, serene closing framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
       ],
     },

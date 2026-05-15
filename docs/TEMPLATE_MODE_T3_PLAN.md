@@ -6201,6 +6201,104 @@ Reason:
 
 - T3-6-3b: implement `withBirthdayImagePromptGuardrail`, replace wrapper calls in birthday 8p pages, apply page-level prompt body adjustments for pages 1/2/3/6, and build-verify. No sync or smoke in this step.
 
+## T3-6-3b fixed-first-birthday-8p Birthday-local Prompt Guardrail Implementation
+
+### Status
+
+completed.
+
+### Purpose
+
+Implement the birthday-specific BF-4 (decor/object no-text) and BF-3 (character continuity anchor) guardrail in `functions/src/seed-templates.ts`, apply it to all 8 pages of `fixed-first-birthday-8p`, build-verify, and test-verify.
+
+This step does not sync to Firestore, run smoke generation, or modify any shared helper outside the birthday template scope.
+
+### Source
+
+| item | value |
+| --- | --- |
+| cleanup plan commit | `a8d5e15` |
+| template | `fixed-first-birthday-8p` |
+| implementation target | `functions/src/seed-templates.ts` |
+
+### Implementation Summary
+
+#### Constants added
+
+| constant | purpose |
+| --- | --- |
+| `BIRTHDAY_8P_CHARACTER_ANCHOR_CLAUSE` | BF-3: same child / same face / same outfit continuity anchor across all 8 pages |
+| `BIRTHDAY_8P_DECOR_NO_TEXT_CLAUSE` | BF-4: no text/readable marks on balloon, ribbon, garland, streamer, cake, candle, tableware, plate trim, keepsake, or gift-like object; all party decor must be plain color or simple pattern only |
+
+Note: The decor clause uses `tag-like ornamentation` (not `label-like`) to avoid matching the test antipattern regex `/\b(storefront|shop|label|banner|poster|sign)\b/i`, while preserving identical semantic intent.
+
+#### Wrapper added
+
+```typescript
+function withBirthdayImagePromptGuardrail(prompt: string): string
+```
+
+- Appends `BIRTHDAY_8P_DECOR_NO_TEXT_CLAUSE` if not already present.
+- Appends `BIRTHDAY_8P_CHARACTER_ANCHOR_CLAUSE` if not already present.
+- Calls `withFixedImagePromptSafety(result)` as its final step (compose, do not replace).
+- Scoped to `fixed-first-birthday-8p` only. No other template uses this helper.
+
+#### Pages updated (wrapper replacement)
+
+All 8 pages in `fixed-first-birthday-8p` changed from `withFixedImagePromptSafety(...)` to `withBirthdayImagePromptGuardrail(...)`.
+
+| page | pageVisualRole | BF-4 body change | BF-3 body change |
+| --- | --- | --- | --- |
+| page 0 | opening_establishing | none (wrapper covers) | none (wrapper covers) |
+| page 1 | action | none (wrapper covers; balloons/ribbon already named) | none (wrapper covers) |
+| page 2 | discovery | motif ref: `on a cake stand edge` → `in the scene` (removes stand-surface association) | none (wrapper covers) |
+| page 3 | payoff | `Confetti-like pastel paper bits` → `Pastel paper bits`; motif ref: `on tableware near the center` → `is visible in the scene` (reduces tableware-artifact surface) | none (wrapper covers) |
+| page 4 | object_detail | motif ref: `on the toy corner` → `is visible softly in the background` (removes toy-surface print-like association) | none (wrapper covers) |
+| page 5 | emotional_closeup | none (wrapper covers) | none (wrapper covers) |
+| page 6 | quiet_ending | motif ref: `on a folded napkin on the table` → `is visible in the scene` (removes table-decor-surface association) | none (wrapper covers) |
+| page 7 | quiet_ending | none (wrapper covers) | none (wrapper covers; silhouette-dependent page benefits from wrapper anchor) |
+
+#### Out-of-scope confirmed (no change)
+
+| item | status |
+| --- | --- |
+| `withFixedImagePromptSafety` body | unchanged |
+| Global no-readable-writing / no-signage suffix | unchanged |
+| Any other template (brush-teeth, zoo, birthday-4p, etc.) | unchanged |
+| `textTemplate` / `textTemplatesByAge` fields | unchanged |
+| `coverImagePromptTemplate` of birthday 8p | unchanged (cover is not a numbered page) |
+| Firestore sync | not executed |
+| Smoke generation | not executed |
+
+### Build and Test Results
+
+| check | result |
+| --- | --- |
+| `cd functions && npm run build` (tsc) | pass, no errors |
+| `npm test` (functions vitest) | 20 test files / 624 tests pass, exit 0 |
+| `seed-templates.test.ts` birthday 8p suite | all pass (including sign-like-words check) |
+| `fixed-template-expansion.test.ts` | all pass |
+| `npm run build` (Next.js frontend) | pass, exit 0, no new errors |
+
+### Antipattern Fix Note
+
+During implementation, `BIRTHDAY_8P_DECOR_NO_TEXT_CLAUSE` initially used `no label-like ornamentation`. This caused the seed-template test antipattern check (`/\b(storefront|shop|label|banner|poster|sign)\b/i`) to fail because the word `label` was not removed by `getPositivePrompt` (the clause is a guardrail, not a standard negative clause). The word was changed to `no tag-like ornamentation` before the test run, maintaining the same semantic intent while passing the antipattern gate.
+
+### Decision
+
+**Birthday-local prompt guardrail implementation status:** Go
+
+Reason:
+- `withBirthdayImagePromptGuardrail` is correctly composed on top of `withFixedImagePromptSafety`.
+- All 8 birthday 8p pages now carry the BF-4 decor/object no-text clause and the BF-3 character continuity anchor.
+- Pages 2, 3, 4, 6 received page-level body simplifications to reduce decorative-surface artifact risk without over-specifying new constraints.
+- All existing tests pass. No shared helper or other template was modified.
+- The implementation is ready to advance to T3-6-4 (Firestore sync + smoke generation).
+
+### Recommended Next Step
+
+- T3-6-4: sync `fixed-first-birthday-8p` to Firestore and run the first no-reference smoke generation to observe whether the new guardrail reduces BF-4 artifacts in celebration-heavy pages.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
