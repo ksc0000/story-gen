@@ -6414,6 +6414,100 @@ Reason:
 
 ---
 
+## T3-5-3a fixed-first-zoo-8p Page-local BF-4/BF-3 Cleanup Plan
+
+### Status
+
+completed.
+
+### Purpose
+
+Define page-local cleanup scope for `fixed-first-zoo-8p` before any sync or smoke execution, based on T3-5-3 prompt audit.
+
+This step is docs-only and planning-only. It does not change prompts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| prompt audit commit | `74d1d3c` |
+| selected template | `fixed-first-zoo-8p` |
+| expected page count | 8 |
+| planning type | page-local BF-4/BF-3 cleanup planning |
+
+### Risk Consolidation (from T3-5-3)
+
+| page | BF-4 risk | BF-3 risk | planning priority |
+| --- | --- | --- | --- |
+| page 0 | low | medium | watch |
+| page 1 | high | medium-high | P1 |
+| page 2 | medium-high | high | P1 |
+| page 3 | medium | medium | P2 watch |
+| page 4 | high | high | P1 |
+| page 5 | medium | medium | P2 watch |
+| page 6 | medium-high | medium-high | P1 |
+| page 7 | medium | medium-high | P2 watch |
+
+### Cleanup Target Scope
+
+| scope | pages | policy |
+| --- | --- | --- |
+| primary cleanup pages | page 1, page 2, page 4, page 6 | 実装対象。page-local no-text/no-sign 強化と主役一貫性補強を追加。 |
+| secondary watch pages | page 3, page 5, page 7 | 実装対象外。smoke/QAで再発が出た場合のみ局所追加。 |
+| baseline watch page | page 0 | 実装対象外。低リスク監視のみ。 |
+
+### Page-local Cleanup Directives (BF-4)
+
+| page | directive | expected effect |
+| --- | --- | --- |
+| page 1 | entrance周辺の sign/map/board/panel/ticket/gate signage を明示的に禁止し、装飾は無地形状のみ許容。 | 入口シーンの readable artifact を抑制。 |
+| page 2 | enclosure周辺の animal-name sign / information board / label-like objects を禁止。柵・背景は抽象テクスチャ寄りに限定。 | 展示説明板由来の text-like ノイズを抑制。 |
+| page 4 | caution/warning/notice/guide panel 風要素を明示禁止。緊張シーンでも掲示物を出さない。 | 高リスク展示シーンの BF-4 再発を抑制。 |
+| page 6 | exit導線の gate sign / direction board / facility signage を禁止。背景導線は記号なし環境描写に寄せる。 | 退出シーンの標識混入を抑制。 |
+
+### Page-local Cleanup Directives (BF-3)
+
+| page | directive | expected effect |
+| --- | --- | --- |
+| page 1 | 主役の顔特徴・年齢印象・服色を保持する明示句を追加。背景より主役を優先。 | 入場遠景で主役同一性低下を抑制。 |
+| page 2 | 大型動物より主役の顔/服を安定的に描写する優先順位を追加。 | 動物優先での同一性崩れを抑制。 |
+| page 4 | 緊張表情でも同一児童の顔立ち維持を指示。過度な年齢変化を禁止。 | 感情シーンでの年齢印象ブレを抑制。 |
+| page 6 | 夕景遠景でも主役の服・体格シルエット一貫を保持する指示を追加。 | 退場シーンの同一性判定不能化を抑制。 |
+
+### Non-target Change Guardrails
+
+| item | decision | notes |
+| --- | --- | --- |
+| global suffix update | no-change | 既存共通 suffix を維持。 |
+| shared helper update | no-change | `withFixedImagePromptSafety` / helper は変更しない。 |
+| unrelated pages broad rewrite | no-change | page-local 最小差分方針を維持。 |
+| text template changes | no-change | T3-5-2 で blocker なし。本文は対象外。 |
+
+### T3-5-4 Readiness Gate
+
+| check | result | notes |
+| --- | --- | --- |
+| cleanup scope defined | pass | primary 4ページと watchページを確定。 |
+| global/shared non-change policy fixed | pass | 横断影響を回避する方針を確定。 |
+| smoke precondition clarity | pass | T3-5-4 前に page-local cleanup 実装を完了する前提を明文化。 |
+| planning blocker | no | docs planning段階での阻害要因なし。 |
+
+### Decision
+
+**Page-local cleanup plan status:** Go
+
+Reason:
+- T3-5-3 の高リスクページを P1 として特定し、局所施策に限定した実装範囲を確定できた。
+- global suffix/shared helper を変更しない方針で、副作用を抑えた進行が可能。
+- T3-5-4 へ進むための前提条件（実装対象・非対象・評価観点）が明確化された。
+
+### Recommended Next Step
+
+- T3-5-3b: implement page-local cleanup for page 1/2/4/6 only (no global/shared changes).
+- T3-5-4: run no-reference smoke after T3-5-3b implementation and template sync are completed.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
