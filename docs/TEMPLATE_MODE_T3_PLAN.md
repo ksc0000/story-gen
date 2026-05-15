@@ -5286,6 +5286,65 @@ Reason:
 
 - T3-4k-8 (write-enabled task): run targeted sync write for `fixed-brush-teeth-8p`, then re-check pages 0-6 `preschool_3_4` vs `general_child` and re-run a preschool smoke to confirm kanji-free output.
 
+## T3-4k-8 fixed-brush-teeth-8p Template Sync Write
+
+### Status
+
+completed.
+
+### Purpose
+
+Synchronize Firestore fixed template data with the current source/compiled seed so the `fixed-brush-teeth-8p` preschool text cleanup can be used by ageBand-aware smoke generation.
+
+### Source
+
+| item | value |
+| --- | --- |
+| previous diagnosis commit | `2b91e4f` |
+| target template | `fixed-brush-teeth-8p` |
+| sync reason | Firestore preschool text stale; `preschool_3_4 == general_child` before sync |
+| expected post-sync state | `preschool_3_4 != general_child`; preschool pages 0-6 no kanji |
+| smoke generation | not run |
+
+### Execution Result
+
+| item | value |
+| --- | --- |
+| auth state | `GOOGLE_APPLICATION_CREDENTIALS=SET_AND_FILE_EXISTS` |
+| build | pass (`npm --prefix functions run build`) |
+| pre-write sync check | pass (`target templates count = 13`, includes `fixed-brush-teeth-8p`) |
+| template sync write | pass (`npm run template:sync:write` completed) |
+| target template included | pass |
+| Firestore post-write verification | pass (read-only check confirms preschool/general divergence and kanji condition) |
+| functions/lib committed | no |
+| generated files committed | no |
+| secrets recorded | no |
+
+### Post-sync Verification
+
+| check | result | notes |
+| --- | --- | --- |
+| Firestore page count | pass | `pageCount = 8` |
+| pages 0-6 `preschool_3_4 != general_child` | pass | `pages0to6AllPreNeGeneral = true` |
+| pages 0-6 preschool kanji check | pass | `pages0to6AnyPreKanji = false` |
+| pages 0-6 general_child preserved | pass | `pages0to6AnyGenKanji = true` |
+| smoke generation not run | pass | no smoke command executed in this task |
+| Admin/reference-flow not run | pass | no Admin or reference-flow operations executed |
+
+### Decision
+
+**Template sync write status:** Go
+
+Reason:
+- Sync write executed successfully with valid auth and updated compiled seed.
+- Post-write Firestore read-only verification matched expected fixed state for `fixed-brush-teeth-8p` pages 0-6.
+- All task constraints were preserved (no smoke/Admin/reference-flow execution, no secret exposure, docs-only final commit scope).
+
+### Follow-up
+
+- T3-4k-9: rerun no-reference smoke with `--age-band=preschool_3_4`.
+- T3-4k-10: verify rendered preschool text output after sync.
+
 ---
 
 ## T3-4k Japanese Orthography Policy for Fixed Templates
