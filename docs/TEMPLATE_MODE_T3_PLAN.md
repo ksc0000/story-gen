@@ -10137,3 +10137,125 @@ Result: pass / proceed.
 ### Next steps
 
 - T3-8j: manual BF-4/BF-3 visual QA for re-smoke book `c2JGhoypMsOXiWnI5J3A`, with page 7 and page 3 as first-priority review points.
+
+---
+
+## T3-8j fixed-sleepy-moon-adventure-8p post-hardening manual BF-4 / BF-3 visual QA rerun
+
+### Status
+
+completed with partial improvement (2026-05-16)
+
+### Purpose
+
+Perform a read-only visual QA rerun on the post-hardening no-reference re-smoke book `c2JGhoypMsOXiWnI5J3A`, compare the result against the pre-hardening failed smoke `UEaEtXoK8DDt2qXT9avc`, and determine whether the T3-8h prompt hardening resolved the prior BF-4 / BF-3 failures.
+
+### Scope checked
+
+- Source re-smoke book: `c2JGhoypMsOXiWnI5J3A`
+- Comparison reference: previous failed smoke `UEaEtXoK8DDt2qXT9avc`
+- page 0-7 generated images
+- BF-4 visual artifact check
+- BF-3 continuity check
+- first-priority rerun focus:
+  - page 7 rendered-text suppression
+  - page 3 dreamscape continuity
+
+### Overall verdict
+
+| area | verdict | summary |
+| --- | --- | --- |
+| BF-4 | **fail** | page 7 blocker is fixed, but readable text still appears on a background book in page 6 |
+| BF-3 | **pass** | same child / same pale blue pajamas / same tan teddy-bear continuity now reads consistently enough across the 8-page sequence |
+| remediation effectiveness | partial pass | BF-3 remediation worked well; BF-4 improved materially but is not fully resolved |
+
+### High-level comparison to the previous failed smoke
+
+| topic | previous failed smoke | post-hardening re-smoke |
+| --- | --- | --- |
+| page 7 rendered Japanese text | present, clear blocker | absent |
+| page 7 symbol-like cloud/message behavior | present | absent |
+| page 3 dream continuity | strong continuity break | substantially improved |
+| child identity drift | severe | much lower |
+| pajama drift | severe | largely resolved |
+| teddy/plush drift | severe | largely resolved |
+
+### Page-by-page visual QA
+
+| page | BF-4 | BF-3 | findings |
+| --- | --- | --- | --- |
+| 0 | pass | pass | No readable text. Child haircut, age impression, pale blue star pajamas, and tan teddy already establish a strong baseline. |
+| 1 | pass | pass | No readable text. Child profile, pajama pattern, and teddy remain consistent with page 0. |
+| 2 | pass | pass | Dream symbols stay loose and non-diagrammatic. Child, pajamas, and primary teddy continuity remain intact. |
+| 3 | pass | pass | Dream page is much improved: same child, same pajamas, same teddy, same bedroom logic all read clearly enough. No text artifact observed. |
+| 4 | pass with watchpoint | pass | Star arc stays organic enough and not obviously text-like. Continuity remains acceptable, though room prop details still vary somewhat. |
+| 5 | pass | pass | Reassurance beat is conveyed visually without rendered quote text. Child and teddy continuity hold. |
+| 6 | **fail** | pass | Main remaining BF-4 issue: a background book/shelf object contains readable Japanese text on the cover. Child continuity still holds. |
+| 7 | pass | pass | Major improvement over the previous run: no rendered Japanese message cloud, no thought/speech bubble, and same child/pajama/teddy identity holds. |
+
+### Priority watchpoint rerun results
+
+| watchpoint | result | note |
+| --- | --- | --- |
+| page 7 rendered-text suppression | **pass** | the previous message-bearing cloud failure appears resolved |
+| page 7 no cloud-frame / no invented writing surface | **pass** | ending now reads as visual-only bedtime imagery |
+| page 3 dreamscape continuity | **pass** | same child, same pajamas, same teddy, and same room are now much more legible |
+| page 3 symbolic softness | pass | wisps/stars remain soft enough and do not turn into diagrammatic text-like structures |
+
+### BF-4 assessment detail
+
+Result: **fail, but materially improved**.
+
+- The original page 7 blocker appears fixed.
+- No new cloud-message composition appears on page 7.
+- However, BF-4 still fails at the sequence level because page 6 contains readable Japanese text on a background book cover.
+- This means the hardening improved the primary failure mode but did not fully eliminate incidental text-bearing room props.
+
+### BF-3 assessment detail
+
+Result: **pass**.
+
+- The child now reads as the same preschool-age child across the sequence.
+- The short dark-brown bob haircut is sufficiently stable.
+- The pale blue pajamas with star pattern are sufficiently stable.
+- The small tan teddy bear remains the primary comfort object throughout the sequence strongly enough to pass.
+- Page 3, previously the strongest continuity failure, is now acceptable.
+
+### T3-8h remediation effectiveness
+
+| remediation target | outcome |
+| --- | --- |
+| page 7 no-message hardening | worked |
+| same-child continuity hardening | worked |
+| same-pajama continuity hardening | worked |
+| same teddy-bear continuity hardening | worked |
+| page 3 bedroom-grounding hardening | worked |
+| sequence-wide no-readable-text suppression | incomplete; incidental room-prop text still slipped through |
+
+### Release judgment
+
+Result: **not yet fully approved**.
+
+- The re-smoke is clearly better than the previous failed smoke.
+- BF-3 is now good enough to pass.
+- BF-4 still fails due to readable background text on page 6.
+- Because the product standard is no readable text anywhere, this run should not be treated as fully approved yet.
+
+### Recommended next step
+
+- Create one more narrow remediation slice focused on suppressing incidental readable text on room props / books / shelf objects for sleepy-moon-8p, then re-smoke once more.
+
+### Exclusions (this slice)
+
+- No image regeneration.
+- No Admin regeneration.
+- No Firestore writes or template sync.
+- No smoke re-run.
+- No reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No code / seed / prompt modifications.
+- No service account JSON, secrets, URLs, or tokens recorded.
+
+### Next steps
+
+- Next recommended slice: targeted BF-4 cleanup for incidental room-prop / book text suppression, then one more no-reference re-smoke.
