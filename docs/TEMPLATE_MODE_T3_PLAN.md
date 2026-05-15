@@ -5640,6 +5640,82 @@ Reason:
 
 ---
 
+## T3-4j-7 Retry fixed-brush-teeth-8p No-reference Smoke after BF-4 Residual Cleanup
+
+### Status
+
+completed.
+
+### Purpose
+
+Retry the no-reference smoke generation after enabling credentials, so the T3-4j-6 BF-4 residual page-local prompt cleanup can be evaluated in a fresh generated book.
+
+This step records generation health only. Detailed manual BF-4 visual QA is handled in T3-4j-8.
+
+### Source
+
+| item | value |
+| --- | --- |
+| BF-4 residual cleanup commit | `e56967e` |
+| previous blocked smoke commit | `93be391` |
+| templateId | `fixed-brush-teeth-8p` |
+| ageBand | `preschool_3_4` |
+| expected childAge | 4 |
+| page count | 8 |
+| reference image | not used |
+| write mode | `--write` |
+
+### Execution Result
+
+| item | value |
+| --- | --- |
+| auth state | SET_AND_FILE_EXISTS |
+| build | pass |
+| template sync write | pass (all 13 templates including fixed-brush-teeth-8p) |
+| dry-run | pass (templateId=fixed-brush-teeth-8p, ageBand=preschool_3_4, childAge=4, pageCount=8, withReference=false) |
+| command | `node scripts/create-template-smoke-books.js --template-id=fixed-brush-teeth-8p --age-band=preschool_3_4 --write` |
+| generated bookId | `OZmjFEZxVnW0vpRD0uuH` |
+| pages | 8/8 |
+| failed | 0 |
+| fallback | 0 |
+| book status | completed |
+| progress | 100 |
+| image model | black-forest-labs/flux-2-pro (all pages) |
+| generation status | pass |
+| reference input used | no |
+| existing book overwritten | no |
+| functions/lib committed | no |
+| generated files committed | no |
+| secrets recorded | no |
+
+### Initial Signal
+
+| check | result | notes |
+| --- | --- | --- |
+| input childAge | pass | childAge=4 confirmed in dry-run and smoke input. |
+| page count | pass | 8/8 pages completed. |
+| image generation health | pass | All 8 pages completed with imageAttemptCount=1 each, no fallback. |
+| severe image artifact | not reviewed | Detailed manual visual QA out of scope unless obvious. |
+| BF-4 residual | not reviewed | Visual QA remains T3-4j-8. |
+| preschool text | not reviewed | Text pipeline already validated; only basic signal if inspected. |
+
+### Decision
+
+**Post-BF-4-residual-cleanup smoke retry status:** Go
+
+Reason:
+- All 8 pages generated successfully (completed, no failed, no fallback).
+- No reference images used as expected for no-reference smoke.
+- image model: flux-2-pro on all pages, imageAttemptCount=1 throughout.
+- Generation health is clean; BF-4 residual visual evaluation proceeds to T3-4j-8.
+
+### Follow-up
+
+- T3-4j-8: perform manual BF-4 visual QA on the generated book (`OZmjFEZxVnW0vpRD0uuH`), focusing on page 0 / 3 / 4.
+- Keep text pipeline follow-up separate unless regression is detected.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
