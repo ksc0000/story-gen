@@ -714,6 +714,54 @@ T3-2 P1 text fix sync/smoke completed:
 
 ---
 
+## T3-7c-3 GitHub Actions hygiene guard run verification
+
+### Verification Scope
+
+Confirmed that the CI workflow automatically executes `npm run guard:hygiene` on push to `main`.
+
+### GitHub Actions Workflow Run
+
+- **Workflow run**: #302 (commit `2eebe08`)
+- **Branch**: `main`
+- **Triggered**: 2026-05-15 16:29 GMT+9
+- **Run duration**: 2m 5s
+
+### Job: "Lint, Type Check & Test"
+
+**Status**: ✓ **succeeded**
+
+**Step execution order** (verified in workflow logs):
+
+1. ✓ Checkout repository
+2. ✓ Setup Node.js
+3. ✓ Install root dependencies
+4. ✓ Install functions dependencies
+5. ✓ **Run hygiene guard** ← successfully executed
+6. ✓ Run linting ← executed after hygiene guard
+7. ✓ Run type check (frontend)
+8. ✓ Run type check (functions)
+9. ✓ Run frontend tests
+10. ✓ Run functions tests
+
+### Findings
+
+| aspect | result | notes |
+| --- | --- | --- |
+| hygiene guard step exists | ✓ YES | Successfully added to workflow in `lint-and-test` job |
+| hygiene guard position | ✓ CORRECT | Positioned after dependency install, before linting |
+| hygiene guard execution | ✓ PASS | No errors or failures; CI step completed successfully |
+| lint step position | ✓ CORRECT | Follows hygiene guard step as intended |
+| overall job status | ✓ SUCCEEDED | All steps passed; no lint/test failures |
+
+### Conclusion
+
+T3-7c-2 CI guard wiring is **fully functional and verified** in production GitHub Actions workflow. The hygiene guard automatically runs on every push to `main` at the correct stage (after dependencies, before lint/test).
+
+**Note**: Workflow run shows overall "failed" status due to Build & Deploy job Firebase secret configuration issues (out of scope for T3-7c-3 verification).
+
+---
+
 ## T3-3 Kickoff Plan: Fixed Template Expansion Design (2026-05-13)
 
 ### Goal
