@@ -6002,6 +6002,78 @@ Reason:
 
 ---
 
+## T3-4j-12 fixed-brush-teeth-8p First Variant Closure Decision
+
+### Status
+
+completed.
+
+### Purpose
+
+Record the first variant closure decision for `fixed-brush-teeth-8p` after text, ageBand, Firestore sync, BF-4 visual cleanup, and manual QA have passed.
+
+This step is docs-only. It does not change prompts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| latest manual BF-4 QA commit | `431fcf0` |
+| latest manual BF-4 QA status | Go |
+| latest QA bookId | `IfP6cn1edweRt0mblEef` |
+| target template | `fixed-brush-teeth-8p` |
+| page count | 8 |
+| reference image | not used |
+
+### Closure Evidence
+
+| area | result | evidence |
+| --- | --- | --- |
+| no-reference smoke generation | pass | 8/8 completed, failed 0, fallback 0 |
+| ageBand support | pass | `--age-band=preschool_3_4`, `childAge=4` |
+| preschool text rendering | pass | pages 0-6 match preschool source, kanji check pass |
+| parentMessage rendering | pass | page 7 rendered normally |
+| Firestore template sync | pass | template sync write completed and verified |
+| BF-4 page 0 | pass | no readable text residual |
+| BF-4 page 3 | pass | toothpaste tube no longer shows legible text |
+| BF-4 page 4 | pass | label-like styling remains non-readable |
+| BF-3 regression | pass | no obvious character regression recorded |
+| visual safety | pass | no scary/broken/medical-looking imagery |
+| story/image match | pass | all pages acceptable for first variant closure |
+
+### Remaining Follow-up
+
+| item | severity | action |
+| --- | --- | --- |
+| label-like non-readable styling on page 4 | P3 | Keep as watch item; no blocking action. |
+| future generation variance | P3 | Re-run targeted smoke if new readable product-surface artifact appears. |
+| broader variant rollout | P2 | Apply the same QA gates to the next fixed-template variant. |
+
+### Decision
+
+**First variant closure status:** Go
+
+Reason:
+- Text, ageBand, Firestore sync, BF-4 cleanup, and targeted manual QA all completed successfully.
+- The original page 3 readable-text issue is resolved, and the remaining page 4 styling is non-readable.
+- No P0/P1 issue remains that blocks closure of the first fixed-template variant.
+
+### Recommended Next Step
+
+- Start the next fixed-template 8p variant rollout using the same staged gates:
+	1. seed/template implementation
+	2. ageBand/text verification
+	3. no-reference smoke
+	4. manual BF-4/BF-3 visual QA
+	5. closure decision
+
+### Follow-up
+
+- T3-5: select and prepare the next 8-page fixed-template variant.
+- Keep `fixed-brush-teeth-8p` closed unless a future smoke shows new P0/P1/P2 regression.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
