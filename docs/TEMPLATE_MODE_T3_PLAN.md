@@ -5157,6 +5157,81 @@ Reason:
 - T3-4k-6: run no-reference smoke with `--age-band=preschool_3_4`.
 - T3-4k-7: verify rendered preschool text output.
 
+## T3-4k-6 fixed-brush-teeth-8p Preschool AgeBand Smoke Generation
+
+### Status
+
+partial.
+
+### Purpose
+
+Run a no-reference smoke generation using `--age-band=preschool_3_4` to verify that the T3-4k-5 ageBand-aware smoke support selects the preschool text variant in live generated output.
+
+### Source
+
+| item | value |
+| --- | --- |
+| ageBand support commit | `7527617` |
+| templateId | `fixed-brush-teeth-8p` |
+| ageBand | `preschool_3_4` |
+| expected childAge | 4 |
+| page count | 8 |
+| reference image | not used |
+| write mode | `--write` |
+
+### Execution Result
+
+| item | value |
+| --- | --- |
+| command | `node scripts/create-template-smoke-books.js --template-id=fixed-brush-teeth-8p --age-band=preschool_3_4 --write` |
+| generated bookId | `bydbr2mS9gzWM6wQ76n3` |
+| pages | 8 |
+| failed | 0 |
+| fallback | none (`imageFallbackUsed=false`) |
+| book status | `completed` |
+| progress | 100 |
+| image model | `black-forest-labs/flux-2-pro` (all pages) |
+| generation status | pass |
+| reference input used | no |
+| existing book overwritten | no |
+| functions/lib committed | no |
+| generated files committed | no |
+| secrets recorded | no |
+
+### Text Verification
+
+| check | result | notes |
+| --- | --- | --- |
+| generated input childAge | pass | Book input contains `childAge: 4`. |
+| age variant observed | partial | Output text matches `preschool_3_4` slot, but Firestore template currently has `preschool_3_4 == general_child` on pages 0-6, so exclusive preschool-path proof is limited. |
+| page 0-6 kanji check | fail | Kanji remained in rendered page text for pages 0-6. |
+| English check | pass | No English except child-name replacement. |
+| unnecessary katakana check | pass | No unnecessary katakana detected. |
+| `{childName}` replacement | pass | Placeholder is resolved; no raw placeholder remained. |
+| page 7 parentMessage usage | pass | Parent message is rendered and placeholder is resolved. |
+
+### Initial Visual Signal
+
+| check | result | notes |
+| --- | --- | --- |
+| image generation health | pass | 8/8 completed, failed 0, fallback none. |
+| severe image artifact | not reviewed | Detailed visual QA is out of scope for this task. |
+| BF-4 artifact | not reviewed | Visual residual check remains a separate T3-4j follow-up. |
+
+### Decision
+
+**Preschool ageBand smoke generation status:** Conditional
+
+Reason:
+- AgeBand-aware smoke path is functioning (input `childAge: 4`, no-reference generation, and 8-page completion are confirmed).
+- However, the target acceptance signal (`page 0-6` kanji-free preschool text) was not met in this generated book.
+- Read-only template check showed current Firestore template text for pages 0-6 has `preschool_3_4` equal to `general_child` and still includes kanji, so text-layer verification remains incomplete.
+
+### Follow-up
+
+- T3-4k-7: record rendered preschool text QA result.
+- T3-4j follow-up: keep BF-4 residual cleanup separate.
+
 ---
 
 ## T3-4k Japanese Orthography Policy for Fixed Templates
