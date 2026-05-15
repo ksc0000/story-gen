@@ -419,6 +419,63 @@ T3-2 P1 text fix sync/smoke completed:
 
 ---
 
+## T3-7 fixed-template rollout summary / next candidate planning
+
+### Status
+
+- completed (docs-only summary and planning)
+- Consolidates closure evidence from T3-4/T3-5/T3-6 and proposes the next rollout direction.
+
+### Fixed-template closure summary
+
+- `fixed-first-birthday-8p`: closed in T3-6-6; docs-only rollout closure complete. Final QA bookId: `YJ14Zc8g9TcpEuUHTuSb`.
+- `fixed-first-zoo-8p`: closed in T3-5-5d after targeted T3-5-5b cleanup, T3-5-5c sync/smoke, and manual BF-4/BF-3 QA; rollout decision: Go.
+- `fixed-brush-teeth-8p`: current status is Conditional-Go from T3-4f; functional and interactive gates pass, but P2 follow-up remains in text polish, visual drift, and reference-flow verification. Treat it as a regression baseline rather than the next candidate.
+
+### Common success patterns
+
+- Use a gated, incremental rollout sequence for 8p fixed templates: seed/source audit → text/ageBand audit → prompt/BF-4/BF-3 audit → page-local cleanup → Firestore sync → no-reference smoke → manual BF-4/BF-3 QA → closure decision.
+- Keep planning and closure decisions docs-only until implementation intent is clearly scoped and source changes are committed separately.
+- Preserve the shared global image-prompt safety helper and add template-local guardrails on top rather than changing the shared helper.
+- Target only the pages that show the highest BF-4/BF-3 risk in manual QA, and avoid broad global prompt rewrites.
+- Record the closure decision, evidence chain, and any known limitations in a dedicated docs section.
+
+### BF-4 / BF-3 recurring risks
+
+- BF-4 risks recur on decorated surfaces and props, not only obvious signage:
+  - `fixed-first-zoo-8p`: entrance signs and clothing print
+  - `fixed-first-birthday-8p`: party decor, cake/tableware, balloons, ribbon
+  - `fixed-brush-teeth-8p`: bathroom objects, cups, shelves, mirrors
+- BF-3 recurring risk is child identity/outfit/age continuity across scenes. It is most visible where the template moves between activity contexts.
+- High-risk pages are template-specific, but the pattern is consistent: entrance/transition pages and close-up/object-detail pages often need extra guardrails.
+- A healthy no-reference smoke result is necessary but not sufficient. Manual BF-4/BF-3 visual QA must be the final gate because reliability can mask quality issues.
+
+### Reusable guardrail patterns
+
+- Template-local wrapper pattern: `withXxxImagePromptGuardrail(prompt)`, which composes the shared safety layer and appends template-specific BF-4/BF-3 clauses.
+- Identity anchor clause: explicitly require the same child face, same age impression, same hair, and same clothing style across all pages.
+- Targeted BF-4 clauses: add negative constraints on the specific risky surface type for the failing page (e.g. sign boards, clothing text, party decor, bathroom props).
+- Keep shared no-readable-writing / no-signage safety broad and stable; fix the template-specific risk by adding narrow, page-relative clauses.
+- Prefer positive scene description followed by a focused negative constraint.
+
+### Incident / hygiene lessons
+
+- Keep docs-only summaries separate from code changes to avoid accidental implementation drift during review.
+- Remove unintended untracked artifacts promptly and harden ignore rules after any incident.
+- Do not capture credentials, tokens, service accounts, or private auth data in docs.
+- Preflight auth and QA environments explicitly; blocked browser login or missing credentials should be surfaced as a separate operational blocker.
+- Use dedicated docs-only commits for rollout decisions to preserve the audit trail.
+
+### Next candidate and priority recommendations
+
+- Next recommended candidate: `fixed-bedtime-good-day-8p` or `fixed-sleepy-moon-adventure-8p`.
+- Rationale: these variants broaden category coverage, reuse the same 8p gated rollout pattern, and avoid reopening already-closed variants unless regression evidence appears.
+- Keep `fixed-brush-teeth-8p` as a regression reference baseline while the next candidate is executed.
+- Cross-cutting improvement: standardize the 8p BF-4/BF-3 guardrail wrapper approach into a reusable pattern so future templates can adopt the same structure.
+- Production readiness still depends on interactive browser QA and auth preflight. Complete those gates before any broader rollout beyond these 8p candidates.
+
+---
+
 ## T3-3 Kickoff Plan: Fixed Template Expansion Design (2026-05-13)
 
 ### Goal
