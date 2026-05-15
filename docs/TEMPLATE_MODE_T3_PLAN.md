@@ -6508,6 +6508,87 @@ Reason:
 
 ---
 
+## T3-5-3b fixed-first-zoo-8p Page-local BF-4/BF-3 Prompt Cleanup Implementation
+
+### Status
+
+completed.
+
+### Purpose
+
+Implement the planned page-local BF-4/BF-3 prompt cleanup for `fixed-first-zoo-8p` before template sync and no-reference smoke generation.
+
+This step changes only selected page-local image prompts. It does not change text templates, ageBand support, global suffixes, shared prompt helpers, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| cleanup plan commit | `d2074e3` |
+| selected template | `fixed-first-zoo-8p` |
+| target pages | page 1, page 2, page 4, page 6 |
+| implementation type | page-local image prompt cleanup |
+
+### Scope
+
+| item | value |
+| --- | --- |
+| page 1 image prompt | changed |
+| page 2 image prompt | changed |
+| page 4 image prompt | changed |
+| page 6 image prompt | changed |
+| page 0 / 3 / 5 / 7 | unchanged |
+| textTemplate | unchanged |
+| textTemplatesByAge | unchanged |
+| global suffix | unchanged |
+| shared helper | unchanged |
+| smoke generation | not run |
+| DB/Admin side effects | none |
+| reference-flow | not run |
+
+### Implementation Summary
+
+| page | result | notes |
+| --- | --- | --- |
+| page 1 | pass | Entrance surfacesに unmarked/no-readable-text 制約と same child/outfit/age impression 維持句を追加。 |
+| page 2 | pass | Enclosure周辺オブジェクトの無文字化制約と zoo visit 内での child/outfit/age impression 維持句を追加。 |
+| page 4 | pass | Caution/warning/notice/panel系の禁止と plain background shapes fallback、same child/outfit 維持句を追加。 |
+| page 6 | pass | Exit導線の無文字化制約と plain arch/path fallback、same child/outfit/age impression 維持句を追加。 |
+| BF-3 continuity anchor | pass | 対象4ページすべてに continuity 句を追加。 |
+| non-target pages unchanged | pass | page 0 / 3 / 5 / 7 の imagePromptTemplate は変更なし。 |
+| text templates unchanged | pass | `textTemplate` / `textTemplatesByAge` は変更なし。 |
+| global suffix/shared helper unchanged | pass | `withFixedImagePromptSafety` と標準 suffix の変更なし。 |
+
+### Validation
+
+| check | result | notes |
+| --- | --- | --- |
+| functions build | pass | `npm --prefix functions run build` 成功。 |
+| seed-template tests | pass | `npm --prefix functions test -- test/seed-templates.test.ts` 成功（345 tests）。 |
+| diff check | pass | 変更は `functions/src/seed-templates.ts` と docs に限定。 |
+| functions/lib not committed | pass | build後に `git restore functions/lib/seed-templates.js functions/lib/seed-templates.js.map` 実施。 |
+| generated files not committed | pass | 生成物の追加コミットなし。 |
+| secrets not committed | pass | secrets / service account JSON のコミットなし。 |
+| smoke generation not run | pass | 本ステップでは未実行。 |
+| DB/Admin side effects avoided | pass | 本ステップでは未実行。 |
+| reference-flow not run | pass | 本ステップでは未実行。 |
+
+### Decision
+
+**Page-local prompt cleanup implementation status:** Go
+
+Reason:
+- T3-5-3a で定義した primary cleanup pages（1/2/4/6）に限定して page-local guardrail を実装した。
+- 非対象ページ、text templates、ageBand support、global suffix、shared helper を維持し、スコープ逸脱を回避した。
+- build と seed-template テストが通過し、T3-5-4 前提条件を満たした。
+
+### Follow-up
+
+- T3-5-4: run template sync and no-reference smoke after zoo page-local cleanup.
+- T3-5-5: perform manual BF-4/BF-3 visual QA on the generated book.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
