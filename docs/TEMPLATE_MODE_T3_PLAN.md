@@ -683,6 +683,37 @@ T3-2 P1 text fix sync/smoke completed:
 
 ---
 
+## T3-7c-2 CI guard wiring
+
+### Implementation
+
+- Modified `.github/workflows/deploy.yml` to add hygiene guard step in `lint-and-test` job.
+- Positioned `npm run guard:hygiene` immediately after `npm ci` (root dependencies install), before linting.
+- Execution order in CI:
+  1. Install root dependencies (`npm ci`)
+  2. Install functions dependencies (`cd functions && npm ci`)
+  3. **Run hygiene guard** (`npm run guard:hygiene`)
+  4. Run linting (`npm run lint`)
+  5. Type checks and tests
+
+### Verification
+
+- `npm run guard:hygiene`: ✓ PASS (`[PASS] guard:hygiene passed. No forbidden paths, docs encoding issues, or staged secret-like patterns detected.`)
+- `npm run lint`: ✓ Functional (warnings only; no new errors introduced)
+- Workflow YAML structure validated (correct indentation, syntax, step ordering)
+
+### Files Modified
+
+- `.github/workflows/deploy.yml`: Added hygiene guard step in `lint-and-test` job
+
+### Result
+
+- CI now runs hygiene checks automatically on every push to `main`
+- Early stage execution ensures violations are caught before lint/test/build phases
+- No workflow downtime; clean integration with existing steps
+
+---
+
 ## T3-3 Kickoff Plan: Fixed Template Expansion Design (2026-05-13)
 
 ### Goal

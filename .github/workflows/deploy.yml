@@ -28,6 +28,8 @@ jobs:
         run: npm ci
       - name: Install functions dependencies
         run: cd functions && npm ci
+      - name: Run hygiene guard
+        run: npm run guard:hygiene
       - name: Run linting
         run: npm run lint
       - name: Run type check (frontend)
