@@ -352,6 +352,42 @@ T3-2 P1 text fix sync/smoke completed:
 
 ---
 
+## T3-6-5 Manual Visual QA Result: fixed-first-birthday-8p (2026-05-15)
+
+- target bookId: `YJ14Zc8g9TcpEuUHTuSb`
+- templateId: `fixed-first-birthday-8p`
+- ageBand: `preschool_3_4`
+- pageCount: 8
+- reference image: not used / no-reference
+- status: `completed`
+- pages completed: 8/8
+- failed: 0
+- fallback: 0
+- timedOut: 0
+- model: `black-forest-labs/flux-2-pro`
+
+### QA scope
+
+- Manual BF-4 / BF-3 visual verification
+- Visual consistency and composition across all 8 pages
+- Child-friendly scene pacing and readability for preschool 3-4
+- No critical artifacts, missing characters, or inappropriate visual elements
+
+### Result
+
+- **PASS**: Manual visual QA completed successfully
+- BF-4 visual review: PASS
+- BF-3 readability / pacing review: PASS
+- No hard failures, fallbacks, or timeouts detected
+- Image quality is consistent with existing fixed template expectations
+
+### Notes
+
+- この QA は docs-only 記録として追加
+- 次工程は T3-7 以降の template quality follow-up / smoke refinement
+
+---
+
 ## T3-3 Kickoff Plan: Fixed Template Expansion Design (2026-05-13)
 
 ### Goal
