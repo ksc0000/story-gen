@@ -5232,6 +5232,60 @@ Reason:
 - T3-4k-7: record rendered preschool text QA result.
 - T3-4j follow-up: keep BF-4 residual cleanup separate.
 
+## T3-4k-7 fixed-brush-teeth-8p Preschool Text Mismatch / Template Sync Diagnosis
+
+### Status
+
+completed (docs-only, read-only diagnosis)
+
+### Purpose
+
+Diagnose why T3-4k-6 generated output still contained kanji on pages 0-6 even when smoke was run with `--age-band=preschool_3_4` and input `childAge: 4`.
+
+### Scope and Constraints
+
+| item | value |
+| --- | --- |
+| code changes | none |
+| template write (`template:sync:write`) | not executed |
+| smoke regeneration | not executed |
+| DB update/admin action | none |
+| diagnosis mode | read-only only |
+
+### Read-only Evidence
+
+| check | result | notes |
+| --- | --- | --- |
+| source/compiled seed (`fixed-brush-teeth-8p`, pages 0-6) | pass | `preschool_3_4 != general_child`; preschool variant has no kanji; general variant has kanji. |
+| Firestore template (`templates/fixed-brush-teeth-8p`, pages 0-6) | mismatch found | `preschool_3_4 == general_child`; both include kanji. |
+| `npm run template:sync:check` | pass (but limited) | Reports no issues because current check validates image-prompt tokens/page-count contract and does not diff `textTemplatesByAge` content. |
+
+### Key Diagnostic Outputs
+
+| item | value |
+| --- | --- |
+| sync check run 1 (before functions build) | `target templates count = 6` (compiled seed stale for newer templates) |
+| sync check run 2 (after `npm --prefix functions run build`) | `target templates count = 13`, `fixed-brush-teeth-8p` included, no issues reported |
+| Firestore text state summary | `pages0to6AllPreEqGeneral = true`, `pages0to6AnyPreKanji = true` |
+| compiled seed text state summary | `pages0to6AllPreEqGeneral = false`, `pages0to6AnyPreKanji = false` |
+
+### Root Cause
+
+1. `templates/fixed-brush-teeth-8p` in Firestore has stale text data on pages 0-6 where `textTemplatesByAge.preschool_3_4` is effectively the same as `general_child` and still contains kanji.
+2. Existing `template:sync:check` is not a full text drift detector for age-bucket body text, so this mismatch can remain undetected while check output stays green.
+
+### Decision
+
+**T3-4k-7 diagnosis status:** Completed
+
+Reason:
+- T3-4k-6 behavior is explained without additional write operations.
+- AgeBand path itself is functioning (`childAge: 4` confirmed), but Firestore template text content for preschool variant is not aligned with current source seed.
+
+### Recommended Follow-up
+
+- T3-4k-8 (write-enabled task): run targeted sync write for `fixed-brush-teeth-8p`, then re-check pages 0-6 `preschool_3_4` vs `general_child` and re-run a preschool smoke to confirm kanji-free output.
+
 ---
 
 ## T3-4k Japanese Orthography Policy for Fixed Templates
