@@ -5418,6 +5418,91 @@ Reason:
 - No-reference smoke completed 8/8, 0 failed, 0 fallback.
 - bookId `ZNbdu8zX7HNYzoST327M` is ready for T3-5-5d manual BF-4/BF-3 visual QA.
 
+## T3-5-5d fixed-first-zoo-8p Manual BF-4/BF-3 Visual QA (post T3-5-5b)
+
+### Status
+
+completed (Go)
+
+### Date
+
+2026-05-15
+
+### Purpose
+
+Run read-only manual visual QA on bookId `ZNbdu8zX7HNYzoST327M` (generated in T3-5-5c) to confirm whether T3-5-5b guardrail changes resolved the BF-4 and BF-3 issues found in T3-5-5.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-first-zoo-8p` |
+| target bookId | `ZNbdu8zX7HNYzoST327M` |
+| pageCount | 8 |
+| reference image | not used |
+| model | `black-forest-labs/flux-2-pro` (all pages) |
+| ageBand | `preschool_3_4` |
+| QA method | read-only visual review of page images (pages 0-7) |
+| out of scope | regeneration, prompt/code edit, Admin mutation |
+
+### Page-by-page Findings
+
+| page | role | BF-4 | BF-3 | observation |
+| --- | --- | --- | --- | --- |
+| 0 | opening_establishing | pass | pass | Home/entrance scene. No text elements. Child baseline: short black hair, round face, young child proportions. |
+| 1 | discovery (zoo entrance) | **pass** | partial | Zoo entrance arch with animal silhouettes and star motif only. Right-edge sign board is a plain white unmarked shape — no glyphs. BF-4 improved from previous fail. Outfit shifts to blue shirt / navy shorts from page 0. |
+| 2 | discovery (large animal) | pass | pass | Giraffe enclosure. No readable text. Child hair/face consistent with page 1. |
+| 3 | object_detail (small animal) | pass | pass | Small animal area (rabbit + bird). No text. Child identity stable. |
+| 4 | setback_or_question | pass | pass | Lion enclosure. Fence and background clean. Child consistent with prior pages. |
+| 5 | emotional_closeup | **pass** | pass | Giraffe eye-level close-up with child. Plain solid-color shirt, no print/logo/marks on clothing. BF-4 clothing text improved from previous fail. Child face and age impression consistent. |
+| 6 | quiet_ending (exit path) | pass | partial | Tree-lined return path. No exit text/signage. Outfit color shifts (white shirt / pink shorts). Child identity still recognizable. |
+| 7 | quiet_ending (parent message) | pass | pass | Dusk closing with lanterns. Lanterns plain with no text. Child consistent. |
+
+### BF-4 Summary
+
+| check | result | notes |
+| --- | --- | --- |
+| entrance/no-sign intent (page 1) | **pass** | Sign board is a plain white shape with no glyphs — improved from T3-5-5 fail |
+| clothing text suppression (page 5) | **pass** | Solid plain shirt, no print/logo/text visible — improved from T3-5-5 fail |
+| other pages (0, 2, 3, 4, 6, 7) | pass | No readable text artifacts observed |
+| overall BF-4 across 8 pages | **pass** | All pages clean |
+
+### BF-3 Summary
+
+| check | result | notes |
+| --- | --- | --- |
+| same child identity continuity | pass | Black hair, round face, young child proportions consistent across all 8 pages |
+| same outfit continuity | partial | Outfit color shifts across scene transitions (page 0 → 1-3 → 4-5 → 6-7). Style is consistent (casual toddler) but exact palette varies. |
+| same age impression continuity | pass | Age impression stable at approximately 3-5 years throughout |
+| overall BF-3 across 8 pages | **partial → improved** | Child identity and age impression consistently maintained. Outfit color variation is the only remaining gap; no "wrong person" impression. Materially improved from T3-5-5 fail. |
+
+### Comparison with T3-5-5 (pre-cleanup)
+
+| dimension | T3-5-5 result | T3-5-5d result | change |
+| --- | --- | --- | --- |
+| BF-4 page 1 (sign text) | fail | **pass** | ✓ resolved |
+| BF-4 page 5 (clothing text) | fail | **pass** | ✓ resolved |
+| BF-4 overall | partial | **pass** | ✓ improved |
+| BF-3 identity | fail | **pass** | ✓ improved |
+| BF-3 outfit | fail | partial | △ improved but color varies |
+| BF-3 age impression | partial | pass | ✓ improved |
+| BF-3 overall | fail | **partial** | ✓ improved |
+
+### Decision
+
+**T3-5-5d manual visual QA status:** Go
+
+Reason:
+- BF-4 is fully resolved: pages 1 and 5 (the two fail pages from T3-5-5) now pass. No readable text artifacts on any page.
+- BF-3 advanced from Fail to Partial: child identity and age impression are consistently maintained. Outfit color drift across scene transitions is the only remaining gap; it does not create a "wrong child" impression and is within acceptable range for flux-2-pro without reference.
+- Both BF-4 pass and BF-3 at-least-partial criteria from T3-5-5a plan are met → Go for next template phase.
+- Residual BF-3 outfit color variation is documented as a known flux-2-pro limitation in no-reference mode.
+
+### Follow-up
+
+- BF-3 outfit color drift: classified as P3 / known limitation in no-reference mode. No immediate follow-up required before broader 8p expansion.
+- Next action: proceed to T3-5-5e (or T3-5-6) as planned.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
