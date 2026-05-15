@@ -6235,6 +6235,89 @@ Reason:
 
 ---
 
+## T3-5-2 fixed-first-zoo-8p Text / AgeBand Audit
+
+### Status
+
+completed.
+
+### Purpose
+
+Audit the child-facing text and age variant coverage for `fixed-first-zoo-8p` before prompt cleanup, template sync, or smoke generation.
+
+This step is docs-only and read-only. It does not change prompts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| seed/source audit commit | `a062a04` |
+| selected template | `fixed-first-zoo-8p` |
+| expected page count | 8 |
+| audit type | text / ageBand read-only |
+
+### Page Text Inventory
+
+| page | visual role | text role | child-facing text source | notes |
+| --- | --- | --- | --- | --- |
+| page 0 | opening_establishing | outing-day opening | `buildAgeSpecificPage` -> `textTemplate` + `textTemplatesByAge` | 朝の出発導入。`{childName}` を自然に使用。 |
+| page 1 | discovery | arrival / entrance discovery | `buildAgeSpecificPage` -> `textTemplate` + `textTemplatesByAge` | `{place}` と `{familyMembers}` を使う到着描写。 |
+| page 2 | discovery | large-animal surprise discovery | `buildAgeSpecificPage` -> `textTemplate` + `textTemplatesByAge` | 驚きから前進への流れ。 |
+| page 3 | object_detail | small-animal focused observation | `buildAgeSpecificPage` -> `textTemplate` + `textTemplatesByAge` | 近接観察の描写。 |
+| page 4 | setback_or_question | mild fear/tension moment | `buildAgeSpecificPage` -> `textTemplate` + `textTemplatesByAge` | どきどきから安心への中間点。 |
+| page 5 | emotional_closeup | emotional reframing | `buildAgeSpecificPage` -> `textTemplate` + `textTemplatesByAge` | やさしい目の発見で感情転換。 |
+| page 6 | quiet_ending | return-path reflection | `buildAgeSpecificPage` -> `textTemplate` + `textTemplatesByAge` | 体験の内面化。`{childName}` 再使用あり。 |
+| page 7 | quiet_ending | parent closing message | `buildAgeSpecificPage` -> all age variants set to `{parentMessage}` | 年齢別分岐なしで親メッセージを直接表示。 |
+
+### Preschool Text Policy
+
+| check | result | notes |
+| --- | --- | --- |
+| page 0-6 hiragana-first | pass | preschool_3_4 はひらがな中心で幼児向け可読性を維持。 |
+| page 0-6 kanji check | pass | preschool_3_4（page 0-6）で漢字残存は確認されず。 |
+| English check | pass | child-facing text（`textTemplate` / age variants）に英語混入なし。 |
+| unnecessary katakana check | pass | 不要なカタカナ多用なし。 |
+| word-internal spacing | pass | 語中の不自然な分断は確認されず。 |
+| phrase-level spacing | partial | 語句間スペースは多めだが、既存固定テンプレートの表記スタイル内。可読性の範囲で運用可能。 |
+| punctuation | pass | 句読点・読点運用は読み聞かせ文として自然。 |
+| `{childName}` replacement readiness | pass | page 0-6 で置換位置は自然。文法破綻リスクは低い。 |
+| page 7 parentMessage behavior | partial | 全 ageBand が `{parentMessage}` 直通のため、入力内容次第で漢字/英語混入の余地がある。 |
+
+### Age Variant Coverage
+
+| ageBand | result | notes |
+| --- | --- | --- |
+| baby_toddler | pass | page 0-6 は短文化、page 7 は `{parentMessage}` 共有。 |
+| preschool_3_4 | pass | page 0-6 に専用文面あり。page 7 は `{parentMessage}`。 |
+| early_reader_5_6 | pass | page 0-6 で記述拡張あり。page 7 は `{parentMessage}`。 |
+| early_elementary_7_8 | pass | page 0-6 で抽象度高め文面あり。page 7 は `{parentMessage}`。 |
+
+### Cleanup Need
+
+| item | result | notes |
+| --- | --- | --- |
+| preschool text cleanup needed | no | 現時点で page 0-6 の本文に即時修正必須事項なし。 |
+| parentMessage policy update needed | yes | page 7 の年齢共通直通仕様に対し、入力ガイドまたは軽いポリシー補足は有用。 |
+| ageBand smoke support reusable | yes | 既存 T3-4 の ageBand smoke観点を再利用可能。 |
+| template sync needed before smoke | yes | T3-5-4 進行時は通常どおり sync を前提に運用。 |
+| text-related blocker | no | smoke 前の text観点で P0/P1 blocker はなし。 |
+
+### Decision
+
+**Text / ageBand audit status:** Conditional-Go
+
+Reason:
+- page 0-6 の child-facing text は hiragana-first と ageBand 分岐の要件を満たしている。
+- age variant coverage は 4 ageBand で一貫しており、本文側の即時修正は不要。
+- page 7 が `{parentMessage}` 直通のため、入力内容によっては preschool readability が揺れる余地があり、運用ポリシー補足を条件として次工程へ進むのが妥当。
+
+### Recommended Next Step
+
+- T3-5-3: perform prompt/BF-4 audit and decide page-local cleanup before smoke generation.
+- If text cleanup is needed, run it before template sync and smoke generation.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
