@@ -5322,6 +5322,102 @@ Reason:
 - Build passes. Source-only change; no runtime deployment in this slice.
 - Next slice T3-5-5c: Firestore template sync and new no-reference smoke rerun for BF-4/BF-3 re-evaluation.
 
+## T3-5-5c fixed-first-zoo-8p Firestore Sync + No-reference Smoke (post T3-5-5b)
+
+### Status
+
+completed
+
+### Date
+
+2026-05-15
+
+### Purpose
+
+Sync the T3-5-5b prompt cleanup to Firestore and generate a new no-reference smoke book (`preschool_3_4`) to provide fresh image evidence for T3-5-5d manual BF-4/BF-3 QA.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-first-zoo-8p` |
+| sync mode | `--write` (source → Firestore) |
+| smoke ageBand | `preschool_3_4` |
+| smoke childAge | 4 |
+| reference image | not used |
+| image model | `black-forest-labs/flux-2-pro` |
+| implementation commit | `9cfa9e8` |
+| out of scope | manual QA (T3-5-5d), other templates |
+
+### Execution Log
+
+#### Step 1: Rebuild functions/lib
+
+Rebuilt `functions/` (`npm run build`) to compile T3-5-5b source changes into `functions/lib/seed-templates.js` before running sync and smoke scripts.
+
+Verified: `grep ZOO_8P_CHARACTER_ANCHOR_CLAUSE functions/lib/seed-templates.js` returns 12 matches.
+
+Note: `functions/lib/` is now in `.gitignore` (commit `00f3edd`); build output is local-only.
+
+#### Step 2: Firestore Template Sync
+
+Command:
+```
+node scripts/sync-fixed-template-seeds.js --template-id=fixed-first-zoo-8p --write
+```
+
+Result:
+```
+[before]  { "fixed-first-zoo-8p": [] }
+[after]   { "fixed-first-zoo-8p": [] }
+[result] write complete. All target templates passed sync checks.
+```
+
+Note: `before: []` means Firestore doc passed all token checks even before write (prior guardrail tokens were present). `--write` executed a full `batch.set` merge from source, so T3-5-5b's new clauses are now live in Firestore.
+
+#### Step 3: No-reference Smoke Generation
+
+Command:
+```
+node scripts/create-template-smoke-books.js --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --write
+```
+
+Result:
+```
+[created] template=fixed-first-zoo-8p pageCount=8 bookId=ZNbdu8zX7HNYzoST327M
+```
+
+#### Step 4: Generation Health Check
+
+| check | result | notes |
+| --- | --- | --- |
+| total pages | 8 / 8 | all pages completed |
+| failed pages | 0 | none |
+| fallback pages | 0 | none |
+| reference images used | 0 / 8 | no-reference confirmed |
+| image model | `black-forest-labs/flux-2-pro` | all 8 pages |
+| page completion status | completed × 8 | all completed |
+| imageDurationMs range | 18,328 – 26,587 ms | typical range |
+
+### Handoff to T3-5-5d
+
+| item | value |
+| --- | --- |
+| bookId | `ZNbdu8zX7HNYzoST327M` |
+| QA mode | no-reference visual BF-4/BF-3 manual review |
+| QA target | pages 0-7 |
+| focus pages (BF-4) | page 1 (sign text), page 5 (clothing text) |
+| focus check (BF-3) | all 8 pages for child/outfit/age consistency |
+
+### Decision
+
+**T3-5-5c status:** completed
+
+Reason:
+- Firestore sync succeeded with no issues before or after write.
+- No-reference smoke completed 8/8, 0 failed, 0 fallback.
+- bookId `ZNbdu8zX7HNYzoST327M` is ready for T3-5-5d manual BF-4/BF-3 visual QA.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
