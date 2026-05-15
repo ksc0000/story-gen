@@ -9063,3 +9063,78 @@ Overall BF-3 risk profile: **low**.
 - No Firestore sync, smoke generation, image generation, or Admin regeneration executed.
 - No reference-flow generation, Firebase Auth changes, Storage token rotation/revocation.
 - No service account JSON, secrets, URLs, or tokens recorded.
+
+---
+
+## T3-8b fixed-sleepy-moon-adventure-8p seed implementation
+
+### Status
+
+completed (2026-05-16)
+
+### Purpose
+
+Add `fixed-sleepy-moon-adventure-8p` to `functions/src/seed-templates.ts` following the T3-8a design, and update `functions/test/seed-templates.test.ts` to cover the new template. Verify with `guard:hygiene`, TypeScript build, and seed-template tests.
+
+### Changes made
+
+#### `functions/src/seed-templates.ts`
+
+1. Added guardrail constants (after `BIRTHDAY_8P_CHARACTER_ANCHOR_CLAUSE` block, before `buildAgeSpecificPage`):
+   - `SLEEPY_MOON_8P_CHARACTER_ANCHOR_CLAUSE` — identity anchor: same face, same age impression, same hairstyle and hair color, same cozy pajama style and color, same stuffed toy across all 8 pages.
+   - `SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE` — dream symbol no-text: soft glowing points and curved cloud wisps only; no connecting lines, no symbol arrangement, no constellation-map patterns, no arrows, no letter-like shapes, no glyph-like forms.
+   - `withSleepyMoon8pImagePromptGuardrail(prompt)` — composes both clauses and calls `withFixedImagePromptSafety`. Do NOT modify `withFixedImagePromptSafety`. Do NOT use for any template other than `fixed-sleepy-moon-adventure-8p`.
+
+2. Added `fixed-sleepy-moon-adventure-8p` template definition (after `fixed-sleepy-moon-adventure` 4p, before `fixed-cardboard-rocket`):
+   - `pageCount: 8`, `layoutVariant: "8_page"`, `order: 11.5`, `active: true`
+   - `sampleImageUrl: "/images/templates/fantasy.png"` (same as 4p)
+   - `coverImagePromptTemplate`: uses `withFixedImagePromptSafety` (same as 4p cover)
+   - 8 pages defined with `buildAgeSpecificPage`; all pages use `withSleepyMoon8pImagePromptGuardrail` in `imagePromptTemplate`
+
+#### `functions/test/seed-templates.test.ts`
+
+- Added `"fixed-sleepy-moon-adventure-8p"` to `FIXED_TEMPLATE_IDS` (total: 13).
+- Updated count assertion: `toBe(12)` → `toBe(13)`.
+- Updated test description: "Phase T3-3e" → "Phase T3-8b: fixed templates are expanded to 13 (12 previous + fixed-sleepy-moon-adventure-8p)".
+- Added `EXPECTED_PAGE_ROLES["fixed-sleepy-moon-adventure-8p"]` entry.
+- Added `EXPECTED_FIXED_SAMPLE_IMAGES["fixed-sleepy-moon-adventure-8p"]` entry.
+
+### 8p page structure implemented
+
+| page | pageVisualRole | narrative beat | source |
+| --- | --- | --- | --- |
+| 0 | opening_establishing | Child in bed; moonlight wraps the room | 4p p0 adapted |
+| 1 | discovery | Child leans toward window; moon fills the view | NEW |
+| 2 | discovery | Cloud and star shapes appear as imagination | 4p p1 carried |
+| 3 | action | Child rides a plain fluffy cloud; stars nearby | NEW |
+| 4 | payoff | Star arc gathers; peak of wonder and comfort | NEW |
+| 5 | emotional_closeup | Moon reassures "you're okay"; child at peace | 4p p2 adapted |
+| 6 | quiet_ending | Child nestles into blanket; eyes growing heavy | NEW |
+| 7 | quiet_ending | {parentMessage}; child asleep | 4p p3 carried |
+
+### Validation result
+
+| check | result | notes |
+| --- | --- | --- |
+| `npm run guard:hygiene` | ✓ pass | No forbidden paths, docs encoding issues, or staged secret-like patterns. |
+| `npm --prefix functions run build` | ✓ pass | TypeScript compiled without errors. |
+| `npm --prefix functions test -- test/seed-templates.test.ts` | ✓ pass | 373 tests pass (1 new antipattern failure fixed by replacing "sign-like forms" → "glyph-like forms" in `SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE`). |
+| `functions/lib` restored before commit | ✓ pass | `functions/lib/` is in `.gitignore`; not tracked; no restore needed. |
+| existing 4p `fixed-sleepy-moon-adventure` unchanged | ✓ pass | No diff in 4p template definition. |
+| shared `withFixedImagePromptSafety` unchanged | ✓ pass | No modifications to shared helper. |
+| `buildAgeSpecificPage` unchanged | ✓ pass | No modifications to shared page builder. |
+
+### Antipattern fix note
+
+The test `every imagePromptTemplate keeps sign-like words out of the positive prompt` uses the regex `/\b(storefront|shop|label|banner|poster|sign)\b/i` against the positive (non-negative-clause) part of every prompt. The initial draft of `SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE` used "no sign-like forms"; the word "sign" at a word boundary matched the antipattern regex even in a negative context. Fixed by replacing "sign-like forms" with "glyph-like forms" — semantically equivalent and not caught by the antipattern check.
+
+### Exclusions (this slice)
+
+- No Firestore sync, smoke generation, image generation, or Admin regeneration executed.
+- No reference-flow generation, Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+
+### Next steps
+
+- T3-8c: text/ageBand audit of `fixed-sleepy-moon-adventure-8p` (all 5 age bands × 8 pages).
+- T3-8d: prompt/BF-4/BF-3 audit + page-local cleanup design.

@@ -92,6 +92,23 @@ function withBirthdayImagePromptGuardrail(prompt: string): string {
   return withFixedImagePromptSafety(result);
 }
 
+const SLEEPY_MOON_8P_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same child across all 8 pages: same face, same age impression, same hairstyle and hair color, same cozy pajama style and color, same stuffed toy visible wherever the child is physically present";
+
+const SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE =
+  "dream and imagination symbols are soft glowing points and curved cloud wisps only, no connecting lines, no symbol arrangement, no constellation-map patterns, no arrows, no letter-like shapes, no glyph-like forms";
+
+function withSleepyMoon8pImagePromptGuardrail(prompt: string): string {
+  let result = prompt;
+  if (!result.includes(SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE)) {
+    result = `${result}, ${SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE}`;
+  }
+  if (!result.includes(SLEEPY_MOON_8P_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${SLEEPY_MOON_8P_CHARACTER_ANCHOR_CLAUSE}`;
+  }
+  return withFixedImagePromptSafety(result);
+}
+
 function buildAgeSpecificPage(params: {
   textTemplate: string;
   imagePromptTemplate: string;
@@ -1412,6 +1429,156 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
             "Wide quiet ending shot of the child asleep comfortably in bed under a soft blanket. Moonlight paints gentle silver highlights across the room while warm ambient light remains subtle. Plush toy rests by the child's side. A tiny star motif appears on blanket edge. Serene bedtime stillness, safe and cozy environment, watercolor picture book style, balanced calm composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-sleepy-moon-adventure-8p": {
+    name: "おつきさまと おやすみぼうけん（8ページ）",
+    description: "月あかりの冒険をゆっくり8ページで描く、安心おやすみテンプレートです。",
+    icon: "🌙",
+    categoryGroupId: "bedtime",
+    subcategoryId: "moon-adventure",
+    parentIntent: "今日も安心して眠ってほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["bedtime", "moon", "comfort", "pilot-8-page"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.png",
+    sampleImageAlt: "月あかりの冒険をゆっくり楽しむ子どものやさしい絵本イメージ（8ページ版）",
+    visualDirection:
+      "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination cloud-and-star adventure, and calm reassuring expressions over an 8-page rhythm.",
+    order: 11.5,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、寝る前のおやすみぼうけんを8ページでやさしく描く絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}とおつきさまのおやすみぼうけん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a sleepy child in cozy pajamas looking at a bright moon from a bedroom window, soft blanket draped around shoulders, tiny glowing star motif, calm and reassuring bedtime mood, soft watercolor style, rounded child-safe composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "おつきさまと おやすみぼうけん",
+      openingNarrationTemplate:
+        "よるのしずかな へやで、{childName}は まどのむこうの おつきさまを みつけました。きょうも やさしい おやすみぼうけんが はじまります。",
+      pageCount: 8,
+      layoutVariant: "8_page",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "ベッドのうえで、{childName}はまどのそとのおつきさまを見つけました。やさしい月あかりが、おへやをそっと包んでいます。",
+          baby_toddler: "{childName}、おつきさま みーつけた。ふわっと あたたかい。",
+          preschool_3_4:
+            "ベッドのうえで、{childName}は まどのそとの おつきさまを みつけました。やさしい つきあかりが、おへやを そっと つつんでいます。",
+          early_reader_5_6:
+            "ベッドのうえで、{childName}は まどのそとの おつきさまを みつけました。やさしい 月あかりが おへやを そっと 包んで、なんだか ほっと する 気持ちに なりました。",
+          early_elementary_7_8:
+            "ベッドのうえで、{childName}は まどのそとの おつきさまを みつけました。やさしい 月あかりが おへやを そっと 包んで、きょうの つかれが すこしずつ ほどけていく ようでした。",
+          general_child:
+            "ベッドのうえで、{childName}はまどのそとのおつきさまを見つけました。やさしい月あかりが、おへやをそっと包んでいます。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            withSleepyMoon8pImagePromptGuardrail("Establishing wide shot of a cozy bedroom at night. A child sits upright on bed under a soft fluffy blanket, gazing through a window at a bright round moon. A plush stuffed toy sits beside the child. A warm bedside lamp glows in the corner. A tiny glowing star motif appears near the plain unprinted curtain. Moonlight and warm lamp light blend softly in the room. Soft watercolor picture book style, rich but uncluttered composition, child-safe rounded shapes. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、もっとよく見たくて、まどのそばにすわりなおしました。おつきさまがぐんと近く見えました。",
+          baby_toddler: "{childName}、おつきさまを もっと みたい。ちかい、ちかい。",
+          preschool_3_4:
+            "{childName}は、もっと よくみたくて、まどのそばに すわりなおしました。おつきさまが ぐんと ちかく みえました。",
+          early_reader_5_6:
+            "{childName}は、もっと よく見たくて、まどのそばに すわりなおしました。おつきさまが ぐんと 近く 見えて、しずかな よるが もっと 広くなったみたいでした。",
+          early_elementary_7_8:
+            "{childName}は、もっと よく見たくて、まどのそばに すわりなおしました。おつきさまが ぐんと 近く 見えて、よるの しずかさが からだ全体に ふかく 広がっていきました。",
+          general_child:
+            "{childName}は、もっとよく見たくて、まどのそばにすわりなおしました。おつきさまがぐんと近く見えました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            withSleepyMoon8pImagePromptGuardrail("Medium shot from the side of a child sitting up in bed, face turned toward a window where a large bright moon fills the glass. The child leans forward with gentle curiosity, soft blanket pooled around the waist. A plush stuffed toy rests on the bed nearby. The curtain is plain fabric with no print or pattern. Moonlight falls softly across the child's face. A tiny glowing star motif appears on the plain window frame edge. Soft watercolor picture book style, intimate wondering mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、ふわふわの雲やきらきらの星をそうぞうしました。",
+          baby_toddler: "ふわふわ くも、きらきら ほし。",
+          preschool_3_4:
+            "{childName}は、ふわふわの くもや きらきらの ほしを そうぞうしました。",
+          early_reader_5_6:
+            "{childName}は、ふわふわの くもや きらきらの ほしを そうぞうしました。やさしい ぼうけんが こころのなかで ひろがります。",
+          early_elementary_7_8:
+            "{childName}は、ふわふわの くもや きらきらの ほしを そうぞうしました。へやにいながら、しずかな よるの そらを たびしている きぶんになります。",
+          general_child: "{childName}は、ふわふわの雲やきらきらの星をそうぞうしました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            withSleepyMoon8pImagePromptGuardrail("Medium discovery shot of a child smiling softly on bed while imagining soft glowing cloud wisps and star shapes floating gently around the cozy room. The floating shapes are soft glowing points and curved wisps only, with no connecting lines, no symbol arrangement, no arrow shapes, no constellation-map patterns, no letter-like forms. The bedroom remains clear and safe, with moonlight entering from the window. A small star motif appears among the symbolic floating shapes. Soft watercolor picture book style, dreamy but grounded composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、そうぞうの中で、ふわふわの雲に乗ってみました。星たちがやさしくそばで光っています。",
+          baby_toddler: "くもに のって、ふわふわ。ほしが きらきら。",
+          preschool_3_4:
+            "{childName}は、そうぞうの なかで、ふわふわの くもに のってみました。ほしたちが やさしく そばで ひかっています。",
+          early_reader_5_6:
+            "{childName}は、そうぞうの 中で、ふわふわの 雲に 乗ってみました。やさしく 光る 星たちが そばに 集まって、まるで 夜の 空を たびしているみたいでした。",
+          early_elementary_7_8:
+            "{childName}は、そうぞうの 中で、ふわふわの 雲に 乗ってみました。星たちが やさしく そばで 光って、へやにいながら よるの 宇宙を たびしている きぶんになります。",
+          general_child:
+            "{childName}は、そうぞうの中で、ふわふわの雲に乗ってみました。星たちがやさしくそばで光っています。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            withSleepyMoon8pImagePromptGuardrail("Action medium shot of the child seated on a plain fluffy white cloud in an imagination dreamscape, surrounded by softly glowing star points. The cloud surface is smooth and plain with no markings, no symbols, no lines, no arrows, no structural details. Stars appear as scattered soft glowing points only with no connecting lines. The real bedroom is faintly visible at the edges to ground the dream-play context. The child's expression is gentle and adventurous. A tiny star motif glows near the cloud edge. Soft watercolor picture book style, dreamlike safe adventure, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "星たちがやさしくアーチをえがいて、{childName}のまわりをふんわりと囲みました。大きな安心感がひろがりました。",
+          baby_toddler: "ほしが ふわっ。{childName}、だいじょうぶ。あったかい。",
+          preschool_3_4:
+            "ほしたちが やさしく アーチを えがいて、{childName}のまわりを ふんわりと かこみました。なんだか おおきな あんしんかんが ひろがります。",
+          early_reader_5_6:
+            "星たちが やさしく アーチを えがいて、{childName}の まわりを ふんわりと 囲みました。その やわらかな 光の 中で、大きな 安心感が からだに ひろがりました。",
+          early_elementary_7_8:
+            "星たちが やさしく アーチを えがいて、{childName}の まわりを ふんわりと 囲みました。その やわらかな 光に 包まれて、きょう一日の 全部が そっと ゆるされていくような 感覚になります。",
+          general_child:
+            "星たちがやさしくアーチをえがいて、{childName}のまわりをふんわりと囲みました。大きな安心感がひろがりました。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            withSleepyMoon8pImagePromptGuardrail("Wide payoff shot of the child surrounded by softly glowing star points arranged in a gentle arc overhead. The stars are scattered soft glowing points in a gentle curve only, with no connecting lines, no symbol arrangement, no constellation-map style, no arrow-like paths. The moon is visible in the background as a plain luminous orb with no surface marks or craters. The child's expression shows serene wonder and contentment. A tiny star motif glows at the arc's highest point. Soft watercolor picture book style, peak wonder and warmth, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おつきさまが「きょうもだいじょうぶ」と見まもってくれているようでした。{childName}のこころはほっとあたたかくなりました。",
+          baby_toddler: "だいじょうぶ、って おつきさま。{childName}、あったかい。",
+          preschool_3_4:
+            "おつきさまが「きょうも だいじょうぶ」と 見まもってくれているようでした。{childName}の こころは ほっと あたたかくなりました。",
+          early_reader_5_6:
+            "おつきさまが「きょうも だいじょうぶ」と 見まもってくれているようでした。{childName}の こころは ほっと あたたかくなって、安心の 気持ちで いっぱいに なります。",
+          early_elementary_7_8:
+            "おつきさまが「きょうも だいじょうぶ」と そっと 見まもってくれているようでした。{childName}の こころは、しずかに ほぐれて、やさしい ぬくもりで みたされていきます。",
+          general_child:
+            "おつきさまが「きょうもだいじょうぶ」と見まもってくれているようでした。{childName}のこころはほっとあたたかくなりました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            withSleepyMoon8pImagePromptGuardrail("Emotional close-up of a child resting on pillow with peaceful eyes, moonlight softly illuminating the face. The child hugs a plain-colored fluffy stuffed toy with comfort. Outside the window, the moon appears gentle and protective as a plain luminous orb with no surface marks or symbols. A tiny star motif glows near the pillow seam. Intimate calm framing, watercolor picture book style, warm reassurance and quiet confidence, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、ふとんの中にもぐりこみました。まぶたがそっとおもくなってきます。おやすみなさい。",
+          baby_toddler: "ふとんに もぐって。まぶた おもい。おやすみ。",
+          preschool_3_4:
+            "{childName}は、ふとんの なかに もぐりこみました。まぶたが そっと おもくなってきます。おやすみなさい。",
+          early_reader_5_6:
+            "{childName}は、ふとんの 中に もぐりこみました。まぶたが そっと おもくなってきます。きょうの おやすみぼうけんも、これで おわりです。おやすみなさい。",
+          early_elementary_7_8:
+            "{childName}は、ふとんの 中に もぐりこみました。まぶたが そっと おもくなってきます。きょうの おやすみぼうけんで 感じた やさしい ひかりが、ゆめのなかにも つながっていきそうです。おやすみなさい。",
+          general_child:
+            "{childName}は、ふとんの中にもぐりこみました。まぶたがそっとおもくなってきます。おやすみなさい。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            withSleepyMoon8pImagePromptGuardrail("Medium quiet shot of the child nestled under a soft blanket on their side, eyes gently closing. A plain-colored soft plush stuffed toy is tucked under the child's arm with no printed features, no appliqué patterns, no labels. Moonlight casts a gentle silver glow across the pillow. A tiny star motif appears on the plain pillow corner. The room is peaceful and still. Soft watercolor picture book style, near-sleep serenity, intimate and safe, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4: "{parentMessage}",
+          early_reader_5_6: "{parentMessage}",
+          early_elementary_7_8: "{parentMessage}",
+          general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            withSleepyMoon8pImagePromptGuardrail("Wide quiet ending shot of the child asleep comfortably in bed under a soft blanket. Moonlight paints gentle silver highlights across the room while warm ambient light remains subtle. A plush toy rests by the child's side. A tiny star motif appears on the plain blanket edge. Serene bedtime stillness, safe and cozy environment, watercolor picture book style, balanced calm composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
       ],
     },

@@ -12,6 +12,7 @@ const FIXED_TEMPLATE_IDS = [
   "fixed-first-christmas",
   "fixed-sharing-friends",
   "fixed-sleepy-moon-adventure",
+  "fixed-sleepy-moon-adventure-8p",
   "fixed-cardboard-rocket",
   "fixed-rainy-day-puddle",
   "fixed-little-helper",
@@ -80,6 +81,16 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-first-christmas": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-sharing-friends": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-sleepy-moon-adventure": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-sleepy-moon-adventure-8p": [
+    "opening_establishing",
+    "discovery",
+    "discovery",
+    "action",
+    "payoff",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending",
+  ],
   "fixed-cardboard-rocket": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-rainy-day-puddle": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-little-helper": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
@@ -108,6 +119,7 @@ const EXPECTED_FIXED_SAMPLE_IMAGES: Record<string, string> = {
   "fixed-first-christmas": "/images/templates/seasonal.png",
   "fixed-sharing-friends": "/images/templates/emotional-growth.png",
   "fixed-sleepy-moon-adventure": "/images/templates/fantasy.png",
+  "fixed-sleepy-moon-adventure-8p": "/images/templates/fantasy.png",
   "fixed-cardboard-rocket": "/images/templates/adventure.png",
   "fixed-rainy-day-puddle": "/images/templates/seasonal.png",
   "fixed-little-helper": "/images/templates/emotional-growth.png",
@@ -142,10 +154,10 @@ function assertFixedStoryPageCountContract(fixedStory: {
 }
 
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
-  it("Phase T3-3e: fixed templates are expanded to 12 (10 legacy + 2 pilots)", () => {
-    expect(FIXED_TEMPLATE_IDS.length).toBe(12);
+  it("Phase T3-8b: fixed templates are expanded to 13 (12 previous + fixed-sleepy-moon-adventure-8p)", () => {
+    expect(FIXED_TEMPLATE_IDS.length).toBe(13);
     const existing = FIXED_TEMPLATE_IDS.filter((id) => SEED_TEMPLATES[id]);
-    expect(existing.length).toBe(12);
+    expect(existing.length).toBe(13);
   });
 
   for (const id of FIXED_TEMPLATE_IDS) {
