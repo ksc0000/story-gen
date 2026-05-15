@@ -5807,6 +5807,87 @@ Reason:
 
 ---
 
+## T3-4j-9 Page 3 Product-surface BF-4 Hard Cleanup Implementation
+
+### Status
+
+completed.
+
+### Purpose
+
+Implement a focused page 3 product-surface cleanup after T3-4j-8 found readable text on the toothpaste tube.
+
+This step targets only the page 3 image prompt. It does not change page 0, page 4, text templates, ageBand support, global suffixes, BF-3 character anchors, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| previous QA commit | `1b3dcf1` |
+| previous QA status | `Hold` |
+| target template | `fixed-brush-teeth-8p` |
+| target page | page 3 |
+| target issue | readable text artifact on toothpaste tube |
+
+### Scope
+
+| item | value |
+| --- | --- |
+| page 3 image prompt | changed |
+| toothpaste tube surface | strengthened as blank/plain/label-free |
+| page 0 | unchanged |
+| page 4 | unchanged |
+| text templates | unchanged |
+| ageBand support | unchanged |
+| global suffix | unchanged |
+| BF-3 anchor | unchanged |
+| smoke generation | not run |
+| DB/Admin side effects | none |
+| reference-flow | not run |
+
+### Implementation Summary
+
+| item | result | notes |
+| --- | --- | --- |
+| page 3 toothpaste tube blank/plain constraint | pass | Added explicit "completely blank, plain white, label-free tube" instruction on page 3 action prompt only. |
+| printed/fake text prohibited | pass | Added explicit prohibition of printed text and fake text on tube surface. |
+| logo/brand mark prohibited | pass | Added explicit prohibition of logo and brand mark on tube surface. |
+| symbols/numbers/letter-like shapes prohibited | pass | Added explicit prohibition of symbols, numbers, and letter-like shapes. |
+| turned-away / hidden tube fallback allowed | pass | Added fallback instruction: turn tube away or partially hide behind cup if needed. |
+| page 0/page 4 unchanged | pass | No prompt edits on page 0 or page 4. |
+| text templates unchanged | pass | `textTemplate` / `textTemplatesByAge` unchanged. |
+| global suffix/BF-3 anchor unchanged | pass | No change to shared suffix or character-anchor behavior. |
+
+### Validation
+
+| check | result | notes |
+| --- | --- | --- |
+| functions build | pass | `npm --prefix functions run build` succeeded. |
+| seed-template tests | pass | `npm --prefix functions test -- test/seed-templates.test.ts` passed (345 tests). |
+| diff check | pass | source-only change in target seed prompt plus docs update. |
+| functions/lib not committed | pass | build artifacts excluded from commit scope. |
+| generated files not committed | pass | no generated files added to commit. |
+| secrets not committed | pass | no secret files/values included. |
+| smoke generation not run | pass | not executed in this step. |
+| DB/Admin side effects avoided | pass | no write/admin operation executed. |
+| reference-flow not run | pass | not executed in this step. |
+
+### Decision
+
+**Page 3 BF-4 hard cleanup implementation status:** Go
+
+Reason:
+- Page 3 action prompt now has product-surface-specific hard constraints targeting the observed toothpaste-tube artifact pattern.
+- The new constraint explicitly blocks printed/fake text, logo/brand marks, symbols/numbers/letter-like marks, and adds camera-composition fallback (turned-away/hidden tube).
+- Scope remained minimal and isolated to the intended prompt.
+
+### Follow-up
+
+- T3-4j-10: sync template and run no-reference smoke after page 3 hard cleanup.
+- T3-4j-11: perform targeted manual BF-4 visual QA for page 3.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
