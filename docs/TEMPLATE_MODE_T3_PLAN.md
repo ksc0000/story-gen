@@ -10259,3 +10259,199 @@ Result: **not yet fully approved**.
 ### Next steps
 
 - Next recommended slice: targeted BF-4 cleanup for incidental room-prop / book text suppression, then one more no-reference re-smoke.
+
+---
+
+## T3-8k fixed-sleepy-moon-adventure-8p narrow BF-4 cleanup plan
+
+### Status
+
+completed (2026-05-16)
+
+### Purpose
+
+Define a docs-only narrow remediation plan for the remaining BF-4 blocker after T3-8j. The objective is to suppress incidental readable text on room props / books / shelf objects in `fixed-sleepy-moon-adventure-8p` without reopening the already-improved BF-3 continuity work or broadening scope beyond sleepy-moon 8p.
+
+### Remaining issue from T3-8j
+
+| area | current state | implication |
+| --- | --- | --- |
+| page 7 message-cloud failure | fixed | no further action needed in this slice |
+| sequence-wide child/pajama/teddy continuity | fixed enough to pass | avoid destabilizing this work |
+| page 6 background readable text | unresolved | current blocking BF-4 issue |
+
+Current blocker summary:
+
+- The re-smoke `c2JGhoypMsOXiWnI5J3A` no longer shows the original page 7 text-cloud failure.
+- However, page 6 still contains readable Japanese text on a background book / shelf object.
+- Because product acceptance is "no readable text anywhere," the sequence remains not fully approved.
+
+### Root-cause hypothesis for page 6
+
+Most likely cause:
+
+- The page 6 prompt still leaves too much freedom for small bedroom props, especially shelf items and book-like objects.
+- Even with the global no-text suffix, the model can still invent readable cover text when:
+  - a shelf is visible
+  - a book or stacked rectangular object is present
+  - the scene includes a calm domestic background with secondary detail surfaces
+
+Why the current safeguards were insufficient:
+
+- `withFixedImagePromptSafety(...)` and the strengthened sleepy-moon no-text clause suppress overt text/bubble behavior well, but they are not specific about:
+  - book covers
+  - spine text
+  - labels on shelf items
+  - printed nursery decor
+  - framed children's board-book style objects
+- In practice, "no readable text" alone is weaker than directly removing or flattening the object surfaces that commonly attract pseudo-typography.
+
+### Narrow cleanup objective
+
+Result: target only incidental room-prop text surfaces.
+
+This cleanup should:
+
+1. Preserve the current BF-3 gains.
+2. Preserve the fixed page 7 no-message behavior.
+3. Avoid broad clause churn unless directly necessary.
+4. Focus on background object simplification, especially page 6 and any similar quiet-ending pages.
+
+### Cleanup strategy
+
+#### 1. Add a sleepy-moon-specific room-prop no-print clause
+
+Design direction:
+
+- Introduce one new sleepy-moon-8p-specific clause dedicated to room props, with wording conceptually covering:
+  - no books with readable covers
+  - no spine text
+  - no printed labels on shelf items
+  - no posters
+  - no framed text art
+  - no nursery cards, book jackets, packaging, or paper items with visible writing
+  - background objects should be plain, simplified, and non-readable
+
+Why:
+
+- This addresses the actual residual artifact class rather than only generic text suppression.
+
+#### 2. Apply the room-prop clause narrowly, not globally across the whole product
+
+Design direction:
+
+- Keep the new clause sleepy-moon-8p-specific.
+- Prefer applying it through the sleepy-moon-specific guardrail path or to selected quiet-bedroom prompts only.
+
+Why:
+
+- The issue is currently isolated to this template family and should not trigger a broad global change.
+
+#### 3. Simplify page 6 background set dressing
+
+Design direction:
+
+- Rewrite page 6 prompt body to reduce the chance of text-bearing objects by describing:
+  - plain shelf objects
+  - simple toy shapes
+  - plain books or, preferably, replacing books with non-book objects when possible
+  - no visible book covers, no visible spines, no readable labels
+- If a shelf remains, constrain it toward:
+  - plain toys
+  - plain blocks
+  - plain folded blanket or basket
+  - simple decor with no printed surfaces
+
+Why:
+
+- T3-8j showed that the main failure is not the central child/teddy area; it is the secondary room-detail layer.
+
+#### 4. Review whether page 7 should inherit the same room-prop cleanup
+
+Design direction:
+
+- Even though page 7 passed, it is another quiet bedroom scene and may still benefit from the same room-prop suppression wording.
+- If we apply the clause, it should be framed as a stability measure, not a response to a new failure.
+
+Why:
+
+- Page 7 now passes. We should avoid creating a fresh regression by leaving a similar prop surface unconstrained.
+
+### Planned scope for T3-8l
+
+#### In scope
+
+- `functions/src/seed-templates.ts`
+  - add one sleepy-moon-8p-specific room-prop no-print clause
+  - tighten page 6 prompt body
+  - optionally add the same room-prop simplification to page 7 and perhaps page 5 if needed for consistency
+- `functions/test/seed-templates.test.ts`
+  - add template-specific assertions for room-prop / book-cover suppression language if useful
+
+#### Out of scope
+
+- changes to `withFixedImagePromptSafety(...)`
+- changes to global suffix behavior
+- changes to textTemplate / textTemplatesByAge
+- changes to unrelated templates
+- Firestore sync, smoke generation, or visual QA in the same slice
+
+### Minimal implementation shape
+
+| target | change | size |
+| --- | --- | --- |
+| sleepy-moon-specific clause set | add room-prop / shelf / book-cover suppression clause | small |
+| page 6 `imagePromptTemplate` | simplify background object language and remove text-bearing surfaces | very small |
+| page 7 `imagePromptTemplate` | optional parallel room-prop suppression for stability | very small |
+| tests | template-specific prompt-token assertions | small |
+
+### T3-8l implementation plan
+
+1. Add a sleepy-moon-8p-specific room-prop no-print clause in `functions/src/seed-templates.ts`.
+2. Apply it to page 6, and optionally page 7 if it helps quiet-ending stability.
+3. Rewrite page 6 background object wording to prefer plain toys / plain shelf objects over visible book covers and labeled items.
+4. Keep child / pajama / teddy continuity wording unchanged unless a tiny local adjustment is needed.
+5. Run `npm run guard:hygiene`.
+6. Run `npm --prefix functions run build`.
+7. Run `npm --prefix functions test -- test/seed-templates.test.ts`.
+8. After implementation, schedule targeted Firestore sync + one more no-reference re-smoke.
+9. Re-run manual visual QA with page 6 as first-priority BF-4 checkpoint.
+
+### Acceptance criteria for the next re-smoke
+
+#### BF-4 acceptance
+
+- No readable text on page 6 shelf / book / background prop surfaces.
+- No readable text on any page in the sequence.
+- No regression of the fixed page 7 no-message behavior.
+
+#### BF-3 acceptance
+
+- Child continuity remains at least as strong as in T3-8j.
+- Pajama continuity remains at least as strong as in T3-8j.
+- Teddy-bear continuity remains at least as strong as in T3-8j.
+
+### Risk note
+
+- The main risk is over-correcting by stripping too much cozy room detail from page 6 / page 7.
+- To avoid that, the cleanup should prefer "plain object surfaces" rather than "remove all props."
+- This keeps the room feeling lived-in while suppressing the specific artifact surface that failed QA.
+
+### Conclusion
+
+- The remaining BF-4 issue is narrow and well-localized.
+- A sleepy-moon-8p-specific room-prop / book-cover suppression pass is the smallest reasonable next step.
+- T3-8l should implement only that narrow cleanup, then move directly to one more targeted re-smoke and page-6-first visual QA.
+
+### Exclusions (this slice)
+
+- No code / seed / prompt modifications.
+- No Firestore sync, smoke generation, image generation, or Admin regeneration.
+- No reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+- No T4 style validation execution.
+
+### Next steps
+
+- T3-8l: implement the narrow sleepy-moon-8p BF-4 cleanup for room props / books / shelf items, then run one more no-reference re-smoke.
