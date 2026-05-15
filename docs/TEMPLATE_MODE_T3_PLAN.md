@@ -5024,6 +5024,78 @@ Reason:
 - Keep BF-4 follow-up scoped to targeted prompt/object wording for label-prone bathroom objects (no broad runtime changes).
 - Run separate ageBand verification task for `preschool_3_4` text rendering (out of scope for T3-4j-4).
 
+## T3-4k-4 AgeBand-aware Smoke Support Plan
+
+### Status
+
+completed (docs-only planning)
+
+### Purpose
+
+Plan minimal ageBand-aware smoke generation support so fixed-template age variants such as `preschool_3_4` can be verified in live smoke output.
+
+This step is docs-only. It does not change smoke scripts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| source finding | `T3-4j-3` ageBand missing finding |
+| related decision | `T3-4j-4` = Conditional-Go |
+| affected template | `fixed-brush-teeth-8p` |
+| expected age variant | `preschool_3_4` |
+| observed age variant | `general_child` |
+| impact | preschool hiragana text cannot be verified by current smoke generation |
+
+### Investigation Result
+
+| check | result | notes |
+| --- | --- | --- |
+| smoke script ageBand support checked | pass | `scripts/create-template-smoke-books.js` currently supports `--template-id`, `--page-count`, `--with-reference`, `--reference-image-url`; no `--age-band` option exists. |
+| childProfileSnapshot input checked | pass | Script writes `childProfileSnapshot` only when `--with-reference` is set; no readingProfile/ageBand field is passed via snapshot. |
+| variant selection path checked | pass | `functions/src/generate-book.ts` selects fixed-template text by `page.textTemplatesByAge?.[readingProfile.ageBand] ?? ...general_child`; `readingProfile` is derived from `getAgeReadingProfile(mergedInput.childAge)`. |
+| minimal CLI option identified | pass | Smallest compatible path is optional `--age-band=<value>` in smoke script, internally mapped to `input.childAge` for existing age profile resolution. |
+| default behavior preservation checked | pass | If `--age-band` is omitted, `input.childAge` remains unset and existing fallback behavior (`general_child`) stays unchanged. |
+| existing smoke tests/checklist impact checked | pass | No dedicated automated test file for this script was identified; main impact is command/docs coverage (`docs/TEMPLATE_SMOKE_CHECKLIST.md`) and one focused regression check path. |
+| secrets avoided | pass | No credential value, email, token, cookie, service account path/JSON, or private URL was recorded. |
+
+### Proposed Minimal Implementation
+
+| id | proposal | scope | priority |
+| --- | --- | --- | --- |
+| AB-1 | Add optional `--age-band=<value>` CLI argument to template smoke generation script. | script-only | P2 |
+| AB-2 | Resolve `--age-band` to compatible `input.childAge` before payload creation (for existing `getAgeReadingProfile(childAge)` path). | script-only | P2 |
+| AB-3 | Preserve current default behavior when `--age-band` is omitted. | compatibility | P1 |
+| AB-4 | Add docs/test coverage for preschool smoke text verification flow. | docs/test | P2 |
+| AB-5 | Run a follow-up no-reference smoke using `--age-band=preschool_3_4` on `fixed-brush-teeth-8p`. | QA follow-up | P2 |
+
+### Acceptance Criteria
+
+| id | criteria |
+| --- | --- |
+| AC-AB-1 | Existing smoke command without `--age-band` behaves as before. |
+| AC-AB-2 | New command with `--age-band=preschool_3_4` renders `textTemplatesByAge.preschool_3_4` for fixed templates. |
+| AC-AB-3 | Generated page 0-6 text contains no kanji for the preschool variant in `fixed-brush-teeth-8p`. |
+| AC-AB-4 | `{childName}` and `parentMessage` continue to render correctly. |
+| AC-AB-5 | No image prompt, seed text, Admin flow, DB schema, or reference-flow changes are required. |
+
+### Decision
+
+**AgeBand-aware smoke support plan status:** Go (implementation-ready)
+
+Reason:
+
+- Root cause and resolution path are clear: fixed-template variant selection already works, but smoke input currently does not provide age-driving input.
+- The minimal change is isolated to smoke script argument parsing and payload shaping.
+- Backward compatibility is straightforward by keeping age unset unless explicitly requested.
+- This plan reduces repeated QA ambiguity between `general_child` and `preschool_3_4` without broad runtime impact.
+
+### Follow-up
+
+- T3-4k-5: implement optional `--age-band` support in `scripts/create-template-smoke-books.js`.
+- T3-4k-6: run preschool no-reference smoke verification for `fixed-brush-teeth-8p`.
+- T3-4k-7: record rendered preschool text QA result in this document.
+
 ---
 
 ## T3-4k Japanese Orthography Policy for Fixed Templates
