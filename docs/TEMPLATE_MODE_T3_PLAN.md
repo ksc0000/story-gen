@@ -388,6 +388,37 @@ T3-2 P1 text fix sync/smoke completed:
 
 ---
 
+## T3-6-6 fixed-first-birthday-8p Rollout Decision / Variant Closure
+
+### Status
+
+- **closed (docs-only closure)**
+- `fixed-first-birthday-8p` is considered rollout-ready for this controlled 8-page variant track.
+
+### Closure rationale
+
+1. T3-6-1 seed/source audit completed and passed: `fixed-first-birthday-8p` has valid `templateId`, `pageCount: 8`, `layoutVariant: "8_page"`, page roles, image prompts, and age-specific text coverage.
+2. T3-6-2 text/ageBand audit completed and passed: preschool_3_4 text is age-appropriate, page 7 isolates `{parentMessage}`, and no placeholder or English contamination risks were found.
+3. T3-6-3 prompt/BF-4/BF-3 audit completed and conditioned the cleanup plan: the birthday-specific guardrail design was defined, targeted high-risk pages were identified, and no global helper changes were required.
+4. T3-6-3a docs-only cleanup planning completed and scoped the birthday-local wrapper plus page-level prompt simplifications.
+5. T3-6-3b birthday-local prompt guardrail implementation completed and build/test verified with no shared-helper or other-template impact.
+6. T3-6-4 template sync + no-reference smoke completed successfully: generated book `YJ14Zc8g9TcpEuUHTuSb` with 8/8 pages completed, 0 failed, 0 fallback, 0 timedOut.
+7. T3-6-5 manual BF-4/BF-3 visual QA passed: both visual artifact safety and readability/pacing passed for the target preschool_3_4 8-page candidate.
+
+### Final decision
+
+- **Rollout decision:** close `fixed-first-birthday-8p` as a controlled 8-page variant in the current T3 rollout slice.
+- The candidate has satisfied the planned gate sequence from T3-6-1 through T3-6-5.
+- No further T3-6 rollout gates remain for `fixed-first-birthday-8p` in this docs-only closure.
+
+### Known limitations / follow-up
+
+- severity: **low**. No immediate BF-4/BF-3 blockers remain, but this variant should still be monitored in future smoke or QA cycles as decorations and child continuity are inherently higher-risk in 8-page celebration flows.
+- follow-up: retain the birthday-specific prompt guardrail if the candidate is expanded or reused, and re-run targeted no-reference smoke after any prompt or wrapper changes.
+- future watch: T3-7 template quality follow-up should verify whether the 8-page variant continues to meet visual safety expectations when more templates or higher audience age bands are added.
+
+---
+
 ## T3-3 Kickoff Plan: Fixed Template Expansion Design (2026-05-13)
 
 ### Goal
