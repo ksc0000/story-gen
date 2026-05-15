@@ -8630,4 +8630,184 @@ Reason:
 
 - `{parentMessage}` (page 7): parent-authored field is out of scope. No action required. Fallback is compliant.
 - `textTemplate` and `general_child` still contain kanji. These are not rendered as preschool_3_4 when an age-specific variant exists. No action required unless age resolution changes.
+
+---
+
+## T3-8 next fixed-template candidate selection
+
+### Status
+
+docs-only candidate selection (2026-05-16)
+
+### Purpose
+
+- Select the next 8-page fixed-template rollout candidate after confirming closure of the three completed variants.
+- Evaluate remaining 4p templates in `functions/src/seed-templates.ts` against the T3-7a gate checklist dimensions.
+- Produce a single recommended candidate for the next rollout slice.
+- No code, seed, prompt, smoke, sync, or image changes are made in this task.
+
+### Current seed/template inventory
+
+Source: `functions/src/seed-templates.ts` (as of commit `f41031b`)
+
+| templateId | pageCount | category | ageMin | ageMax | requiredInputs | status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-birthday-8p` | 8 | milestones | 1 | 6 | childName, familyMembers | **closed** (T3-6-6) |
+| `fixed-first-zoo-8p` | 8 | milestones | 1 | 6 | childName, familyMembers, place | **closed** (T3-5-5d) |
+| `fixed-brush-teeth-8p` | 8 | daily-life | 2 | 8 | childName | **closed** (T3-4f, Conditional-Go; regression baseline) |
+| `fixed-bedtime-good-day` | 4 | bedtime | 1 | 6 | childName | candidate |
+| `fixed-sleepy-moon-adventure` | 4 | bedtime | 2 | 8 | childName | candidate |
+| `fixed-cardboard-rocket` | 4 | imagination | 3 | 8 | childName | candidate |
+| `fixed-rainy-day-puddle` | 4 | daily-life | 2 | 8 | childName | candidate |
+| `fixed-little-helper` | 4 | growth-support | 3 | 8 | childName | candidate |
+| `fixed-first-christmas` | 4 | seasonal-events | 1 | 6 | childName, familyMembers | candidate |
+| `fixed-sharing-friends` | 4 | emotional-growth | 3 | 8 | childName, lessonToTeach | candidate |
+| `fixed-first-zoo` (4p) | 4 | milestones | 1 | 6 | childName, familyMembers, place | legacy 4p (not targeted for 8p expansion) |
+| `fixed-first-birthday` (4p) | 4 | milestones | 1 | 6 | childName, familyMembers | legacy 4p (not targeted for 8p expansion) |
+| `fixed-brush-teeth` (4p) | 4 | daily-life | 2 | 8 | childName | legacy 4p (regression ref for 8p variant) |
+| `fixed-bedtime-good-day` | 4 | bedtime | 1 | 6 | childName | candidate |
+
+### Closure-excluded variants
+
+The following variants are confirmed closed and must not be re-selected unless regression evidence appears:
+
+1. `fixed-brush-teeth-8p` — Conditional-Go (T3-4f); serves as regression reference baseline.
+2. `fixed-first-zoo-8p` — Go (T3-5-5d); rollout complete.
+3. `fixed-first-birthday-8p` — Go (T3-6-6); rollout complete.
+
+### Candidate shortlist
+
+Candidates from the active 4p inventory (excluding legacy 4p and closed 8p variants):
+
+| templateId | ageBand | category | requiredInputs | BF-4 risk | BF-3 risk | smoke simplicity | guardrail reuse |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-sleepy-moon-adventure` | 2–8 | bedtime | childName only | low | low | high | high |
+| `fixed-bedtime-good-day` | 1–6 | bedtime | childName only | low–medium | low | high | high |
+| `fixed-rainy-day-puddle` | 2–8 | daily-life | childName only | medium | medium | medium | medium |
+| `fixed-cardboard-rocket` | 3–8 | imagination | childName only | medium | medium | medium | medium |
+| `fixed-little-helper` | 3–8 | growth-support | childName only | high | medium | medium | low |
+| `fixed-first-christmas` | 1–6 | seasonal-events | childName + familyMembers | high | high | low | low |
+| `fixed-sharing-friends` | 3–8 | emotional-growth | childName + lessonToTeach | medium | high | low | low |
+
+### Evaluation against T3-7a gate checklist dimensions
+
+#### `fixed-sleepy-moon-adventure`
+
+| dimension | assessment |
+| --- | --- |
+| Candidate selection | Not previously closed; broadest age band among bedtime variants (2–8). |
+| Seed / source | Single 4p source definition with standard `withFixedImagePromptSafety` wrapper on cover and explicit no-text clauses on all pages. No unintended seed changes observed. |
+| Text / ageBand | All 5 age bands (baby_toddler, preschool_3_4, early_reader_5_6, early_elementary_7_8, general_child) are populated. Covers age 2–8 without gap. `{childName}` placeholder is consistent. `{parentMessage}` on page 4. |
+| Prompt / BF-4 / BF-3 risk | BF-4: moon, stars, and dream-symbol imagery contain no physical decorated surfaces or labeled props; artifact risk is minimal. BF-3: single-scene bedroom setting with no location transitions; child identity continuity risk is low. |
+| Page-local cleanup | No identified high-risk pages. Moon and dream visuals are abstract; no real-world signage-prone objects appear in page prompts. Minor watch point: floating dream-symbol shapes on page 2 should remain clearly non-textual. |
+| Firestore sync preflight | Not assessed in this slice; standard 8p sync path expected to apply without special handling. |
+| Smoke suitability | Single required input (`childName`). No multi-character or multi-location complexity. Smoke input fixture straightforward to define. |
+| Manual BF-4 / BF-3 QA | Expected low-risk QA; high-risk pages are not identified at this stage, making this a lean manual review. |
+| Guardrail reusability | `withFixedImagePromptSafety` wrapper already present on cover. Template-local star/moon motif pattern is directly analogous to the closed birthday/zoo/brush-teeth 8p guardrail approach. No new guardrail class needed. |
+
+#### `fixed-bedtime-good-day`
+
+| dimension | assessment |
+| --- | --- |
+| Candidate selection | Not previously closed; narrower age band (1–6) than sleepy-moon. |
+| Seed / source | Standard `withFixedImagePromptSafety` wrapper on cover; no-text clauses on all pages. |
+| Text / ageBand | All 5 age bands populated; covers age 1–6. `{childName}` and `{parentMessage}` placeholders intact. |
+| Prompt / BF-4 / BF-3 risk | BF-4: page 2 describes a "small keepsake from the day (a leaf, a drawing, or a toy)" — a drawing object could invite text-like marks; slightly higher artifact risk than sleepy-moon. BF-3: single bedroom setting; low risk. |
+| Page-local cleanup | Page 2 keepsake prompt may need targeted no-text wording for any 8p expansion that retains or amplifies the keepsake scene. |
+| Smoke suitability | Single required input; straightforward fixture. |
+| Guardrail reusability | High; same bedtime pattern as sleepy-moon. |
+
+#### `fixed-rainy-day-puddle`
+
+| dimension | assessment |
+| --- | --- |
+| Candidate selection | Not closed; broadish age band (2–8). |
+| BF-4 risk | Medium: outdoor scene includes raincoat (potential logo risk), puddle reflections (distorted signage), and incidental background elements (neighborhood context could include fences, walls, gate labels). |
+| BF-3 risk | Medium: outdoor-to-indoor transition could create continuity gaps on clothing/scene. |
+| Guardrail reusability | Medium: outdoor-scene pattern not yet established in closed templates; new guardrail class likely needed. |
+
+#### `fixed-cardboard-rocket`
+
+| dimension | assessment |
+| --- | --- |
+| BF-4 risk | Medium: cardboard rocket's "control panel sticker area" is noted in page 3 prompt — sticker surfaces are artifact-prone. Page 2 cockpit view describes symbolic overlays that remain safe only with tight wording. |
+| BF-3 risk | Medium: imagination/pretend-play transitions may create scene grounding issues. |
+| Guardrail reusability | Medium: space/imagination scene pattern not established in closed templates. |
+
+#### `fixed-little-helper`
+
+| dimension | assessment |
+| --- | --- |
+| BF-4 risk | High: household tasks involve kitchen appliances, packaging, shelves — all of which commonly produce text-like artifact risks (labels, dials, buttons, product logos). |
+| Guardrail reusability | Low: kitchen/appliance props require new guardrail scope not covered by existing templates. |
+
+#### `fixed-first-christmas`
+
+| dimension | assessment |
+| --- | --- |
+| BF-4 risk | High: Christmas decorations (ribbon, wrapping paper, ornaments, gift tags, stockings, greeting cards) are structurally similar to birthday party decor — the highest-risk category from T3-6. Elevated risk of decorated-surface pseudo-text. |
+| BF-3 risk | High: `familyMembers` input adds multi-character consistency requirement; similar complexity to closed birthday/zoo variants. |
+| Guardrail reusability | Low: seasonal decoration risk requires new targeted guardrails even with learnings from birthday. Seasonal availability also limits rollout timing. |
+
+#### `fixed-sharing-friends`
+
+| dimension | assessment |
+| --- | --- |
+| BF-4 risk | Medium: social play scene has manageable prop risk if playground/toy objects are kept minimal. |
+| BF-3 risk | High: multi-character continuity needed (friend character must remain consistent across pages). `lessonToTeach` required input adds prompt complexity. |
+| Smoke suitability | Low: two required inputs; `lessonToTeach` free-form input needs careful fixture definition. |
+
+### Candidate comparison summary
+
+| rank | templateId | age | BF-4 | BF-3 | smoke | guardrail | category coverage |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `fixed-sleepy-moon-adventure` | 2–8 | low | low | high | high | bedtime (new sub-theme) |
+| 2 | `fixed-bedtime-good-day` | 1–6 | low–med | low | high | high | bedtime (also new sub-theme) |
+| 3 | `fixed-rainy-day-puddle` | 2–8 | med | med | med | med | daily-life (new category) |
+| 4 | `fixed-cardboard-rocket` | 3–8 | med | med | med | med | imagination (new category) |
+| 5 | `fixed-sharing-friends` | 3–8 | med | high | low | low | emotional-growth (new category) |
+| 6 | `fixed-little-helper` | 3–8 | high | med | med | low | growth-support (new category) |
+| 7 | `fixed-first-christmas` | 1–6 | high | high | low | low | seasonal-events (seasonal risk) |
+
+### Recommended candidate
+
+**`fixed-sleepy-moon-adventure-8p`**
+
+Rationale:
+
+1. Broadest age band among low-risk candidates (2–8) — covers preschool through early elementary without gap.
+2. Lowest BF-4 risk in the shortlist: moon, stars, and dream symbols are abstract; no physical decorated surfaces, no labeled props, no signage-prone objects appear in any existing page prompt.
+3. Lowest BF-3 risk: single-scene bedroom setting; no location transitions; single character; child identity continuity is trivially maintained.
+4. Highest smoke simplicity: one required input (`childName`); smoke fixture is straightforward; no multi-character or free-form input complexity.
+5. Highest guardrail reusability: `withFixedImagePromptSafety` wrapper already on cover; star/moon motif pattern is directly analogous to the closed templates' guardrail approach; no new guardrail class needed.
+6. Category coverage: adds a distinct bedtime sub-theme (moon/adventure imagination) that does not reopen any closed variant.
+7. T3-7 recommendation alignment: this candidate was explicitly listed as a top recommendation in T3-7 next-candidate planning.
+
+`fixed-bedtime-good-day` is the second-best alternative if bedtime-good-day is preferred for its baby-friendly age floor (min age 1 vs 2) or if a simpler narrative arc is preferred. The only risk differentiator is the keepsake object on page 2, which would need a targeted no-text guard during 8p seed expansion.
+
+### T3-7a gate checklist readiness (pre-execution)
+
+| gate | readiness | notes |
+| --- | --- | --- |
+| 1. Candidate selection and scope audit | **Ready** | `fixed-sleepy-moon-adventure` confirmed not closed; scope is 8p seed expansion only. |
+| 2. Seed / source audit | **Pending** | 4p source exists; 8p source not yet created. Audit will be T3-8a. |
+| 3. Text / ageBand / story audit | **Pending** | Will follow seed expansion. All 5 age bands already defined in 4p source. |
+| 4. Prompt / BF-4 / BF-3 risk audit | **Pending** | Pre-assessment shows low risk; formal audit after 8p source is drafted. |
+| 5. Page-local cleanup | **Pending** | No high-risk pages identified; minor watch on page 2 dream-symbol overlap. |
+| 6. Firestore sync preflight | **Not started** | Standard 8p sync path expected; no special handling anticipated. |
+| 7. No-reference smoke | **Not started** | Requires safe credentials/env. |
+| 8. Manual BF-4 / BF-3 QA | **Not started** | Low-risk profile expected. |
+| 9. Closure decision | **Not started** | Will be T3-8 final gate. |
+
+### Exclusions (this slice)
+
+- No code, seed, prompt, or Firestore changes made.
+- No smoke generation, image generation, or Admin regeneration executed.
+- No reference-flow generation, Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+
+### Next steps
+
+- T3-8a: seed/source audit of `fixed-sleepy-moon-adventure` and design of 8p expansion structure.
+- T3-8b onward: follow the T3-7a standard rollout checklist gates in sequence.
 - Future 8p variant templates should apply this orthography policy from initial seed writing.
