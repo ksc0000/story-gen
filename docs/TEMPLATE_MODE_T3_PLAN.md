@@ -5030,7 +5030,7 @@ Execute Firestore template sync and a new no-reference smoke generation for `fix
 | 3. Existing books not overwritten | pass | smoke script created a new document ID via create-path |
 | 4. Reference image not used | pass | `withReference=false`, `childProfileSnapshot: NO`, all pages `inputReferenceCount=0` |
 | 5. Page count is 8 | pass | inspect expected 8 / actual 8 |
-| 6. Failed/fallback presence | pass | page status all `completed`; no `image_failed` observed; model stayed primary (`flux-2-pro`) on all pages |
+| 6. Failed/fallback presence | pass | page status all `completed`; no `image_failed`; `imageFallbackUsed=false` |
 | 7. Image model | pass | all pages `black-forest-labs/flux-2-pro` |
 | 8. Generated bookId | pass | `mR3lsI7AF2P8n11mMRxS` |
 | 9. Input childAge is 4 | pass | smoke creation log: `requestedAgeBand=preschool_3_4 -> childAge=4` |
@@ -5043,52 +5043,94 @@ Execute Firestore template sync and a new no-reference smoke generation for `fix
 - QA mode: no-reference visual BF-4/BF-3 manual review
 - note: this task intentionally did not perform manual visual judgment; it only prepared and validated the handoff artifact.
 
+---
+
+## T3-5-5 fixed-first-zoo-8p Manual BF-4/BF-3 Visual QA (no-reference, existing book)
+
+### Status
+
+completed (Conditional-Hold)
+
+### Date
+
+2026-05-15
+
+### Purpose
+
+Run read-only manual visual QA for bookId `mR3lsI7AF2P8n11mMRxS` and judge BF-4 (no-readable-text artifacts) and BF-3 (same child / same outfit / same age impression continuity) readiness after T3-5-3b page-local prompt cleanup.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-first-zoo-8p` |
+| target bookId | `mR3lsI7AF2P8n11mMRxS` |
+| pageCount | 8 |
+| reference image | not used |
+| model | `black-forest-labs/flux-2-pro` (all pages) |
+| generation reliability context | completed 8/8, failed 0, fallback 0 |
+| QA method | read-only visual review of page images |
+| out of scope | regeneration, prompt/code edit, Admin mutation |
+
 ### Method
 
-- Reviewed the existing 8 page images read-only.
-- Evaluated only visible text-like artifacts (labels, letters, numbers, pseudo-text marks) in scene objects and backgrounds.
-- Did not evaluate text rendering correctness for `preschool_3_4` in this task.
+- Pulled page images from the target bookId and reviewed pages 0-7 visually.
+- Evaluated BF-4 for readable/near-readable signage, labels, notices, and text-like marks.
+- Evaluated BF-3 for child identity continuity, outfit continuity, and age-impression continuity across the page sequence.
+- This task records observations only; no generation rerun and no data mutation.
 
-### Page-by-page Visual Findings (BF-4)
+### Page-by-page Findings
 
-| page | BF-4 result | observation |
+| page | BF-4 | BF-3 | observation |
+| --- | --- | --- | --- |
+| 0 | pass | partial | Entrance scene is clean (no readable text). Child baseline established. |
+| 1 | issue | issue | Readable Japanese-like sign text appears in background. Child look/outfit shifts from page 0. |
+| 2 | pass | issue | No clear readable text, but child face/hair/outfit drift continues. |
+| 3 | pass | issue | No obvious text artifact. Child outfit/accessory differs again from neighboring pages. |
+| 4 | pass | issue | Caution/panel-like text avoided successfully; identity/outfit continuity still unstable. |
+| 5 | issue | issue | Readable text-like print appears on child clothing. Child presentation shifts again. |
+| 6 | pass | partial | Exit-flow no-text intent mostly holds, but child continuity remains only partially aligned. |
+| 7 | pass | issue | Final page has no strong text artifact, but child look/outfit is not consistently the same as prior pages. |
+
+### BF-4 Summary
+
+| check | result | notes |
 | --- | --- | --- |
-| 0 | issue | Readable Latin-like label text appears on bathroom bottle objects. |
-| 1 | partial | Tube/bottle area still has label-like markings, but readability is limited. |
-| 2 | pass | No strong readable text-like artifact observed. |
-| 3 | issue | Multiple product containers show readable/almost-readable label text; residual BF-4 issue is clear. |
-| 4 | issue | Tube object shows readable Latin-like text and line patterns consistent with label artifacts. |
-| 5 | pass | No prominent readable label/text artifact observed. |
-| 6 | pass | No prominent readable label/text artifact observed. |
-| 7 | partial | Bottle labels remain with faint readable-like strings; less severe than issue pages. |
+| entrance/no-sign intent (page 1) | fail | readable sign text remains |
+| caution/warning/panel suppression (page 4) | pass | explicit panel-like text artifact not observed |
+| exit no-text intent (page 6) | pass | no readable exit text observed |
+| overall BF-4 across 8 pages | partial | residual readable text-like artifacts remain on pages 1 and 5 |
 
-### Visual QA Summary
+### BF-3 Summary
 
-| axis | result | judgment |
+| check | result | notes |
 | --- | --- | --- |
-| completion/reliability context | 8/8 completed, failed 0, fallback none | stable |
-| BF-4 no-text artifact reduction | Some pages are cleaner, but readable label artifacts remain on multiple pages | partial |
-| rollout readiness from visual-only BF-4 view | Not a hard fail, but still requires targeted follow-up | Conditional-Go |
+| same child identity continuity | fail | face/hair presentation changes multiple times |
+| same outfit continuity | fail | clothing palette/style/accessories vary by page |
+| same age impression continuity | partial | mostly child-age range, but perceived age/style fluctuates |
+| overall BF-3 across 8 pages | fail | continuity guardrail outcome is insufficient for pass |
 
 ### Decision
 
-**T3-4j-4 visual-only QA status:** Conditional-Go (P2 residual)
+**T3-5-5 manual visual QA status:** Conditional-Hold
 
 Reason:
 
-- No P0/P1 failure pattern was observed (all pages generated, no fallback).
-- BF-4 cleanup effect is partial: page quality is mixed, and readable/almost-readable label artifacts remain on pages 0/3/4 (and lightly on 1/7).
-- Therefore, BF-4 is improved from hard failure context but not fully resolved.
+- Reliability metrics from T3-5-4 are healthy (completed 8/8, failed 0, fallback 0), but this QA targets visual quality guardrails.
+- BF-4 still has observable residual issues (readable/near-readable text artifacts on pages 1 and 5).
+- BF-3 continuity is not stable enough for "same child / same outfit" acceptance.
+- Therefore this output is not yet ready for Go on BF-4/BF-3 quality acceptance.
 
-### Explicit Separation: text/ageBand follow-up
+### Next Step Recommendation
 
-- This task intentionally did **not** validate `preschool_3_4` rendered text.
-- `general_child` vs `preschool_3_4` verification remains a separate follow-up task after ageBand-capable smoke/run setup.
+- Proceed to a focused follow-up slice for additional page-local prompt hardening (priority: pages 1 and 5 for BF-4, full-sequence child/outfit continuity for BF-3), then rerun no-reference smoke and repeat manual QA.
 
-### Follow-up
+### Safety/Constraint Confirmation
 
-- Keep BF-4 follow-up scoped to targeted prompt/object wording for label-prone bathroom objects (no broad runtime changes).
-- Run separate ageBand verification task for `preschool_3_4` text rendering (out of scope for T3-4j-4).
+- No Admin regeneration executed.
+- No reference-flow generation executed.
+- No code/prompt/seed modification executed in this QA step.
+- No credentials/private URLs/personal data recorded in docs.
 
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
