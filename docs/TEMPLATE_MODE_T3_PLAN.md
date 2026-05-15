@@ -10455,3 +10455,120 @@ Why:
 ### Next steps
 
 - T3-8l: implement the narrow sleepy-moon-8p BF-4 cleanup for room props / books / shelf items, then run one more no-reference re-smoke.
+
+---
+
+## T3-8l fixed-sleepy-moon-adventure-8p room-prop BF-4 cleanup implementation
+
+### Status
+
+completed (2026-05-16)
+
+### Purpose
+
+Implement the narrow sleepy-moon-8p BF-4 cleanup defined in T3-8k: add a sleepy-moon-specific room-prop no-print guard, harden page 6 against readable background books / shelf text, lightly apply the same guard to selected quiet-bedroom pages, and verify that the change remains tightly scoped. Firestore sync and re-smoke are intentionally deferred to the next slice.
+
+### Files changed
+
+- `functions/src/seed-templates.ts`
+- `functions/test/seed-templates.test.ts`
+
+### What changed
+
+#### `functions/src/seed-templates.ts`
+
+1. Added `SLEEPY_MOON_8P_ROOM_PROP_NO_PRINT_CLAUSE`
+   - New sleepy-moon-8p-specific room-prop suppression clause.
+   - Covers:
+     - no readable book covers
+     - no spine writing
+     - no paper items with visible writing
+     - no nursery cards
+     - no word-bearing wall art
+     - no packaging graphics
+     - shelf objects stay plain and non-readable
+
+2. Added `withSleepyMoon8pRoomPropGuardrail(prompt)`
+   - Appends the new room-prop clause when absent.
+   - Then routes through the existing sleepy-moon-8p guardrail path.
+   - `withFixedImagePromptSafety(...)` remains unchanged.
+
+3. Applied the room-prop guard narrowly to bedroom/quiet pages
+   - page 0
+   - page 1
+   - page 5
+   - page 6
+   - page 7
+
+4. Hardened page 6 prompt body specifically
+   - Added explicit background-object simplification:
+     - only plain toys, plain blocks, or a plain basket
+     - no visible book covers
+     - no spine writing
+     - no paper items with visible writing
+   - Kept the child / pajama / teddy continuity anchor intact.
+
+5. Preserved previous success conditions
+   - page 3 dreamscape continuity wording unchanged
+   - page 7 visual-only / no-message-area behavior preserved
+   - no changes to `textTemplate` or `textTemplatesByAge`
+
+### Explicit non-changes
+
+- `withFixedImagePromptSafety(...)` unchanged
+- global no-text suffix unchanged
+- `textTemplate` unchanged
+- `textTemplatesByAge` unchanged
+- no unrelated templates changed
+- no Firestore sync or smoke generation in this slice
+
+### Test updates
+
+#### `functions/test/seed-templates.test.ts`
+
+Added sleepy-moon-8p-specific assertions for:
+
+- quiet-bedroom pages `0 / 1 / 5 / 6 / 7` including room-prop / book-cover suppression wording
+- page 6 explicitly simplifying shelf / bedside background props
+
+### Validation result
+
+| check | result | notes |
+| --- | --- | --- |
+| `npm run guard:hygiene` | ✓ pass | No forbidden paths, docs encoding issues, or staged secret-like patterns |
+| `npm --prefix functions run build` | ✓ pass | TypeScript build passed |
+| `npm --prefix functions test -- test/seed-templates.test.ts` | ✓ pass | `379` tests passed |
+
+### Implementation judgment
+
+Result: pass.
+
+- The remaining BF-4 cleanup was implemented in a narrow, sleepy-moon-8p-only scope.
+- page 6 now has direct background-prop simplification language rather than relying only on generic no-text constraints.
+- page 7 keeps its prior no-message success path while gaining the same room-prop suppression layer.
+
+### Ready / not ready
+
+- Ready for next slice:
+  - targeted Firestore sync
+  - one more no-reference re-smoke
+  - page-6-first manual BF-4 visual QA
+- Not completed in this slice:
+  - Firestore sync
+  - smoke generation
+  - visual approval
+
+### Exclusions (this slice)
+
+- No Firestore sync.
+- No smoke generation.
+- No image generation.
+- No Admin regeneration.
+- No reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+- No T4 style validation execution.
+
+### Next steps
+
+- T3-8m: sync the narrowed room-prop cleanup into Firestore, run one more no-reference re-smoke, then re-run manual visual QA with page 6 as the first BF-4 checkpoint.

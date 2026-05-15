@@ -101,6 +101,9 @@ const SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE =
 const SLEEPY_MOON_8P_ENDING_NO_BUBBLE_CLAUSE =
   "final bedtime scene is visual-only, no speech bubble, no thought cloud, no dream caption area, no writing in the air, stars only as scattered tiny glowing points and one gentle curved wisp, never arranged symbols";
 
+const SLEEPY_MOON_8P_ROOM_PROP_NO_PRINT_CLAUSE =
+  "background bedroom props stay plain and simplified, no readable book covers, no spine writing, no paper items with visible writing, no nursery cards, no word-bearing wall art, no packaging graphics, shelf objects stay plain and non-readable";
+
 function withSleepyMoon8pImagePromptGuardrail(prompt: string): string {
   let result = prompt;
   if (!result.includes(SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE)) {
@@ -110,6 +113,14 @@ function withSleepyMoon8pImagePromptGuardrail(prompt: string): string {
     result = `${result}, ${SLEEPY_MOON_8P_CHARACTER_ANCHOR_CLAUSE}`;
   }
   return withFixedImagePromptSafety(result);
+}
+
+function withSleepyMoon8pRoomPropGuardrail(prompt: string): string {
+  let result = prompt;
+  if (!result.includes(SLEEPY_MOON_8P_ROOM_PROP_NO_PRINT_CLAUSE)) {
+    result = `${result}, ${SLEEPY_MOON_8P_ROOM_PROP_NO_PRINT_CLAUSE}`;
+  }
+  return withSleepyMoon8pImagePromptGuardrail(result);
 }
 
 function buildAgeSpecificPage(params: {
@@ -1481,7 +1492,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "ベッドのうえで、{childName}はまどのそとのおつきさまを見つけました。やさしい月あかりが、おへやをそっと包んでいます。",
           pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            withSleepyMoon8pImagePromptGuardrail("Establishing wide shot of a cozy bedroom at night. The same preschool-age child with a short dark-brown bob haircut sits upright on bed under a soft fluffy blanket, wearing the same pale blue pajamas with a tiny simple star pattern and gazing through a window at a bright round moon. The same small tan teddy bear plush sits beside the child. A warm bedside lamp glows in the corner. A tiny glowing star motif appears near the plain unprinted curtain. Moonlight and warm lamp light blend softly in the room. Soft watercolor picture book style, rich but uncluttered composition, child-safe rounded shapes. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withSleepyMoon8pRoomPropGuardrail("Establishing wide shot of a cozy bedroom at night. The same preschool-age child with a short dark-brown bob haircut sits upright on bed under a soft fluffy blanket, wearing the same pale blue pajamas with a tiny simple star pattern and gazing through a window at a bright round moon. The same small tan teddy bear plush sits beside the child. A warm bedside lamp glows in the corner. A tiny glowing star motif appears near the plain unprinted curtain. Moonlight and warm lamp light blend softly in the room. Soft watercolor picture book style, rich but uncluttered composition, child-safe rounded shapes. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、もっとよく見たくて、まどのそばにすわりなおしました。おつきさまがぐんと近く見えました。",
@@ -1496,7 +1507,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "{childName}は、もっとよく見たくて、まどのそばにすわりなおしました。おつきさまがぐんと近く見えました。",
           pageVisualRole: "discovery",
           imagePromptTemplate:
-            withSleepyMoon8pImagePromptGuardrail("Medium shot from the side of the same child sitting up in bed, face turned toward a window where a large bright moon fills the glass. The child leans forward with gentle curiosity, wearing the same pale blue pajamas with a tiny simple star pattern, with a soft blanket pooled around the waist. The same small tan teddy bear plush rests on the bed nearby. The curtain is plain fabric with no print or pattern. Moonlight falls softly across the child's face. A tiny glowing star motif appears on the plain window frame edge. Soft watercolor picture book style, intimate wondering mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withSleepyMoon8pRoomPropGuardrail("Medium shot from the side of the same child sitting up in bed, face turned toward a window where a large bright moon fills the glass. The child leans forward with gentle curiosity, wearing the same pale blue pajamas with a tiny simple star pattern, with a soft blanket pooled around the waist. The same small tan teddy bear plush rests on the bed nearby. The curtain is plain fabric with no print or pattern. Moonlight falls softly across the child's face. A tiny glowing star motif appears on the plain window frame edge. Soft watercolor picture book style, intimate wondering mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、ふわふわの雲やきらきらの星をそうぞうしました。",
@@ -1555,7 +1566,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "おつきさまが「きょうもだいじょうぶ」と見まもってくれているようでした。{childName}のこころはほっとあたたかくなりました。",
           pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
-            withSleepyMoon8pImagePromptGuardrail("Emotional close-up of the same child resting on pillow with peaceful eyes, moonlight softly illuminating the face. The child keeps the same short dark-brown bob haircut, the same pale blue pajamas with a tiny simple star pattern, and hugs the same small tan teddy bear plush with comfort. Outside the window, the moon appears gentle and protective as a plain luminous orb with no surface marks or symbols. A tiny star motif glows near the pillow seam. Intimate calm framing, watercolor picture book style, warm reassurance and quiet confidence, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withSleepyMoon8pRoomPropGuardrail("Emotional close-up of the same child resting on pillow with peaceful eyes, moonlight softly illuminating the face. The child keeps the same short dark-brown bob haircut, the same pale blue pajamas with a tiny simple star pattern, and hugs the same small tan teddy bear plush with comfort. Outside the window, the moon appears gentle and protective as a plain luminous orb with no surface marks or symbols. A tiny star motif glows near the pillow seam. Intimate calm framing, watercolor picture book style, warm reassurance and quiet confidence, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、ふとんの中にもぐりこみました。まぶたがそっとおもくなってきます。おやすみなさい。",
@@ -1570,7 +1581,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "{childName}は、ふとんの中にもぐりこみました。まぶたがそっとおもくなってきます。おやすみなさい。",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            withSleepyMoon8pImagePromptGuardrail("Medium quiet shot of the same child nestled under a soft blanket on their side, eyes gently closing. The child keeps the same short dark-brown bob haircut and the same pale blue pajamas with a tiny simple star pattern. The same small tan teddy bear plush is tucked under the child's arm with no printed features, no appliqué patterns, and no labels. Moonlight casts a gentle silver glow across the pillow. A tiny star motif appears on the plain pillow corner. The room is peaceful and still. Soft watercolor picture book style, near-sleep serenity, intimate and safe, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withSleepyMoon8pRoomPropGuardrail("Medium quiet shot of the same child nestled under a soft blanket on their side, eyes gently closing. The child keeps the same short dark-brown bob haircut and the same pale blue pajamas with a tiny simple star pattern. The same small tan teddy bear plush is tucked under the child's arm with no printed features, no appliqué patterns, and no labels. Moonlight casts a gentle silver glow across the pillow. A tiny star motif appears on the plain pillow corner. Any background shelf or bedside surface, if shown at all, contains only plain toys, plain blocks, or a plain basket, with no visible book covers, no spine writing, and no paper items with visible writing. The room is peaceful and still. Soft watercolor picture book style, near-sleep serenity, intimate and safe, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{parentMessage}",
@@ -1581,7 +1592,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           general_child: "{parentMessage}",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            withSleepyMoon8pImagePromptGuardrail(`Wide quiet ending shot of the same child asleep comfortably in bed under a soft blanket. The child keeps the same short dark-brown bob haircut and the same pale blue pajamas with a tiny simple star pattern. The same small tan teddy bear plush rests by the child's side. Moonlight paints gentle silver highlights across the room while warm ambient light remains subtle. A tiny star motif appears on the plain blanket edge. Final bedtime scene is visual-only with no message area, no cloud frame, and no invented writing surface. Serene bedtime stillness, safe and cozy environment, watercolor picture book style, balanced calm composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark. ${SLEEPY_MOON_8P_ENDING_NO_BUBBLE_CLAUSE}`),
+            withSleepyMoon8pRoomPropGuardrail(`Wide quiet ending shot of the same child asleep comfortably in bed under a soft blanket. The child keeps the same short dark-brown bob haircut and the same pale blue pajamas with a tiny simple star pattern. The same small tan teddy bear plush rests by the child's side. Moonlight paints gentle silver highlights across the room while warm ambient light remains subtle. A tiny star motif appears on the plain blanket edge. Final bedtime scene is visual-only with no message area, no cloud frame, and no invented writing surface. Serene bedtime stillness, safe and cozy environment, watercolor picture book style, balanced calm composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark. ${SLEEPY_MOON_8P_ENDING_NO_BUBBLE_CLAUSE}`),
         }),
       ],
     },
