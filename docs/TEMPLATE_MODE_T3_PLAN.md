@@ -6015,6 +6015,192 @@ Reason:
 - T3-6-3a: define a birthday-only page-local cleanup plan, prioritizing pages 1/2/3/6 and keeping pages 4/5/7 as secondary watch items.
 - T3-6-3b: implement the minimal birthday-specific guardrail wrapper and page-local prompt tightening before any sync or smoke execution.
 
+## T3-6-3a fixed-first-birthday-8p Birthday-only BF-4/BF-3 Cleanup Plan
+
+### Status
+
+completed (docs-only planning)
+
+### Purpose
+
+Define the scope, design principles, and page-level implementation plan for birthday-specific BF-4 and BF-3 prompt cleanup in `fixed-first-birthday-8p`.
+
+This step is docs-only planning. It does not change code, seed templates, prompts, Firestore records, Admin state, or Storage tokens.
+
+### Source
+
+| item | value |
+| --- | --- |
+| seed/source audit commit | `d30a8ca` |
+| text/ageBand audit commit | `0f93578` |
+| prompt/BF-4/BF-3 audit commit | `37278fa` |
+| revert commit (7cf4a01 correction) | `490d209` |
+| ignore hardening commit | `b70c9df` |
+| template | `fixed-first-birthday-8p` |
+
+### Scope Boundaries
+
+#### In scope
+
+- Birthday-template-local BF-4 decor/object no-text guardrail clause design.
+- Birthday-template-local BF-3 character continuity anchor clause design.
+- Page-level tightening targets for pages 1, 2, 3, 6 (primary) and pages 4, 7 (secondary watch).
+- Design of a birthday-specific wrapper helper (`withBirthdayImagePromptGuardrail` or equivalent) that calls the existing shared `withFixedImagePromptSafety(...)` as its base.
+- Specification of the page-local additions required per page before T3-6-3b implementation.
+
+#### Out of scope
+
+- Changes to the global no-readable-writing / no-signage suffix.
+- Changes to the shared `withFixedImagePromptSafety(...)` helper body.
+- Changes to any other template (brush-teeth, zoo, or future templates).
+- Code, seed, or prompt editing (T3-6-3b responsibility).
+- Firestore sync, smoke generation, image generation.
+- Admin re-generation or reference-flow generation.
+- Firebase Auth changes.
+- Storage download token rotation / revocation.
+
+### Design Principles
+
+1. **Birthday-local only.** All new guardrail clauses must live in the birthday template file or a birthday-scoped helper. The shared layer must not be touched.
+2. **Compose, do not replace.** The new birthday wrapper must call `withFixedImagePromptSafety(...)` as its inner base; it adds clauses around or after it, not instead of it.
+3. **Minimal viable surface.** Add only the clauses that directly address the gap identified in T3-6-3: (a) birthday-object/decor no-text, (b) same-child/same-outfit continuity anchor. Do not over-specify style or layout here.
+4. **BF-4 first.** Decor/object no-text clauses have the highest artifact risk in celebration-heavy scenes and should be resolved before BF-3 anchor addition.
+5. **Global suffix is not the gap.** The T3-6-3 audit confirmed the shared suffix already covers no-readable-writing and no-signage. Birthday cleanup must not duplicate those; it must add specificity for party props and keepsakes.
+
+### Birthday-only BF-4 Guardrail Clause
+
+Clause intent: prevent pseudo-text, label-like, emblem-like, or print-like markings on birthday-specific decorative and tableware surfaces.
+
+Target surfaces:
+- Balloons (ribbon loops, tie-knot prints, surface emblem drift)
+- Party garland / paper streamers / confetti-like paper pieces
+- Cake stand, cake surface, candle base
+- Plates, cups, tableware edges and trim
+- Keepsake / gift-like objects held or visible on-table
+- Folded napkins, table-runner patterns
+
+Clause design:
+```
+No text, letters, numbers, symbols, or readable marks on any balloon surface,
+ribbon, garland, streamer, cake, candle, tableware edge, plate trim,
+keepsake, or gift-like object. All party decor surfaces must be plain color
+or simple pattern only — no pseudo-writing, no label-like ornamentation,
+no emblem-like detail.
+```
+
+This clause is applied at the birthday-wrapper level so all 8 pages inherit it, rather than adding it individually per page.
+
+### Birthday-only BF-3 Continuity Anchor Clause
+
+Clause intent: preserve protagonist identity, age impression, outfit, and hair across the morning-prep → celebration → evening-calm narrative arc.
+
+Anchor design:
+```
+The same child appears on every page throughout this book: same face,
+same age impression, same hair color and length, same clothing style and
+palette. Do not change the child's age, outfit, or facial features between
+pages.
+```
+
+This clause is also applied at the birthday-wrapper level so all 8 pages inherit a uniform identity anchor without per-page repetition.
+
+### Wrapper Helper Design
+
+Proposed helper signature (TypeScript sketch for T3-6-3b reference):
+
+```typescript
+/**
+ * Birthday-8p template-local prompt guardrail wrapper.
+ * Composes the shared fixed-image-prompt safety layer with
+ * birthday-specific BF-4 (decor/object no-text) and BF-3
+ * (character continuity anchor) clauses.
+ *
+ * Do NOT modify withFixedImagePromptSafety. Do NOT use for
+ * any template other than fixed-first-birthday-8p.
+ */
+function withBirthdayImagePromptGuardrail(prompt: string): string {
+  const birthdayBF4Clause = `No text, letters, numbers, symbols, or readable marks on any balloon surface, ribbon, garland, streamer, cake, candle, tableware edge, plate trim, keepsake, or gift-like object. All party decor surfaces must be plain color or simple pattern only — no pseudo-writing, no label-like ornamentation, no emblem-like detail.`;
+  const birthdayBF3Anchor = `The same child appears on every page throughout this book: same face, same age impression, same hair color and length, same clothing style and palette. Do not change the child's age, outfit, or facial features between pages.`;
+  const base = withFixedImagePromptSafety(prompt);
+  return `${base} ${birthdayBF4Clause} ${birthdayBF3Anchor}`;
+}
+```
+
+This wrapper replaces per-page direct calls to `withFixedImagePromptSafety` only within `fixed-first-birthday-8p`. All other templates continue to use `withFixedImagePromptSafety` directly without change.
+
+### Page-level Cleanup Plan
+
+#### Primary cleanup pages (BF-4 high)
+
+| page | scene | BF-4 action | BF-3 action |
+| --- | --- | --- | --- |
+| page 1 | Decorating with balloons and garland | Add per-page note: explicitly name balloons/ribbon in prompt if not yet named; wrapper clause covers no-text requirement. | Wrapper anchor covers continuity. |
+| page 2 | Cake discovery — cake, candle, table | Add per-page note: prompt should name cake/stand/plate to invoke wrapper clause; no new no-text text needed in prompt body. | Wrapper anchor covers continuity. |
+| page 3 | Celebration table — tableware, confetti, objects | Highest risk. Prompt body should avoid over-specifying decorative detail; keep composition simple to reduce artifact surface. Wrapper clause covers no-text. | Wrapper anchor covers continuity. |
+| page 6 | Evening afterglow — folded napkin, table, decor | Prompt body should minimize named decorative objects; wrapper clause covers no-text. | Wrapper anchor covers continuity. |
+
+#### Secondary watch pages (BF-4 medium / possible light cleanup)
+
+| page | scene | BF-4 action | BF-3 action |
+| --- | --- | --- | --- |
+| page 4 | Keepsake gift or toy detail | If prompt names a held object, verify it does not imply packaging-like or labeled surface. Wrapper clause covers no-text. | Wrapper anchor covers continuity. |
+| page 7 | Final table-edge / soft-lights closing | Prompt body should stay calm and minimal; wrapper clause handles residual decor risk. | Wrapper anchor especially important here because back-view closing relies on silhouette/outfit consistency. |
+
+#### Lower-risk pages (no prompt body change needed)
+
+| page | scene | rationale |
+| --- | --- | --- |
+| page 0 | Morning pajama intro | Scene is simple; shared no-text suffix plus wrapper BF-4 clause is sufficient. |
+| page 5 | Emotional close-up | Safe composition; wrapper anchor strengthens BF-3 coverage. |
+
+### Global Suffix / Shared Helper Policy
+
+**Global suffix: no change.** The existing no-readable-writing / no-signage suffix is already broad and correct. Birthday cleanup must not duplicate or extend it at the global level.
+
+**`withFixedImagePromptSafety(...)`: no change.** The shared helper is used by multiple templates. The gap is birthday-object specificity, not missing global coverage. Adding birthday-specific clauses to the shared helper would pollute non-birthday templates.
+
+**All cleanup is birthday-template-local.** The new `withBirthdayImagePromptGuardrail` helper and any per-page prompt body adjustments must live entirely within the birthday template seed file.
+
+### T3-6-3b Implementation Steps
+
+The following steps are planned for T3-6-3b (not executed here):
+
+1. **Create birthday wrapper helper.**
+   - Add `withBirthdayImagePromptGuardrail(prompt: string): string` in `functions/src/seed-templates.ts` adjacent to the birthday template definition.
+   - Implement using the clause text specified above.
+   - Keep `withFixedImagePromptSafety` unchanged.
+
+2. **Replace wrapper calls in birthday template pages.**
+   - For each of pages 0–7 in `fixed-first-birthday-8p`, change `withFixedImagePromptSafety(...)` to `withBirthdayImagePromptGuardrail(...)`.
+   - No other template should be changed.
+
+3. **Apply page-level prompt body adjustments (primary pages first).**
+   - Page 3: simplify `imagePromptTemplate` body to reduce over-specified decorative surface description.
+   - Pages 1, 2, 6: verify named props are present to activate wrapper clause; adjust if absent.
+   - Pages 4, 7: review prompt body for packaging-like or label-surface-implying language; trim if needed.
+
+4. **Build and verify.**
+   - Run `cd functions && npm run build` and confirm no TypeScript errors.
+   - Run `npm run build` from root and confirm frontend build passes.
+
+5. **Do not sync or smoke in T3-6-3b.**
+   - Firestore sync, smoke generation, and Admin operations remain out of scope for T3-6-3b.
+   - Those are deferred to T3-6-4 (Firestore sync + smoke generation) and T3-6-5 (smoke QA review).
+
+### Decision
+
+**Cleanup plan status:** Go (docs-only planning complete)
+
+Reason:
+- The scope is well-defined: birthday-wrapper-local BF-4 clause and BF-3 anchor, no global changes, no cross-template impact.
+- The wrapper design composes cleanly on top of the existing shared helper.
+- Page-level tightening for pages 1/2/3/6 is scoped to prompt body simplification only (no new suffixes), keeping the change surface small.
+- The plan is sufficient to unblock T3-6-3b minimal implementation.
+
+### Recommended Next Step
+
+- T3-6-3b: implement `withBirthdayImagePromptGuardrail`, replace wrapper calls in birthday 8p pages, apply page-level prompt body adjustments for pages 1/2/3/6, and build-verify. No sync or smoke in this step.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
