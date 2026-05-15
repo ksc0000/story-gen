@@ -5345,6 +5345,83 @@ Reason:
 - T3-4k-9: rerun no-reference smoke with `--age-band=preschool_3_4`.
 - T3-4k-10: verify rendered preschool text output after sync.
 
+## T3-4k-9 fixed-brush-teeth-8p Post-sync Preschool AgeBand Smoke
+
+### Status
+
+completed.
+
+### Purpose
+
+Rerun a no-reference smoke generation using `--age-band=preschool_3_4` after the T3-4k-8 template sync write, and verify that rendered pages 0-6 use the preschool hiragana-first text variant.
+
+### Source
+
+| item | value |
+| --- | --- |
+| template sync commit | `0ab50c8` |
+| templateId | `fixed-brush-teeth-8p` |
+| ageBand | `preschool_3_4` |
+| expected childAge | 4 |
+| page count | 8 |
+| reference image | not used |
+| write mode | `--write` |
+
+### Execution Result
+
+| item | value |
+| --- | --- |
+| command | `node scripts/create-template-smoke-books.js --template-id=fixed-brush-teeth-8p --age-band=preschool_3_4 --write` |
+| generated bookId | `o73uJ4aTTwFX7s6eBaiA` |
+| pages | 8 |
+| failed | 0 |
+| fallback | none (`fallbackPages=0`) |
+| book status | `completed` |
+| progress | 100 |
+| image model | `black-forest-labs/flux-2-pro` |
+| generation status | pass |
+| reference input used | no |
+| existing book overwritten | no |
+| functions/lib committed | no |
+| generated files committed | no |
+| secrets recorded | no |
+
+### Text Verification
+
+| check | result | notes |
+| --- | --- | --- |
+| generated input childAge | pass | `inputChildAge=4` |
+| age variant observed | pass | pages 0-6 rendered text matched `preschool_3_4` variant |
+| page 0-6 match preschool source | pass | `pages0to6MatchPreschool=true` |
+| page 0-6 differ from general_child | pass | `pages0to6DifferFromGeneral=true` |
+| page 0-6 kanji check | pass | `pages0to6AnyKanji=false` |
+| English check | pass | no English detected after excluding child-name token |
+| unnecessary katakana check | pass | `pages0to6AnyKatakana=false` |
+| `{childName}` replacement | pass | no unresolved placeholder on pages 0-6 |
+| page 7 parentMessage usage | pass | `page7ParentMessageRendered=true` |
+
+### Initial Visual Signal
+
+| check | result | notes |
+| --- | --- | --- |
+| image generation health | pass | completed 8/8, failed 0, fallback none |
+| severe image artifact | not reviewed | Detailed visual QA out of scope unless obvious. |
+| BF-4 artifact | not reviewed | Visual QA remains separate. |
+
+### Decision
+
+**Post-sync preschool ageBand smoke status:** Go
+
+Reason:
+- Post-sync run generated a new 8-page no-reference book and completed successfully.
+- Pages 0-6 text matched preschool variant, diverged from general_child, and had no kanji.
+- Parent-message rendering and placeholder replacement were normal, with no fallback usage.
+
+### Follow-up
+
+- T3-4k-10: verify rendered preschool text output in a concise QA record if needed.
+- T3-4j follow-up: keep BF-4 residual cleanup separate.
+
 ---
 
 ## T3-4k Japanese Orthography Policy for Fixed Templates
