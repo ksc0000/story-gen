@@ -426,3 +426,43 @@ describe("fixed-first-zoo — IMG-002 scene lock (sandbox bleed prevention)", ()
     }
   });
 });
+
+describe("fixed-sleepy-moon-adventure-8p — prompt hardening", () => {
+  const template = SEED_TEMPLATES["fixed-sleepy-moon-adventure-8p"];
+  const pages = template.fixedStory?.pages ?? [];
+
+  it("every page prompt keeps the same pale blue pajamas and small tan teddy bear anchor", () => {
+    for (const page of pages) {
+      const prompt = page.imagePromptTemplate.toLowerCase();
+      expect(prompt).toContain("same pale blue pajamas with a tiny simple star pattern");
+      expect(prompt).toContain("same small tan teddy bear plush");
+    }
+  });
+
+  it("shared sleepy-moon dream guardrail forbids bubble and message-cloud behavior", () => {
+    for (const page of pages) {
+      const prompt = page.imagePromptTemplate.toLowerCase();
+      expect(prompt).toContain("never speech bubbles");
+      expect(prompt).toContain("never thought bubbles");
+      expect(prompt).toContain("never text balloons");
+      expect(prompt).toContain("never message clouds");
+      expect(prompt).toContain("no floating framed areas for words or symbols");
+    }
+  });
+
+  it("page 3 keeps the dreamscape clearly grounded in the same bedroom", () => {
+    const prompt = pages[3]?.imagePromptTemplate.toLowerCase() ?? "";
+    expect(prompt).toContain("same clearly recognizable bedroom");
+    expect(prompt).toContain("the bed, window, and room remain clearly recognizable");
+  });
+
+  it("page 7 explicitly forces a visual-only ending with no message area", () => {
+    const prompt = pages[7]?.imagePromptTemplate.toLowerCase() ?? "";
+    expect(prompt).toContain("final bedtime scene is visual-only");
+    expect(prompt).toContain("no message area");
+    expect(prompt).toContain("no cloud frame");
+    expect(prompt).toContain("no speech bubble");
+    expect(prompt).toContain("no thought cloud");
+    expect(prompt).toContain("no invented writing surface");
+  });
+});

@@ -9858,3 +9858,135 @@ Rationale:
 ### Next steps
 
 - T3-8h: implement the sleepy-moon-8p prompt hardening changes, then run targeted validation + re-smoke.
+
+---
+
+## T3-8h fixed-sleepy-moon-adventure-8p prompt hardening implementation
+
+### Status
+
+completed (2026-05-16)
+
+### Purpose
+
+Implement the sleepy-moon-8p-specific prompt hardening defined in T3-8g, while keeping scope narrow: update only `fixed-sleepy-moon-adventure-8p` prompt guardrails and page-local image prompt bodies, run targeted validation, and record the result. Firestore sync and re-smoke are intentionally deferred to the next slice.
+
+### Files changed
+
+- `functions/src/seed-templates.ts`
+- `functions/test/seed-templates.test.ts`
+
+### What changed
+
+#### `functions/src/seed-templates.ts`
+
+1. Hardened `SLEEPY_MOON_8P_CHARACTER_ANCHOR_CLAUSE`
+   - Upgraded from a broad "same child / same pajamas / same stuffed toy" reminder to a concrete no-reference anchor.
+   - Now fixes:
+     - same preschool-age child
+     - same round face
+     - same short dark-brown bob haircut with straight silhouette
+     - same pale blue pajamas with a tiny simple star pattern
+     - same small tan teddy bear plush
+   - Added anti-drift wording:
+     - do not change the child
+     - do not change the haircut
+     - do not swap the pajamas
+     - do not replace the teddy bear with a different plush animal / pillow toy / cloud toy
+
+2. Hardened `SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE`
+   - Preserved the existing anti-diagram constraints.
+   - Added explicit suppression of:
+     - speech bubbles
+     - thought bubbles
+     - text balloons
+     - caption clouds
+     - message clouds
+     - writing panels
+     - floating framed areas intended to hold words or symbols
+
+3. Added `SLEEPY_MOON_8P_ENDING_NO_BUBBLE_CLAUSE`
+   - New page-7-oriented suppression clause for:
+     - no speech bubble
+     - no thought cloud
+     - no dream caption area
+     - no writing in the air
+     - stars only as scattered tiny glowing points and one gentle curved wisp
+     - never arranged symbols
+
+4. Hardened page-local `imagePromptTemplate` bodies for page 0-7
+   - Repeated the same child / same pajama / same teddy-bear anchor directly in page prompts.
+   - Kept changes local to `fixed-sleepy-moon-adventure-8p`.
+   - Did not modify `textTemplate` or `textTemplatesByAge`.
+
+5. Strengthened page 3 specifically
+   - Reframed the dream scene as an imagination layer above the same clearly recognizable bedroom.
+   - Added explicit room-grounding wording:
+     - same clearly recognizable bedroom
+     - bed, window, and room remain clearly recognizable
+   - Repeated same child / same pajamas / same teddy-bear continuity inside the dream page itself.
+
+6. Strengthened page 7 specifically
+   - Reframed the ending as a visual-only bedtime scene.
+   - Added direct no-message-area / no-cloud-frame / no-invented-writing-surface wording.
+   - Appended `SLEEPY_MOON_8P_ENDING_NO_BUBBLE_CLAUSE` locally to page 7 only.
+
+### Explicit non-changes
+
+- `withFixedImagePromptSafety(...)` unchanged
+- global no-text suffix unchanged
+- `textTemplate` unchanged
+- `textTemplatesByAge` unchanged
+- no unrelated template prompts changed
+
+### Test updates
+
+#### `functions/test/seed-templates.test.ts`
+
+Added sleepy-moon-8p-specific assertions for:
+
+- same pale blue pajamas + same small tan teddy bear anchor on every page prompt
+- shared dream guardrail suppression of bubble / message-cloud behavior
+- page 3 same-bedroom grounding language
+- page 7 visual-only ending / no-message-area / no cloud-frame language
+
+### Validation result
+
+| check | result | notes |
+| --- | --- | --- |
+| `npm run guard:hygiene` | ✓ pass | No forbidden paths, docs encoding issues, or staged secret-like patterns |
+| `npm --prefix functions run build` | ✓ pass | TypeScript build passed |
+| `npm --prefix functions test -- test/seed-templates.test.ts` | ✓ pass | `377` tests passed |
+
+### Implementation judgment
+
+Result: pass.
+
+- The T3-8g remediation design was implemented within the intended narrow scope.
+- Shared helper behavior and text-layer behavior were preserved.
+- The prompt layer is now materially stricter against page-7 text-container drift and sequence-wide continuity drift.
+
+### Ready / not ready
+
+- Ready for next slice:
+  - targeted Firestore sync
+  - no-reference re-smoke
+  - follow-up manual visual QA
+- Not completed in this slice:
+  - Firestore sync
+  - smoke generation
+  - visual approval
+
+### Exclusions (this slice)
+
+- No Firestore sync.
+- No smoke generation.
+- No image generation.
+- No Admin regeneration.
+- No reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+
+### Next steps
+
+- T3-8i: sync the hardened sleepy-moon-8p template, run a new no-reference smoke, then re-run manual BF-4/BF-3 visual QA with page 3 and page 7 as first-priority checks.
