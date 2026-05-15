@@ -5963,6 +5963,45 @@ Reason:
 
 ---
 
+## T3-4j-11 fixed-brush-teeth-8p Manual BF-4 Visual QA after Page 3 Hard Cleanup
+
+### Status
+
+completed.
+
+### Purpose
+
+Perform manual BF-4 visual QA on the fresh no-reference smoke book after the page 3 product-surface cleanup.
+
+### Scope
+
+| page | result | notes |
+| --- | --- | --- |
+| page 0 | pass | No readable text residuals observed on the bathroom setup or products. |
+| page 1 | pass | No readable text residuals observed. Decorative product shapes stay non-legible. |
+| page 2 | pass | No readable text residuals observed. |
+| page 3 | pass | Toothpaste tube is no longer a text-risk surface in the rendered image; no legible product text observed. |
+| page 4 | pass | No legible BF-4 residuals observed; some bottles have label-like styling, but nothing readable. |
+| page 5 | pass | No readable text residuals observed. |
+| page 6 | pass | No readable text residuals observed. |
+| page 7 | pass | No readable text residuals observed. |
+
+### Decision
+
+**Manual BF-4 visual QA status:** Go
+
+Reason:
+- The original page 3 text-residual concern is no longer visible in the fresh smoke.
+- No other page showed a clear readable-text regression during this review.
+- The remaining label-like styling on page 4 does not resolve into legible text.
+
+### Follow-up
+
+- Keep the page 3 hard-cleanup prompt in place.
+- Re-run smoke only if a future generation shows a new legible product-surface artifact.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
