@@ -5743,6 +5743,87 @@ Reason:
 - T3-6-2: perform text / ageBand audit for `fixed-first-birthday-8p`.
 - T3-6-3: perform prompt / BF-4 audit and decide whether page-local cleanup is needed before smoke generation.
 
+## T3-6-1a Accidental Commit 7cf4a01 Revert / Ignore Hardening
+
+### Status
+
+completed.
+
+### Date
+
+2026-05-15
+
+### Purpose
+
+Correct the accidental commit `7cf4a0100f4c4939226dc2cff52320b34ee445a2` before proceeding to T3-6-2.
+
+This step prioritizes safe recovery without history rewrite: confirm whether the accidental commit is in `main`, revert it with `git revert`, strengthen ignore rules against recurrence, and record follow-up action for exposed Firebase Storage download tokens without reproducing any concrete URL.
+
+### Source
+
+| item | value |
+| --- | --- |
+| normal pre-incident head | `d30a8ca` |
+| accidental commit | `7cf4a01` |
+| accidental commit message | `変更分手動プッシュ` |
+| accidental commit parent | `d30a8ca` |
+| revert commit | `490d209` |
+| response type | safe forward fix via `git revert` |
+
+### Containment Check
+
+| check | result | notes |
+| --- | --- | --- |
+| `7cf4a01` present on current `main` | yes | Confirmed before correction; `HEAD`, `main`, and `origin/main` were on `7cf4a01`. |
+| history rewrite required | no | Recovered with forward-only revert, not reset / force-push. |
+| revert commit created | pass | `490d209` cleanly reverted the accidental commit. |
+| tracked leaked artifacts removed from `HEAD` | pass | `.tmp/`, `page-qa-*.png`, helper scripts, and accidental tracked payloads were removed by the revert commit. |
+| token-bearing file existed in accidental commit | pass | `.tmp/page_urls.txt` in `7cf4a01` contained Firebase Storage URLs with `token=` query values. |
+
+### Ignore Hardening
+
+| path / pattern | action | notes |
+| --- | --- | --- |
+| `.tmp/` | ignore added | Blocks future temp image / URL helper output under the temp workspace. |
+| `page-qa-*.png` | ignore added | Blocks local QA screenshot artifacts in repo root. |
+| `scripts/_*.js` | ignore added | Blocks local-only helper scripts following the underscore naming pattern. |
+| `.claude/settings.local.json` | ignore added | Local assistant settings are now explicitly ignored. |
+| `.claude/settings.local.json` tracking state | follow-up addressed in this slice | File had already been tracked before the accident, so ignore alone was insufficient. It was removed from index to stop future tracking. |
+
+### Token / URL Exposure Assessment
+
+| item | assessment |
+| --- | --- |
+| exposure type | private Firebase Storage download URLs with token query parameters appeared in published git history |
+| reverted from current `HEAD` | yes |
+| removed from git history | no |
+| immediate conclusion | revert reduces ongoing exposure from current branch tip, but does not invalidate previously exposed download tokens |
+| operator follow-up required | yes |
+
+### Required Follow-up Outside Git
+
+- Revert alone is not sufficient for Firebase Storage download-token exposure because the token values remain visible in published history for anyone who already fetched or viewed that commit.
+- The relevant Storage objects should have their download tokens revoked or rotated using an approved Firebase / GCS operational path.
+- If direct token revocation is not available in the current operating workflow, re-uploading or metadata-updating the affected objects to replace old download tokens should be treated as required follow-up.
+- After token rotation / revocation, verify that the previously exposed URLs no longer grant access.
+- Do not record the concrete URLs or token strings in repo docs, issues, or commit messages.
+
+### Decision
+
+**Incident correction status:** Go
+
+Reason:
+- The accidental commit was confirmed on `main` and safely neutralized by `git revert` without rewriting shared history.
+- Ignore rules are now strengthened for the exact artifact classes involved in the incident.
+- The remaining risk is operational rather than git-structural: previously exposed Firebase Storage download tokens still need out-of-band revocation or rotation.
+- Once that token follow-up is executed by the appropriate operator, T3-6-2 can proceed without carrying this git-level incident forward.
+
+### Ready Condition for T3-6-2
+
+- Git history no longer exposes the accidental files from branch tip.
+- Ignore rules cover the known local artifact classes from this incident.
+- Token revocation / rotation is explicitly recorded as a required operator follow-up.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
