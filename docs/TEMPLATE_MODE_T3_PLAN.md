@@ -663,6 +663,26 @@ T3-2 P1 text fix sync/smoke completed:
 
 ---
 
+## T3-7c-1 local hygiene guard implementation
+
+### Implementation
+
+- Added `scripts/check-hygiene.mjs` as a local Node hygiene guard script.
+- Added the `guard:hygiene` npm script to root `package.json`.
+- The script validates:
+  - forbidden tracked paths,
+  - forbidden staged file paths,
+  - docs encoding issues in `docs/*.md`,
+  - secret-like patterns in staged file content.
+
+### Verification
+
+- `npm run guard:hygiene` passed successfully.
+- Existing linting remained functional with no new errors.
+- This slice remains docs-only plus local script implementation; it does not change CI workflow, pre-commit hooks, or secret handling.
+
+---
+
 ## T3-3 Kickoff Plan: Fixed Template Expansion Design (2026-05-13)
 
 ### Goal
@@ -3316,7 +3336,7 @@ Reason for this order:
 | `fixed-little-helper-8p` | `growth-support` / helping at home | build pride in contribution without pressure | high family resonance | medium | medium | required: `childName`; optional: `parentMessage` | chore progression stays warm not didactic, home-task continuity, avoid repetitive domestic frames, ending lands emotionally | **Add after first three** |
 | `fixed-sharing-friends-8p` | `emotional-growth` / sharing with peers | social coaching through story | high educational value if tone stays natural | medium | medium-high | required: `childName`, `lessonToTeach`; optional: `parentMessage` | `lessonToTeach` specificity quality, anti-preachy copy, peer character consistency, emotionally believable conflict / repair arc | **Promising but not first wave** |
 | `fixed-first-christmas-8p` | `seasonal-events` / family holiday gift | commemorative seasonal book | high seasonal gift value, lower year-round reuse | medium | medium-high | required: `childName`, `familyMembers`; optional: `parentMessage` | decoration pseudo-text risk, tree/gift scene variety, family group consistency, seasonality messaging | **Later seasonal wave** |
-| `fixed-rainy-day-puddle-8p` | `daily-life` / cozy weather outing | turn small day into a positive memory | moderate charm, lower urgency | low-medium | medium | required: `childName`; optional: `parentMessage` | rain-day visual variety, safety framing, muddy/wet scene continuity, ending warmth without repetitive �grain is fun�h beats | **Later filler candidate** |
+| `fixed-rainy-day-puddle-8p` | `daily-life` / cozy weather outing | turn small day into a positive memory | moderate charm, lower urgency | low-medium | medium | required: `childName`; optional: `parentMessage` | rain-day visual variety, safety framing, muddy/wet scene continuity, ending warmth without repetitive "grain is fun" beats | **Later filler candidate** |
 | `fixed-bedtime-good-day-8p` | `bedtime` / literal end-of-day reflection | simple soothing bedtime routine | moderate value, but overlaps with stronger bedtime candidate | low | medium | required: `childName`; optional: `parentMessage` | enough 8-page variety in one room / one routine, reflective pacing, not repetitive versus `sleepy-moon-adventure` | **Defer** |
 
 ### Candidate Notes
@@ -3359,7 +3379,7 @@ Why prioritize:
 Risks to watch:
 
 - Imagination overlays can become visually noisy or too close to sci-fi UI text / controls.
-- Need to keep �gpretend play in a safe room�h readable so the tone stays grounded for younger users.
+- Need to keep "pretend play in a safe room" readable so the tone stays grounded for younger users.
 
 Expected input profile:
 
@@ -3403,7 +3423,7 @@ Validation points:
 Why consider soon:
 
 - High parent resonance for pride, competence, and family contribution.
-- Can become a meaningful �gI can help�h book if the pacing adds escalating participation instead of repeating chores.
+- Can become a meaningful "I can help" book if the pacing adds escalating participation instead of repeating chores.
 
 Risks to watch:
 
@@ -3456,7 +3476,7 @@ Validation points:
 
 - no pseudo-text on gifts, ornaments, decor, stockings
 - family group consistency stays stable across multi-character pages
-- story beats justify 8 pages beyond �gpretty festive scenes�h
+- story beats justify 8 pages beyond "pretty festive scenes"
 
 #### 7. `fixed-rainy-day-puddle-8p`
 
@@ -3537,7 +3557,7 @@ Later / seasonal wave:
 Reason:
 
 - Current 8p foundation is good enough to expand carefully.
-- The next best expansion path is not �gmore memory books,�h but broader category coverage with low-input, low-regression variants.
+- The next best expansion path is not "more memory books," but broader category coverage with low-input, low-regression variants.
 - `growth-support`, `imagination`, and `bedtime` offer the best mix of user value, implementation safety, and creative headroom for the next 8-page additions.
 
 ## T3-4a First Additional 8-page Variant Spec - fixed-brush-teeth-8p
