@@ -581,6 +581,88 @@ T3-2 P1 text fix sync/smoke completed:
 
 ---
 
+## T3-7b hygiene / CI guard planning
+
+### Current guard state
+
+- `.gitignore` already excludes known local-only artifacts and secrets:
+  - `functions/lib/`
+  - `.tmp/`
+  - `page-qa-*.png`
+  - `scripts/_*.js`
+  - `.claude/settings.local.json`
+  - `service-account.json`
+- Root `package.json` defines app build/test/lint scripts and smoke-related scripts, but no pre-commit hook or secret scanning script is currently configured.
+- GitHub Actions CI is defined in `.github/workflows/deploy.yml` and currently runs:
+  - checkout, npm install, lint, TypeScript type checks, frontend tests, functions tests
+  - build and deploy on `main` push
+  - deploy-time secret presence checks for Firebase public env vars and `FIREBASE_TOKEN`
+
+### Hygiene / CI guard planning
+
+- Goals
+  - Prevent local artifacts, generated files, secrets, private URLs, and docs mojibake from entering commits.
+  - Keep rollout documentation and decision artifacts clearly separated from implementation changes.
+  - Use layered guardrails: local commit hygiene, npm/script validation, and CI enforcement.
+
+- Guard categories
+  1. Local commit hygiene
+     - Verify `.gitignore` covers known local-only artifacts and temporary files.
+     - Use a local checklist or pre-commit hook to prevent accidental inclusion of:
+       - build output
+       - generated image/story artifacts
+       - draft QA/visual artifacts
+       - secret files and private URLs
+       - service account JSON
+       - local assistant config files
+     - Validate docs encoding before commit.
+  2. npm script / developer script guards
+     - Provide explicit scripts that can be run locally to validate hygiene, such as:
+       - docs encoding / UTF-8 checks
+       - accidental secret / URL detection
+       - ignored-file validation against `.gitignore`
+     - Keep these scripts distinct from the app build/test scripts.
+  3. CI enforcement
+     - Extend `.github/workflows/deploy.yml` with dedicated guard steps for:
+       - accidental secret / private URL detection
+       - docs encoding validation
+       - local artifact detection
+       - `.gitignore` enforcement for newly added artifact patterns
+     - Keep CI checks separate from deploy eligibility: guard failures should block merges/pushes until resolved.
+
+### Recommended guard plan
+
+- Pre-commit / local guard
+  - Add or document a pre-commit checklist that rejects:
+    - `functions/lib/`, `.tmp/`, `page-qa-*.png`, `scripts/_*.js`, `.claude/settings.local.json`
+    - `service-account.json`, `.firebase/`, `.vercel/`, `.env*.local`
+    - local docs drafts with encoding anomalies
+    - any string matching `https://storage.googleapis.com/` plus token-like query fragments
+  - If a pre-commit hook is added later, use it to catch file-level hygiene issues before staging.
+
+- npm script guard
+  - Define guard scripts that can run locally and in CI, for example:
+    - `npm run check:keep-out` for forbidden files and directories
+    - `npm run check:docs-encoding` for UTF-8 docs validation
+    - `npm run check:secrets` for accidental secret/private URL patterns
+  - Keep these scripts lightweight and add them to developer onboarding docs.
+
+- CI guard
+  - Add CI steps in `.github/workflows/deploy.yml` before lint/test/build phases to enforce hygiene:
+    - forbidden artifact scan
+    - docs encoding validation
+    - public secret/URL detection
+  - Ensure CI guard failures are explicit, actionable, and do not rely on manual review alone.
+
+### Separation rules for hygiene planning
+
+- Keep this planning docs-only: do not implement guard scripts or hooks in this slice.
+- Do not record or expose actual secrets, tokenized URLs, service account data, or private credentials in docs.
+- Maintain the audit trail in docs and commit history without mixing in operational artifacts.
+- Use a separate commit for guard planning and do not combine this section with source or deployment changes.
+
+---
+
 ## T3-3 Kickoff Plan: Fixed Template Expansion Design (2026-05-13)
 
 ### Goal
