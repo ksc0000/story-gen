@@ -10,6 +10,18 @@ const { FieldValue, getFirestore } = functionsRequire("firebase-admin/firestore"
 
 const TARGET_PROJECT_ID = "story-gen-8a769";
 const ALLOWED_PAGE_COUNTS = [4, 8, 12];
+const ALLOWED_AGE_BANDS = [
+  "baby_toddler",
+  "preschool_3_4",
+  "early_reader_5_6",
+  "early_elementary_7_8",
+];
+const AGE_BAND_TO_CHILD_AGE = {
+  baby_toddler: 2,
+  preschool_3_4: 4,
+  early_reader_5_6: 6,
+  early_elementary_7_8: 8,
+};
 
 function getSeedTemplatesFromCompiledModule() {
   const compiled = require("../functions/lib/seed-templates.js");
@@ -252,6 +264,28 @@ function parsePageCountArg(args) {
   return pageCount;
 }
 
+function parseAgeBandArg(args) {
+  const matched = args.find((arg) => arg.startsWith("--age-band="));
+  if (!matched) {
+    return null;
+  }
+
+  const ageBand = matched.slice("--age-band=".length).trim();
+  if (!ALLOWED_AGE_BANDS.includes(ageBand)) {
+    throw new Error(`--age-band must be one of ${ALLOWED_AGE_BANDS.join("/")}, got ${ageBand}`);
+  }
+
+  return ageBand;
+}
+
+function resolveChildAgeFromAgeBand(ageBand) {
+  if (!ageBand) {
+    return null;
+  }
+
+  return AGE_BAND_TO_CHILD_AGE[ageBand] ?? null;
+}
+
 function resolveTemplatePageCount(seedTemplates, templateId) {
   const template = seedTemplates[templateId];
   const fixedStory = template?.fixedStory;
@@ -283,8 +317,21 @@ function resolveTemplatePageCount(seedTemplates, templateId) {
   return 4;
 }
 
-function buildBookPayload({ templateId, index, smokeRunId, templateCount, referenceImageUrl, pageCount }) {
+function buildBookPayload({
+  templateId,
+  index,
+  smokeRunId,
+  templateCount,
+  referenceImageUrl,
+  pageCount,
+  childAge,
+}) {
   const nowMs = Date.now();
+  const input = buildInputForTemplate(templateId, index);
+
+  if (childAge !== null) {
+    input.childAge = childAge;
+  }
 
   const payload = {
     userId: `smoke-user-${smokeRunId}-${index + 1}`,
@@ -297,7 +344,7 @@ function buildBookPayload({ templateId, index, smokeRunId, templateCount, refere
     pageCount,
     status: "generating",
     progress: 0,
-    input: buildInputForTemplate(templateId, index),
+    input,
     characterConsistencyMode: "all_pages",
     createdAt: FieldValue.serverTimestamp(),
     createdAtMs: nowMs,
@@ -332,6 +379,8 @@ async function main() {
   const withReference = args.includes("--with-reference");
   const listTemplates = args.includes("--list-templates");
   const requestedPageCount = parsePageCountArg(args);
+  const requestedAgeBand = parseAgeBandArg(args);
+  const childAgeFromAgeBand = resolveChildAgeFromAgeBand(requestedAgeBand);
 
   const seedTemplates = getSeedTemplatesFromCompiledModule();
   const fixedTemplateIds = getFixedTemplateIds(seedTemplates);
@@ -384,6 +433,11 @@ async function main() {
 
   if (dryRun) {
     console.log("[dry-run] The following books would be created (no Firestore writes):");
+    if (requestedAgeBand) {
+      console.log(`[dry-run] ageBand=${requestedAgeBand} -> childAge=${childAgeFromAgeBand}`);
+    } else {
+      console.log("[dry-run] ageBand=(default behavior: childAge unset, general_child fallback)");
+    }
     const smokeRunId = buildSmokeRunId();
     for (const [index, templateId] of targetTemplateIds.entries()) {
       const pageCount = requestedPageCount ?? resolveTemplatePageCount(seedTemplates, templateId);
@@ -394,10 +448,13 @@ async function main() {
         templateCount: targetTemplateIds.length,
         referenceImageUrl,
         pageCount,
+        childAge: childAgeFromAgeBand,
       });
       console.log(`  [${index + 1}/${targetTemplateIds.length}] templateId=${templateId}`);
       console.log(`         userId=${payload.userId}`);
       console.log(`         pageCount=${payload.pageCount}`);
+      console.log(`         ageBand=${requestedAgeBand ?? "default"}`);
+      console.log(`         childAge=${payload.input.childAge ?? "(unset)"}`);
       console.log(`         withReference=${!!referenceImageUrl}`);
       if (referenceImageUrl) {
         console.log(`         referenceImageUrl=${redactUrl(referenceImageUrl)}`);
@@ -425,6 +482,11 @@ async function main() {
   if (requestedPageCount) {
     console.log(`[info] requestedPageCount=${requestedPageCount}`);
   }
+  if (requestedAgeBand) {
+    console.log(`[info] requestedAgeBand=${requestedAgeBand} -> childAge=${childAgeFromAgeBand}`);
+  } else {
+    console.log("[info] requestedAgeBand=(default behavior: childAge unset, general_child fallback)");
+  }
   if (referenceImageUrl) {
     console.log(`[info] referenceImageUrl=${redactUrl(referenceImageUrl)}`);
   }
@@ -441,6 +503,7 @@ async function main() {
       templateCount: targetTemplateIds.length,
       referenceImageUrl,
       pageCount,
+      childAge: childAgeFromAgeBand,
     });
     await docRef.create(payload);
     created.push({ templateId, bookId: docRef.id, pageCount });

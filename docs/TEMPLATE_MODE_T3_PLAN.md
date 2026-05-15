@@ -5096,6 +5096,67 @@ Reason:
 - T3-4k-6: run preschool no-reference smoke verification for `fixed-brush-teeth-8p`.
 - T3-4k-7: record rendered preschool text QA result in this document.
 
+## T3-4k-5 Optional AgeBand Smoke Support Implementation
+
+### Status
+
+completed.
+
+### Purpose
+
+Implement optional ageBand-aware smoke generation support so fixed-template text variants such as `preschool_3_4` can be verified without changing default smoke behavior.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| script | `scripts/create-template-smoke-books.js` |
+| option added | `--age-band=<value>` |
+| default behavior | unchanged |
+| seed text changes | none |
+| image prompt changes | none |
+| smoke generation | not run |
+| DB/Admin side effects | none |
+| reference-flow | not run |
+
+### Implementation Summary
+
+| item | result | notes |
+| --- | --- | --- |
+| CLI option parsed | pass | Added `parseAgeBandArg(args)` for optional `--age-band=<value>`. |
+| valid ageBand values checked | pass | Allowed values: `baby_toddler`, `preschool_3_4`, `early_reader_5_6`, `early_elementary_7_8`; invalid value throws error. |
+| ageBand to childAge mapping added | pass | Added mapping aligned to age profile boundary: `2/4/6/8`. |
+| default behavior preserved | pass | If `--age-band` is omitted, `childAge` is not set and existing `general_child` fallback remains. |
+| dry-run output updated | pass | Dry-run now prints selected `ageBand` and resolved `childAge` (or unset/default). |
+| smoke write not run | pass | `--write` was not executed in this task. |
+
+### Validation
+
+| check | result | notes |
+| --- | --- | --- |
+| default dry-run without ageBand | pass | `childAge=(unset)`, input payload stayed unchanged except new debug lines. |
+| dry-run with `--age-band=preschool_3_4` | pass | `childAge=4` injected into input payload. |
+| invalid ageBand rejected | pass | Error: `--age-band must be one of baby_toddler/preschool_3_4/early_reader_5_6/early_elementary_7_8`. |
+| functions build | pass | `npm --prefix functions run build` passed. |
+| tests if applicable | pass | `npm --prefix functions test -- test/seed-templates.test.ts` passed (345 tests). |
+| functions/lib not committed | pass | Build artifacts were generated for validation only; excluded from final commit scope. |
+| generated files not committed | pass | No generated files included in final commit scope. |
+| secrets not committed | pass | No credentials/tokens/private URLs added to code or docs. |
+
+### Decision
+
+**Optional ageBand smoke support status:** Go
+
+Reason:
+- Requested optional `--age-band` support is implemented with minimal blast radius in smoke script only.
+- Existing behavior remains backward-compatible when the option is omitted.
+- Dry-run/build/test validation passed without DB write, Admin action, or reference-flow execution.
+
+### Follow-up
+
+- T3-4k-6: run no-reference smoke with `--age-band=preschool_3_4`.
+- T3-4k-7: verify rendered preschool text output.
+
 ---
 
 ## T3-4k Japanese Orthography Policy for Fixed Templates
