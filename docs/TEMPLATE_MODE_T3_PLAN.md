@@ -5422,6 +5422,82 @@ Reason:
 - T3-4k-10: verify rendered preschool text output in a concise QA record if needed.
 - T3-4j follow-up: keep BF-4 residual cleanup separate.
 
+## T3-4j-5 BF-4 Residual Cleanup Plan
+
+### Status
+
+completed.
+
+### Purpose
+
+Plan the next minimal BF-4 visual residual cleanup for `fixed-brush-teeth-8p` after the preschool text pipeline was verified in T3-4k-9.
+
+This step is docs-only. It does not change prompts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| latest text verification | `T3-4k-9` |
+| latest text verification commit | `61e39ac` |
+| BF-4 source QA | `T3-4j-4` |
+| BF-4 QA bookId | `Xmce9MTGP8URzAQEblHK` |
+| BF-4 decision | `Conditional-Go` |
+| BF-4 severity | `P2 residual` |
+
+### Residual BF-4 Findings
+
+| page | result | issue |
+| --- | --- | --- |
+| page 0 | issue | readable-ish label artifact remains |
+| page 1 | partial | minor remaining risk around toothbrush/tube/counter |
+| page 2 | pass | no action planned |
+| page 3 | issue | readable-ish label artifact remains |
+| page 4 | issue | readable-ish label/pseudo-text artifact remains |
+| page 5 | pass | no action planned |
+| page 6 | pass | no action planned |
+| page 7 | partial | minor remaining risk in quiet ending background |
+
+### Cleanup Strategy
+
+| id | strategy | scope | priority |
+| --- | --- | --- | --- |
+| BF4-R1 | Add page-local no-text constraint to page 0 bathroom establishing prompt. | page-local | P2 |
+| BF4-R2 | Add page-local no-label/no-product-mark constraint to page 3 brushing action prompt. | page-local | P2 |
+| BF4-R3 | Strengthen page 4 mirror/object-detail prompt to avoid pseudo-text, labels, decorative marks, or written symbols. | page-local | P2 |
+| BF4-R4 | Keep page 1 and page 7 as secondary watch items; avoid broad changes unless implementation diff remains minimal. | page-local optional | P3 |
+| BF4-R5 | Do not change page 2, page 5, or page 6 unless regression is found later. | no-op | P3 |
+| BF4-R6 | Do not change global suffix or BF-3 character anchor. | safety/compat | P1 |
+
+### Acceptance Criteria
+
+| id | criteria |
+| --- | --- |
+| AC-BF4-R1 | Pages 0, 3, and 4 have explicit no readable text / no label / no pseudo-text constraints. |
+| AC-BF4-R2 | No global prompt suffix changes are required. |
+| AC-BF4-R3 | BF-3 character continuity anchor remains unchanged. |
+| AC-BF4-R4 | Text orthography and ageBand smoke support remain untouched. |
+| AC-BF4-R5 | Follow-up smoke can be run without reference image and without Admin operation. |
+
+### Decision
+
+**BF-4 residual cleanup plan status:** Conditional-Go
+
+Reason:
+- T3-4k text pipeline is now verified.
+- Remaining quality risk is visual BF-4 only.
+- Residuals are P2 and suitable for a focused page-local cleanup.
+
+### Recommended Next Step
+
+Implement a minimal BF-4-only prompt cleanup for pages 0, 3, and 4, then run a no-reference smoke and manual visual QA.
+
+### Follow-up
+
+- T3-4j-6: implement BF-4 residual page-local prompt cleanup.
+- T3-4j-7: run no-reference smoke after residual cleanup.
+- T3-4j-8: perform manual BF-4 visual QA.
+
 ---
 
 ## T3-4k Japanese Orthography Policy for Fixed Templates
