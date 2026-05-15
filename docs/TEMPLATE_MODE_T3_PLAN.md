@@ -5498,6 +5498,74 @@ Implement a minimal BF-4-only prompt cleanup for pages 0, 3, and 4, then run a n
 - T3-4j-7: run no-reference smoke after residual cleanup.
 - T3-4j-8: perform manual BF-4 visual QA.
 
+## T3-4j-6 BF-4 Residual Page-local Prompt Cleanup Implementation
+
+### Status
+
+completed.
+
+### Purpose
+
+Implement the minimal BF-4 residual page-local prompt cleanup for `fixed-brush-teeth-8p` based on the T3-4j-5 plan.
+
+This step targets page 0, page 3, and page 4 image prompts only. It does not change text templates, ageBand support, global suffixes, BF-3 character anchors, generated books, database records, Admin state, or reference-flow behavior.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| templateId | `fixed-brush-teeth-8p` |
+| target pages | page 0, page 3, page 4 |
+| target issue | BF-4 readable-ish / pseudo-text visual residual |
+| text template changes | none |
+| ageBand changes | none |
+| global suffix changes | none |
+| BF-3 anchor changes | none |
+| smoke generation | not run |
+| DB/Admin side effects | none |
+| reference-flow | not run |
+
+### Implementation Summary
+
+| item | result | notes |
+| --- | --- | --- |
+| page 0 prompt cleanup | pass | Added page-local plain/unlabeled bathroom object constraint and explicit no readable text, no labels, no logos, no written marks in sink/mirror/counter/background. |
+| page 3 prompt cleanup | pass | Added page-local plain/unlabeled constraint for toothbrush, toothpaste tube, cup, mirror, and counter with no brand marks, labels, letters, numbers, or readable markings. |
+| page 4 prompt cleanup | pass | Strengthened mirror/object-detail clause to avoid pseudo-text, decorative symbols, label-like marks, written notes, product labels, posters, charts, letters, and numbers. |
+| page 1 / page 7 watch-only | pass | No changes made; kept as watch-only per T3-4j-5 minimal-diff strategy. |
+| page 2 / 5 / 6 unchanged | pass | No changes made. |
+| global suffix unchanged | pass | Shared safety suffix behavior unchanged. |
+| BF-3 anchor unchanged | pass | Character anchor clause unchanged. |
+| text templates unchanged | pass | No changes to `textTemplate` or `textTemplatesByAge`. |
+
+### Validation
+
+| check | result | notes |
+| --- | --- | --- |
+| functions build | pass | `npm --prefix functions run build` completed successfully. |
+| seed-template tests | pass | `npm --prefix functions test -- test/seed-templates.test.ts` passed (345/345). |
+| diff check | pass | Final tracked changes are limited to target source/doc files for this task. |
+| functions/lib not committed | pass | build-generated `functions/lib/seed-templates.js` and `.map` were restored before commit. |
+| generated files not committed | pass | no generated outputs included in commit scope. |
+| secrets not committed | pass | no credentials, secret files, or secret paths added. |
+| smoke generation not run | pass | not executed in this task. |
+| DB/Admin side effects avoided | pass | no DB write and no Admin operation executed. |
+| reference-flow not run | pass | not executed in this task. |
+
+### Decision
+
+**BF-4 residual prompt cleanup implementation status:** Go
+
+Reason:
+- T3-4j-5 page-local cleanup plan was implemented with minimal scope on pages 0, 3, and 4 only.
+- BF-3 anchor, global suffix, and text/ageBand behavior were preserved without regression in build/tests.
+- Implementation is ready for the next verification slice (no-reference smoke and manual BF-4 visual QA).
+
+### Follow-up
+
+- T3-4j-7: run no-reference smoke after BF-4 residual cleanup.
+- T3-4j-8: perform manual BF-4 visual QA.
+
 ---
 
 ## T3-4k Japanese Orthography Policy for Fixed Templates
