@@ -476,6 +476,111 @@ T3-2 P1 text fix sync/smoke completed:
 
 ---
 
+## T3-7a fixed-template rollout checklist / reusable gate definition
+
+### Purpose
+
+- Define a docs-only, repeatable rollout process for the next fixed-template 8p candidate.
+- Reuse lessons from T3-4 / T3-5 / T3-6 / T3-7 without making implementation, seed, prompt, or datastore changes in this slice.
+- Keep the decision path transparent, auditable, and clearly separated from downstream execution steps.
+
+### Standard rollout checklist
+
+1. Candidate selection and scope audit
+   - Identify the next fixed-template candidate and confirm it is not one of the already-closed variants.
+   - Confirm the candidate category adds coverage without reopening a closed variant unless there is regression evidence.
+
+2. Seed/source audit
+   - Verify the template seed source and any fixed text assets for correctness.
+   - Confirm no unintended seed changes exist and that the template stays within the target age band.
+
+3. Text / ageBand / story audit
+   - Validate story text quality, age appropriateness, and fixed-template narrative flow.
+   - Confirm there are no hidden prompt or story metadata issues that would introduce new BF-4/BF-3 risk.
+
+4. Prompt / BF-4 / BF-3 risk audit
+   - Review prompt structure, safety helper usage, and template-specific guardrail needs.
+   - Identify the highest-risk pages for BF-4 and BF-3 based on page type, transitions, and decorated surfaces.
+
+5. Page-local cleanup
+   - Apply page-specific cleanup notes only to the identified high-risk pages.
+   - Avoid broad global prompt rewrites; narrow fixes are preferred.
+
+6. Firestore sync preflight
+   - Confirm that the candidate can be synced safely in Firestore with no undefined fields.
+   - Do not treat Firestore sync as a quality gate; it is a readiness gate for generation pipelines.
+
+7. No-reference smoke
+   - Run the smoke generation path without reference-image consistency checks.
+   - Verify the generated result at a structural level and confirm no hard failures in page generation.
+
+8. Manual BF-4 / BF-3 QA
+   - Perform visual checks on the candidate pages, focusing on high-risk sections identified earlier.
+   - Confirm child identity continuity, age impression, and the absence of readable text/signage violations.
+
+9. Closure decision
+   - Record the candidate decision as Pass, Conditional-Go, or Hold.
+   - If Conditional-Go, document residual risk and the exact mitigation plan.
+
+### Gate definitions
+
+- Pass
+  - No critical BF-4 or BF-3 issues remain.
+  - Firestore sync is clean and smoke generation completes without hard failures.
+  - Manual QA agrees that the candidate is ready for rollout.
+
+- Conditional-Go
+  - One or more non-critical issues remain, with explicit mitigations and acceptance criteria.
+  - The risk is documented, and the candidate can continue only with a defined follow-up action.
+
+- Hold
+  - Critical BF-4 or BF-3 issues are unresolved.
+  - Smoke or sync failures occur due to data or process issues.
+  - QA environment or auth preflight is blocked.
+
+### BF-4 / BF-3 standard check items
+
+- BF-4 checks
+  - No readable text, signage, labels, or logos on props, apparel, surfaces, or decor.
+  - No unintended print or brand-like artwork on clothing, party goods, or environment details.
+  - No identifiable system UI, storefront signage, or packaging text in the scene.
+  - No repeated decorative elements that could be interpreted as prohibited text or symbols.
+
+- BF-3 checks
+  - Child identity consistency: same age impression, hair, clothing style, and character design across pages.
+  - Outfit continuity across transitions, especially when the template moves between room/activity contexts.
+  - Consistent secondary character depiction when the same character reappears.
+  - Scene transition continuity: the same story moment is perceived consistently across page boundaries.
+
+### Separation rules
+
+- Firestore sync separation
+  - Use Firestore sync only after page-level cleanup and prompt/Gate audit are complete.
+  - Treat sync as a readiness step, not a quality judgment.
+
+- Smoke separation
+  - Run smoke after a successful Firestore sync preflight.
+  - Use smoke to validate generation flow and catch hard failures before manual QA.
+
+- Manual QA separation
+  - Perform manual BF-4/BF-3 QA only after smoke completes successfully.
+  - Manual QA is the final quality gate and must cover the template-specific high-risk pages.
+
+- Closure separation
+  - Do not close a candidate until all prior gates are documented and the result is explicit.
+  - Closure is a docs-only decision for this slice; implementation or rollout work is tracked separately.
+
+### Incident / hygiene guard checklist
+
+- Keep the process docs-only: do not include code, seed, prompt, or secret changes in this section.
+- Confirm no service account JSON, credentials, tokens, or private auth data are recorded.
+- Ensure any unintended untracked artifact is removed and, if needed, ignored.
+- Preflight authentication and QA environments before starting manual checks.
+- Preserve the audit trail by recording gate decisions, checklist completion, and known limitations.
+- Use dedicated docs commits for process definitions and rollout decisions.
+
+---
+
 ## T3-3 Kickoff Plan: Fixed Template Expansion Design (2026-05-13)
 
 ### Goal
