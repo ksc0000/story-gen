@@ -6141,6 +6141,100 @@ Reason:
 
 ---
 
+## T3-5-1 fixed-first-zoo-8p Seed / Source Audit
+
+### Status
+
+completed.
+
+### Purpose
+
+Audit the source seed for `fixed-first-zoo-8p` before implementation, sync, or smoke generation.
+
+This step is docs-only and read-only. It does not change prompts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| rollout plan commit | `6683589` |
+| selected template | `fixed-first-zoo-8p` |
+| expected page count | 8 |
+| audit type | seed/source read-only |
+
+### Structure Audit
+
+| check | result | notes |
+| --- | --- | --- |
+| templateId exists | pass | `functions/src/seed-templates.ts` に `fixed-first-zoo-8p` 定義あり。 |
+| page count | pass | `fixedStory.pageCount: 8` を確認。 |
+| pageVisualRole coverage | pass | 8ページすべてで role 指定あり: opening_establishing, discovery, discovery, object_detail, setback_or_question, emotional_closeup, quiet_ending, quiet_ending。 |
+| imagePromptTemplate coverage | pass | 8ページすべてで `imagePromptTemplate` を確認。 |
+| textTemplate coverage | pass | 8ページすべてで `textTemplate` を確認。 |
+| textTemplatesByAge coverage | pass | 各ページは `buildAgeSpecificPage` で age variant を渡しており、helper 側で `textTemplatesByAge` が生成される。 |
+| parentMessage handling | pass | page 7 は全 ageBand で `{parentMessage}` をそのまま使用するクロージング構成。 |
+
+### Text / AgeBand Audit
+
+| check | result | notes |
+| --- | --- | --- |
+| preschool_3_4 exists | pass | page 0-7 すべてに `preschool_3_4` 文面あり。page 7 は `{parentMessage}`。 |
+| preschool kanji risk | pass | `preschool_3_4` はひらがな中心で、顕著な漢字混入は見当たらない。 |
+| English risk | pass | child-facing text（`textTemplate` / age variant）に英語文はなし。 |
+| unnecessary katakana risk | pass | 不要なカタカナ多用は見当たらない（幼児向け読みやすさを維持）。 |
+| `{childName}` handling | pass | page 0-6 で文脈に応じて使用、page 7 は親メッセージ優先で未使用。 |
+| page 7 parentMessage behavior | pass | page 7 は `textTemplate` と全 ageBand が `{parentMessage}` 固定で、親メッセージを直接終幕表示する設計。 |
+
+### BF-4 Prompt Risk Audit
+
+| page | risk | notes |
+| --- | --- | --- |
+| page 0 | low | 自宅出発シーン。看板面が少ないが、リュック等の意図しない記号化は watch。 |
+| page 1 | high | zoo entrance / arch / path 文脈で、入口案内・看板・地図・掲示板系の文字化けリスクが最も高い。 |
+| page 2 | medium | 大型動物エンクロージャー。柵周辺の案内板・ラベル化アセット混入を警戒。 |
+| page 3 | medium | 小動物エリアの object-detail 構図。背景の案内板・展示ラベル・壁面パターンが text-like 化しやすい。 |
+| page 4 | medium-high | ライオン/クマ等の展示文脈。柵・注意表示・情報パネル風要素が出やすい。 |
+| page 5 | medium | クローズアップ中心だが、背景葉/岩/柵で記号化ノイズが発生しうる。 |
+| page 6 | medium | 退出動線シーン。出口周辺のゲート/案内板/施設サインの混入を警戒。 |
+| page 7 | medium | 夕景クロージングでも「zoo exit path or home doorway」指定のため、標識・掲示物の混入余地あり。 |
+
+### BF-3 Prompt Risk Audit
+
+| check | result | notes |
+| --- | --- | --- |
+| child appearance anchor | conditional | `fixed-brush-teeth-8p` のような明示 anchor clause は未定義。初回 smoke で同一児童性の揺れ確認が必要。 |
+| outfit consistency | conditional | ページ横断で同一衣装指定は弱め。移動・時間帯変化に伴う衣装ブレが起きる可能性。 |
+| multiple animal contexts | conditional | 象/キリン/小動物/大型動物と文脈が多く、被写体優先で主人公再現が落ちる可能性。 |
+| scene transition complexity | conditional | home -> entrance -> enclosure群 -> exit -> dusk closing の遷移が多段で一貫性に負荷。 |
+| crowd/background complexity | conditional | 動物園の背景要素（柵/木/導線/人混み想定）が多く、主役解像度低下リスクあり。 |
+
+### Reusable Gate Fit (from T3-4)
+
+| gate | fit | notes |
+| --- | --- | --- |
+| seed/source audit | pass | 本ステップで適用完了。 |
+| text/ageBand audit | pass | `preschool_3_4` / age variants / page7 parentMessage の分離監査が可能。 |
+| prompt/BF-4 audit | pass | page 1/4/6/7 を重点監査対象にした page-local 計画が可能。 |
+| no-reference smoke | pass | 次段で generation health と BF-4 初期シグナル取得に有効。 |
+| manual BF-4/BF-3 QA | pass | signage系と同一児童性を同時に観察する運用が可能。 |
+| closure decision | pass | Go/Conditional-Go/Hold 判定基準をそのまま再利用可能。 |
+
+### Initial Decision
+
+**Seed/source audit status:** Conditional-Go
+
+Reason:
+- 構造面（templateId / pageCount / pageVisualRole / imagePromptTemplate / textTemplate / age variants）は期待どおりで、次工程に進む前提は満たす。
+- 一方で zoo 特有の entrance/exhibit/exit 文脈により、BF-4 の sign-like artifact リスクは `fixed-brush-teeth-8p` より高い。
+- 明示的な BF-3 character anchor clause がないため、scene 遷移の多い 8p で同一児童性の揺れを先に監視すべき。
+
+### Recommended Next Step
+
+- T3-5-2: perform text/ageBand audit and determine whether preschool text cleanup is needed.
+- T3-5-3: perform prompt/BF-4 audit and decide page-local cleanup before smoke generation.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
