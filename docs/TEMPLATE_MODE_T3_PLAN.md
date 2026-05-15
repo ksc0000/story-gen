@@ -6074,6 +6074,73 @@ Reason:
 
 ---
 
+## T3-5 Next 8-page Fixed-template Variant Rollout Plan
+
+### Status
+
+completed.
+
+### Purpose
+
+Select and plan the next 8-page fixed-template variant rollout after closing `fixed-brush-teeth-8p` as the first validated fixed-template variant.
+
+This step is docs-only. It does not change prompts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| previous closure commit | `d369db9` |
+| closed first variant | `fixed-brush-teeth-8p` |
+| previous closure status | Go |
+| reusable gate set | text / ageBand / template sync / no-reference smoke / BF-4 visual QA / BF-3 regression / closure decision |
+
+### Candidate Review
+
+| candidate templateId | page count | text age variants | BF-4 risk | BF-3 risk | rollout suitability | notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-zoo-8p` | 8 | present (`textTemplatesByAge` via age-specific pages) | medium-high | medium | high | Entrance/ground prompts include map/entrance/exhibit contexts where sign-like artifacts can appear, so gate reusability is high. |
+| `fixed-first-birthday-8p` | 8 | present (`textTemplatesByAge` via age-specific pages) | medium | low-medium | medium-high | Indoor celebration scenes are stable, but BF-4 stress is lower than zoo because fewer natural signage surfaces. |
+| `fixed-brush-teeth-8p` | 8 | present (`textTemplatesByAge` via age-specific pages) | resolved (watch P3) | low | closed | Already closed in T3-4j-12; keep as baseline and regression reference only. |
+
+### Recommended Next Variant
+
+| item | value |
+| --- | --- |
+| recommended templateId | `fixed-first-zoo-8p` |
+| reason | Highest QA gate reuse value: likely sign/board/panel-like visual surfaces in zoo contexts while remaining a familiar family-memory theme. |
+| expected page count | 8 |
+| expected primary QA risk | BF-4 readable-like artifacts on entrance/exhibit/sign-like surfaces |
+| expected text QA risk | preschool text consistency drift across pages 0-6 and parentMessage rendering on page 7 |
+| expected visual QA risk | scene-to-scene identity consistency with multiple animal contexts and enclosure transitions |
+| rollout decision | Conditional-Go |
+
+### Reusable Gate Plan
+
+| gate | purpose | expected output |
+| --- | --- | --- |
+| T3-5-1 seed/source audit | Confirm candidate template structure, page count, text variants, and prompt risk. | docs-only audit result |
+| T3-5-2 text/ageBand audit | Confirm child-facing text policy and age variant behavior. | text risk report |
+| T3-5-3 prompt/BF-4 audit | Identify likely no-text artifact risks before generation. | prompt cleanup plan |
+| T3-5-4 no-reference smoke | Generate first no-reference candidate book. | bookId and generation health |
+| T3-5-5 manual visual/text QA | Review BF-4/BF-3/text/story/safety gates. | QA decision |
+| T3-5-6 closure decision | Close or route follow-up fixes. | Go / Conditional-Go / Conditional / Hold |
+
+### Decision
+
+**Next variant rollout plan status:** Go
+
+Reason:
+- T3-4で確立した staged gates を、そのまま次 variant に再利用できる前提が揃っている。
+- `fixed-first-zoo-8p` は 8ページ構成かつ age variant を持ち、docs-only の事前監査から次スライスに進める。
+- BF-4の再発しやすい表面（入口/案内/展示周辺）を含むため、再利用ゲートの検証価値が高い。
+
+### Follow-up
+
+- T3-5-1: start docs-only seed/source audit for the selected next variant.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
