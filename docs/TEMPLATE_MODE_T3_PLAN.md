@@ -9501,3 +9501,117 @@ Result: pass / proceed.
 ### Next steps
 
 - T3-8f: manual visual QA for smoke book `UEaEtXoK8DDt2qXT9avc`.
+
+---
+
+## T3-8f fixed-sleepy-moon-adventure-8p manual BF-4 / BF-3 visual QA
+
+### Status
+
+completed with findings (2026-05-16)
+
+### Purpose
+
+Perform read-only visual QA on the generated no-reference smoke book `UEaEtXoK8DDt2qXT9avc` for `fixed-sleepy-moon-adventure-8p`, focusing on page 0-7 BF-4 text-like artifact risk and BF-3 continuity / identity / pajama / stuffed-toy consistency. No regeneration or Firestore writes were performed in this slice.
+
+### Scope checked
+
+- Source smoke book: `UEaEtXoK8DDt2qXT9avc`
+- page 0-7 generated images
+- BF-4 visual artifact check
+- BF-3 continuity check
+- T3-8d watchpoints:
+  - page 2 symbolic shapes
+  - page 3 dreamscape continuity
+  - page 4 star arc organic/non-text-like behavior
+  - page 5 reassurance conveyed visually without rendered quotation text
+
+### Overall verdict
+
+| area | verdict | summary |
+| --- | --- | --- |
+| BF-4 | **fail** | page 7 contains clear rendered Japanese text and additional text-like / symbol-like line work |
+| BF-3 | **fail** | same-child / same-pajama / same-stuffed-toy continuity does not hold across the 8-page sequence |
+| smoke structural health | pass | 8/8 pages completed, but visual quality gate not met |
+
+### Key findings
+
+1. **BF-4 blocker on page 7**
+   - A cloud-like speech/thought area contains clearly readable Japanese text.
+   - The same page also contains line-and-star shapes that read closer to drawn symbols than to loose ambient star points.
+   - This directly violates the intended no-text image constraint and the page-7 prompt expectations.
+
+2. **BF-3 continuity failure across the sequence**
+   - Child face shape, hair silhouette, and age impression vary significantly from page to page.
+   - Pajama color and pattern change repeatedly rather than staying fixed.
+   - The "same stuffed toy" contract is not preserved: bear / cloud plush / bunny / mouse-like toy all appear as primary comfort objects at different points.
+
+3. **Dream pages partially succeed on softness, but not on continuity discipline**
+   - Pages 2-4 generally avoid severe diagram-like BF-4 failure.
+   - However, those pages do not maintain a stable child identity or stable toy / pajama anchor strongly enough.
+
+### Page-by-page visual QA
+
+| page | BF-4 | BF-3 | findings |
+| --- | --- | --- | --- |
+| 0 | pass | fail | No visible text artifact. Calm bedroom image works, but pajamas and toy baseline already differ from later pages; bear toy and outfit do not persist reliably. |
+| 1 | pass | fail | No rendered text. Child face/hair/pajamas shift noticeably from page 0; main comfort object becomes a cloud plush rather than the same stuffed toy. |
+| 2 | pass with watchpoint | fail | Floating clouds/stars stay mostly soft and non-diagrammatic, so the page 2 BF-4 watchpoint is acceptable. But child identity, blanket pattern, curtain pattern, and toy presentation drift further. |
+| 3 | pass | fail | Dream cloud remains plain enough and not text-like, so the page 3 BF-4 watchpoint is acceptable. Main failure is BF-3: back-view dream child, different pajama pattern, different room dressing, and inconsistent toy continuity. |
+| 4 | pass with watchpoint | fail | Star arc reads as decorative but still organic enough, so page 4 does not cross into hard BF-4 failure. However, the child, pajamas, and toy set change again; books / bedside props also introduce extra variation. |
+| 5 | pass | fail | Reassurance beat is carried by expression and lighting rather than rendered quote text, so the page 5 watchpoint passes. But plush changes to a bunny-like toy and child styling shifts again. |
+| 6 | pass | fail | No visible text artifact. Sleeping scene is gentle, but child hair, pajamas, and primary stuffed toy differ from earlier pages. |
+| 7 | **fail** | fail | Clear Japanese rendered text appears inside a cloud shape. Additional glowing line work reads symbol-like. Child styling and toy continuity also drift again. |
+
+### Watchpoint review against T3-8d
+
+| watchpoint | result | note |
+| --- | --- | --- |
+| page 2 floating star/cloud symbols stay loose and non-diagrammatic | pass | shapes are soft enough, though still more decorated than ideal |
+| page 3 child identity / pajamas / stuffed toy continuity survives dreamscape shift | fail | dream page does not preserve the same child/tangible anchor strongly enough |
+| page 4 star arc remains organic, not patterned or text-like | pass with watchpoint | arc is somewhat regular, but not the main failure |
+| page 5 reassurance conveyed by expression/lighting, not rendered text | pass | no obvious quotation text artifact on this page |
+
+### BF-4 assessment detail
+
+Result: **fail**.
+
+- The sequence is not globally acceptable because page 7 contains explicit rendered Japanese text.
+- Page 7 also includes line-and-star strokes that are more symbol-like than the intended "soft glowing points and curved cloud wisps only" rule.
+- Pages 0-6 do not show equally severe text artifacts, but page 7 alone is blocking.
+
+### BF-3 assessment detail
+
+Result: **fail**.
+
+- The child does not read as the same exact child across all 8 pages.
+- Pajama style/color continuity is not preserved.
+- The designated comfort object / stuffed toy continuity is not preserved.
+- These are not minor soft-style variations; they are sequence-level continuity breaks visible without zooming in.
+
+### Release judgment
+
+Result: **do not treat this smoke as visually approved**.
+
+- Structural generation succeeded.
+- Visual QA did not pass.
+- T3-8f should be considered a findings slice, not an approval slice.
+
+### Recommended next step
+
+- Create a follow-up remediation slice to tighten the no-text ending-page behavior and strengthen same-child / same-pajama / same-toy continuity before any approval-oriented re-smoke.
+
+### Exclusions (this slice)
+
+- No image regeneration.
+- No Admin regeneration.
+- No Firestore writes or template sync.
+- No smoke re-run.
+- No reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No code / seed / prompt modifications.
+- No service account JSON, secrets, URLs, or tokens recorded.
+
+### Next steps
+
+- Next recommended slice: remediation design / prompt-hardening for `fixed-sleepy-moon-adventure-8p`, then re-smoke after fixes.
