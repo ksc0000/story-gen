@@ -9138,3 +9138,106 @@ The test `every imagePromptTemplate keeps sign-like words out of the positive pr
 
 - T3-8c: text/ageBand audit of `fixed-sleepy-moon-adventure-8p` (all 5 age bands × 8 pages).
 - T3-8d: prompt/BF-4/BF-3 audit + page-local cleanup design.
+
+---
+
+## T3-8c fixed-sleepy-moon-adventure-8p text / ageBand audit
+
+### Status
+
+completed (2026-05-16)
+
+### Purpose
+
+Audit the shipped `fixed-sleepy-moon-adventure-8p` text layer in `functions/src/seed-templates.ts` as a docs-only slice: confirm page 0-7 `textTemplate`, all 5 age-band variants, page 7 `{parentMessage}` passthrough contract, and whether any page text is likely to increase image-text / BF-4 artifact risk.
+
+### Scope checked
+
+- `functions/src/seed-templates.ts`
+  - `fixed-sleepy-moon-adventure-8p` page 0-7 `textTemplate`
+  - `textTemplatesByAge` coverage for `baby_toddler`, `preschool_3_4`, `early_reader_5_6`, `early_elementary_7_8`, `general_child`
+  - page 7 `{parentMessage}` passthrough contract
+- No code changes, prompt changes, Firestore sync, smoke generation, image generation, or Admin regeneration
+
+### Coverage result
+
+| page | role | base text present | 5 age bands present | result |
+| --- | --- | --- | --- | --- |
+| 0 | `opening_establishing` | yes | yes | pass |
+| 1 | `discovery` | yes | yes | pass |
+| 2 | `discovery` | yes | yes | pass |
+| 3 | `action` | yes | yes | pass |
+| 4 | `payoff` | yes | yes | pass |
+| 5 | `emotional_closeup` | yes | yes | pass |
+| 6 | `quiet_ending` | yes | yes | pass |
+| 7 | `quiet_ending` | yes (`{parentMessage}`) | yes (`{parentMessage}` in all 5 bands) | pass |
+
+Implementation note:
+
+- `buildAgeSpecificPage(...)` maps all five explicit age-band inputs into `textTemplatesByAge`, and `fixed-sleepy-moon-adventure-8p` supplies all five on every page.
+- No page in this template falls back to `undefined` `textTemplatesByAge`.
+
+### Page-by-page text audit
+
+| page | summary | age-band progression | audit note |
+| --- | --- | --- | --- |
+| 0 | child notices the moon from bed; room wrapped in moonlight | compact toddler line -> hiragana-heavy preschool line -> more reflective older-reader lines | pass; calm opening, safe bedtime framing |
+| 1 | child leans closer to the window; moon feels near | observation expands from simple proximity to broader quiet-night feeling | pass; natural bridge from setup to discovery |
+| 2 | child imagines clouds and stars | simple naming for younger bands, gentle internal-expansion line for older bands | pass; vocabulary stays concrete enough |
+| 3 | child rides a cloud in imagination | action beat expands into soft "night-sky trip" feeling | pass; fantasy stays cozy rather than overstimulating |
+| 4 | stars form a soft arc around child | reassurance escalates from toddler "だいじょうぶ" to older emotional-release language | pass with minor watchpoint: `preschool_3_4` uses `アーチ` and `あんしんかん`, still acceptable in read-aloud but slightly more abstract than surrounding pages |
+| 5 | moon seems to reassure the child | emotional vocabulary deepens by age without changing the core beat | pass; strongest reassurance page, still natural |
+| 6 | child burrows into blanket and grows sleepy | bedtime closure expands gently for older bands | pass; good pre-parent-message landing page |
+| 7 | direct parent message page | all five age bands are direct passthrough | pass; contract preserved exactly |
+
+### Preschool 3-4 audit
+
+Overall result: pass.
+
+- Pages 0-3, 5-6 read naturally for a 4-year-old read-aloud: short clauses, mostly hiragana wording, concrete bedtime imagery, and no abrupt tonal jumps.
+- Page 4 is still acceptable, but it is the most linguistically mature preschool line in the set because `アーチ` and `あんしんかん` are less concrete than the surrounding pages.
+- Even on page 4, the sentence remains understandable in a read-aloud context because the emotional meaning is carried by the surrounding star-and-comfort imagery rather than by the abstract noun alone.
+
+### Child-facing page 0-6 readability audit
+
+Result: pass.
+
+- Kanji load is controlled. `general_child` and older bands include some kanji (`見`, `月`, `光`, `中`, `星`, `大`, `安心感`) but the child-facing younger bands remain heavily hiragana-weighted.
+- No English appears in page 0-6 story text.
+- Katakana is effectively absent except `アーチ` on page 4 preschool/older variants; this is low risk and context-supported.
+- Sentence length increases sensibly by band: toddler lines are fragment-based, preschool lines are short two-clause read-aloud sentences, and older bands add reflective emotional interpretation without becoming paragraph-like.
+- No page 0-6 text introduces scary imagery, overstimulating action, or abrupt setting shifts that would undercut bedtime use.
+
+### Page 7 `{parentMessage}` passthrough contract
+
+Result: pass.
+
+- page 7 `textTemplate` is exactly `{parentMessage}`.
+- page 7 `baby_toddler`, `preschool_3_4`, `early_reader_5_6`, `early_elementary_7_8`, and `general_child` are all exactly `{parentMessage}`.
+- No additional wrapper text, punctuation, or suffix/prefix was added in any band, so the parent-message contract is preserved exactly.
+
+### BF-4 / image-text artifact audit (text layer only)
+
+Result: low risk / pass.
+
+- The page text itself does not mention books, labels, signs, posters, writing, maps, charts, or symbolic mark-making that would encourage visible text artifacts in illustrations.
+- The imaginative beats use clouds, moonlight, stars, and comfort language rather than text-like visual objects.
+- Quoted reassurance on page 5 (`「きょうも だいじょうぶ」`) is acceptable in the text layer; it does not by itself require rendered text in the image, and the image prompts separately enforce explicit no-text constraints.
+- No page text introduces BF-4-adjacent object requests such as printed pajamas, letter blocks, wall art, cards, notes, or nameplates.
+
+### Conclusion
+
+- No blocking issues found.
+- No code, seed, or prompt change is required from this T3-8c audit.
+- The template is ready to proceed to T3-8d prompt/BF-4/BF-3 audit.
+
+### Exclusions (this slice)
+
+- No code / seed / prompt modifications.
+- No Firestore sync, smoke generation, image generation, or Admin regeneration executed.
+- No reference-flow generation, Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+
+### Next steps
+
+- T3-8d: prompt/BF-4/BF-3 audit + page-local cleanup design.
