@@ -5566,6 +5566,78 @@ Reason:
 - T3-4j-7: run no-reference smoke after BF-4 residual cleanup.
 - T3-4j-8: perform manual BF-4 visual QA.
 
+## T3-4j-7 fixed-brush-teeth-8p No-reference Smoke after BF-4 Residual Cleanup
+
+### Status
+
+blocked.
+
+### Purpose
+
+Run a no-reference smoke generation after the T3-4j-6 BF-4 residual page-local prompt cleanup to prepare a fresh book for manual BF-4 visual QA.
+
+This step records generation health only. Detailed manual visual QA is handled in T3-4j-8.
+
+### Source
+
+| item | value |
+| --- | --- |
+| BF-4 residual cleanup commit | `e56967e` |
+| templateId | `fixed-brush-teeth-8p` |
+| ageBand | `preschool_3_4` |
+| expected childAge | 4 |
+| page count | 8 |
+| reference image | not used |
+| write mode | `--write` |
+
+### Execution Result
+
+| item | value |
+| --- | --- |
+| build | pass |
+| template sync write | blocked (`GOOGLE_APPLICATION_CREDENTIALS` not set) |
+| dry-run | not run (blocked by auth gate) |
+| command | not run |
+| generated bookId | none |
+| pages | 0 |
+| failed | unknown |
+| fallback | unknown |
+| book status | not generated |
+| progress | 0 |
+| image model | unknown |
+| generation status | blocked |
+| reference input used | no |
+| existing book overwritten | no |
+| functions/lib committed | no |
+| generated files committed | no |
+| secrets recorded | no |
+
+### Initial Signal
+
+| check | result | notes |
+| --- | --- | --- |
+| input childAge | pending | smoke command was not executed due to auth gate. |
+| page count | pending | smoke command was not executed due to auth gate. |
+| image generation health | pending | smoke command was not executed due to auth gate. |
+| severe image artifact | not reviewed | Detailed manual visual QA out of scope unless obvious. |
+| BF-4 residual | not reviewed | Visual QA remains T3-4j-8. |
+| preschool text | not reviewed | Text pipeline already validated; only basic signal if inspected. |
+
+### Decision
+
+**Post-BF-4-residual-cleanup smoke status:** Hold
+
+Reason:
+- Credential gate check returned `GOOGLE_APPLICATION_CREDENTIALS=NOT_SET`, so write-required steps could not proceed safely.
+- `template:sync:write` failed for the same reason, confirming Firestore write path is blocked in this session.
+- Per task constraint, no smoke generation was executed without valid auth.
+
+### Follow-up
+
+- Set valid Firebase credentials in the same PowerShell session and confirm `GOOGLE_APPLICATION_CREDENTIALS=SET_AND_FILE_EXISTS`.
+- Re-run T3-4j-7 steps in order: template sync write, dry-run, no-reference smoke write, monitor, inspect.
+- T3-4j-8: perform manual BF-4 visual QA on the generated book after T3-4j-7 succeeds.
+
 ---
 
 ## T3-4k Japanese Orthography Policy for Fixed Templates
