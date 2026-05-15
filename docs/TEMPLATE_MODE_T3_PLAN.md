@@ -5824,6 +5824,94 @@ Reason:
 - Ignore rules cover the known local artifact classes from this incident.
 - Token revocation / rotation is explicitly recorded as a required operator follow-up.
 
+## T3-6-2 fixed-first-birthday-8p Text / AgeBand Audit
+
+### Status
+
+completed.
+
+### Purpose
+
+Audit the child-facing text and ageBand coverage for `fixed-first-birthday-8p` before prompt cleanup, template sync, or smoke generation.
+
+This step is docs-only and read-only. It does not change prompts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| seed/source audit commit | `d30a8ca` |
+| incident recovery commits acknowledged | `490d209`, `b70c9df` |
+| selected template | `fixed-first-birthday-8p` |
+| audit target | pages 0-7 text templates + age-specific variants |
+
+### Coverage Audit
+
+| check | result | notes |
+| --- | --- | --- |
+| page 0-7 `textTemplate` present | pass | All 8 pages define a base `textTemplate`. |
+| page 0-7 age variants present | pass | Each page provides `baby_toddler`, `preschool_3_4`, `early_reader_5_6`, `early_elementary_7_8`, and `general_child`. |
+| pages 0-6 child-facing text path | pass | Story body pages use child-facing birthday narrative, not `parentMessage`. |
+| page 7 `parentMessage` isolation | pass | Final page uses `{parentMessage}` for every ageBand, keeping parent-authored closing text isolated to the final beat. |
+| unresolved placeholder dependency | pass | Pages 0-6 depend only on `childName` and `familyMembers`; no `place`-style extra input risk is present. |
+
+### Preschool_3_4 Audit
+
+| check | result | notes |
+| --- | --- | --- |
+| tone suitability | pass | Preschool lines are short, warm, and concrete, fitting a first-birthday memory story. |
+| kanji risk | pass | No intentional preschool-facing kanji-heavy wording is evident in pages 0-6. |
+| English risk | pass | No English story text is introduced in the child-facing birthday lines. |
+| unnecessary katakana risk | pass | Birthday scenes rely on everyday Japanese phrasing rather than excessive loanword-heavy wording. |
+| sentence length | pass / minor | Most preschool lines are compact; a few pages combine two short beats, but still remain manageable for read-aloud. |
+| birthday-specific naturalness | pass | Morning prep, decoration, cake discovery, celebration, keepsake, pride, and calm ending all read naturally for this theme. |
+
+### Page-by-page Child-facing Text Review
+
+| page | role | result | notes |
+| --- | --- | --- | --- |
+| 0 | opening_establishing | pass | Morning-of-birthday setup is age-appropriate and easy to read aloud. |
+| 1 | action | pass | Decorating with family uses concrete action wording suitable for preschool listeners. |
+| 2 | discovery | pass | Cake discovery beat is natural for a birthday story and easy to visualize. |
+| 3 | payoff | pass | Celebration reaction remains short and emotionally clear. |
+| 4 | object_detail | pass | Keepsake/present-focused line is specific enough without becoming verbose. |
+| 5 | emotional_closeup | pass | Proud / happy feeling beat is natural and matches the birthday memory arc. |
+| 6 | quiet_ending | pass / minor | Calm afterglow line is natural, though it leans slightly reflective compared with the more concrete early pages. |
+| 7 | quiet_ending / parent message | pass | `parentMessage` is intentionally deferred here; template contract is clear and consistent across ageBands. |
+
+### Cross-age Naturalness Audit
+
+| ageBand | result | notes |
+| --- | --- | --- |
+| `baby_toddler` | pass | Very short celebratory fragments fit toddler read-aloud use. |
+| `preschool_3_4` | pass | Simple sentence rhythm and concrete birthday beats are suitable. |
+| `early_reader_5_6` | pass | Slightly richer explanation appears without becoming too dense. |
+| `early_elementary_7_8` | pass | More reflective wording is added appropriately while staying on-theme. |
+| `general_child` | pass | Baseline lines remain natural and reusable. |
+
+### ParentMessage Contract Audit
+
+| check | result | notes |
+| --- | --- | --- |
+| page 7 only | pass | `parentMessage` is not mixed into pages 0-6. |
+| all ageBands map to same token | pass | Every ageBand on page 7 resolves to `{parentMessage}`. |
+| product contract clarity | pass | This makes future smoke/manual QA straightforward: body text is template-owned, closing line is caller-owned. |
+
+### Initial Decision
+
+**Text / ageBand audit status:** Go
+
+Reason:
+- `fixed-first-birthday-8p` has complete text coverage for pages 0-7 and for all expected age bands.
+- The `preschool_3_4` path reads as age-appropriate birthday narration: short, warm, and concrete, with no clear English, placeholder, or kanji-heavy regression risk in pages 0-6.
+- Page 7 cleanly isolates `{parentMessage}`, which keeps parent-authored variability out of the child-facing body-text audit surface.
+- No text-side blocker was found that should stop the template from advancing to the prompt / BF-4 audit.
+
+### Recommended Next Step
+
+- T3-6-3: perform prompt / BF-4 audit for `fixed-first-birthday-8p`.
+- Keep text changes out of scope unless a later smoke/manual QA reveals a concrete rendering mismatch.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
