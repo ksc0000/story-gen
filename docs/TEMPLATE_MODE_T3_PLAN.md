@@ -5251,6 +5251,77 @@ Reason:
 - Plan is incremental, scoped, and reversible (prompt-only changes).
 - Next action: implement T3-5-5a-1 and T3-5-5a-2 prompt edits, commit, and run T3-5-5a-3 smoke.
 
+## T3-5-5b fixed-first-zoo-8p BF-4/BF-3 Follow-up Cleanup Implementation
+
+### Status
+
+completed
+
+### Date
+
+2026-05-15
+
+### Purpose
+
+Implement the T3-5-5a cleanup plan: add `withZoo8pImagePromptGuardrail` to all 8 pages of `fixed-first-zoo-8p`, providing BF-3 character continuity anchor (all pages), BF-4 no-sign-text guard (page 1), and BF-4 no-clothing-text guard (page 5). Build and verify. Firestore template sync and smoke rerun are deferred to T3-5-5c.
+
+### Scope
+
+| item | value |
+| --- | --- |
+| target template | `fixed-first-zoo-8p` |
+| source file | `functions/src/seed-templates.ts` |
+| change type | page-local `imagePromptTemplate` guardrail wrapper (source-only) |
+| out of scope | Firestore sync, smoke rerun, Admin regeneration, other templates |
+
+### Implementation
+
+#### New Constants
+
+| constant | purpose |
+| --- | --- |
+| `ZOO_8P_CHARACTER_ANCHOR_CLAUSE` | BF-3: per-page identity anchor — same child, same hair, same outfit, age ≈ 4 across all 8 pages |
+| `ZOO_8P_NO_SIGN_TEXT_CLAUSE` | BF-4 (page 1): all background signs/boards/notices are plain-colored shapes with no glyphs or letters |
+| `ZOO_8P_NO_CLOTHING_TEXT_CLAUSE` | BF-4 (page 5): clothing has no visible print, logo, text, letters, or readable marks |
+
+#### New Wrapper
+
+`withZoo8pImagePromptGuardrail(prompt, options?)` — appends the applicable clauses and calls `withFixedImagePromptSafety`. Options: `signText: true` (page 1), `clothingText: true` (page 5).
+
+#### Pages Changed
+
+| page index | pageVisualRole | BF-4 option | BF-3 anchor |
+| --- | --- | --- | --- |
+| 0 | opening_establishing | — | ✓ |
+| 1 | discovery (zoo entrance) | signText | ✓ |
+| 2 | discovery (large animal) | — | ✓ |
+| 3 | object_detail (small animal) | — | ✓ |
+| 4 | setback_or_question | — | ✓ |
+| 5 | emotional_closeup | clothingText | ✓ |
+| 6 | quiet_ending (exit path) | — | ✓ |
+| 7 | quiet_ending (parent message) | — | ✓ |
+
+### Verification
+
+| check | result | notes |
+| --- | --- | --- |
+| `withZoo8pImagePromptGuardrail` applied to all 8 pages | pass | verified by grep |
+| page 1 has `signText: true` | pass | zoo entrance / BF-4 fail page |
+| page 5 has `clothingText: true` | pass | emotional_closeup / BF-4 fail page |
+| `tsc` build passes | pass | `npm run build` in `functions/` returns no errors |
+| no other template touched | pass | only `fixed-first-zoo-8p` pages changed |
+
+### Decision
+
+**T3-5-5b implementation status:** completed
+
+Reason:
+- All 8 page-local `imagePromptTemplate` values now use `withZoo8pImagePromptGuardrail`.
+- BF-4 targeted guards applied to pages 1 (signText) and 5 (clothingText) per T3-5-5a plan.
+- BF-3 identity anchor applied to all 8 pages.
+- Build passes. Source-only change; no runtime deployment in this slice.
+- Next slice T3-5-5c: Firestore template sync and new no-reference smoke rerun for BF-4/BF-3 re-evaluation.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
