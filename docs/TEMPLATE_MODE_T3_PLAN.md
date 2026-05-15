@@ -5503,6 +5503,78 @@ Reason:
 - BF-3 outfit color drift: classified as P3 / known limitation in no-reference mode. No immediate follow-up required before broader 8p expansion.
 - Next action: proceed to T3-5-5e (or T3-5-6) as planned.
 
+## T3-5-5e fixed-first-zoo-8p Rollout Decision / Variant Closure
+
+### Status
+
+completed (docs-only closure)
+
+### Date
+
+2026-05-15
+
+### Purpose
+
+Record the rollout decision and first variant closure outcome for `fixed-first-zoo-8p` after T3-5 source audit, text/ageBand audit, prompt cleanup, Firestore sync, no-reference smoke generation, and T3-5-5d manual BF-4/BF-3 visual QA.
+
+This step is docs-only. It does not change prompts, seeds, generated books, Firestore state, Admin state, or authentication flow.
+
+### Source
+
+| item | value |
+| --- | --- |
+| latest closure input commit | `a551c2a` |
+| latest closure input status | Go |
+| latest QA bookId | `ZNbdu8zX7HNYzoST327M` |
+| target template | `fixed-first-zoo-8p` |
+| page count | 8 |
+| reference image | not used |
+| generation model | `black-forest-labs/flux-2-pro` |
+| rollout mode | no-reference fixed-template rollout |
+
+### Closure Evidence
+
+| area | result | evidence |
+| --- | --- | --- |
+| seed/source audit | pass | T3-5-1 confirmed template source exists and scope is isolated to `fixed-first-zoo-8p`. |
+| preschool text + ageBand coverage | pass | T3-5-2 confirmed preschool copy path, ageBand support, and no blocking text gaps. |
+| page-local BF-4/BF-3 cleanup implementation | pass | T3-5-3b and T3-5-5b added targeted prompt guardrails for sign/clothing text and continuity anchoring. |
+| Firestore template sync | pass | T3-5-4 and T3-5-5c completed sync write/check with no remaining drift. |
+| no-reference smoke generation | pass | Latest smoke book `ZNbdu8zX7HNYzoST327M` completed 8/8 pages with failed 0 and fallback 0. |
+| BF-4 page 1 sign text | pass | T3-5-5d verified the entrance sign-like surface is blank/non-readable. |
+| BF-4 page 5 clothing text | pass | T3-5-5d verified clothing print/text artifact is removed. |
+| BF-4 overall | pass | All reviewed pages 0-7 were clean of readable text artifacts. |
+| BF-3 identity continuity | pass | Same child identity and age impression maintained across the sequence. |
+| BF-3 outfit continuity | partial | Outfit palette still shifts across scenes, but not to a wrong-child impression. |
+| story/image match + visual safety | pass | Zoo outing arc remains readable and no blocking safety/quality issue was recorded. |
+
+### Remaining Follow-up
+
+| item | severity | action |
+| --- | --- | --- |
+| outfit color palette drift across scenes in no-reference flow | P3 | Keep as known limitation under `black-forest-labs/flux-2-pro`; no closure block. |
+| future no-reference variance | P3 | Re-run targeted smoke + manual QA if readable sign/clothing text reappears in later generations. |
+| broader 8p rollout reuse | P2 | Apply the same staged BF-4/BF-3 gates to the next candidate variant before expansion. |
+
+### Decision
+
+**Rollout decision / first variant closure status:** Go
+
+Reason:
+- T3-5-5d moved the template from Conditional-Hold to Go by fully resolving the two BF-4 fail points (page 1 sign text and page 5 clothing text).
+- BF-3 improved from fail to acceptable closure quality for no-reference rollout: child identity and age impression are stable, while the remaining outfit palette drift is a documented P3 limitation rather than a blocker.
+- Source audit, text/ageBand checks, Firestore sync, smoke generation, and manual visual QA now form a complete end-to-end evidence chain for `fixed-first-zoo-8p`.
+- No P0/P1/P2 issue remains that blocks variant closure for this template.
+
+### Recommended Next Step
+
+- Close `fixed-first-zoo-8p` as rollout-complete for this slice and move to the next planned template phase or next candidate variant using the same gated sequence.
+
+### Follow-up
+
+- Keep `fixed-first-zoo-8p` closed unless a future smoke/manual QA run shows a new BF-4 or BF-3 regression above the current documented P3 limitation.
+- Treat outfit color drift as a watch item, not a reopen condition, unless it begins to break child identity continuity.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
