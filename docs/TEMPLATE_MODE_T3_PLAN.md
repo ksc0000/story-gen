@@ -8811,3 +8811,255 @@ Rationale:
 - T3-8a: seed/source audit of `fixed-sleepy-moon-adventure` and design of 8p expansion structure.
 - T3-8b onward: follow the T3-7a standard rollout checklist gates in sequence.
 - Future 8p variant templates should apply this orthography policy from initial seed writing.
+
+---
+
+## T3-8a fixed-sleepy-moon-adventure seed/source audit + 8p expansion design
+
+### Status
+
+docs-only audit and design (2026-05-16)
+
+### Purpose
+
+- Audit the existing 4p `fixed-sleepy-moon-adventure` source in `functions/src/seed-templates.ts`.
+- Design the 8p page structure for `fixed-sleepy-moon-adventure-8p`.
+- Identify BF-4 / BF-3 initial risks at the seed/source level.
+- Record guardrail reuse strategy and next implementation sequence.
+- No seed, code, prompt, or datastore changes are made in this task.
+
+---
+
+### 4p source audit
+
+#### Source location
+
+`functions/src/seed-templates.ts` lines 1333–1418
+
+#### Template metadata
+
+| field | value |
+| --- | --- |
+| templateId | `fixed-sleepy-moon-adventure` |
+| name | おつきさまと おやすみぼうけん |
+| categoryGroupId | bedtime |
+| subcategoryId | moon-adventure |
+| recommendedAgeMin | 2 |
+| recommendedAgeMax | 8 |
+| requiredInputs | `["childName"]` |
+| optionalInputs | `["parentMessage"]` |
+| creationMode | fixed_template |
+| priceTier | ume |
+| active | true |
+| order | 11 |
+
+#### Fixed story metadata
+
+| field | value | notes |
+| --- | --- | --- |
+| titleTemplate | `{childName}とおつきさまのおやすみぼうけん` | single placeholder; no risk |
+| titleSpreadTextTemplate | `おつきさまと おやすみぼうけん` | fixed; correct |
+| openingNarrationTemplate | `よるのしずかな へやで、{childName}は まどのむこうの おつきさまを みつけました。` | correct; hiragana-first |
+| coverImagePromptTemplate | `withFixedImagePromptSafety(...)` | safety wrapper present; explicit no-text clause; low BF-4 risk |
+
+#### 4p page audit
+
+| page | pageVisualRole | textTemplate (default) | ageBand coverage | imagePromptTemplate summary | no-text clause |
+| --- | --- | --- | --- | --- | --- |
+| 0 | opening_establishing | ベッドのうえで、{childName}はまどのそとのおつきさまを見つけました。 | all 5 bands ✓ | Wide bedroom; child on bed gazing at moon; star motif on curtain; lamp + moonlight | present ✓ |
+| 1 | discovery | {childName}は、ふわふわの雲やきらきらの星をそうぞうしました。 | all 5 bands ✓ | Cloud and star shapes as dream symbols floating around room; bedroom visible | present ✓ |
+| 2 | emotional_closeup | おつきさまが「きょうもだいじょうぶ」と見まもってくれているようでした。 | all 5 bands ✓ | Close-up of child on pillow; moonlight on face; moon outside as gentle guardian | present ✓ |
+| 3 | quiet_ending | {parentMessage} | all 5 bands (parentMessage passthrough) | Wide shot of sleeping child; moonlight; plush toy; star motif on blanket | present ✓ |
+
+#### 4p source audit findings
+
+| check | result | notes |
+| --- | --- | --- |
+| `withFixedImagePromptSafety` on cover | ✓ pass | Safety wrapper present; no-text clause in cover prompt. |
+| per-page no-text clause | ✓ pass | All 4 pages have explicit "No text, no letters, no Japanese characters, no readable signs, no logo, no watermark." |
+| age-specific text (all 5 bands) | ✓ pass | baby_toddler, preschool_3_4, early_reader_5_6, early_elementary_7_8, general_child populated on all pages. |
+| `{childName}` placeholder | ✓ pass | Present on textTemplate and age-specific bands of pages 0, 1, 2. |
+| `{parentMessage}` passthrough | ✓ pass | Page 3 uses {parentMessage} correctly across all age bands. |
+| recurring visual motif | ✓ pass | "tiny glowing star motif" referenced in pages 0, 1, 2, 3 — structural motif is established. |
+| child identity anchor | partial | Pages describe the same bedroom and plush toy but do not yet include an explicit cross-page identity anchor phrase. Acceptable for 4p; should be added per 8p guardrail. |
+| unintended seed changes | none | No diff from baseline. 4p source is clean. |
+| ageBand range | ✓ pass | recommendedAgeMin: 2, Max: 8 — matches all populated age bands. |
+| BF-4 surface risk | low | No labeled props, no decorated signage-prone objects, no clothing print or packaging. |
+| BF-3 risk | low | Single character, single scene (bedroom), no location transitions. |
+
+---
+
+### 8p expansion design
+
+#### Design principles
+
+- Preserve the existing 4p narrative arc (bedtime → wonder → reassurance → sleep).
+- Expand the middle imagination/adventure phase with two new pages that deepen the moon-adventure theme without introducing new artifact-prone objects.
+- Keep the quiet ending and parentMessage structure at page 7 (same as 4p page 3).
+- All new pages must include the star motif, explicit no-text clause, and age-specific text for all 5 bands.
+- Apply a template-local identity anchor clause on all pages where the child is physically visible.
+- Use the same `withFixedImagePromptSafety` wrapper on the cover; add `withSleepyMoonImagePromptGuardrail` inline clauses per page (same pattern as birthday/zoo/brush-teeth 8p).
+
+#### Proposed 8p page structure
+
+| page | pageVisualRole | origin | narrative beat | child visible |
+| --- | --- | --- | --- | --- |
+| 0 | opening_establishing | 4p p0 (adapted) | Child in bed; first glimpse of moonlight; peaceful bedroom | yes |
+| 1 | establishing_detail | NEW | Child sits up closer to window; moon fills view; wonder begins | yes |
+| 2 | discovery | 4p p1 (carried) | Cloud and star shapes appear as imagination around the room | yes |
+| 3 | discovery_expansion | NEW | Child "rides" a gentle star-lit cloud path in imagination | yes (dream-frame) |
+| 4 | peak_moment | NEW | Friendly star cluster forms a soft glowing arc; peak of adventure | yes (dream-frame) |
+| 5 | emotional_closeup | 4p p2 (adapted) | Moon reassures "you're okay"; child back in bed | yes |
+| 6 | calm_return | NEW | Child settles into pillows; eyes growing heavy; soft peace | yes |
+| 7 | quiet_ending | 4p p3 (carried) | {parentMessage}; child asleep in moonlight | yes (asleep) |
+
+#### Page-by-page design notes
+
+**Page 0 — opening_establishing** (adapted from 4p p0)
+
+- Narrative: same as 4p p0; widen to establish bedroom atmosphere more fully for an 8p arc.
+- Image: wide shot; child on bed under blanket; moonlight from window; warm lamp; plush toy visible near child (introduce continuity anchor); star motif on curtain.
+- Identity anchor: introduce same cozy pajamas and same plush toy that will carry across all pages.
+- BF-4 risk: low. No new artifact-prone elements.
+
+**Page 1 — establishing_detail** (NEW)
+
+- Narrative: child is drawn to the window; sits up and leans toward the glass; moon is very large and close in their imagination.
+- Image: medium shot from behind/side; child at window edge of bed, face turned toward moon; moon large and luminous; soft curtain frames; plush toy visible on bed.
+- BF-4 risk: low. Window frame is safe; moon has no text-like features; keep curtain without patterned print.
+- BF-3 risk: low. Same pajamas, same plush toy.
+
+**Page 2 — discovery** (carried from 4p p1)
+
+- Narrative: same as 4p p1; clouds and stars as imagination symbols.
+- Image: same base prompt; may be lightly expanded to make the dream-symbol atmosphere richer for an 8p pacing.
+- BF-4 risk: low. Dream symbols must remain abstract, non-textual shapes. Note: specify "soft glow points and curved cloud wisps only; no connected lines that resemble writing or arrows."
+
+**Page 3 — discovery_expansion** (NEW)
+
+- Narrative: child "rides" a gentle cloud path through the star-filled imagination sky; sense of gentle adventure without fear.
+- Image: medium-wide; child seated on a fluffy cloud (purely imagination framing, room still softly visible as anchor); stars arc gently overhead; star motif on cloud edge.
+- BF-4 risk: low–medium. Cloud as a "seat" must not have any structural markings, labels, or patterned surface. Specify: "plain fluffy white cloud, smooth surface, no markings, no symbols, no lines that resemble signs."
+- BF-3 risk: low. Child in dream frame; must wear same pajamas; same plush toy may appear tucked in imagination.
+
+**Page 4 — peak_moment** (NEW)
+
+- Narrative: a soft arc of friendly stars gathers around child; peak of wonder; feeling of being gently held in the night sky.
+- Image: wide-medium; child surrounded by softly glowing star points in a curved arc overhead; moon visible in background; serene, joyful expression.
+- BF-4 risk: low. Star cluster must be rendered as glowing soft points — not as constellations with connecting lines, not as any symbol-like arrangement. Specify: "scattered glowing star points in a gentle arc, no connecting lines, no symbol arrangement."
+- BF-3 risk: low. Same pajamas.
+
+**Page 5 — emotional_closeup** (adapted from 4p p2)
+
+- Narrative: same as 4p p2; moon reassures; child's heart is calm.
+- Image: same base prompt; add identity anchor clause.
+- BF-4 risk: low. Pillow/blanket star motif — keep as simple 5-point or round glow, no text-like dots.
+
+**Page 6 — calm_return** (NEW)
+
+- Narrative: child settles gently back into pillows; eyes growing heavy; the room feels warm and safe; adventure is ending softly.
+- Image: medium; child lying on side with eyes half-closed; plush toy tucked under arm; moonlight gentle on face; star motif on pillow corner.
+- BF-4 risk: low. Plush toy — specify "plain-colored soft plush, no printed features, no appliqué patterns."
+- BF-3 risk: low. Same pajamas, same plush toy, same face.
+
+**Page 7 — quiet_ending** (carried from 4p p3)
+
+- Narrative: {parentMessage}; child asleep; same as 4p p3.
+- Image: same base prompt; keep.
+- BF-4 risk: low. Blanket star motif same as 4p.
+
+---
+
+### BF-4 initial risk summary
+
+| page | risk level | highest-risk element | mitigation direction |
+| --- | --- | --- | --- |
+| 0 | low | curtain without patterned print | "plain unprinted curtain fabric" in prompt |
+| 1 | low | window frame, moon surface | moon described as luminous orb only; no craters or marks |
+| 2 | low | dream symbols shape | "soft glow points and curved wisps only; no connected lines" |
+| 3 | low–medium | cloud surface markings | "plain fluffy white cloud, smooth surface, no markings" |
+| 4 | low | star cluster arrangement | "scattered glowing points in gentle arc, no connecting lines, no symbol arrangement" |
+| 5 | low | blanket/pillow star motif | "single glowing 5-point or round glow shape only" |
+| 6 | low | plush toy surface | "plain-colored soft plush, no printed features, no appliqué" |
+| 7 | low | blanket star motif | same as 4p p3; no new risk |
+
+No high-risk pages identified at seed/source level. Overall BF-4 risk profile: **low**.
+
+---
+
+### BF-3 initial risk summary
+
+| risk area | assessment | mitigation direction |
+| --- | --- | --- |
+| Pajama continuity (pages 0–7) | low | Specify same cozy pajama style and color on every page where child is visible. |
+| Plush toy continuity (pages 0–7) | low | Introduce same plush toy in page 0; carry it through all pages. |
+| Dream-frame child face (pages 3–4) | low | Confirm child's face and pajamas remain consistent with real-scene pages (0, 1, 2, 5, 6, 7). |
+| Multi-character risk | none | Template uses childName only; no secondary characters. |
+
+Overall BF-3 risk profile: **low**.
+
+---
+
+### Guardrail reuse strategy
+
+| layer | strategy |
+| --- | --- |
+| Cover | `withFixedImagePromptSafety(...)` — already present in 4p; carry to 8p cover unchanged. |
+| Per-page no-text clause | Existing "No text, no letters, no Japanese characters, no readable signs, no logo, no watermark" — carry to all 8 pages. |
+| Template-local guardrail | Add `withSleepyMoonImagePromptGuardrail` pattern for identity anchor and page-specific BF-4 clauses (same structural approach as `withBirthdayImagePromptGuardrail`, `withZooImagePromptGuardrail`, `withBrushTeethImagePromptGuardrail` in closed 8p templates). |
+| Identity anchor | "same child, same cozy pajamas, same plush toy" clause on pages 0, 1, 2, 3, 4, 5, 6 (all child-visible pages). |
+| Page-3 cloud surface | Add targeted clause: "plain fluffy white cloud, smooth surface, no markings, no symbols, no lines that resemble signs or arrows." |
+| Page-4 star cluster | Add targeted clause: "scattered soft glowing points in gentle arc, no connecting lines, no symbol arrangement, no constellation-map style." |
+
+---
+
+### Existing 4p → 8p page mapping summary
+
+| 8p page | 4p origin | action |
+| --- | --- | --- |
+| 0 | 4p p0 | adapt (widen; add plush toy anchor) |
+| 1 | NEW | write new (window approach; establishing detail) |
+| 2 | 4p p1 | carry (minor prompt expansion optional) |
+| 3 | NEW | write new (cloud ride; discovery expansion) |
+| 4 | NEW | write new (star arc peak moment) |
+| 5 | 4p p2 | adapt (add identity anchor clause) |
+| 6 | NEW | write new (calm return; near-sleep) |
+| 7 | 4p p3 | carry (parentMessage; asleep) |
+
+4 pages carried / adapted from 4p; 4 pages newly designed.
+
+---
+
+### Implementation readiness
+
+| item | status | notes |
+| --- | --- | --- |
+| 4p source in `seed-templates.ts` | ✓ exists | Clean; no unintended changes. |
+| 8p templateId | not yet created | `fixed-sleepy-moon-adventure-8p` does not exist in `seed-templates.ts`. |
+| `withFixedImagePromptSafety` function | ✓ available | Already imported and used on 4p cover. |
+| `buildAgeSpecificPage` function | ✓ available | Used for all 4p pages. |
+| Compiled seed | not rebuilt | `functions/lib` is stale for new 8p template; must be rebuilt locally before smoke. |
+| CI hygiene guard | ✓ active | `npm run guard:hygiene` runs in GitHub Actions before lint/test. |
+
+---
+
+### Proposed T3-8 execution sequence
+
+| slice | type | action |
+| --- | --- | --- |
+| T3-8a (this) | docs-only | 4p source audit + 8p expansion design |
+| T3-8b | seed implementation | Add `fixed-sleepy-moon-adventure-8p` to `functions/src/seed-templates.ts` |
+| T3-8c | docs-only audit | Text / ageBand audit of 8p expansion (all 5 age bands × 8 pages) |
+| T3-8d | docs-only audit | Prompt / BF-4 / BF-3 audit + page-local cleanup design |
+| T3-8e | execution | Firestore sync preflight (dry-run then write) |
+| T3-8f | execution | No-reference smoke generation + inspect |
+| T3-8g | execution | Manual BF-4 / BF-3 QA |
+| T3-8h | docs-only | Closure decision (Pass / Conditional-Go / Hold) |
+
+### Exclusions (this slice)
+
+- No seed, code, or prompt changes made.
+- No `fixed-sleepy-moon-adventure-8p` template implemented.
+- No Firestore sync, smoke generation, image generation, or Admin regeneration executed.
+- No reference-flow generation, Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
