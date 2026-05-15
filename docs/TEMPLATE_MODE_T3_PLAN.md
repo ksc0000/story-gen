@@ -9990,3 +9990,150 @@ Result: pass.
 ### Next steps
 
 - T3-8i: sync the hardened sleepy-moon-8p template, run a new no-reference smoke, then re-run manual BF-4/BF-3 visual QA with page 3 and page 7 as first-priority checks.
+
+---
+
+## T3-8i fixed-sleepy-moon-adventure-8p Firestore sync + no-reference re-smoke
+
+### Status
+
+completed (2026-05-16)
+
+### Purpose
+
+Sync the hardened `fixed-sleepy-moon-adventure-8p` prompt layer into Firestore, generate a new no-reference re-smoke book under the same `preschool_3_4` / `childAge=4` conditions as the failed T3-8f run, monitor it to completion, inspect structural generation health, and record results. Manual visual QA is intentionally deferred to T3-8j.
+
+### Scope executed
+
+- `npm run guard:hygiene`
+- `npm --prefix functions run build`
+- `node scripts/sync-fixed-template-seeds.js --template-id=fixed-sleepy-moon-adventure-8p`
+- `node scripts/sync-fixed-template-seeds.js --write --template-id=fixed-sleepy-moon-adventure-8p`
+- post-write sync re-check for `fixed-sleepy-moon-adventure-8p`
+- `node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4`
+- `node scripts/create-template-smoke-books.js --write --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4`
+- `node scripts/monitor-smoke-book.js <bookId>` polling until completion
+- `node scripts/inspect-smoke-book.js <bookId> --expected-page-count=8`
+
+### Preconditions
+
+| check | result | notes |
+| --- | --- | --- |
+| Git worktree clean before run | ✓ pass | `main...origin/main` clean at start |
+| `guard:hygiene` | ✓ pass | No forbidden paths, docs encoding issues, or staged secret-like patterns |
+| Credentials present | ✓ pass | `GOOGLE_APPLICATION_CREDENTIALS` set and accepted |
+| `functions` build | ✓ pass | `npm --prefix functions run build` completed successfully |
+
+### Firestore sync result
+
+| step | result | notes |
+| --- | --- | --- |
+| pre-write sync check | ✓ pass | target template already returned `[]` issues |
+| targeted sync write | ✓ pass | write executed for `fixed-sleepy-moon-adventure-8p` only |
+| post-write sync check | ✓ pass | target template still returned `[]` issues |
+
+Sync conclusion:
+
+- The hardened sleepy-moon-8p prompt layer is now explicitly re-synced into Firestore `templates`.
+- No unrelated fixed templates were written in this slice.
+
+### Re-smoke request configuration
+
+| field | value |
+| --- | --- |
+| templateId | `fixed-sleepy-moon-adventure-8p` |
+| smoke mode | no-reference |
+| ageBand | `preschool_3_4` |
+| childAge | `4` |
+| pageCount | `8` |
+| reference image | none |
+| previous failed bookId | `UEaEtXoK8DDt2qXT9avc` |
+| new re-smoke bookId | `c2JGhoypMsOXiWnI5J3A` |
+
+Dry-run confirmation:
+
+- payload resolved to `childName=SmokeKid1`
+- `parentMessage=きょうもすてきな一日だったね`
+- `childAge=4`
+- `pageCount=8`
+- `withReference=false`
+
+### Monitor result
+
+Result: completed.
+
+- Polling observed progress transitions `50 -> 75 -> 88 -> 100 -> completed`
+- Final book status: `completed`
+- Final book progress: `100`
+- No book-level failure stage or failure reason was reported
+
+### Inspect result
+
+| check | result | notes |
+| --- | --- | --- |
+| creationMode | ✓ pass | `fixed_template` |
+| characterConsistencyMode | ✓ pass | `all_pages` |
+| childProfileSnapshot absent | ✓ expected | correct for no-reference smoke |
+| expected page count | ✓ pass | `8/8` |
+| completed pages | ✓ pass | `8/8` |
+| failed pages | ✓ pass | `0/8` |
+| imageAttemptCount | ✓ pass | all pages `1` |
+| inputReferenceCount | ✓ expected | `0/8` |
+| usedCharacterReference | ✓ expected | `false` on all pages |
+
+### Page generation health
+
+| page | status | imageDurationMs | inputReferenceCount | note |
+| --- | --- | --- | --- | --- |
+| 0 | completed | `33616` | `0` | pass |
+| 1 | completed | `29458` | `0` | pass |
+| 2 | completed | `23591` | `0` | pass; visual QA deferred to T3-8j |
+| 3 | completed | `27287` | `0` | pass; top continuity re-check target in T3-8j |
+| 4 | completed | `31479` | `0` | pass; visual QA deferred to T3-8j |
+| 5 | completed | `32598` | `0` | pass; visual QA deferred to T3-8j |
+| 6 | completed | `57090` | `0` | pass; slower page but completed in one attempt |
+| 7 | completed | `30112` | `0` | pass; top BF-4 re-check target in T3-8j |
+
+Generation-health summary:
+
+- All 8 pages completed successfully.
+- No page entered `image_failed`.
+- No retries beyond attempt `1` were needed.
+- No reference path was used, which is correct for this no-reference re-smoke slice.
+
+### Comparison to previous failed smoke
+
+| item | previous smoke | re-smoke |
+| --- | --- | --- |
+| bookId | `UEaEtXoK8DDt2qXT9avc` | `c2JGhoypMsOXiWnI5J3A` |
+| source prompt layer | pre-hardening | post-T3-8h hardening |
+| structural completion | pass | pass |
+| manual visual verdict | failed in T3-8f | not yet reviewed |
+
+### Judgment
+
+Result: pass / proceed.
+
+- The hardened template synced successfully.
+- The re-smoke completed successfully under the intended no-reference conditions.
+- Structural generation health is good enough to proceed to a new manual visual QA slice.
+- T3-8i does not claim BF-4/BF-3 visual success; that remains pending T3-8j.
+
+### Deferred to T3-8j
+
+- Manual BF-4 visual re-check for page 7 rendered-text suppression
+- Manual BF-3 continuity re-check for page 3 dreamscape continuity
+- Full-sequence child / pajama / teddy-bear continuity review across pages 0-7
+
+### Exclusions (this slice)
+
+- No manual visual QA performed in this slice.
+- No image regeneration of the previous failed book.
+- No Admin regeneration or reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No code / seed / prompt modifications.
+- No service account JSON, secrets, URLs, or tokens recorded.
+
+### Next steps
+
+- T3-8j: manual BF-4/BF-3 visual QA for re-smoke book `c2JGhoypMsOXiWnI5J3A`, with page 7 and page 3 as first-priority review points.
