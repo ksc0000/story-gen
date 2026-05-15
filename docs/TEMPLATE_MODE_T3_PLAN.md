@@ -5132,6 +5132,125 @@ Reason:
 - No code/prompt/seed modification executed in this QA step.
 - No credentials/private URLs/personal data recorded in docs.
 
+---
+
+## T3-5-5a fixed-first-zoo-8p BF-4/BF-3 Follow-up Cleanup Plan
+
+### Status
+
+planned (docs-only)
+
+### Date
+
+2026-05-15
+
+### Purpose
+
+Design a targeted follow-up slice to address the BF-4/BF-3 issues found in T3-5-5 for `fixed-first-zoo-8p`. The goal is to harden page-local prompts against residual readable-text artifacts (BF-4) and improve child/outfit/age-impression continuity across the 8-page sequence (BF-3), then re-run no-reference smoke and repeat manual QA.
+
+This step is docs-only planning. No prompt/code/seed changes are committed here.
+
+### Root Cause Summary (from T3-5-5)
+
+| issue | pages | root cause diagnosis |
+| --- | --- | --- |
+| BF-4: readable sign text | 1 | entrance/background scene lacks explicit suppress-text anchor; sign silhouette drifts to glyph-level legibility |
+| BF-4: text-like print on clothing | 5 | emotional-closeup scene prompt does not include a clothing-text suppression clause; model renders decorative print as readable |
+| BF-3: child identity drift | all | per-page prompts do not share a stable identity seed; face/hair generation is independently sampled each page |
+| BF-3: outfit drift | all | clothing description is not explicitly anchored per-page; color/style/accessory varies freely |
+| BF-3: age impression fluctuation | all | perceived age is driven by size/proportion cues that are not explicitly locked; style cues drift and shift apparent age |
+
+### Proposed Cleanup Tasks
+
+#### T3-5-5a-1: BF-4 Page-local Prompt Hardening (pages 1 and 5)
+
+| item | detail |
+| --- | --- |
+| scope | `imagePromptTemplate` for pages 1 and 5 only |
+| page 1 fix | Add explicit no-text instruction anchored to background/signage elements: "all background signs, boards, and notices are plain-colored shapes with no glyphs or letters, no readable text of any kind" |
+| page 5 fix | Add explicit clothing-text suppression: "clothing has no visible print, logo, text, letters, or readable marks" |
+| guard style | Use same page-local guard clause pattern established in T3-5-3b (negative constraint + positively reframe the visual intent) |
+| risk | Minimal; change is page-scoped and does not touch the shared image prompt structure |
+| acceptance | Pages 1 and 5 regenerate with no readable text observed in manual QA |
+
+#### T3-5-5a-2: BF-3 Continuity Anchoring (all pages)
+
+| item | detail |
+| --- | --- |
+| scope | `imagePromptTemplate` shared identity anchor across all 8 pages |
+| approach | Insert a per-page child identity descriptor block before the scene-specific portion of each page prompt. Block includes: hair color/length, eye description, clothing base color/style, body proportion (young child), age-impression cue ("looks like a 4-year-old child") |
+| constraint | Descriptor must be expressed as a positive prompt (what the character looks like), not purely negative |
+| note on model limitation | flux-2-pro does not support cross-page consistency natively; per-page anchoring is the best available mitigation; residual drift is expected but should be materially reduced |
+| risk | Moderate; touching all 8 page prompts. Each page must be reviewed post-edit to confirm the descriptor integrates naturally with scene intent |
+| acceptance | BF-3 manual QA shows clearly reduced face/hair/outfit drift; overall BF-3 result advances from Fail to at least Partial |
+
+#### T3-5-5a-3: No-reference Smoke Rerun
+
+| item | detail |
+| --- | --- |
+| scope | Full 8-page no-reference smoke for `fixed-first-zoo-8p` after T3-5-5a-1 and T3-5-5a-2 are committed |
+| method | Same as T3-5-4: `create-template-smoke-books.js` with `--age-band=preschool_3_4`, no reference image |
+| success criteria | 8/8 completed, 0 failed, 0 fallback |
+| output | New bookId to pass to T3-5-5a-4 |
+
+#### T3-5-5a-4: Manual BF-4/BF-3 Visual QA (repeat)
+
+| item | detail |
+| --- | --- |
+| scope | Read-only visual review of new bookId generated in T3-5-5a-3 |
+| method | Same checklist as T3-5-5 |
+| pass criteria BF-4 | No readable text observed on any page (especially pages 1 and 5) |
+| pass criteria BF-3 | Child face/hair/outfit is recognizably consistent across at least 6 of 8 pages; age impression is stable in the 3-5 year range |
+| decision gate | BF-4 pass + BF-3 at least Partial → Go for next template phase; BF-3 Fail again → escalate to prompt architecture review |
+
+### Page-by-page Prompt Change Plan
+
+| page | role | T3-5-5a-1 (BF-4) | T3-5-5a-2 (BF-3 anchor) | notes |
+| --- | --- | --- | --- | --- |
+| 0 | opening_establishing | no change | add identity anchor | baseline page; BF-4 passed |
+| 1 | setback_or_question | add no-sign-text clause | add identity anchor | BF-4 fail: readable sign |
+| 2 | discovery | no change | add identity anchor | BF-4 passed |
+| 3 | action | no change | add identity anchor | BF-4 passed |
+| 4 | object_detail | no change | add identity anchor | BF-4 passed |
+| 5 | emotional_closeup | add no-clothing-text clause | add identity anchor | BF-4 fail: clothing text |
+| 6 | exit_flow | no change | add identity anchor | BF-4 passed |
+| 7 | quiet_ending | no change | add identity anchor | BF-4 passed |
+
+### Risk Register
+
+| risk | likelihood | mitigation |
+| --- | --- | --- |
+| Identity anchor text increases total prompt length and causes truncation | Low | Keep anchor to ≤30 tokens; use shorthand descriptors |
+| New clauses conflict with scene composition intent | Medium | Review each page prompt after edit; test with smoke rerun |
+| BF-3 drift persists even after anchoring (model limitation) | Medium | Acceptable if drift reduces; document residual as known flux-2-pro limitation |
+| BF-4 sign text reappears on different pages in rerun | Low | If new pages fail BF-4, scope additional page-local guards in T3-5-5b |
+
+### Sequence
+
+```
+T3-5-5a-1  →  T3-5-5a-2  →  commit  →  T3-5-5a-3 (smoke rerun)  →  T3-5-5a-4 (QA)
+```
+
+Both T3-5-5a-1 and T3-5-5a-2 are source-only prompt edits, committed together before smoke rerun.
+
+### Out of Scope
+
+- Reference-flow generation
+- Admin regeneration of existing bookId `mR3lsI7AF2P8n11mMRxS`
+- Changes to any template other than `fixed-first-zoo-8p`
+- BF-1 / BF-2 / OR gates (handled in separate series)
+- Other ageBand variants (`baby_toddler`, `early_reader_5_6`, `early_elementary_7_8`)
+
+### Decision
+
+**T3-5-5a plan status:** Go (ready to implement)
+
+Reason:
+- Root causes for BF-4 pages 1 and 5 are localized and addressable with page-local prompt guards following the established T3-5-3b pattern.
+- BF-3 anchoring is a known-pattern mitigation; its effectiveness is subject to model capability but is the correct next step.
+- Plan is incremental, scoped, and reversible (prompt-only changes).
+- Next action: implement T3-5-5a-1 and T3-5-5a-2 prompt edits, commit, and run T3-5-5a-3 smoke.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
