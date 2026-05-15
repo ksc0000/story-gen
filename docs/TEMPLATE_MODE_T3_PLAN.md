@@ -5888,6 +5888,81 @@ Reason:
 
 ---
 
+## T3-4j-10 fixed-brush-teeth-8p No-reference Smoke after Page 3 Hard Cleanup
+
+### Status
+
+completed.
+
+### Purpose
+
+Run a no-reference smoke generation after the T3-4j-9 page 3 product-surface hard cleanup to prepare a fresh book for targeted manual BF-4 visual QA.
+
+This step records generation health only. Detailed manual visual QA is handled in T3-4j-11.
+
+### Source
+
+| item | value |
+| --- | --- |
+| page 3 hard cleanup commit | `8c244e7` |
+| templateId | `fixed-brush-teeth-8p` |
+| ageBand | `preschool_3_4` |
+| expected childAge | 4 |
+| page count | 8 |
+| reference image | not used |
+| write mode | `--write` |
+
+### Execution Result
+
+| item | value |
+| --- | --- |
+| auth state | `SET_AND_FILE_EXISTS` |
+| build | pass |
+| template sync write | pass (13 target templates including fixed-brush-teeth-8p) |
+| dry-run | pass |
+| command | `node scripts/create-template-smoke-books.js --template-id=fixed-brush-teeth-8p --age-band=preschool_3_4 --write` |
+| generated bookId | `IfP6cn1edweRt0mblEef` |
+| pages | 8/8 |
+| failed | 0 |
+| fallback | 0 |
+| book status | completed |
+| progress | 100 |
+| image model | black-forest-labs/flux-2-pro (all pages) |
+| generation status | pass |
+| reference input used | no |
+| existing book overwritten | no |
+| functions/lib committed | no |
+| generated files committed | no |
+| secrets recorded | no |
+
+### Initial Signal
+
+| check | result | notes |
+| --- | --- | --- |
+| input childAge | pass | dry-run and book input both show childAge=4. |
+| page count | pass | inspect expected-page-count=8 passed. |
+| image generation health | pass | 8/8 completed, failed=0, fallback=0, imageAttemptCount=1 on all pages. |
+| severe image artifact | not reviewed | Detailed manual visual QA out of scope unless obvious. |
+| page 3 BF-4 artifact | not reviewed | Visual QA remains T3-4j-11. |
+| preschool text | not reviewed | Text pipeline already validated; only basic signal if inspected. |
+
+### Decision
+
+**Post-page-3-hard-cleanup smoke status:** Go
+
+Reason:
+- Template sync write succeeded after T3-4j-9 source update.
+- No-reference smoke generated a fresh new bookId with childAge=4 and pageCount=8.
+- Generation health is clean (8/8 completed, failed=0, fallback=0, model=flux-2-pro).
+- Ready to proceed to targeted manual BF-4 visual QA on page 3.
+
+### Follow-up
+
+- T3-4j-11: perform targeted manual BF-4 visual QA on page 3.
+- Keep text pipeline follow-up separate unless regression is detected.
+
+---
+
 ## T3-4k Japanese Orthography Policy for Fixed Templates
 
 ### Status
