@@ -9241,3 +9241,124 @@ Result: low risk / pass.
 ### Next steps
 
 - T3-8d: prompt/BF-4/BF-3 audit + page-local cleanup design.
+
+---
+
+## T3-8d fixed-sleepy-moon-adventure-8p prompt / BF-4 / BF-3 audit
+
+### Status
+
+completed (2026-05-16)
+
+### Purpose
+
+Audit the shipped `fixed-sleepy-moon-adventure-8p` image prompt layer in `functions/src/seed-templates.ts` as a docs-only slice: confirm the shared guardrail composition, review page 0-7 `imagePromptTemplate`, assess BF-4 and BF-3 risk page by page, and decide whether the template is ready to move to Firestore sync / smoke from a prompt-risk standpoint.
+
+### Scope checked
+
+- `functions/src/seed-templates.ts`
+  - `SLEEPY_MOON_8P_CHARACTER_ANCHOR_CLAUSE`
+  - `SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE`
+  - `withSleepyMoon8pImagePromptGuardrail(prompt)`
+  - `fixed-sleepy-moon-adventure-8p` cover + page 0-7 `imagePromptTemplate`
+- No code changes, prompt changes, Firestore sync, smoke generation, image generation, or Admin regeneration
+
+### Shared guardrail audit
+
+Result: pass.
+
+#### `SLEEPY_MOON_8P_CHARACTER_ANCHOR_CLAUSE`
+
+- Requires the same child across all 8 pages.
+- Locks the highest-value continuity features for this template: face, age impression, hairstyle, hair color, pajama style/color, and stuffed toy presence.
+- This is a strong BF-3 stabilizer because the template stays in a single bedtime world and relies on emotional continuity more than on scene novelty.
+
+#### `SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE`
+
+- Restricts dream symbols to soft glowing points and curved cloud wisps only.
+- Explicitly blocks the highest-risk BF-4 artifact shapes for this template family: connecting lines, symbol arrangement, constellation-map patterns, arrows, letter-like shapes, and glyph-like forms.
+- This clause is well matched to the page 2-4 imagination arc, where visual abstraction is necessary but text-like geometry must be avoided.
+
+#### `withSleepyMoon8pImagePromptGuardrail(prompt)`
+
+- Appends the dream-symbol clause when absent.
+- Appends the character-anchor clause when absent.
+- Then calls `withFixedImagePromptSafety(result)`.
+- Net effect: each page keeps both local scene detail and a shared no-text / same-child baseline.
+
+### Prompt-shape overview
+
+Overall result: low risk / pass.
+
+- Every page prompt includes explicit no-text language (`No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.`).
+- The dream pages avoid printed objects, signage, labels, maps, books, or decorative patterns that often create BF-4 noise.
+- Composition remains mostly single-subject with one supporting prop (`stuffed toy`) and one stable environment (`bedroom`), which is favorable for BF-3 stability.
+- The strongest page-local watchpoint is not literal text, but accidental symbolic over-structuring on pages 2-4 if star points become arranged too cleanly.
+
+### Page-by-page BF-4 / BF-3 audit
+
+| page | role | prompt summary | BF-4 risk | BF-3 risk | audit note |
+| --- | --- | --- | --- | --- | --- |
+| 0 | `opening_establishing` | child in bed, moon at window, lamp, toy, plain curtain, tiny star motif | low | low | stable room setup; plain curtain reduces accidental pattern/text risk |
+| 1 | `discovery` | side medium shot, moon fills window, plain curtain, star motif on plain frame edge | low | low | close framing and repeated room anchors support continuity |
+| 2 | `discovery` | imagined cloud wisps and star shapes floating in room, bedroom still visible | low-medium | low-medium | safe due to explicit guardrail, but first symbolic page is the main BF-4 watchpoint for accidental diagram-like arrangement |
+| 3 | `action` | child seated on plain fluffy cloud, star points only, bedroom faintly visible at edges | low-medium | medium | strongest BF-3 watchpoint because the dreamscape is most transformed here, though edge-visible room grounding helps |
+| 4 | `payoff` | star arc overhead, moon as plain orb, peak wonder shot | medium | low-medium | arc composition is emotionally right but is the clearest page-local risk for stars drifting toward decorative patterning if generation over-regularizes the curve |
+| 5 | `emotional_closeup` | child on pillow, toy in arms, plain orb moon outside, star motif near pillow seam | low | low | strongest stabilizing page after dream climax; quoted reassurance exists in story text, but image prompt still forbids rendered text |
+| 6 | `quiet_ending` | child under blanket, eyes closing, plain plush, plain pillow corner star motif | low | low | simple bedroom intimacy, minimal artifact surface area |
+| 7 | `quiet_ending` | child asleep in bed, blanket edge star motif, balanced calm room | low | low | safest ending prompt; highly smoke-friendly |
+
+### BF-4 analysis
+
+Overall result: low risk with 2 contained watchpoints.
+
+- Page 2: floating symbolic shapes are intentionally abstract; the guardrail does the right thing by forbidding connecting lines, arrow forms, symbol arrangement, and constellation-map patterns.
+- Page 3: the cloud ride remains low-medium BF-4 risk because the cloud is explicitly plain and the stars are scattered soft points only.
+- Page 4: this is the highest BF-4 watchpoint in the template because "arranged in a gentle arc overhead" can encourage over-neat spacing. The prompt still mitigates this by explicitly banning connecting lines, symbol arrangement, constellation-map style, and arrow-like paths.
+- Pages 0, 1, 5, 6, and 7 are low BF-4 risk because they are grounded bedroom scenes with explicit no-text constraints and plain-surface descriptions.
+
+### BF-3 analysis
+
+Overall result: low risk with 1 moderate watchpoint.
+
+- The strongest BF-3 protection is the shared character anchor: same face, age impression, hairstyle, hair color, pajama style/color, and stuffed toy across all pages.
+- The bedroom remains visually present or strongly implied throughout the entire sequence, which helps preserve same-child / same-world continuity.
+- Page 3 is the main BF-3 watchpoint because the imagination cloud scene departs furthest from the literal room. This is partially offset by "The real bedroom is faintly visible at the edges to ground the dream-play context."
+- Page 4 steps back toward stability because the child remains central and the moon is constrained to a plain luminous orb without surface marks or symbolic detail.
+- Pages 5-7 return to highly stable close-range bedtime imagery, so end-of-sequence drift risk is low.
+
+### Page-local cleanup judgment
+
+Result: no cleanup required in this slice.
+
+- No blocking prompt defects were found.
+- No page requires docs-driven prompt rewrite before sync/smoke.
+- Page 2-4 symbolic geometry and page 3 dream-world separation are worth watching during future smoke review, but they do not justify a pre-smoke code or prompt edit in this docs-only audit.
+
+### Firestore sync / smoke gate
+
+Result: proceed.
+
+- From a prompt-risk perspective, `fixed-sleepy-moon-adventure-8p` is ready to advance to Firestore sync and smoke generation.
+- Recommended smoke watchpoints:
+  - page 2: ensure floating star/cloud symbols stay loose and non-diagrammatic
+  - page 3: ensure the child identity, pajamas, and stuffed toy continuity survive the dreamscape shift
+  - page 4: ensure the star arc reads organic rather than patterned or text-like
+  - page 5: ensure the reassurance beat is conveyed by expression and lighting, not by accidental rendered quotation text
+
+### Conclusion
+
+- No blocking issues found.
+- No code, seed, or prompt change is required from this T3-8d audit.
+- The template is ready to proceed to Firestore sync / smoke when that slice is scheduled.
+
+### Exclusions (this slice)
+
+- No code / seed / prompt modifications.
+- No Firestore sync, smoke generation, image generation, or Admin regeneration executed.
+- No reference-flow generation, Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+
+### Next steps
+
+- Next execution slice: Firestore sync / smoke generation for `fixed-sleepy-moon-adventure-8p`, with focused review on pages 2-5.
