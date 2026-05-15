@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(npm test:*)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Skill(superpowers:brainstorming)",
+      "Skill(superpowers:brainstorming:*)",
+      "Bash(git ls-remote *)",
+      "Bash(xargs grep -l \"T3-5-5\\\\|zoo\\\\|fixed-first-zoo\")",
+      "Bash(xargs grep -l \"T3-5-5\\\\|BF-4\\\\|BF-3\")",
+      "Bash(awk '/^## T3-5-5a fixed-first-zoo-8p BF-4\\\\/BF-3 Follow-up Cleanup Plan/,/^## T3-5-5b/' docs/TEMPLATE_MODE_T3_PLAN.md)",
+      "Bash(awk '/^  \"fixed-first-zoo-8p\"/,/^  \"fixed-bedtime-good-day\"/' functions/src/seed-templates.ts)",
+      "Bash(npm run *)",
+      "Bash(git checkout *)"
     ]
   }
 }
