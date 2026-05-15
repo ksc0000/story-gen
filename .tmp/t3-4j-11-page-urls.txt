@@ -1,8 +1,0 @@
-﻿P0|https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/books%2FIfP6cn1edweRt0mblEef%2Fpage-0.png?alt=media&token=4cac3515-fbea-48d6-bb95-7ebbe325aa64
-P1|https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/books%2FIfP6cn1edweRt0mblEef%2Fpage-1.png?alt=media&token=8b5be566-e5e9-4557-a61b-a7b5328447f9
-P2|https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/books%2FIfP6cn1edweRt0mblEef%2Fpage-2.png?alt=media&token=a3b5d76d-d333-48f2-8091-83b5d5afe46c
-P3|https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/books%2FIfP6cn1edweRt0mblEef%2Fpage-3.png?alt=media&token=764908ed-cecd-46f0-ba7e-36134ca362f3
-P4|https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/books%2FIfP6cn1edweRt0mblEef%2Fpage-4.png?alt=media&token=5ae0ab30-8c08-46a9-ae9a-ca1b0f737e07
-P5|https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/books%2FIfP6cn1edweRt0mblEef%2Fpage-5.png?alt=media&token=71896a59-3e32-412f-8713-1b455b6e835d
-P6|https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/books%2FIfP6cn1edweRt0mblEef%2Fpage-6.png?alt=media&token=393d685d-5dcf-4072-840e-1ffba96ead60
-P7|https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/books%2FIfP6cn1edweRt0mblEef%2Fpage-7.png?alt=media&token=dcdac0ce-b8f8-4664-83d6-0a35745b441c
