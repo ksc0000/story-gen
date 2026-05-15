@@ -5912,6 +5912,109 @@ Reason:
 - T3-6-3: perform prompt / BF-4 audit for `fixed-first-birthday-8p`.
 - Keep text changes out of scope unless a later smoke/manual QA reveals a concrete rendering mismatch.
 
+## T3-6-3 fixed-first-birthday-8p Prompt / BF-4 / BF-3 Audit
+
+### Status
+
+completed.
+
+### Purpose
+
+Audit `imagePromptTemplate` coverage and birthday-specific BF-4 / BF-3 risks for `fixed-first-birthday-8p` before any sync, smoke generation, or prompt cleanup implementation.
+
+This step is docs-only and read-only. It does not change prompts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| seed/source audit commit | `d30a8ca` |
+| text/ageBand audit commit | `0f93578` |
+| selected template | `fixed-first-birthday-8p` |
+| audit target | page 0-7 `imagePromptTemplate` definitions |
+
+### Prompt Coverage Audit
+
+| check | result | notes |
+| --- | --- | --- |
+| page 0-7 `imagePromptTemplate` present | pass | All 8 pages define a page-local prompt. |
+| `withFixedImagePromptSafety(...)` coverage | pass | All birthday 8p prompts use the shared fixed safety wrapper. |
+| no-text suffix coverage | pass | Each page inherits the global no-readable-writing / no-signage suffix through the wrapper. |
+| reference-isolation suffix coverage | pass | Each page inherits the shared child-reference isolation suffix. |
+| template-local BF-3 guardrail wrapper | absent | No birthday-specific character continuity anchor is currently applied. |
+| template-local BF-4 decor/object guardrail wrapper | absent | No birthday-specific decor / tableware no-text clause is currently applied beyond the shared suffix. |
+
+### BF-4 Prompt Risk Audit (Page-level)
+
+| page | risk | result | notes |
+| --- | --- | --- | --- |
+| page 0 | low-medium | watch | Morning prep scene is simple, but folded ribbon/garland decor can still generate pseudo-text-like marks. |
+| page 1 | medium-high | needs cleanup consideration | Balloons, ribbon loops, and wall decoration surfaces create a strong decorative-artifact surface. |
+| page 2 | medium-high | needs cleanup consideration | Cake stand, candle base, plate edge, and table surfaces can drift into label-like or readable-like marks. |
+| page 3 | high | needs cleanup consideration | Celebration tableware, confetti-like paper bits, and centered table objects create the richest BF-4 artifact surface in the sequence. |
+| page 4 | medium | watch / possible cleanup | Keepsake toy detail may invite package-like or printed-surface markings if the model stylizes the object too literally. |
+| page 5 | low-medium | watch | Emotional close-up is safer, but cushion/background decor can still pick up stray pseudo-text. |
+| page 6 | medium | needs cleanup consideration | Evening room with remaining decorations and folded napkin/table elements still offers text-like artifact surfaces. |
+| page 7 | medium | watch / possible cleanup | Final table-edge / soft-lights closing scene is calmer, but lingering decor objects can still attract pseudo-text if over-detailed. |
+
+### BF-3 Prompt Risk Audit (Page-level)
+
+| page | risk | result | notes |
+| --- | --- | --- | --- |
+| page 0 | medium | watch | Pajama intro establishes the child baseline, so identity clarity here matters for the whole sequence. |
+| page 1 | medium-high | watch | Group decorating action increases pose/background complexity and can weaken same-child continuity. |
+| page 2 | medium-high | watch | Candle/cake discovery often pulls attention to props, increasing face/outfit drift risk. |
+| page 3 | medium | watch | Wide celebration composition can diffuse focus from the protagonist to the whole group. |
+| page 4 | medium | watch | Object-detail framing shifts visual emphasis away from the child, which can weaken continuity signal. |
+| page 5 | medium-high | watch | Emotional close-up should reinforce identity, but can also restyle facial proportions if not anchored. |
+| page 6 | medium-high | watch | Afterglow evening lighting and seated group pose can drift outfit color/style and age impression. |
+| page 7 | medium-high | watch | Back-view closing shot weakens direct identity verification and makes continuity dependent on silhouette/outfit consistency. |
+
+### Birthday-specific Prompt Risks
+
+| risk area | severity | notes |
+| --- | --- | --- |
+| balloons / ribbon / garland decor | medium-high | Decorative party surfaces can easily produce pseudo-text or emblem-like patterns. |
+| cake / stand / plate / tableware | high | Celebration props often invite label-like edges, print-like trim, or readable-like ornamentation. |
+| keepsake / present-like object | medium | Small held objects may be stylized as toy packaging or printed memorabilia unless constrained. |
+| scene-to-scene outfit drift | medium-high | The story naturally moves from morning prep to celebration to evening calm, inviting clothing/palette shifts if unanchored. |
+| family-group composition | medium | Multiple family figures can reduce focus on protagonist identity and age consistency. |
+| evening closing decor | medium | Calm final scenes are safer, but still expose folded paper/light/table details that can carry artifact-like markings. |
+
+### Reusable Guardrail Pattern Fit
+
+| item | fit | notes |
+| --- | --- | --- |
+| shared `withFixedImagePromptSafety(...)` | pass | Already applied and still useful as the base layer. |
+| brush-teeth style character anchor clause | high | A birthday-specific same-child / same-outfit anchor should transfer well across all 8 pages. |
+| brush-teeth style object no-text clause | medium-high | Birthday version should target cake stand, tableware, keepsake, balloons, ribbon, and party decor instead of bathroom objects. |
+| zoo-style page-local option flags | medium | Page-local flags could be useful for the highest-risk celebration pages, but a birthday-specific object/decor clause may be simpler than sign/clothing options. |
+| global suffix change | no | Existing shared suffix is already broad; the gap is birthday-object specificity, not missing global coverage. |
+
+### Cleanup Need
+
+| item | result | notes |
+| --- | --- | --- |
+| page-local cleanup needed before smoke | yes | Pages 1/2/3/6 are the strongest candidates for targeted BF-4 tightening before first no-reference smoke. |
+| template-local BF-3 anchor worth adding | yes | A birthday-specific same-child / same-outfit clause would likely improve continuity across morning, celebration, and evening beats. |
+| global helper change needed | no | Existing shared helper is sufficient as a base; cleanup should stay birthday-template-local. |
+| proceed directly to smoke with current prompts | no | Given prior birthday 8p creative findings and current prompt surface, defining cleanup first is safer. |
+
+### Decision
+
+**Prompt / BF-4 / BF-3 audit status:** Conditional
+
+Reason:
+- The shared prompt safety wrapper is present on all pages, so the template already has a solid base no-text suffix.
+- However, `fixed-first-birthday-8p` still lacks a template-local continuity anchor and birthday-object/decor-specific no-text guardrail, leaving meaningful BF-4 and BF-3 exposure in celebration-heavy scenes.
+- The strongest BF-4 risk is not signage but decorative surfaces: balloons, ribbon loops, cake stand edges, tableware, confetti-like paper, and keepsake objects.
+- A focused birthday-only cleanup plan should be defined before the first new no-reference smoke so we do not repeat already-known P2 artifact patterns.
+
+### Recommended Next Step
+
+- T3-6-3a: define a birthday-only page-local cleanup plan, prioritizing pages 1/2/3/6 and keeping pages 4/5/7 as secondary watch items.
+- T3-6-3b: implement the minimal birthday-specific guardrail wrapper and page-local prompt tightening before any sync or smoke execution.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
