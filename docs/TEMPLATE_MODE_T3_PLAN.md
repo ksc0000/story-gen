@@ -5649,6 +5649,100 @@ Reason:
 - Keep `fixed-brush-teeth-8p` and `fixed-first-zoo-8p` closed as regression baselines only.
 - If `fixed-first-birthday-8p` shows the same decoration-text tendency in first smoke, treat it as the first BF-4 checkpoint before any broader candidate expansion.
 
+## T3-6-1 fixed-first-birthday-8p Seed / Source Audit
+
+### Status
+
+completed.
+
+### Purpose
+
+Audit the source seed for `fixed-first-birthday-8p` before sync, smoke generation, or prompt cleanup.
+
+This step is docs-only and read-only. It does not change prompts, seed templates, generated books, database records, Admin state, or reference-flow behavior.
+
+### Source
+
+| item | value |
+| --- | --- |
+| rollout candidate selection commit | `aa722be` |
+| selected template | `fixed-first-birthday-8p` |
+| expected page count | 8 |
+| audit type | seed/source read-only |
+
+### Structure Audit
+
+| check | result | notes |
+| --- | --- | --- |
+| templateId exists | pass | `functions/src/seed-templates.ts` includes `fixed-first-birthday-8p`. |
+| page count | pass | `fixedStory.pageCount: 8` is defined. |
+| layout variant | pass | `fixedStory.layoutVariant: "8_page"` is defined. |
+| required inputs | pass | Required inputs are `childName` and `familyMembers`; optional input is `parentMessage`. |
+| pageVisualRole coverage | pass | All 8 pages define roles: `opening_establishing`, `action`, `discovery`, `payoff`, `object_detail`, `emotional_closeup`, `quiet_ending`, `quiet_ending`. |
+| imagePromptTemplate coverage | pass | All 8 pages define `imagePromptTemplate`. |
+| textTemplate coverage | pass | All 8 pages define `textTemplate`. |
+| textTemplatesByAge coverage | pass | All pages use `buildAgeSpecificPage`, so age-specific text is generated through `textTemplatesByAge`. |
+| parentMessage handling | pass | Final page uses `{parentMessage}` for all age bands as the closing line. |
+
+### Text / AgeBand Audit
+
+| check | result | notes |
+| --- | --- | --- |
+| preschool_3_4 exists | pass | Pages 0-7 all provide `preschool_3_4`; page 7 remains `{parentMessage}`. |
+| English risk | pass | Child-facing text templates do not intentionally mix English into story text. |
+| placeholder risk | pass | Pages 0-6 use only `childName` / `familyMembers`; page 7 isolates `parentMessage`. No extra unresolved placeholder dependency is visible. |
+| ageBand suitability | pass | Age-specific text construction matches the pattern already used by closed 8p variants. |
+| parentMessage contract | pass | Closing page isolates `parentMessage`, making later smoke/QA verification straightforward. |
+
+### BF-4 Prompt Risk Audit
+
+| page | risk | notes |
+| --- | --- | --- |
+| page 0 | low-medium | Morning room prep scene is simple, but folded decorations and wall decor can still induce pseudo-text marks. |
+| page 1 | medium | Balloons, ribbon loops, and wall decoration surfaces may produce decorative text-like artifacts. |
+| page 2 | medium | Cake stand, candles, and plate-edge details can induce label-like or sign-like marks. |
+| page 3 | medium-high | Celebration tableware, confetti-like pieces, and centered decor increase the chance of readable-like artifact formation. |
+| page 4 | medium | Keepsake toy/object detail can invite printed-surface or packaging-like marks if generation drifts. |
+| page 5 | low-medium | Emotional close-up is simpler, but cushion/decor elements in the background can still introduce stray markings. |
+| page 6 | medium | Evening room with lingering decorations and table objects may still generate pseudo-text on paper or folded surfaces. |
+| page 7 | medium | Final calm room / table-edge closing image has low action complexity but still includes decor surfaces that can pick up artifact-like marks. |
+
+### BF-3 Prompt Risk Audit
+
+| check | result | notes |
+| --- | --- | --- |
+| child appearance anchor | conditional | No template-local character anchor clause like the later stabilized variants; first smoke should monitor same-child continuity closely. |
+| outfit consistency | conditional | Story moves from morning prep to celebration to quiet evening, so pajama / dressed / after-party presentation drift is plausible unless generation naturally stabilizes. |
+| scene transition complexity | conditional | Interior-only flow is simpler than zoo, but the beat progression still changes lighting, pose, and activity across 8 pages. |
+| family/background complexity | conditional | Multiple family members recur across scenes, increasing background variation and the chance of child-presentation drift. |
+| object-led focus shifts | conditional | Cake, keepsake, and celebration props may pull attention away from child consistency on some pages. |
+
+### Reusable Gate Fit
+
+| gate | fit | notes |
+| --- | --- | --- |
+| seed/source audit | pass | Template structure is valid for staged rollout entry. |
+| text/ageBand audit | pass | Candidate is suitable for a dedicated text/ageBand review next. |
+| prompt/BF-4 audit | pass | Birthday-specific decoration/tableware surfaces give enough signal for page-local BF-4 review. |
+| no-reference smoke | pass | Template shape and input surface are simple enough for a first controlled smoke run. |
+| manual BF-4/BF-3 QA | pass | Decoration artifacts and same-child continuity can be reviewed clearly from page images. |
+| closure decision | pass | Existing Go / Conditional-Go / Hold framework can be reused without adjustment. |
+
+### Initial Decision
+
+**Seed/source audit status:** Conditional-Go
+
+Reason:
+- The structural rollout prerequisites are present: `templateId`, `pageCount`, `layoutVariant`, page roles, image prompts, and age-specific text coverage are all in place.
+- Input dependency is simpler than zoo because `fixed-first-birthday-8p` does not require a location placeholder; this lowers smoke setup complexity.
+- BF-4 and BF-3 risks still remain meaningful for no-reference rollout, especially around decoration/tableware pseudo-text and child continuity across multi-scene celebration beats.
+- The template is ready to advance to dedicated text/ageBand review and prompt/BF-4 audit, but it should not skip those gates.
+
+### Recommended Next Step
+
+- T3-6-2: perform text / ageBand audit for `fixed-first-birthday-8p`.
+- T3-6-3: perform prompt / BF-4 audit and decide whether page-local cleanup is needed before smoke generation.
+
 ## T3-4k-4 AgeBand-aware Smoke Support Plan
 
 ### Status
