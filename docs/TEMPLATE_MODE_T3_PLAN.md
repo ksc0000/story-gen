@@ -9362,3 +9362,142 @@ Result: proceed.
 ### Next steps
 
 - Next execution slice: Firestore sync / smoke generation for `fixed-sleepy-moon-adventure-8p`, with focused review on pages 2-5.
+
+---
+
+## T3-8e fixed-sleepy-moon-adventure-8p Firestore sync + no-reference smoke generation
+
+### Status
+
+completed (2026-05-16)
+
+### Purpose
+
+Sync `fixed-sleepy-moon-adventure-8p` into Firestore `templates`, then generate one no-reference smoke book for `preschool_3_4` / `childAge=4`, monitor it to completion, inspect generation health, and record execution results. Manual visual QA is intentionally deferred to T3-8f.
+
+### Scope executed
+
+- `npm run guard:hygiene`
+- `npm --prefix functions run build`
+- `node scripts/sync-fixed-template-seeds.js --template-id=fixed-sleepy-moon-adventure-8p`
+- `node scripts/sync-fixed-template-seeds.js --write --template-id=fixed-sleepy-moon-adventure-8p`
+- post-write sync re-check for `fixed-sleepy-moon-adventure-8p`
+- `node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4`
+- `node scripts/create-template-smoke-books.js --write --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4`
+- `node scripts/monitor-smoke-book.js <bookId>` polling until completion
+- `node scripts/inspect-smoke-book.js <bookId> --expected-page-count=8`
+
+### Preconditions
+
+| check | result | notes |
+| --- | --- | --- |
+| Git worktree clean before run | ✓ pass | `main...origin/main` clean at start |
+| `guard:hygiene` | ✓ pass | No forbidden paths, docs encoding issues, or staged secret-like patterns |
+| Credentials present | ✓ pass | `GOOGLE_APPLICATION_CREDENTIALS` set and accepted by sync/smoke scripts |
+| `functions` build | ✓ pass | `npm --prefix functions run build` completed successfully |
+
+### Firestore sync result
+
+| step | result | notes |
+| --- | --- | --- |
+| pre-write sync check | expected out-of-sync | target document reported `document missing` |
+| targeted sync write | ✓ pass | write executed for `fixed-sleepy-moon-adventure-8p` only |
+| post-write sync check | ✓ pass | target template returned `[]` issues |
+
+Sync conclusion:
+
+- `fixed-sleepy-moon-adventure-8p` is now present in Firestore `templates`.
+- No unrelated fixed templates were written in this slice.
+
+### Smoke request configuration
+
+| field | value |
+| --- | --- |
+| templateId | `fixed-sleepy-moon-adventure-8p` |
+| smoke mode | no-reference |
+| ageBand | `preschool_3_4` |
+| childAge | `4` |
+| pageCount | `8` |
+| reference image | none |
+| childProfileSnapshot | not attached |
+| bookId | `UEaEtXoK8DDt2qXT9avc` |
+
+Dry-run confirmation:
+
+- payload resolved to `childName=SmokeKid1`
+- `parentMessage=きょうもすてきな一日だったね`
+- `childAge=4`
+- `pageCount=8`
+- `withReference=false`
+
+### Monitor result
+
+Result: completed.
+
+- Polling observed progress transitions `0 -> 13 -> 25 -> 38 -> 50 -> 75 -> 88 -> 100`
+- Final book status: `completed`
+- Final book progress: `100`
+- No book-level failure stage or failure reason was reported
+
+### Inspect result
+
+| check | result | notes |
+| --- | --- | --- |
+| creationMode | ✓ pass | `fixed_template` |
+| characterConsistencyMode | ✓ pass | `all_pages` |
+| childProfileSnapshot absent | ✓ expected | correct for no-reference smoke |
+| expected page count | ✓ pass | `8/8` |
+| completed pages | ✓ pass | `8/8` |
+| failed pages | ✓ pass | `0/8` |
+| imageAttemptCount | ✓ pass | all pages `1` |
+| inputReferenceCount | ✓ expected | `0/8` |
+| usedCharacterReference | ✓ expected | `false` on all pages |
+
+### Page generation health
+
+| page | status | imageDurationMs | inputReferenceCount | note |
+| --- | --- | --- | --- | --- |
+| 0 | completed | `28021` | `0` | pass |
+| 1 | completed | `42199` | `0` | pass |
+| 2 | completed | `33254` | `0` | pass; visual watchpoint carried to T3-8f |
+| 3 | completed | `22581` | `0` | pass; continuity watchpoint carried to T3-8f |
+| 4 | completed | `32848` | `0` | pass; arc-shape watchpoint carried to T3-8f |
+| 5 | completed | `27838` | `0` | pass; reassurance rendering watchpoint carried to T3-8f |
+| 6 | completed | `35326` | `0` | pass |
+| 7 | completed | `38209` | `0` | pass |
+
+Generation-health summary:
+
+- All 8 pages completed successfully.
+- No page entered `image_failed`.
+- No retries beyond attempt `1` were needed.
+- No reference path was used, which is correct for this no-reference smoke slice.
+
+### Judgment
+
+Result: pass / proceed.
+
+- Firestore sync succeeded for the target template.
+- No-reference smoke generation succeeded for the target template.
+- Structural generation health is good enough to move to manual visual QA.
+- The previously identified prompt watchpoints remain relevant, but they now move to T3-8f image review rather than prompting any code or prompt change in T3-8e.
+
+### Deferred to T3-8f
+
+- Manual visual QA for BF-4/BF-3 outcomes
+- Page 2: floating star/cloud symbols should remain loose and non-diagrammatic
+- Page 3: dreamscape continuity should preserve same-child / same-pajama / same-toy identity
+- Page 4: star arc should remain organic and non-text-like
+- Page 5: reassurance beat should read through composition and expression, not accidental text-like marks
+
+### Exclusions (this slice)
+
+- No code / seed / prompt modifications.
+- No manual visual QA performed in this slice.
+- No image regeneration, Admin regeneration, or reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+
+### Next steps
+
+- T3-8f: manual visual QA for smoke book `UEaEtXoK8DDt2qXT9avc`.
