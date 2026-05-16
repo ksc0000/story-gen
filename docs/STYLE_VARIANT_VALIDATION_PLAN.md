@@ -1418,3 +1418,310 @@ That slice should define or implement:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+---
+
+## 17. T4-6 Style-Aware Smoke Runner Support Design
+
+Status: completed
+
+Date: 2026-05-16
+
+### 17.1 Purpose
+
+Define a docs-only implementation design for adding style-aware support to the smoke runner so that T4 mini-matrix execution can later run safely with explicit canonical style selection, dry-run visibility, and consistent payload persistence.
+
+### 17.2 Current Gap Summary
+
+From T4-5:
+
+- current runner is template-aware but not style-aware
+- unknown style-related CLI args are silently ignored
+- payload hardcodes `style: "soft_watercolor"`
+- runner does not persist style metadata used by the normal create flow
+- prompt-only versus preview-reference-assisted runs are not distinguished
+
+Design goal:
+
+- make style-aware smoke execution explicit, validated, and observable
+- do not break existing template-only smoke behavior
+
+### 17.3 Non-Goals
+
+T4-6 design does not propose:
+
+- changing style profile content
+- changing T3 fixed-template prompts
+- enabling style-preview reference by default
+- rewriting the generation pipeline outside the smoke-runner path
+
+### 17.4 CLI Design
+
+#### New arguments
+
+Required new style-aware argument:
+
+- `--style-id=<canonicalStyleId>`
+
+Optional future-facing argument:
+
+- `--validation-mode=<prompt_only|preview_reference_assisted>`
+
+Optional future-facing convenience flag:
+
+- `--style-preview-reference`
+
+Recommended defaults:
+
+- if `--style-id` is omitted:
+  - keep current behavior for non-T4 smoke use
+  - default effective style remains `soft_watercolor`
+- if `--validation-mode` is omitted:
+  - default to `prompt_only`
+- if `--style-preview-reference` is omitted:
+  - default to `false`
+
+CLI usage examples:
+
+```powershell
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=crayon
+```
+
+```powershell
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=anime_storybook --validation-mode=prompt_only
+```
+
+```powershell
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=crayon --validation-mode=preview_reference_assisted --style-preview-reference
+```
+
+### 17.5 Canonical Style Validation
+
+Validation rule:
+
+- `--style-id` must validate against the T4 canonical style list only
+
+Canonical list:
+
+- `soft_watercolor`
+- `fluffy_pastel`
+- `crayon`
+- `flat_illustration`
+- `anime_storybook`
+- `classic_picture_book`
+- `toy_3d`
+- `paper_collage`
+- `pencil_sketch`
+- `colorful_pop`
+
+Behavior on invalid value:
+
+- exit with explicit error
+- print allowed canonical ids
+- do not fall back silently
+
+Behavior on missing value:
+
+- if style mode is not required for the command, keep current default behavior
+- if future T4 execution wrapper requires style, that wrapper should enforce presence separately
+
+### 17.6 Alias Handling
+
+Alias policy:
+
+- smoke runner should accept legacy aliases only if it normalizes them immediately
+- canonical ids are the only ids that should appear in:
+  - dry-run reporting
+  - persisted metadata fields
+  - T4 review tables
+
+Alias normalization map:
+
+- `watercolor` → `soft_watercolor`
+- `flat` → `flat_illustration`
+
+Recommended behavior:
+
+- if alias is passed, emit a normalization note in dry-run and write logs
+- persist canonical id, not alias id
+
+Reason:
+
+- preserves backward convenience
+- keeps T4 reporting consistent
+
+### 17.7 Payload Injection Design
+
+T4-aware payload fields should align with the normal create flow as closely as practical.
+
+Recommended payload fields:
+
+- `style`
+- `selectedStyleId`
+- `selectedStyleName`
+- `styleBible`
+- `stylePreviewImageUrl`
+- `stylePreviewUsedAsReference`
+
+Recommended value mapping:
+
+- `style`: canonical style id
+- `selectedStyleId`: canonical style id
+- `selectedStyleName`: profile display name
+- `styleBible`: profile styleBible
+- `stylePreviewImageUrl`: profile previewImageUrl
+- `stylePreviewUsedAsReference`: boolean from validation mode / flag
+
+Optional metadata additions inside `smokeTestMetadata`:
+
+- `styleId`
+- `validationMode`
+- `stylePreviewReference`
+
+Design principle:
+
+- payload should be fully inspectable after creation without needing CLI reconstruction
+
+### 17.8 Prompt-Only / No-Reference Defaults
+
+T4 baseline-preserving default:
+
+- `validationMode = prompt_only`
+- `withReference = false`
+- `stylePreviewUsedAsReference = false`
+
+Important separation:
+
+- `--with-reference` currently means character-reference path
+- `--style-preview-reference` should not silently imply character-reference mode
+
+Recommended model:
+
+- character reference path remains controlled by existing `--with-reference`
+- style preview reference remains separate and optional
+- prompt-only no-reference is the default for T4 mini-matrix runs
+
+### 17.9 Dry-Run Output Design
+
+Dry-run should display effective style state explicitly.
+
+Recommended additional dry-run lines:
+
+- `styleId=<canonicalStyleId>`
+- `selectedStyleName=<display name>`
+- `validationMode=<prompt_only|preview_reference_assisted>`
+- `stylePreviewUsedAsReference=<true|false>`
+- `stylePreviewImageUrl=<preview url>`
+- if alias was supplied: `normalizedStyleId=<canonicalStyleId>`
+
+Example dry-run block:
+
+```text
+[1/1] templateId=fixed-sleepy-moon-adventure-8p
+       styleId=crayon
+       selectedStyleName=クレヨンで描いた絵本
+       validationMode=prompt_only
+       stylePreviewUsedAsReference=false
+       pageCount=8
+       ageBand=preschool_3_4
+       childAge=4
+```
+
+Error behavior:
+
+- unsupported style flags should no longer be silently ignored
+- malformed style args should fail fast before payload preview
+
+### 17.10 Backward Compatibility Policy
+
+Must preserve:
+
+- existing template-only dry-run
+- existing template-only write flow
+- existing `--age-band` behavior
+- existing `--with-reference` character-reference behavior
+
+Compatibility rule:
+
+- no existing command without style args should change its output shape materially beyond optional extra fields
+
+### 17.11 Suggested Implementation Scope For T4-7
+
+Primary code scope:
+
+- `scripts/create-template-smoke-books.js`
+
+Potential read-only import dependency:
+
+- `src/lib/illustration-styles.ts` or a shared equivalent style registry source
+
+Recommended T4-7 work items:
+
+1. add style arg parsing
+2. add canonical / alias normalization
+3. add style profile lookup
+4. inject style fields into payload
+5. add validation mode fields
+6. add dry-run output lines
+7. reject unknown style flags explicitly
+
+Out of scope for T4-7 unless needed:
+
+- modifying style profile prose
+- changing UI picker
+- altering Firestore generation pipeline logic outside smoke-runner payload preparation
+
+### 17.12 Test Strategy
+
+T4-7 should validate at least:
+
+#### CLI parsing checks
+
+- `--style-id=soft_watercolor` accepted
+- `--style-id=crayon` accepted
+- `--style-id=watercolor` normalized to `soft_watercolor`
+- `--style-id=flat` normalized to `flat_illustration`
+- invalid style rejected with clear error
+
+#### Dry-run behavior checks
+
+- dry-run prints canonical style id
+- dry-run prints style display name
+- dry-run prints validation mode
+- dry-run prints preview-reference flag
+- dry-run no longer silently ignores style args
+
+#### Payload checks
+
+- payload `style` equals canonical style id
+- payload `selectedStyleId` equals canonical style id
+- payload `selectedStyleName` matches profile
+- payload `styleBible` and `stylePreviewImageUrl` populated from profile
+- payload `stylePreviewUsedAsReference` matches mode
+
+#### Regression checks
+
+- old dry-run without style args still works
+- old write path without style args still works
+- `--with-reference` character-reference path still works
+
+### 17.13 Decision
+
+T4-6 decision:
+
+- style-aware smoke runner support should be implemented as a narrow extension of `scripts/create-template-smoke-books.js`
+- canonical style normalization and explicit dry-run visibility are mandatory
+- prompt-only / no-reference must remain the default T4 baseline mode
+- T4-7 can proceed safely once it stays within this runner-scoped implementation boundary
+
+### 17.14 Exclusions
+
+- No code changes performed
+- No runner implementation performed
+- No style profile changes performed
+- No Firestore sync performed
+- No smoke generation performed
+- No image generation performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
