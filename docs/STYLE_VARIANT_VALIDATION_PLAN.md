@@ -2823,3 +2823,186 @@ Then:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+---
+
+## 24. T4-13 Firestore Sync And Targeted Style Re-Smoke
+
+Status: completed
+
+Date: 2026-05-17
+
+### 24.1 Purpose
+
+Sync the T4-12 zoo prompt hardening into Firestore for `fixed-first-zoo-8p` and run a targeted 2-book style re-smoke for the previously failing `crayon` and `anime_storybook` variants before manual visual QA rerun.
+
+### 24.2 Target Scope
+
+Template synced:
+
+- `fixed-first-zoo-8p`
+
+Targeted re-smoke runs:
+
+| run | templateId | styleId |
+| --- | --- | --- |
+| 1 | `fixed-first-zoo-8p` | `crayon` |
+| 2 | `fixed-first-zoo-8p` | `anime_storybook` |
+
+Shared generation parameters:
+
+- `pageCount=8`
+- `ageBand=preschool_3_4`
+- `childAge=4`
+- `validationMode=prompt_only`
+- `withReference=false`
+- `stylePreviewUsedAsReference=false`
+- reference image: not used
+- style preview reference: not used
+
+### 24.3 Preconditions Confirmed
+
+- git worktree clean and synced with `origin/main`
+- `npm run guard:hygiene`: pass
+- `npm --prefix functions run build`: pass
+- `GOOGLE_APPLICATION_CREDENTIALS` set
+- T4-12 implementation already merged locally and pushed
+
+### 24.4 Targeted Template Sync
+
+Executed sync check:
+
+```powershell
+node scripts/sync-fixed-template-seeds.js --dry-run --template-id=fixed-first-zoo-8p
+```
+
+Result:
+
+- pre-sync report: `[]`
+- target template already passed the sync checker
+
+Executed targeted sync write:
+
+```powershell
+node scripts/sync-fixed-template-seeds.js --write --template-id=fixed-first-zoo-8p
+```
+
+Result:
+
+- before report: `[]`
+- after report: `[]`
+- targeted write completed successfully
+
+Executed post-sync check:
+
+```powershell
+node scripts/sync-fixed-template-seeds.js --dry-run --template-id=fixed-first-zoo-8p
+```
+
+Result:
+
+- post-sync report: `[]`
+
+Assessment:
+
+- Firestore template state is aligned with the local hardened seed
+
+### 24.5 Targeted Re-Smoke Dry-Run
+
+Executed:
+
+```powershell
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=crayon
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=anime_storybook
+```
+
+Dry-run confirmation for both:
+
+- correct `styleId`
+- correct `selectedStyleName`
+- `validationMode=prompt_only`
+- `stylePreviewUsedAsReference=false`
+- `withReference=false`
+- `pageCount=8`
+- `ageBand=preschool_3_4`
+- `childAge=4`
+
+### 24.6 Targeted Write Generation
+
+Executed:
+
+```powershell
+node scripts/create-template-smoke-books.js --write --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=crayon
+node scripts/create-template-smoke-books.js --write --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=anime_storybook
+```
+
+Generated book ids:
+
+| styleId | bookId | smokeRunId |
+| --- | --- | --- |
+| `crayon` | `43luvSMHYiQJZIMEcYz4` | `template-t2a-20260516154717` |
+| `anime_storybook` | `kdX8Mvy7mSOJTGTou9Kq` | `template-t2a-20260516154720` |
+
+### 24.7 Monitor And Inspect Result
+
+Both books reached terminal status without retries or structural problems.
+
+Summary table:
+
+| templateId | styleId | bookId | status | progress | pagesTotal | pagesCompleted | pagesFailed | fallbackCount | timedOutCount | inputReferenceCountTotal | usedCharacterReferenceAny | result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-zoo-8p` | `crayon` | `43luvSMHYiQJZIMEcYz4` | `completed` | `100` | `8` | `8` | `0` | `0` | `0` | `0` | `false` | pass |
+| `fixed-first-zoo-8p` | `anime_storybook` | `kdX8Mvy7mSOJTGTou9Kq` | `completed` | `100` | `8` | `8` | `0` | `0` | `0` | `0` | `false` | pass |
+
+Confirmed across both books:
+
+- `selectedStyleId` persisted as requested canonical id
+- `selectedStyleName` matched the requested style
+- `validationMode` remained `prompt_only`
+- `stylePreviewUsedAsReference` remained `false`
+- `withReference` remained `false`
+- `inputReferenceCount` stayed `0`
+- `usedCharacterReference` stayed `false`
+- no fallback pages detected
+- no timeout markers detected
+- no page-level failure provider was recorded
+
+### 24.8 Health Assessment
+
+T4-13 generation health verdict:
+
+- 2 / 2 books completed
+- 16 / 16 pages completed
+- 0 / 16 pages failed
+- no fallback usage observed
+- no timeout usage observed
+- no reference path usage observed
+- no structural blockers found
+
+Implication:
+
+- the hardened zoo variants are structurally ready for manual visual QA rerun
+- the remaining question is purely visual: whether page `1` and page `7` signage is now suppressed
+
+### 24.9 Decision
+
+T4-13 decision:
+
+- targeted Firestore sync succeeded
+- targeted 2-run style re-smoke succeeded
+- proceed to T4-14 manual visual QA rerun for:
+  - `43luvSMHYiQJZIMEcYz4`
+  - `kdX8Mvy7mSOJTGTou9Kq`
+
+### 24.10 Exclusions
+
+- No manual visual QA performed
+- No image regeneration performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No code changes performed
+- No runner changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
