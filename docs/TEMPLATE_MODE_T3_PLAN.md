@@ -10720,3 +10720,134 @@ Result: pass / proceed.
 ### Next steps
 
 - T3-8n: manual BF-4/BF-3 visual QA for re-smoke book `yRRoIxfbF0pDmTICPfMc`, with page 6 as the first-priority BF-4 checkpoint.
+
+## T3-8n fixed-sleepy-moon-adventure-8p post-room-prop-cleanup manual BF-4 / BF-3 visual QA rerun
+
+Status: completed
+
+Owner: Codex
+
+Date: 2026-05-16
+
+Related commits:
+
+- `70db042` feat: tighten sleepy moon 8p room props
+- `585a264` docs: add T3-8m sleepy moon 8p re-smoke run
+
+Target smoke book:
+
+- bookId: `yRRoIxfbF0pDmTICPfMc`
+- templateId: `fixed-sleepy-moon-adventure-8p`
+- mode: no-reference
+- ageBand: `preschool_3_4`
+- childAge: `4`
+- pageCount: `8`
+
+### Purpose
+
+Run a read-only manual visual QA pass on the post-room-prop-cleanup re-smoke book `yRRoIxfbF0pDmTICPfMc`, with first-priority focus on whether page 6 background room-prop text has been removed, whether page 7 keeps the post-T3-8h no-message success path, and whether BF-3 continuity remains stable after the T3-8l cleanup.
+
+### Scope executed
+
+- Retrieved and reviewed page 0 through page 7 images for book `yRRoIxfbF0pDmTICPfMc`
+- Per-page BF-4 visual assessment
+- Per-page BF-3 continuity / identity / pajamas / teddy-bear assessment
+- Focused comparison against prior rerun findings from T3-8j
+
+### Visual QA summary
+
+Judgment:
+
+- BF-4: fail
+- BF-3: pass
+- release status: not yet approved
+
+High-level outcome:
+
+- The T3-8l room-prop cleanup worked for the original blocker on page 6; the prior readable shelf / background text is no longer visible there.
+- Page 7 remains stable and does not regress into message-cloud, speech-bubble, or rendered-text behavior.
+- BF-3 continuity remains acceptable across the full sequence: same preschool-age child, same short dark-brown bob, same pale blue star pajamas, and same tan teddy bear are all still legible.
+- BF-4 is still not fully clear because page 2 now shows readable Japanese text on background bookshelf book covers, which remains a blocker under the no-readable-text standard.
+
+### Page-by-page verdict
+
+| page | BF-4 | BF-3 | notes |
+| --- | --- | --- | --- |
+| 0 | pass | pass | clean bedroom opener; no readable text observed; child / pajamas / teddy read correctly |
+| 1 | pass | pass | moon-window setup remains clean; no readable text observed; continuity holds |
+| 2 | fail | pass | left bookshelf contains readable Japanese book-cover text; central child / teddy / pajamas still match sequence |
+| 3 | pass | pass | dreamscape continuity remains grounded to same child and teddy; no clear text-like artifact observed |
+| 4 | pass | pass | star-arc dream page reads organic rather than text-like; continuity holds |
+| 5 | pass | pass | quiet reassurance beat stays visual-only; no quote-text artifact observed; continuity holds |
+| 6 | pass | pass | previous blocker cleared; shelf / basket / blocks read as plain non-readable props; sleep pose and teddy continuity hold |
+| 7 | pass | pass | no message cloud, no speech bubble, no readable rendered text; ending remains visually stable |
+
+### Focus findings
+
+#### Page 6 re-check
+
+Result: pass.
+
+- The previous T3-8j blocker on page 6 appears resolved.
+- Background shelf objects now read as plain blocks / toys rather than books with readable covers or spine text.
+- The basket area and wall decor do not show new readable text-like marks.
+
+#### Page 7 regression check
+
+Result: pass.
+
+- No return of clear rendered Japanese text.
+- No message-bearing cloud, thought bubble, caption cloud, or obvious writing surface is present.
+- Star and arc elements remain decorative rather than legible symbol strings.
+
+#### Page 2 newly visible blocker
+
+Result: fail.
+
+- The left bookshelf includes book covers with readable Japanese characters.
+- This is a BF-4 blocker even though it sits outside the main child focal area.
+- The room-prop cleanup succeeded on the originally targeted page 6 but did not yet suppress printed-book imagery on page 2.
+
+### BF-3 continuity assessment
+
+Result: pass.
+
+- Same child identity remains readable across pages 0 through 7.
+- Same short dark-brown bob hairstyle remains consistent enough for approval.
+- Same pale blue star pajamas remain sequence-stable.
+- Same tan teddy bear remains the recurring plush anchor.
+- Page 3 dreamscape continuity remains intact after the T3-8l cleanup; no meaningful regression observed.
+- Age impression continues to read as preschool-age and fits `childAge=4`.
+
+### Comparison to T3-8j
+
+| item | T3-8j rerun | T3-8n rerun |
+| --- | --- | --- |
+| page 6 BF-4 status | fail due to readable shelf / book text | pass; original page 6 blocker appears fixed |
+| page 7 BF-4 status | pass | pass; no regression |
+| BF-3 sequence continuity | pass | pass |
+| top remaining BF-4 blocker | page 6 | page 2 bookshelf book-cover text |
+
+### Judgment
+
+Result: partial improvement, but not yet approvable.
+
+- The narrow T3-8l cleanup was effective for its intended page 6 target.
+- The successful page 3 and page 7 paths remain intact.
+- BF-3 remains in a good state.
+- Release approval should still be withheld because page 2 introduces or preserves readable background book text, so the sequence is still not clean on BF-4.
+
+### Recommended next step
+
+- Prepare one more narrow sleepy-moon-8p-only BF-4 cleanup focused on page 2 bookshelf / printed-book suppression while preserving the now-successful page 3, page 6, and page 7 behavior.
+- After that targeted cleanup, run another no-reference re-smoke and re-check page 2 first.
+
+### Exclusions (this slice)
+
+- No image regeneration performed.
+- No Admin regeneration or reference-flow generation.
+- No Firestore writes or template sync actions.
+- No code / seed / prompt changes.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+- No T4 style validation execution.
