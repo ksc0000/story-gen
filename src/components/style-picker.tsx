@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/animated-card";
-import type { IllustrationStyle } from "@/lib/types";
+import type { IllustrationStyle, IllustrationStyleProfile } from "@/lib/types";
 import { ILLUSTRATION_STYLE_PROFILES } from "@/lib/illustration-styles";
 
 const STYLE_CARD_COPY: Record<
@@ -58,14 +58,20 @@ const STYLE_CARD_COPY: Record<
   },
 };
 
-interface StylePickerProps { selected: IllustrationStyle | null; onSelect: (style: IllustrationStyle) => void; }
+interface StylePickerProps {
+  selected: IllustrationStyle | null;
+  onSelect: (style: IllustrationStyle) => void;
+  styles?: IllustrationStyleProfile[];
+}
 
-export function StylePicker({ selected, onSelect }: StylePickerProps) {
+export function StylePicker({ selected, onSelect, styles }: StylePickerProps) {
+  const visibleStyles = styles ?? ILLUSTRATION_STYLE_PROFILES.filter(
+    (profile) => profile.id !== "watercolor" && profile.id !== "flat"
+  );
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-      {ILLUSTRATION_STYLE_PROFILES.filter(
-        (profile) => profile.id !== "watercolor" && profile.id !== "flat"
-      ).map((s) => (
+      {visibleStyles.map((s) => (
         <AnimatedCard key={s.id} onClick={() => onSelect(s.id)}>
           <Card className={`h-full cursor-pointer overflow-hidden transition ${selected === s.id ? "ring-2 ring-purple-500 border-purple-400" : ""}`}>
             <CardContent className="flex h-full flex-col p-0 text-center">

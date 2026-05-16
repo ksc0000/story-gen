@@ -1,4 +1,4 @@
-import type { IllustrationStyle } from "@/lib/types";
+import type { IllustrationStyle, IllustrationStyleProfile } from "@/lib/types";
 import { ILLUSTRATION_STYLE_PROFILES } from "@/lib/illustration-styles";
 
 export type StyleExposureStatus =
@@ -53,6 +53,9 @@ export const CANONICAL_ILLUSTRATION_STYLES: IllustrationStyle[] =
     .filter((styleId) => !(styleId in LEGACY_STYLE_ALIASES));
 
 const CANONICAL_STYLE_SET = new Set<string>(CANONICAL_ILLUSTRATION_STYLES);
+const PROFILE_LOOKUP = new Map<IllustrationStyle, IllustrationStyleProfile>(
+  ILLUSTRATION_STYLE_PROFILES.map((profile) => [profile.id, profile])
+);
 
 const DEFAULT_INTERNAL_SORT_PRIORITY = 900;
 
@@ -144,7 +147,10 @@ export function normalizeStyleExposureStyleId(
 export function isCanonicalIllustrationStyle(
   styleId: string | null | undefined
 ): styleId is IllustrationStyle {
-  return Boolean(styleId) && CANONICAL_STYLE_SET.has(styleId);
+  if (!styleId) {
+    return false;
+  }
+  return CANONICAL_STYLE_SET.has(styleId);
 }
 
 export function getStyleTemplateExposure(
@@ -238,4 +244,28 @@ export function isStyleSelectableForTemplate(
   styleId: string | null | undefined
 ): boolean {
   return getStyleTemplateExposure(templateId, styleId).userSelectable;
+}
+
+export function getCanonicalStylePickerProfiles(): IllustrationStyleProfile[] {
+  return CANONICAL_ILLUSTRATION_STYLES
+    .map((styleId) => PROFILE_LOOKUP.get(styleId))
+    .filter((profile): profile is IllustrationStyleProfile => Boolean(profile));
+}
+
+export function getStylePickerProfilesForTemplate(
+  templateId: string | null | undefined
+): IllustrationStyleProfile[] {
+  if (!templateId) {
+    return getCanonicalStylePickerProfiles();
+  }
+
+  const selectableProfiles = getUserSelectableStyleExposureEntries(templateId)
+    .map((entry) => (entry.styleId ? PROFILE_LOOKUP.get(entry.styleId) : null))
+    .filter((profile): profile is IllustrationStyleProfile => Boolean(profile));
+
+  if (selectableProfiles.length > 0) {
+    return selectableProfiles;
+  }
+
+  return getCanonicalStylePickerProfiles();
 }

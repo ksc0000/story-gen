@@ -1,6 +1,7 @@
 import {
   CANONICAL_ILLUSTRATION_STYLES,
   getStyleExposureEntriesForTemplate,
+  getStylePickerProfilesForTemplate,
   getStyleTemplateExposure,
   getUserSelectableStyleExposureEntries,
   isStyleSelectableForTemplate,
@@ -112,5 +113,33 @@ describe("style exposure config", () => {
     expect(
       isStyleSelectableForTemplate("fixed-first-zoo-8p", "soft_watercolor")
     ).toBe(true);
+  });
+
+  it("returns zoo picker profiles without blocked anime", () => {
+    const profiles = getStylePickerProfilesForTemplate("fixed-first-zoo-8p");
+
+    expect(profiles.map((profile) => profile.id)).toEqual([
+      "crayon",
+      "soft_watercolor",
+    ]);
+  });
+
+  it("returns sleepy moon picker profiles in exposure priority order", () => {
+    const profiles = getStylePickerProfilesForTemplate("fixed-sleepy-moon-adventure-8p");
+
+    expect(profiles.map((profile) => profile.id)).toEqual([
+      "crayon",
+      "anime_storybook",
+      "soft_watercolor",
+    ]);
+  });
+
+  it("falls back to canonical picker profiles when a template is not configured yet", () => {
+    const profiles = getStylePickerProfilesForTemplate("some-unconfigured-template");
+
+    expect(profiles.map((profile) => profile.id)).toContain("soft_watercolor");
+    expect(profiles.map((profile) => profile.id)).toContain("anime_storybook");
+    expect(profiles.map((profile) => profile.id)).not.toContain("watercolor");
+    expect(profiles.map((profile) => profile.id)).not.toContain("flat");
   });
 });

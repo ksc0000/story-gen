@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
 import { getAgeReadingDisplayProfile } from "@/lib/age-reading-profile";
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
+import { getStylePickerProfilesForTemplate } from "@/lib/style-exposure";
 import {
   CHARACTER_CONSISTENCY_LABELS,
   CREATION_MODE_LABELS,
@@ -79,6 +80,24 @@ function StyleSelectionPageContent() {
   const outfitModeLabel = OUTFIT_MODE_LABELS[outfitMode];
   const ageReadingProfile = getAgeReadingDisplayProfile(child?.age);
   const hasChildAge = typeof child?.age === "number";
+  const visibleStyleProfiles = useMemo(
+    () => getStylePickerProfilesForTemplate(template?.id),
+    [template?.id]
+  );
+
+  useEffect(() => {
+    const firstVisibleStyle = visibleStyleProfiles[0]?.id ?? null;
+    if (!firstVisibleStyle) {
+      if (selected !== null) {
+        setSelected(null);
+      }
+      return;
+    }
+
+    if (!selected || !visibleStyleProfiles.some((profile) => profile.id === selected)) {
+      setSelected(firstVisibleStyle);
+    }
+  }, [selected, visibleStyleProfiles]);
 
   const simulateDemoGeneration = async (bookId: string) => {
     const demoPages = [
@@ -226,7 +245,13 @@ function StyleSelectionPageContent() {
         {childName ? `${childName}を主人公にします。` : "主人公が未選択です。"}
         {template ? ` ${template.name} をこのタッチで仕上げます。` : ""}迷ったら「やさしい水彩」のままで大丈夫です。
       </p>
-      <div className="mt-6"><StylePicker selected={selected} onSelect={setSelected} /></div>
+      <div className="mt-6">
+        <StylePicker
+          selected={selected}
+          onSelect={setSelected}
+          styles={visibleStyleProfiles}
+        />
+      </div>
       <div className="mx-auto mt-6 max-w-3xl rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-5">
         <h2 className="text-base font-semibold text-purple-900">作成内容を確認</h2>
         <p className="mt-1 text-sm text-violet-600">

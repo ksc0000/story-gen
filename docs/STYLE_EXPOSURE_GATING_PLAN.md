@@ -836,3 +836,164 @@ Deferred to later:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 16. T5-4 Create Flow UI Style Filtering
+
+Date: 2026-05-17
+
+Scope:
+
+- connect the create flow UI to the T5-3 style exposure config
+- keep payload persistence unchanged
+- do not add server-side validation in this slice
+
+### 16.1 Implemented Files
+
+Updated:
+
+- `src/app/(app)/create/style/page.tsx`
+- `src/components/style-picker.tsx`
+- `src/lib/style-exposure.ts`
+- `src/__tests__/style-exposure.test.ts`
+- `src/__tests__/style-picker.test.tsx`
+
+### 16.2 Implementation Summary
+
+Implemented UI wiring:
+
+- `create/style/page.tsx`
+  - now resolves template-aware style picker profiles through `getStylePickerProfilesForTemplate(template?.id)`
+  - uses `useMemo` to derive the visible style list from the selected template
+  - uses `useEffect` to recover from stale selections when the current selected style is no longer visible
+- `style-picker.tsx`
+  - now accepts an explicit `styles` prop
+  - renders the received list in the given order
+  - still supports the previous canonical fallback behavior when no list is passed
+
+Implemented helper support:
+
+- `src/lib/style-exposure.ts`
+  - added `getCanonicalStylePickerProfiles()`
+  - added `getStylePickerProfilesForTemplate(templateId)`
+  - preserves canonical fallback behavior for templates not yet configured in the exposure matrix
+
+### 16.3 Effective UI Behavior
+
+For `fixed-first-zoo-8p`:
+
+- visible styles:
+  - `crayon`
+  - `soft_watercolor`
+- hidden from normal UI:
+  - `anime_storybook`
+
+For `fixed-sleepy-moon-adventure-8p`:
+
+- visible styles in priority order:
+  - `crayon`
+  - `anime_storybook`
+  - `soft_watercolor`
+
+Ordering rule:
+
+- uses exposure config `sortPriority`
+- picker display now follows exposure policy rather than global style profile order
+
+Safety behavior:
+
+- if a previously selected style becomes unavailable for the current template, the page resets selection to the first visible style
+- templates not yet configured in the exposure matrix still fall back to canonical styles so the create flow does not silently break outside the current validated scope
+
+### 16.4 Payload Compatibility
+
+Confirmed unchanged payload path:
+
+- `style`
+- `selectedStyleId`
+- `selectedStyleName`
+- `styleBible`
+- `stylePreviewImageUrl`
+- `stylePreviewUsedAsReference`
+
+Interpretation:
+
+- T5-4 changes only the UI-visible selection set and ordering
+- it does not alter the saved style payload format
+
+### 16.5 Test Coverage
+
+Expanded `style-exposure` tests:
+
+- zoo template returns picker profiles without blocked anime
+- sleepy-moon template returns picker profiles in exposure priority order
+- unconfigured template falls back to canonical picker profiles
+
+Added `style-picker` component tests:
+
+- zoo picker renders only `crayon` and `soft_watercolor`
+- sleepy-moon picker preserves `crayon -> anime_storybook -> soft_watercolor` order
+
+Test totals after update:
+
+- `style-exposure.test.ts`: `13` tests passed
+- `style-picker.test.tsx`: `2` tests passed
+
+### 16.6 Validation
+
+Executed:
+
+```powershell
+npm run guard:hygiene
+npm run lint
+npm test -- src/__tests__/style-exposure.test.ts src/__tests__/style-picker.test.tsx
+npm run build
+```
+
+Result:
+
+- `guard:hygiene`: pass
+- targeted tests: pass (`15` tests total)
+- `build`: pass
+- `lint`: warning-only, with pre-existing repo warnings only
+
+Pre-existing lint warnings still present outside this slice:
+
+- unused local in `src/app/(app)/admin/book-quality-review/page.tsx`
+- `<img>` usage warnings in:
+  - `src/app/(app)/children/page.tsx`
+  - `src/app/(app)/create/select-child/page.tsx`
+
+### 16.7 Outcome
+
+T5-4 verdict:
+
+- create flow UI now respects the product exposure matrix
+- blocked pairing `fixed-first-zoo-8p × anime_storybook` is no longer visible in the normal picker
+- validated pairings are ordered by product exposure priority
+- unconfigured templates remain non-breaking through canonical fallback
+
+### 16.8 Next Step
+
+Proceed to:
+
+- T5-5 server-side blocked-pair validation
+
+Deferred:
+
+- admin / QA override behavior
+- fallback recommendation UX for blocked attempts
+- optional gating analytics
+
+### 16.9 Exclusions
+
+- No server-side validation wiring performed
+- No Firestore schema changes
+- No smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No runner changes
+- No style profile changes
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
