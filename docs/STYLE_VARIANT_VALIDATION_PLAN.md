@@ -2376,3 +2376,264 @@ Secondary note:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+---
+
+## 22. T4-11 Zoo-Style BF-4 Remediation Planning
+
+Status: completed
+
+Date: 2026-05-16
+
+### 22.1 Purpose
+
+Define a docs-only remediation plan for the remaining T4 zoo-style BF-4 blockers, limited to `fixed-first-zoo-8p × crayon` and `fixed-first-zoo-8p × anime_storybook`, without changing runner behavior or style profiles.
+
+### 22.2 Scope
+
+Targeted variants only:
+
+- `fixed-first-zoo-8p × crayon`
+- `fixed-first-zoo-8p × anime_storybook`
+
+Out of scope:
+
+- sleepy-moon variants
+- `soft_watercolor` zoo variant
+- style profile prose changes
+- runner changes
+- Firestore sync or re-smoke execution
+
+### 22.3 Failure Recap
+
+From T4-10:
+
+`fixed-first-zoo-8p × crayon`
+
+- BF-4: `fail`
+- primary blocker:
+  - page `7` readable Latin-letter sign in the background
+
+`fixed-first-zoo-8p × anime_storybook`
+
+- BF-4: `fail`
+- primary blockers:
+  - page `1` readable Japanese zoo gate signage
+  - page `7` readable background sign
+
+Shared pattern:
+
+- failures cluster around entrance / exit / wayfinding surfaces
+- they are not random page-wide text collapses
+- they are scene-specific printed-surface reintroductions
+
+### 22.4 Cause Hypothesis
+
+Primary hypothesis:
+
+- `fixed-first-zoo-8p` still semantically invites “real zoo entrance” and “real zoo exit” rendering
+- once the style becomes more graphic or more cinematic, the model tends to complete that realism with signage, maps, gate boards, nameplates, and facility markers
+
+Why this persists despite existing no-text clauses:
+
+1. current wording is broad but still coexists with entrance/gate/exit semantics
+2. the model may treat zoo signs as “scene structure” rather than optional clutter
+3. stylized renderers often simplify environments into iconic features
+4. zoo iconic features frequently include signs, maps, directional boards, and labeled gates
+
+Secondary hypothesis:
+
+- page `1` and page `7` are the highest-risk compositions because they are naturally “gateway” scenes
+- page `2` and page `4` remain secondary risk pages because enclosure placards and warning panels are plausible completions there
+
+### 22.5 Why `crayon` And `anime_storybook` Worsen The Risk
+
+`crayon`
+
+- simplifies real-world structures into bold symbolic shapes
+- signboards can become attractive “clean rectangles” for the renderer
+- once a rectangle is placed, hand-drawn letter-like marks can appear more easily
+
+`anime_storybook`
+
+- tends to dramatize arrival and farewell beats with stronger environment staging
+- gates, boards, and name signs are reinforced as part of a cinematic establishing shot
+- readable signage is more likely because the style leans into location identity cues
+
+Important interpretation:
+
+- this is not mainly a style-profile problem
+- this is a zoo-template-local prompt contract problem revealed by stylized rendering pressure
+
+### 22.6 Template-Local Remediation Direction
+
+T4-11 decision is to strengthen `fixed-first-zoo-8p` locally rather than adding style-specific prompt forks first.
+
+Recommended direction:
+
+1. introduce a stronger zoo-template-local no-sign / no-board / no-printed-surface clause
+2. apply it at least to page `1`, `2`, `4`, `6`, and `7`
+3. reframe risky scenes away from “official facility signage” and toward natural or decorative cues
+4. keep the style contract untouched for now so T4 reporting stays comparable across styles
+
+Core principle:
+
+- suppress zoo-specific printed surfaces at the template layer
+- let style variation continue to operate above that safer baseline
+
+### 22.7 Proposed Guardrail Focus
+
+Proposed new zoo-local suppression targets:
+
+- no entrance signs
+- no zoo name boards
+- no map boards
+- no ticket boards
+- no information panels
+- no directional markers
+- no exit markers
+- no facility placards
+- no enclosure labels
+- no warning notices
+- no posted notices
+- no hanging banners
+- no printed gate surfaces
+
+Preferred replacement language:
+
+- use leafy arches
+- use plain fence posts
+- use natural path framing
+- use animal silhouettes only
+- use unmarked lanterns
+- use plain wooden or leafy structures with no printed surfaces
+
+### 22.8 Page-Specific Remediation Plan
+
+#### Page 1
+
+Current risk:
+
+- zoo entrance shot strongly invites gate signage and map boards
+
+Remediation direction:
+
+- keep the arrival beat
+- remove any implication of formal admission signage
+- describe the entrance as a leafy arch, trees, path, and open gate only
+- explicitly forbid side boards, map panels, admission notices, and posted signs
+
+Suggested design intent:
+
+- “arrival at a welcoming leafy threshold”
+- not “arrival at an information-rich facility gate”
+
+#### Page 2
+
+Current risk:
+
+- enclosure scene can still pull in animal-name placards
+
+Remediation direction:
+
+- strengthen “plain fence / natural habitat / no placards in view”
+- reduce background opportunity for panel-like objects
+
+#### Page 4
+
+Current risk:
+
+- larger-animal tension beat can attract warning notices or caution boards
+
+Remediation direction:
+
+- explicitly replace caution signage with plain fence rhythm and family posture
+- use body language, not notice boards, to communicate tension
+
+#### Page 6
+
+Current risk:
+
+- exit path at golden hour can still generate direction boards or facility markers
+
+Remediation direction:
+
+- simplify into trees, path, sky glow, and back-view family silhouette
+- forbid wayfinding, maps, exit labels, and facility markers
+
+#### Page 7
+
+Current risk:
+
+- closing shot can still place readable sign text near zoo buildings or the path edge
+
+Remediation direction:
+
+- make the ending about parent-child silhouette, dusk light, and quiet path
+- keep any background architecture plain and distant
+- explicitly forbid background signboards, building labels, and printed structures
+
+### 22.9 Minimal Code-Change Strategy For T4-12
+
+Recommended implementation scope:
+
+- limit changes to `functions/src/seed-templates.ts`
+- keep them inside `fixed-first-zoo-8p` prompt helpers and page bodies
+
+Preferred implementation shape:
+
+1. add or strengthen one zoo-8p-local printed-surface clause
+2. route the highest-risk pages through that stronger clause
+3. minimally harden page `1` and page `7` body text
+4. lightly harden page `2`, `4`, and `6`
+
+Do not change in T4-12:
+
+- runner
+- style profile registry
+- styleBible
+- negativeStyleRules
+- shared global suffix
+- unrelated templates
+
+### 22.10 T4-12 Implementation Plan
+
+T4-12 should execute:
+
+1. inspect the current `fixed-first-zoo-8p` prompt helper structure
+2. strengthen zoo-template-local no-sign / no-board / no-printed-surface guard
+3. page `1` focused hardening
+4. page `7` focused hardening
+5. secondary hardening for page `2`, `4`, and `6`
+6. keep `soft_watercolor` success path intact
+7. run `npm run guard:hygiene`
+8. run targeted build / tests as needed
+9. record implementation result in this doc
+
+Follow-up after T4-12:
+
+- targeted re-smoke for:
+  - `fixed-first-zoo-8p × crayon`
+  - `fixed-first-zoo-8p × anime_storybook`
+- then manual rerun QA for those two variants
+
+### 22.11 Decision
+
+T4-11 decision:
+
+- zoo-style BF-4 remediation should be handled as a zoo-template-local hardening step, not as a style-profile rewrite
+- page `1` and page `7` are the first blockers to fix
+- page `2`, `4`, and `6` should receive lighter preventive hardening in the same slice
+- T4-12 can proceed as a narrow prompt-hardening implementation
+
+### 22.12 Exclusions
+
+- No code or prompt changes performed
+- No Firestore sync performed
+- No smoke generation performed
+- No image generation performed
+- No runner changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
