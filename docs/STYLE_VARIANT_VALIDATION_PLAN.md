@@ -923,3 +923,314 @@ T4-3 decision:
 - The style prompt contract should be hardened primarily through style-specific negative rules and explicit priority ordering, not by weakening T3 baseline prompts.
 - Prompt-only validation remains the authoritative first gate.
 - The initial six styles are sufficiently specified to move to T4-4 mini-matrix smoke design without code changes in this slice.
+
+---
+
+## 15. T4-4 First Mini-Matrix Smoke Design
+
+Status: completed
+
+Date: 2026-05-16
+
+### 15.1 Purpose
+
+Define the first executable style mini-matrix smoke plan for T4 without running generation yet. This slice fixes the initial target templates, target styles, execution unit, naming convention, record format, QA rubric, and decision rules so that T4-5 can move straight into controlled smoke execution.
+
+### 15.2 Design Principles
+
+The first mini-matrix should:
+
+- stay small enough for careful human QA
+- include both a quiet indoor template and an outdoor / signage-risk template
+- include at least one low-risk style, one medium-risk style, and one high-risk style
+- run in prompt-only mode first
+- remain no-reference so style behavior is judged without style-preview assistance
+
+### 15.3 Selected Templates
+
+Initial mini-matrix templates:
+
+1. `fixed-sleepy-moon-adventure-8p`
+2. `fixed-first-zoo-8p`
+
+Why these two:
+
+- `fixed-sleepy-moon-adventure-8p`
+  - approved T3 baseline exists
+  - quiet emotional scenes make style drift and BF-3 identity drift easy to spot
+  - prior BF-4 issues involved secondary room props, so style pressure on background clutter is observable
+- `fixed-first-zoo-8p`
+  - approved T3 baseline exists
+  - outdoor setting plus enclosure / entrance context makes BF-4 signage-like drift more likely
+  - animal scenes and larger spatial range make style adherence easier to compare
+
+Not in first mini-matrix:
+
+- `fixed-brush-teeth-8p`
+- `fixed-first-birthday-8p`
+
+Reason:
+
+- both remain strong phase-2 candidates, but they are not needed for the first six-run cut
+
+### 15.4 Selected Styles
+
+Initial mini-matrix styles:
+
+1. `soft_watercolor`
+2. `crayon`
+3. `anime_storybook`
+
+Coverage logic:
+
+- `soft_watercolor`
+  - low-risk baseline-friendly anchor
+  - helps distinguish template regressions from style regressions
+- `crayon`
+  - highest initial pseudo-text / BF-4 risk
+  - good stress test for handwritten-mark suppression
+- `anime_storybook`
+  - highest identity / age-drift pressure
+  - good stress test for BF-3 continuity under stylization
+
+Deferred from first mini-matrix:
+
+- `fluffy_pastel`
+- `flat_illustration`
+- `toy_3d`
+
+Reason:
+
+- they are still initial-set candidates, but the first cut should prioritize one anchor plus the two strongest watch styles
+
+### 15.5 Matrix Shape
+
+First mini-matrix size:
+
+- 2 templates × 3 styles = 6 smoke books
+
+Matrix table:
+
+| templateId | `soft_watercolor` | `crayon` | `anime_storybook` |
+| --- | --- | --- | --- |
+| `fixed-sleepy-moon-adventure-8p` | run | run | run |
+| `fixed-first-zoo-8p` | run | run | run |
+
+Execution order recommendation:
+
+1. `fixed-sleepy-moon-adventure-8p` × `soft_watercolor`
+2. `fixed-first-zoo-8p` × `soft_watercolor`
+3. `fixed-sleepy-moon-adventure-8p` × `crayon`
+4. `fixed-first-zoo-8p` × `crayon`
+5. `fixed-sleepy-moon-adventure-8p` × `anime_storybook`
+6. `fixed-first-zoo-8p` × `anime_storybook`
+
+Reason:
+
+- start with the safest anchor style
+- then move to BF-4 stress
+- finish with BF-3 / stylization stress
+
+### 15.6 Shared Input Assumptions
+
+Initial mini-matrix should use:
+
+- validation mode: `prompt_only`
+- reference mode: `no_reference`
+- ageBand: `preschool_3_4`
+- childAge: `4`
+- pageCount: template-native 8 pages
+
+Input consistency rule:
+
+- use identical or equivalent child-facing input across styles for the same template
+- do not vary ageBand, childAge, or optional story inputs between styles within the same template row
+
+Reason:
+
+- style comparison should isolate visual-style behavior, not input variance
+
+### 15.7 Smoke Execution Unit
+
+Single execution unit:
+
+- one book = one templateId × one canonical styleId × one ageBand × one validation mode
+
+Required fields per run:
+
+- templateId
+- styleId
+- validationMode
+- referenceMode
+- ageBand
+- childAge
+- pageCount
+- run date
+- resulting bookId
+
+### 15.8 Naming And Run Labels
+
+Suggested run label format:
+
+`T4-5-mini-<template-short>-<styleId>-<validationMode>`
+
+Examples:
+
+- `T4-5-mini-sleepy-moon-soft_watercolor-prompt_only`
+- `T4-5-mini-zoo-crayon-prompt_only`
+- `T4-5-mini-sleepy-moon-anime_storybook-prompt_only`
+
+Suggested template short labels:
+
+- `sleepy-moon` → `fixed-sleepy-moon-adventure-8p`
+- `zoo` → `fixed-first-zoo-8p`
+
+Validation mode labels:
+
+- `prompt_only`
+- `preview_reference_assisted`
+
+Reference mode labels:
+
+- `no_reference`
+- `style_reference_only`
+
+### 15.9 Record Format
+
+Use one row per smoke book.
+
+Recommended record schema:
+
+| field | description |
+| --- | --- |
+| track | fixed `T4` |
+| slice | e.g. `T4-5` |
+| runLabel | human-readable matrix label |
+| templateId | canonical template id |
+| styleId | canonical style id only |
+| validationMode | `prompt_only` or `preview_reference_assisted` |
+| referenceMode | `no_reference` or `style_reference_only` |
+| ageBand | `preschool_3_4` |
+| childAge | `4` |
+| pageCount | `8` |
+| bookId | generated smoke id |
+| status | structural generation result |
+| BF4 | `pass` / `watch` / `fail` |
+| BF3 | `pass` / `watch` / `fail` |
+| styleAdherence | `strong` / `acceptable` / `weak` / `off-target` |
+| emotionalFit | `high fit` / `acceptable` / `mismatch` |
+| decision | `Go` / `Conditional-Go` / `Conditional` / `Hold` |
+| notes | short reviewer notes |
+
+### 15.10 QA Table Design
+
+Per-book QA rubric:
+
+| area | allowed verdicts | primary questions |
+| --- | --- | --- |
+| BF-4 | `pass` / `watch` / `fail` | readable text, pseudo-text, labels, signage, symbol strings? |
+| BF-3 | `pass` / `watch` / `fail` | same child, same age impression, same outfit, same recurring object? |
+| style adherence | `strong` / `acceptable` / `weak` / `off-target` | does the styleBible read clearly and distinctly? |
+| emotional fit | `high fit` / `acceptable` / `mismatch` | does this style serve the template mood? |
+| operational health | `pass` / `watch` / `fail` | completed, no broken image, no black image, no obvious rendering collapse? |
+
+Per-page focused notes should be captured when:
+
+- BF-4 issue is local to a single page
+- BF-3 identity drift starts on a specific page
+- a style adherence success or failure is especially visible on one page
+
+### 15.11 Decision Rules
+
+Per-book decision:
+
+- `Go`
+  - BF-4 pass
+  - BF-3 pass
+  - style adherence acceptable or strong
+  - emotional fit acceptable or high fit
+  - operational health pass
+- `Conditional-Go`
+  - BF-4 pass
+  - BF-3 pass
+  - one low-severity watch item in style adherence or emotional fit
+- `Conditional`
+  - no hard safety/continuity blocker, but style adherence weak or emotional mismatch is material
+- `Hold`
+  - BF-4 fail
+  - BF-3 fail
+  - operational fail
+  - or clearly off-target style behavior
+
+Mini-matrix advancement rule:
+
+- if both templates pass `soft_watercolor`, the baseline comparison anchor is considered stable
+- if either `crayon` run hits BF-4 fail, the next design slice should focus on style-specific pseudo-text hardening before broadening matrix width
+- if either `anime_storybook` run hits BF-3 fail, the next design slice should focus on age/identity hardening before expanding stylized families
+
+### 15.12 Proposed T4-5 Command Outline
+
+T4-5 should likely use a repeated command pattern based on the existing smoke path.
+
+Execution outline per run:
+
+1. confirm latest source / hygiene / credentials
+2. prepare style-aware smoke input
+3. create one no-reference smoke for one template × one style
+4. monitor completion
+5. inspect structural health
+6. record result for later human QA
+
+Proposed command shape candidates:
+
+```powershell
+node scripts/create-template-smoke-books.js --write --template-id=<templateId> --page-count=8 --age-band=preschool_3_4
+```
+
+If style-aware smoke support is added later, the target command shape should become:
+
+```powershell
+node scripts/create-template-smoke-books.js --write --template-id=<templateId> --page-count=8 --age-band=preschool_3_4 --style-id=<canonicalStyleId>
+```
+
+If preview-reference-assisted comparison is later enabled for experiments, a future command shape may look like:
+
+```powershell
+node scripts/create-template-smoke-books.js --write --template-id=<templateId> --page-count=8 --age-band=preschool_3_4 --style-id=<canonicalStyleId> --style-preview-reference
+```
+
+Important:
+
+- T4-4 does not assert that all these flags already exist
+- this section only defines the target execution model and naming needed for T4-5 planning
+
+### 15.13 Expected Output Of T4-5
+
+T4-5 should return:
+
+- 6 generated bookIds or a documented reduced set if execution is intentionally phased
+- structural health summary per run
+- a ready-to-review matrix table with templateId / styleId / bookId / status
+- explicit separation between prompt-only runs and any later preview-reference-assisted reruns
+
+### 15.14 Acceptance Criteria
+
+T4-4 is considered complete if:
+
+1. the initial matrix templates are fixed
+2. the initial matrix styles are fixed
+3. prompt-only / no-reference assumptions are explicit
+4. execution unit and naming conventions are explicit
+5. book-level record format is explicit
+6. QA rubric is explicit
+7. T4-5 can be written as an execution slice without re-deciding matrix scope
+
+### 15.15 Decision
+
+T4-4 decision:
+
+- the first mini-matrix should start with 2 templates × 3 styles in prompt-only / no-reference mode
+- `soft_watercolor` is the anchor style
+- `crayon` is the first BF-4 stress style
+- `anime_storybook` is the first BF-3 stress style
+- this is small enough for careful QA and broad enough to test the first meaningful style tradeoffs
