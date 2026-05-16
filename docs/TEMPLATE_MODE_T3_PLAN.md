@@ -10879,6 +10879,11 @@ Variant closure result:
 - `fixed-sleepy-moon-adventure-8p` is closed as an approved T3-8 rollout candidate.
 - Use `o63Qj088Izc35dVVmkz8` as the closure-reference smoke when discussing the final approved no-reference state of this template.
 
+T4 handoff:
+
+- Style Variant Validation Track begins from this closure set.
+- See `docs/STYLE_VARIANT_VALIDATION_PLAN.md` for T4-1 taxonomy, contract, and validation-matrix planning.
+
 ### Exclusions (this slice)
 
 - No code / seed / prompt changes
