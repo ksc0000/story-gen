@@ -678,3 +678,161 @@ Reasoning:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 15. T5-3 Style Exposure Config Module Implementation
+
+Date: 2026-05-17
+
+Scope:
+
+- product-facing config module only
+- no UI integration in this slice
+- no server-side validation wiring in this slice
+
+### 15.1 Implemented Files
+
+Added:
+
+- `src/lib/style-exposure.ts`
+- `src/__tests__/style-exposure.test.ts`
+
+### 15.2 Implemented Types
+
+Implemented in `src/lib/style-exposure.ts`:
+
+- `StyleExposureStatus`
+- `StyleExposureRationale`
+- `StyleTemplateExposure`
+- `ResolvedStyleExposure`
+
+Design notes:
+
+- exposure policy remains separate from `illustration-styles.ts`
+- `templateId × styleId` is the resolution key
+- resolved results preserve:
+  - requested style id
+  - normalized canonical style id
+  - alias usage
+  - template-known / style-known status
+
+### 15.3 Implemented Config
+
+Added:
+
+- `CANONICAL_ILLUSTRATION_STYLES`
+- `STYLE_TEMPLATE_EXPOSURE_MATRIX`
+
+Initial encoded matrix:
+
+- sleepy-moon × crayon: `promote`
+- sleepy-moon × anime_storybook: `promote`
+- sleepy-moon × soft_watercolor: `available`
+- first-zoo × crayon: `promote`
+- first-zoo × soft_watercolor: `available`
+- first-zoo × anime_storybook: `blocked`
+
+Default behavior for unlisted pairings:
+
+- `status=internal`
+- `rationale=not_validated`
+- `userSelectable=false`
+
+### 15.4 Implemented Helpers
+
+Added helper functions:
+
+- `normalizeStyleExposureStyleId(...)`
+- `isCanonicalIllustrationStyle(...)`
+- `getStyleTemplateExposure(...)`
+- `getStyleExposureEntriesForTemplate(...)`
+- `getUserSelectableStyleExposureEntries(...)`
+- `isStyleSelectableForTemplate(...)`
+
+Behavior covered:
+
+- legacy alias normalization
+  - `watercolor` -> `soft_watercolor`
+  - `flat` -> `flat_illustration`
+- unknown style id handling
+- known but unvalidated pairing handling
+- template-scoped sorted exposure lists
+
+### 15.5 Test Coverage
+
+Added unit coverage for:
+
+- canonical list excludes aliases
+- alias normalization
+- promote pairing resolution
+- blocked pairing resolution
+- alias requests resolving through the matrix
+- known but unlisted pairing fallback to `internal`
+- unknown style id fallback behavior
+- sorted per-template exposure ordering
+- user-selectable filtering
+- simple selectability helper behavior
+
+Test result:
+
+- `10` tests passed
+
+### 15.6 Validation
+
+Executed:
+
+```powershell
+npm run guard:hygiene
+npm test -- src/__tests__/style-exposure.test.ts
+npm run lint
+```
+
+Result:
+
+- `guard:hygiene`: pass
+- targeted style exposure test: pass
+- `lint`: pass with pre-existing repo warnings only
+
+Pre-existing lint warnings observed outside this slice:
+
+- unused local in `src/app/(app)/admin/book-quality-review/page.tsx`
+- `<img>` usage warnings in:
+  - `src/app/(app)/children/page.tsx`
+  - `src/app/(app)/create/select-child/page.tsx`
+
+No new lint warning remains from `style-exposure.ts`.
+
+### 15.7 Implementation Outcome
+
+T5-3 verdict:
+
+- config module is ready
+- helper API is ready for UI integration
+- helper API is ready for later server-side validation mirroring or reuse
+- no behavior change has been applied to the live create flow yet
+
+### 15.8 Next Step
+
+Proceed to:
+
+- T5-4 template-aware style filtering / ordering in the create flow UI
+
+Deferred to later:
+
+- T5-5 server-side blocked-pair validation
+- T5-6 blocked-combination fallback UX
+- T5-7 admin / QA override support
+
+### 15.9 Exclusions
+
+- No UI wiring performed
+- No server-side validation wiring performed
+- No Firestore schema changes
+- No smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No runner changes
+- No style profile changes
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
