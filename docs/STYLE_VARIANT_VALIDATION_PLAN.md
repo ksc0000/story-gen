@@ -4101,3 +4101,14 @@ Closure quality:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## T5 Handoff Reference
+
+Date: 2026-05-17
+
+- product integration planning continues in `docs/STYLE_EXPOSURE_GATING_PLAN.md`
+- T5 should treat `template × style` as the gating unit
+- T4 final exposure baseline:
+  - `Promote / Go`: sleepy-moon × crayon, sleepy-moon × anime_storybook, first-zoo × crayon
+  - `Conditional-Go`: sleepy-moon × soft_watercolor, first-zoo × soft_watercolor
+  - `Blocked / Deferred`: first-zoo × anime_storybook
