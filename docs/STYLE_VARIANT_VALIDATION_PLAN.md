@@ -3288,3 +3288,122 @@ T4-16 / rerun success should mean:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 27. T4-16 Anime Storybook Page-1 Clothing-Text BF-4 Hardening Implementation
+
+Date: 2026-05-17
+
+Scope:
+
+- source prompt cleanup for `fixed-first-zoo-8p`
+- target issue limited to `anime_storybook` rerun book `kdX8Mvy7mSOJTGTou9Kq`
+- target failure surface limited to page `1` child clothing readable alphanumeric text
+
+### 27.1 Implementation Summary
+
+Updated files:
+
+- `functions/src/seed-templates.ts`
+- `functions/test/seed-templates.test.ts`
+
+Implemented changes:
+
+- strengthened `ZOO_8P_NO_CLOTHING_TEXT_CLAUSE`
+  - expanded beyond generic no-print language
+  - now explicitly suppresses:
+    - visible print
+    - logo
+    - badge text
+    - letters
+    - numbers
+    - mascot word marks
+    - slogan graphics
+    - patches
+    - readable marks of any kind
+- applied zoo clothing-text guard directly to page `1`
+  - page `1` now uses `withZoo8pImagePromptGuardrail(..., { signText: true, clothingText: true })`
+- hardened page `1` prompt body with explicit apparel constraints
+  - plain child-safe clothing
+  - simple solid-color fabric only
+  - no shirt lettering
+  - no logo patches
+  - no mascot prints
+  - no badge text
+  - no decorative number or alphabet graphics
+  - suppression applies to clothing, backpack, hat, and shoes
+
+### 27.2 Scope Control
+
+Preserved intentionally:
+
+- T4-12 signage hardening
+- zoo page `7` background-sign success path
+- `crayon` rerun success path
+- style profiles
+- smoke runner
+- sleepy-moon prompts
+- `textTemplate`
+- `textTemplatesByAge`
+- shared global suffix behavior
+
+Not changed:
+
+- Firestore state
+- smoke generation state
+- any style profile content
+- any runner payload logic
+
+### 27.3 Test Coverage
+
+Added / updated assertions in `functions/test/seed-templates.test.ts`:
+
+- page `1` still removes gate-side boards and admission signage
+- page `1` now explicitly includes zoo-local clothing text suppression
+- page `1` now explicitly includes no shirt lettering / no logo patches / no mascot prints / no alphabet graphics wording
+
+### 27.4 Validation
+
+Executed:
+
+```powershell
+npm run guard:hygiene
+npm --prefix functions run build
+npm --prefix functions test -- test/seed-templates.test.ts
+```
+
+Result:
+
+- `guard:hygiene`: pass
+- functions build: pass
+- seed template test: pass (`385` tests passed)
+
+### 27.5 Assessment
+
+T4-16 implementation verdict:
+
+- narrow prompt hardening completed as planned
+- intervention stayed template-local and page-local
+- existing signage remediation path was preserved
+- codebase is ready for targeted rerun validation
+
+### 27.6 Next Step
+
+Proceed to:
+
+- T4-17 targeted Firestore sync + `fixed-first-zoo-8p × anime_storybook` re-smoke
+- then T4-18 manual visual QA focused on:
+  - page `1` clothing print suppression
+  - page `7` no-sign regression check
+
+### 27.7 Exclusions
+
+- No Firestore sync performed in this slice
+- No smoke generation performed in this slice
+- No image generation performed in this slice
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No runner changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded

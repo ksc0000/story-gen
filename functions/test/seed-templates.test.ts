@@ -453,6 +453,16 @@ describe("fixed-first-zoo-8p — prompt hardening", () => {
     expect(prompt).toContain("no posted signs");
   });
 
+  it("page 1 also suppresses clothing text and logo-like outfit graphics", () => {
+    const prompt = pages[1]?.imagePromptTemplate.toLowerCase() ?? "";
+    expect(prompt).toContain("clothing and wearable accessories have no visible print");
+    expect(prompt).toContain("plain child-safe clothing with simple solid-color fabric only");
+    expect(prompt).toContain("no shirt lettering");
+    expect(prompt).toContain("no logo patches");
+    expect(prompt).toContain("no mascot prints");
+    expect(prompt).toContain("no decorative number or alphabet graphics");
+  });
+
   it("page 7 explicitly keeps background zoo structures plain and unmarked", () => {
     const prompt = pages[7]?.imagePromptTemplate.toLowerCase() ?? "";
     expect(prompt).toContain("plain, distant, and unmarked");
