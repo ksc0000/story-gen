@@ -10572,3 +10572,151 @@ Result: pass.
 ### Next steps
 
 - T3-8m: sync the narrowed room-prop cleanup into Firestore, run one more no-reference re-smoke, then re-run manual visual QA with page 6 as the first BF-4 checkpoint.
+
+---
+
+## T3-8m fixed-sleepy-moon-adventure-8p Firestore sync + no-reference re-smoke
+
+### Status
+
+completed (2026-05-16)
+
+### Purpose
+
+Sync the narrowed room-prop BF-4 cleanup from T3-8l into Firestore, generate one more no-reference re-smoke under the same `preschool_3_4` / `childAge=4` conditions, monitor it to completion, inspect structural generation health, and record the run. Manual visual QA is intentionally deferred to T3-8n.
+
+### Scope executed
+
+- `npm run guard:hygiene`
+- `npm --prefix functions run build`
+- `node scripts/sync-fixed-template-seeds.js --template-id=fixed-sleepy-moon-adventure-8p`
+- `node scripts/sync-fixed-template-seeds.js --write --template-id=fixed-sleepy-moon-adventure-8p`
+- post-write sync re-check for `fixed-sleepy-moon-adventure-8p`
+- `node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4`
+- `node scripts/create-template-smoke-books.js --write --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4`
+- `node scripts/monitor-smoke-book.js <bookId>` polling until completion
+- `node scripts/inspect-smoke-book.js <bookId> --expected-page-count=8`
+
+### Preconditions
+
+| check | result | notes |
+| --- | --- | --- |
+| Git worktree clean before run | ✓ pass | `main...origin/main` clean at start |
+| `guard:hygiene` | ✓ pass | No forbidden paths, docs encoding issues, or staged secret-like patterns |
+| Credentials present | ✓ pass | `GOOGLE_APPLICATION_CREDENTIALS` set and accepted |
+| `functions` build | ✓ pass | `npm --prefix functions run build` completed successfully |
+
+### Firestore sync result
+
+| step | result | notes |
+| --- | --- | --- |
+| pre-write sync check | ✓ pass | target template already returned `[]` issues |
+| targeted sync write | ✓ pass | write executed for `fixed-sleepy-moon-adventure-8p` only |
+| post-write sync check | ✓ pass | target template still returned `[]` issues |
+
+Sync conclusion:
+
+- The narrowed sleepy-moon-8p room-prop cleanup is now explicitly re-synced into Firestore `templates`.
+- No unrelated fixed templates were written in this slice.
+
+### Re-smoke request configuration
+
+| field | value |
+| --- | --- |
+| templateId | `fixed-sleepy-moon-adventure-8p` |
+| smoke mode | no-reference |
+| ageBand | `preschool_3_4` |
+| childAge | `4` |
+| pageCount | `8` |
+| reference image | none |
+| previous re-smoke bookId | `c2JGhoypMsOXiWnI5J3A` |
+| new re-smoke bookId | `yRRoIxfbF0pDmTICPfMc` |
+
+Dry-run confirmation:
+
+- payload resolved to `childName=SmokeKid1`
+- `parentMessage=きょうもすてきな一日だったね`
+- `childAge=4`
+- `pageCount=8`
+- `withReference=false`
+
+### Monitor result
+
+Result: completed.
+
+- Polling observed progress transitions `50 -> 75 -> 100 -> completed`
+- Final book status: `completed`
+- Final book progress: `100`
+- No book-level failure stage or failure reason was reported
+
+### Inspect result
+
+| check | result | notes |
+| --- | --- | --- |
+| creationMode | ✓ pass | `fixed_template` |
+| characterConsistencyMode | ✓ pass | `all_pages` |
+| childProfileSnapshot absent | ✓ expected | correct for no-reference smoke |
+| expected page count | ✓ pass | `8/8` |
+| completed pages | ✓ pass | `8/8` |
+| failed pages | ✓ pass | `0/8` |
+| imageAttemptCount | ✓ pass | all pages `1` |
+| inputReferenceCount | ✓ expected | `0/8` |
+| usedCharacterReference | ✓ expected | `false` on all pages |
+
+### Page generation health
+
+| page | status | imageDurationMs | inputReferenceCount | note |
+| --- | --- | --- | --- | --- |
+| 0 | completed | `18497` | `0` | pass |
+| 1 | completed | `19293` | `0` | pass |
+| 2 | completed | `28233` | `0` | pass; visual QA deferred to T3-8n |
+| 3 | completed | `24890` | `0` | pass; continuity regression check deferred to T3-8n |
+| 4 | completed | `23832` | `0` | pass; visual QA deferred to T3-8n |
+| 5 | completed | `17439` | `0` | pass; quiet-bedroom prop cleanup side effects to review in T3-8n |
+| 6 | completed | `23260` | `0` | pass; first-priority BF-4 re-check target in T3-8n |
+| 7 | completed | `17897` | `0` | pass; page 7 no-message behavior re-check deferred to T3-8n |
+
+Generation-health summary:
+
+- All 8 pages completed successfully.
+- No page entered `image_failed`.
+- No retries beyond attempt `1` were needed.
+- No reference path was used, which is correct for this no-reference re-smoke slice.
+
+### Comparison to the previous re-smoke
+
+| item | previous re-smoke | current re-smoke |
+| --- | --- | --- |
+| bookId | `c2JGhoypMsOXiWnI5J3A` | `yRRoIxfbF0pDmTICPfMc` |
+| source prompt layer | post-T3-8h hardening | post-T3-8l room-prop cleanup |
+| structural completion | pass | pass |
+| manual visual verdict | BF-4 fail / BF-3 pass in T3-8j | not yet reviewed |
+
+### Judgment
+
+Result: pass / proceed.
+
+- The narrowed room-prop cleanup synced successfully.
+- The new re-smoke completed successfully under the intended no-reference conditions.
+- Structural generation health is good enough to proceed to another manual visual QA slice.
+- T3-8m does not claim BF-4 success; page 6 remains the first visual checkpoint for T3-8n.
+
+### Deferred to T3-8n
+
+- Manual BF-4 visual re-check for page 6 background text suppression
+- Manual BF-4 regression check for page 7 no-message success path
+- Manual BF-3 regression check to ensure child / pajama / teddy continuity remains intact after room-prop cleanup
+
+### Exclusions (this slice)
+
+- No manual visual QA performed in this slice.
+- No image regeneration of previous books.
+- No Admin regeneration or reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No code / seed / prompt modifications.
+- No service account JSON, secrets, URLs, or tokens recorded.
+- No T4 style validation execution.
+
+### Next steps
+
+- T3-8n: manual BF-4/BF-3 visual QA for re-smoke book `yRRoIxfbF0pDmTICPfMc`, with page 6 as the first-priority BF-4 checkpoint.
