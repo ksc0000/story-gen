@@ -22,6 +22,85 @@ const AGE_BAND_TO_CHILD_AGE = {
   early_reader_5_6: 6,
   early_elementary_7_8: 8,
 };
+const DEFAULT_STYLE_ID = "soft_watercolor";
+// Keep this runner-local registry intentionally narrow and read-only so the
+// script can remain executable in plain Node without a TS build step.
+const STYLE_PROFILE_REGISTRY = {
+  soft_watercolor: {
+    id: "soft_watercolor",
+    name: "やさしい水彩",
+    previewImageUrl: "/images/styles/soft_watercolor.png",
+    styleBible:
+      "Japanese children's picture book watercolor style, soft warm colors, pale colors, gentle pigment blooms, hand-painted paper texture, cozy lighting, tender child-friendly atmosphere.",
+  },
+  fluffy_pastel: {
+    id: "fluffy_pastel",
+    name: "ふんわりパステル",
+    previewImageUrl: "/images/styles/fluffy_pastel.png",
+    styleBible:
+      "Fluffy pastel picture book style, soft rounded forms, airy colors, gentle edges, cute toddler-friendly design, plush and comforting mood.",
+  },
+  crayon: {
+    id: "crayon",
+    name: "クレヨンで描いた絵本",
+    previewImageUrl: "/images/styles/crayon.png",
+    styleBible:
+      "Crayon storybook style, warm hand-drawn strokes, waxy texture, playful childlike marks, colorful but gentle page design.",
+  },
+  flat_illustration: {
+    id: "flat_illustration",
+    name: "シンプルフラット",
+    previewImageUrl: "/images/styles/flat_illustration.png",
+    styleBible:
+      "Simple flat illustration style, bright clean colors, readable shapes, minimal shadows, modern child-friendly picture book layout.",
+  },
+  anime_storybook: {
+    id: "anime_storybook",
+    name: "わくわくアニメ風",
+    previewImageUrl: "/images/styles/anime_storybook.png",
+    styleBible:
+      "Anime-inspired picture book style, expressive faces, sparkling eyes, lively framing, vivid but soft family-safe colors, warm fantasy energy.",
+  },
+  classic_picture_book: {
+    id: "classic_picture_book",
+    name: "クラシック絵本",
+    previewImageUrl: "/images/styles/classic_picture_book.png",
+    styleBible:
+      "Classic picture book illustration, traditional fairytale warmth, detailed linework, painterly textures, timeless storybook atmosphere.",
+  },
+  toy_3d: {
+    id: "toy_3d",
+    name: "ぷっくり3Dトイ風",
+    previewImageUrl: "/images/styles/toy_3d.png",
+    styleBible:
+      "Rounded 3D toy storybook style, clay-like forms, playful miniature diorama feeling, soft plastic texture, bright child-safe lighting.",
+  },
+  paper_collage: {
+    id: "paper_collage",
+    name: "紙あそびコラージュ",
+    previewImageUrl: "/images/styles/paper_collage.png",
+    styleBible:
+      "Paper cut collage picture book style, layered handmade paper textures, tactile edges, warm craft feeling, playful child-friendly composition.",
+  },
+  pencil_sketch: {
+    id: "pencil_sketch",
+    name: "やさしい鉛筆スケッチ",
+    previewImageUrl: "/images/styles/pencil_sketch.png",
+    styleBible:
+      "Gentle pencil sketch picture book style, delicate line art, subtle color tinting, nostalgic quiet mood, soft hand-drawn feeling.",
+  },
+  colorful_pop: {
+    id: "colorful_pop",
+    name: "カラフルポップ",
+    previewImageUrl: "/images/styles/colorful_pop.png",
+    styleBible:
+      "Colorful pop picture book style, vivid joyful colors, friendly rounded forms, playful graphic energy, clear child-safe staging.",
+  },
+};
+const STYLE_ID_ALIASES = {
+  watercolor: "soft_watercolor",
+  flat: "flat_illustration",
+};
 
 function getSeedTemplatesFromCompiledModule() {
   const compiled = require("../functions/lib/seed-templates.js");
@@ -278,6 +357,67 @@ function parseAgeBandArg(args) {
   return ageBand;
 }
 
+function parseStyleIdArg(args) {
+  const matched = args.find((arg) => arg.startsWith("--style-id="));
+  if (!matched) {
+    return null;
+  }
+
+  const styleId = matched.slice("--style-id=".length).trim();
+  if (!styleId) {
+    throw new Error("--style-id requires a non-empty value.");
+  }
+
+  return styleId;
+}
+
+function rejectUnsupportedStyleArgs(args) {
+  const unsupported = args.filter(
+    (arg) =>
+      arg === "--style-preview-reference" ||
+      arg.startsWith("--validation-mode=") ||
+      arg.startsWith("--style=") ||
+      arg.startsWith("--selected-style-id=") ||
+      arg.startsWith("--selected-style-name=") ||
+      arg.startsWith("--style-preview-image-url=") ||
+      arg.startsWith("--style-preview-used-as-reference=")
+  );
+
+  if (unsupported.length > 0) {
+    throw new Error(
+      `Unsupported style-related arguments: ${unsupported.join(", ")}. ` +
+        "This runner currently supports only --style-id=<canonicalStyleId> and always uses prompt-only mode with stylePreviewUsedAsReference=false."
+    );
+  }
+}
+
+function resolveStyleSelection(rawStyleId) {
+  const requestedStyleId = rawStyleId ?? DEFAULT_STYLE_ID;
+  const normalizedStyleId = STYLE_ID_ALIASES[requestedStyleId] ?? requestedStyleId;
+  const profile = STYLE_PROFILE_REGISTRY[normalizedStyleId];
+
+  if (!profile) {
+    const canonicalIds = Object.keys(STYLE_PROFILE_REGISTRY).join(", ");
+    const aliases = Object.entries(STYLE_ID_ALIASES)
+      .map(([alias, canonical]) => `${alias} -> ${canonical}`)
+      .join(", ");
+    throw new Error(
+      `Unknown style id: ${requestedStyleId}. Allowed canonical ids: ${canonicalIds}. Legacy aliases: ${aliases}`
+    );
+  }
+
+  return {
+    requestedStyleId,
+    canonicalStyleId: profile.id,
+    normalizedFromAlias: requestedStyleId !== profile.id ? requestedStyleId : null,
+    selectedStyleName: profile.name,
+    styleBible: profile.styleBible,
+    stylePreviewImageUrl: profile.previewImageUrl,
+    stylePreviewUsedAsReference: false,
+    validationMode: "prompt_only",
+  };
+}
+
 function resolveChildAgeFromAgeBand(ageBand) {
   if (!ageBand) {
     return null;
@@ -325,6 +465,7 @@ function buildBookPayload({
   referenceImageUrl,
   pageCount,
   childAge,
+  styleSelection,
 }) {
   const nowMs = Date.now();
   const input = buildInputForTemplate(templateId, index);
@@ -340,7 +481,12 @@ function buildBookPayload({
     templateId,
     creationMode: "fixed_template",
     productPlan: "free",
-    style: "soft_watercolor",
+    style: styleSelection.canonicalStyleId,
+    selectedStyleId: styleSelection.canonicalStyleId,
+    selectedStyleName: styleSelection.selectedStyleName,
+    styleBible: styleSelection.styleBible,
+    stylePreviewImageUrl: styleSelection.stylePreviewImageUrl,
+    stylePreviewUsedAsReference: styleSelection.stylePreviewUsedAsReference,
     pageCount,
     status: "generating",
     progress: 0,
@@ -361,6 +507,9 @@ function buildBookPayload({
       templateCount,
       createdAtIso: new Date(nowMs).toISOString(),
       withReference: !!referenceImageUrl,
+      styleId: styleSelection.canonicalStyleId,
+      validationMode: styleSelection.validationMode,
+      stylePreviewReference: styleSelection.stylePreviewUsedAsReference,
     },
   };
 
@@ -374,13 +523,16 @@ function buildBookPayload({
 
 async function main() {
   const args = process.argv.slice(2);
+  rejectUnsupportedStyleArgs(args);
   const dryRun = args.includes("--dry-run");
   const write = args.includes("--write");
   const withReference = args.includes("--with-reference");
   const listTemplates = args.includes("--list-templates");
   const requestedPageCount = parsePageCountArg(args);
   const requestedAgeBand = parseAgeBandArg(args);
+  const requestedStyleId = parseStyleIdArg(args);
   const childAgeFromAgeBand = resolveChildAgeFromAgeBand(requestedAgeBand);
+  const styleSelection = resolveStyleSelection(requestedStyleId);
 
   const seedTemplates = getSeedTemplatesFromCompiledModule();
   const fixedTemplateIds = getFixedTemplateIds(seedTemplates);
@@ -449,9 +601,18 @@ async function main() {
         referenceImageUrl,
         pageCount,
         childAge: childAgeFromAgeBand,
+        styleSelection,
       });
       console.log(`  [${index + 1}/${targetTemplateIds.length}] templateId=${templateId}`);
       console.log(`         userId=${payload.userId}`);
+      console.log(`         styleId=${payload.style}`);
+      if (styleSelection.normalizedFromAlias) {
+        console.log(`         normalizedStyleId=${styleSelection.canonicalStyleId} (from ${styleSelection.normalizedFromAlias})`);
+      }
+      console.log(`         selectedStyleName=${payload.selectedStyleName}`);
+      console.log(`         validationMode=${payload.smokeTestMetadata.validationMode}`);
+      console.log(`         stylePreviewUsedAsReference=${payload.stylePreviewUsedAsReference}`);
+      console.log(`         stylePreviewImageUrl=${payload.stylePreviewImageUrl}`);
       console.log(`         pageCount=${payload.pageCount}`);
       console.log(`         ageBand=${requestedAgeBand ?? "default"}`);
       console.log(`         childAge=${payload.input.childAge ?? "(unset)"}`);
@@ -479,6 +640,13 @@ async function main() {
 
   console.log(`[start] creating ${targetTemplateIds.length} smoke books for ${TARGET_PROJECT_ID}`);
   console.log(`[info] withReference=${!!referenceImageUrl}`);
+  console.log(`[info] styleId=${styleSelection.canonicalStyleId}`);
+  if (styleSelection.normalizedFromAlias) {
+    console.log(`[info] normalizedStyleId=${styleSelection.canonicalStyleId} (from ${styleSelection.normalizedFromAlias})`);
+  }
+  console.log(`[info] selectedStyleName=${styleSelection.selectedStyleName}`);
+  console.log(`[info] validationMode=${styleSelection.validationMode}`);
+  console.log(`[info] stylePreviewUsedAsReference=${styleSelection.stylePreviewUsedAsReference}`);
   if (requestedPageCount) {
     console.log(`[info] requestedPageCount=${requestedPageCount}`);
   }
@@ -504,10 +672,13 @@ async function main() {
       referenceImageUrl,
       pageCount,
       childAge: childAgeFromAgeBand,
+      styleSelection,
     });
     await docRef.create(payload);
     created.push({ templateId, bookId: docRef.id, pageCount });
-    console.log(`[created] template=${templateId} pageCount=${pageCount} bookId=${docRef.id}`);
+    console.log(
+      `[created] template=${templateId} styleId=${styleSelection.canonicalStyleId} pageCount=${pageCount} bookId=${docRef.id}`
+    );
   }
 
   console.log(`[done] created ${created.length} smoke books.`);

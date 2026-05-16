@@ -1725,3 +1725,167 @@ T4-6 decision:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+---
+
+## 18. T4-7 Style-Aware Smoke Runner Support
+
+Status: completed
+
+Date: 2026-05-16
+
+### 18.1 Purpose
+
+Implement the T4-6 runner design as a narrow extension of `scripts/create-template-smoke-books.js` so T4 style mini-matrix dry-runs and later write runs can target canonical styles explicitly without changing the broader generation flow.
+
+### 18.2 Files Changed
+
+- `scripts/create-template-smoke-books.js`
+- `docs/STYLE_VARIANT_VALIDATION_PLAN.md`
+
+### 18.3 Implemented Runner Support
+
+Added runner-local style-aware support for:
+
+- `--style-id=<id>`
+- canonical style profile lookup
+- legacy alias normalization
+- fail-fast rejection for unknown style ids
+- fail-fast rejection for unsupported style-related args
+- style metadata injection into smoke payload
+- style metadata visibility in dry-run output
+
+Preserved behavior:
+
+- no `--style-id` still defaults to `soft_watercolor`
+- prompt-only remains the only supported validation mode in this runner
+- `stylePreviewUsedAsReference` remains `false`
+- character-reference flow still remains separate behind `--with-reference`
+
+### 18.4 Canonical And Alias Behavior
+
+Canonical ids accepted by the runner:
+
+- `soft_watercolor`
+- `fluffy_pastel`
+- `crayon`
+- `flat_illustration`
+- `anime_storybook`
+- `classic_picture_book`
+- `toy_3d`
+- `paper_collage`
+- `pencil_sketch`
+- `colorful_pop`
+
+Legacy aliases normalized immediately:
+
+- `watercolor` → `soft_watercolor`
+- `flat` → `flat_illustration`
+
+Normalization behavior:
+
+- runner accepts the alias for compatibility
+- dry-run surfaces `normalizedStyleId=...`
+- payload persists only the canonical id
+
+### 18.5 Payload Injection Result
+
+`buildBookPayload(...)` now writes:
+
+- `style`
+- `selectedStyleId`
+- `selectedStyleName`
+- `styleBible`
+- `stylePreviewImageUrl`
+- `stylePreviewUsedAsReference`
+
+And `smokeTestMetadata` now also records:
+
+- `styleId`
+- `validationMode`
+- `stylePreviewReference`
+
+Current T4-7 invariant:
+
+- `validationMode = prompt_only`
+- `stylePreviewUsedAsReference = false`
+- `stylePreviewReference = false`
+
+### 18.6 Unsupported Style-Related Args Policy
+
+The runner no longer silently ignores style-shaped arguments that it does not support.
+
+T4-7 explicitly rejects:
+
+- `--style-preview-reference`
+- `--validation-mode=...`
+- `--style=...`
+- `--selected-style-id=...`
+- `--selected-style-name=...`
+- `--style-preview-image-url=...`
+- `--style-preview-used-as-reference=...`
+
+Reason:
+
+- T4 needs fail-fast behavior rather than false confidence from silently ignored inputs
+- preview-reference-assisted mode remains a future extension, not an accidental partial mode
+
+### 18.7 Dry-Run Verification
+
+Executed checks:
+
+```powershell
+npm run guard:hygiene
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=crayon
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=watercolor
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=not_a_style
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-preview-reference
+```
+
+Observed results:
+
+- default dry-run reports `styleId=soft_watercolor`
+- canonical dry-run reports the requested canonical style, for example `crayon`
+- alias dry-run normalizes `watercolor` to `soft_watercolor`
+- invalid style ids now fail fast with the canonical list and alias map in the error
+- unsupported style-related flags now fail fast instead of being ignored
+
+### 18.8 T4-5 Gap Closure Assessment
+
+T4-5 gaps and T4-7 status:
+
+| gap from T4-5 | T4-7 status |
+| --- | --- |
+| no parsed `--style-id` | resolved |
+| no canonical validation | resolved |
+| no alias normalization | resolved |
+| no style-aware payload mutation | resolved |
+| no style metadata persistence | resolved |
+| no dry-run style visibility | resolved |
+| silent ignore of style args | resolved for style-related args |
+
+Still intentionally deferred:
+
+- preview-reference-assisted style mode
+- style-aware write generation execution
+- multi-run T4 mini-matrix generation itself
+
+### 18.9 Decision
+
+T4-7 decision:
+
+- style-aware smoke runner support is now sufficient for T4 prompt-only dry-runs and for a later controlled write slice
+- canonical style reporting is now possible from the runner path
+- T4-8 can safely move to style-aware dry-run confirmation across the mini-matrix scope or the first staged write execution slice
+
+### 18.10 Exclusions
+
+- No write generation performed
+- No image generation performed
+- No Firestore sync performed
+- No style profile content changed
+- No UI changed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
