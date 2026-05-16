@@ -391,3 +391,223 @@ T4-1 decision:
 - Start T4 as a separate validation track
 - Use approved T3 templates as baseline references
 - Begin with taxonomy / contract / matrix design before any style implementation work
+
+---
+
+## 13. T4-2 Current Style Asset Audit And Canonical Style List Cleanup Plan
+
+Status: completed
+
+Date: 2026-05-16
+
+### 13.1 Purpose
+
+Audit the current style assets and define a docs-only cleanup direction for canonical style ids, legacy aliases, preview reference handling, and style profile metadata before any T4 style-implementation work begins.
+
+### 13.2 Files Reviewed
+
+- `src/lib/types.ts`
+- `src/lib/illustration-styles.ts`
+- `src/components/style-picker.tsx`
+- `src/app/(app)/create/style/page.tsx`
+- `functions/src/test-image-models.ts`
+
+### 13.3 Audit Findings
+
+#### Type layer
+
+`src/lib/types.ts`
+
+- `IllustrationStyle` currently contains 12 ids
+- 10 ids behave like canonical style ids
+- 2 ids behave like legacy aliases:
+  - `watercolor`
+  - `flat`
+- `IllustrationStyleProfile` has the right minimum fields for T4:
+  - `id`
+  - `name`
+  - `previewImageUrl`
+  - `styleBible`
+  - `negativeStyleRules`
+  - `usePreviewAsReference?`
+
+Assessment:
+
+- Type surface is functional, but canonical ids and compatibility aliases are mixed in one union.
+- That is acceptable for runtime compatibility, but it is too ambiguous for validation reporting unless T4 explicitly separates the two classes.
+
+#### Profile registry
+
+`src/lib/illustration-styles.ts`
+
+- `ILLUSTRATION_STYLE_PROFILES` contains 12 profiles
+- All current profiles set `usePreviewAsReference: false`
+- `watercolor` duplicates `soft_watercolor`
+- `flat` duplicates `flat_illustration`
+- duplicated alias profiles currently repeat:
+  - display name
+  - preview image
+  - styleBible
+  - negative rules
+
+Assessment:
+
+- The registry is usable today, but it includes data duplication for alias compatibility.
+- T4 should treat alias entries as compatibility shims, not as independent validation targets.
+
+#### UI layer
+
+`src/components/style-picker.tsx`
+
+- UI card copy exists for all 12 ids
+- The picker filters out `watercolor` and `flat`
+- Visible order is the source order of `ILLUSTRATION_STYLE_PROFILES` after filtering
+- display names are user-friendly and already localized in Japanese
+
+Assessment:
+
+- UI behavior already implies a canonical-vs-alias distinction.
+- The hidden alias rule is good, but it exists only as ad hoc filtering rather than a documented contract.
+
+#### Saved payload
+
+`src/app/(app)/create/style/page.tsx`
+
+- New book payload stores:
+  - `style`
+  - `selectedStyleId`
+  - `selectedStyleName`
+  - `styleBible`
+  - `stylePreviewImageUrl`
+  - `stylePreviewUsedAsReference: false`
+- default selected style is `soft_watercolor`
+
+Assessment:
+
+- Payload already persists enough information for later audit and reporting.
+- `style` and `selectedStyleId` may become redundant if canonical / alias normalization is introduced later.
+- For T4 validation, `selectedStyleId` should be interpreted as the canonical review key once cleanup is implemented.
+
+#### Preview reference handling
+
+`functions/src/test-image-models.ts`
+
+- admin test endpoint accepts:
+  - `style`
+  - `stylePreviewReference`
+- when enabled, preview image URL is appended to input images
+- input role `style_reference` is added
+- default is off
+
+Assessment:
+
+- This is a useful experiment path for later T4 work.
+- For T4 baseline validation, preview reference should remain off by default so style adherence can first be judged from prompt-only behavior.
+
+### 13.4 Canonical / Alias Table
+
+| id | class | displayName | previewImageUrl | styleBible status | negativeStyleRules status | UI visible | preview ref default |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `soft_watercolor` | canonical | `やさしい水彩` | `/images/styles/soft_watercolor.png` | present | present | yes | false |
+| `fluffy_pastel` | canonical | `ふんわりパステル` | `/images/styles/fluffy_pastel.png` | present | present | yes | false |
+| `crayon` | canonical | `クレヨンで描いた絵本` | `/images/styles/crayon.png` | present | present | yes | false |
+| `flat_illustration` | canonical | `シンプルフラット` | `/images/styles/flat_illustration.png` | present | present | yes | false |
+| `anime_storybook` | canonical | `わくわくアニメ風` | `/images/styles/anime_storybook.png` | present | present | yes | false |
+| `classic_picture_book` | canonical | `クラシック絵本` | `/images/styles/classic_picture_book.png` | present | present | yes | false |
+| `toy_3d` | canonical | `ぷっくり3Dトイ風` | `/images/styles/toy_3d.png` | present | present | yes | false |
+| `paper_collage` | canonical | `紙あそびコラージュ` | `/images/styles/paper_collage.png` | present | present | yes | false |
+| `pencil_sketch` | canonical | `やさしい鉛筆スケッチ` | `/images/styles/pencil_sketch.png` | present | present | yes | false |
+| `colorful_pop` | canonical | `カラフルポップ` | `/images/styles/colorful_pop.png` | present | present | yes | false |
+| `watercolor` | legacy alias | `やさしい水彩` | `/images/styles/soft_watercolor.png` | duplicates `soft_watercolor` | duplicates `soft_watercolor` | no | false |
+| `flat` | legacy alias | `シンプルフラット` | `/images/styles/flat_illustration.png` | duplicates `flat_illustration` | duplicates `flat_illustration` | no | false |
+
+### 13.5 Canonical List For T4 Validation
+
+Canonical list confirmed for T4 validation:
+
+- `soft_watercolor`
+- `fluffy_pastel`
+- `crayon`
+- `flat_illustration`
+- `anime_storybook`
+- `classic_picture_book`
+- `toy_3d`
+- `paper_collage`
+- `pencil_sketch`
+- `colorful_pop`
+
+Legacy aliases kept for compatibility only:
+
+- `watercolor` → `soft_watercolor`
+- `flat` → `flat_illustration`
+
+Validation rule:
+
+- All T4 matrix planning, QA logs, and rollout decisions must use canonical ids only.
+- Alias ids may still exist in runtime or old documents, but should be normalized in reporting.
+
+### 13.6 Confirmed Initial And Deferred Style Sets
+
+Initial T4 validation set confirmed:
+
+- `soft_watercolor`
+- `fluffy_pastel`
+- `crayon`
+- `flat_illustration`
+- `anime_storybook`
+- `toy_3d`
+
+Deferred set confirmed:
+
+- `classic_picture_book`
+- `paper_collage`
+- `pencil_sketch`
+- `colorful_pop`
+
+Reasoning:
+
+- initial set gives enough spread across painterly, hand-drawn, clean, and stylized families
+- deferred set is not rejected; it is simply lower-priority for first matrix execution
+
+### 13.7 Preview Reference Policy
+
+T4 policy for style preview reference:
+
+- Baseline style validation should default to prompt-only behavior
+- `stylePreviewReference` remains an explicit experimental path, not a default rollout setting
+- preview reference comparisons should be labeled separately from prompt-only comparisons
+
+Implication:
+
+- A style should not be considered rollout-ready merely because it works with preview-reference assistance
+- prompt-only viability is the primary bar for early T4 validation
+
+### 13.8 Cleanup Candidates For T4-3+
+
+Docs-only planning outcome:
+
+- cleanup is needed, but not in T4-2
+
+Recommended implementation candidates:
+
+1. Introduce an explicit canonical-style metadata layer
+2. Mark alias profiles as compatibility aliases instead of full duplicated peers
+3. Normalize saved style ids for new payloads while preserving legacy read compatibility
+4. Define a single canonical UI order source rather than relying on registry order plus ad hoc filtering
+5. Decide whether `selectedStyleId` should become canonical-normalized even when `style` was supplied via alias
+6. Add docs or utility support for style-level reporting keys in T4 smoke reviews
+
+Not required yet:
+
+- No immediate need to delete alias ids from types
+- No immediate need to turn on preview-reference defaults
+- No immediate need to rewrite styleBible prose unless later validation shows weak adherence
+
+### 13.9 Decision
+
+T4-2 decision:
+
+- Canonical style list is confirmed as the 10 non-alias ids.
+- `watercolor` and `flat` are confirmed as legacy aliases only.
+- Preview reference remains off by default and should be treated as an experiment flag.
+- Cleanup implementation should be deferred to T4-3 or later, after the first validation matrix design is finalized.
