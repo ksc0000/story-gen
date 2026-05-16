@@ -2143,3 +2143,236 @@ T4-9 decision:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+---
+
+## 21. T4-10 Manual Visual QA For 6 Generated Style Books
+
+Status: completed
+
+Date: 2026-05-16
+
+### 21.1 Purpose
+
+Perform manual visual QA for the first 6 generated T4 style books and record BF-4, BF-3, style adherence, style consistency, emotional fit, story-image match, and per-book rollout decisions before any follow-up remediation or matrix expansion.
+
+### 21.2 Review Scope
+
+Books reviewed:
+
+| run | templateId | styleId | bookId |
+| --- | --- | --- | --- |
+| 1 | `fixed-sleepy-moon-adventure-8p` | `soft_watercolor` | `h3QDTgIjGTwBOGYRkgzC` |
+| 2 | `fixed-first-zoo-8p` | `soft_watercolor` | `LBzamVYJs1CDv3dRwE9L` |
+| 3 | `fixed-sleepy-moon-adventure-8p` | `crayon` | `r5R8Q5nCTv2DB5pB8ahl` |
+| 4 | `fixed-first-zoo-8p` | `crayon` | `d6dzSFiudIAPKuMa5IN7` |
+| 5 | `fixed-sleepy-moon-adventure-8p` | `anime_storybook` | `8kT3VwB8pZSwrWWuLqwB` |
+| 6 | `fixed-first-zoo-8p` | `anime_storybook` | `T7LGTZZGfN0enFgLM6at` |
+
+Method:
+
+- reviewed page `0` through `7` for all 6 books
+- used local contact sheets for sequence comparison
+- opened high-risk single pages for BF-4 spot checks
+- kept this slice read-only
+
+### 21.3 High-Level Findings
+
+Overall pattern:
+
+- `fixed-sleepy-moon-adventure-8p` is materially more stable across style variation than `fixed-first-zoo-8p`
+- `soft_watercolor` is the safest overall anchor style
+- `crayon` and `anime_storybook` both preserved strong style identity
+- the main blocker in this matrix is not structural health but zoo-side BF-4 signage / printed-surface emergence in the more stylized runs
+
+Most important blockers:
+
+1. `fixed-first-zoo-8p × anime_storybook`
+   - page `1` contains clearly readable Japanese signage at the zoo gate
+   - page `7` also contains readable background sign text
+2. `fixed-first-zoo-8p × crayon`
+   - page `7` contains readable Latin-letter signage (`SMOK...`) in the background
+
+Most important non-blocking watch item:
+
+- `fixed-sleepy-moon-adventure-8p × soft_watercolor`
+  - page `6` contains a small red seal-like corner mark that reads as watermark/signature-like
+
+### 21.4 Per-Book QA Table
+
+| templateId | styleId | bookId | BF-4 | BF-3 | style adherence | style consistency | emotional fit | story-image match | decision | key notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-sleepy-moon-adventure-8p` | `soft_watercolor` | `h3QDTgIjGTwBOGYRkgzC` | `watch` | `pass` | `strong` | `strong` | `high fit` | `acceptable` | `Conditional-Go` | page `6` has a small seal-like corner artifact; otherwise very strong sleepy baseline |
+| `fixed-first-zoo-8p` | `soft_watercolor` | `LBzamVYJs1CDv3dRwE9L` | `pass` | `watch` | `strong` | `acceptable` | `high fit` | `acceptable` | `Conditional-Go` | safe composition and gentle zoo mood; some outfit / staging drift across pages but still readable as one outing |
+| `fixed-sleepy-moon-adventure-8p` | `crayon` | `r5R8Q5nCTv2DB5pB8ahl` | `pass` | `pass` | `strong` | `strong` | `high fit` | `acceptable` | `Go` | style reads clearly as waxy crayon without pseudo-text collapse |
+| `fixed-first-zoo-8p` | `crayon` | `d6dzSFiudIAPKuMa5IN7` | `fail` | `watch` | `strong` | `acceptable` | `acceptable` | `acceptable` | `Hold` | page `7` background sign introduces readable Latin letters; outfit continuity is also looser than sleepy runs |
+| `fixed-sleepy-moon-adventure-8p` | `anime_storybook` | `8kT3VwB8pZSwrWWuLqwB` | `pass` | `pass` | `strong` | `strong` | `high fit` | `acceptable` | `Go` | expressive but still preschool-appropriate; same child / pajamas / teddy continuity holds |
+| `fixed-first-zoo-8p` | `anime_storybook` | `T7LGTZZGfN0enFgLM6at` | `fail` | `watch` | `strong` | `acceptable` | `acceptable` | `acceptable` | `Hold` | page `1` readable Japanese signage and page `7` readable background sign are BF-4 blockers |
+
+### 21.5 BF-4 Assessment By Style
+
+#### `soft_watercolor`
+
+Result:
+
+- strongest overall BF-4 performer in this matrix
+
+Book-level summary:
+
+- sleepy-moon: low-severity watch only
+- first-zoo: pass
+
+Notes:
+
+- sleepy-moon page `6` includes a small red seal-like mark in the lower-right corner
+- this does not read like large overlay text, but it does resemble a watermark/signature artifact and should stay on the watch list
+- zoo soft-watercolor avoided the explicit signage problem seen in the stylized runs
+
+#### `crayon`
+
+Result:
+
+- mixed
+
+Book-level summary:
+
+- sleepy-moon: pass
+- first-zoo: fail
+
+Notes:
+
+- sleepy-moon preserved hand-drawn texture without obvious pseudo-text
+- first-zoo page `7` produced readable background lettering, which is a BF-4 blocker
+
+#### `anime_storybook`
+
+Result:
+
+- mixed with the strongest zoo-side BF-4 failure
+
+Book-level summary:
+
+- sleepy-moon: pass
+- first-zoo: fail
+
+Notes:
+
+- anime sleepy remained clean and did not introduce bubble / caption artifacts
+- anime zoo page `1` generated clearly readable Japanese information boards at the entrance
+- anime zoo page `7` also retained readable sign text in the background
+
+### 21.6 BF-3 Assessment By Style
+
+#### `soft_watercolor`
+
+- sleepy-moon: pass
+- first-zoo: watch
+
+Notes:
+
+- sleepy-moon preserved the clearest same-child / same-pajama / same-teddy continuity
+- zoo remained understandable as the same child, but outfit and scene-stage continuity were looser across the sequence
+
+#### `crayon`
+
+- sleepy-moon: pass
+- first-zoo: watch
+
+Notes:
+
+- sleepy-moon kept strong same-child identity despite the stylized texture
+- zoo child identity remained understandable, but wardrobe / staging consistency varied more page-to-page
+
+#### `anime_storybook`
+
+- sleepy-moon: pass
+- first-zoo: watch
+
+Notes:
+
+- anime sleepy stayed preschool-appropriate and consistent
+- anime zoo did not age the child up severely, but wardrobe and family-scene continuity were still looser than the sleepy template
+
+### 21.7 Style Adherence And Emotional Fit
+
+`soft_watercolor`
+
+- style adherence: strong on both templates
+- emotional fit: especially strong on sleepy-moon, also high on zoo
+
+`crayon`
+
+- style adherence: strong on both templates
+- emotional fit: very good on sleepy-moon, acceptable on zoo
+
+`anime_storybook`
+
+- style adherence: strong on both templates
+- emotional fit: high on sleepy-moon, acceptable on zoo
+
+Interpretation:
+
+- the style system can express all 3 target styles distinctly in prompt-only mode
+- the main issue is not “style fails to appear”
+- the main issue is that zoo-specific rendered signage becomes more likely in the stylized variants
+
+### 21.8 Story-Image Match
+
+General verdict:
+
+- all 6 books remained broadly aligned with their template stories
+
+Template-specific notes:
+
+- sleepy-moon across all 3 styles
+  - story-image match remained solid
+  - bedtime calm, moon gaze, dream transition, reassurance, and sleep ending all read correctly
+- first-zoo across all 3 styles
+  - scene sequence remained understandable
+  - animals, family outing beats, and sunset close all read correctly
+  - the concern is not semantic mismatch but BF-4 signage emergence and somewhat looser continuity
+
+### 21.9 Matrix Decision
+
+Per-book rollout summary:
+
+- `Go`
+  - `fixed-sleepy-moon-adventure-8p × crayon`
+  - `fixed-sleepy-moon-adventure-8p × anime_storybook`
+- `Conditional-Go`
+  - `fixed-sleepy-moon-adventure-8p × soft_watercolor`
+  - `fixed-first-zoo-8p × soft_watercolor`
+- `Hold`
+  - `fixed-first-zoo-8p × crayon`
+  - `fixed-first-zoo-8p × anime_storybook`
+
+Matrix-level decision:
+
+- `Conditional`
+
+Reason:
+
+- the mini-matrix proves that prompt-only style variation is viable
+- sleepy-moon is effectively style-ready across the first 3 styles
+- first-zoo still needs style-specific BF-4 suppression for signage / printed surfaces before the crayon and anime variants can be considered rollout-ready
+
+### 21.10 Recommended Next Step
+
+Recommended next slice:
+
+- T4-11: zoo-style BF-4 remediation planning focused on entrance signs, background boards, and printed zoo surfaces for `crayon` and `anime_storybook`
+
+Secondary note:
+
+- sleepy soft-watercolor page `6` seal-like artifact can stay as a low-severity watch item unless it recurs systematically
+
+### 21.11 Exclusions
+
+- No image regeneration performed
+- No Admin regeneration performed
+- No Firestore writes performed
+- No code or runner changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
