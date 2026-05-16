@@ -3407,3 +3407,174 @@ Proceed to:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 28. T4-17 Anime Storybook Firestore Sync And Targeted Re-Smoke
+
+Date: 2026-05-17
+
+Scope:
+
+- target template: `fixed-first-zoo-8p`
+- target style: `anime_storybook`
+- target mode: `prompt_only`
+- reference image: not used
+- style preview reference: not used
+
+### 28.1 Preconditions
+
+Confirmed before running:
+
+- git working tree was clean
+- `npm run guard:hygiene`: pass
+- `npm --prefix functions run build`: pass
+- T4-16 prompt hardening had already landed on `main`
+
+### 28.2 Targeted Template Sync
+
+Executed pre-check:
+
+```powershell
+node scripts/sync-fixed-template-seeds.js --dry-run --template-id=fixed-first-zoo-8p
+```
+
+Result:
+
+- pre-sync report for `fixed-first-zoo-8p`: `[]`
+
+Executed write:
+
+```powershell
+node scripts/sync-fixed-template-seeds.js --write --template-id=fixed-first-zoo-8p
+```
+
+Write result:
+
+- before report: `[]`
+- after report: `[]`
+- targeted sync completed successfully
+
+Executed post-check:
+
+```powershell
+node scripts/sync-fixed-template-seeds.js --dry-run --template-id=fixed-first-zoo-8p
+```
+
+Result:
+
+- post-sync report for `fixed-first-zoo-8p`: `[]`
+
+Assessment:
+
+- Firestore template state is aligned with the local T4-16 clothing-text hardening
+
+### 28.3 Targeted Anime Re-Smoke Dry-Run
+
+Executed:
+
+```powershell
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=anime_storybook
+```
+
+Dry-run confirmed:
+
+- `styleId=anime_storybook`
+- `selectedStyleName=わくわくアニメ風`
+- `validationMode=prompt_only`
+- `stylePreviewUsedAsReference=false`
+- `pageCount=8`
+- `ageBand=preschool_3_4`
+- `childAge=4`
+- `withReference=false`
+
+### 28.4 Targeted Anime Re-Smoke Write
+
+Executed:
+
+```powershell
+node scripts/create-template-smoke-books.js --write --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=anime_storybook
+```
+
+Generated:
+
+| templateId | styleId | bookId | smokeRunId |
+| --- | --- | --- | --- |
+| `fixed-first-zoo-8p` | `anime_storybook` | `BDKHvJt4J7Bfzwx4IZAg` | `template-t2a-20260516165104` |
+
+### 28.5 Monitor And Inspect Result
+
+Monitor progression observed:
+
+- `generating / 0`
+- `generating / 25`
+- `generating / 50`
+- `generating / 88`
+- `generating / 100`
+- `completed / 100`
+
+Executed:
+
+```powershell
+npm run smoke:monitor -- BDKHvJt4J7Bfzwx4IZAg
+npm run smoke:inspect -- BDKHvJt4J7Bfzwx4IZAg --expected-page-count=8
+```
+
+Final structural summary:
+
+| templateId | styleId | bookId | status | progress | pagesTotal | pagesCompletedOrFallback | pagesFailed | fallbackCount | timedOutCount | inputReferenceCountTotal | usedCharacterReferenceAny | validationMode | result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-zoo-8p` | `anime_storybook` | `BDKHvJt4J7Bfzwx4IZAg` | `completed` | `100` | `8` | `8` | `0` | `1` | `0` | `0` | `false` | `prompt_only` | pass-with-watch |
+
+Page-level watch item:
+
+- page `1`: `fallback_completed` after `3` attempts
+
+Confirmed:
+
+- `selectedStyleId` persisted as `anime_storybook`
+- `selectedStyleName` persisted as `わくわくアニメ風`
+- `stylePreviewUsedAsReference=false`
+- `withReference=false`
+- `inputReferenceCountTotal=0`
+- `usedCharacterReference=false`
+- expected page count check: `PASS`
+
+### 28.6 Health Assessment
+
+T4-17 generation health verdict:
+
+- targeted sync: pass
+- book creation: pass
+- final book status: `completed`
+- pages structurally available: `8/8`
+- failed pages: `0/8`
+- reference path usage: none
+- timeout usage: none
+- fallback usage: present on page `1` only
+
+Interpretation:
+
+- the rerun is structurally usable for manual visual QA
+- however, page `1` should be reviewed carefully because the successful output came through fallback completion rather than a clean first-pass completion
+
+### 28.7 Decision
+
+T4-17 decision:
+
+- proceed to T4-18 manual visual QA for `BDKHvJt4J7Bfzwx4IZAg`
+- prioritize:
+  - page `1` clothing-text suppression result
+  - page `1` fallback side effects
+  - page `7` no-sign regression check
+
+### 28.8 Exclusions
+
+- No manual visual QA performed in this slice
+- No image regeneration performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No code changes performed
+- No style profile changes performed
+- No runner changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
