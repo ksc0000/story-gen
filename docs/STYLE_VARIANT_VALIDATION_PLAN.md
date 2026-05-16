@@ -3578,3 +3578,161 @@ T4-17 decision:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 29. T4-18 Anime Storybook Manual Visual QA Rerun
+
+Date: 2026-05-17
+
+Scope:
+
+- manual visual QA rerun for the T4-17 targeted anime re-smoke
+- templateId: `fixed-first-zoo-8p`
+- styleId: `anime_storybook`
+- bookId: `BDKHvJt4J7Bfzwx4IZAg`
+- mode: `prompt_only`
+- reference image: not used
+
+### 29.1 Review Focus
+
+Reviewed:
+
+- pages `0` through `7`
+- page `1` clothing-text suppression outcome
+- page `1` fallback side effects
+- page `1` gate signage regression risk
+- page `7` background sign regression risk
+- sequence-level BF-3 continuity
+- style adherence / consistency
+- commercial suitability
+
+### 29.2 Page-Level Visual Findings
+
+Page `0`:
+
+- anime-storybook look is strong and commercially appealing at first glance
+- however, a visible watermark-like text mark appears at the lower-left corner: `© SmokeKid1`
+- this is a clear BF-4 blocker
+- the child presentation here also reads as a different child from the later zoo pages
+
+Page `1`:
+
+- the original target issue is improved: the child clothing no longer shows the previous readable alphanumeric chest print
+- the earlier gate-signage problem also appears suppressed
+- however, the page now introduces a strong sequence-level continuity shift
+- the child reads as a different hairstyle / outfit / silhouette from page `0`
+- fallback completion likely did not create obvious image corruption, but the page does appear to have taken a different character path than the opener
+
+Pages `2` through `6`:
+
+- BF-4 is mostly acceptable across the interior zoo beats
+- style adherence remains strong and recognizably anime-storybook
+- emotional tone and animal interaction beats remain commercially appealing
+- continuity is more stable within pages `1` through `6` than between page `0` and page `1`
+
+Page `7`:
+
+- background sign regression is present
+- a left-side posted sign and a central information-board-like surface both contain readable Japanese text
+- this reintroduces a direct BF-4 blocker at the ending scene
+
+### 29.3 BF-4 Assessment
+
+Result:
+
+- `fail`
+
+Blockers observed:
+
+- page `0`: visible watermark-like text `© SmokeKid1`
+- page `7`: readable Japanese text on background sign / board surfaces
+
+Improved item:
+
+- page `1` clothing-text suppression appears effective
+
+Regression summary:
+
+- the page `1` shirt-text issue improved
+- but the rerun is not approvable because different BF-4 failures remain elsewhere in the book
+
+### 29.4 BF-3 Assessment
+
+Result:
+
+- `fail`
+
+Primary issue:
+
+- page `0` presents a child who reads as a different character from the child shown from page `1` onward
+- this is stronger than a minor outfit drift; it looks like a child identity reset between the opener and the zoo entrance sequence
+
+Secondary note:
+
+- pages `1` through `7` are more internally coherent than the opener-to-main-sequence transition
+- age impression remains preschool-compatible, but identity continuity across the full 8-page sequence is not acceptable
+
+### 29.5 Style And Story Assessment
+
+Style adherence:
+
+- strong
+
+Style consistency:
+
+- acceptable for rendering language
+- not acceptable for full-sequence character continuity
+
+Emotional fit:
+
+- pass
+
+Story-image match:
+
+- conditional
+- individual zoo beats read well, but opener continuity reduces narrative coherence
+
+Commercial suitability:
+
+- `fail`
+
+Reason:
+
+- visible text artifacts and sequence-level character inconsistency make the book not yet release-ready
+
+### 29.6 Decision
+
+Per-book decision:
+
+- `Hold`
+
+Overall interpretation:
+
+- T4-16 succeeded at the narrow page `1` clothing-text target
+- however, the rerun still fails approval because:
+  - BF-4 remains blocked by page `0` watermark-like text and page `7` readable signage
+  - BF-3 regressed through a page `0` to page `1` identity discontinuity
+
+### 29.7 Recommended Next Step
+
+Recommended follow-up:
+
+- plan another narrow remediation slice for `fixed-first-zoo-8p × anime_storybook`
+- next slice should explicitly address:
+  - page `0` watermark-like lower-corner text artifact
+  - page `7` posted-sign / board text regression
+  - opener-to-page-1 same-child continuity anchoring
+- because page `1` was `fallback_completed`, keep special attention on whether fallback behavior is correlated with the continuity reset
+
+### 29.8 Exclusions
+
+- No image regeneration performed
+- No Admin regeneration performed
+- No Firestore write performed in this slice
+- No template sync performed in this slice
+- No smoke regeneration performed in this slice
+- No code changes performed
+- No runner changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
