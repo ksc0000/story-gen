@@ -10717,6 +10717,17 @@ Result: pass / proceed.
 - No service account JSON, secrets, URLs, or tokens recorded.
 - No T4 style validation execution.
 
+## T4 Closure Reference
+
+Date: 2026-05-17
+
+- T4 initial style validation track closed in `docs/STYLE_VARIANT_VALIDATION_PLAN.md` section `31. T4-20 Style Validation Closure And Candidate Ranking`
+- initial prompt-only matrix outcome:
+  - `Go`: sleepy-moon × crayon, sleepy-moon × anime_storybook, first-zoo × crayon
+  - `Conditional-Go`: sleepy-moon × soft_watercolor, first-zoo × soft_watercolor
+  - `Blocked / Deferred`: first-zoo × anime_storybook
+- detailed style ranking, product exposure guidance, and deferred roadmap live in the T4 plan doc rather than this T3 rollout log
+
 ## T3-8s fixed-sleepy-moon-adventure-8p rollout decision / variant closure
 
 Status: completed

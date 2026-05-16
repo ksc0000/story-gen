@@ -3924,3 +3924,180 @@ Deferred follow-up option after closure:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 31. T4-20 Style Validation Closure And Candidate Ranking
+
+Date: 2026-05-17
+
+Scope:
+
+- docs-only closure of the initial T4 style validation track
+- closes the first prompt-only mini-matrix validation cycle
+- consolidates ranking, exposure guidance, and deferred roadmap items
+
+### 31.1 Track Summary
+
+T4-1 through T4-19 established:
+
+- a style taxonomy and validation framework
+- a style-aware smoke runner path for prompt-only testing
+- a 6-run initial matrix across:
+  - `fixed-sleepy-moon-adventure-8p`
+  - `fixed-first-zoo-8p`
+  - `soft_watercolor`
+  - `crayon`
+  - `anime_storybook`
+- targeted remediation on the zoo template where needed
+- enough validated outcomes to rank candidates without further immediate generation work
+
+Overall closure statement:
+
+- the initial T4 prompt-only style validation track is complete
+- no further remediation is required to close the first-pass matrix
+- follow-up work should be treated as new stabilization tracks, not as blockers for T4 initial conclusions
+
+### 31.2 Final Mini-Matrix Result
+
+Final outcome table:
+
+| templateId | styleId | final decision | status summary |
+| --- | --- | --- | --- |
+| `fixed-sleepy-moon-adventure-8p` | `crayon` | `Go` | strong BF-4/BF-3 performance and strong style fit |
+| `fixed-sleepy-moon-adventure-8p` | `anime_storybook` | `Go` | expressive, stable, commercially strong |
+| `fixed-sleepy-moon-adventure-8p` | `soft_watercolor` | `Conditional-Go` | safe and usable with minor watchpoint |
+| `fixed-first-zoo-8p` | `crayon` | `Go` | converged after targeted signage hardening |
+| `fixed-first-zoo-8p` | `soft_watercolor` | `Conditional-Go` | gentle fit, light continuity watch |
+| `fixed-first-zoo-8p` | `anime_storybook` | `Blocked / Deferred` | repeated BF-4/BF-3 instability after multiple remediations |
+
+Matrix-level result:
+
+- initial T4 matrix verdict: `Pass with targeted exclusions`
+
+Meaning:
+
+- prompt-only style variation is validated as a viable product direction
+- success depends on style-template compatibility, not just style quality in isolation
+
+### 31.3 Final Ranking
+
+Final ranking tiers:
+
+| tier | combination | product interpretation |
+| --- | --- | --- |
+| A1 | `fixed-sleepy-moon-adventure-8p × crayon` | best current mix of safety, continuity, and distinctive style |
+| A1 | `fixed-sleepy-moon-adventure-8p × anime_storybook` | strongest expressive premium candidate with stable execution |
+| A2 | `fixed-first-zoo-8p × crayon` | successful remediation case and robust family-friendly zoo option |
+| B1 | `fixed-sleepy-moon-adventure-8p × soft_watercolor` | dependable soft-default candidate with minor visual watch |
+| B1 | `fixed-first-zoo-8p × soft_watercolor` | dependable default zoo candidate with modest continuity watch |
+| D | `fixed-first-zoo-8p × anime_storybook` | deferred until dedicated stabilization work is justified |
+
+Ranking interpretation:
+
+- `crayon` is the most portable style in the current validated set
+- `anime_storybook` can outperform other styles when it fits the template well
+- `soft_watercolor` is the safest baseline but not the strongest differentiator
+
+### 31.4 Product Exposure Guidance
+
+Promote / expose confidently:
+
+- `fixed-sleepy-moon-adventure-8p × crayon`
+- `fixed-sleepy-moon-adventure-8p × anime_storybook`
+- `fixed-first-zoo-8p × crayon`
+
+Expose cautiously / behind limited rollout or internal curation:
+
+- `fixed-sleepy-moon-adventure-8p × soft_watercolor`
+- `fixed-first-zoo-8p × soft_watercolor`
+
+Do not expose in the current product pass:
+
+- `fixed-first-zoo-8p × anime_storybook`
+
+Operational guidance:
+
+- if a single style must be favored first across multiple templates, prefer `crayon`
+- if a premium expressive showcase is needed, prefer `anime_storybook` on sleepy-moon only
+- if a safest broad default is needed, prefer `soft_watercolor` with template-specific QA watchlists preserved
+
+### 31.5 Key Learnings From T4
+
+Style validation learnings:
+
+- style adherence alone is not enough; BF-4 and BF-3 stability remain the gating criteria
+- template-scene semantics strongly affect style success
+- zoo scenes are especially vulnerable to:
+  - signage
+  - boards
+  - printed surfaces
+  - wayfinding-like props
+- anime-style rendering is more likely to:
+  - enrich visible surfaces with decorative detail
+  - destabilize identity continuity when the scene framing changes sharply
+- crayon style is unusually robust under prompt-only no-reference constraints
+- soft-watercolor is conservative and dependable but less visually differentiated
+
+Program learning:
+
+- narrow prompt hardening can successfully rescue some pairings
+- however, when the issue surface keeps relocating across reruns, remediation efficiency drops sharply
+- the right unit of validation is the style-template pairing, not the style alone
+
+### 31.6 Why Anime-Zoo Moves To A Dedicated Deferred Track
+
+Deferred rationale for `fixed-first-zoo-8p × anime_storybook`:
+
+- repeated remediation improved the last observed blocker but did not stabilize the pairing
+- blockers shifted across:
+  - gate signage
+  - clothing text
+  - watermark-like text
+  - end-scene signage
+  - opener-to-main-sequence continuity reset
+- the latest rerun also involved page `1` fallback completion
+- this indicates lower convergence under the current prompt-only constraints
+
+Conclusion:
+
+- anime-zoo should not block T4 closure
+- it should be reopened only as a dedicated stabilization track with its own success criteria and budget
+
+### 31.7 Next Roadmap Candidates
+
+Recommended next steps after T4 closure:
+
+1. T4-21 optional follow-up planning for deferred style-template stabilization tracks.
+2. Extend matrix coverage to additional canonical styles only after the current ranked candidates are socialized.
+3. Consider exposure sequencing guidance for product / design / growth teams based on the ranked winners.
+4. Preserve all current watch items so future reruns can compare against a stable baseline.
+
+Immediate next step:
+
+- treat T4 initial validation as closed
+- if more T4 work continues, start a new subtrack rather than extending the initial matrix closure slice
+
+### 31.8 Closure Decision
+
+T4 initial style validation track decision:
+
+- `Closed`
+
+Closure quality:
+
+- enough evidence collected
+- enough candidates validated for product guidance
+- deferred items clearly separated from approved candidates
+
+### 31.9 Exclusions
+
+- No code or prompt changes performed
+- No Firestore sync performed
+- No smoke generation performed
+- No image generation performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No runner changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
