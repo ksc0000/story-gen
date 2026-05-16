@@ -1234,3 +1234,187 @@ T4-4 decision:
 - `crayon` is the first BF-4 stress style
 - `anime_storybook` is the first BF-3 stress style
 - this is small enough for careful QA and broad enough to test the first meaningful style tradeoffs
+
+---
+
+## 16. T4-5 Style Mini-Matrix Smoke Runner Support Check / Dry-Run
+
+Status: completed
+
+Date: 2026-05-16
+
+### 16.1 Purpose
+
+Check whether the current smoke runner can support the T4 style mini-matrix execution model, confirm whether a style-aware argument path already exists, and run safe dry-runs only. This slice does not perform write generation.
+
+### 16.2 Scope Executed
+
+- checked git worktree status
+- ran `npm run guard:hygiene`
+- reviewed `scripts/create-template-smoke-books.js`
+- reviewed current style-related runner references
+- ran representative dry-runs for:
+  - `fixed-sleepy-moon-adventure-8p`
+  - `fixed-first-zoo-8p`
+- ran one dry-run with an unsupported-looking `--style-id=crayon` argument to test runner behavior
+
+### 16.3 Runner Capability Findings
+
+Current smoke runner reviewed:
+
+- `scripts/create-template-smoke-books.js`
+
+Confirmed supported arguments:
+
+- `--dry-run`
+- `--write`
+- `--template-id=<id>`
+- `--page-count=<4|8|12>`
+- `--age-band=<ageBand>`
+- `--with-reference`
+- `--reference-image-url=<url>`
+- `--list-templates`
+
+Not found:
+
+- `--style-id`
+- `--style`
+- `--selected-style-id`
+- any equivalent documented style-selection argument
+
+Assessment:
+
+- the current runner is template-aware and age-band-aware
+- the current runner is not style-aware
+
+### 16.4 Payload Path Findings
+
+Inside `buildBookPayload(...)` in `scripts/create-template-smoke-books.js`:
+
+- payload currently hardcodes:
+  - `style: "soft_watercolor"`
+- payload does not set:
+  - `selectedStyleId`
+  - `selectedStyleName`
+  - `styleBible`
+  - `stylePreviewImageUrl`
+  - `stylePreviewUsedAsReference`
+
+Implication:
+
+- even if a caller passes `--style-id=crayon`, the current payload creation path does not consume it
+- all smoke books created by the current runner would still be tagged as `soft_watercolor`
+- current runner output is therefore unsuitable for canonical T4 style comparison
+
+### 16.5 Dry-Run Results
+
+Executed dry-runs:
+
+```powershell
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=crayon
+```
+
+Observed behavior:
+
+- dry-run itself works correctly for template / pageCount / ageBand preview
+- `fixed-sleepy-moon-adventure-8p` resolves to `childAge=4`, `pageCount=8`
+- `fixed-first-zoo-8p` resolves to `childAge=4`, `pageCount=8`, and includes `place` / `familyMembers`
+- adding `--style-id=crayon` does not error
+- adding `--style-id=crayon` does not change the dry-run output
+
+Conclusion:
+
+- unknown style args are currently ignored rather than validated or applied
+- style-aware dry-run is not supported yet
+
+### 16.6 Matrix Dry-Run Feasibility
+
+T4-4 target matrix:
+
+- 2 templates × 3 styles = 6 runs
+
+Current feasibility verdict:
+
+- template-axis dry-run: feasible
+- ageBand / childAge dry-run: feasible
+- style-axis dry-run: not feasible
+- full prompt-only mini-matrix dry-run: not feasible with the current runner
+
+Reason:
+
+- the current runner cannot vary style payload fields per run
+- therefore the 6-run matrix would collapse into repeated `soft_watercolor` payloads
+
+### 16.7 Support Gap Summary
+
+Gap severity:
+
+- medium for planning
+- blocking for T4-6 style-aware smoke execution
+
+Specific gaps:
+
+1. no parsed `--style-id` argument
+2. no canonical style-id validation in runner
+3. no style-aware payload mutation
+4. no persistence of style metadata fields used by create flow
+5. no explicit run labeling for `prompt_only` vs `preview_reference_assisted`
+6. no guardrail to reject unknown style-related CLI args
+
+### 16.8 Proposed Implementation Direction For T4-6+
+
+Before T4 style smoke execution, the runner should eventually support:
+
+1. `--style-id=<canonicalStyleId>`
+2. canonical style-id validation against approved T4 canonical ids
+3. payload fields:
+   - `style`
+   - `selectedStyleId`
+   - `selectedStyleName`
+   - `styleBible`
+   - `stylePreviewImageUrl`
+   - `stylePreviewUsedAsReference`
+4. explicit validation mode labeling:
+   - `prompt_only`
+   - `preview_reference_assisted`
+5. explicit failure on unsupported or malformed style args
+
+Preferred behavior:
+
+- dry-run should print effective style payload fields
+- write mode should persist the same style metadata the create flow uses
+- preview-reference experiments should be opt-in and clearly separated
+
+### 16.9 Decision
+
+T4-5 decision:
+
+- Do not proceed to style mini-matrix write generation yet.
+- Current runner support is insufficient for canonical style-aware smoke execution.
+- T4 should switch next to a runner support design / implementation slice before any T4 style write smoke is attempted.
+
+### 16.10 Recommended Next Step
+
+Recommended next slice:
+
+- T4-6: style-aware smoke runner support design / implementation planning or execution
+
+That slice should define or implement:
+
+- style-aware CLI argument support
+- canonical style validation
+- style metadata payload persistence
+- prompt-only vs preview-reference run labeling
+
+### 16.11 Exclusions
+
+- No write generation performed
+- No image generation performed
+- No Firestore writes performed
+- No code changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
