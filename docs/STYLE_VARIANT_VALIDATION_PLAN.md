@@ -3736,3 +3736,191 @@ Recommended follow-up:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 30. T4-19 Anime-Zoo Remediation Continuation Decision And Style Matrix Ranking Update
+
+Date: 2026-05-17
+
+Scope:
+
+- docs-only decision slice
+- target case under review: `fixed-first-zoo-8p × anime_storybook`
+- objective:
+  - decide whether to continue remediation immediately
+  - or block / defer this candidate and move T4 toward matrix closure and candidate ranking
+
+### 30.1 Anime-Zoo Remediation History
+
+Relevant history:
+
+- T4-10:
+  - initial matrix QA found `fixed-first-zoo-8p × anime_storybook` on `Hold`
+  - blockers:
+    - page `1` readable Japanese gate signage
+    - page `7` readable background sign
+- T4-11:
+  - created zoo-style BF-4 remediation plan
+- T4-12:
+  - implemented zoo-template-local signage / printed-surface hardening
+- T4-13:
+  - ran targeted sync + style re-smoke
+- T4-14:
+  - signage improved
+  - new blocker appeared:
+    - page `1` child clothing readable alphanumeric text
+- T4-15:
+  - created clothing-text remediation plan
+- T4-16:
+  - implemented zoo page `1` clothing/apparel no-text hardening
+- T4-17:
+  - ran targeted anime-only sync + re-smoke
+  - page `1` generation finished as `fallback_completed` after `3` attempts
+- T4-18:
+  - page `1` clothing-text issue improved / resolved
+  - but new or reintroduced blockers remained:
+    - page `0` watermark-like text `© SmokeKid1`
+    - page `7` readable Japanese sign / board text
+    - BF-3 continuity reset between page `0` and page `1`
+
+### 30.2 What Improved vs What Remains Blocked
+
+Improved through remediation:
+
+- page `1` gate signage was successfully suppressed
+- page `1` clothing text was successfully suppressed
+- page `7` sign issue was improved in an earlier rerun, though not stably eliminated
+- style adherence remained consistently strong
+- emotional fit remained passable throughout
+
+Remaining / reintroduced blockers:
+
+- BF-4 remains unstable
+  - surface moved from gate signage to clothing text
+  - then moved again to watermark-like text and end-scene signage
+- BF-3 regressed in the latest rerun
+  - opener child no longer matches the child from page `1` onward
+- page `1` required fallback completion
+  - this raises concern that the model path is not converging cleanly under current constraints
+
+Interpretation:
+
+- narrow fixes are improving the last observed issue
+- but the failure surface keeps relocating instead of converging toward release-ready stability
+
+### 30.3 Cost / Risk Evaluation For Further Remediation
+
+Potential benefit of continuing immediately:
+
+- anime-storybook is visually attractive
+- style adherence is one of the strongest in the matrix
+- if stabilized, it could become a premium-looking exposure candidate
+
+Current cost / risk:
+
+- remediation is no longer isolated to a single page or single BF-4 surface
+- the latest rerun introduced cross-page BF-3 instability, which is more expensive to fix safely than a narrow no-text clause
+- additional hardening may start overconstraining the zoo baseline or harming already-approved crayon / soft-watercolor paths if not kept extremely narrow
+- repeated targeted reruns consume time while other T4 closure work is already sufficiently informed by existing Go / Conditional-Go candidates
+
+Assessment:
+
+- immediate continuation has diminishing returns for the current T4 phase
+- the next likely remediation would be multi-surface:
+  - page `0` watermark-like text
+  - page `7` signage
+  - opener-to-page-1 continuity anchor
+- that scope is materially larger than the prior narrow fixes
+
+### 30.4 Blocked / Deferred Decision
+
+Decision:
+
+- mark `fixed-first-zoo-8p × anime_storybook` as `Blocked / Deferred`
+
+Why this is justified:
+
+- the issue surface has shifted across three remediation rounds:
+  - signage
+  - clothing text
+  - watermark / signage / continuity reset
+- convergence is currently low
+- commercial suitability is still not close enough to `Conditional-Go`
+- T4 already has enough strong candidates to support matrix learning and ranking without forcing this case to closure now
+
+Severity:
+
+- medium-high for this candidate
+- low for the T4 program overall, because the matrix is not blocked on this one pairing
+
+### 30.5 Updated Matrix Ranking
+
+Updated candidate ranking after T4-18:
+
+| rank tier | templateId | styleId | current decision | notes |
+| --- | --- | --- | --- | --- |
+| A | `fixed-sleepy-moon-adventure-8p` | `crayon` | `Go` | strongest clean style/template fit in current matrix |
+| A | `fixed-sleepy-moon-adventure-8p` | `anime_storybook` | `Go` | strong expressive fit with acceptable safety and continuity |
+| A | `fixed-first-zoo-8p` | `crayon` | `Go` | remediation converged successfully |
+| B | `fixed-sleepy-moon-adventure-8p` | `soft_watercolor` | `Conditional-Go` | minor watchpoint only |
+| B | `fixed-first-zoo-8p` | `soft_watercolor` | `Conditional-Go` | commercially viable with light continuity watch |
+| D | `fixed-first-zoo-8p` | `anime_storybook` | `Blocked / Deferred` | strong style fit but poor convergence under prompt-only safety constraints |
+
+Interpretation:
+
+- `crayon` is currently the most robust style across both baseline templates
+- `anime_storybook` is template-sensitive
+  - excellent on sleepy-moon
+  - unstable on zoo
+- `soft_watercolor` remains the safest broad default but not the most distinctive visual differentiator
+
+### 30.6 Product Exposure Candidates
+
+Current product exposure candidates:
+
+- `fixed-sleepy-moon-adventure-8p × crayon`
+- `fixed-sleepy-moon-adventure-8p × anime_storybook`
+- `fixed-first-zoo-8p × crayon`
+
+Secondary / cautious exposure candidates:
+
+- `fixed-sleepy-moon-adventure-8p × soft_watercolor`
+- `fixed-first-zoo-8p × soft_watercolor`
+
+Blocked / deferred candidate:
+
+- `fixed-first-zoo-8p × anime_storybook`
+
+### 30.7 Program Decision
+
+Decision for next step:
+
+- do **not** continue immediate remediation as T4-20
+- proceed with `T4-20 style validation closure / candidate ranking`
+
+Reasoning:
+
+- the matrix already has enough high-signal outcomes to close the first validation pass
+- additional work on anime-zoo is better treated as a deferred follow-up track after closure
+- closure now will preserve the learning:
+  - style-template compatibility is real
+  - crayon is robust
+  - anime-storybook needs template-specific caution
+
+Deferred follow-up option after closure:
+
+- open a later subtrack specifically for `anime_storybook × zoo`
+- treat it as an exploratory stabilization effort, not as a blocker for T4 initial conclusions
+
+### 30.8 Exclusions
+
+- No code or prompt changes performed
+- No Firestore sync performed
+- No smoke generation performed
+- No image generation performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No runner changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
