@@ -1889,3 +1889,111 @@ T4-7 decision:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+---
+
+## 19. T4-8 Full 6-Run Mini-Matrix Dry-Run
+
+Status: completed
+
+Date: 2026-05-16
+
+### 19.1 Purpose
+
+Run the full T4 initial mini-matrix in dry-run mode only and confirm that the style-aware runner can build the intended payload shape for every template/style combination before any write generation begins.
+
+### 19.2 Scope Executed
+
+- checked git worktree / branch sync state
+- ran `npm run guard:hygiene`
+- rechecked runner syntax and style-aware fields in `scripts/create-template-smoke-books.js`
+- executed the full 6-run prompt-only / no-reference dry-run matrix
+- recorded the effective style and input fields per run
+
+No `--write` execution was performed.
+
+### 19.3 Matrix Executed
+
+Templates:
+
+- `fixed-sleepy-moon-adventure-8p`
+- `fixed-first-zoo-8p`
+
+Styles:
+
+- `soft_watercolor`
+- `crayon`
+- `anime_storybook`
+
+Fixed run parameters:
+
+- `pageCount=8`
+- `ageBand=preschool_3_4`
+- `childAge=4`
+- `validationMode=prompt_only`
+- `stylePreviewUsedAsReference=false`
+- `withReference=false`
+
+### 19.4 Commands Run
+
+```powershell
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=soft_watercolor
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=crayon
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=anime_storybook
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=soft_watercolor
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=crayon
+node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=anime_storybook
+```
+
+### 19.5 Dry-Run Result Table
+
+| templateId | styleId | selectedStyleName | validationMode | stylePreviewUsedAsReference | pageCount | ageBand | childAge | withReference | result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-sleepy-moon-adventure-8p` | `soft_watercolor` | `やさしい水彩` | `prompt_only` | `false` | `8` | `preschool_3_4` | `4` | `false` | pass |
+| `fixed-sleepy-moon-adventure-8p` | `crayon` | `クレヨンで描いた絵本` | `prompt_only` | `false` | `8` | `preschool_3_4` | `4` | `false` | pass |
+| `fixed-sleepy-moon-adventure-8p` | `anime_storybook` | `わくわくアニメ風` | `prompt_only` | `false` | `8` | `preschool_3_4` | `4` | `false` | pass |
+| `fixed-first-zoo-8p` | `soft_watercolor` | `やさしい水彩` | `prompt_only` | `false` | `8` | `preschool_3_4` | `4` | `false` | pass |
+| `fixed-first-zoo-8p` | `crayon` | `クレヨンで描いた絵本` | `prompt_only` | `false` | `8` | `preschool_3_4` | `4` | `false` | pass |
+| `fixed-first-zoo-8p` | `anime_storybook` | `わくわくアニメ風` | `prompt_only` | `false` | `8` | `preschool_3_4` | `4` | `false` | pass |
+
+### 19.6 Input And Reference Checks
+
+Confirmed across all 6 runs:
+
+- `validationMode` remained `prompt_only`
+- `stylePreviewUsedAsReference` remained `false`
+- `withReference` remained `false`
+- no reference image URL was supplied
+- no character-reference path was activated
+- age band resolved consistently to `childAge=4`
+
+Template-specific input confirmation:
+
+- `fixed-sleepy-moon-adventure-8p`
+  - input contained `childName`, `parentMessage`, `childAge`
+- `fixed-first-zoo-8p`
+  - input contained `childName`, `parentMessage`, `place`, `familyMembers`, `childAge`
+
+Assessment:
+
+- the runner is now correctly style-aware without leaking into reference-assisted behavior
+- the T4 mini-matrix can proceed to a write slice without redefining payload shape
+
+### 19.7 Decision
+
+T4-8 decision:
+
+- full 6-run mini-matrix dry-run is successful
+- style-aware payload assembly is stable across both baseline templates and all 3 initial styles
+- T4-9 can proceed to staged write generation for the same 6-run matrix if desired
+
+### 19.8 Exclusions
+
+- No write generation performed
+- No image generation performed
+- No Firestore writes performed
+- No code changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
