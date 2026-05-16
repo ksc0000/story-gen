@@ -11018,3 +11018,100 @@ Result: plan approved.
 - No Firebase Auth changes, Storage token rotation/revocation.
 - No service account JSON, secrets, URLs, or tokens recorded.
 - No T4 style validation execution.
+
+## T3-8p fixed-sleepy-moon-adventure-8p page-2 bookshelf / printed-book BF-4 cleanup implementation
+
+Status: completed
+
+Owner: Codex
+
+Date: 2026-05-16
+
+Related commits:
+
+- `aad8d49` docs: add T3-8o sleepy moon 8p BF4 cleanup plan
+
+Target:
+
+- templateId: `fixed-sleepy-moon-adventure-8p`
+- scope: page `2` only
+
+### Purpose
+
+Implement the narrow sleepy-moon-8p-only BF-4 cleanup planned in T3-8o by extending the room-prop no-print guard to page 2 and slightly hardening the page 2 prompt body against bookshelf / printed-book background artifacts, without touching page 3, page 6, page 7, shared helpers, or text layers.
+
+### Source changes
+
+Files changed:
+
+- `functions/src/seed-templates.ts`
+- `functions/test/seed-templates.test.ts`
+
+Implemented prompt changes:
+
+- page 2 `imagePromptTemplate` now passes through `withSleepyMoon8pRoomPropGuardrail(...)`
+- page 2 prompt body now explicitly adds:
+  - `simple and uncluttered` background direction
+  - `no visible bookshelf`
+  - `no readable book covers`
+  - `no spine writing`
+  - `no paper items with visible writing`
+  - `no printed room surfaces`
+  - `room props, if shown at all, are soft blurred unmarked shapes only`
+
+Preserved intentionally:
+
+- page 3 prompt body unchanged
+- page 6 prompt body unchanged
+- page 7 prompt body unchanged
+- `SLEEPY_MOON_8P_CHARACTER_ANCHOR_CLAUSE` unchanged
+- `SLEEPY_MOON_8P_DREAM_NO_TEXT_CLAUSE` unchanged
+- `textTemplate` unchanged
+- `textTemplatesByAge` unchanged
+- shared `withFixedImagePromptSafety(...)` unchanged
+- global suffix behavior unchanged
+
+### Test updates
+
+Prompt hardening test changes:
+
+- expanded the guarded sleepy-moon room-prop test coverage to include page `2`
+- added a page-2-specific assertion for:
+  - `background stays simple and uncluttered`
+  - `no visible bookshelf`
+  - `no printed room surfaces`
+  - `soft blurred unmarked shapes only`
+
+### Validation
+
+| command | result | notes |
+| --- | --- | --- |
+| `npm run guard:hygiene` | pass | no hygiene regressions |
+| `npm --prefix functions run build` | pass | TypeScript build succeeded |
+| `npm --prefix functions test -- test/seed-templates.test.ts` | pass | `380` tests passed |
+
+### Judgment
+
+Result: pass.
+
+- The page-2 cleanup was implemented in the intended narrow scope.
+- The existing successful page 3 / page 6 / page 7 paths were left untouched.
+- Validation passed cleanly, so the slice is ready for targeted Firestore sync and another no-reference re-smoke.
+
+### Deferred follow-up
+
+- targeted Firestore sync for `fixed-sleepy-moon-adventure-8p`
+- one more no-reference re-smoke
+- manual visual QA with page 2 as the first BF-4 checkpoint
+
+### Exclusions (this slice)
+
+- No Firestore sync
+- No smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No T4 style validation execution

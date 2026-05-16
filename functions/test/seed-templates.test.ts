@@ -466,15 +466,23 @@ describe("fixed-sleepy-moon-adventure-8p — prompt hardening", () => {
     expect(prompt).toContain("no invented writing surface");
   });
 
-  it("quiet-bedroom pages suppress readable room props and book-cover surfaces", () => {
-    const quietBedroomPageIndexes = [0, 1, 5, 6, 7];
-    for (const index of quietBedroomPageIndexes) {
+  it("guarded sleepy-moon pages suppress readable room props and book-cover surfaces", () => {
+    const guardedPageIndexes = [0, 1, 2, 5, 6, 7];
+    for (const index of guardedPageIndexes) {
       const prompt = pages[index]?.imagePromptTemplate.toLowerCase() ?? "";
       expect(prompt).toContain("no readable book covers");
       expect(prompt).toContain("no spine writing");
       expect(prompt).toContain("no paper items with visible writing");
       expect(prompt).toContain("shelf objects stay plain and non-readable");
     }
+  });
+
+  it("page 2 explicitly suppresses bookshelf-like printed background detail", () => {
+    const prompt = pages[2]?.imagePromptTemplate.toLowerCase() ?? "";
+    expect(prompt).toContain("background stays simple and uncluttered");
+    expect(prompt).toContain("no visible bookshelf");
+    expect(prompt).toContain("no printed room surfaces");
+    expect(prompt).toContain("soft blurred unmarked shapes only");
   });
 
   it("page 6 explicitly simplifies shelf and bedside background props", () => {
