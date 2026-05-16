@@ -10851,3 +10851,170 @@ Result: partial improvement, but not yet approvable.
 - No Firebase Auth changes, Storage token rotation/revocation.
 - No service account JSON, secrets, URLs, or tokens recorded.
 - No T4 style validation execution.
+
+## T3-8o fixed-sleepy-moon-adventure-8p page-2 bookshelf / printed-book BF-4 cleanup plan
+
+Status: completed
+
+Owner: Codex
+
+Date: 2026-05-16
+
+Related commits:
+
+- `70db042` feat: tighten sleepy moon 8p room props
+- `f698a0b` docs: add T3-8n sleepy moon 8p rerun QA
+
+Target:
+
+- templateId: `fixed-sleepy-moon-adventure-8p`
+- focus page: `2`
+- current re-smoke bookId: `yRRoIxfbF0pDmTICPfMc`
+- issue class: BF-4 readable background text
+
+### Purpose
+
+Define a docs-only narrow remediation plan for the remaining BF-4 blocker after T3-8n. The goal is to suppress the page 2 bookshelf / printed-book text behavior without reopening the already-stable page 3 continuity path, page 6 room-prop cleanup success, or page 7 visual-only ending success.
+
+### Residual issue from T3-8n
+
+Current state:
+
+- BF-4 remains `fail`
+- BF-3 remains `pass`
+- page 6 cleanup worked
+- page 7 no-message path held
+- page 2 still shows readable Japanese text on left-side bookshelf book covers
+
+Residual blocker statement:
+
+- The remaining blocker is no longer sequence-wide room clutter in general.
+- It is now a narrower page-2-specific printed-book / bookshelf surface problem.
+- Because the visible text is readable, it still blocks release even though the child focal area and sequence continuity are otherwise acceptable.
+
+### Cause hypothesis
+
+Primary hypothesis:
+
+- The T3-8l room-prop no-print guard did not apply to page 2, because its rollout was intentionally limited to pages `0 / 1 / 5 / 6 / 7`.
+
+Secondary hypothesis:
+
+- Page 2 prompt wording likely still leaves enough bedroom realism latitude for the image model to invent a side bookshelf with visible book covers.
+- Once a bookshelf appears, the model has a known tendency to decorate covers with pseudo-real or readable text unless the prompt explicitly suppresses printed matter.
+
+Supporting observation:
+
+- The failure is localized to a secondary background region rather than the main child / teddy / moon composition.
+- That pattern suggests the existing child-anchor and dream-no-text hardening are not the problem; the missing control is specifically prop-surface suppression on page 2.
+
+### Cleanup strategy
+
+Planned direction:
+
+- Extend the sleepy-moon-8p room-prop no-print guard to page 2.
+- Keep the change sleepy-moon-8p-only.
+- Avoid touching shared helpers, global suffixes, or text templates.
+
+Guardrail intent for page 2:
+
+- No readable book covers
+- No spine writing
+- No printed titles
+- No bookshelf items with visible letters, kana, kanji, or numbers
+- If books appear at all, they should read as plain closed shapes with non-readable surfaces
+
+Preferred visual simplification:
+
+- Bias page 2 toward plain bedroom props, soft bedding, window light, stars, clouds, or simple toys
+- Reduce the likelihood of a distinct background bookshelf cluster
+- Preserve the dreamy transition mood without introducing printed decorative clutter
+
+### Prompt-body adjustment plan
+
+If the current page 2 body mentions or loosely implies a full bedroom background, T3-8p should narrow that phrasing so the model has less freedom to invent a detailed bookshelf vignette.
+
+Planned page-2 body treatment:
+
+- Keep the child, pajamas, teddy, moonlight, and early-dream transition as the primary composition
+- De-emphasize busy wall storage or reading-corner props
+- Prefer plain background toys or soft shapes over bookshelves and book-cover-facing furniture
+- Add a brief explicit statement that any background shelf items stay plain and non-readable
+
+Important constraint:
+
+- Do not redesign page 2 into a materially different scene
+- Do not weaken the dream-transition energy that already works compositionally
+- Do not introduce stronger symbol arcs or text-like swirls while suppressing books
+
+### Scope boundary
+
+In scope for T3-8p:
+
+- `functions/src/seed-templates.ts`
+- sleepy-moon-8p-only prompt hardening
+- page 2 room-prop / bookshelf / printed-book suppression
+- minimal related test updates for sleepy-moon 8p prompt expectations
+
+Out of scope for T3-8p:
+
+- shared `withFixedImagePromptSafety(...)`
+- global suffix changes
+- textTemplate or `textTemplatesByAge`
+- Firestore sync in the same slice
+- smoke generation in the same slice
+- broad redesign of page 3 or page 7
+
+### T3-8p implementation plan
+
+Implementation shape:
+
+- Reuse the existing room-prop no-print clause rather than creating a second parallel suppression system unless page 2 needs one tiny additive phrase
+- Apply the room-prop guard to page 2
+- Add one page-2-specific line that discourages bookshelf / printed-book background details if needed
+- Preserve the successful page 3 grounding wording and the page 7 ending wording untouched
+
+Validation plan for T3-8p:
+
+- `npm run guard:hygiene`
+- `npm --prefix functions run build`
+- `npm --prefix functions test -- test/seed-templates.test.ts`
+
+Success criteria for moving beyond T3-8p:
+
+- Prompt diff remains narrow and sleepy-moon-8p-scoped
+- Existing prompt hardening tests continue to pass
+- No unintended edits to shared prompt safety layers
+
+### Post-T3-8p follow-up
+
+Next expected slice after implementation:
+
+- targeted Firestore sync for `fixed-sleepy-moon-adventure-8p`
+- one more no-reference re-smoke
+- manual visual QA with page 2 as the first BF-4 checkpoint
+
+Approval target:
+
+- page 2 no longer shows readable book-cover or bookshelf text
+- page 6 stays clean
+- page 7 stays visual-only
+- BF-3 continuity remains pass
+
+### Judgment
+
+Result: plan approved.
+
+- The remaining issue is narrow enough to justify one more focused sleepy-moon-8p-only cleanup.
+- The highest-probability fix is to extend room-prop no-print suppression to page 2 and slightly reduce bookshelf-inducing prompt latitude there.
+- This approach keeps code changes minimal while protecting the successful gains from T3-8h through T3-8n.
+
+### Exclusions (this slice)
+
+- No code / seed / prompt changes.
+- No Firestore sync or smoke generation.
+- No image generation or Admin regeneration.
+- No reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No service account JSON, secrets, URLs, or tokens recorded.
+- No T4 style validation execution.
