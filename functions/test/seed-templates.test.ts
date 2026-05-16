@@ -427,6 +427,52 @@ describe("fixed-first-zoo — IMG-002 scene lock (sandbox bleed prevention)", ()
   });
 });
 
+describe("fixed-first-zoo-8p — prompt hardening", () => {
+  const template = SEED_TEMPLATES["fixed-first-zoo-8p"];
+  const pages = template.fixedStory?.pages ?? [];
+
+  it("sign-guarded zoo pages suppress signs, boards, and printed facility surfaces", () => {
+    const guardedPageIndexes = [1, 2, 4, 6, 7];
+    for (const index of guardedPageIndexes) {
+      const prompt = pages[index]?.imagePromptTemplate.toLowerCase() ?? "";
+      expect(prompt).toContain("all background signs, boards, and notices are plain-colored shapes");
+      expect(prompt).toContain("no entrance signs");
+      expect(prompt).toContain("no zoo name boards");
+      expect(prompt).toContain("no map boards");
+      expect(prompt).toContain("no information panels");
+      expect(prompt).toContain("no printed gate or building surfaces");
+    }
+  });
+
+  it("page 1 explicitly removes gate-side boards and admission signage", () => {
+    const prompt = pages[1]?.imagePromptTemplate.toLowerCase() ?? "";
+    expect(prompt).toContain("welcoming leafy threshold");
+    expect(prompt).toContain("no side boards");
+    expect(prompt).toContain("no map panels");
+    expect(prompt).toContain("no admission notices");
+    expect(prompt).toContain("no posted signs");
+  });
+
+  it("page 7 explicitly keeps background zoo structures plain and unmarked", () => {
+    const prompt = pages[7]?.imagePromptTemplate.toLowerCase() ?? "";
+    expect(prompt).toContain("plain, distant, and unmarked");
+    expect(prompt).toContain("no signboards");
+    expect(prompt).toContain("no building labels");
+    expect(prompt).toContain("no printed surfaces anywhere in view");
+  });
+
+  it("pages 2, 4, and 6 lightly redirect panel-like zoo props into natural shapes", () => {
+    const page2 = pages[2]?.imagePromptTemplate.toLowerCase() ?? "";
+    const page4 = pages[4]?.imagePromptTemplate.toLowerCase() ?? "";
+    const page6 = pages[6]?.imagePromptTemplate.toLowerCase() ?? "";
+
+    expect(page2).toContain("no panel-like objects in view");
+    expect(page4).toContain("use body language and fence rhythm only to communicate caution or surprise");
+    expect(page6).toContain("simplify the exit scene to trees, path, sky glow, and family silhouette only");
+    expect(page6).toContain("plain, distant, and unmarked");
+  });
+});
+
 describe("fixed-sleepy-moon-adventure-8p — prompt hardening", () => {
   const template = SEED_TEMPLATES["fixed-sleepy-moon-adventure-8p"];
   const pages = template.fixedStory?.pages ?? [];

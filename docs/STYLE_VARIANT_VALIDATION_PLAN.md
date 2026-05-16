@@ -2637,3 +2637,189 @@ T4-11 decision:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+---
+
+## 23. T4-12 Zoo-Style BF-4 Prompt Hardening
+
+Status: completed
+
+Date: 2026-05-17
+
+### 23.1 Purpose
+
+Implement the narrow zoo-template-local BF-4 hardening planned in T4-11 for `fixed-first-zoo-8p`, without changing style profiles, runner behavior, or unrelated templates.
+
+### 23.2 Files Changed
+
+- `functions/src/seed-templates.ts`
+- `functions/test/seed-templates.test.ts`
+- `docs/STYLE_VARIANT_VALIDATION_PLAN.md`
+
+### 23.3 Implementation Summary
+
+Implemented a new zoo-8p-local printed-surface suppression layer and threaded it through the highest-risk `fixed-first-zoo-8p` pages.
+
+New prompt clause:
+
+- `ZOO_8P_NO_PRINTED_SURFACES_CLAUSE`
+
+Purpose of the new clause:
+
+- forbid entrance signs
+- forbid zoo name boards
+- forbid map boards
+- forbid ticket boards
+- forbid information panels
+- forbid directional markers
+- forbid exit markers
+- forbid facility placards
+- forbid enclosure labels
+- forbid warning notices
+- forbid posted notices
+- forbid hanging banners
+- forbid printed gate or building surfaces
+
+Guardrail integration:
+
+- `withZoo8pImagePromptGuardrail(...)` now appends the new printed-surface clause whenever `signText: true` is used
+
+### 23.4 Page-Level Hardening Applied
+
+#### Page 1
+
+Hardening added:
+
+- reframed the arrival scene as a welcoming leafy threshold
+- explicitly forbids:
+  - side boards
+  - map panels
+  - admission notices
+  - posted signs
+
+Goal:
+
+- keep the arrival beat while removing “official zoo gate signage” affordances
+
+#### Page 2
+
+Hardening added:
+
+- strengthens enclosure scene toward natural habitat framing
+- explicitly says:
+  - plain fence rhythm only
+  - no panel-like objects in view
+
+Goal:
+
+- reduce the chance of animal placards or board-like props appearing
+
+#### Page 4
+
+Hardening added:
+
+- explicitly says caution / surprise should be conveyed by body language and fence rhythm only
+
+Goal:
+
+- avoid warning boards, caution notices, and other signage-like surfaces in the larger-animal beat
+
+#### Page 6
+
+Hardening added:
+
+- simplifies the exit scene to:
+  - trees
+  - path
+  - sky glow
+  - family silhouette only
+- explicitly requires background structures to remain plain, distant, and unmarked
+
+Goal:
+
+- suppress wayfinding, exit labels, and facility markers in the golden-hour departure scene
+
+#### Page 7
+
+Hardening added:
+
+- explicitly requires background buildings, lamps, fences, and zoo structures to remain plain, distant, and unmarked
+- explicitly forbids:
+  - signboards
+  - building labels
+  - printed surfaces anywhere in view
+
+Goal:
+
+- directly target the T4-10 page `7` BF-4 blocker in `crayon` and `anime_storybook`
+
+### 23.5 Scope Guardrails Preserved
+
+Explicitly unchanged in T4-12:
+
+- style profiles
+- styleBible / negativeStyleRules
+- smoke runner
+- sleepy-moon prompts
+- `textTemplate`
+- `textTemplatesByAge`
+- shared `withFixedImagePromptSafety(...)`
+- unrelated templates
+
+### 23.6 Test Coverage Added
+
+Added / updated tests in `functions/test/seed-templates.test.ts` for:
+
+- sign-guarded zoo pages `1 / 2 / 4 / 6 / 7` inheriting the stronger printed-surface suppression
+- page `1` explicitly forbidding gate-side boards / map panels / admission notices / posted signs
+- page `7` explicitly forcing plain distant unmarked background zoo structures
+- page `2`, `4`, and `6` containing the intended light hardening language
+
+### 23.7 Validation Result
+
+Executed:
+
+```powershell
+npm run guard:hygiene
+npm --prefix functions run build
+npm --prefix functions test -- test/seed-templates.test.ts
+```
+
+Results:
+
+- `npm run guard:hygiene`: pass
+- `npm --prefix functions run build`: pass
+- `npm --prefix functions test -- test/seed-templates.test.ts`: pass
+- seed-template test count: `384 passed`
+
+### 23.8 Decision
+
+T4-12 decision:
+
+- zoo-style BF-4 hardening is now implemented as a narrow template-local change
+- page `1` and page `7` received the strongest targeted cleanup
+- page `2`, `4`, and `6` received preventive supporting hardening
+- the change is ready for the next re-smoke slice
+
+### 23.9 Recommended Next Step
+
+Recommended next slice:
+
+- T4-13: targeted re-smoke for
+  - `fixed-first-zoo-8p × crayon`
+  - `fixed-first-zoo-8p × anime_storybook`
+
+Then:
+
+- T4-14: manual visual QA rerun focused on page `1` and page `7`
+
+### 23.10 Exclusions
+
+- No Firestore sync performed
+- No smoke generation performed
+- No image generation performed
+- No runner changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
