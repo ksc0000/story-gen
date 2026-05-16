@@ -1997,3 +1997,149 @@ T4-8 decision:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+---
+
+## 20. T4-9 Controlled Write Generation For 6-Run Style Mini-Matrix
+
+Status: completed
+
+Date: 2026-05-16
+
+### 20.1 Purpose
+
+Execute the first T4 style mini-matrix as controlled prompt-only / no-reference write generation, record the 6 resulting `bookId`s, and confirm structural generation health before any manual visual QA.
+
+### 20.2 Preconditions Confirmed
+
+- git worktree was clean and synced with `origin/main`
+- `npm run guard:hygiene`: pass
+- `GOOGLE_APPLICATION_CREDENTIALS` was set
+- runner support from T4-7 was already in place
+- full 6-run dry-run from T4-8 had already passed
+
+No additional code changes were required for this slice.
+
+### 20.3 Matrix Executed
+
+Shared parameters:
+
+- `pageCount=8`
+- `ageBand=preschool_3_4`
+- `childAge=4`
+- `validationMode=prompt_only`
+- `withReference=false`
+- `stylePreviewUsedAsReference=false`
+- reference image: not used
+- style preview reference: not used
+
+Runs executed:
+
+| run | templateId | styleId |
+| --- | --- | --- |
+| 1 | `fixed-sleepy-moon-adventure-8p` | `soft_watercolor` |
+| 2 | `fixed-first-zoo-8p` | `soft_watercolor` |
+| 3 | `fixed-sleepy-moon-adventure-8p` | `crayon` |
+| 4 | `fixed-first-zoo-8p` | `crayon` |
+| 5 | `fixed-sleepy-moon-adventure-8p` | `anime_storybook` |
+| 6 | `fixed-first-zoo-8p` | `anime_storybook` |
+
+### 20.4 Write Commands
+
+Executed as six controlled single-book writes:
+
+```powershell
+node scripts/create-template-smoke-books.js --write --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=soft_watercolor
+node scripts/create-template-smoke-books.js --write --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=soft_watercolor
+node scripts/create-template-smoke-books.js --write --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=crayon
+node scripts/create-template-smoke-books.js --write --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=crayon
+node scripts/create-template-smoke-books.js --write --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4 --style-id=anime_storybook
+node scripts/create-template-smoke-books.js --write --template-id=fixed-first-zoo-8p --page-count=8 --age-band=preschool_3_4 --style-id=anime_storybook
+```
+
+### 20.5 Generated BookIds
+
+| run | templateId | styleId | bookId | smokeRunId |
+| --- | --- | --- | --- | --- |
+| 1 | `fixed-sleepy-moon-adventure-8p` | `soft_watercolor` | `h3QDTgIjGTwBOGYRkgzC` | `template-t2a-20260516083825` |
+| 2 | `fixed-first-zoo-8p` | `soft_watercolor` | `LBzamVYJs1CDv3dRwE9L` | `template-t2a-20260516083826` |
+| 3 | `fixed-sleepy-moon-adventure-8p` | `crayon` | `r5R8Q5nCTv2DB5pB8ahl` | `template-t2a-20260516083830` |
+| 4 | `fixed-first-zoo-8p` | `crayon` | `d6dzSFiudIAPKuMa5IN7` | `template-t2a-20260516083830` |
+| 5 | `fixed-sleepy-moon-adventure-8p` | `anime_storybook` | `8kT3VwB8pZSwrWWuLqwB` | `template-t2a-20260516083831` |
+| 6 | `fixed-first-zoo-8p` | `anime_storybook` | `T7LGTZZGfN0enFgLM6at` | `template-t2a-20260516083831` |
+
+### 20.6 Monitor Summary
+
+The 6 books were polled until all statuses left `generating`.
+
+Observed progress snapshots:
+
+- sleepy-moon `soft_watercolor`: `38 → 50 → 63 → 75 → 100 → completed`
+- first-zoo `soft_watercolor`: `25 → 50 → 50 → 75 → 100 → completed`
+- sleepy-moon `crayon`: `25 → 38 → 50 → 50 → 75 → 100 → completed`
+- first-zoo `crayon`: `25 → 38 → 50 → 50 → 75 → 100 → completed`
+- sleepy-moon `anime_storybook`: `25 → 38 → 50 → 50 → 75 → 100 → completed`
+- first-zoo `anime_storybook`: `25 → 25 → 50 → 50 → 75 → 100 → completed`
+
+No run became stuck, failed, or required regeneration during this slice.
+
+### 20.7 Structural Inspect Result
+
+| templateId | styleId | bookId | status | progress | pagesTotal | pagesCompleted | pagesFailed | fallbackCount | timedOutCount | inputReferenceCountTotal | usedCharacterReferenceAny | result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-sleepy-moon-adventure-8p` | `soft_watercolor` | `h3QDTgIjGTwBOGYRkgzC` | `completed` | `100` | `8` | `8` | `0` | `0` | `0` | `0` | `false` | pass |
+| `fixed-first-zoo-8p` | `soft_watercolor` | `LBzamVYJs1CDv3dRwE9L` | `completed` | `100` | `8` | `8` | `0` | `0` | `0` | `0` | `false` | pass |
+| `fixed-sleepy-moon-adventure-8p` | `crayon` | `r5R8Q5nCTv2DB5pB8ahl` | `completed` | `100` | `8` | `8` | `0` | `0` | `0` | `0` | `false` | pass |
+| `fixed-first-zoo-8p` | `crayon` | `d6dzSFiudIAPKuMa5IN7` | `completed` | `100` | `8` | `8` | `0` | `0` | `0` | `0` | `false` | pass |
+| `fixed-sleepy-moon-adventure-8p` | `anime_storybook` | `8kT3VwB8pZSwrWWuLqwB` | `completed` | `100` | `8` | `8` | `0` | `0` | `0` | `0` | `false` | pass |
+| `fixed-first-zoo-8p` | `anime_storybook` | `T7LGTZZGfN0enFgLM6at` | `completed` | `100` | `8` | `8` | `0` | `0` | `0` | `0` | `false` | pass |
+
+Confirmed across all 6 books:
+
+- `styleId` persisted as requested canonical id
+- `selectedStyleName` matched the requested style
+- `validationMode` remained `prompt_only`
+- `stylePreviewUsedAsReference` remained `false`
+- `withReference` remained `false`
+- `inputReferenceCount` stayed `0`
+- `usedCharacterReference` stayed `false`
+- no fallback pages detected
+- no timeout markers detected
+- no page-level failure provider was recorded
+
+### 20.8 Health Assessment
+
+T4-9 generation health verdict:
+
+- 6 / 6 books completed
+- 48 / 48 pages completed
+- 0 / 48 pages failed
+- no fallback usage observed
+- no timeout usage observed
+- no reference path usage observed
+- no structural blockers found
+
+Implication:
+
+- the first style mini-matrix is structurally healthy and ready for manual visual QA
+- T4-10 should focus on BF-4, BF-3, style adherence, and emotional fit, not on operational recovery
+
+### 20.9 Decision
+
+T4-9 decision:
+
+- controlled write generation for the 6-run style mini-matrix succeeded
+- all books are structurally healthy
+- proceed to T4-10 manual visual QA for the six generated books
+
+### 20.10 Exclusions
+
+- No manual visual QA performed
+- No image regeneration performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No code changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
