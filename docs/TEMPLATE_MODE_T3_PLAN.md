@@ -10717,6 +10717,181 @@ Result: pass / proceed.
 - No service account JSON, secrets, URLs, or tokens recorded.
 - No T4 style validation execution.
 
+## T3-8s fixed-sleepy-moon-adventure-8p rollout decision / variant closure
+
+Status: completed
+
+Owner: Codex
+
+Date: 2026-05-16
+
+Related commits:
+
+- `9c3ce8b` feat: add 8-page sleepy moon fixed template
+- `908ea0a` feat: harden sleepy moon 8p prompts
+- `70db042` feat: tighten sleepy moon 8p room props
+- `207ce9d` feat: harden sleepy moon 8p page 2 props
+- `b92d148` docs: add T3-8r sleepy moon 8p rerun QA
+
+Variant:
+
+- templateId: `fixed-sleepy-moon-adventure-8p`
+- approved smoke bookId: `o63Qj088Izc35dVVmkz8`
+- approval mode: no-reference smoke
+- approved ageBand: `preschool_3_4`
+- approved childAge: `4`
+- approved pageCount: `8`
+
+### Purpose
+
+Close the T3-8 variant track for `fixed-sleepy-moon-adventure-8p` by consolidating the implementation, audit, sync, smoke, remediation, and final visual QA evidence into one rollout decision record, and by naming the approved smoke run that should be used as the closure reference for this variant.
+
+### Evidence chain
+
+T3-8 execution trail:
+
+- T3-8: candidate selection
+- T3-8a: seed/source audit and 8-page expansion design
+- T3-8b: seed implementation
+- T3-8c: text / ageBand audit
+- T3-8d: prompt / BF-4 / BF-3 audit
+- T3-8e: initial Firestore sync + no-reference smoke
+- T3-8f: first manual visual QA fail
+- T3-8g: remediation design
+- T3-8h: prompt hardening implementation
+- T3-8i: re-smoke after prompt hardening
+- T3-8j: visual QA partial improvement, remaining page 6 BF-4 fail
+- T3-8k: room-prop BF-4 cleanup plan
+- T3-8l: room-prop cleanup implementation
+- T3-8m: re-smoke after room-prop cleanup
+- T3-8n: visual QA partial improvement, remaining page 2 BF-4 fail
+- T3-8o: page-2 cleanup plan
+- T3-8p: page-2 cleanup implementation
+- T3-8q: re-smoke after page-2 cleanup
+- T3-8r: manual visual QA pass / approve
+
+Closure reference:
+
+- Approved smoke bookId: `o63Qj088Izc35dVVmkz8`
+- This is the accepted no-reference QA reference for `fixed-sleepy-moon-adventure-8p` as of 2026-05-16.
+
+### Final state summary
+
+| area | final state | evidence |
+| --- | --- | --- |
+| seed implementation | pass | T3-8b implemented 8-page fixed template and tests |
+| text layer | pass | T3-8c |
+| ageBand coverage | pass | all 5 age bands confirmed in T3-8c |
+| page 7 `{parentMessage}` contract | pass | confirmed in T3-8c |
+| prompt audit gate | pass / proceed | T3-8d |
+| Firestore sync health | pass | T3-8e, T3-8i, T3-8m, T3-8q all targeted sync checks clean |
+| smoke structural health | pass | all smoke runs completed with expected `8/8` pages and `0/8` failed on final successful path |
+| BF-3 continuity | pass | final visual approval in T3-8r |
+| BF-4 artifact suppression | pass | final visual approval in T3-8r |
+| rollout decision | Go | approved smoke `o63Qj088Izc35dVVmkz8` |
+
+### Final smoke health snapshot
+
+Approved run details:
+
+- bookId: `o63Qj088Izc35dVVmkz8`
+- status: `completed`
+- progress: `100`
+- completed pages: `8/8`
+- failed pages: `0/8`
+- expected page count check: `PASS`
+- inputReferenceCount: `0/8`
+- usedCharacterReference: `false` on all pages
+- broken / black image reports: none
+
+Interpretation:
+
+- Structural generation health is acceptable for rollout.
+- No-reference behavior is functioning as intended for this variant.
+- The approved smoke reflects the latest prompt-remediated source state.
+
+### Final visual QA state
+
+Final T3-8r judgment:
+
+- BF-4: pass
+- BF-3: pass
+- story-image match: acceptable
+- page 2 previous blocker: resolved
+- page 6 regression: none
+- page 7 regression: none
+
+Approved visual notes:
+
+- Page 2 no longer shows readable bookshelf / printed-book text.
+- Page 6 keeps the clean non-readable room-prop state.
+- Page 7 keeps the visual-only ending behavior without message-cloud regressions.
+- Same child, same short dark-brown bob, same pale blue star pajamas, and same tan teddy bear remain readable across the sequence.
+
+### Remediation closure summary
+
+Resolved issues:
+
+- page 7 rendered-text / message-cloud BF-4 blocker from T3-8f
+- sequence-level BF-3 child / pajama / plush continuity drift from T3-8f
+- page 6 room-prop readable text blocker from T3-8j
+- page 2 bookshelf / printed-book readable text blocker from T3-8n
+
+Remediation pattern that worked:
+
+- sleepy-moon-8p-specific prompt hardening only
+- no changes to shared `withFixedImagePromptSafety(...)`
+- no changes to global suffix behavior
+- no changes to text templates or age-band text variants
+
+### Known limitations / watch items
+
+Current severity assessment:
+
+- Severity: low
+
+Watch items:
+
+- Approval evidence is based on a no-reference smoke path for `preschool_3_4` / `childAge=4`; other age bands and future model behavior should still be monitored through normal rollout QA sampling.
+- The variant required multiple rounds of BF-4 cleanup, so future regression checks should continue to glance at secondary room props, shelves, and printed surfaces when image-model behavior changes.
+
+No current blocker:
+
+- There is no open blocker within the T3-8 variant closure scope.
+- No additional sleepy-moon-8p-specific remediation is required before rollout on the basis of the approved smoke evidence now recorded.
+
+### Rollout decision
+
+Decision: Go.
+
+Reasoning:
+
+- Source implementation is complete.
+- Text / ageBand / prompt audit gates passed.
+- Firestore sync and smoke structural health are clean on the final source state.
+- Final manual visual QA passed both BF-4 and BF-3.
+- An approved closure-reference smoke has been identified and recorded.
+
+### Closure note
+
+Variant closure result:
+
+- `fixed-sleepy-moon-adventure-8p` is closed as an approved T3-8 rollout candidate.
+- Use `o63Qj088Izc35dVVmkz8` as the closure-reference smoke when discussing the final approved no-reference state of this template.
+
+### Exclusions (this slice)
+
+- No code / seed / prompt changes
+- No Firestore sync
+- No smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No T4 style validation execution
+
 ## T3-8r fixed-sleepy-moon-adventure-8p post-page-2-cleanup manual BF-4 / BF-3 visual QA rerun
 
 Status: completed
