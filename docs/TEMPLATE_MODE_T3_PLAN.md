@@ -11115,3 +11115,162 @@ Result: pass.
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No T4 style validation execution
+
+## T3-8q fixed-sleepy-moon-adventure-8p Firestore sync + no-reference re-smoke
+
+Status: completed
+
+Owner: Codex
+
+Date: 2026-05-16
+
+Related commits:
+
+- `207ce9d` feat: harden sleepy moon 8p page 2 props
+
+Target:
+
+- templateId: `fixed-sleepy-moon-adventure-8p`
+- mode: no-reference
+- ageBand: `preschool_3_4`
+- childAge: `4`
+- pageCount: `8`
+- previous re-smoke bookId: `yRRoIxfbF0pDmTICPfMc`
+- current re-smoke bookId: `o63Qj088Izc35dVVmkz8`
+
+### Purpose
+
+Sync the page-2 BF-4 cleanup from T3-8p into Firestore, generate one more no-reference re-smoke under the same `preschool_3_4` / `childAge=4` conditions, monitor it to completion, inspect structural generation health, and record the run. Manual visual QA is intentionally deferred to T3-8r.
+
+### Scope executed
+
+- `npm run guard:hygiene`
+- `npm --prefix functions run build`
+- `node scripts/sync-fixed-template-seeds.js --template-id=fixed-sleepy-moon-adventure-8p`
+- `node scripts/sync-fixed-template-seeds.js --write --template-id=fixed-sleepy-moon-adventure-8p`
+- post-write sync re-check for `fixed-sleepy-moon-adventure-8p`
+- `node scripts/create-template-smoke-books.js --dry-run --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4`
+- `node scripts/create-template-smoke-books.js --write --template-id=fixed-sleepy-moon-adventure-8p --page-count=8 --age-band=preschool_3_4`
+- `node scripts/monitor-smoke-book.js o63Qj088Izc35dVVmkz8`
+- `node scripts/inspect-smoke-book.js o63Qj088Izc35dVVmkz8 --expected-page-count=8`
+
+### Preconditions
+
+| check | result | notes |
+| --- | --- | --- |
+| Git worktree clean before run | ✓ pass | `main...origin/main` clean at start |
+| `guard:hygiene` | ✓ pass | no forbidden paths, docs encoding issues, or staged secret-like patterns |
+| Credentials present | ✓ pass | `GOOGLE_APPLICATION_CREDENTIALS` set |
+| `functions` build | ✓ pass | `npm --prefix functions run build` completed successfully |
+
+### Firestore sync result
+
+| step | result | notes |
+| --- | --- | --- |
+| pre-write sync check | ✓ pass | target template returned `[]` issues |
+| targeted sync write | ✓ pass | write executed for `fixed-sleepy-moon-adventure-8p` only |
+| post-write sync check | ✓ pass | target template still returned `[]` issues |
+
+Sync conclusion:
+
+- The page-2 sleepy-moon-8p cleanup is now re-synced into Firestore `templates`.
+- No unrelated fixed templates were written in this slice.
+
+### Re-smoke request configuration
+
+| field | value |
+| --- | --- |
+| templateId | `fixed-sleepy-moon-adventure-8p` |
+| smoke mode | no-reference |
+| ageBand | `preschool_3_4` |
+| childAge | `4` |
+| pageCount | `8` |
+| reference image | none |
+| previous re-smoke bookId | `yRRoIxfbF0pDmTICPfMc` |
+| new re-smoke bookId | `o63Qj088Izc35dVVmkz8` |
+
+Dry-run confirmation:
+
+- payload resolved to `childName=SmokeKid1`
+- `parentMessage=きょうもすてきな一日だったね`
+- `childAge=4`
+- `pageCount=8`
+- `withReference=false`
+
+### Monitor result
+
+Result: completed.
+
+- Initial inspect caught the book in a transient `generating` state even though all pages had already completed
+- Final monitor result reached `completed`
+- Final book progress: `100`
+- No book-level failure stage or failure reason was reported
+
+### Inspect result
+
+| check | result | notes |
+| --- | --- | --- |
+| creationMode | ✓ pass | `fixed_template` |
+| characterConsistencyMode | ✓ pass | `all_pages` |
+| childProfileSnapshot absent | ✓ expected | correct for no-reference smoke |
+| expected page count | ✓ pass | `8/8` |
+| completed pages | ✓ pass | `8/8` |
+| failed pages | ✓ pass | `0/8` |
+| imageAttemptCount | ✓ pass | all pages `1` |
+| inputReferenceCount | ✓ expected | `0/8` |
+| usedCharacterReference | ✓ expected | `false` on all pages |
+
+### Page generation health
+
+| page | status | imageDurationMs | inputReferenceCount | note |
+| --- | --- | --- | --- | --- |
+| 0 | completed | `21575` | `0` | pass |
+| 1 | completed | `25705` | `0` | pass |
+| 2 | completed | `28936` | `0` | pass; first BF-4 re-check target in T3-8r |
+| 3 | completed | `45630` | `0` | pass; continuity regression check deferred to T3-8r |
+| 4 | completed | `28851` | `0` | pass; visual QA deferred to T3-8r |
+| 5 | completed | `21489` | `0` | pass; visual QA deferred to T3-8r |
+| 6 | completed | `23901` | `0` | pass; page 6 clean-path regression check deferred to T3-8r |
+| 7 | completed | `21261` | `0` | pass; page 7 no-message regression check deferred to T3-8r |
+
+Generation-health summary:
+
+- All 8 pages completed successfully.
+- No page entered `image_failed`.
+- No retries beyond attempt `1` were needed.
+- No reference path was used, which is correct for this no-reference re-smoke slice.
+
+### Comparison to the previous re-smoke
+
+| item | previous re-smoke | current re-smoke |
+| --- | --- | --- |
+| bookId | `yRRoIxfbF0pDmTICPfMc` | `o63Qj088Izc35dVVmkz8` |
+| source prompt layer | post-T3-8l room-prop cleanup | post-T3-8p page-2 BF-4 cleanup |
+| structural completion | pass | pass |
+| manual visual verdict | BF-4 fail / BF-3 pass in T3-8n | not yet reviewed |
+
+### Judgment
+
+Result: pass / proceed.
+
+- The page-2 cleanup synced successfully.
+- The new re-smoke completed successfully under the intended no-reference conditions.
+- Structural generation health is good enough to proceed to another manual visual QA slice.
+- T3-8q does not claim BF-4 success; page 2 is now the first visual checkpoint for T3-8r.
+
+### Deferred to T3-8r
+
+- Manual BF-4 visual re-check for page 2 bookshelf / printed-book suppression
+- Manual BF-4 regression check for page 6 clean room-prop path
+- Manual BF-4 regression check for page 7 no-message success path
+- Manual BF-3 regression check to ensure child / pajama / teddy continuity remains intact
+
+### Exclusions (this slice)
+
+- No manual visual QA performed in this slice.
+- No image regeneration of previous books.
+- No Admin regeneration or reference-flow generation.
+- No Firebase Auth changes, Storage token rotation/revocation.
+- No code / seed / prompt modifications.
+- No service account JSON, secrets, URLs, or tokens recorded.
+- No T4 style validation execution.
