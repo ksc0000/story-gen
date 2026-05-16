@@ -3006,3 +3006,146 @@ T4-13 decision:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 25. T4-14 Targeted Zoo-Style Manual Visual QA Rerun
+
+Date: 2026-05-17
+
+Scope:
+
+- manual visual QA rerun for the two T4-13 targeted re-smoke books
+- template fixed to `fixed-first-zoo-8p`
+- styles under review:
+  - `crayon`
+  - `anime_storybook`
+- mode remains `prompt_only`
+- reference image remains unused
+
+Target books:
+
+| styleId | rerun bookId | previous failed bookId | prior blocker |
+| --- | --- | --- | --- |
+| `crayon` | `43luvSMHYiQJZIMEcYz4` | `d6dzSFiudIAPKuMa5IN7` | page `7` readable Latin-letter background sign |
+| `anime_storybook` | `kdX8Mvy7mSOJTGTou9Kq` | `T7LGTZZGfN0enFgLM6at` | page `1` readable Japanese gate signage; page `7` readable background sign |
+
+### 25.1 Visual Review Method
+
+Reviewed:
+
+- page `0` through page `7` for both rerun books
+- contact-sheet level sequence continuity
+- focused close review on:
+  - `crayon` page `7`
+  - `anime_storybook` page `1`
+  - `anime_storybook` page `7`
+
+Primary evaluation axes:
+
+- BF-4 readable text / sign / printed-surface suppression
+- BF-3 continuity regression check
+- style adherence
+- style consistency
+- emotional fit
+- story-image match
+
+### 25.2 Crayon Rerun Result
+
+Book:
+
+- templateId: `fixed-first-zoo-8p`
+- styleId: `crayon`
+- bookId: `43luvSMHYiQJZIMEcYz4`
+
+Visual findings:
+
+- page `7` no longer shows the previous readable Latin-letter background sign
+- exit/final-scene structures read as plain enough and non-readable
+- no new obvious signage blocker was observed across pages `0` through `7`
+- crayon rendering remains strong and recognizable across the full sequence
+- child continuity remains acceptable for this template and does not show a major regression
+- zoo mood, animal beats, and story-image match remain intact after the no-sign hardening
+
+Assessment:
+
+- BF-4: pass
+- BF-3: pass
+- style adherence: strong
+- style consistency: strong
+- emotional fit: pass
+- story-image match: pass
+
+Decision:
+
+- `Go`
+
+### 25.3 Anime Storybook Rerun Result
+
+Book:
+
+- templateId: `fixed-first-zoo-8p`
+- styleId: `anime_storybook`
+- bookId: `kdX8Mvy7mSOJTGTou9Kq`
+
+Visual findings:
+
+- previous page `1` gate-side signage issue appears improved; the entrance scene no longer depends on readable zoo gate signage
+- previous page `7` background sign issue also appears improved; no readable final-scene sign was observed
+- however, page `1` now contains a new readable text-like artifact on the child's shirt/chest area
+- this clothing print reads as clear alphanumeric text rather than harmless decorative texture
+- aside from that blocker, the anime storybook look remains vivid, emotionally appropriate, and sequence-consistent enough
+- BF-3 continuity did not show a major regression during the rerun
+
+Assessment:
+
+- BF-4: fail
+- BF-3: watch
+- style adherence: strong
+- style consistency: acceptable
+- emotional fit: pass
+- story-image match: pass
+
+Decision:
+
+- `Hold`
+
+### 25.4 Targeted Rerun Summary
+
+Summary table:
+
+| templateId | styleId | bookId | BF-4 | BF-3 | style adherence | decision | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fixed-first-zoo-8p` | `crayon` | `43luvSMHYiQJZIMEcYz4` | pass | pass | strong | `Go` | previous page `7` sign blocker resolved |
+| `fixed-first-zoo-8p` | `anime_storybook` | `kdX8Mvy7mSOJTGTou9Kq` | fail | watch | strong | `Hold` | page `1` new readable shirt text; page `7` sign blocker resolved |
+
+Targeted rerun decision:
+
+- `Conditional`
+
+Interpretation:
+
+- the zoo-template-local hardening successfully addressed the original page `7` crayon sign issue
+- the same hardening also improved anime page `1` gate signage and anime page `7` background signage
+- however, `anime_storybook` still remains blocked by a new BF-4 clothing-text artifact on page `1`
+- this means the zoo style track is improved but not yet fully cleared for both stylized reruns
+
+### 25.5 Recommended Next Step
+
+Recommended follow-up:
+
+- plan a narrow BF-4 cleanup for `fixed-first-zoo-8p` that suppresses readable clothing prints or letter-like shirt graphics in the page `1` entrance beat
+- preserve the successful no-sign / no-board / no-printed-surface improvements already achieved on page `7`
+- keep the scope template-local and avoid changing style profiles unless the next rerun proves template-only suppression is insufficient
+
+### 25.6 Exclusions
+
+- No image regeneration performed
+- No Admin regeneration performed
+- No Firestore write performed in this slice
+- No template sync performed in this slice
+- No smoke regeneration performed in this slice
+- No code changes performed
+- No runner changes performed
+- No style profile changes performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
