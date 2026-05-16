@@ -3149,3 +3149,142 @@ Recommended follow-up:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 26. T4-15 Anime Storybook Page-1 Clothing-Text BF-4 Remediation Plan
+
+Date: 2026-05-17
+
+Scope:
+
+- docs-only remediation planning
+- target template: `fixed-first-zoo-8p`
+- target style: `anime_storybook`
+- target failed rerun book: `kdX8Mvy7mSOJTGTou9Kq`
+- target issue: page `1` child clothing readable alphanumeric text
+
+### 26.1 Residual Failure Summary
+
+Current state after T4-14:
+
+- previous zoo-gate signage issue on page `1`: improved / resolved
+- previous background sign issue on page `7`: improved / resolved
+- remaining blocker: page `1` child shirt/chest area contains readable alphanumeric text
+- BF-4 outcome for `fixed-first-zoo-8p × anime_storybook`: fail
+- BF-3 outcome: watch but not release-blocking by itself
+
+Interpretation:
+
+- T4-12 zoo printed-surface hardening successfully reduced environmental signage risk
+- the remaining BF-4 issue is no longer a board / gate / placard problem
+- the current failure has shifted to character apparel rendering inside the entrance scene
+
+### 26.2 Cause Hypothesis
+
+Working hypothesis:
+
+- `anime_storybook` tends to enrich character outfits with stronger graphic detail than `soft_watercolor` or `crayon`
+- once gate signage and environmental boards were suppressed, the model may have moved decorative high-contrast detail onto the child outfit
+- page `1` is especially vulnerable because it is an establishing scene with a front-facing child pose and high visible torso area
+- the current zoo template hardening covers printed surfaces in the environment more directly than printed marks on clothing
+
+Risk model:
+
+- signage suppression alone is insufficient for stylized entrance scenes
+- if outfit graphics are not explicitly constrained, anime rendering may introduce letters, patches, logos, badges, or emblem-like shirt prints
+- this is still a template-local BF-4 problem because the issue occurs inside a concrete page context, not as a general failure of the style runner or style payload path
+
+### 26.3 Prompt Remediation Direction
+
+Recommended suppression direction:
+
+- add explicit no-readable-text clothing guidance for the zoo `page 1` prompt
+- suppress:
+  - shirt text
+  - logo text
+  - badge text
+  - jersey numbers
+  - word marks
+  - alphabet prints
+  - slogan graphics
+  - letter patches
+- steer the outfit toward:
+  - plain child-safe clothing
+  - simple solid colors
+  - small non-readable shapes only
+  - unmarked fabric surfaces
+
+Desired wording characteristics:
+
+- narrow and local to the page `1` entrance beat
+- framed as visual constraints, not as a global anti-style clause
+- compatible with the existing no-sign / no-board / no-printed-surface guidance
+
+### 26.4 Template-Local vs Style-Specific Decision
+
+Decision:
+
+- use zoo template-local hardening first
+
+Reasoning:
+
+- the failure occurs in a specific template scene with a specific body framing, not across the full style matrix
+- runner behavior is already validated and not implicated
+- style adherence for `anime_storybook` is strong, so broad style-profile edits would risk overcorrecting the style track
+- template-local page `1` outfit suppression is the smallest viable intervention
+
+Escalation rule:
+
+- if a page `1` outfit-text artifact persists after a template-local rerun, then consider a secondary anime-style-specific negative rule candidate
+- do not escalate to style-profile changes until template-local suppression has been tested first
+
+### 26.5 T4-16 Implementation Plan
+
+Planned implementation scope for T4-16:
+
+- inspect `functions/src/seed-templates.ts` for the current zoo 8p guard path and page `1` prompt body
+- extend zoo 8p local prompt hardening with a clothing-text suppression clause
+- apply the new clause at minimum to zoo `page 1`
+- optionally allow very light reuse on other zoo pages only if the wording stays narrow and non-disruptive
+- preserve:
+  - `crayon` rerun success on page `7`
+  - existing page `1` gate-sign suppression
+  - existing page `7` background-sign suppression
+  - runner behavior
+  - style profiles
+  - text templates and ageBand text
+
+Validation target for T4-16:
+
+- `npm run guard:hygiene`
+- `npm --prefix functions run build`
+- `npm --prefix functions test -- test/seed-templates.test.ts`
+- docs update in this plan
+
+Follow-up after T4-16:
+
+- T4-17 targeted Firestore sync + `anime_storybook` re-smoke for `fixed-first-zoo-8p`
+- T4-18 manual visual QA focused on page `1` clothing print suppression and regression check for page `7`
+
+### 26.6 Acceptance Criteria
+
+T4-16 / rerun success should mean:
+
+- page `1` no longer shows readable clothing text, alphanumeric marks, or logo-like shirt graphics
+- page `1` still reads as a warm zoo entrance beat
+- `anime_storybook` style adherence remains recognizably strong
+- no regression on page `7` sign suppression
+- no new BF-4 blocker appears on page `2`, `4`, or `6`
+
+### 26.7 Out Of Scope
+
+- No code or prompt changes in this slice
+- No Firestore sync in this slice
+- No smoke generation in this slice
+- No image regeneration in this slice
+- No Admin regeneration in this slice
+- No reference-flow generation in this slice
+- No runner changes
+- No style profile changes
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
