@@ -2977,3 +2977,164 @@ Do not escalate to style-profile or runner changes before the bedroom-object-loc
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+---
+
+## 28. T6-13 - Bedtime x Soft_Watercolor S1 Bedroom-Object No-Text Retry Generation / Structural Inspection
+
+Date: 2026-05-18
+
+### 28.1 Scope
+
+Execute the T6-13 targeted retry for `bedtime x soft_watercolor` using the S1 retry lane only, including:
+
+- runner profile support update for `s1rr`
+- dry-run validation
+- one-book write generation
+- monitor / inspect structural verification
+- structural evidence recording
+
+Out of scope for this slice:
+
+- detailed manual visual QA
+- pair verdict reopening
+- S2 regeneration
+- original S1 / S1R regeneration
+
+### 28.2 Runner Profile Support Update
+
+Updated file: `scripts/create-nonfixed-smoke-book.js`
+
+Changes:
+
+- added bedtime profile key `s1rr` (anchored moderate room-no-text retry)
+- expanded usage comments to include `s1rr`
+- no functions logic changes
+
+`s1rr` input intent:
+
+- preserve the stable anchored-moderate bedtime lane
+- keep prompt-only / no-reference execution
+- keep the room-safe bedtime emotional framing from `s1r`
+- add explicit room-object suppression language through parentMessage / place wording
+- steer toward an unlabeled bedroom with no named shelves / boxes while preserving cozy room richness
+
+### 28.3 Dry-Run Verification
+
+Dry-run command executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --dry-run --theme-id=bedtime --style-id=soft_watercolor --profile=s1rr
+```
+
+Dry-run summary:
+
+- payload resolved `themeId=bedtime`, `styleId=soft_watercolor`
+- `creationMode=guided_ai`, `productPlan=standard_paid`, `pageCount=8`
+- no-reference path confirmed (`withReference=false`)
+- profile label resolved as `anchored moderate room-no-text retry`
+- input includes:
+  - `childName=さくら`
+  - `childAge=4`
+  - room-object no-text retry `parentMessage`
+  - `colorMood=soft warm quiet bedtime watercolor night`
+  - `favorites=うさぎのぬいぐるみ`
+  - `place=しずかですっきりした寝室 もじのないたなと箱`
+
+### 28.4 Generation Evidence (Write)
+
+Write command executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --write --theme-id=bedtime --style-id=soft_watercolor --profile=s1rr
+```
+
+Created retry book:
+
+| sample | bookId | profile | runId |
+| --- | --- | --- | --- |
+| Book S1RR | `7silOATa4vPfvfXNHNIt` | anchored moderate room-no-text retry (`s1rr`) | `t6-nonfixed-20260517153443` |
+
+### 28.5 Monitor / Inspect Structural Results
+
+#### Book S1RR - Anchored Moderate Room-No-Text Retry (`s1rr`)
+
+| field | value |
+| --- | --- |
+| bookId | `7silOATa4vPfvfXNHNIt` |
+| title | `おやすみ、さくらちゃん` |
+| status | **completed** |
+| progress | 100 |
+| theme | bedtime |
+| styleId | soft_watercolor |
+| selectedStyleName | やさしい水彩 |
+| pageCount requested | 8 |
+| pages actual | 8 |
+| pages completed | 8 |
+| failed pages | 0 |
+| imageModel | `black-forest-labs/flux-2-pro` |
+| imageAttemptCount | 1 (all pages) |
+| imageFallbackUsed pages | 0 |
+| imageTimedOut pages | 0 |
+| referenceImagesUsed pages | 0 |
+| usedCharacterReference pages | 0 |
+| imageDurationMs (min / avg / max) | 16254 / 22145 / 27005 |
+| inspect expected page count check | PASS |
+
+Monitor / inspect notes:
+
+- `selectedStyleId` persisted as `soft_watercolor`
+- `creationMode` persisted as `guided_ai`
+- `characterConsistencyMode` remained `cover_only`
+- reference path remained unused across all 8 pages
+
+### 28.6 Structural Interpretation (T6-13)
+
+- The targeted S1 bedroom-object retry completed successfully with full 8/8 pages.
+- No page-level image failure occurred.
+- No fallback usage and no timeout flags were observed.
+- No-reference execution path remained intact (`inputReferenceCount=0`, `usedCharacterReference=false` for all pages).
+- Structural health for Book S1RR is **pass** at T6-13 scope.
+
+What T6-13 does and does not prove:
+
+- proves: the `s1rr` retry lane is runnable and structurally healthy
+- does not yet prove: that the bedroom-object BF-4 migration is resolved
+- detailed visual QA is deferred to T6-14
+
+### 28.7 T6-14 Handoff (Manual Visual QA)
+
+T6-14 should perform detailed manual visual QA for Book S1RR and then reassess the pair using:
+
+- existing Book S2 clean control (`PFuh3zu7q4VmNn4qA3dU`)
+- new Book S1RR retry evidence (`7silOATa4vPfvfXNHNIt`)
+
+Required T6-14 focus:
+
+- BF-4 on page `2` shelf / storage surfaces first
+- BF-4 regression check on page `6`
+- full-book sweep for any readable text on bedroom objects
+- BF-3 continuity versus S1 / S1R
+- `soft_watercolor` style adherence and bedtime emotional fit after broader room-object suppression
+
+Current status before T6-14:
+
+- S1RR structural health: pass
+- S1RR visual QA: pending
+- pair verdict: not finalized after bedroom-object retry
+
+### 28.8 Exclusions (T6-13)
+
+- No functions logic changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No detailed manual visual QA completion
+- No final pair verdict confirmation
