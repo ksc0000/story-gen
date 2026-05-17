@@ -2798,3 +2798,182 @@ If a next remediation slice is opened, it should likely:
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+---
+
+## 27. T6-12 - Bedtime x Soft_Watercolor Bedroom-Object No-Text Remediation Plan (Docs-Only)
+
+Date: 2026-05-18
+
+### 27.1 Objective
+
+Define the next minimum-scope remediation strategy for `bedtime x soft_watercolor` after T6-11 showed failure migration between different bedroom-object text surfaces.
+
+This slice is planning only:
+
+- no code or prompt implementation in this slice
+- no new generation in this slice
+- no runner changes in this slice
+- no pair verdict reopening in this slice
+
+### 27.2 Failure Migration Summary
+
+Observed BF-4 blocker progression:
+
+| sample | bookId | failing page | surface | text type | outcome |
+| --- | --- | --- | --- | --- | --- |
+| original S1 | `uwhwhq3DmuGPekxBVn0a` | page `6` | lower-left in-room area | readable Japanese paragraph block | Hold |
+| S1R | `YVsHLGjXJ1svdhzWMDn9` | page `2` | shelf storage box | readable Latin text `SAKURA` | Hold |
+| S2 control | `PFuh3zu7q4VmNn4qA3dU` | none | none | none | Go |
+
+Key interpretation:
+
+- the original blocker was removed
+- the pair did not stabilize
+- the failure moved from one bedroom surface to another
+- current narrow page-6-focused hardening is therefore insufficient as a convergence strategy
+
+### 27.3 What The Migration Implies
+
+The evidence now suggests:
+
+1. this is not just a single-page payoff-scene problem
+2. this is not yet evidence that `soft_watercolor` is broadly unusable
+3. the unstable zone is the broader bedroom-object layer where the model can invent:
+   - storage labels
+   - shelf-box names
+   - framed print text
+   - book spine text
+   - decor markings that drift into readable symbols
+
+Updated conclusion:
+
+- the failure class is best described as **bedroom-object / labeled-surface BF-4 migration**
+- the next intervention should be broader than the T6-9 page-6-only watchover suppression
+- the next intervention should still remain narrower than a style-wide or architecture-wide rewrite
+
+### 27.4 Updated Cause Hypothesis
+
+| hypothesis class | updated assessment | reasoning |
+| --- | --- | --- |
+| page-specific scene issue only | reduced | page `6` issue was removed, but a new page `2` object-label issue appeared |
+| generic no-text clause is directionally correct but underspecified | high | existing no-text rules are not enough to suppress secondary bedroom object labels |
+| bedroom object richness creates recurring text opportunities | high | both failures occurred on non-primary room surfaces rather than on the child or the moon/stars focal beat |
+| `soft_watercolor` surface texture amplifies incidental label generation | medium | watercolor wash and cozy decor richness may encourage bookish / papery / labeled room details, but current evidence is still pair-local rather than globally style-failing |
+| input-only tuning can fully solve the issue | low | `s1r` changed the failing page but did not stabilize BF-4 overall |
+
+Working model after T6-11:
+
+- the root problem is now better framed as insufficient suppression of **secondary bedroom reading surfaces**
+- local input steering alone can redirect the error but not reliably eliminate it
+- the next step should harden no-text rules for bedroom objects across the full bedtime room scene family
+
+### 27.5 Remediation Option Comparison
+
+| option | scope | upside | downside | recommendation |
+| --- | --- | --- | --- | --- |
+| A. rerun S1R unchanged again | one-book rerun, no prompt change | cheapest execution | likely repeats migration without new learning | reject |
+| B. add another input-only retry variant | one-book rerun with altered parentMessage / place wording only | preserves minimal change footprint | T6-11 suggests input-only steering is not sufficient for BF-4 stability | reject |
+| C. broaden bedroom-object no-text suppression locally for bedtime room scenes + retry S1 lane only | narrow prompt hardening for labeled room surfaces | directly targets the migrated failure class while staying pair-local | requires carefully scoped wording to avoid flattening room richness | **recommended** |
+| D. add global `soft_watercolor` anti-text hardening | style-wide | could reduce future label incidents broadly | too broad for the current evidence; risks overcorrecting a baseline style with strong fit | reject |
+| E. add runner/reference/schema changes | infrastructure-wide | maximum control | out of scope and disproportionate | reject |
+
+### 27.6 Recommended T6-13 Strategy
+
+Recommended execution direction for T6-13:
+
+- keep the pair fixed as `bedtime x soft_watercolor`
+- keep prompt-only / no-reference mode unchanged
+- stay on the S1 retry lane only
+- retain S2 as the clean control
+- move from **page-specific watchover suppression** to **bedroom-object labeled-surface suppression**
+
+Recommended hardening target surfaces:
+
+- shelf storage boxes
+- toy bins / baskets
+- book spines
+- framed prints / picture frames
+- labels on containers, drawers, pillows, decor cards, and wall items
+- any papery, printed, or plaque-like object in the child bedroom
+
+Recommended hardening intent:
+
+- preserve a cozy bedroom
+- preserve room richness
+- remove or neutralize only the surfaces most likely to invite readable marks
+
+### 27.7 Desired Wording Shape For Later Implementation
+
+T6-13 implementation should likely use wording characteristics like:
+
+- no names, labels, words, alphabet marks, or printed symbols on bedroom storage objects
+- no readable text on boxes, bins, toy containers, books, framed pictures, wall decor, or shelf items
+- use plain, unlabeled, child-safe bedroom objects only
+- if books or frames appear, keep covers/spines/faces turned away or visually blank
+- if containers appear, keep them solid-color and unmarked
+- keep surfaces decorative but non-readable
+
+Important guardrails:
+
+- do not remove the bedroom entirely
+- do not remove all shelf or decor richness if a cleaner unlabeled version is sufficient
+- do not shift to sterile empty-room compositions unless needed
+- do not escalate to style-level changes before this bedroom-object-local strategy is tested
+
+### 27.8 T6-13 Retry Definition
+
+Primary retry target for T6-13:
+
+- retry unit: Book S1 lane only
+- target pair: `theme=bedtime`, `style=soft_watercolor`
+- execution mode: prompt-only / no-reference
+- objective: test whether broader bedroom-object no-text hardening can stabilize BF-4 without harming bedtime emotional fit or style quality
+
+Evaluation priorities for T6-13 follow-up QA:
+
+- full-book BF-4 sweep, not only the previously failing pages
+- page `2` shelf / storage surfaces
+- page `6` watchover scene regression check
+- any new text emergence on secondary objects
+- preservation of soft-watercolor warmth and child-safe bedroom storytelling
+
+Success criteria for the next retry:
+
+- no BF-4 fail pages anywhere in S1 retry
+- no new readable text on shelf items, boxes, books, bins, or framed objects
+- BF-3 remains pass
+- style adherence remains acceptable or better
+- emotional fit remains acceptable or better
+
+### 27.9 Escalation Rule
+
+Escalate beyond bedroom-object-local hardening only if:
+
+- the next retry still produces readable text on a different bedroom object surface, or
+- the failure migrates outside the bedroom-object family despite explicit local suppression
+
+If that happens, the next analysis may need to consider:
+
+- broader bedtime-scene no-text guardrails across more room compositions
+- more systemic no-readable-mark suppression for non-fixed bedtime generation
+
+Do not escalate to style-profile or runner changes before the bedroom-object-local remediation has been tested.
+
+### 27.10 Out Of Scope (T6-12)
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
