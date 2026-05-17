@@ -5685,3 +5685,180 @@ This test is low-risk, requires no code changes, and directly isolates the concu
 - No private image URLs or storage tokens recorded
 - No manual visual QA
 - No product exposure matrix update
+
+## 41. T6-26 - IMAGE_CONCURRENCY=1 Controlled Re-Smoke / Fallback Hypothesis Test
+
+Date: 2026-05-18
+
+### 41.1 Scope
+
+Execute a controlled re-smoke of `imagination × crayon` (profiles i1 and i2) with `IMAGE_CONCURRENCY=1` to test Hypothesis H1 from T6-25.
+
+H1 stated that concurrent page generation (`IMAGE_CONCURRENCY=2`) was causing burst API failures on `pro_consistent` (flux-2-pro), which caused the 7/8 fallback pattern observed in T6-23/T6-24.
+
+The controlled variable: `IMAGE_CONCURRENCY` reduced from 2 (default) to 1 (serial page generation). All other parameters are identical to T6-23.
+
+### 41.2 Dry-Run Verification
+
+Dry-run confirmed both profiles resolve correctly:
+
+| sample | profile | themeId | styleId | creationMode | productPlan | pageCount | withReference |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| i1 | anchored moderate | fantasy | crayon | guided_ai | standard_paid | 8 | false |
+| i2 | rich | fantasy | crayon | guided_ai | standard_paid | 8 | false |
+
+### 41.3 Environment Change
+
+`IMAGE_CONCURRENCY=1` was added to `functions/.env.story-gen-8a769` and the `generateBook` function was redeployed to apply it. After the test, the line was removed and the function was redeployed again to restore the default (`IMAGE_CONCURRENCY=2`).
+
+The `.env.story-gen-8a769` file is back to its pre-test state. No net change to the committed env file.
+
+### 41.4 Generation Evidence (Write)
+
+Write commands executed with `IMAGE_CONCURRENCY=1` active:
+
+| sample | bookId | profile | runId |
+| --- | --- | --- | --- |
+| Book I1 | `LP9dLwaVodcsz0GCOlJP` | anchored moderate (`i1`) | `t6-nonfixed-20260517175726` |
+| Book I2 | `Gs0MrswWkcuAo2bQ4W9Y` | rich (`i2`) | `t6-nonfixed-20260517175733` |
+
+### 41.5 Monitor / Inspect Structural Results
+
+#### Book I1 (LP9dLwaVodcsz0GCOlJP) — IMAGE_CONCURRENCY=1
+
+| field | value |
+| --- | --- |
+| bookId | `LP9dLwaVodcsz0GCOlJP` |
+| status | **completed** |
+| progress | 100 |
+| creationMode | guided_ai |
+| theme | fantasy |
+| styleId | crayon |
+| pageCount requested | 8 |
+| pages actual | 8 |
+| pages `completed` status | 2 (pages 0–1) |
+| pages `fallback_completed` | 6 (pages 2–7) |
+| pages `image_failed` | 0 |
+| imageAttemptCount (pages 0–1) | 1 |
+| imageAttemptCount (pages 2–7) | 3 |
+| imageTimedOut pages | 0 |
+| referenceImagesUsed pages | 0 |
+| usedCharacterReference pages | 0 |
+| imageDurationMs (min / avg / max) | 17412 / 44203 / 59888 |
+
+#### Book I2 (Gs0MrswWkcuAo2bQ4W9Y) — IMAGE_CONCURRENCY=1
+
+| field | value |
+| --- | --- |
+| bookId | `Gs0MrswWkcuAo2bQ4W9Y` |
+| status | **completed** |
+| progress | 100 |
+| creationMode | guided_ai |
+| theme | fantasy |
+| styleId | crayon |
+| pageCount requested | 8 |
+| pages actual | 8 |
+| pages `completed` status | 1 (page 0) |
+| pages `fallback_completed` | 7 (pages 1–7) |
+| pages `image_failed` | 0 |
+| imageAttemptCount (page 0) | 1 |
+| imageAttemptCount (pages 1–7) | 3 |
+| imageTimedOut pages | 0 |
+| referenceImagesUsed pages | 0 |
+| usedCharacterReference pages | 0 |
+| imageDurationMs (min / avg / max) | 32452 / 41700 / 74193 |
+
+### 41.6 T6-23 vs T6-26 Comparison
+
+| metric | T6-23 (concurrency=2) | T6-26 (concurrency=1) |
+| --- | --- | --- |
+| I1 fallback pages | 7/8 | 6/8 |
+| I2 fallback pages | 7/8 | 7/8 |
+| I1 `completed` pages | 1 (page 0) | 2 (pages 0–1) |
+| I2 `completed` pages | 1 (page 0) | 1 (page 0) |
+| image_failed pages | 0 | 0 |
+| imageTimedOut pages | 0 | 0 |
+| Structural completion | 8/8 both books | 8/8 both books |
+
+### 41.7 H1 Verdict
+
+H1 stated: `IMAGE_CONCURRENCY=2` caused burst API failures on `pro_consistent`, which drove the 7/8 fallback pattern.
+
+H1 success criteria from T6-25:
+
+| condition | result |
+| --- | --- |
+| fallback_completed ≤ 1/8 per book | **Not met** (6/8 and 7/8) |
+| fallback_completed materially lower than 7/8 | **Not met** (improvement of 1 page on I1 only) |
+| fallback_completed remains around 7/8 | **Met** — this condition applies |
+
+**H1 verdict: WEAK**
+
+Reducing concurrency from 2 to 1 produced at most a 1-page improvement in I1 (7→6) and no improvement in I2 (7→7). The fallback pattern is not primarily driven by burst concurrency.
+
+### 41.8 Updated Root Cause Analysis
+
+With H1 ruled out as the primary driver, two remaining hypotheses gain more weight.
+
+#### H2: Replicate flux-2-pro intermittent availability per account or session (now primary hypothesis)
+
+Both T6-23 and T6-26 show the same pattern: pages 0 (and occasionally 1) succeed with `pro_consistent`, while later pages consistently exhaust the primary retries. This pattern is independent of whether pages are generated in parallel (concurrency=2) or serially (concurrency=1).
+
+This suggests that `pro_consistent` / flux-2-pro becomes unavailable shortly after the first 1–2 successful generations within a single book run. The most plausible mechanism is:
+
+- A per-account or per-session rate limit on flux-2-pro predictions that kicks in after the first 1–2 calls in quick succession.
+- A warm-start / cold-start routing effect where the first call lands on a ready instance, but subsequent calls hit cold instances that return error responses within the 120 s timeout.
+
+Supporting evidence:
+- Pattern is consistent across 4 books (T6-23 I1, T6-23 I2, T6-26 I1, T6-26 I2).
+- Page 0 always succeeds. Pages 1–7 fail systematically.
+- I1 in T6-26 succeeded on page 1 as well (possibly because with serial generation, there was a small natural delay between pages 0 and 1 that allowed the rate limit to reset partially).
+- `imageTimedOut = 0` in all 4 books: the failures are fast errors, not slow timeouts.
+
+#### H3: Prompt complexity escalation after the opening page (secondary hypothesis)
+
+Imagination pages 1–7 may carry significantly more scene-specific content than page 0 (the story introduction). If flux-2-pro has a prompt length or token budget issue that causes fast rejections on complex prompts, this could explain the consistent page 0 success pattern.
+
+However, H3 is less likely than H2 because:
+- I1 in T6-26 also succeeded on page 1, which is not a simpler prompt than pages 2–7.
+- T4 fixed-template books with equally detailed prompts do not show this pattern.
+
+### 41.9 Implications for Remediation Design
+
+| option | H1 assumed | H2 assumed | revised recommendation |
+| --- | --- | --- | --- |
+| R1: reduce IMAGE_CONCURRENCY | primary fix | ineffective alone | **deprioritized** (tested; did not resolve) |
+| R2: increase pro_consistent retry count + backoff | complementary | **potentially effective** if per-session limit is time-gated | retain as next option |
+| R3: style-reinforcement on fallback prompt | quality fix | quality fix regardless of cause | retain |
+| R4: extend fallback chain to klein_base | quality fix | quality fix regardless of cause | retain |
+| R5: post-generation auto-regeneration | premature | worth revisiting with delay | defer |
+
+New option:
+
+- **R6: Diagnose Replicate rate-limit behavior directly** — Add Cloud Logging for the error type (HTTP status code, error body) from flux-2-pro failures, and inspect the logs from T6-26 runs to confirm whether failures are 429 (rate limit), 500 (server error), or connection errors. This is a prerequisite for designing a targeted fix.
+
+### 41.10 Pair Status After T6-26
+
+| pair | verdict | blocker | updated next action |
+| --- | --- | --- | --- |
+| `imagination × crayon` | **Hold** | fallback-heavy (cause: H2 likely, not H1) | T6-27: visual QA for T6-26 books + R6 error logging investigation |
+
+### 41.11 Exclusions
+
+- No code changes
+- No runner changes
+- No functions logic changes (env-var change was a test parameter only; restored after test)
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No manual visual QA
+- No product exposure matrix update
