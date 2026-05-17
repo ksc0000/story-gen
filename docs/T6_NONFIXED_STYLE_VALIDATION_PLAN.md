@@ -1207,3 +1207,154 @@ T6-3 full pair verdict: **Hold pending** — cannot issue a final verdict until 
 - No style profile changes
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+---
+
+## 18. T6-3a — Bedtime × Crayon Book A2 (Anchored Moderate) Retry / Quality-Gate Remediation
+
+Date: 2026-05-17
+
+### 18.1 Objective
+
+Execute T6-3a to remediate Book A moderate-profile quality-gate failure by introducing an anchored moderate profile (`a2`) and re-running Book A as Book A2.
+
+Scope for this slice:
+
+- input remediation (`a2`) in non-fixed smoke runner
+- dry-run payload verification
+- guided_ai generation write
+- monitor and inspect structural verification
+- evidence recording in this plan
+
+Out of scope (deferred):
+
+- Book B detailed visual QA (moved to T6-4)
+- final pair verdict issuance
+
+### 18.2 Input Remediation Design (Book A -> Book A2)
+
+Root cause from T6-3 Book A:
+
+- failure stage: `quality_gate`
+- pages completed: `0 / 8`
+- dominant violation: `page_text_not_connected_to_story_goal` (7/8 pages)
+
+Interpretation:
+
+- text-generation anchoring was insufficient in original moderate profile (`a`)
+- this was not an image generation failure
+
+Remediation applied:
+
+- added new profile key `a2` for `bedtime` in `scripts/create-nonfixed-smoke-book.js`
+- profile label: `anchored moderate`
+- anchoring changes vs `a`:
+  - longer parentMessage with explicit bedtime scene grounding
+  - add one lightweight grounding field: `favorites: "うさぎのぬいぐるみ"`
+  - keep `colorMood: "soft warm"`
+
+### 18.3 Dry-Run Verification (`--profile=a2`)
+
+Dry-run command executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --dry-run --theme-id=bedtime --style-id=crayon --profile=a2
+```
+
+Observed payload summary:
+
+- `themeId: bedtime`
+- `styleId: crayon`
+- `profile: a2 (anchored moderate)`
+- `creationMode: guided_ai`
+- `productPlan: standard_paid`
+- `pageCount: 8`
+- `characterMode: cover_only`
+- `withReference: false`
+- `input` includes anchored parentMessage + `favorites`
+
+Dry-run validation verdict: pass.
+
+### 18.4 Generation + Monitor + Inspect Evidence
+
+Write command executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --write --theme-id=bedtime --style-id=crayon --profile=a2
+```
+
+Created book:
+
+- Book A2 `bookId`: `yylnhRJfVF23GcVyJBUF`
+- `runId`: `t6-nonfixed-20260517133158`
+
+Monitor/inspect summary:
+
+| field | value |
+| --- | --- |
+| bookId | yylnhRJfVF23GcVyJBUF |
+| runId | t6-nonfixed-20260517133158 |
+| themeId | bedtime |
+| styleId | crayon |
+| inputProfile | anchored moderate (a2) |
+| creationMode | guided_ai |
+| productPlan | standard_paid |
+| characterConsistencyMode | cover_only |
+| childProfileSnapshot | none |
+| pageCount (requested) | 8 |
+| status | **completed** |
+| failureStage | none |
+| progress | 100 |
+| pagesCompleted | 8 / 8 |
+| failedPages | 0 |
+| referenceImagesUsed | 0 / 8 |
+| imageModel | black-forest-labs/flux-2-pro |
+| usedCharacterReference | false (all pages) |
+| imageAttemptCount | 1 (all pages) |
+| imageFallbackUsed | false (all pages) |
+| imageTimedOut | false (all pages) |
+
+### 18.5 T6-3a Result Interpretation
+
+Book A2 passed structural generation (`completed`, 8/8), while original Book A failed at `quality_gate` before any image generation.
+
+This run supports the remediation hypothesis:
+
+- adding moderate-level anchoring (longer parentMessage + one grounding field) materially reduced quality-gate failure risk for `bedtime × crayon` in this sample.
+
+This is still sample-limited (single retry) and should not be over-generalized as a universal guarantee.
+
+### 18.6 Carry-Over to T6-4 (Book B Visual QA)
+
+Book B from T6-3 remains:
+
+- `bookId`: `iuCrth0sC6UV9SVVf0F1`
+- structural status: completed (8/8)
+- detailed visual QA status: **pending**
+
+Per scope split, detailed visual QA is deferred to T6-4 and is not closed in T6-3a.
+
+### 18.7 Pair Verdict State After T6-3a
+
+Current structural state:
+
+- Book A2 (anchored moderate): structural pass (`completed`, 8/8)
+- Book B (rich): structural pass already recorded, visual QA pending
+
+Pair verdict state:
+
+- `bedtime × crayon` final pair verdict remains **Hold pending** until Book B detailed visual QA is completed in T6-4.
+
+### 18.8 Exclusions (T6-3a)
+
+- No functions logic changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded

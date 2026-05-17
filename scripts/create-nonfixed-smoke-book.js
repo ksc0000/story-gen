@@ -1,8 +1,8 @@
 // Minimal guided_ai smoke book creator for T6 non-fixed style validation.
-// Only supports the predefined T6 input profiles (--profile=a or --profile=b).
+// Only supports the predefined T6 input profiles (--profile=a, --profile=a2, or --profile=b).
 // Usage:
-//   node scripts/create-nonfixed-smoke-book.js --dry-run [--theme-id=bedtime] [--style-id=crayon] [--profile=a|b]
-//   node scripts/create-nonfixed-smoke-book.js --write  [--theme-id=bedtime] [--style-id=crayon] [--profile=a|b]
+//   node scripts/create-nonfixed-smoke-book.js --dry-run [--theme-id=bedtime] [--style-id=crayon] [--profile=a|a2|b]
+//   node scripts/create-nonfixed-smoke-book.js --write  [--theme-id=bedtime] [--style-id=crayon] [--profile=a|a2|b]
 
 const { createRequire } = require("module");
 const { resolve } = require("path");
@@ -39,7 +39,7 @@ const STYLE_PROFILE_REGISTRY = {
 };
 
 // T6 input profiles per theme and profile letter.
-// Profile A = moderate, Profile B = rich (per T6-2 design).
+// Profile A = moderate, A2 = anchored moderate, B = rich.
 const T6_INPUT_PROFILES = {
   bedtime: {
     a: {
@@ -49,6 +49,17 @@ const T6_INPUT_PROFILES = {
         childAge: 4,
         parentMessage: "きょうもたくさんあそんだね。おやすみ、さくら。",
         colorMood: "soft warm",
+      },
+    },
+    a2: {
+      label: "anchored moderate",
+      input: {
+        childName: "さくら",
+        childAge: 4,
+        parentMessage:
+          "きょうもたくさんあそんだね。おきにいりのうさぎさんといっしょに、あたたかいおへやでゆっくりねむろうね。おやすみ、さくら。",
+        colorMood: "soft warm",
+        favorites: "うさぎのぬいぐるみ",
       },
     },
     b: {
