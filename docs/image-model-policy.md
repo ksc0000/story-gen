@@ -68,3 +68,30 @@
 - 原価最適化は後で `key_pages` / `cover_only` を再検討し、まずは全ページ参照画像で一貫性改善量を検証します。
 - 現在の改善軸は「モデル切替」だけではなく、本文 quality gate、Gemini fallback、画像 prompt 最適化、reference all pages の組み合わせです。
 - 満足度低下の主因が本文品質にある場合は、画像モデルをむやみに変更するよりも、story quality gate と story text rewrite pass の改善を優先します。
+
+## E005 content sensitivity rejection — imagination カテゴリ固有の問題（2026-05 確認）
+
+### 確認された事実（T6-27〜T6-30）
+
+- `pro_consistent` (flux-2-pro) は `imagination` categoryGroupId のページ 1–7 に対して **E005** (content sensitivity rejection) を返す。
+- E005 はプロンプト決定論的：同一プロンプトは毎回 E005。リトライ・バックオフでは回復しない（T6-27 確認）。
+- `IMAGE_CONCURRENCY` の変更（2→1）は E005 に無効（T6-26 確認）。
+- L1 (Gemini system prompt fantasy rule block) + L2 (runtime imagination guardrail) を実装・デプロイ（T6-29/T6-30）したが E005 は同率で継続。
+- E005 は fantasy シーンのビジュアルコンテンツ自体（ロケット、グローオーブ、魔法的世界観）に対する flux-2-pro の感度閾値が原因。プロンプト文言の調整だけでは解消できない。
+
+### klein_fast / klein_base を imagination の primary モデルにすることは NG
+
+- T6-24 で確認：klein_fast フォールバックは BF-4/BF-3 を通過するが、**クレヨンスタイル遵守 Fail**（フォトリアルへの劣化）かつ **story-image match Fail**（ファンタジーシーン再現不可）。
+- klein_fast / klein_base を primary にしても E005 は回避できるが **商品品質水準を満たさない**。
+- 「klein primary 化＝E005 回避」は技術的に正しいが、製品として出せないトレードオフになる。
+- このため **klein primary 化は正式に Reject**（T6-31 決定）。
+
+### imagination × crayon ペアの現在の扱い（T6-31 時点）
+
+| 項目 | 状態 |
+| --- | --- |
+| ペアステータス | **Hold** |
+| primary モデル | flux-2-pro (`pro_consistent`) のまま変更しない |
+| E005 対応状況 | L1+L2 実装済み、L3 regex sanitizer は未実装（deferred） |
+| fallback | klein_fast が引き続き fallback として機能（品質問題あり）|
+| 次フェーズ | L3 sanitizer 実装 → re-smoke → 改善不十分なら Replicate policy 確認または代替モデル評価 |

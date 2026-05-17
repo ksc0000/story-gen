@@ -6523,3 +6523,267 @@ The `categoryGroupId` pass-through to `buildImagePrompt()` was verified to be al
 - No private image URLs or storage tokens recorded
 - No manual visual QA
 - No product exposure matrix update
+## 46. T6-31 - Klein Primary Rejection / Imagination Model-Policy Decision (Docs-Only)
+
+Date: 2026-05-18
+
+### 46.1 Scope
+
+This is a docs-only decision task. Based on cumulative evidence from T6-24 through T6-30,
+formally reject the option of switching imagination-category books to `klein_fast` (or `klein_base`)
+as the primary image model. Document the model-policy options and recommend a path forward for T6-32.
+
+No code changes, no re-generation, no visual QA.
+
+### 46.2 Summary of Accumulated Evidence
+
+#### 46.2.1 E005 Timeline
+
+| task | finding |
+| --- | --- |
+| T6-23 | 7/8 pages fallback_completed per book across I1, I2 |
+| T6-24 | Klein fallback: style adherence Fail, story-image match Fail (photoreal drift) |
+| T6-25 | Concurrency analysis; hypotheses H1/H2/H3 proposed |
+| T6-26 | IMAGE_CONCURRENCY=1: no meaningful E005 improvement (I1 6/8, I2 7/8) |
+| T6-27 | Cloud Logs confirmed: all pro_consistent failures are E005 (content sensitivity rejection) |
+| T6-28 | R7 sanitizer design: L1 + L2 + L3 layers designed |
+| T6-29 | L1+L2 implemented; L3 deferred |
+| T6-30 | L1+L2 deployed; re-smoke: I1 6/8, I2 7/8 — **no improvement** |
+
+**Conclusion: E005 is endemic to flux-2-pro for imagination-category scenes. Prompt-level adjustments
+(L1+L2) are insufficient. The visual content of fantasy/space scenes itself triggers flux-2-pro's
+sensitivity threshold regardless of text-object wording in the prompt.**
+
+#### 46.2.2 Klein Fallback Quality Evidence (T6-24)
+
+| book | BF-4 | BF-3 | style adherence | emotional fit | story-image match | verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| I1 `gxuvnnlAnQXf6LVXtSo4` | Pass | Pass | **Fail** | Pass | **Fail** | Hold |
+| I2 `ZPwrVsVARKIPBEm8mcu2` | Pass | Pass | **Fail** | Pass | **Fail** | Hold |
+
+Failure mechanism for Klein fallback pages (T6-24 observations):
+
+- Pages 1-7 shifted from crayon storybook rendering to soft photoreal bedroom imagery.
+- Fantasy narrative beats (dragon, glowing castle, quest object discovery) did not materialize visually.
+- Generic child-in-room compositions replaced the imagination-specific scene geometry.
+- The visual output is structurally safe (BF-4/BF-3 clear) but not usable as commercial imagination x crayon output.
+
+### 46.3 Klein Primary Rejection Decision
+
+#### 46.3.1 Decision
+
+**Klein_fast and klein_base are formally rejected as primary models for imagination x crayon books.**
+
+#### 46.3.2 Rationale
+
+| dimension | assessment |
+| --- | --- |
+| E005 avoidance | Klein avoids E005 - this is the only advantage |
+| Crayon style fidelity | **Fails** - Klein fallback produces soft photoreal, not crayon storybook |
+| Fantasy scene specificity | **Fails** - Klein fallback collapses imagination set pieces into generic bedroom scenes |
+| Story-image match | **Fails** - fantasy narrative beats are not visually realized |
+| Product quality bar | Below bar - not acceptable for commercial release |
+| Tradeoff summary | Avoids E005 but loses the entire value proposition of the pair |
+
+Switching to Klein primary would:
+
+1. Eliminate E005 technical failures.
+2. Simultaneously eliminate crayon style adherence.
+3. Simultaneously eliminate imagination scene specificity.
+4. Result in output structurally indistinguishable from a generic soft-photoreal bedroom scene book.
+
+This is not a viable path. The pair is called imagination x crayon precisely because the promise
+is a hand-drawn crayon storybook with fantasy narrative. Klein primary removes both.
+
+#### 46.3.3 What Klein Is Still Used For
+
+- `klein_fast` remains the **fallback model** in the pro_consistent -> klein_fast chain.
+- This preserves book structural completeness (partial_completed / fallback_completed).
+- Klein fallback is a reliability safety net, not a quality-delivery path.
+- This role is unchanged by this decision.
+
+### 46.4 Current State: imagination x crayon
+
+| item | state |
+| --- | --- |
+| Pair status | **Hold** |
+| Primary model | flux-2-pro (pro_consistent) - unchanged |
+| E005 rate | pages 1-7 per book, all runs, no improvement with L1+L2 |
+| Fallback model | klein_fast (structural safety net, quality below bar) |
+| L1 prompt guardrail | Deployed (T6-29/T6-30) |
+| L2 runtime guardrail | Deployed (T6-29/T6-30) |
+| L3 regex sanitizer | Deferred (not yet implemented) |
+| Visual QA | T6-24 baseline only; T6-30 books not yet QA'd |
+
+### 46.5 Model Policy Options Analysis
+
+Six options are evaluated. Options requiring Klein primary are excluded per section 46.3.
+
+#### Option O1: Implement L3 regex sanitizer and re-smoke
+
+Remove or replace fantasy text-bearing tokens from imagePrompt at image-generation time using the
+regex rules designed in T6-28 section 43.3.3.
+
+| dimension | assessment |
+| --- | --- |
+| E005 reduction potential | **Moderate** - removes specific tokens that correlate with E005 |
+| Style fidelity impact | Minimal - does not change the scene structure, only removes text-risk tokens |
+| Story-image match impact | May slightly reduce scene specificity at the margins |
+| Code change required | Small - sanitizeImagePromptText() extension |
+| Risk | Low |
+| Reversible | Yes |
+| Time to evidence | 1 implementation + 1 re-smoke |
+| Limitation | If E005 is triggered by scene type rather than token presence, L3 will not help |
+
+**Assessment: highest-priority next option. Low risk, already designed, directly extends the T6-29 work.**
+
+#### Option O2: Contact Replicate for E005 policy review for fantasy/space imagery
+
+Submit a support request to Replicate to understand whether flux-2-pro's E005 threshold can be adjusted
+for fantasy/space content that is clearly non-harmful (children's picture book context).
+
+| dimension | assessment |
+| --- | --- |
+| E005 reduction potential | **High** if Replicate agrees and adjusts policy |
+| Style fidelity impact | None - model unchanged |
+| Code change required | None |
+| Risk | Low |
+| Dependency | External - Replicate response time unknown |
+| Limitation | Replicate may decline; timeline is unpredictable |
+
+**Assessment: valid parallel action. Zero code cost; should be initiated regardless of O1 outcome.**
+
+#### Option O3: Evaluate an alternative primary model for imagination-category books
+
+Test a third model (e.g., kontext_reference / flux-kontext-pro, or a new Replicate model) that has
+higher tolerance for fantasy/space content while maintaining crayon instruction following.
+
+| dimension | assessment |
+| --- | --- |
+| E005 reduction potential | Unknown - depends on model |
+| Style fidelity potential | Unknown - requires validation |
+| Code change required | Medium - new model profile + fallback chain |
+| Risk | Medium - unvalidated quality |
+| Time to evidence | Model selection + 1 re-smoke + visual QA |
+| Limitation | Adds model complexity; kontext_reference is currently reference-focused, not style-trained |
+
+**Assessment: viable if O1+O2 are insufficient. Defer until O1 result is known.**
+
+#### Option O4: Redesign imagination prompts to minimize fantasy text-bearing objects at story-gen time
+
+Adjust Gemini story prompt design to generate imagination stories that use purely visual fantasy objects
+(glowing orbs, crystals, planets, rocket silhouettes) instead of text-bearing objects (spell books,
+scrolls, star charts).
+
+| dimension | assessment |
+| --- | --- |
+| E005 reduction potential | **Moderate-High** if story narrative avoids text-bearing objects |
+| Style fidelity impact | Positive - simpler fantasy scenes may render better |
+| Story variety impact | Narrowing - reduces available narrative motifs |
+| Code change required | Medium |
+| Risk | Medium - may reduce story diversity and imagination richness |
+
+**Assessment: viable long-term but reduces story variety. Revisit if O1+O2+O3 are insufficient.**
+
+#### Option O5: Accept current E005 rate; invest in Klein fallback quality improvements
+
+Accept that imagination pages 1-7 will use Klein fallback, and invest in improving Klein output
+quality through style-reinforcement injection on the fallback prompt path (R3 from T6-25).
+
+| dimension | assessment |
+| --- | --- |
+| E005 rate | Unchanged |
+| Style fidelity (fallback) | May improve with R3, but Klein's style gap is structural |
+| Story-image match | Unlikely to recover fully with Klein |
+| Acceptability | **Not acceptable per operator decision** - Klein quality is below product bar |
+
+**Assessment: Rejected per operator decision. Klein quality cannot recover enough
+to serve as the primary output path for a commercial imagination x crayon book.**
+
+#### Option O6: Pause imagination x crayon; focus T6 resources on other pairs
+
+Formally pause imagination x crayon (similar to bedtime x soft_watercolor in T6-21).
+
+| dimension | assessment |
+| --- | --- |
+| Risk | None |
+| Signal value | Low |
+| Opportunity cost | High if imagination is a high-priority pair |
+| Reversibility | Full |
+
+**Assessment: viable only if O1+O2 prove unproductive after 2 additional slices. Do not pause yet.**
+
+### 46.6 Decision Summary
+
+| option | recommended action |
+| --- | --- |
+| O1: L3 regex sanitizer | T6-32: implement and re-smoke |
+| O2: Replicate policy inquiry | Initiate in parallel with T6-32 |
+| O3: Alternative model evaluation | Defer - revisit if O1+O2 insufficient |
+| O4: Story narrative redesign | Defer - long-term option |
+| O5: Accept E005 + Klein improvements | Rejected per operator decision |
+| O6: Pause pair | Hold in reserve - activate only if O1+O2 fail across 2 slices |
+
+### 46.7 T6-32 Recommended Scope
+
+T6-32: L3 Imagination Prompt Regex Sanitizer Implementation + Re-Smoke
+
+Implementation target:
+
+- Implement sanitizeImagePromptText() regex extensions for imagination-specific tokens
+  (as designed in T6-28 section 43.3.3).
+- Deploy and run a controlled re-smoke of imagination x crayon I1 and I2.
+- Measure: E005 per-page rejection count, fallback_completed ratio, book status.
+
+Success threshold:
+
+| metric | target |
+| --- | --- |
+| fallback_completed | < 3/8 per book |
+| E005 on pro_consistent | clearly decreased vs. T6-30 (I1: 6/8, I2: 7/8) |
+| book status | completed (8/8) |
+| imageTimedOut | 0 |
+
+If T6-32 re-smoke meets the threshold:
+
+- Manual visual QA of the T6-32 books (T6-33).
+- Assess whether style adherence and story-image match have improved with lower fallback count.
+
+If T6-32 re-smoke does not meet the threshold:
+
+- Activate O2 (Replicate inquiry) as the immediate next action.
+- Consider O3 (alternative model evaluation) if O2 yields no response within 1 week.
+
+Parallel action:
+
+- Initiate a Replicate support request asking about E005 policy for children's picture book fantasy content.
+
+### 46.8 Pair Status After T6-31
+
+| pair | verdict | primary model | E005 status | Klein primary | next action |
+| --- | --- | --- | --- | --- | --- |
+| imagination x crayon | **Hold** | flux-2-pro (pro_consistent) | Ongoing (L1+L2 insufficient) | **Rejected** | T6-32: L3 sanitizer + re-smoke |
+
+### 46.9 What T6-31 Did NOT Do
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No manual visual QA
+- No Klein primary implementation
+- No additional Klein quality evaluation generation
+- No product exposure matrix update
