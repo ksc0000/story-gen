@@ -5037,3 +5037,208 @@ Recommended hold triggers:
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
 - No manual visual QA
+
+## 38. T6-23 - Imagination x Crayon Smoke Generation / Structural Inspection
+
+Date: 2026-05-18
+
+### 38.1 Scope
+
+Execute the next pair structural smoke for `imagination x crayon` using the T6-22 design, including:
+
+- runner profile support update for `i1` / `i2`
+- dry-run validation
+- two-book write generation
+- monitor / inspect structural verification
+- structural evidence recording
+
+Out of scope:
+
+- manual visual QA
+- pair verdict reopening
+- post-generation regeneration
+
+### 38.2 Runner Profile Support Update
+
+Updated file: `scripts/create-nonfixed-smoke-book.js`
+
+Changes:
+
+- added reusable `IMAGINATION_INPUT_PROFILES`
+- extended `fantasy` profile set with `i1` and `i2`
+- added `T6_INPUT_PROFILES.imagination` alias pointing to the same imagination/fantasy profile set
+- no functions logic changes
+
+Execution note:
+
+- matrix category label is `imagination`
+- actual guided-ai theme id used by the runner remains `fantasy`
+- this follows the existing T6 mapping rule: `imagination -> theme id fantasy`
+
+### 38.3 Dry-Run Verification
+
+Dry-run commands executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --dry-run --theme-id=fantasy --style-id=crayon --profile=i1
+npm run smoke:create-nonfixed-book -- --dry-run --theme-id=fantasy --style-id=crayon --profile=i2
+```
+
+Dry-run summary:
+
+- both payloads resolved `themeId=fantasy`
+- both payloads resolved `styleId=crayon`
+- `creationMode=guided_ai`, `productPlan=standard_paid`, `pageCount=8`
+- no-reference path confirmed (`withReference=false`)
+- profile labels resolved as:
+  - `i1` -> `anchored moderate`
+  - `i2` -> `rich`
+
+Dry-run input check:
+
+#### Book I1 - `i1`
+
+- `childName=ひかり`
+- `childAge=4`
+- `favorites=だんぼーるロケット`
+- `colorMood=warm playful crayon twilight`
+- `place=おへやのなかのてづくりうちゅうごっこ`
+
+#### Book I2 - `i2`
+
+- `childName=そうた`
+- `childAge=5`
+- `favorites=だんぼーるロケットとほしのステッキ`
+- `colorMood=bright adventurous crayon with warm highlights`
+- `place=おへやからつながるふしぎなそらのみち`
+
+### 38.4 Generation Evidence (Write)
+
+Write commands executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --write --theme-id=fantasy --style-id=crayon --profile=i1
+npm run smoke:create-nonfixed-book -- --write --theme-id=fantasy --style-id=crayon --profile=i2
+```
+
+Created smoke books:
+
+| sample | bookId | profile | runId |
+| --- | --- | --- | --- |
+| Book I1 | `gxuvnnlAnQXf6LVXtSo4` | anchored moderate (`i1`) | `t6-nonfixed-20260517171510` |
+| Book I2 | `ZPwrVsVARKIPBEm8mcu2` | rich (`i2`) | `t6-nonfixed-20260517171510` |
+
+### 38.5 Monitor / Inspect Structural Results
+
+#### Book I1 - Anchored Moderate (`i1`)
+
+| field | value |
+| --- | --- |
+| bookId | `gxuvnnlAnQXf6LVXtSo4` |
+| title | `ひかりちゃんの ほしぞらロケット` |
+| status | **completed** |
+| progress | 100 |
+| theme | fantasy |
+| styleId | crayon |
+| selectedStyleName | クレヨンで描いた絵本 |
+| pageCount requested | 8 |
+| pages actual | 8 |
+| pages completed status | 1 `completed` + 7 `fallback_completed` |
+| failed pages | 0 |
+| imageModel | `black-forest-labs/flux-2-pro` |
+| imageAttemptCount | 1 on page 0, 3 on pages 1-7 |
+| imageFallbackUsed pages | 7 |
+| imageTimedOut pages | 0 |
+| referenceImagesUsed pages | 0 |
+| usedCharacterReference pages | 0 |
+| imageDurationMs (min / avg / max) | 21577 / 38572 / 47712 |
+| inspect expected page count check | PASS |
+
+#### Book I2 - Rich (`i2`)
+
+| field | value |
+| --- | --- |
+| bookId | `ZPwrVsVARKIPBEm8mcu2` |
+| title | `そうたの きらきら ほしさがし` |
+| status | **completed** |
+| progress | 100 |
+| theme | fantasy |
+| styleId | crayon |
+| selectedStyleName | クレヨンで描いた絵本 |
+| pageCount requested | 8 |
+| pages actual | 8 |
+| pages completed status | 1 `completed` + 7 `fallback_completed` |
+| failed pages | 0 |
+| imageModel | `black-forest-labs/flux-2-pro` |
+| imageAttemptCount | 1 on page 0, 3 on pages 1-7 |
+| imageFallbackUsed pages | 7 |
+| imageTimedOut pages | 0 |
+| referenceImagesUsed pages | 0 |
+| usedCharacterReference pages | 0 |
+| imageDurationMs (min / avg / max) | 26949 / 34687 / 43894 |
+| inspect expected page count check | PASS |
+
+### 38.6 Structural Interpretation (T6-23)
+
+Primary result:
+
+- both I1 and I2 cleared the story quality gate
+- both books completed 8/8 page generation
+- no-reference execution remained intact across both books
+
+Important structural caution:
+
+- both books were **fallback-heavy**
+- each book used fallback completion on 7 of 8 pages
+- this is not a structural failure, but it is a strong watchpoint for T6-24 visual QA
+
+What T6-23 proves:
+
+- the pivot away from `bedtime x soft_watercolor` restored structural viability
+- `imagination x crayon` can generate reviewable books in the current system
+- the new `i1` / `i2` input lanes are runnable and quality-gate-safe
+
+What T6-23 does not yet prove:
+
+- BF-4 safety in imagination-specific symbol / pseudo-text surfaces
+- BF-3 continuity across higher-variance imagination scenes
+- whether fallback-heavy generation materially harms style adherence or story-image match
+
+### 38.7 T6-24 Handoff
+
+T6-24 should perform manual visual QA and pair verdict review for:
+
+| sample | bookId | profile |
+| --- | --- | --- |
+| Book I1 | `gxuvnnlAnQXf6LVXtSo4` | anchored moderate / `i1` |
+| Book I2 | `ZPwrVsVARKIPBEm8mcu2` | rich / `i2` |
+
+Priority T6-24 watchpoints:
+
+- BF-4 on:
+  - rune-like marks
+  - map-like symbols
+  - rocket/control-panel pseudo-text
+  - spell-book / signage / banner surfaces
+- BF-3 on protagonist identity across scene-heavy pages
+- crayon style adherence under fallback-heavy generation
+- emotional fit: wonder without fear / clutter overload
+- story-image match: quest object remains legible page-to-page
+
+### 38.8 Exclusions
+
+- No functions logic changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No seed-template data changes
+- No quality gate threshold changes
+- No Firestore schema/rules changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No detailed manual visual QA
+- No final pair verdict update

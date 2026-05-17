@@ -38,6 +38,53 @@ const STYLE_PROFILE_REGISTRY = {
   },
 };
 
+const IMAGINATION_INPUT_PROFILES = {
+  a: {
+    label: "moderate",
+    input: {
+      childName: "ひかり",
+      childAge: 5,
+      parentMessage: "そうぞうのせかいで、やさしいぼうけんをたのしんでね。",
+      colorMood: "magical dreamy",
+    },
+  },
+  b: {
+    label: "rich",
+    input: {
+      childName: "そうた",
+      childAge: 4,
+      parentMessage: "どんなぼうけんも、あんしんしてたのしんで、ちゃんとかえってきてね。",
+      colorMood: "vivid adventure",
+      favorites: "だんぼーるロケットとほしのステッキ",
+      place: "おへやからつながるふしぎなそらのみち",
+    },
+  },
+  i1: {
+    label: "anchored moderate",
+    input: {
+      childName: "ひかり",
+      childAge: 4,
+      parentMessage:
+        "てづくりのだんぼーるロケットにのって、おへやのなかのそうぞうのうちゅうをやさしくたびして、ちいさなはっけんをたのしんで、あんしんしてにこにこでもどってこようね。",
+      colorMood: "warm playful crayon twilight",
+      favorites: "だんぼーるロケット",
+      place: "おへやのなかのてづくりうちゅうごっこ",
+    },
+  },
+  i2: {
+    label: "rich",
+    input: {
+      childName: "そうた",
+      childAge: 5,
+      parentMessage:
+        "だんぼーるロケットとほしのステッキをもって、ふしぎなそらのみちをすすみながら、ちいさなともだちやきらきらをみつけて、ちょっとどきどきしてもさいごはあんしんしてえがおでかえってこようね。",
+      colorMood: "bright adventurous crayon with warm highlights",
+      favorites: "だんぼーるロケットとほしのステッキ",
+      place: "おへやからつながるふしぎなそらのみち",
+    },
+  },
+};
+
 // T6 input profiles per theme and profile letter.
 // Profile A = moderate, A2 = anchored moderate, B = rich.
 const T6_INPUT_PROFILES = {
@@ -175,6 +222,13 @@ const T6_INPUT_PROFILES = {
     },
   },
 };
+
+T6_INPUT_PROFILES.fantasy = {
+  ...T6_INPUT_PROFILES.fantasy,
+  ...IMAGINATION_INPUT_PROFILES,
+};
+
+T6_INPUT_PROFILES.imagination = T6_INPUT_PROFILES.fantasy;
 
 function buildSmokeRunId() {
   const iso = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
