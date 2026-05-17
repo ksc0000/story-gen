@@ -7,6 +7,7 @@
     "clean": "node scripts/clean-build.mjs",
     "guard:hygiene": "node scripts/check-hygiene.mjs",
     "smoke:create-template-books": "node scripts/create-template-smoke-books.js",
+    "smoke:create-nonfixed-book": "node scripts/create-nonfixed-smoke-book.js",
     "smoke:monitor": "node scripts/monitor-smoke-book.js",
     "smoke:inspect": "node scripts/inspect-smoke-book.js",
     "smoke:upload-reference": "node scripts/setup-smoke-reference.js",

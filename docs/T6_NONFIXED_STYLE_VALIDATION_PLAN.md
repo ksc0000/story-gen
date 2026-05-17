@@ -1058,3 +1058,152 @@ If `bedtime × crayon` pair verdict is `Conditional`:
 - No runner changes
 - No style profile changes
 - No service account JSON, secrets, URLs, or tokens recorded
+
+---
+
+## 17. T6-3 L1 Smoke — Bedtime × Crayon Execution Results
+
+Date: 2026-05-17
+
+### 17.1 Runner Support Check
+
+Finding: the existing `scripts/create-template-smoke-books.js` hardcodes `creationMode: "fixed_template"` and iterates over `getFixedTemplateIds()`. It cannot create `guided_ai` books.
+
+Action taken: created `scripts/create-nonfixed-smoke-book.js` — minimal guided_ai smoke book creator for T6. Supports `--dry-run` and `--write` flags; accepts `--theme-id`, `--style-id`, `--profile=a|b` arguments. No functions logic changes.
+
+npm script added: `smoke:create-nonfixed-book`.
+
+### 17.2 Dry-Run Verification
+
+Dry-run for Book A (profile=a / moderate):
+
+```
+themeId:       bedtime
+styleId:       crayon
+profile:       a (moderate)
+creationMode:  guided_ai
+productPlan:   standard_paid
+pageCount:     8
+characterMode: cover_only
+withReference: false
+input:         {"childName":"さくら","childAge":4,"parentMessage":"きょうもたくさんあそんだね。おやすみ、さくら。","colorMood":"soft warm"}
+```
+
+Payload verified correct. Proceeded to `--write`.
+
+Note: `productPlan` is `standard_paid` (not `free` as noted in section 16.5) because `guided_ai` requires `standard_paid`. The server would normalize `free + guided_ai → standard_paid` anyway; being explicit avoids smoke metadata ambiguity.
+
+### 17.3 Structural Evidence
+
+#### Book A — Moderate Profile
+
+| field | value |
+| --- | --- |
+| bookId | J5eLcAw50sC2yh0MCbJ6 |
+| runId | t6-nonfixed-20260517064657 |
+| themeId | bedtime |
+| styleId | crayon |
+| inputProfile | moderate (a) |
+| creationMode | guided_ai |
+| productPlan | standard_paid |
+| characterConsistencyMode | cover_only |
+| childProfileSnapshot | none |
+| pageCount (requested) | 8 |
+| status | **failed** |
+| failureStage | quality_gate |
+| progress | 0 |
+| pagesCompleted | 0 / 8 |
+| referenceImagesUsed | 0 / 8 |
+
+Quality gate violation detail (20 violations across 8 pages):
+
+| violation | pages |
+| --- | --- |
+| missing_action_or_emotion | 1, 3, 5, 6, 8 |
+| too_many_sound_words | 2 |
+| text_too_childish | 2 |
+| missing_scene_detail | 4, 5, 7 |
+| sentence_too_short_for_age | 5, 7 |
+| page_text_not_connected_to_story_goal | 1, 2, 3, 4, 6, 7, 8 |
+| missing_visual_motif_in_text | 3, 4 |
+
+#### Book B — Rich Profile
+
+| field | value |
+| --- | --- |
+| bookId | iuCrth0sC6UV9SVVf0F1 |
+| runId | t6-nonfixed-20260517064705 |
+| themeId | bedtime |
+| styleId | crayon |
+| inputProfile | rich (b) |
+| creationMode | guided_ai |
+| productPlan | standard_paid |
+| characterConsistencyMode | cover_only |
+| childProfileSnapshot | none |
+| pageCount (requested) | 8 |
+| status | **completed** |
+| progress | 100 |
+| pagesCompleted | 8 / 8 |
+| referenceImagesUsed | 0 / 8 |
+| imageModel | black-forest-labs/flux-2-pro |
+| usedCharacterReference | false (all pages) |
+| imageAttemptCount | 1 (all pages) |
+| failedPages | 0 |
+
+### 17.4 Generation Analysis
+
+**Book A failure interpretation:**
+
+The quality gate is a server-side LLM output check applied to the generated page text before image generation begins. Book A failed with 20 violations, most critically `page_text_not_connected_to_story_goal` appearing on 7 of 8 pages. This indicates the moderate input profile (minimal parentMessage + colorMood only) did not give the LLM sufficient anchoring context to generate scene text that the quality gate accepts as meaningfully connected to a coherent story arc.
+
+This is a text-generation failure, not an image-render failure. No images were generated for Book A.
+
+**Book B success interpretation:**
+
+The rich input profile — with a longer parentMessage, `colorMood: "deep cozy night"`, and `favorites: "ミニカーとぬいぐるみ"` — provided the LLM with sufficient scene anchoring to pass all quality checks. All 8 pages generated successfully.
+
+**Key T6 finding from this run:**
+
+The moderate input profile is insufficient to pass the server-side quality gate for `bedtime × guided_ai` in at least this execution. The rich input profile passed. This does not mean moderate is always insufficient — LLM output has run-to-run variance — but it is a signal that thin input profiles carry meaningful quality-gate failure risk for guided_ai books.
+
+**T6 framework update implication:**
+
+The T6-1 requirement that "moderate or richer input profile is required for a Go verdict" is validated by this observation. Minimal and moderate profiles may be usable as comparison baselines but should not be relied upon as sufficient for production path validation.
+
+### 17.5 Visual QA Status
+
+Book A: not applicable (generation failed before image phase).
+
+Book B: image URLs are available in Firestore for all 8 pages. Visual QA (BF-4, BF-3, style adherence, emotional fit) is pending manual review. This document records structural evidence only; visual QA must be performed separately using the evidence template from section 16.7.
+
+Visual QA is required before issuing a final T6-3 pair verdict.
+
+### 17.6 Partial Pair Verdict (Structural Only)
+
+Book A structural verdict: **Hold** (generation failed at quality_gate before image phase; no images to review)
+
+Book B structural verdict: **Pending visual QA** (generation completed; 8/8 pages; image QA required)
+
+T6-3 full pair verdict: **Hold pending** — cannot issue a final verdict until either Book A is re-run successfully or the quality gate behavior is understood and addressed.
+
+### 17.7 Recommended Next Steps
+
+1. Retry Book A with a slightly richer parentMessage to test whether the moderate profile can reliably pass the quality gate with a longer message, or redesign the moderate profile definition to require a minimum parentMessage length.
+2. Perform visual QA on Book B (8 pages) using the section 16.7 evidence template.
+3. If a revised Book A generates successfully, record both books' full evidence and issue the final pair verdict.
+4. Document whether the quality gate failure rate for moderate bedtime inputs is a systemic risk or a one-off LLM sampling event.
+
+### 17.8 Exclusions
+
+- No fixed-template exposure matrix changes
+- No style exposure gating changes
+- No UI changes
+- No functions logic changes (runner script only: `scripts/create-nonfixed-smoke-book.js`)
+- No Firestore schema or rules changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation / revocation
+- No style profile changes
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
