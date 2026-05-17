@@ -1758,3 +1758,257 @@ What is now true:
 - No runner changes
 - No style profile changes
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 21. T5-9 Product Rollout Checklist / Operator Playbook For Style Exposure Updates
+
+### 21.1 Purpose
+
+This section defines the standard operator workflow for updating the style exposure matrix safely.
+
+Use this playbook whenever a team wants to:
+
+- add a new `templateId × styleId` pairing
+- promote or demote an existing pairing
+- emergency-block a pairing already exposed in product
+- reopen a previously blocked pairing after validation
+
+### 21.2 Current Gating Stack
+
+Before any exposure update, confirm the current stack is still the source of truth:
+
+- T4 validation evidence in `docs/STYLE_VARIANT_VALIDATION_PLAN.md`
+- frontend exposure config in `src/lib/style-exposure.ts`
+- create-flow UI filtering in `src/app/(app)/create/style/page.tsx`
+- functions mirror config in `functions/src/lib/style-exposure.ts`
+- server-side guard in `functions/src/generate-book.ts`
+- server-side QA evidence in `docs/STYLE_EXPOSURE_GATING_PLAN.md`
+
+Operator rule:
+
+- never update only one layer
+- exposure policy is not considered changed until docs, frontend config, and functions mirror all agree
+
+### 21.3 Standard Change Types
+
+Supported change types:
+
+- add new pairing
+- promote `available -> promote`
+- soften `blocked -> internal`
+- reopen `blocked/internal -> available`
+- emergency block `promote/available -> blocked`
+- remove pairing from active exposure
+
+Recommended framing:
+
+- treat every change as a `pairing-level policy update`
+- do not reason about style exposure as a style-wide toggle unless every relevant template has been validated
+
+### 21.4 Required Validation Evidence
+
+Minimum evidence before allowing a new public-facing pairing:
+
+- documented validation run in `docs/STYLE_VARIANT_VALIDATION_PLAN.md`
+- structural smoke completion
+- manual visual QA for BF-4
+- manual visual QA for BF-3
+- style adherence assessment
+- emotional fit / story-image fit assessment
+- explicit decision outcome (`Go`, `Conditional-Go`, `Conditional`, or `Hold`)
+
+Promotion requirements by target status:
+
+#### `promote`
+
+- pairing must have stable `Go` evidence
+- no unresolved blocker-level BF-4/BF-3 issues
+- suitable for recommended or highlighted product exposure
+
+#### `available`
+
+- pairing may have `Conditional-Go` evidence
+- no blocker-level issues
+- minor watch items may remain if documented and commercially acceptable
+
+#### `internal`
+
+- pairing may have incomplete validation
+- may be retained for future testing
+- must not be user-selectable in normal product flow
+
+#### `blocked`
+
+- pairing has known unacceptable risk or instability
+- should be hidden from UI and rejected by guarded backend paths
+
+### 21.5 Standard Update Procedure
+
+When updating the matrix, follow this order:
+
+1. confirm evidence and target status decision
+2. update the product decision record in docs
+3. update `src/lib/style-exposure.ts`
+4. update `functions/src/lib/style-exposure.ts`
+5. update or add tests for frontend exposure helpers
+6. update or add tests for functions-side guard behavior if status changes affect backend behavior
+7. run hygiene, lint/build, and targeted tests
+8. verify UI-visible styles for affected templates
+9. verify server behavior for blocked or reopened pairings
+10. record rollout result and merge only after all layers agree
+
+### 21.6 Frontend / Functions Sync Checklist
+
+Every matrix update must check all of the following:
+
+- canonical `templateId` matches across docs and both config modules
+- canonical `styleId` matches across docs and both config modules
+- `status` matches across frontend and functions mirrors
+- `rationale` matches or is intentionally equivalent
+- `userSelectable` matches intended UI exposure
+- `sortPriority` reflects intended picker order
+- alias behavior remains unchanged unless intentionally updated
+
+Do not ship if:
+
+- frontend shows a pairing the functions mirror would reject
+- functions allow a pairing that docs still classify as blocked
+- docs claim a pairing is promoted but sort/order still hides it behind lower-priority options
+
+### 21.7 UI / Server / Test / Docs Checklist
+
+For each exposure change, verify:
+
+#### UI
+
+- affected template shows only intended visible styles
+- blocked pairings are hidden
+- ordering follows `sortPriority`
+- stale selection fallback still behaves safely
+
+#### Server
+
+- allowed pairing passes guarded path
+- blocked/internal/unlisted pairing fails guarded path where applicable
+- failure metadata remains audit-friendly
+
+#### Tests
+
+- frontend helper tests updated if visible matrix changed
+- picker tests updated if ordering/visibility changed
+- functions tests updated if server allow/block behavior changed
+
+#### Docs
+
+- validation evidence source linked or referenced
+- matrix table updated
+- rollout tier updated
+- watch notes or deferred reasons updated if relevant
+
+### 21.8 Promotion / Demotion Rules
+
+Promotion rule:
+
+- move a pairing upward only after documented fresh evidence supports the new tier
+
+Demotion rule:
+
+- demote immediately if any of the following appear in validated reruns:
+  - blocker-level BF-4 regression
+  - blocker-level BF-3 regression
+  - repeated fallback behavior with visible quality instability
+  - commercial suitability failure
+
+Suggested downgrade path:
+
+- `promote -> available`
+  - if issues are minor and manageable
+- `available -> internal`
+  - if evidence becomes stale or incomplete
+- `promote/available -> blocked`
+  - if production safety or commercial suitability is no longer acceptable
+
+### 21.9 Emergency Block Procedure
+
+Use emergency block when a currently exposed pairing shows a blocker after rollout.
+
+Emergency steps:
+
+1. set pairing status to `blocked` in `src/lib/style-exposure.ts`
+2. mirror the same change in `functions/src/lib/style-exposure.ts`
+3. keep or add a clear blocked rationale
+4. run the smallest targeted UI and functions verification set
+5. push immediately once checks pass
+6. update docs with incident note and temporary operating status
+
+Emergency success criteria:
+
+- pairing disappears from normal UI
+- server guard rejects direct fixed-template writes for that pairing
+
+### 21.10 Rollback Guidance
+
+Rollback trigger examples:
+
+- accidental exposure of blocked pairing
+- mismatched frontend/functions matrix state
+- new regression discovered after merge
+
+Rollback options:
+
+- config rollback
+  - revert the last matrix change commit
+- emergency block
+  - keep code shape but change the pairing to `blocked`
+- temporary internalization
+  - move public pairing to `internal` while reruns are evaluated
+
+Preferred rollback choice:
+
+- if safety is uncertain, prefer `blocked` over `internal`
+
+### 21.11 Release Verification Checklist
+
+Before considering a style exposure update released, confirm:
+
+- docs decision has been updated
+- frontend exposure config is updated
+- functions mirror config is updated
+- UI filtering behavior is correct for affected templates
+- server guard behavior is correct for affected templates
+- targeted tests pass
+- hygiene passes
+- any required build/lint step passes
+- rollout owner knows whether the pairing is `promote`, `available`, `internal`, or `blocked`
+
+### 21.12 Operator Notes
+
+Recommended operator defaults:
+
+- default unknown or new pairing to `internal`
+- require explicit evidence before making a pairing user-selectable
+- prefer narrow pair-level changes over broad style-wide assumptions
+- preserve blocked rationales so future reopen work has context
+
+### 21.13 Suggested Next Steps
+
+Recommended follow-up candidates after this playbook:
+
+1. T5-10 optional non-fixed-path exposure enforcement audit.
+2. T5-11 admin/internal override path planning.
+3. Shared config extraction planning if frontend/functions duplication becomes expensive.
+
+### 21.14 Exclusions
+
+- No code changes performed
+- No UI changes performed
+- No functions changes performed
+- No Firestore schema or rules changes performed
+- No smoke generation performed
+- No image generation performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No runner changes
+- No style profile changes
+- No service account JSON, secrets, URLs, or tokens recorded
