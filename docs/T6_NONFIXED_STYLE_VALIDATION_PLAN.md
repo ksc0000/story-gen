@@ -3861,3 +3861,195 @@ T6-18 focus:
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+## 33. T6-18 - Post-Hardening Bedtime x Soft_Watercolor Smoke Retry / Structural Inspection
+
+Date: 2026-05-18
+
+### 33.1 Scope
+
+Execute one post-hardening smoke retry for `bedtime x soft_watercolor` using the existing `s1rr` retry lane after the T6-17 non-fixed prompt hardening implementation.
+
+This slice includes:
+
+- dry-run validation
+- one-book write generation
+- monitor / inspect structural verification
+- structural evidence recording
+
+Out of scope:
+
+- manual visual QA
+- pair verdict reopening
+- S2 regeneration
+
+### 33.2 Retry Definition
+
+Execution target:
+
+| sample | theme | style | profile | reference mode |
+| --- | --- | --- | --- | --- |
+| post-hardening S1RR | bedtime | soft_watercolor | `s1rr` | no-reference |
+
+Rationale:
+
+- T6-17 changed production prompt assembly, not the runner profile layer
+- using the same `s1rr` lane gives the cleanest comparison against the prior S1RR result
+- S2 remains the retained clean control and is not regenerated here
+
+### 33.3 Dry-Run Verification
+
+Dry-run command executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --dry-run --theme-id=bedtime --style-id=soft_watercolor --profile=s1rr
+```
+
+Dry-run summary:
+
+- payload resolved `themeId=bedtime`
+- payload resolved `styleId=soft_watercolor`
+- `creationMode=guided_ai`
+- `productPlan=standard_paid`
+- `pageCount=8`
+- no-reference path confirmed (`withReference=false`)
+- profile resolved as `s1rr` / `anchored moderate room-no-text retry`
+
+Dry-run input check:
+
+- `childName=sakura`
+- `childAge=4`
+- `colorMood=soft warm quiet bedtime watercolor night`
+- `favorites=usagi no nuigurumi`
+- `place=quiet simplified bedroom with text-free shelf and boxes`
+- room-no-text `parentMessage` remained present in the retry payload
+
+### 33.4 Generation Evidence (Write)
+
+Write command executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --write --theme-id=bedtime --style-id=soft_watercolor --profile=s1rr
+```
+
+Created post-hardening retry book:
+
+| sample | bookId | profile | runId |
+| --- | --- | --- | --- |
+| Book S1RR-H1 | `DtBgZfT7rVKhLuH0A7l4` | anchored moderate room-no-text retry (`s1rr`) | `t6-nonfixed-20260517163614` |
+
+### 33.5 Monitor / Inspect Structural Results
+
+#### Book S1RR-H1 - Post-Hardening Retry (`s1rr`)
+
+| field | value |
+| --- | --- |
+| bookId | `DtBgZfT7rVKhLuH0A7l4` |
+| title | `[SMOKE-T6] bedtime × soft_watercolor (anchored moderate room-no-text retry)` |
+| status | **failed** |
+| progress | 0 |
+| theme | bedtime |
+| style | soft_watercolor |
+| selectedStyleId | soft_watercolor |
+| selectedStyleName | やさしい水彩 |
+| creationMode | guided_ai |
+| productPlan | standard_paid |
+| characterConsistencyMode | cover_only |
+| smoke metadata `withReference` | false |
+| failureStage | `quality_gate` |
+| failureReason | `unknown` |
+| generatedTextPreview pages | 8 |
+| pages actual | 0 |
+| pages completed | 0 |
+| failed pages | 0 |
+| referenceImagesUsed pages | 0 |
+| usedCharacterReference pages | 0 |
+| inspect expected page count check | **FAIL** (`expected=8`, `actual=0`) |
+
+Monitor / inspect notes:
+
+- the run reached book creation and story-preview generation
+- the run did **not** reach page image generation
+- no page documents were written
+- no image-model, image-attempt, fallback, or timeout metrics were produced because image generation never started
+
+Quality-gate failure metadata:
+
+`technicalErrorMessage` summary:
+
+- `text_too_childish page=2`
+- repeated `missing_scene_detail`
+- repeated `missing_action_or_emotion`
+- repeated `page_text_not_connected_to_story_goal`
+- repeated `missing_visual_motif_in_text`
+
+### 33.6 Structural Interpretation (T6-18)
+
+What this run proves:
+
+- the T6-17 hardening code did not break smoke payload construction
+- `bedtime` / `soft_watercolor` / `guided_ai` / no-reference selection persisted correctly at book level
+- the post-hardening retry lane is still callable and writes the expected smoke metadata
+
+What this run does not yet prove:
+
+- whether bookshelf / book-surface BF-4 artifacts are reduced
+- whether page-level image prompts now behave better in actual image generation
+- whether the pair can move off `Hold`
+
+Why not:
+
+- the run failed at `quality_gate` before any page images were generated
+- therefore there is no visual evidence set for T6-19 yet
+
+Operational conclusion:
+
+- T6-18 does **not** provide a visual-QA-ready retry book
+- T6-19 manual visual QA is blocked until a subsequent retry clears story quality gate and reaches page generation
+- the new blocker is currently upstream of image generation, not a direct BF-4 image-surface observation
+
+### 33.7 Prompt-Field Behavior Notes
+
+Prompt-field behavior confirmed at the structural level:
+
+- `selectedStyleId=soft_watercolor` persisted
+- `theme=bedtime` persisted
+- `creationMode=guided_ai` persisted
+- smoke metadata `withReference=false` persisted
+- retry profile remained `s1rr`
+
+Prompt-field behavior not yet observable:
+
+- page-level image prompt output after hardening
+- page-level printed-surface suppression behavior
+- image-model response to the new shared + bedtime-local no-text guidance
+
+### 33.8 Next-Step Handoff
+
+Before any post-hardening visual QA, the next retry slice must first restore structural viability past the story quality gate.
+
+Practical implication:
+
+- do not treat this run as a replacement for S1RR in pair review
+- keep current pair state unchanged
+- next work should address the new `quality_gate` blocker or produce a successful post-hardening generation before T6-19 visual QA
+
+### 33.9 Exclusions
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No detailed manual visual QA
+- No final pair verdict update
+- No S2 regeneration
