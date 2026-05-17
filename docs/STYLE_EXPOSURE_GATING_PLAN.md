@@ -2689,3 +2689,233 @@ Recommended next candidates after T5 release readiness:
 - No runner changes
 - No style profile changes
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 25. T5-13 Non-Fixed-Path Exposure Enforcement Audit
+
+### 25.1 Audit Goal
+
+Audit how non-fixed creation paths currently interact with style selection and exposure policy.
+
+This audit focuses on:
+
+- how `guided_ai` and `original_ai` books receive style fields
+- where those fields are used in generation
+- how current behavior differs from fixed-template enforcement
+- whether non-fixed paths should enter the style exposure gating system now
+
+This slice is audit-only:
+
+- no code changes
+- no server behavior changes
+
+### 25.2 Create Flow Branching
+
+Current create flow branching:
+
+- `fixed_template`
+  - template-specific product path
+  - now gated in UI and backend
+- `guided_ai`
+  - template/theme-guided AI generation
+  - currently not backend-gated by exposure matrix
+- `original_ai`
+  - open-ended AI generation
+  - currently not backend-gated by exposure matrix
+
+Relevant create-flow behavior from `src/app/(app)/create/style/page.tsx`:
+
+- the page always resolves a selected style
+- it always writes style-related fields into the book payload
+- it always stores:
+  - `style`
+  - `selectedStyleId`
+  - `selectedStyleName`
+  - `styleBible`
+  - `stylePreviewImageUrl`
+  - `stylePreviewUsedAsReference`
+
+Important nuance:
+
+- style picker visibility is currently template-aware only where the exposure matrix explicitly defines a template
+- unconfigured templates fall back to the canonical style list in the frontend helper
+
+### 25.3 Non-Fixed Payload Behavior
+
+For non-fixed books, the create flow still writes:
+
+- `theme`
+- `templateId`
+- `categoryGroupId`
+- `creationMode`
+- `style`
+- `selectedStyleId`
+- `selectedStyleName`
+- `styleBible`
+- `stylePreviewImageUrl`
+- `stylePreviewUsedAsReference=false`
+
+Meaning:
+
+- non-fixed books already carry enough style identity for future server-side gating
+- there is no schema blocker preventing policy expansion later
+
+### 25.4 Functions-Side Non-Fixed Behavior
+
+Current functions behavior in `functions/src/generate-book.ts`:
+
+- style exposure validation is checked only when:
+  - `resolvedCreationMode === "fixed_template"`
+- for non-fixed books:
+  - exposure matrix is not consulted
+  - generation continues into the normal story/image path
+
+Non-fixed style usage still occurs later in generation:
+
+- style profile is resolved from `normalizedBookData.style`
+- style cues are included in story/image prompt construction
+- style metadata is saved back into generation records
+
+Audit conclusion:
+
+- non-fixed paths are style-influenced
+- but they are not style-gated
+
+### 25.5 Current Risk Profile
+
+Current non-fixed-path risk:
+
+- frontend may still show canonical styles for non-fixed templates that have never been validated as pairings
+- backend will currently accept those non-fixed combinations
+- therefore, style exposure policy is not fully end-to-end outside the fixed-template scope
+
+However, this is not an unexpected regression.
+
+Reason:
+
+- T5 release scope explicitly excluded broader non-fixed creation modes
+- non-fixed styles remain in a more exploratory/open product state
+- no non-fixed style-template matrix has yet been validated to the same standard as T4 fixed-template pairings
+
+### 25.6 Should Non-Fixed Paths Be Gated Now?
+
+Audit judgment:
+
+- not yet
+
+Reasoning:
+
+- current validation evidence is pairing-specific for fixed-template baselines
+- non-fixed themes are broader and more prompt-open than fixed templates
+- enforcing a hard allow/block matrix now would create policy decisions without matching validation evidence
+- fail-closing unvalidated non-fixed themes immediately would likely over-constrain current guided/original AI behavior
+
+Recommended posture:
+
+- keep current non-fixed behavior out of the active hard-gated release scope
+- do not expand server fail-close to non-fixed until a separate validation framework exists
+
+### 25.7 Candidate Gating Units For Future Expansion
+
+Possible future gating units considered:
+
+#### `theme × style`
+
+Pros:
+
+- closest to current payload structure
+- compatible with existing `theme/templateId` usage
+
+Cons:
+
+- guided themes are broader than fixed templates
+- evidence burden grows quickly
+- some themes may be too open-ended for reliable pair-level validation at first
+
+#### `categoryGroupId × style`
+
+Pros:
+
+- fewer combinations
+- closer to product-level exposure buckets
+
+Cons:
+
+- too coarse if one theme in the category is stable and another is not
+- may hide real per-theme instability
+
+#### `creationMode/bookType × style`
+
+Pros:
+
+- simple policy surface
+
+Cons:
+
+- too coarse to be trustworthy
+- likely to overgeneralize across very different prompts and themes
+
+#### No hard gating until dedicated non-fixed validation exists
+
+Pros:
+
+- consistent with current evidence quality
+- avoids premature hard policy on exploratory generation paths
+
+Cons:
+
+- non-fixed style exposure remains less controlled than fixed-template flow
+
+Audit recommendation:
+
+- if/when expansion begins, start with `theme × style`
+- but only after a dedicated non-fixed validation track defines evidence standards
+
+### 25.8 Impact On Current Release
+
+Current release impact:
+
+- acceptable
+
+Reason:
+
+- T5 release scope was explicitly fixed-template only
+- fixed-template path now has both UI filtering and backend fail-close
+- non-fixed path remains out of current `Go` scope rather than silently misclassified as protected
+
+Important product note:
+
+- do not communicate current style gating as universal across all creation modes
+- communicate it as enforced for the validated fixed-template scope only
+
+### 25.9 Recommended Follow-Up
+
+Recommended next implementation/planning candidates:
+
+1. T5-14 admin/internal override planning.
+2. T6-1 non-fixed style validation framework design.
+3. T6-2 non-fixed theme × style candidate selection and validation matrix design.
+4. T6-3 non-fixed-path exposure enforcement design only after validation criteria exist.
+
+### 25.10 Audit Verdict
+
+T5-13 verdict:
+
+- non-fixed style exposure is currently ungated at the backend
+- this is acceptable for the present release because it is outside the approved T5 scope
+- backend expansion should be deferred until non-fixed validation evidence exists
+
+### 25.11 Exclusions
+
+- No code changes performed
+- No UI changes performed
+- No functions changes performed
+- No Firestore schema or rules changes performed
+- No smoke generation performed
+- No image generation performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No runner changes
+- No style profile changes
+- No service account JSON, secrets, URLs, or tokens recorded
