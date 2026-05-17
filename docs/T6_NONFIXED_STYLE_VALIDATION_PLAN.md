@@ -2283,3 +2283,195 @@ Rationale:
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+---
+
+## 24. T6-9 - Bedtime x Soft_Watercolor BF-4 Remediation Plan (Docs-Only)
+
+Date: 2026-05-17
+
+### 24.1 Objective
+
+Define the minimum-scope remediation plan for the T6-8 blocker in `bedtime x soft_watercolor`, so T6-10 can execute a focused retry without changing runner behavior, style profiles, or broader non-fixed infrastructure.
+
+This slice is planning only:
+
+- no code or prompt implementation in this slice
+- no new generation in this slice
+- no pair verdict reopening in this slice
+
+### 24.2 Blocker Restatement
+
+Target blocker from T6-8:
+
+- book: Book S1 `uwhwhq3DmuGPekxBVn0a`
+- page: `6`
+- current verdict: BF-4 `fail`
+- observed surface: lower-left quadrant contains a large readable Japanese text block unrelated to the story scene
+- pair impact: `bedtime x soft_watercolor` remained `Hold` because section 21.9 requires no BF-4 fail pages
+
+Important narrowing signals:
+
+- both books passed structural health
+- Book S2 (`PFuh3zu7q4VmNn4qA3dU`) was BF-4 clean and received `Go`
+- aggregate BF-3 passed
+- aggregate style adherence was strong
+- aggregate emotional fit was high-fit
+- failure was localized to one sample, one page, and one surface
+
+### 24.3 Page 6 Context Comparison
+
+Book S1 page `6` context:
+
+- pageVisualRole: `payoff`
+- page text beat: moon and stars quietly watching over sleeping Sakura through the window
+- scene prompt shape: wide bedroom shot, visible window, many stars, visible room detail, hidden rabbit-shaped star cluster
+
+Book S2 page `6` comparison:
+
+- pageVisualRole: `quiet_ending`
+- page text beat: Kenta traveling in a dream-star world
+- scene prompt shape: dream-cloud scene with fewer bedroom surfaces and less open negative space for accidental text blocks
+
+Interpretation:
+
+- the failure did not require a globally unsafe style or globally unsafe category
+- the failing page combined a wide in-room composition, dense story instructions, many visible stars, and a late-story payoff beat
+- this makes page-local composition pressure a more plausible driver than pair-level style unsafety
+
+### 24.4 Cause Hypothesis Classification
+
+| hypothesis class | assessment | reasoning |
+| --- | --- | --- |
+| input profile origin (`s1` anchored moderate) | low to medium | S1 failed and S2 passed, so profile sensitivity is possible, but the artifact occurred on one late page rather than across the whole book; no broader S1 degradation was observed |
+| generated story / page text origin | low | page text itself contains no signage-like content and is bedtime-safe; all pages carry text, but only page `6` produced the blocker |
+| `soft_watercolor` style origin | low | style adherence was strong and S2 was clean; current evidence does not support a pair-wide style defect |
+| prompt / global no-text suppression insufficiency | high | the page prompt already includes no-text clauses, yet the model still produced a large readable paragraph block; this suggests existing suppression is directionally correct but not strong enough for this page context |
+| page `6` scene composition origin | high | S1 page `6` uses a wide bedroom payoff composition with visible lower-left free area and rich scene detail; this is the most direct contextual difference from the clean S2 page `6` dream composition |
+
+Working cause model:
+
+- primary driver: page-local composition vulnerability on S1 page `6`
+- co-driver: existing no-text suppression is too generic for this specific late-bedtime wide-room payoff beat
+- non-primary factors: `s1` input profile and `soft_watercolor` style may affect stochastic convergence, but they are not the strongest explanatory variables from current evidence
+
+### 24.5 Remediation Options Comparison
+
+| option | scope | upside | downside | recommendation |
+| --- | --- | --- | --- | --- |
+| A. rerun full pair unchanged | rerun S1 + S2 with no prompt change | cheapest to reason about; tests pure variance | does not actively reduce recurrence risk; wastes rerun budget on already-clean S2 | reject |
+| B. rerun Book S1 only unchanged | one-book retry, no prompt change | isolates whether the issue was one-off sampling noise | if it passes, root prevention remains weak; if it fails again, little new diagnostic information is gained | fallback only |
+| C. narrow prompt hardening for the failing page context + retry Book S1 only | one-book targeted retry with localized no-text / composition hardening | smallest intervention that meaningfully addresses recurrence risk while preserving the validated pair structure | requires careful wording so style warmth is not over-suppressed | **recommended** |
+| D. broaden style-level anti-text rules for all `soft_watercolor` pages | style-profile-level hardening | may reduce future text artifacts more broadly | too wide for a one-page failure; risks overcorrecting a baseline style that otherwise performed well | reject |
+| E. change runner, schema, or reference flow | infrastructure-level change | maximum control | out of scope, too expensive, not justified by current evidence | reject |
+
+### 24.6 Recommended Minimum-Scope Direction
+
+Recommended direction for T6-10:
+
+- keep the pair fixed as `bedtime x soft_watercolor`
+- keep prompt-only / no-reference mode unchanged
+- do not alter runner behavior
+- do not alter style profiles
+- do not alter global non-fixed generation architecture
+- target only the failing book lane first: Book S1 anchored moderate (`s1`)
+
+Recommended remediation shape:
+
+1. strengthen no-readable-text suppression for the specific late-bedtime wide-room sleep-watchover scene class
+2. reduce composition freedom on the failing page context so the model is less likely to invent large flat text-bearing regions
+3. preserve the emotional beat: sleeping child, bunny plush, moon/stars watching over the room
+
+Desired wording characteristics for later implementation:
+
+- local, narrow, and scene-specific
+- framed as visual constraints, not style denial
+- compatible with `soft_watercolor` softness and bedtime warmth
+- explicit about blank surfaces, printed blocks, paragraph-like clusters, labels, captions, and book-page overlays
+
+### 24.7 Planned Prompt-Hardening Themes For T6-10
+
+T6-10 should prefer narrow hardening in the failing page context using themes like:
+
+- no printed paragraph blocks anywhere in the room
+- no poster text, page text, storybook overlays, wall writing, labels, or decorative writing
+- no open-book, paper-sheet, poster, or framed-print surfaces that could invite generated writing
+- prefer clean bedding, plain walls, simple furniture, and uncluttered lower-frame surfaces
+- keep the window / moon / star watchover beat visually dominant
+- favor a calm sleep closure composition over a detail-dense payoff tableau
+
+Important non-goals for the later implementation:
+
+- do not remove moon / stars / bunny motifs
+- do not make the page photorealistic or harsh
+- do not rewrite the whole pair strategy
+- do not escalate to style-level hardening before a narrow page-context retry is tested
+
+### 24.8 Template-Local vs Pair-Level Decision
+
+Decision:
+
+- treat this as a pair-local, page-context-local remediation problem first
+
+Reasoning:
+
+- current evidence does not indicate a broad `soft_watercolor` failure
+- the clean S2 book demonstrates viable pair behavior already exists
+- broad style or infrastructure changes would be disproportionate to a one-page failure
+- a narrow intervention preserves causal clarity for T6-10
+
+Escalation rule:
+
+- if a targeted S1 retry still produces readable text on page `6` or a nearby late-book page, then consider a second-step broader no-text hardening for bedtime non-fixed late-sleep pages
+- do not escalate to style-profile or runner changes unless narrow prompt hardening fails
+
+### 24.9 T6-10 Retry Definition
+
+Primary retry target for T6-10:
+
+- retry unit: Book S1 lane only
+- target profile: anchored moderate (`s1`)
+- target pair: `theme=bedtime`, `style=soft_watercolor`
+- mode: prompt-only, no-reference
+- page count: 8
+- evaluation focus: full book QA with special attention to page `6` and any late-book pages that could inherit the same failure mode
+
+Retry policy:
+
+- do not rerun Book S2 in the first retry slice
+- preserve Book S2 as the clean comparison/control sample from T6-8
+- treat T6-10 as a targeted remediation retry, not a fresh pair re-baseline
+
+Success criteria for T6-10:
+
+- no BF-4 fail on page `6`
+- no new BF-4 fail introduced on other pages
+- bedtime emotional fit remains acceptable or better
+- `soft_watercolor` style adherence remains acceptable or better
+- child / bunny continuity remains pass
+
+If T6-10 passes:
+
+- pair can be reconsidered with the original S2 `Go` evidence plus the remediated S1 retry evidence
+
+If T6-10 fails:
+
+- open a second remediation slice before any additional pair promotion decision
+
+### 24.10 Out Of Scope (T6-9)
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
