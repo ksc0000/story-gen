@@ -2475,3 +2475,163 @@ If T6-10 fails:
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+---
+
+## 25. T6-10 - Bedtime x Soft_Watercolor S1R Retry Generation / Structural Inspection
+
+Date: 2026-05-17
+
+### 25.1 Scope
+
+Execute the T6-10 targeted retry for `bedtime x soft_watercolor` using Book S1 retry lane only, including:
+
+- runner profile support update for `s1r`
+- dry-run validation
+- one-book write generation
+- monitor / inspect structural verification
+- structural evidence recording
+
+Out of scope for this slice:
+
+- detailed manual visual QA
+- pair verdict reopening
+- S2 regeneration
+
+### 25.2 Runner Profile Support Update
+
+Updated file: `scripts/create-nonfixed-smoke-book.js`
+
+Changes:
+
+- added bedtime profile key `s1r` (anchored moderate retry)
+- expanded usage comments to include `s1r`
+- no functions logic changes
+
+`s1r` input intent:
+
+- preserve the successful anchored-moderate structure from `s1`
+- keep prompt-only / no-reference execution
+- strengthen bedtime grounding with a calmer sleep-closure parent message
+- add `place` hint (`しずかですっきりした寝室`) to reduce scene clutter freedom
+- avoid adding new prop complexity beyond the bunny plush motif
+
+### 25.3 Dry-Run Verification
+
+Dry-run command executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --dry-run --theme-id=bedtime --style-id=soft_watercolor --profile=s1r
+```
+
+Dry-run summary:
+
+- payload resolved `themeId=bedtime`, `styleId=soft_watercolor`
+- `creationMode=guided_ai`, `productPlan=standard_paid`, `pageCount=8`
+- no-reference path confirmed (`withReference=false`)
+- profile label resolved as `anchored moderate retry`
+- input includes:
+  - `childName=さくら`
+  - `childAge=4`
+  - longer retry `parentMessage`
+  - `colorMood=soft warm quiet bedtime watercolor night`
+  - `favorites=うさぎのぬいぐるみ`
+  - `place=しずかですっきりした寝室`
+
+### 25.4 Generation Evidence (Write)
+
+Write command executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --write --theme-id=bedtime --style-id=soft_watercolor --profile=s1r
+```
+
+Created retry book:
+
+| sample | bookId | profile | runId |
+| --- | --- | --- | --- |
+| Book S1R | `YVsHLGjXJ1svdhzWMDn9` | anchored moderate retry (`s1r`) | `t6-nonfixed-20260517144741` |
+
+### 25.5 Monitor / Inspect Structural Results
+
+#### Book S1R - Anchored Moderate Retry (`s1r`)
+
+| field | value |
+| --- | --- |
+| bookId | `YVsHLGjXJ1svdhzWMDn9` |
+| title | `おやすみ、きらきら おほしさま` |
+| status | **completed** |
+| progress | 100 |
+| theme | bedtime |
+| styleId | soft_watercolor |
+| selectedStyleName | やさしい水彩 |
+| pageCount requested | 8 |
+| pages actual | 8 |
+| pages completed | 8 |
+| failed pages | 0 |
+| imageModel | `black-forest-labs/flux-2-pro` |
+| imageAttemptCount | 1 (all pages) |
+| imageFallbackUsed pages | 0 |
+| imageTimedOut pages | 0 |
+| referenceImagesUsed pages | 0 |
+| usedCharacterReference pages | 0 |
+| imageDurationMs (min / avg / max) | 17264 / 23570 / 32762 |
+| inspect expected page count check | PASS |
+
+Monitor / inspect notes:
+
+- `selectedStyleId` persisted as `soft_watercolor`
+- `creationMode` persisted as `guided_ai`
+- `characterConsistencyMode` remained `cover_only`
+- reference path remained unused across all 8 pages
+
+### 25.6 Structural Interpretation (T6-10)
+
+- The targeted S1 retry completed successfully with full 8/8 pages.
+- No page-level image failure occurred.
+- No fallback usage and no timeout flags were observed.
+- No-reference execution path remained intact (`inputReferenceCount=0`, `usedCharacterReference=false` for all pages).
+- Structural health for Book S1R is **pass** at T6-10 scope.
+
+What T6-10 does and does not prove:
+
+- proves: the `s1r` retry lane is runnable and structurally healthy
+- does not yet prove: that the T6-8 BF-4 blocker is resolved
+- detailed visual QA is deferred to T6-11
+
+### 25.7 T6-11 Handoff (Manual Visual QA)
+
+T6-11 should perform detailed manual visual QA for Book S1R and then reassess the pair using:
+
+- original Book S2 control evidence (`PFuh3zu7q4VmNn4qA3dU`)
+- new Book S1R retry evidence (`YVsHLGjXJ1svdhzWMDn9`)
+
+Required T6-11 focus:
+
+- BF-4 on page `6` first, then full-book BF-4 sweep
+- BF-3 continuity versus prior S1 expectations
+- `soft_watercolor` style adherence after retry prompt grounding
+- bedtime emotional fit
+- story-image match
+
+Current status before T6-11:
+
+- S1R structural health: pass
+- S1R visual QA: pending
+- pair verdict: not finalized after retry
+
+### 25.8 Exclusions (T6-10)
+
+- No functions logic changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No detailed manual visual QA completion
+- No final pair verdict confirmation
