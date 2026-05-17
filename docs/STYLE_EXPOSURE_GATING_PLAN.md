@@ -2455,3 +2455,237 @@ Recommended next slice:
 - No runner changes
 - No style profile changes
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 24. T5-12 Style-Gated Create Flow Release Readiness / Final Checklist
+
+### 24.1 Goal
+
+This section records the final release-readiness view for the initial style-gated create flow rollout.
+
+The purpose is to answer:
+
+- is the current T5 scope release-ready?
+- what exact baseline is being released?
+- what is still deferred or intentionally excluded?
+
+### 24.2 T5 Summary
+
+T5 delivered the following:
+
+- exposure-policy planning
+- exposure config design
+- frontend exposure config module
+- template-aware style picker filtering
+- functions-side fixed-template exposure guard
+- blocked/allowed path QA
+- operator playbook for future matrix updates
+- end-to-end low-cost product QA evidence
+
+Overall T5 outcome:
+
+- `Release Ready` for the currently validated fixed-template scope
+
+### 24.3 Current Release Baseline
+
+Current product exposure baseline:
+
+- `fixed-sleepy-moon-adventure-8p`
+  - user-facing:
+    - `crayon`
+    - `anime_storybook`
+    - `soft_watercolor`
+  - blocked:
+    - none
+- `fixed-first-zoo-8p`
+  - user-facing:
+    - `crayon`
+    - `soft_watercolor`
+  - blocked:
+    - `anime_storybook`
+
+Current backend allow/block posture:
+
+- allow:
+  - `promote`
+  - `available`
+- fail-close:
+  - `internal`
+  - `blocked`
+  - unknown style ids
+  - unlisted pairings
+
+Current backend scope:
+
+- enforced for `creationMode === "fixed_template"`
+
+### 24.4 Final Release Checklist
+
+The release should be considered ready only if all of the following are true:
+
+#### Product policy
+
+- exposure matrix is documented
+- every user-facing pairing has recorded validation evidence
+- every blocked pairing has a recorded rationale
+
+#### Frontend
+
+- style picker filters by template correctly
+- hidden blocked pairings are not visible in the normal flow
+- style ordering matches configured exposure priority
+- stale selected style recovers to a valid visible style
+
+#### Backend
+
+- fixed-template guard is active in `processBookGeneration(...)`
+- blocked fixed-template pairings fail before story generation
+- blocked fixed-template pairings fail before image generation
+- failure metadata is audit-friendly
+
+#### QA
+
+- targeted frontend tests pass
+- targeted functions tests pass
+- blocked-path test passes
+- representative allowed-path test passes
+- no contradictory evidence exists in the latest docs
+
+#### Operations
+
+- operator playbook exists for matrix changes
+- emergency block procedure is documented
+- rollback options are documented
+
+### 24.5 Readiness By Area
+
+#### UI readiness
+
+- ready
+
+Reason:
+
+- template-aware filtering is implemented
+- visible options match the validated matrix
+- stale fallback path has low-cost QA support
+
+#### Server readiness
+
+- ready for fixed-template scope
+
+Reason:
+
+- blocked-pair enforcement exists beyond the client
+- bypass attempts through direct product writes are covered by the guarded generation path
+
+#### QA readiness
+
+- ready
+
+Reason:
+
+- T5-7 and T5-11 provide sufficient low-cost confidence for the current scope
+- no additional live write was required for this release decision
+
+#### Docs / operations readiness
+
+- ready
+
+Reason:
+
+- exposure policy, rollout guidance, operator playbook, and QA evidence are all documented
+
+### 24.6 Known Limitations
+
+Known limitations at release:
+
+- server-side exposure enforcement currently applies only to fixed-template paths
+- no admin override path exists yet
+- no client-facing fallback recommendation UX exists for blocked attempts
+- no live Firestore blocked-write proof was collected in T5-11
+- frontend and functions exposure configs are mirrored, not yet shared from a single package
+
+Assessment of these limitations:
+
+- acceptable for the current release scope
+- not acceptable as a reason to extend exposure blindly into non-fixed product paths without further audit
+
+### 24.7 Deferred Items
+
+Deferred items after release:
+
+- non-fixed-path exposure enforcement audit
+- privileged admin/internal override path
+- client fallback recommendation UX for blocked attempts
+- shared config extraction to reduce duplication drift
+- optional controlled live blocked-write verification if ops wants additional trigger-level evidence
+
+### 24.8 Rollback / Emergency Reference
+
+If a release issue is discovered, use the existing T5 references:
+
+- emergency block procedure:
+  - see `21.9 Emergency Block Procedure`
+- rollback guidance:
+  - see `21.10 Rollback Guidance`
+- operator sync checklist:
+  - see `21.6 Frontend / Functions Sync Checklist`
+
+Release principle:
+
+- if confidence drops, prefer emergency-blocking the affected pairing over leaving it exposed while investigating
+
+### 24.9 Post-Release Monitoring Guidance
+
+After release, monitor for:
+
+- unexpected blocked-pair creation failures in logs
+- reports of missing/incorrect style options in the create flow
+- evidence that UI-visible options and backend policy drifted apart
+- operator mistakes during future matrix updates
+
+Recommended monitoring focus:
+
+- creation failures containing `style_exposure_blocked:`
+- support or QA reports mentioning hidden/visible style mismatches
+- any future incidents involving `fixed-first-zoo-8p × anime_storybook`
+
+### 24.10 Final Release Decision
+
+T5 final release-readiness decision:
+
+- `Go`
+
+Scope of that decision:
+
+- the currently documented style-gated fixed-template create flow
+- the currently documented exposure baseline only
+
+Non-go scope:
+
+- new unvalidated pairings
+- broader non-fixed creation modes
+- admin/internal override scenarios
+
+### 24.11 Suggested Next Roadmap
+
+Recommended next candidates after T5 release readiness:
+
+1. T5-13 non-fixed-path exposure enforcement audit.
+2. T5-14 admin/internal override planning.
+3. T5-15 shared config extraction assessment.
+
+### 24.12 Exclusions
+
+- No code changes performed
+- No UI changes performed
+- No functions changes performed
+- No Firestore schema or rules changes performed
+- No smoke generation performed
+- No image generation performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No runner changes
+- No style profile changes
+- No service account JSON, secrets, URLs, or tokens recorded

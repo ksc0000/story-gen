@@ -4115,3 +4115,6 @@ Date: 2026-05-17
 - T5 closure status:
   - normal create UI now filters styles by template exposure policy
   - fixed-template backend now fail-closes blocked or unvalidated style pairings
+- T5 release readiness:
+  - current style-gated fixed-template create flow is documented as `Go`
+  - deferred pairings remain blocked until separately validated and promoted
