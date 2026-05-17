@@ -1572,3 +1572,123 @@ Rationale:
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+---
+
+## 20. T6-5 — Next Non-Fixed Pair Candidate Selection (Docs-Only)
+
+Date: 2026-05-17
+
+### 20.1 Objective
+
+Select one next non-fixed `categoryGroupId × styleId` pair after `bedtime × crayon` reached Go, using a docs-only decision process.
+
+Decision lenses used:
+
+- risk (BF-4 / BF-3 and execution stability)
+- learning value (how much uncertainty is reduced)
+- cost (expected retries / QA burden)
+- matrix coverage value (incremental evidence added to T6 initial matrix)
+
+### 20.2 Current Matrix Progress
+
+Completed pair:
+
+- `bedtime × crayon` -> Go (T6-4)
+
+Remaining unvalidated pairs:
+
+- `bedtime × soft_watercolor`
+- `bedtime × anime_storybook`
+- `imagination × crayon`
+- `imagination × soft_watercolor`
+- `imagination × anime_storybook`
+- `emotional-growth × crayon`
+- `emotional-growth × soft_watercolor`
+- `emotional-growth × anime_storybook`
+
+### 20.3 Candidate Comparison (Shortlist)
+
+Candidates compared in this slice:
+
+- `bedtime × soft_watercolor`
+- `bedtime × anime_storybook`
+- `imagination × crayon`
+- `emotional-growth × crayon`
+
+| candidate pair | risk (overall) | learning value | expected BF-4 | expected BF-3 | expected style adherence | execution cost | matrix coverage value |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `bedtime × soft_watercolor` | low | high | low | low to medium | high (baseline comparison quality) | low | high (isolates style effect within same category) |
+| `bedtime × anime_storybook` | medium | high | low to medium | medium (age-drift / dramatization) | medium (style swing risk) | medium | high (same-category style contrast, higher volatility) |
+| `imagination × crayon` | medium to high | very high | medium to high (fantasy symbols can resemble marks) | medium (scene variance) | medium | medium to high | high (new category stress test) |
+| `emotional-growth × crayon` | medium | medium to high | low to medium | medium (character-expression drift) | medium to high | medium | medium to high (new category with lower scene entropy) |
+
+### 20.4 Selection Result
+
+Selected next pair: **`bedtime × soft_watercolor`**
+
+Selection rationale:
+
+1. Keeps `categoryGroupId=bedtime` fixed and changes only style, maximizing causal clarity after `bedtime × crayon` Go.
+2. Offers strongest immediate comparison value for style adherence and emotional fit with minimal confounding.
+3. Expected BF-4 and BF-3 risk is lower than `bedtime × anime_storybook` and clearly lower than `imagination × crayon`.
+4. Lower execution cost supports faster learning loop and cleaner entry into expanded matrix validation.
+5. Aligns with prior fixed-template evidence where `soft_watercolor` acted as a safe baseline (often Conditional-Go range), making it a practical second anchor.
+
+Rejected-for-now rationale:
+
+- `bedtime × anime_storybook`: useful but higher volatility; better as the next step after `bedtime × soft_watercolor`.
+- `imagination × crayon`: high learning value but too many confounders at once (category+scene entropy).
+- `emotional-growth × crayon`: valuable, but weaker direct A/B contrast than staying in bedtime for one more style comparison.
+
+### 20.5 Pair Priority Order (Post T6-5 Decision)
+
+Recommended near-term order:
+
+1. `bedtime × soft_watercolor` (next)
+2. `bedtime × anime_storybook`
+3. `emotional-growth × crayon`
+4. `imagination × crayon`
+
+This order prioritizes low-risk same-category style discrimination first, then escalates toward higher-variance category exploration.
+
+### 20.6 Lightweight Input Direction for T6-6 Smoke Design
+
+Target pair for next smoke design: `bedtime × soft_watercolor`
+
+Input policy guidance (lightweight):
+
+1. Use two-book structure matching T6-4 comparability:
+  - Book S1: anchored moderate profile (same anchoring philosophy as A2)
+  - Book S2: rich profile
+2. Keep `childAge` in 3-4 range and keep scene entropy low (bedroom, moon/stars, bedtime routine).
+3. Require one explicit grounding object in both profiles (e.g., favorite plush) to reduce quality-gate drift.
+4. Keep `colorMood` in soft/warm/night-safe range; avoid high-contrast fantasy descriptors.
+5. Preserve no-reference path (`referenceImagesUsed=0`) for comparability with prior bedtime runs.
+6. Reuse the same evidence grid (BF-4/BF-3/style/emotional/story-image/structural carry-over) to allow direct cross-style comparison.
+
+### 20.7 Expected Decision Gate for Next Slice
+
+For `bedtime × soft_watercolor`:
+
+- if Go/Conditional-Go: proceed to `bedtime × anime_storybook` as third bedtime style point
+- if Conditional/Hold: pause category expansion and analyze whether failure is style-specific or input-profile-specific
+
+### 20.8 Exclusions (T6-5)
+
+- Docs-only candidate selection
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
