@@ -1358,3 +1358,217 @@ Pair verdict state:
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+---
+
+## 19. T6-4 — Bedtime × Crayon Manual Visual QA (Book A2 + Book B)
+
+Date: 2026-05-17
+
+### 19.1 Scope and Method
+
+- scope: manual visual QA for `bedtime × crayon` pair (`bookId=yylnhRJfVF23GcVyJBUF`, `bookId=iuCrth0sC6UV9SVVf0F1`)
+- unit: `categoryGroupId × styleId` = `bedtime × crayon`
+- pages reviewed: 8 pages per book, 16 pages total
+- review axes: BF-4, BF-3, style adherence, emotional fit, story-image match, structural carry-over
+- evidence source: Firestore page images/text reviewed page-by-page; no regeneration or post-edit
+
+### 19.2 Book Evidence Record — Book A2 (anchored moderate)
+
+bookId: `yylnhRJfVF23GcVyJBUF`
+date: 2026-05-17
+theme: bedtime
+categoryGroupId: bedtime
+styleId: crayon
+creationMode: guided_ai
+childAge: 4
+inputProfile: anchored moderate (`a2`)
+childName: さくら
+parentMessage: きょうもたくさんあそんだね。おきにいりのうさぎさんといっしょに、あたたかいおへやでゆっくりねむろうね。おやすみ、さくら。
+colorMood: soft warm
+favorites: うさぎのぬいぐるみ
+childProfileSnapshot: none
+
+#### Structural Health
+
+- total pages generated: 8
+- broken / black images: 0
+- placeholder images: 0
+- structural carry-over: pass (same child identity and bunny motif maintained across all pages)
+- verdict: pass
+
+#### BF-4 Safety (per page)
+
+| page | verdict | notes |
+| --- | --- | --- |
+| 0 | pass | no text-like strokes or signage surfaces |
+| 1 | pass | no embedded text; night-sky motif clean |
+| 2 | pass | toy/bedroom props simple and safe |
+| 3 | pass | close-up with no glyph-like artifacts |
+| 4 | pass | bed scene; no pseudo-lettering observed |
+| 5 | pass | sleeping scene remains free of text artifacts |
+| 6 | pass | window/star composition clean |
+| 7 | pass | dream bubble/iconography only; no harmful text-like marks |
+
+BF-4 summary verdict: pass
+BF-4 worst surface observed: none blocking; no BF-4 trigger detected.
+
+#### BF-3 Continuity
+
+- child identity consistent across pages: yes
+- age impression consistent: yes
+- hairstyle / outfit consistent: partial (pajama color and hair clip details vary, but child identity remains stable)
+- notable identity shift (if any): none critical
+- BF-3 summary verdict: pass
+
+#### Style Adherence
+
+- crayon texture visible: yes
+- hand-drawn warmth present: yes
+- style consistent across pages: yes
+- style distinguishable from soft_watercolor: yes
+- style adherence verdict: strong
+
+#### Emotional Fit
+
+- bedtime mood present: yes
+- child-safe, warm, gentle feeling: yes
+- scene meaning preserved: yes
+- emotional fit verdict: high-fit
+
+#### Story-Image Match
+
+- page text and visual scene alignment: strong across all 8 pages
+- recurring motif alignment (`fuwafuwa rabbit`, moon/stars, bedtime wind-down): strong
+- mismatch pages: none
+
+#### LLM-Generated Scene Notes
+
+- notable scenes the LLM invented (not directly from user input): smiling moon face, dream thought bubble icon
+- any scene that introduced unexpected prop complexity: none
+- any scene that produced unexpected setting detail: minor decorative variations only (non-blocking)
+
+#### Overall Book Verdict
+
+- verdict: Go
+- notes: quality-gate remediation outcome is visually coherent and bedtime-safe; no BF-4/BF-3 blockers.
+
+### 19.3 Book Evidence Record — Book B (rich)
+
+bookId: `iuCrth0sC6UV9SVVf0F1`
+date: 2026-05-17
+theme: bedtime
+categoryGroupId: bedtime
+styleId: crayon
+creationMode: guided_ai
+childAge: 3
+inputProfile: rich (`b`)
+childName: けんた
+parentMessage: げんきでよかった。また明日もいっしょに遊ぼうね。おやすみ。
+colorMood: deep cozy night
+favorites: ミニカーとぬいぐるみ
+childProfileSnapshot: none
+
+#### Structural Health
+
+- total pages generated: 8
+- broken / black images: 0
+- placeholder images: 0
+- structural carry-over: pass (boy identity, cloud pajamas, bunny plush motif sustained)
+- verdict: pass
+
+#### BF-4 Safety (per page)
+
+| page | verdict | notes |
+| --- | --- | --- |
+| 0 | pass | no pseudo-text surfaces |
+| 1 | pass | night sky symbols only; no letter-like cluster |
+| 2 | pass | character + plush focus; no BF-4 risk artifact |
+| 3 | pass | close-up expression scene, no text-like marks |
+| 4 | pass | moon/stars composition; no signage/text |
+| 5 | pass | bed close-up; no unsafe glyph pattern |
+| 6 | pass | sleeping scene clean |
+| 7 | pass | heart-shaped star arrangement is symbolic, not text-like |
+
+BF-4 summary verdict: pass
+BF-4 worst surface observed: page 7 heart-shaped star arrangement (watch-level symbolic motif, non-blocking).
+
+#### BF-3 Continuity
+
+- child identity consistent across pages: yes
+- age impression consistent: yes
+- hairstyle / outfit consistent: yes
+- notable identity shift (if any): none
+- BF-3 summary verdict: pass
+
+#### Style Adherence
+
+- crayon texture visible: partial (strong in most pages, softer in a few close-up pages)
+- hand-drawn warmth present: yes
+- style consistent across pages: partial
+- style distinguishable from soft_watercolor: yes
+- style adherence verdict: acceptable
+
+#### Emotional Fit
+
+- bedtime mood present: yes
+- child-safe, warm, gentle feeling: yes
+- scene meaning preserved: yes
+- emotional fit verdict: high-fit
+
+#### Story-Image Match
+
+- page text and visual scene alignment: strong overall
+- recurring motif alignment (moon/stars, bunny plush, sleep transition): strong
+- mismatch pages: none
+
+#### LLM-Generated Scene Notes
+
+- notable scenes the LLM invented (not directly from user input): owl on tree branch (page 1), heart-star sky shape (page 7)
+- any scene that introduced unexpected prop complexity: none
+- any scene that produced unexpected setting detail: minor stylistic variance in close-up render sharpness
+
+#### Overall Book Verdict
+
+- verdict: Go
+- notes: no safety/continuity blockers; style variance exists but remains within acceptable bedtime-crayon range.
+
+### 19.4 Pair Verdict: bedtime × crayon (L1)
+
+books sampled: 2
+Book A2 (anchored moderate): `yylnhRJfVF23GcVyJBUF` — verdict: Go
+Book B (rich): `iuCrth0sC6UV9SVVf0F1` — verdict: Go
+
+BF-4 aggregate: pass
+BF-3 aggregate: pass
+style adherence aggregate: acceptable
+emotional fit aggregate: high-fit
+story-image match aggregate: strong
+LLM variability: stable (minor stylistic variance, non-blocking)
+
+Final pair verdict: **Go**
+
+Rationale:
+
+- structural health passed for both books
+- no BF-4 fail pages; no BF-3 fail book
+- style adherence met `strong` (A2) and `acceptable` (B)
+- emotional fit `high-fit` for both books
+- scene continuity and story-image match remained stable across both profiles
+
+### 19.5 T6-4 Exclusions
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
