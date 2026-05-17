@@ -2270,3 +2270,188 @@ Recommended next slice:
 - No runner changes
 - No style profile changes
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 23. T5-11 Product QA Execution For Style-Gated Create Flow End-To-End
+
+### 23.1 Scope
+
+Executed the low-cost QA plan defined in T5-10.
+
+This QA execution focused on:
+
+- user-visible style filtering
+- stale selected style fallback behavior
+- blocked pair server fail-close
+- allowed pair pass-through behavior
+
+This slice remained low-cost by design:
+
+- no live Firestore write
+- no image generation
+- no smoke generation
+
+### 23.2 Executed Checks
+
+Executed:
+
+- `npm run guard:hygiene`
+- `npm test -- src/__tests__/style-exposure.test.ts src/__tests__/style-picker.test.tsx`
+- `npm --prefix functions test -- test/generate-book.test.ts`
+- `npm --prefix functions test -- test/generate-book.test.ts -t "fails closed for blocked fixed-template style pairings before generation starts"`
+- `npm --prefix functions test -- test/generate-book.test.ts -t "skips LLM story generation for fixed templates|uses premium model metadata when imageQualityTier is premium|normalizes free fixed-template books back to light quality even if premium was sent"`
+
+Observed results:
+
+- hygiene: pass
+- frontend style exposure and picker tests: pass (`15 passed`)
+- full targeted functions suite: pass (`48 passed`)
+- blocked-path targeted test: pass
+- allowed-path representative targeted tests: pass (`3 passed`)
+
+### 23.3 UI Filtering Result
+
+Evidence used:
+
+- `src/__tests__/style-exposure.test.ts`
+- `src/__tests__/style-picker.test.tsx`
+
+Confirmed:
+
+- `fixed-first-zoo-8p`
+  - visible:
+    - `crayon`
+    - `soft_watercolor`
+  - hidden:
+    - `anime_storybook`
+- `fixed-sleepy-moon-adventure-8p`
+  - visible in priority order:
+    - `crayon`
+    - `anime_storybook`
+    - `soft_watercolor`
+
+UI filtering verdict:
+
+- pass
+
+### 23.4 Stale Selected Style Fallback Result
+
+Evidence used:
+
+- create-flow implementation inspection in `src/app/(app)/create/style/page.tsx`
+- exposure helper tests proving the visible list is template-dependent and ordered
+
+Relevant implementation behavior:
+
+- page derives `visibleStyleProfiles` from `getStylePickerProfilesForTemplate(template?.id)`
+- `useEffect(...)` resets `selected` to the first visible style when:
+  - current selection is missing
+  - current selection is no longer visible for the chosen template
+
+QA judgment:
+
+- pass with low-cost evidence
+
+Reason:
+
+- the fallback path is deterministic
+- it is directly keyed off the tested visible style list
+- no contradictory behavior was found in the page logic
+
+Note:
+
+- no live browser interaction was required in this slice because the fallback logic is small, deterministic, and already sits on top of tested exposure helpers
+
+### 23.5 Blocked Pair Server Result
+
+Blocked target:
+
+- `fixed-first-zoo-8p × anime_storybook`
+
+Confirmed via targeted functions QA:
+
+- book is rejected before story generation
+- book is rejected before image generation
+- status becomes `failed`
+- failure metadata contains the stable audit marker beginning with:
+  - `style_exposure_blocked:`
+
+Blocked-path verdict:
+
+- pass
+
+### 23.6 Allowed Pair Result
+
+Allowed-path evidence was taken from representative fixed-template and generation-path tests.
+
+Confirmed:
+
+- allowed fixed-template paths still complete normally
+- fixed-template generation is not accidentally blocked by the exposure guard
+- representative allowed-path tests completed successfully
+
+Allowed-path verdict:
+
+- pass
+
+### 23.7 Live Write / Live Generation Decision
+
+Decision:
+
+- not executed
+
+Rationale:
+
+- the requested QA emphasized low cost
+- server-side policy enforcement was already verified at the exact guarded `processBookGeneration(...)` branch
+- live blocked writes would add operational side effects without materially increasing confidence for this slice
+- live allowed generation would add image-generation cost while duplicating already confirmed pass-through behavior
+
+Assessment:
+
+- acceptable
+
+### 23.8 Acceptance Criteria Result
+
+Acceptance criteria outcome:
+
+- UI filtering correctness: pass
+- blocked style hidden for zoo: pass
+- exposure priority ordering: pass
+- stale selection recovery: pass
+- blocked server fail-close: pass
+- allowed pair server pass-through: pass
+- frontend/functions policy alignment: pass
+
+### 23.9 QA Verdict
+
+T5-11 verdict:
+
+- pass
+
+Meaning:
+
+- the style-gated create flow is behaving consistently with the current exposure policy
+- normal user-facing selection is aligned with the validated matrix
+- backend protection is present for blocked fixed-template bypass attempts
+
+### 23.10 Recommended Next Step
+
+Recommended next slice:
+
+- T5-12 optional non-fixed-path exposure enforcement audit
+
+### 23.11 Exclusions
+
+- No code changes performed
+- No UI changes performed
+- No functions changes performed
+- No Firestore schema or rules changes performed
+- No smoke generation performed
+- No image generation performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No runner changes
+- No style profile changes
+- No service account JSON, secrets, URLs, or tokens recorded
