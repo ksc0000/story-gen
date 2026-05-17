@@ -266,12 +266,26 @@ function buildBedtimeRoomPropNoTextGuidance(): string {
   ].join(" ");
 }
 
-function buildCategoryGroupNoTextGuidance(categoryGroupId?: string): string {
-  if (categoryGroupId !== "bedtime") {
-    return "";
-  }
+function buildImaginationNoTextGuidance(): string {
+  return [
+    "Imagination scene guardrail: all fantasy objects must stay purely visual with no text-like surface markings.",
+    "Do not render spell book titles or open text pages, scroll writing, rune carvings, glyph patterns, magical inscriptions,",
+    "star chart annotations, treasure map labels, constellation name tags, or compass direction letters.",
+    "A spell book may appear as a plain mysterious closed volume with no title.",
+    "A map may appear as an unlabeled visual landscape. Stars may appear as light points without name labels.",
+    "A compass may appear as a round decorative object with no visible letters or numbers.",
+    "Use purely visual fantasy objects: glowing orbs, crystals, wands, portals, clouds, rocket shapes, planets — all without surface text marks.",
+  ].join(" ");
+}
 
-  return buildBedtimeRoomPropNoTextGuidance();
+function buildCategoryGroupNoTextGuidance(categoryGroupId?: string): string {
+  if (categoryGroupId === "bedtime") {
+    return buildBedtimeRoomPropNoTextGuidance();
+  }
+  if (categoryGroupId === "imagination") {
+    return buildImaginationNoTextGuidance();
+  }
+  return "";
 }
 
 function describeCharacterKind(kind: StoryCharacterKind | undefined): string {
@@ -364,6 +378,7 @@ ${ageReadingGuidance}
 - imagePrompt には、そのページで何を一番見せたいかを明確に含めてください。
 - imagePrompt では "wide establishing shot of...", "small child seen from behind...", "focus on the sandbox toys in the foreground...", "family members in the background...", "bird's-eye view of the park...", "close-up of tiny hands holding..." のように、視点や焦点が伝わる表現を歓迎します。
 - Important: pages[].text is for the readable story text shown by the app. pages[].imagePrompt is only for generating a wordless illustration. Never ask the image model to render the story text, repeated phrase, labels, signs, books with readable titles, speech bubbles, captions, or any written characters inside the image.
+- Fantasy and imagination imagePrompt rules: do not describe spell books with visible titles or open text pages, scrolls with written content, rune stones or glyph carvings, magical inscriptions, star charts with symbol annotations or constellation name labels, treasure maps with text labels or compass direction marks, or any object whose surface would contain glyphs, symbols, or marks resembling writing. Fantasy objects (orbs, wands, crystals, rockets, glowing portals, planets, cloud formations) are allowed when they are purely visual with no text-like surface markings. A spell book may appear as a plain mysterious closed volume. A map may appear as an unlabeled visual landscape. Stars may appear as light points without name labels. A compass may appear as a round decorative object with no visible letters.
 - For each page, pageVisualRole must be exactly one of:
   - opening_establishing
   - discovery

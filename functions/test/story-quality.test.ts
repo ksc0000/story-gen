@@ -404,6 +404,59 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "image_prompt.text_risk")).toBe(true);
   });
 
+  it("warns when imagePrompt contains imagination-specific text-risk tokens (rune, glyph, inscription)", () => {
+    const runeReport = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "きょうは たのしい日です。",
+            imagePrompt: "wide shot of a child touching a rune stone in a magical forest",
+            compositionHint: "wide shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+    expect(runeReport.issues.some((issue) => issue.code === "image_prompt.text_risk")).toBe(true);
+
+    const glyphReport = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "きょうは たのしい日です。",
+            imagePrompt: "close-up of ancient glyph patterns carved on a stone pillar",
+            compositionHint: "close-up",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+    expect(glyphReport.issues.some((issue) => issue.code === "image_prompt.text_risk")).toBe(true);
+
+    const starChartReport = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "きょうは たのしい日です。",
+            imagePrompt: "medium shot of a child looking at a star chart spread out on the ground",
+            compositionHint: "medium shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+    expect(starChartReport.issues.some((issue) => issue.code === "image_prompt.text_risk")).toBe(true);
+  });
+
   it("warns when recurring magical friends lack cast definitions", () => {
     const report = validateGeneratedStoryQuality({
       story: {

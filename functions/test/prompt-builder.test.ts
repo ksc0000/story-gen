@@ -286,6 +286,47 @@ describe("buildImagePrompt", () => {
     expect(result).not.toContain("Bedtime room-prop guardrail:");
     expect(result).not.toContain("nursery cards");
   });
+  it("adds imagination scene guardrail for imagination categoryGroup", () => {
+    const result = buildImagePrompt(
+      "A child exploring a magical forest",
+      "crayon",
+      undefined,
+      undefined,
+      {
+        categoryGroupId: "imagination",
+      }
+    );
+
+    expect(result).toContain("Imagination scene guardrail:");
+    expect(result).toContain("rune carvings");
+    expect(result).toContain("glyph patterns");
+    expect(result).toContain("star chart annotations");
+    expect(result).toContain("treasure map labels");
+    expect(result).toContain("compass direction letters");
+    expect(result).not.toContain("Bedtime room-prop guardrail:");
+  });
+  it("does not add imagination guardrail for non-imagination categoryGroup", () => {
+    const result = buildImagePrompt(
+      "A child at the beach",
+      "crayon",
+      undefined,
+      undefined,
+      {
+        categoryGroupId: "memories",
+      }
+    );
+
+    expect(result).toContain("Printed-surface guardrail:");
+    expect(result).not.toContain("Imagination scene guardrail:");
+  });
+  it("includes fantasy imagePrompt rules in buildSystemPrompt", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("Fantasy and imagination imagePrompt rules:");
+    expect(result).toContain("spell books");
+    expect(result).toContain("rune stones or glyph carvings");
+    expect(result).toContain("star charts with symbol annotations");
+    expect(result).toContain("treasure maps with text labels");
+  });
   it("returns a style reference image path", () => {
     expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.png");
   });

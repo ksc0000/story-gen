@@ -472,6 +472,18 @@ function hasImagePromptTextRisk(imagePrompt: string): boolean {
     "words",
     "quote",
     "phrase",
+    // imagination / fantasy text-bearing elements that correlate with E005 on flux-2-pro
+    "rune",
+    "glyph",
+    "inscription",
+    "star chart",
+    "treasure map",
+    "celestial map",
+    "magical text",
+    "glowing text",
+    "enchanted mark",
+    "constellation name",
+    "compass direction",
   ].some((token) => normalized.includes(token));
 }
 

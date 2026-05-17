@@ -6386,3 +6386,166 @@ If Layer 1 alone reduces E005 rate below 30%, Layer 2 and Layer 3 are optional. 
 - No private image URLs or storage tokens recorded
 - No manual visual QA
 - No product exposure matrix update
+
+## 44. T6-29 - E005 Prompt Sanitizer Implementation
+
+Date: 2026-05-18
+
+### 44.1 Scope
+
+Implement the R7 prompt sanitization design from T6-28 to reduce E005 content sensitivity rejection rate on `pro_consistent` (flux-2-pro) for imagination-category books.
+
+Implementation layers completed:
+
+| layer | target | status |
+| --- | --- | --- |
+| L1 | Gemini upstream — `buildSystemPrompt()` fantasy imagePrompt rule block | ✅ implemented |
+| L2 | Runtime guardrail — `buildImaginationNoTextGuidance()` + `buildCategoryGroupNoTextGuidance("imagination")` | ✅ implemented |
+| Observability | `hasImagePromptTextRisk()` imagination token extension | ✅ implemented |
+| Tests | `prompt-builder.test.ts` + `story-quality.test.ts` new test cases | ✅ implemented |
+| L3 | `sanitizeImagePromptText()` regex replacements | deferred (post re-smoke) |
+
+### 44.2 Changes Made
+
+#### 44.2.1 L1 — buildSystemPrompt() Fantasy imagePrompt Rule Block
+
+**File:** `functions/src/lib/prompt-builder.ts`
+
+Added a new rule immediately after the existing "Important: pages[].text is for the readable story text..." instruction:
+
+```
+- Fantasy and imagination imagePrompt rules: do not describe spell books with
+  visible titles or open text pages, scrolls with written content, rune stones
+  or glyph carvings, magical inscriptions, star charts with symbol annotations
+  or constellation name labels, treasure maps with text labels or compass
+  direction marks, or any object whose surface would contain glyphs, symbols,
+  or marks resembling writing. Fantasy objects (orbs, wands, crystals, rockets,
+  glowing portals, planets, cloud formations) are allowed when they are purely
+  visual with no text-like surface markings. A spell book may appear as a plain
+  mysterious closed volume. A map may appear as an unlabeled visual landscape.
+  Stars may appear as light points without name labels. A compass may appear as
+  a round decorative object with no visible letters.
+```
+
+**Scope:** Global — applies to all categories at story generation time (Gemini). Also addresses the non-imagination E005 cases observed in T6-27 §42.5.
+
+#### 44.2.2 L2 — buildImaginationNoTextGuidance() + buildCategoryGroupNoTextGuidance() Extension
+
+**File:** `functions/src/lib/prompt-builder.ts`
+
+Added new helper `buildImaginationNoTextGuidance()`:
+
+```ts
+function buildImaginationNoTextGuidance(): string {
+  return [
+    "Imagination scene guardrail: all fantasy objects must stay purely visual with no text-like surface markings.",
+    "Do not render spell book titles or open text pages, scroll writing, rune carvings, glyph patterns, magical inscriptions,",
+    "star chart annotations, treasure map labels, constellation name tags, or compass direction letters.",
+    "A spell book may appear as a plain mysterious closed volume with no title.",
+    "A map may appear as an unlabeled visual landscape. Stars may appear as light points without name labels.",
+    "A compass may appear as a round decorative object with no visible letters or numbers.",
+    "Use purely visual fantasy objects: glowing orbs, crystals, wands, portals, clouds, rocket shapes, planets — all without surface text marks.",
+  ].join(" ");
+}
+```
+
+Updated `buildCategoryGroupNoTextGuidance()` to route `"imagination"` to the new helper:
+
+```ts
+function buildCategoryGroupNoTextGuidance(categoryGroupId?: string): string {
+  if (categoryGroupId === "bedtime") {
+    return buildBedtimeRoomPropNoTextGuidance();
+  }
+  if (categoryGroupId === "imagination") {
+    return buildImaginationNoTextGuidance();
+  }
+  return "";
+}
+```
+
+**Scope:** `categoryGroupId === "imagination"` — templates `adventure`, `fantasy`, `original-ai`, `fixed-cardboard-rocket-adventure`. Applied at image generation time inside `buildImagePrompt()`.
+
+#### 44.2.3 Observability — hasImagePromptTextRisk() Extension
+
+**File:** `functions/src/lib/story-quality.ts`
+
+Extended the token list in `hasImagePromptTextRisk()` with imagination-specific E005-correlated patterns:
+
+```ts
+// imagination / fantasy text-bearing elements that correlate with E005 on flux-2-pro
+"rune",
+"glyph",
+"inscription",
+"star chart",
+"treasure map",
+"celestial map",
+"magical text",
+"glowing text",
+"enchanted mark",
+"constellation name",
+"compass direction",
+```
+
+**Impact:** After L1 is live, `image_prompt.text_risk` warning rate on imagination books should measurably drop. This extended detection provides a leading quality indicator for T6-30 re-smoke validation.
+
+### 44.3 Tests Added
+
+**`functions/test/prompt-builder.test.ts`** — 3 new test cases:
+
+- `adds imagination scene guardrail for imagination categoryGroup` — verifies `buildImagePrompt()` includes "Imagination scene guardrail:", "rune carvings", "glyph patterns", "star chart annotations", "treasure map labels", "compass direction letters" when `categoryGroupId === "imagination"`
+- `does not add imagination guardrail for non-imagination categoryGroup` — verifies the guardrail is absent for `categoryGroupId === "memories"`
+- `includes fantasy imagePrompt rules in buildSystemPrompt` — verifies `buildSystemPrompt()` output contains "Fantasy and imagination imagePrompt rules:", "spell books", "rune stones or glyph carvings", "star charts with symbol annotations", "treasure maps with text labels"
+
+**`functions/test/story-quality.test.ts`** — 1 new test case (3 sub-assertions):
+
+- `warns when imagePrompt contains imagination-specific text-risk tokens (rune, glyph, inscription)` — verifies `image_prompt.text_risk` warning fires for prompts containing `rune stone`, `glyph patterns`, and `star chart`
+
+### 44.4 Build and Test Results
+
+```
+npm run build  → exit 0 (no TypeScript errors)
+npm test       → 673/673 tests passed, 20/20 test files passed
+```
+
+New tests: 4 added, all passing.
+
+### 44.5 What Was NOT Implemented (Deferred)
+
+**L3 — `sanitizeImagePromptText()` regex extension:** Deferred until T6-30 re-smoke measures the impact of L1 + L2. If E005 rejection rate drops below 30% with L1 + L2 alone, L3 may be unnecessary.
+
+**Cover image E005:** Cover image prompts are out of scope for this implementation. The T6-27 §42.5 evidence shows E005 on cover images is less frequent and not specific to imagination category.
+
+### 44.6 Deploy Plan
+
+Functions deployment required before re-smoke:
+
+```
+cd functions && npm run build
+firebase deploy --only functions --project story-gen-8a769
+```
+
+The `categoryGroupId` pass-through to `buildImagePrompt()` was verified to be already present in `generate-book.ts` (introduced in T6-17 for bedtime).
+
+### 44.7 Pair Status After T6-29
+
+| pair | verdict | implementation status | recommended next action |
+| --- | --- | --- | --- |
+| `imagination × crayon` | **Hold** | R7 L1 + L2 implemented, deployed | T6-30: re-smoke and measure E005 rejection rate |
+
+### 44.8 Exclusions
+
+- No UI changes
+- No Firestore schema/rules changes
+- No style profile changes
+- No style exposure matrix changes
+- No seed-template data changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No manual visual QA
+- No product exposure matrix update
