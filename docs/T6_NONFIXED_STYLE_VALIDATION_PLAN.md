@@ -2635,3 +2635,166 @@ Current status before T6-11:
 - No private image URLs or storage tokens recorded
 - No detailed manual visual QA completion
 - No final pair verdict confirmation
+
+---
+
+## 26. T6-11 - Bedtime x Soft_Watercolor S1R Manual Visual QA / Pair Re-Evaluation
+
+Date: 2026-05-18
+
+### 26.1 Scope
+
+- scope: manual visual QA for retry Book S1R (`bookId=YVsHLGjXJ1svdhzWMDn9`) and pair re-evaluation against existing clean control Book S2 (`bookId=PFuh3zu7q4VmNn4qA3dU`)
+- unit: `categoryGroupId x styleId` = `bedtime x soft_watercolor`
+- pages reviewed: 8 pages for S1R; S2 evidence reused from T6-8
+- review axes: BF-4, BF-3, style adherence, emotional fit, story-image match, structural carry-over
+- evidence source: Firestore page images/text reviewed page-by-page; no regeneration or post-edit
+
+### 26.2 Book Evidence Record - Book S1R (anchored moderate retry)
+
+bookId: `YVsHLGjXJ1svdhzWMDn9`
+date: 2026-05-18
+theme: bedtime
+categoryGroupId: bedtime
+styleId: soft_watercolor
+creationMode: guided_ai
+childAge: 4
+inputProfile: anchored moderate retry (`s1r`)
+childName: さくら
+parentMessage: きょうもたくさんあそんだね。おきにいりのうさぎさんといっしょに、しずかでやさしいひかりのおへやで、まどのそとのおつきさまとおほしさまにみまもられながら、あんしんしてぐっすりねむろうね。おやすみ、さくら。
+colorMood: soft warm quiet bedtime watercolor night
+favorites: うさぎのぬいぐるみ
+place: しずかですっきりした寝室
+childProfileSnapshot: none
+
+#### Structural Health
+
+- total pages generated: 8
+- broken / black images: 0
+- placeholder images: 0
+- structural carry-over: pass (same child identity, pink cloud/star pajamas, and bunny plush motif remain recognizable through the sequence)
+- verdict: pass
+
+#### BF-4 Safety (per page)
+
+| page | verdict | notes |
+| --- | --- | --- |
+| 0 | pass | no readable text or signage-like surface |
+| 1 | pass | window / curtain / bed scene remains text-free |
+| 2 | fail | lower-right shelf box contains clearly readable Latin text `SAKURA` |
+| 3 | pass | star lamp and bedside composition remain clean |
+| 4 | pass | bedding motif is symbolic only; no readable lettering |
+| 5 | pass | sleep scene clean; no text-like artifact |
+| 6 | pass | original page 6 Japanese paragraph blocker is resolved; no readable text observed |
+| 7 | pass | ending sleep scene remains free of readable text |
+
+BF-4 summary verdict: fail
+BF-4 worst surface observed: page 2 shelf storage box with readable `SAKURA` label; blocking BF-4 artifact.
+
+#### BF-3 Continuity
+
+- child identity consistent across pages: yes
+- age impression consistent: yes
+- hairstyle / outfit consistent: yes
+- notable identity shift (if any): bunny plush pose and ear posture vary, but recurring identity remains readable
+- BF-3 summary verdict: pass
+
+#### Style Adherence
+
+- watercolor texture visible: yes
+- soft warm bedtime palette present: yes
+- style consistent across pages: yes
+- style distinguishable from crayon / anime_storybook: yes
+- style adherence verdict: strong
+
+#### Emotional Fit
+
+- bedtime mood present: yes
+- child-safe, warm, gentle feeling: yes
+- scene meaning preserved: yes
+- emotional fit verdict: high-fit
+
+#### Story-Image Match
+
+- page text and visual scene alignment: strong overall
+- recurring motif alignment (moon/stars, bunny plush, quiet bedroom wind-down): strong
+- mismatch pages: none blocking for story logic; page 2 BF-4 issue is safety-related rather than scene-semantics-related
+
+#### LLM-Generated Scene Notes
+
+- notable scenes the LLM invented (not directly from user input): smiling crescent moon, star curtain motif, glowing star lamp shade, labeled shelf box
+- any scene that introduced unexpected prop complexity: shelf storage / decor details on page 2
+- any scene that produced unexpected setting detail: page 2 introduced the readable `SAKURA` label while otherwise matching the calm bedroom search beat
+
+#### Overall Book Verdict
+
+- verdict: Hold
+- notes: the original page 6 blocker was removed, but a new BF-4 blocker appeared on page 2 as readable shelf-box text.
+
+### 26.3 Pair Re-Evaluation: bedtime x soft_watercolor
+
+Books used for re-evaluation:
+
+- Book S1R retry: `YVsHLGjXJ1svdhzWMDn9` - verdict: Hold
+- Existing Book S2 control from T6-8: `PFuh3zu7q4VmNn4qA3dU` - verdict: Go
+
+BF-4 aggregate: fail
+BF-3 aggregate: pass
+style adherence aggregate: strong
+emotional fit aggregate: high-fit
+story-image match aggregate: strong
+LLM variability: variable (clean S2 control remains valid; S1 retry removed the original page 6 blocker but produced a new page 2 readable-text blocker)
+
+Final pair verdict after retry: **Hold**
+
+Rationale:
+
+- S1R proves the T6-9 narrowing helped remove the original page 6 Japanese paragraph artifact
+- however, pair-level BF-4 criteria still fail because page 2 now contains readable `SAKURA` text
+- S2 remains a clean and commercially viable control sample
+- style adherence, BF-3 continuity, and emotional fit remain strong enough that the issue still appears narrow and text-surface-local rather than a broad pair failure
+- the pair is therefore improved diagnostically, but not yet cleared for promotion
+
+### 26.4 Interpretation After Retry
+
+What changed versus T6-8:
+
+- resolved: original S1 page 6 lower-left Japanese paragraph block
+- new blocker: S1R page 2 readable shelf-box label `SAKURA`
+
+Interpretation:
+
+- the retry confirms the earlier blocker was not fully random; narrow prompt grounding did change the failing surface
+- however, the non-fixed bedtime path still allows text to reappear on secondary bedroom objects
+- this suggests the next remediation should expand from page-6-only watchover suppression to a slightly broader bedroom-object / labeled-surface suppression rule, while still staying narrower than a style-wide rewrite
+
+### 26.5 Suggested T6-12 Direction
+
+If a next remediation slice is opened, it should likely:
+
+- keep the same pair and prompt-only / no-reference mode
+- stay on Book S1 retry lane only
+- add narrow suppression for:
+  - labeled storage boxes
+  - toy bins
+  - book spines
+  - framed prints
+  - bedroom containers or decor that may invite name labels
+- preserve the calm bedtime bedroom setting and current soft-watercolor strengths
+
+### 26.6 Exclusions (T6-11)
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
