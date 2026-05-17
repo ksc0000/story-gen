@@ -1414,3 +1414,141 @@ Possible later expansion:
 
 - extend the same policy to broader non-fixed product paths after a dedicated audit
 - add server/client recovery guidance if blocked-pair UX needs improvement
+
+## 19. T5-7 Server-Side Exposure Validation QA
+
+### 19.1 Scope
+
+Performed QA for the T5-6 server-side exposure guard with a focus on:
+
+- blocked pair rejection before story/image generation
+- allowed pair pass-through into the existing generation path
+- auditability of failure metadata
+- effective protection against UI bypass / direct `books` writes at the functions entrypoint
+
+This slice was executed as QA-only:
+
+- no code changes
+- no schema changes
+- no real image-generation smoke run
+
+### 19.2 QA Strategy
+
+Used the functions generation entrypoint as the primary validation surface:
+
+- `processBookGeneration(...)` is the same branch reached by the Firestore trigger after a `books` write
+- therefore, targeted functions tests provide a low-cost equivalent for direct-write bypass QA
+
+Reason for avoiding a production Firestore blocked-pair smoke:
+
+- the branch under test is deterministic and fully covered before generation work starts
+- a live blocked write would add operational noise without increasing confidence materially
+- the user explicitly asked to minimize cost and side effects
+
+### 19.3 Blocked Pair QA
+
+Targeted blocked pair:
+
+- `fixed-first-zoo-8p × anime_storybook`
+
+Validated behavior:
+
+- status becomes `failed`
+- failure happens before story generation
+- failure happens before image generation
+- `updateBookFailureMetadata(...)` records an auditable technical reason string
+
+Targeted command:
+
+- `npm --prefix functions test -- test/generate-book.test.ts -t "fails closed for blocked fixed-template style pairings before generation starts"`
+
+Observed result:
+
+- pass
+- stderr includes:
+  - `style_exposure_blocked: template=fixed-first-zoo-8p style=anime_storybook status=blocked rationale=deferred_stabilization`
+
+QA conclusion for blocked path:
+
+- pass
+- server-side guard is effective even if the client UI is bypassed and a blocked pairing reaches the trigger path
+
+### 19.4 Allowed Pair QA
+
+Allowed coverage confirmed through existing fixed-template generation tests and the full `generate-book` suite.
+
+Representative allowed-path evidence:
+
+- `fixed-first-zoo` legacy id normalizes and still completes fixed-template generation
+- fixed-template generation still reaches page writes and `completed` status when the pairing is allowed
+- quality-tier normalization and regular fixed-template generation behavior remain intact
+
+Targeted command:
+
+- `npm --prefix functions test -- test/generate-book.test.ts -t "skips LLM story generation for fixed templates|uses premium model metadata when imageQualityTier is premium|normalizes free fixed-template books back to light quality even if premium was sent"`
+
+Observed result:
+
+- pass (`3 passed`)
+- fixed-template stdout confirms generation continued:
+  - `Book book-fixed generation completed: 2/2 pages succeeded`
+  - `Book book-free generation completed: 2/2 pages succeeded`
+
+QA conclusion for allowed path:
+
+- pass
+- the guard does not block known-allowed fixed-template execution paths
+
+### 19.5 Full Regression Check
+
+Executed:
+
+- `npm run guard:hygiene`
+- `npm --prefix functions test -- test/generate-book.test.ts`
+
+Observed result:
+
+- hygiene: pass
+- full targeted functions suite: pass (`48 passed`)
+
+QA implication:
+
+- no regression detected in the surrounding fixed-template or generation logic from the T5-6 guard
+
+### 19.6 Direct Firestore Write Equivalence Assessment
+
+Direct production Firestore write QA was not executed in this slice.
+
+Assessment:
+
+- acceptable
+
+Reasoning:
+
+- the create flow writes to `books`
+- the backend guard runs in the trigger-driven `processBookGeneration(...)` path
+- the targeted tests exercise that exact guard branch with crafted book payloads
+- the QA objective here was policy enforcement, not model/image behavior
+
+### 19.7 QA Verdict
+
+T5-7 verdict:
+
+- pass
+
+Confirmed:
+
+- blocked pairing is rejected before generation work
+- allowed pairing proceeds through the existing path
+- failure metadata is audit-friendly
+- server-side guard meaningfully complements T5-4 UI hiding
+
+### 19.8 Follow-Up
+
+Recommended next slice:
+
+- T5-8 server-side exposure validation closure / rollout guidance
+
+Optional later QA:
+
+- one low-cost live blocked-pair write in a controlled QA environment if product ops wants end-to-end trigger evidence beyond unit-level branch verification
