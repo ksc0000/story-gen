@@ -5242,3 +5242,138 @@ Priority T6-24 watchpoints:
 - No private image URLs or storage tokens recorded
 - No detailed manual visual QA
 - No final pair verdict update
+
+## 39. T6-24 - Imagination x Crayon Manual Visual QA / Pair Verdict
+
+Date: 2026-05-18
+
+### 39.1 Scope
+
+Perform manual visual QA for the two structurally completed `imagination x crayon` smoke books from T6-23 and issue book-level plus pair-level verdicts.
+
+Reviewed books:
+
+| sample | bookId | profile |
+| --- | --- | --- |
+| Book I1 | `gxuvnnlAnQXf6LVXtSo4` | anchored moderate / `i1` |
+| Book I2 | `ZPwrVsVARKIPBEm8mcu2` | rich / `i2` |
+
+Review dimensions:
+
+- BF-4 readability / pseudo-text surfaces
+- BF-3 character continuity / age / identity stability
+- `crayon` style adherence
+- emotional fit
+- story-image match
+- fallback-heavy impact on scene stability and prompt adherence
+
+### 39.2 Book I1 Visual QA
+
+#### I1 page-level observations
+
+- page 0: strong result; clear crayon rendering, readable opening fantasy beat, no BF-4 issue
+- pages 1-3: fallback output shifts to soft photoreal bedroom imagery; child and glowing star remain gentle, but the room-sky adventure framing collapses into plain in-room poses
+- pages 4-6: largest story-image mismatch; text calls for a hidden box, opening effort, and discovery of star fragments, but images continue to show mostly the same child-plus-star setup without the requested object/action payoff
+- page 7: gentle ending mood is preserved, but the visual remains generic and does not visually resolve the found-fragment return beat
+
+#### I1 rubric
+
+| dimension | verdict | notes |
+| --- | --- | --- |
+| BF-4 | Pass | no readable text, labels, map-like symbols, or pseudo-letter artifacts observed |
+| BF-3 | Pass | protagonist remains a young girl in star pajamas; no clear age-up or identity break |
+| style adherence | **Fail** | 7 fallback pages drift hard from crayon storybook into soft photoreal imagery |
+| emotional fit | Pass | wonder stays gentle and child-safe |
+| story-image match | **Fail** | adventure/search/payoff beats are largely missing from pages 4-7 |
+| fallback impact | High negative | fallback behavior materially reduced prompt specificity and visual narrative progression |
+
+Book I1 verdict: **Hold**
+
+Primary reason:
+
+- BF-4/BF-3 are acceptable, but `crayon` style adherence and story-image match fall below pair-clear criteria once fallback pages dominate the book
+
+### 39.3 Book I2 Visual QA
+
+#### I2 page-level observations
+
+- page 0: strong result; warm crayon bedroom launch image with clear fantasy invitation and good child-friendly appeal
+- pages 1-3: fallback output again switches to photoreal bedroom portrait mode; child identity stays stable, but visual language no longer resembles the requested crayon storybook path
+- pages 4-6: major imagination beats from text do not appear; the sleeping baby dragon, distant glowing castle, and branch-side fragment discovery are not visualized in a specific or reliable way
+- page 7: return-home reassurance tone remains gentle, but the closing image is still a generic bedroom pose rather than a visual resolution of the quest
+
+#### I2 rubric
+
+| dimension | verdict | notes |
+| --- | --- | --- |
+| BF-4 | Pass | no readable text, signage, book-title leakage, or control-panel pseudo-text observed |
+| BF-3 | Pass | same young boy is maintained across pages; no scary escalation or costume age drift |
+| style adherence | **Fail** | fallback pages abandon crayon texture/composition and become photoreal |
+| emotional fit | Pass | magical adventure remains warm and non-threatening |
+| story-image match | **Fail** | text-specific fantasy set pieces are not materially depicted on the fallback pages |
+| fallback impact | High negative | fallback-heavy lane preserved structural completion but not usable visual fidelity for this pair |
+
+Book I2 verdict: **Hold**
+
+Primary reason:
+
+- the book remains safe and gentle, but the fallback-heavy output does not visually realize the `imagination x crayon` promise closely enough for release-level validation
+
+### 39.4 Pair Verdict
+
+| pair | I1 | I2 | verdict |
+| --- | --- | --- | --- |
+| `imagination x crayon` | Hold | Hold | **Hold** |
+
+Pair-level interpretation:
+
+- this pair is structurally viable, unlike the paused `bedtime x soft_watercolor` lane
+- BF-4 passed across both reviewed books
+- BF-3 remained acceptable across both reviewed books
+- however, both books failed on the same aggregate weakness:
+  - fallback-heavy generation caused broad `crayon` style collapse
+  - fallback-heavy generation also weakened story-image alignment on the pages where imagination-specific scene beats mattered most
+
+Why pair is not `Go`:
+
+- pair-level criteria require acceptable style adherence and story-image match across both books, not only structural completion and BF safety
+- with 7/8 pages falling back in both books, the visual output is too unstable to treat this pair as commercially validated
+
+### 39.5 T6-24 Conclusion
+
+What T6-24 proves:
+
+- `imagination x crayon` can clear structural generation and avoid the upstream quality-gate trap seen in the paused `bedtime x soft_watercolor` lane
+- the current lane does not show a BF-4 readability blocker
+- the main blocker for this pair is not safety but fallback-driven quality degradation
+
+What T6-24 does not prove:
+
+- that `crayon` remains reliable under high fallback pressure for imagination scenes
+- that imagination-category scene specificity survives the current fallback path well enough for validation success
+
+Recommended next step:
+
+- keep `imagination x crayon` at **Hold**
+- move the next slice to fallback-behavior analysis / remediation design rather than declaring pair success
+
+### 39.6 Exclusions
+
+- No code changes
+- No runner changes
+- No functions logic changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No product exposure matrix update
