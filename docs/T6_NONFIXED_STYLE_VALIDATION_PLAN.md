@@ -5862,3 +5862,214 @@ New option:
 - No private image URLs or storage tokens recorded
 - No manual visual QA
 - No product exposure matrix update
+
+## 42. T6-27 - Cloud Logs / Primary Failure Code Audit (Docs-Only)
+
+Date: 2026-05-18
+
+### 42.1 Scope
+
+Audit Cloud Functions logs for the `generateBook` function to determine the actual error code and error type for `pro_consistent` (flux-2-pro) primary attempt failures observed in T6-23 and T6-26.
+
+Objective: replace the H1/H2/H3 hypotheses from T6-25 with a log-confirmed root cause.
+
+Books audited:
+
+| run | book | bookId | fallback pages |
+| --- | --- | --- | --- |
+| T6-23 (concurrency=2) | I1 | `gxuvnnlAnQXf6LVXtSo4` | 7/8 |
+| T6-23 (concurrency=2) | I2 | `ZPwrVsVARKIPBEm8mcu2` | 7/8 |
+| T6-26 (concurrency=1) | I1 C1 | `LP9dLwaVodcsz0GCOlJP` | 6/8 |
+| T6-26 (concurrency=1) | I2 C1 | `Gs0MrswWkcuAo2bQ4W9Y` | 7/8 |
+
+### 42.2 Log Extraction Method
+
+Logs were retrieved via:
+
+```
+firebase functions:log --project story-gen-8a769 --only generateBook -n 200
+```
+
+The output covers the time window from T6-23 generation (2026-05-17T17:16) through T6-26 generation completion (2026-05-17T18:06).
+
+### 42.3 Confirmed Error Code for All pro_consistent Failures
+
+Every `pro_consistent` (flux-2-pro) attempt failure across all four books returned the identical error:
+
+```json
+{
+  "message": "Image generation attempt failed",
+  "profile": "pro_consistent",
+  "error": "Prediction failed: The input or output was flagged as sensitive. Please try again with different inputs. (E005) (uIJ6l3ruRD)"
+}
+```
+
+Error classification:
+
+| field | value |
+| --- | --- |
+| Error code | **E005** |
+| Error type | **Replicate content sensitivity rejection** |
+| HTTP status | not 429 (no rate-limit retry header observed) |
+| Timeout | not triggered (`imageTimedOut = 0` on all books) |
+| Error message | "The input or output was flagged as sensitive. Please try again with different inputs." |
+| Replicate reference ID | `uIJ6l3ruRD` (static error reference, not a per-request ID) |
+
+### 42.4 Log Evidence per Book
+
+#### T6-23 I1 (`gxuvnnlAnQXf6LVXtSo4`) — 2026-05-17T17:17–17:21
+
+All page failures on pro_consistent show E005. Selected log entries:
+
+```
+17:17:23 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=1  attempt=0  E005
+17:17:50 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=1  attempt=1  E005
+17:17:57 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=2  attempt=0  E005
+17:18:16 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=2  attempt=1  E005
+17:18:15 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=3  attempt=0  E005
+17:18:34 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=3  attempt=1  E005
+17:18:38 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=4  attempt=0  E005
+17:18:51 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=4  attempt=1  E005
+17:19:05 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=5  attempt=0  E005
+17:19:25 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=5  attempt=1  E005
+17:19:25 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=6  attempt=0  E005
+17:19:48 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=6  attempt=1  E005
+17:20:01 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=7  attempt=0  E005
+17:20:20 W  bookId=gxuvnnlAnQXf6LVXtSo4  pageIndex=7  attempt=1  E005
+```
+
+Pattern: pages 1–7, both attempts (0 and 1), all E005. Page 0: no failure log (succeeded on first attempt).
+
+#### T6-23 I2 (`ZPwrVsVARKIPBEm8mcu2`) — 2026-05-17T17:17–17:20
+
+```
+17:17:19 W  bookId=ZPwrVsVARKIPBEm8mcu2  pageIndex=1  attempt=0  E005
+17:17:33 W  bookId=ZPwrVsVARKIPBEm8mcu2  pageIndex=1  attempt=1  E005
+17:17:54 W  bookId=ZPwrVsVARKIPBEm8mcu2  pageIndex=2  attempt=0  E005
+17:18:17 W  bookId=ZPwrVsVARKIPBEm8mcu2  pageIndex=2  attempt=1  E005
+(pages 3–7 follow the same E005 pattern on both attempts)
+17:19:25 W  bookId=ZPwrVsVARKIPBEm8mcu2  pageIndex=7  attempt=0  E005
+17:19:37 W  bookId=ZPwrVsVARKIPBEm8mcu2  pageIndex=7  attempt=1  E005
+```
+
+#### T6-26 I1 C1 (`LP9dLwaVodcsz0GCOlJP`) — 2026-05-17T18:00–18:06
+
+```
+18:00:46 W  bookId=LP9dLwaVodcsz0GCOlJP  pageIndex=2  attempt=0  E005
+18:00:59 W  bookId=LP9dLwaVodcsz0GCOlJP  pageIndex=2  attempt=1  E005
+18:01:35 W  bookId=LP9dLwaVodcsz0GCOlJP  pageIndex=3  attempt=0  E005
+18:01:59 W  bookId=LP9dLwaVodcsz0GCOlJP  pageIndex=3  attempt=1  E005
+(pages 4–7 follow the same E005 pattern on both attempts)
+18:05:28 W  bookId=LP9dLwaVodcsz0GCOlJP  pageIndex=7  attempt=0  E005
+18:05:45 W  bookId=LP9dLwaVodcsz0GCOlJP  pageIndex=7  attempt=1  E005
+```
+
+No failure on pages 0 or 1 — both succeeded on first pro_consistent attempt.
+
+#### T6-26 I2 C1 (`Gs0MrswWkcuAo2bQ4W9Y`) — 2026-05-17T18:00–18:06
+
+```
+18:00:39 W  bookId=Gs0MrswWkcuAo2bQ4W9Y  pageIndex=1  attempt=0  E005
+18:00:54 W  bookId=Gs0MrswWkcuAo2bQ4W9Y  pageIndex=1  attempt=1  E005
+(pages 2–7 follow the same E005 pattern on both attempts)
+18:05:25 W  bookId=Gs0MrswWkcuAo2bQ4W9Y  pageIndex=7  attempt=0  E005
+18:05:46 W  bookId=Gs0MrswWkcuAo2bQ4W9Y  pageIndex=7  attempt=1  E005
+```
+
+### 42.5 Additional Evidence: E005 Is Not Exclusive to Imagination Prompts
+
+The same log window shows E005 failures on non-imagination books:
+
+- Book `BDKHvJt4J7Bfzwx4IZAg` (2026-05-16): pro_consistent E005 on page 1, attempts 0 and 1.
+- Book `7silOATa4vPfvfXNHNIt` (2026-05-17T15:39): pro_consistent E005 on **cover image** generation, attempts 0 and 1.
+
+Other books in the same period (iuCrth0sC6UV9SVVf0F1, yylnhRJfVF23GcVyJBUF, YVsHLGjXJ1svdhzWMDn9, uwhwhq3DmuGPekxBVn0a) completed without E005. This confirms that E005 is triggered by specific prompt content, not by the imagination category alone, but imagination-category prompts carry higher risk.
+
+### 42.6 Hypothesis Revision
+
+Prior hypotheses from T6-25 are now resolved:
+
+| hypothesis | T6-25 assessment | T6-27 finding |
+| --- | --- | --- |
+| H1: `IMAGE_CONCURRENCY=2` burst pressure | WEAK (tested in T6-26) | **Ruled out** — failures are E005 content filter, not rate-limit |
+| H2: Replicate flux-2-pro transient service degradation | primary after T6-26 | **Ruled out** — E005 is deterministic per prompt, not transient |
+| H3: Prompt complexity escalation | secondary | **Partially relevant** — narrative complexity correlates with E005 risk |
+
+**New definitive finding: H4 — Replicate / flux-2-pro content sensitivity filter (E005)**
+
+`flux-2-pro` applies a content moderation layer to predictions. When the input or output score exceeds the sensitivity threshold, it returns E005 and the prediction fails immediately. The same prompts submitted to `flux-2-klein-9b` (klein_fast) do not trigger E005. E005 is prompt-deterministic: the same prompt returns E005 on every attempt.
+
+### 42.7 Why Page 0 Consistently Passes
+
+The story quality log for T6-23 I1 shows no `image_prompt.text_risk`, `readable_text_risk`, or `brand_or_logo_risk` warnings on page 0, while pages 1–7 carry multiple such warnings. The opening page is typically a simple scene-setting illustration, while pages 1–7 escalate into imagination-specific content: rocket launches, fantasy landscapes, magic objects, creature encounters, discovery beats. These richer scenes contain elements (fantasy signage, glowing text effects, magical books, spell-like motifs) that push into flux-2-pro's sensitivity threshold.
+
+I1 C1 in T6-26 also succeeded on page 1 because that run generated page 1 story text that did not trigger E005 — confirming the threshold is content-dependent, not positional.
+
+### 42.8 Why Retrying the Same Prompt Does Not Help
+
+E005 is **deterministic**: the same prompt returns E005 on every attempt. This is directly observed in logs — every attempt 0 and attempt 1 for a given page produces the same E005 without exception. R2 (retry with backoff) will not recover from E005.
+
+### 42.9 Updated Remediation Assessment
+
+| option | T6-25 recommendation | T6-27 reassessment |
+| --- | --- | --- |
+| R1: reduce IMAGE_CONCURRENCY | deprioritized after T6-26 | **Confirmed ineffective** |
+| R2: increase pro_consistent retry count + backoff | retain | **Ineffective** — E005 is deterministic per prompt |
+| R3: style-reinforcement on fallback prompt | retain | **Remains valid** for fallback quality |
+| R4: extend fallback chain to klein_base | retain | **Remains valid** for fallback quality |
+| R5: post-generation auto-regeneration | defer | Re-generation with same prompt also hits E005; requires prompt modification |
+| R6: diagnose Replicate error type | done | **Complete** — E005 confirmed |
+
+New options:
+
+**R7: Prompt sanitization to reduce E005 trigger probability**
+
+Remove or rewrite image prompt elements that correlate with E005 rejection. The story quality gate `image_prompt.text_risk` / `readable_text_risk` / `brand_or_logo_risk` warnings already flag these patterns. A targeted prompt-builder pass that strips or rewrites these elements before image generation could reduce E005 rejection significantly. Story narrative content is preserved; only the image prompt field is modified.
+
+**R8: Accept E005 as a known flux-2-pro limitation; focus on fallback quality**
+
+If sanitizing imagination prompts meaningfully degrades scene specificity, accept that imagination-category books will use klein_fast for many pages and invest in fallback quality improvement through R3 + R4.
+
+### 42.10 Recommended Path for T6-28
+
+**Primary: R7 — prompt sanitization design and implementation**
+
+- Identify patterns in imagination-category `imagePrompt` fields that correlate with `image_prompt.text_risk` / `readable_text_risk` / `brand_or_logo_risk` quality warnings.
+- Design a prompt-builder sanitization pass that removes or rewrites these patterns from the image prompt (not from the story text).
+- After implementation, run a new re-smoke to measure E005 rejection rate change.
+
+**Parallel: R4 — evaluate klein_base as fallback quality floor**
+
+- Enable `ENABLE_KLEIN_BASE=true` and compare klein_base vs. klein_fast for crayon style fidelity on imagination prompts.
+
+**Retire: R1, R2** — formally retired. Both are confirmed ineffective for E005.
+
+**Defer: R5** — premature until prompt sanitization (R7) reduces the E005 rate.
+
+### 42.11 Pair Status After T6-27
+
+| pair | verdict | root cause (confirmed) | recommended next action |
+| --- | --- | --- | --- |
+| `imagination × crayon` | **Hold** | E005 content sensitivity rejection by flux-2-pro on pages 1–7 | T6-28: design and implement R7 prompt sanitization |
+
+### 42.12 Exclusions
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No manual visual QA
+- No product exposure matrix update
