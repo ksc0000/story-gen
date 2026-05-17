@@ -2012,3 +2012,261 @@ Recommended follow-up candidates after this playbook:
 - No runner changes
 - No style profile changes
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 22. T5-10 Product QA Plan For Style-Gated Create Flow End-To-End
+
+### 22.1 Goal
+
+Define a low-risk, product-facing end-to-end QA plan for the style-gated create flow.
+
+This QA plan is meant to validate:
+
+- user-visible style filtering in the create flow
+- safe fallback when a previously selected style becomes invalid for the selected template
+- server-side fail-close behavior when blocked pairs bypass the UI
+- normal generation path continuity for allowed pairs
+
+This slice is planning-only:
+
+- no Firestore write
+- no smoke execution
+- no image generation
+
+### 22.2 QA Scope
+
+The E2E QA surface includes:
+
+- template selection state in the create flow
+- style picker visible options and ordering
+- stale selected style fallback in the style page
+- persisted create payload assumptions
+- backend trigger-side guard for fixed-template pairings
+
+Out of scope for this slice:
+
+- visual QA of generated images
+- broader non-fixed creation paths
+- admin-only or override workflows
+
+### 22.3 Primary QA Questions
+
+The execution slice should answer these questions:
+
+1. Does each validated template show only its approved styles in the normal create UI?
+2. Does the picker order match the exposure config `sortPriority`?
+3. If a user reaches the style page with a stale/blocked style selected, does the UI recover safely?
+4. If a blocked pairing is written directly to `books`, does the backend reject it before story/image generation?
+5. If an allowed pairing is submitted, does the flow continue through the expected generation path?
+
+### 22.4 UI Filtering QA Coverage
+
+For UI filtering, verify:
+
+- `fixed-first-zoo-8p`
+  - visible:
+    - `crayon`
+    - `soft_watercolor`
+  - hidden:
+    - `anime_storybook`
+- `fixed-sleepy-moon-adventure-8p`
+  - visible:
+    - `crayon`
+    - `anime_storybook`
+    - `soft_watercolor`
+
+Also verify:
+
+- visible ordering follows exposure `sortPriority`
+- no unexpected canonical fallback list appears for these validated templates
+- no blocked style leaks into the standard style picker
+
+### 22.5 Stale Selected Style Fallback QA Coverage
+
+Key stale-selection scenario:
+
+- template changes from sleepy-moon to first-zoo while `anime_storybook` is selected
+
+Expected behavior:
+
+- stale style is no longer shown as an available option
+- selected style falls back automatically to the first visible allowed style
+- fallback is deterministic and consistent with picker order
+- downstream payload still stores a valid visible style
+
+Additional fallback checks:
+
+- fallback does not crash or leave the UI in an empty state
+- fallback does not preserve hidden style metadata silently
+- returning to a template where the style is valid again behaves predictably
+
+### 22.6 Server-Side Fail-Close QA Coverage
+
+Blocked server-path scenario:
+
+- direct write equivalent for:
+  - `fixed-first-zoo-8p × anime_storybook`
+
+Expected behavior:
+
+- trigger reaches `processBookGeneration(...)`
+- exposure validation runs before story generation
+- exposure validation runs before image generation
+- book status becomes `failed`
+- failure metadata includes stable technical reason beginning with:
+  - `style_exposure_blocked:`
+
+Server-side acceptance point:
+
+- UI bypass must not be able to force generation for the blocked fixed-template pairing
+
+### 22.7 Allowed Pair QA Coverage
+
+Allowed-pair QA should be kept minimal.
+
+Recommended allowed live candidate:
+
+- `fixed-first-zoo-8p × crayon`
+
+Reason:
+
+- already strong validated pairing
+- simplest contrast against the blocked zoo anime pairing
+- lower ambiguity in expected outcome
+
+Alternative allowed candidate:
+
+- `fixed-sleepy-moon-adventure-8p × anime_storybook`
+
+Allowed-path expectations:
+
+- create flow keeps the selected style visible
+- payload remains valid
+- generation proceeds past exposure validation
+- no exposure-related failure metadata is written
+
+### 22.8 Cost-Minimized Execution Design
+
+Recommended execution order for the actual QA slice:
+
+1. local/UI-only verification first
+2. local/functions test verification second
+3. live blocked write last, and only if extra end-to-end trigger evidence is still needed
+4. allowed live generation only if local evidence is insufficient
+
+Cost-minimizing defaults:
+
+- use one blocked pairing maximum for live backend QA
+- use one allowed pairing maximum if live generation is required
+- prefer existing local tests and deterministic trigger-path verification over production writes
+
+Preferred evidence stack:
+
+- UI observation or local browser validation for picker behavior
+- existing frontend tests for exposure helpers/picker behavior
+- existing functions tests for guard behavior
+- optional one live blocked write
+- optional one live allowed write
+
+### 22.9 Proposed Execution Matrix
+
+Planned matrix for the execution slice:
+
+#### UI-only verification matrix
+
+- `fixed-first-zoo-8p × crayon`
+  - should be visible
+- `fixed-first-zoo-8p × soft_watercolor`
+  - should be visible
+- `fixed-first-zoo-8p × anime_storybook`
+  - should be hidden
+- `fixed-sleepy-moon-adventure-8p × crayon`
+  - should be visible
+- `fixed-sleepy-moon-adventure-8p × anime_storybook`
+  - should be visible
+- `fixed-sleepy-moon-adventure-8p × soft_watercolor`
+  - should be visible
+
+#### Stale-selection scenario
+
+- start with `fixed-sleepy-moon-adventure-8p × anime_storybook`
+- switch template to `fixed-first-zoo-8p`
+- verify fallback to first visible allowed style
+
+#### Optional live blocked backend scenario
+
+- `fixed-first-zoo-8p × anime_storybook`
+  - expected:
+    - immediate guarded failure
+    - no story/image generation
+
+#### Optional live allowed backend scenario
+
+- `fixed-first-zoo-8p × crayon`
+  - expected:
+    - generation path continues normally
+
+### 22.10 Acceptance Criteria
+
+The execution slice should be considered passing only if all of the following hold:
+
+#### UI acceptance
+
+- validated templates show exactly the intended user-facing styles
+- blocked style is not visible for `fixed-first-zoo-8p`
+- visible order matches exposure priority
+
+#### Fallback acceptance
+
+- stale blocked selection auto-recovers to a valid visible style
+- no invalid hidden selection remains active after template switch
+
+#### Server acceptance
+
+- blocked direct-write equivalent is rejected before generation work
+- allowed pair is not rejected by exposure validation
+- failure metadata for blocked path is stable and audit-friendly
+
+#### Operational acceptance
+
+- observed behavior matches docs and config on both frontend and functions sides
+- no mismatch is found between UI-visible policy and backend enforcement
+
+### 22.11 Execution Notes
+
+Recommended tooling for the future execution slice:
+
+- in-app browser or local browser for style page UI checks
+- existing unit/integration tests for helper-level confirmation
+- only minimal live backend writes if truly needed
+
+Recommended evidence capture:
+
+- short QA table with:
+  - templateId
+  - styleId
+  - UI visible/hidden result
+  - fallback result
+  - server result
+  - final QA decision
+
+### 22.12 Suggested Next Step
+
+Recommended next slice:
+
+- T5-11 execute product QA for style-gated create flow end-to-end
+
+### 22.13 Exclusions
+
+- No code changes performed
+- No UI changes performed
+- No functions changes performed
+- No Firestore schema or rules changes performed
+- No smoke generation performed
+- No image generation performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No runner changes
+- No style profile changes
+- No service account JSON, secrets, URLs, or tokens recorded
