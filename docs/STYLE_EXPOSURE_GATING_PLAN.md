@@ -997,3 +997,290 @@ Deferred:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 17. T5-5 Server-Side Blocked-Pair Validation Planning
+
+Date: 2026-05-17
+
+Scope:
+
+- docs-only planning for server-side enforcement
+- no code changes in this slice
+- objective: identify the real backend entrypoint and define a safe validation strategy for blocked pairings
+
+### 17.1 Current Request / Generation Path
+
+Observed current path:
+
+1. `src/app/(app)/create/style/page.tsx`
+   - client writes a new `books` document directly with `addDoc(collection(db, "books"), bookPayload)`
+2. book payload already includes:
+   - `theme`
+   - `templateId`
+   - `creationMode`
+   - `style`
+   - `selectedStyleId`
+   - `selectedStyleName`
+   - `styleBible`
+   - `stylePreviewImageUrl`
+   - `stylePreviewUsedAsReference`
+3. `functions/src/generate-book.ts`
+   - `generateBook = onDocumentCreated({ document: "books/{bookId}" }, ...)`
+4. the Firestore trigger calls `processBookGeneration(bookId, bookData, deps)`
+5. `processBookGeneration(...)`
+   - sanitizes input
+   - fetches template through `deps.getTemplate(bookData.theme)`
+   - normalizes book settings
+   - proceeds into fixed-template or LLM story generation
+
+Implication:
+
+- the true server-side generation gate is the Firestore trigger, not a callable API
+- UI hiding in T5-4 is helpful but not sufficient because a crafted client can still write a blocked pairing directly
+
+### 17.2 Where Style Fields Are Saved And Used
+
+Confirmed persistence path:
+
+- client stores `style` as the operative style field
+- client also stores `selectedStyleId` and `selectedStyleName` as descriptive metadata
+- `styleBible` and `stylePreviewImageUrl` are stored on the book payload
+
+Confirmed generation-side usage:
+
+- `generate-book.ts` uses `bookData.style` as the actual style input for prompt construction
+- style profile lookup is based on `normalizedBookData.style`
+- `selectedStyleId` is useful for auditing but is not the authoritative field for generation behavior
+
+Design consequence:
+
+- server-side blocked-pair validation must validate against the canonical operative pair:
+  - `templateId` or resolved template key
+  - `bookData.style`
+
+### 17.3 Recommended Enforcement Point
+
+Primary recommendation:
+
+- enforce blocked-pair validation inside `processBookGeneration(...)`
+
+Recommended insertion point:
+
+- after template fetch succeeds
+- before quota checks, story generation, or image generation begin
+
+Suggested logical order:
+
+1. validate raw input safety
+2. fetch template
+3. resolve canonical style-template exposure
+4. fail early if pairing is blocked for product flow
+5. continue with normalization and generation only if allowed
+
+Why this point is best:
+
+- template identity is now known and trustworthy
+- no expensive generation work has started yet
+- failure can be expressed as ordinary book-level validation failure metadata
+
+### 17.4 Config Sharing Strategy
+
+T5-3 currently lives in:
+
+- `src/lib/style-exposure.ts`
+
+Functions cannot safely import that browser-side file directly as the long-term contract.
+
+Recommended T5-6 strategy:
+
+- add a server mirror:
+  - `functions/src/lib/style-exposure.ts`
+
+Mirror contents should include:
+
+- `StyleExposureStatus`
+- `StyleExposureRationale`
+- `StyleTemplateExposure`
+- `ResolvedStyleExposure`
+- initial exposure matrix
+- the minimum resolver helpers needed for backend enforcement
+
+Important constraint:
+
+- keep style identity metadata in `illustration-styles.ts`
+- keep product gating in `style-exposure.ts`
+- do not merge these concepts during server rollout
+
+Future option:
+
+- if duplication becomes painful, later extract a shared package/module
+- not required for T5-6
+
+### 17.5 Validation Policy Design
+
+Recommended server interpretation by resolved exposure:
+
+#### `promote`
+
+- allow generation
+
+#### `available`
+
+- allow generation
+
+#### `internal`
+
+- default production behavior: reject
+- reason:
+  - unvalidated pairing should not silently pass through the production backend
+
+#### `blocked`
+
+- reject
+
+Recommended first-pass policy:
+
+- only `promote` and `available` are allowed through the standard product generation path
+- `internal` and `blocked` should both fail in product mode
+
+Reasoning:
+
+- this matches T5-1 / T5-2 fail-closed policy
+- it prevents accidental exposure of unvalidated pairings
+
+### 17.6 Template Identity Resolution
+
+Current nuance:
+
+- generation fetches the template using `bookData.theme`
+- book payload also carries `templateId`
+
+Recommended validation source of truth:
+
+- prefer `bookData.templateId ?? bookData.theme`
+
+Reason:
+
+- T5 exposure policy is explicitly keyed by template id
+- using `templateId` first aligns with product semantics while preserving backward compatibility
+
+Suggested validation guard:
+
+- if the resolved template id is missing, treat the pairing as non-validated and fail conservatively in product mode
+
+### 17.7 Failure Behavior Design
+
+Recommended failure shape:
+
+- use existing book failure path
+- mark book as `failed`
+- record validation metadata through `updateBookFailureMetadata(...)`
+
+Suggested metadata direction:
+
+- `failureStage: "validation"`
+- `failureProvider: "system"`
+- `failureReason: "unknown"` for now, unless enum expansion is approved later
+- `retryable: false`
+- `technicalErrorMessage` should include a stable blocked-pair reason string
+
+Suggested user-facing message shape:
+
+- safe, short, non-technical
+- example intent:
+  - "この絵のタッチは、今はこのテンプレートでは選べません。別のタッチを選んでください。"
+
+Suggested technical message shape:
+
+- include template id and style id for auditability
+- example intent:
+  - `style_exposure_blocked: template=fixed-first-zoo-8p style=anime_storybook`
+
+### 17.8 Fallback Recommendation Design
+
+Do not auto-rewrite blocked pairings on the server.
+
+Recommended behavior:
+
+- fail clearly
+- let the client recover
+
+Suggested future client-facing recovery payload concept:
+
+- blocked reason code
+- recommended replacement styles for the same template
+
+Current recommended replacements:
+
+- for `fixed-first-zoo-8p × anime_storybook`
+  - `crayon`
+  - `soft_watercolor`
+
+T5-6 note:
+
+- server implementation can start with fail-only behavior
+- client-facing fallback recommendation UX can remain a later slice if needed
+
+### 17.9 Internal Override / Admin Preview Planning
+
+T5-5 recommendation:
+
+- do not mix admin override into the first server validation slice
+
+Initial production path:
+
+- standard create flow must enforce blocking strictly
+
+Later override path candidate:
+
+- admin or QA context can pass through a separate trusted route or explicit override flag
+- that override must not be inferable from normal client payload alone
+
+Reason:
+
+- avoids accidental privilege escalation
+- keeps T5-6 small and safe
+
+### 17.10 Proposed T5-6 Slice
+
+Recommended T5-6 implementation scope:
+
+1. add a functions-side `style-exposure` mirror module
+2. resolve `templateId ?? theme` plus canonical `style`
+3. insert blocked/unvalidated pairing validation into `processBookGeneration(...)`
+4. fail books early with clear validation metadata
+5. add targeted tests for:
+   - allowed pairing passes
+   - blocked pairing fails
+   - unlisted pairing fails closed
+   - alias style normalizes before validation if needed
+
+Validation targets for T5-6:
+
+- `npm run guard:hygiene`
+- functions build
+- targeted functions tests covering the new validation branch
+
+### 17.11 Planning Decision
+
+T5-5 planning verdict:
+
+- server-side blocked-pair validation should be added at the Firestore-trigger generation entrypoint
+- first implementation should enforce fail-closed behavior for `internal` and `blocked`
+- admin override should be deferred
+- client fallback recommendation UX should be deferred unless T5-6 needs it for usability
+
+### 17.12 Exclusions
+
+- No code or functions changes performed
+- No API changes performed
+- No Firestore schema changes performed
+- No smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No runner changes
+- No style profile changes
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
