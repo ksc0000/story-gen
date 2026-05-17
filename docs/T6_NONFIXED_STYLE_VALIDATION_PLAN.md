@@ -1917,3 +1917,155 @@ Before T6-7 starts, confirm:
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+---
+
+## 22. T6-7 — Bedtime × Soft_Watercolor Smoke Generation / Structural Inspection
+
+Date: 2026-05-17
+
+### 22.1 Scope
+
+Execute T6-7 structural smoke for `bedtime × soft_watercolor` with two books (S1/S2), including:
+
+- runner profile support update (`s1`, `s2`)
+- dry-run validation
+- write generation
+- monitor / inspect structural verification
+- structural evidence recording
+
+Out of scope for this slice:
+
+- detailed manual visual QA (deferred to T6-8)
+- final pair verdict determination
+
+### 22.2 Runner Profile Support Update
+
+Updated file: `scripts/create-nonfixed-smoke-book.js`
+
+Changes:
+
+- added bedtime profile key `s1` (anchored moderate)
+- added bedtime profile key `s2` (rich)
+- expanded usage comments to include `s1|s2`
+- no functions logic changes
+
+### 22.3 Dry-Run Verification
+
+Dry-run commands executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --dry-run --theme-id=bedtime --style-id=soft_watercolor --profile=s1
+npm run smoke:create-nonfixed-book -- --dry-run --theme-id=bedtime --style-id=soft_watercolor --profile=s2
+```
+
+Dry-run summary:
+
+- both payloads resolved `themeId=bedtime`, `styleId=soft_watercolor`
+- `creationMode=guided_ai`, `productPlan=standard_paid`, `pageCount=8`
+- no-reference path confirmed (`withReference=false`)
+- S1 profile label: anchored moderate
+- S2 profile label: rich
+
+### 22.4 Generation Evidence (Write)
+
+Write commands executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --write --theme-id=bedtime --style-id=soft_watercolor --profile=s1
+npm run smoke:create-nonfixed-book -- --write --theme-id=bedtime --style-id=soft_watercolor --profile=s2
+```
+
+Created books:
+
+| sample | bookId | profile | runId |
+| --- | --- | --- | --- |
+| Book S1 | `uwhwhq3DmuGPekxBVn0a` | anchored moderate (`s1`) | `t6-nonfixed-20260517140513` |
+| Book S2 | `PFuh3zu7q4VmNn4qA3dU` | rich (`s2`) | `t6-nonfixed-20260517140516` |
+
+### 22.5 Monitor / Inspect Structural Results
+
+#### Book S1 — Anchored Moderate (`s1`)
+
+| field | value |
+| --- | --- |
+| bookId | uwhwhq3DmuGPekxBVn0a |
+| status | **completed** |
+| progress | 100 |
+| theme | bedtime |
+| styleId | soft_watercolor |
+| selectedStyleName | やさしい水彩 |
+| pageCount requested | 8 |
+| pages actual | 8 |
+| pages completed | 8 |
+| failed pages | 0 |
+| imageModel | black-forest-labs/flux-2-pro |
+| imageAttemptCount | 1 (all pages) |
+| imageFallbackUsed pages | 0 |
+| imageTimedOut pages | 0 |
+| referenceImagesUsed pages | 0 |
+| usedCharacterReference pages | 0 |
+| imageDurationMs (min / avg / max) | 21011 / 24617 / 27559 |
+| inspect expected page count check | PASS |
+
+#### Book S2 — Rich (`s2`)
+
+| field | value |
+| --- | --- |
+| bookId | PFuh3zu7q4VmNn4qA3dU |
+| status | **completed** |
+| progress | 100 |
+| theme | bedtime |
+| styleId | soft_watercolor |
+| selectedStyleName | やさしい水彩 |
+| pageCount requested | 8 |
+| pages actual | 8 |
+| pages completed | 8 |
+| failed pages | 0 |
+| imageModel | black-forest-labs/flux-2-pro |
+| imageAttemptCount | 1 (all pages) |
+| imageFallbackUsed pages | 0 |
+| imageTimedOut pages | 0 |
+| referenceImagesUsed pages | 0 |
+| usedCharacterReference pages | 0 |
+| imageDurationMs (min / avg / max) | 16237 / 21475 / 33609 |
+| inspect expected page count check | PASS |
+
+### 22.6 Structural Interpretation (T6-7)
+
+- Both S1 and S2 completed successfully with full 8/8 pages.
+- No quality-gate failure and no page-level image failure occurred.
+- No fallback usage and no timeout flags were observed.
+- No-reference execution path remained intact (`inputReferenceCount=0`, `usedCharacterReference=false` for all pages).
+- Structural health for `bedtime × soft_watercolor` is **pass** at T6-7 scope.
+
+### 22.7 T6-8 Handoff (Manual Visual QA)
+
+T6-8 should perform detailed manual visual QA for both books using the defined watchpoints:
+
+- BF-4 per-page safety
+- BF-3 continuity
+- soft_watercolor style adherence
+- emotional fit
+- story-image match
+
+Current status before T6-8:
+
+- visual QA: pending
+- pair verdict: not finalized in T6-7
+
+### 22.8 Exclusions (T6-7)
+
+- No functions logic changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No detailed manual visual QA completion
+- No final pair verdict confirmation

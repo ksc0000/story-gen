@@ -1,8 +1,8 @@
 // Minimal guided_ai smoke book creator for T6 non-fixed style validation.
-// Only supports the predefined T6 input profiles (--profile=a, --profile=a2, or --profile=b).
+// Only supports the predefined T6 input profiles (for example: a, a2, b, s1, s2).
 // Usage:
-//   node scripts/create-nonfixed-smoke-book.js --dry-run [--theme-id=bedtime] [--style-id=crayon] [--profile=a|a2|b]
-//   node scripts/create-nonfixed-smoke-book.js --write  [--theme-id=bedtime] [--style-id=crayon] [--profile=a|a2|b]
+//   node scripts/create-nonfixed-smoke-book.js --dry-run [--theme-id=bedtime] [--style-id=crayon] [--profile=a|a2|b|s1|s2]
+//   node scripts/create-nonfixed-smoke-book.js --write  [--theme-id=bedtime] [--style-id=crayon] [--profile=a|a2|b|s1|s2]
 
 const { createRequire } = require("module");
 const { resolve } = require("path");
@@ -70,6 +70,28 @@ const T6_INPUT_PROFILES = {
         parentMessage: "げんきでよかった。また明日もいっしょに遊ぼうね。おやすみ。",
         colorMood: "deep cozy night",
         favorites: "ミニカーとぬいぐるみ",
+      },
+    },
+    s1: {
+      label: "anchored moderate",
+      input: {
+        childName: "さくら",
+        childAge: 4,
+        parentMessage:
+          "きょうもたくさんあそんだね。おきにいりのうさぎさんといっしょに、あたたかいおへやでゆっくりねむろうね。おやすみ、さくら。",
+        colorMood: "soft warm watercolor night",
+        favorites: "うさぎのぬいぐるみ",
+      },
+    },
+    s2: {
+      label: "rich",
+      input: {
+        childName: "けんた",
+        childAge: 3,
+        parentMessage:
+          "げんきでよかった。また明日もいっしょに遊ぼうね。おつきさまとおほしさまをみながら、やさしいきもちでねむろうね。おやすみ。",
+        colorMood: "pale cozy night",
+        favorites: "うさぎのぬいぐるみとミニカー",
       },
     },
   },
