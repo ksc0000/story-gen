@@ -1692,3 +1692,228 @@ For `bedtime × soft_watercolor`:
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+---
+
+## 21. T6-6 — Bedtime × Soft_Watercolor Smoke Input / Execution Design (Docs-Only)
+
+Date: 2026-05-17
+
+### 21.1 Objective
+
+Define concrete smoke input and execution design for `bedtime × soft_watercolor` so that the next run can be executed safely and comparably.
+
+This slice is design-only:
+
+- generation execution is deferred to T6-7
+- manual visual QA is deferred to T6-8
+
+### 21.2 Design Baseline and Constraints
+
+Baseline evidence used:
+
+1. `bedtime × crayon` reached Go in T6-4 with two-book structure (anchored moderate + rich).
+2. T6-5 selected `bedtime × soft_watercolor` as next pair for low-risk, high-comparison value progression.
+3. T6-3a showed anchored-moderate grounding reduces quality-gate failure risk versus thin moderate input.
+
+Design constraints for comparability:
+
+- keep `categoryGroupId=bedtime` fixed
+- change only style (`soft_watercolor`)
+- keep no-reference path (`childProfileSnapshot: none`, `referenceImagesUsed=0` target)
+- preserve two-book structure to compare with T6-4 outcomes
+
+### 21.3 Input Structure Mapping (A2/B -> S1/S2)
+
+| role | prior crayon run | T6-6 design role |
+| --- | --- | --- |
+| anchored moderate lane | Book A2 (`a2`) | Book S1 |
+| rich lane | Book B (`b`) | Book S2 |
+
+Rationale:
+
+- preserves cross-style comparability while minimizing new confounders
+- keeps one lower-entropy anchored profile and one richer profile
+
+### 21.4 Book S1 / Book S2 Concrete Input Profiles
+
+Target pair: `theme=bedtime`, `style=soft_watercolor`, `creationMode=guided_ai`, `productPlan=standard_paid`, `pageCount=8`.
+
+#### Book S1 — Anchored Moderate (soft_watercolor)
+
+| field | value |
+| --- | --- |
+| profile key | `s1` (new design key; naming for docs only) |
+| inputProfile label | anchored moderate |
+| childName | さくら |
+| childAge | 4 |
+| parentMessage | きょうもたくさんあそんだね。おきにいりのうさぎさんといっしょに、あたたかいおへやでゆっくりねむろうね。おやすみ、さくら。 |
+| colorMood | soft warm watercolor night |
+| favorites | うさぎのぬいぐるみ |
+| style | soft_watercolor |
+| theme | bedtime |
+| childProfileSnapshot | none |
+
+Design intent:
+
+- maximize quality-gate pass probability with proven anchored structure
+- isolate style difference relative to crayon A2
+
+#### Book S2 — Rich (soft_watercolor)
+
+| field | value |
+| --- | --- |
+| profile key | `s2` (new design key; naming for docs only) |
+| inputProfile label | rich |
+| childName | けんた |
+| childAge | 3 |
+| parentMessage | げんきでよかった。また明日もいっしょに遊ぼうね。おつきさまとおほしさまをみながら、やさしいきもちでねむろうね。おやすみ。 |
+| colorMood | pale cozy night |
+| favorites | うさぎのぬいぐるみとミニカー |
+| style | soft_watercolor |
+| theme | bedtime |
+| childProfileSnapshot | none |
+
+Design intent:
+
+- keep rich lane learning value
+- slightly constrain scene entropy compared with prior rich wording
+- retain one harder prop (`ミニカー`) for BF-4 monitoring while keeping overall gentle palette
+
+### 21.5 Soft_Watercolor-Specific QA Watchpoints
+
+Expected strengths:
+
+- gentle palette and soft lighting generally fit bedtime emotional target
+- low BF-4 tendency compared with denser stroke-heavy styles
+
+Watchpoints to track explicitly:
+
+1. over-wash blur: subject boundaries become too soft and scene readability drops
+2. low-contrast face detail: child expression becomes ambiguous across pages
+3. color bleeding clusters: blot patterns that could resemble glyph-like marks at small scale
+4. object drift under low contrast: recurring plush/toy appears inconsistently shaped or disappears
+5. mood flattening: pages become visually similar and lose narrative progression cues
+
+### 21.6 T6-7 Smoke Execution Policy (Generation / Structural Scope)
+
+Execution scope for T6-7:
+
+- run dry-run and write for Book S1 and Book S2 only
+- capture structural metadata only (no manual image verdict yet)
+
+Required policy:
+
+1. preflight
+  - confirm target pair `bedtime × soft_watercolor`
+  - confirm same environment assumptions as T6-4/T6-5
+  - confirm no pending bedtime template edits
+2. generation
+  - create Book S1 first, then Book S2
+  - no Admin override path
+  - no regeneration/retry until initial structural inspection is recorded
+3. structural checks
+  - status transition: `generating -> completed|partial_completed|failed`
+  - pages completed and failed pages
+  - quality-gate or image-stage failure stage if any
+  - image metrics retained: `imageDurationMs`, `imageAttemptCount`, `imageFallbackUsed`, `imageTimedOut`, `imageModel`
+4. stop conditions
+  - if either book hard-fails at quality_gate, record and stop before visual QA
+  - if completed/partial_completed, proceed to T6-8 visual QA phase
+
+### 21.7 T6-8 Visual QA Separation Policy
+
+T6-8 is defined as manual visual QA phase for `bedtime × soft_watercolor` after T6-7 structural completion.
+
+Separation rule:
+
+- T6-7 outputs: bookIds + structural evidence only
+- T6-8 outputs: page-level visual evidence + book verdicts + pair verdict
+
+T6-8 required review axes:
+
+- BF-4 safety (per page)
+- BF-3 continuity
+- soft_watercolor style adherence
+- emotional fit for bedtime
+- story-image match
+- structural carry-over consistency
+
+### 21.8 Evidence Template for T6-7/T6-8
+
+Use one record per book and one pair summary.
+
+Book-level required fields:
+
+- bookId
+- date
+- theme: bedtime
+- categoryGroupId: bedtime
+- styleId: soft_watercolor
+- creationMode: guided_ai
+- inputProfile: anchored moderate (S1) or rich (S2)
+- childName, childAge, parentMessage, colorMood, favorites
+- childProfileSnapshot: none
+- structural metrics (status, pages completed, failure stage if any)
+- visual QA axes (BF-4/BF-3/style/emotional/story-image)
+- overall book verdict: Go | Conditional-Go | Conditional | Hold
+
+Pair-level required fields:
+
+- books sampled: 2
+- Book S1 verdict
+- Book S2 verdict
+- BF-4 aggregate
+- BF-3 aggregate
+- style adherence aggregate
+- emotional fit aggregate
+- LLM variability (stable/variable/fail)
+- final pair verdict
+
+### 21.9 Preliminary Decision Criteria for Bedtime × Soft_Watercolor
+
+Go candidate if all hold:
+
+1. both books structural pass (or acceptable partial without safety concerns)
+2. BF-4 no fail pages
+3. BF-3 pass for both books
+4. style adherence at least acceptable for both books
+5. emotional fit at least acceptable for both books
+
+Conditional-Go candidate:
+
+- one persistent watch item, documented and judged non-blocking
+
+Conditional/Hold candidate:
+
+- visible watercolor blur/contrast issues causing repeated story-image mismatch
+- BF-3 drift in one or both books
+- any BF-4 fail page
+
+### 21.10 Handoff Checklist to T6-7
+
+Before T6-7 starts, confirm:
+
+1. S1/S2 input payloads are frozen
+2. no code or runner change is required for this slice
+3. output logging format is ready for structural metrics
+4. T6-8 visual QA worksheet fields are pre-created in docs
+
+### 21.11 Exclusions (T6-6)
+
+- Docs-only design
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
