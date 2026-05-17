@@ -4307,3 +4307,215 @@ Only after that:
 - No private image URLs or storage tokens recorded
 - No manual visual QA
 - No pair verdict update
+
+## 35. T6-20 - Balanced S3 Post-Hardening Smoke Retry / Structural Inspection
+
+Date: 2026-05-18
+
+### 35.1 Scope
+
+Execute one balanced post-hardening retry for `bedtime x soft_watercolor` by adding a new `s3` input profile to the smoke runner, then run:
+
+- runner profile addition
+- dry-run validation
+- one-book write generation
+- monitor / inspect structural verification
+- structural evidence recording
+
+Out of scope:
+
+- manual visual QA
+- pair verdict reopening
+- S2 regeneration
+
+### 35.2 Runner Profile Support Update
+
+Updated file: `scripts/create-nonfixed-smoke-book.js`
+
+Changes:
+
+- added bedtime profile key `s3`
+- expanded usage comments to include `s3`
+- no functions logic changes
+
+`s3` input intent:
+
+- preserve the post-hardening production prompt path from T6-17
+- keep prompt-only / no-reference execution
+- keep the room-object plain/unlabeled intent from the `s1rr` lane
+- rebalance the user-facing input toward:
+  - child hugging bunny
+  - entering bed / blanket
+  - safe sleepy emotional progression
+  - moonlight as support rather than main substitute subject
+
+### 35.3 Dry-Run Verification
+
+Dry-run command executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --dry-run --theme-id=bedtime --style-id=soft_watercolor --profile=s3
+```
+
+Dry-run summary:
+
+- payload resolved `themeId=bedtime`
+- payload resolved `styleId=soft_watercolor`
+- `creationMode=guided_ai`
+- `productPlan=standard_paid`
+- `pageCount=8`
+- no-reference path confirmed (`withReference=false`)
+- profile resolved as `s3` / `balanced anchored post-hardening`
+
+Dry-run input check:
+
+- `childName=さくら`
+- `childAge=4`
+- `colorMood=soft warm quiet bedtime watercolor night`
+- `favorites=うさぎのぬいぐるみ`
+- `place=しずかであたたかい寝室 すっきりしたたなと箱`
+- parent message restored bedtime routine / bunny / sleep progression emphasis
+
+### 35.4 Generation Evidence (Write)
+
+Write command executed:
+
+```bash
+npm run smoke:create-nonfixed-book -- --write --theme-id=bedtime --style-id=soft_watercolor --profile=s3
+```
+
+Created balanced retry book:
+
+| sample | bookId | profile | runId |
+| --- | --- | --- | --- |
+| Book S3 | `oj1VACCdTyTTObUILPGL` | balanced anchored post-hardening (`s3`) | `t6-nonfixed-20260517165305` |
+
+### 35.5 Monitor / Inspect Structural Results
+
+#### Book S3 - Balanced Anchored Post-Hardening (`s3`)
+
+| field | value |
+| --- | --- |
+| bookId | `oj1VACCdTyTTObUILPGL` |
+| title | `[SMOKE-T6] bedtime × soft_watercolor (balanced anchored post-hardening)` |
+| status | **failed** |
+| progress | 0 |
+| theme | bedtime |
+| style | soft_watercolor |
+| selectedStyleId | soft_watercolor |
+| selectedStyleName | やさしい水彩 |
+| creationMode | guided_ai |
+| productPlan | standard_paid |
+| characterConsistencyMode | cover_only |
+| smoke metadata `withReference` | false |
+| failureStage | `quality_gate` |
+| failureReason | `unknown` |
+| generatedTextPreview pages | 8 |
+| pages actual | 0 |
+| pages completed | 0 |
+| failed pages | 0 |
+| referenceImagesUsed pages | 0 |
+| usedCharacterReference pages | 0 |
+| inspect expected page count check | **FAIL** (`expected=8`, `actual=0`) |
+
+Monitor / inspect notes:
+
+- the run again stopped before page-image generation
+- no page docs were created
+- no image-model, fallback, timeout, or page-attempt metrics were produced
+
+Quality-gate failure metadata summary:
+
+- `sentence_too_short_for_age page=1`
+- `missing_scene_detail page=2`
+- `missing_scene_detail page=3`
+- `text_too_childish page=4`
+- `missing_scene_detail page=6`
+- `missing_action_or_emotion page=7`
+- `sentence_too_short_for_age page=7`
+- `missing_scene_detail page=8`
+- `missing_action_or_emotion page=8`
+- repeated `page_text_not_connected_to_story_goal`
+- repeated `missing_visual_motif_in_text`
+
+### 35.6 Generated Text Preview Interpretation
+
+Book-level metadata observed:
+
+| field | observed value |
+| --- | --- |
+| storyGoal | `さくらが、お気に入りのうさぎのぬいぐるみと、夜空の光に見守られながら、安心して眠りにつくこと。` |
+| mainQuestObject | `うさぎのぬいぐるみと安心感を与える光` |
+| narrativeDevice | `null` |
+
+Preview reading summary:
+
+| page | preview reading |
+| --- | --- |
+| 1 | child remembers fun day on bed; warm happy feeling |
+| 2 | bunny introduced at blanket edge; hug beat |
+| 3 | explicit bunny + bed-entry +安心 progression |
+| 4 | moon/stars smiling and `やさしい ひかり` line |
+| 5 | moonlight enters room; bunny tail glows softly |
+| 6 | child closes eyes and recalls the day; bunny nearby |
+| 7 | stars and room light wrap child; quiet drift into dream |
+| 8 | short closing `やさしい ひかり、おやすみ。` line |
+
+Interpretation:
+
+- compared with T6-18 `s1rr`, S3 restored clearer bunny / bed-entry grounding on pages `2` and `3`
+- however, the later pages still drift into soft atmosphere and generalized light-watching
+- `mainQuestObject` broadened into `bunny + comforting light`, which may have weakened quest specificity rather than strengthening it
+- `narrativeDevice` remained `null`, so motif-related quality checks still had no stable support
+
+### 35.7 Structural Interpretation (T6-20)
+
+What improved relative to T6-18:
+
+- the retry text is less aggressively constrained by explicit room-no-text wording
+- the opening bedtime routine and bunny anchor are stronger
+- the profile better matches the T6-19 recommendation direction than `s1rr`
+
+What did not improve enough:
+
+- the run still failed before image generation
+- page-level prompt output remains unobserved
+- post-hardening BF-4 image behavior is still untested
+
+Operational conclusion:
+
+- a balanced input-only retry was not sufficient to restore structural viability
+- the blocker is now best described as persistent quality-gate fragility in the non-fixed bedtime soft-watercolor lane after post-hardening
+- T6-21 manual visual QA remains blocked because no image pages exist
+
+### 35.8 Next-Step Handoff
+
+The next slice should not attempt pair verdict review yet.
+
+The next practical decision space is likely:
+
+- another docs-only retry design, or
+- a more deliberate retry lane that strengthens story-goal continuity / motif structure further without undoing T6-17 image hardening
+
+Current pair state after T6-20:
+
+- `bedtime x soft_watercolor`: unchanged / **Hold**
+
+### 35.9 Exclusions
+
+- No functions logic changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No quality gate threshold changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No detailed manual visual QA
+- No final pair verdict update
+- No S2 regeneration
