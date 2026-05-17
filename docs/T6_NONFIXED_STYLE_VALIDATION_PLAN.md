@@ -5411,6 +5411,7 @@ Pattern summary:
 - The consistent 3-attempt pattern (2 primary failures + 1 fallback success) indicates a deterministic fallback path rather than random noise.
 
 ### 40.3 Generation Stack: How Fallback Works
+- No product exposure matrix update
 
 Relevant code paths (as of T6-24 codebase state):
 
@@ -5425,9 +5426,6 @@ standard_paid → imageQualityTier: "standard", imageModelProfile: "pro_consiste
 ```
 resolveImageModelProfile({ imageModelProfile: "pro_consistent" }) → "pro_consistent"
 → primary model: black-forest-labs/flux-2-pro
-```
-
-**Fallback chain** (`functions/src/lib/replicate.ts`):
 
 ```
 resolveImageFallbackProfiles("pro_consistent") → ["pro_consistent", "klein_fast"]
@@ -5492,10 +5490,6 @@ Confidence: **high**.
 
 A temporary degradation in flux-2-pro availability during the smoke run (`t6-nonfixed-20260517171510`) could cause systematic failures across both books simultaneously. This would explain the consistent pattern without requiring a burst-concurrency mechanism.
 
-Supporting evidence:
-- both books ran in the same `runId` window, so a shared time-window failure is plausible
-- page 0 for each book succeeded before the degraded window
-
 Confidence: **moderate**.
 
 Limitation: This hypothesis is not distinguishable from H1 without Replicate status history or logs showing per-request error codes.
@@ -5516,12 +5510,6 @@ The fallback to `klein_fast` preserved structural completion but materially redu
 
 **Reason 1: Style fidelity gap between models**
 
-Both models receive the same text prompt including `styleBible` (crayon style instructions). However:
-
-- `pro_consistent` (flux-2-pro): high instruction-following capability; reliably renders explicit style descriptors like crayon texture, hand-drawn line weight, and warm palette.
-- `klein_fast` (flux-2-klein-9b): lower capability; tends to default to its training distribution (soft photoreal) when style instructions conflict with generic scene prompts.
-
-Result: fallback pages displayed soft photoreal rendering instead of the requested crayon storybook style.
 
 **Reason 2: Scene specificity gap**
 
@@ -5542,20 +5530,6 @@ Five options are considered. They are not mutually exclusive.
 Reduce `IMAGE_CONCURRENCY` from 2 to 1 for `guided_ai` / `original_ai` books. This serializes page requests to flux-2-pro, reducing burst pressure on the Replicate API.
 
 | dimension | assessment |
-| --- | --- |
-| addresses H1 | yes — directly reduces burst concurrency |
-| addresses H2 | no |
-| code change required | yes — env-var or plan-specific concurrency override |
-| risk | low — serialization adds latency but does not change model behavior |
-| implementation complexity | low |
-| trade-off | generation time per book increases (e.g., 8 pages at ~35s avg ≈ 280 s serial vs. ~150 s at concurrency=2) |
-
-**Assessment: recommended as first hypothesis test** (low risk, targeted at H1).
-
-#### Option R2: Increase per-profile retry count before falling back
-
-Increase `maxRetries` for the `pro_consistent` profile from 2 to 3, with exponential backoff between retries.
-
 | dimension | assessment |
 | --- | --- |
 | addresses H1 | partially — gives burst pressure time to dissipate |
