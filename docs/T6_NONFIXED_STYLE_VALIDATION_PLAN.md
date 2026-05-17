@@ -3436,3 +3436,265 @@ Validation expectations after implementation:
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+## 31. T6-16 - Non-Fixed Bedtime No-Text Guardrail Implementation Design (Docs-Only)
+
+Date: 2026-05-18
+
+### 31.1 Objective
+
+Translate the T6-15 design direction into a concrete implementation plan for T6-17, focusing on:
+
+- exact insertion point in the non-fixed prompt assembly path
+- helper shape for shared and bedtime-local no-text hardening
+- test and validation command plan
+- follow-up smoke retry scope for T6-18
+
+This slice is docs-only implementation design.
+
+### 31.2 Investigated Non-Fixed Prompt Path
+
+Observed guided-ai image prompt flow:
+
+1. `functions/src/generate-book.ts`
+2. per-page image prompt generation calls `buildImagePrompt(...)`
+3. `functions/src/lib/prompt-builder.ts`
+4. final prompt string is assembled from:
+   - character consistency guidance
+   - style bible
+   - style negative rules
+   - composition guidance
+   - scene policy / background guidance
+   - wordless illustration suffix
+
+Relevant current evidence:
+
+- `generate-book.ts` passes page-level context into `buildImagePrompt(...)`
+- `buildImagePrompt(...)` already receives `scenePolicy`, `childProfileBasePrompt`, cast info, and page role data
+- `buildScenePolicyGuidance(...)` already contributes shared scene-level negative wording
+- final image prompt already ends with a generic wordless/no-text suffix
+
+Implementation consequence:
+
+- T6-17 should not modify the smoke runner first
+- the correct production insertion point is `functions/src/lib/prompt-builder.ts`
+
+### 31.3 Fixed-Template Pattern To Reuse
+
+Referenced fixed-template guardrail pattern:
+
+- `functions/src/seed-templates.ts`
+- helper-style wrappers such as:
+  - `withFixedImagePromptSafety(...)`
+  - `withSleepyMoon8pRoomPropGuardrail(...)`
+  - other template-local object-surface guardrail helpers
+
+Pattern characteristics worth copying:
+
+- small composable helper functions
+- concrete object-surface clauses rather than abstract `no text` only
+- category-local vocabulary for likely failure surfaces
+- helper wrapping instead of ad hoc duplicated suffixes
+
+Design conclusion:
+
+- T6-17 should follow the helper composition pattern from fixed-template guardrails
+- the implementation should live in prompt-builder, not in seed template data and not in the smoke runner
+
+### 31.4 Recommended Insertion Point
+
+Primary insertion point:
+
+- `functions/src/lib/prompt-builder.ts`
+- inside `buildImagePrompt(...)`
+
+Recommended structure:
+
+1. keep existing `buildScenePolicyGuidance(...)` behavior
+2. add a new shared non-fixed printed-surface clause into the assembled prompt
+3. append a categoryGroup-local bedtime clause when the active template belongs to `categoryGroupId=bedtime`
+
+Why this insertion point is preferred:
+
+- it affects real guided-ai production prompts
+- it applies consistently across all non-fixed pages
+- it avoids smoke-only or profile-only drift
+- it can use existing prompt-builder options and template metadata already present in the generation flow
+
+### 31.5 Helper Design Proposal
+
+Recommended new helper design inside `functions/src/lib/prompt-builder.ts`:
+
+- `buildSharedPrintedSurfaceNoTextGuidance(): string`
+- `buildCategoryGroupNoTextGuidance(categoryGroupId?: string): string`
+- `buildBedtimeRoomPropNoTextGuidance(): string`
+
+Expected helper responsibilities:
+
+#### Shared helper
+
+Purpose:
+
+- strengthen the current generic `no readable text` wording
+- explicitly suppress printed-surface artifacts across the non-fixed lane
+
+Recommended clause shape:
+
+- no readable text on books, book covers, book spines
+- no labels on boxes, bins, containers, packaging, cards
+- no framed word art, nursery cards, posters, charts, printed wall decor
+- no logos, watermarks, numbers, letters, pseudo-writing, glyph-like marks
+- background objects should be plain, unlabeled, and non-readable
+
+#### Bedtime-local helper
+
+Purpose:
+
+- target the exact failure family seen in S1 / S1R / S1RR without changing all styles
+
+Recommended clause shape:
+
+- bedroom bookshelf objects must stay plain and simplified
+- no readable book titles, spine writing, shelf labels, toy-bin labels, container labels
+- no nursery cards, framed word prints, packaging graphics, or printed paper items
+- shelf props should remain visual-only and non-readable
+
+#### Category router helper
+
+Purpose:
+
+- keep the bedtime clause opt-in by `categoryGroupId`
+- allow future reuse for other indoor categories if similar BF-4 migrations appear
+
+### 31.6 Required Prompt-Builder Signature Change
+
+To make the category-local helper viable, T6-17 should extend the prompt-builder call path so `buildImagePrompt(...)` can access `categoryGroupId`.
+
+Recommended change chain:
+
+- `functions/src/generate-book.ts`
+  - pass `template.categoryGroupId` into `buildImagePrompt(...)` options
+- `functions/src/lib/prompt-builder.ts`
+  - accept `categoryGroupId?: string` in the options object
+  - route to the bedtime-specific no-text helper only when `categoryGroupId === "bedtime"`
+
+Why this is preferable to inference:
+
+- avoids guessing from theme text or page prompt wording
+- matches the same category vocabulary already used elsewhere in the codebase
+- keeps the behavior explicit and testable
+
+### 31.7 Bedtime-Only Limiting Rule
+
+The first implementation pass should apply the local room-prop clause only when:
+
+- `categoryGroupId === "bedtime"`
+- generation path is non-fixed (`guided_ai` or, if shared through the same builder, any non-template prompt path using `buildImagePrompt`)
+
+It should not:
+
+- alter fixed-template prompt text
+- mutate style profiles
+- attach bedtime wording to unrelated categories such as zoo, birthday, or imagination
+
+Reason for this limit:
+
+- the validated migration evidence is strongest in bedtime bedroom scenes
+- a narrow category-local scope reduces unintended regressions while still fixing the real production layer
+
+### 31.8 Why T6-17 Should Not Change Style Profiles
+
+Style-specific changes are intentionally deferred because:
+
+- current evidence does not prove `soft_watercolor` is the root cause
+- `bedtime x crayon` is already `Go`, which points to context and prompt-layer interaction rather than a universal style defect
+- changing `functions/src/lib/illustration-styles.ts` now would widen the blast radius unnecessarily
+- shared + bedtime-local prompt hardening is the lower-risk causal test
+
+Escalation rule after T6-18:
+
+- only consider style-specific negative-rule changes if shared plus bedtime-local hardening still leaves BF-4 readable text surfaces in the same lane
+
+### 31.9 Test Plan For T6-17
+
+Primary test file to extend:
+
+- `functions/test/prompt-builder.test.ts`
+
+Recommended new test coverage:
+
+1. shared printed-surface guidance appears in `buildImagePrompt(...)`
+2. bedtime categoryGroup adds bedroom-object no-text wording
+3. non-bedtime categoryGroup does not receive bedtime-local wording
+4. existing generic wordless/no-text suffix remains present
+5. style-specific rules remain unchanged and still appear alongside the new shared clause
+
+Optional secondary checks if implementation shape warrants them:
+
+- `functions/test/generate-book.test.ts` if the call signature change around `categoryGroupId` needs integration confidence
+- no seed-template tests are required unless implementation accidentally touches fixed-template files
+
+Recommended validation commands for T6-17:
+
+```bash
+npm --prefix functions test -- prompt-builder.test.ts
+npm --prefix functions test -- generate-book.test.ts
+npm run guard:hygiene
+```
+
+If a narrower local command is preferred during iteration, keep the final verification at least on:
+
+- `prompt-builder.test.ts`
+- hygiene
+
+### 31.10 T6-17 Implementation Scope Definition
+
+T6-17 should include:
+
+- prompt-builder helper additions in `functions/src/lib/prompt-builder.ts`
+- prompt-builder option plumbing for `categoryGroupId`
+- generate-book call-site update to pass `template.categoryGroupId`
+- prompt-builder unit tests
+
+T6-17 should exclude:
+
+- smoke runner changes
+- style profile changes
+- seed-template data edits
+- new generation execution
+- pair verdict changes
+
+### 31.11 T6-18 Smoke Retry Direction
+
+T6-18 should be a validation slice after implementation, not part of T6-17.
+
+Recommended smoke scope:
+
+- retry the S1 lane only
+- use the existing bedtime soft-watercolor smoke path
+- keep no-reference mode
+- prefer the latest retry profile lane rather than inventing many new ad hoc profiles
+
+T6-18 evaluation intent:
+
+- confirm structural health still passes
+- confirm BF-4 bedroom bookshelf / book-surface text is reduced or removed
+- defer final pair verdict to the visual QA slice after structural generation succeeds
+
+### 31.12 Exclusions
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
