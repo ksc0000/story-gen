@@ -1,0 +1,45 @@
+name: AI Loop Controller
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Maximum loop iterations"
+        required: true
+        default: "1"
+      mode:
+        description: "docs-only | review-only | code"
+        required: true
+        default: "docs-only"
+      dry_run:
+        description: "Generate prompts without implementation"
+        required: true
+        default: "true"
+
+jobs:
+  controller:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Print loop configuration
+        run: |
+          echo "AI Loop Controller"
+          echo "iterations=${{ github.event.inputs.iterations }}"
+          echo "mode=${{ github.event.inputs.mode }}"
+          echo "dry_run=${{ github.event.inputs.dry_run }}"
+
+      - name: Read AI loop docs
+        run: |
+          ls -R docs/ai-loop || true
+
+      - name: Placeholder controller step
+        run: |
+          echo "Future controller agent execution goes here"
+          echo "This phase intentionally does not modify production code"
+
+      - name: Safety reminder
+        run: |
+          echo "Human review is still required"
