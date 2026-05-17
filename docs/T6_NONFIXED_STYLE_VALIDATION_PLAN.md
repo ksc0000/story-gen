@@ -4053,3 +4053,257 @@ Practical implication:
 - No detailed manual visual QA
 - No final pair verdict update
 - No S2 regeneration
+
+## 34. T6-19 - Post-Hardening Quality-Gate Failure Analysis / Retry Design (Docs-Only)
+
+Date: 2026-05-18
+
+### 34.1 Objective
+
+Analyze why the T6-18 post-hardening retry stopped at `quality_gate` and define the next retry strategy needed to observe post-hardening image-level BF-4 behavior.
+
+This slice is docs-only analysis / retry design.
+
+Out of scope:
+
+- code changes
+- runner changes
+- new smoke generation
+- manual visual QA
+- pair verdict update
+
+### 34.2 T6-18 Failure Restatement
+
+Target run:
+
+| item | value |
+| --- | --- |
+| bookId | `DtBgZfT7rVKhLuH0A7l4` |
+| runId | `t6-nonfixed-20260517163614` |
+| pair | `bedtime x soft_watercolor` |
+| profile | `s1rr` |
+| status | `failed` |
+| failureStage | `quality_gate` |
+| generatedTextPreview pages | 8 |
+| actual page docs | 0 |
+| image generation | not reached |
+
+Immediate implication:
+
+- T6-17 image-prompt hardening was deployed
+- but the run never reached page-image generation
+- therefore post-hardening BF-4 behavior remains unobserved
+
+### 34.3 Generated Text Preview Review
+
+T6-18 preserved 8 preview text pages even though image generation never started.
+
+Observed text pattern from `generatedTextPreview`:
+
+| page | preview reading |
+| --- | --- |
+| 1 | child + bunny in bedroom, sleepy tone, gentle night color |
+| 2 | moon and stars smiling through the window |
+| 3 | child and bunny inside blanket, explicit `おやすみ` line |
+| 4 | tactile comfort close-up, very soft emotional wording |
+| 5 | bunny watching over sleeping child, `だいすきだよ` line |
+| 6 | quiet room, ticking clock, dream question |
+| 7 | moonlight and stars watching over the room, `ゆっくり、おやすみ` |
+| 8 | sleeping ending with moon and stars watching over child |
+
+High-level read:
+
+- tone is commercially aligned with bedtime
+- the text is gentle and coherent at a surface level
+- however, the later pages drift toward generalized sleep atmosphere and celestial watching rather than repeatedly grounding the main quest object or story goal
+
+Additional book-level metadata observed:
+
+| field | observed value |
+| --- | --- |
+| storyGoal | `さくらちゃんが、お気に入りのうさぎさんと夜空に守られ、安心した気持ちで眠りにつくこと。` |
+| mainQuestObject | `うさぎのぬいぐるみ` |
+| narrativeDevice | `null` |
+| generatedTextPreview count | 8 |
+
+Important structural observation:
+
+- `generatedTextPreview` stores text-only preview strings, not page imagePrompt objects
+- because the quality gate failed before page docs were created, T6-18 provides no page-level prompt payload for direct image-prompt inspection
+
+### 34.4 Quality-Gate Failure Breakdown
+
+Recorded `technicalErrorMessage` summary:
+
+- `text_too_childish page=2`
+- repeated `missing_scene_detail`
+- repeated `missing_action_or_emotion`
+- repeated `page_text_not_connected_to_story_goal`
+- repeated `missing_visual_motif_in_text`
+
+How those warnings/errors map to the preview text:
+
+- `text_too_childish page=2`
+  - page 2 concentrates on moon / stars smiling and uses a very simple reaction beat
+- `missing_scene_detail`
+  - several later pages become soft emotional statements with minimal place detail beyond `room`, `window`, `moon`, and `stars`
+- `missing_action_or_emotion`
+  - some pages describe quiet stillness rather than a clear action / discovery / emotional change
+- `page_text_not_connected_to_story_goal`
+  - the storyGoal explicitly requires `favorite bunny + safe feeling + falling asleep`, but multiple pages center moonlight watching rather than re-grounding bunny /安心 /眠りに向かう movement
+- `missing_visual_motif_in_text`
+  - the run appears to have no usable narrative-device motif metadata, so motif expectations were not being satisfied in text
+
+### 34.5 Cause Hypothesis Classification
+
+#### Hypothesis A: `s1rr` input over-optimized for no-text suppression
+
+Assessment: strong
+
+Reasoning:
+
+- the `s1rr` parentMessage and place wording aggressively emphasize `text-free`, `no names`, `plain shelves`, `plain boxes`
+- that wording is useful for BF-4 image suppression
+- but it likely consumes part of the generation budget that previously went to concrete story-beat detail
+- the result may be a safer room description with a weaker narrative spine
+
+#### Hypothesis B: T6-17 prompt hardening indirectly changed story-generation behavior
+
+Assessment: medium
+
+Reasoning:
+
+- the code change was in image prompt assembly, not in text-generation quality rules directly
+- however, non-fixed generation keeps storyGoal / imagePrompt / narrative-device expectations coupled
+- stronger printed-surface suppression language may have pushed the overall generation toward flatter, safer room descriptions when the same retry lane already had constrained bedtime input
+
+#### Hypothesis C: quality gate is strict on minimal bedtime text
+
+Assessment: medium
+
+Reasoning:
+
+- bedtime allows quieter scenes, but the gate still expects scene detail, action/emotion, and recurring story-goal linkage
+- once several pages become mostly reassurance + moon/stars observation, the gate flags them as too generic or weakly connected
+
+#### Hypothesis D: `s1rr` retry lane structurally weakens storyGoal linkage
+
+Assessment: strong
+
+Reasoning:
+
+- `storyGoal` resolved around `bunny + safety + sleep`
+- preview pages 4-8 increasingly pivot to ambient comfort rather than maintaining bunny-centered payoff progression
+- this suggests the lane itself now favors mood over quest continuity
+
+### 34.6 Why T6-18 Did Not Validate T6-17
+
+T6-18 failed to validate the T6-17 image hardening for a simple reason:
+
+- the run never crossed the story quality gate
+- therefore no page image prompts were materialized into page docs
+- and therefore no image outputs exist for BF-4 observation
+
+Practical meaning:
+
+- T6-17 remains structurally implemented and test-verified
+- but it remains empirically unvalidated against the original bookshelf / book-surface BF-4 failure surface
+
+### 34.7 Remediation Option Comparison
+
+| option | description | upside | downside | recommendation |
+| --- | --- | --- | --- | --- |
+| retry `s1rr` unchanged | rerun exact same lane | cheapest comparison | likely repeats same upstream gate failure | reject |
+| make input even more bedroom-safe | add more no-text / no-label wording | might further reduce BF-4 risk | likely worsens text thinness and goal drift | reject |
+| roll back to `s1r` | use less constrained retry lane | better chance to clear quality gate | loses closest comparison to bookshelf-surface failure | secondary fallback only |
+| use original `s1` | strongest narrative lane | best chance to pass quality gate | weakens comparability to latest bedroom-object remediation | fallback only |
+| keep `s1rr` lane but rebalance input toward story-goal / bunny / sleep progression | preserves latest image-safety direction while restoring narrative anchor | best chance to reach image phase without discarding T6-17 test target | requires a new retry input/profile slice | **recommended** |
+| alter quality gate rules | easier passage to image phase | changes production threshold and muddies interpretation | too broad for this validation thread | reject |
+
+### 34.8 Recommended T6-20 Retry Direction
+
+Recommended execution direction for T6-20:
+
+- keep the T6-17 code unchanged
+- keep `bedtime x soft_watercolor`
+- keep no-reference mode
+- do not regenerate S2
+- do not change style profiles
+- do not change quality-gate logic
+- introduce a **rebalanced retry input** that preserves room-object no-text intent but restores clearer story-goal continuity
+
+Recommended retry shape:
+
+- maintain bedroom-object plain/unlabeled intent
+- reduce repeated explicit `no text / no name / no label` phrasing inside user-facing input
+- strengthen child + bunny + sleepy safety progression
+- explicitly encourage page-to-page movement toward sleep rather than multiple pages of static moon/stars observation
+- reinforce a gentle repeated motif that can satisfy the quality gate without reintroducing printed surfaces
+
+### 34.9 Input Design Guidance For T6-20
+
+The next retry input should likely:
+
+- keep `favorites=うさぎのぬいぐるみ`
+- keep a calm bedroom place description
+- describe the room as `quiet`, `cozy`, `plain`, `safe`, `softly lit`
+- avoid overloading the parentMessage with multiple explicit anti-text constraints
+- emphasize:
+  - child hugging bunny
+  - getting into bed
+  - feeling safe
+  - slowly falling asleep
+  - moonlight as support, not as replacement protagonist
+
+Suggested direction for wording shape:
+
+- better:
+  - room is calm and cozy, shelves and boxes are simple and plain
+  - child falls asleep while hugging favorite bunny
+  - moonlight gently supports the scene
+- worse:
+  - repeated references to no text, no names, no letters, no labels in every clause
+  - over-specifying unlabeled surfaces at the expense of narrative action
+
+### 34.10 Recommended T6-20 Scope
+
+T6-20 should likely be:
+
+- runner-profile addition or targeted retry-input adjustment only
+- one-book retry only
+- same pair, same style, same no-reference mode
+- structural inspection only in the first follow-up slice
+
+T6-20 success condition:
+
+- clear `quality_gate`
+- create page docs
+- reach image generation
+- preserve `selectedStyleId=soft_watercolor`
+- preserve `withReference=false`
+
+Only after that:
+
+- resume manual visual QA in the next slice
+- evaluate whether T6-17 actually reduced bookshelf / book-surface BF-4 artifacts
+
+### 34.11 Exclusions
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No manual visual QA
+- No pair verdict update
