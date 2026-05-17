@@ -1552,3 +1552,209 @@ Recommended next slice:
 Optional later QA:
 
 - one low-cost live blocked-pair write in a controlled QA environment if product ops wants end-to-end trigger evidence beyond unit-level branch verification
+
+## 20. T5-8 Style Exposure Gating Closure / Rollout Guidance
+
+### 20.1 Closure Scope
+
+This slice closes the initial T5 style exposure gating track.
+
+T5 covered:
+
+- product exposure policy design
+- exposure config design
+- frontend exposure config module
+- create-flow UI filtering
+- server-side exposure guard planning
+- server-side exposure guard implementation
+- server-side QA
+
+Closure intent:
+
+- confirm the current gating stack is product-usable
+- document the current matrix as operational guidance
+- separate rollout-ready pairings from deferred pairings
+
+### 20.2 Implementation Status Summary
+
+UI gating status:
+
+- implemented
+- normal create flow now filters style options by `templateId`
+- stale selected styles fall back to the first visible allowed style
+
+Current user-visible examples:
+
+- `fixed-first-zoo-8p`
+  - `crayon`
+  - `soft_watercolor`
+- `fixed-sleepy-moon-adventure-8p`
+  - `crayon`
+  - `anime_storybook`
+  - `soft_watercolor`
+
+Server-side gating status:
+
+- implemented for `creationMode === "fixed_template"`
+- runs inside `functions/src/generate-book.ts`
+- validates the operative pair:
+  - `bookData.templateId ?? bookData.theme`
+  - `bookData.style`
+- allows:
+  - `promote`
+  - `available`
+- blocks:
+  - `internal`
+  - `blocked`
+  - unknown styles
+  - unlisted pairings
+
+Combined product effect:
+
+- blocked pairings are hidden in normal UI
+- blocked or unvalidated fixed-template pairings are also rejected server-side if UI is bypassed
+
+### 20.3 Current Product Exposure Matrix
+
+Current operational matrix:
+
+- `fixed-sleepy-moon-adventure-8p × crayon`
+  - status: `promote`
+  - rollout guidance: safe for active exposure
+- `fixed-sleepy-moon-adventure-8p × anime_storybook`
+  - status: `promote`
+  - rollout guidance: safe for active exposure
+- `fixed-sleepy-moon-adventure-8p × soft_watercolor`
+  - status: `available`
+  - rollout guidance: safe baseline option, not primary hero pairing
+- `fixed-first-zoo-8p × crayon`
+  - status: `promote`
+  - rollout guidance: safe for active exposure
+- `fixed-first-zoo-8p × soft_watercolor`
+  - status: `available`
+  - rollout guidance: acceptable with standard watch level
+- `fixed-first-zoo-8p × anime_storybook`
+  - status: `blocked`
+  - rollout guidance: do not expose in product flow
+
+Default matrix behavior for unlisted pairings:
+
+- treat as `internal`
+- do not expose in normal product UI
+- reject in fixed-template backend path
+
+### 20.4 Rollout Guidance
+
+Recommended exposure tiers:
+
+- `promote`
+  - can be used in user-facing recommended lists
+  - can be featured in product messaging or merchandising experiments
+- `available`
+  - can be user-selectable
+  - should not outrank stronger validated pairings by default
+- `internal`
+  - reserve for future validation or internal QA only
+  - not user-selectable
+- `blocked`
+  - do not expose
+  - reject on guarded backend path
+
+Recommended initial product posture:
+
+- lead with `crayon` as the broadest portable style
+- surface `anime_storybook` only on validated template pairings such as sleepy-moon
+- retain `soft_watercolor` as a dependable baseline, especially where a safer default is preferred
+
+### 20.5 Blocked Pair Operating Policy
+
+Blocked pairing in current scope:
+
+- `fixed-first-zoo-8p × anime_storybook`
+
+Operating policy:
+
+- hidden from standard UI
+- rejected by fixed-template server guard
+- no automatic fallback rewriting on the server
+- no admin override in the standard product path
+
+Reason for continued block:
+
+- repeated T4 remediation did not converge reliably
+- issue surfaces migrated across signage, clothing text, watermark-like text, and continuity
+- product reliability remains below acceptable threshold for normal exposure
+
+### 20.6 Deferred / Remaining Items
+
+Deferred items:
+
+- admin or QA override path
+- client-facing fallback recommendation UX after a blocked selection
+- non-fixed-template server-side exposure enforcement expansion
+- shared-package extraction between frontend and functions exposure config
+- live end-to-end blocked write QA in a dedicated controlled environment
+
+Known current narrowing:
+
+- server-side enforcement currently applies only to fixed-template generation
+
+Assessment:
+
+- acceptable for this rollout stage
+- should be revisited before extending style exposure policy to broader non-fixed creation paths
+
+### 20.7 Product Readiness Decision
+
+T5 initial gating track decision:
+
+- `Closed`
+
+Readiness summary:
+
+- UI filtering: ready
+- fixed-template backend enforcement: ready
+- blocked pairing handling: ready for current validated scope
+- exposure matrix: ready for product operations use
+
+Overall rollout judgment:
+
+- `Go` for the currently validated and configured fixed-template pairings
+- `Do Not Expose` for blocked or unvalidated pairings
+
+### 20.8 Suggested Next Steps
+
+Recommended immediate follow-up candidates:
+
+1. T5-9 product rollout checklist / operator playbook for style exposure updates.
+2. Add server-side exposure enforcement to non-fixed product paths only after a dedicated audit.
+3. Add admin/internal override flow as a separate privileged path if product QA needs manual pairing trials.
+4. Consider shared config extraction if frontend/functions drift risk becomes material.
+
+### 20.9 Closure Verdict
+
+T5 verdict:
+
+- `Closed`
+
+What is now true:
+
+- template-aware style exposure is enforced in the create UI
+- blocked fixed-template pairings are no longer protected only by the client
+- the validated style-template matrix is documented well enough for controlled product rollout
+
+### 20.10 Exclusions
+
+- No code changes performed
+- No UI changes performed
+- No functions changes performed
+- No Firestore schema or rules changes performed
+- No smoke generation performed
+- No image generation performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No runner changes
+- No style profile changes
+- No service account JSON, secrets, URLs, or tokens recorded

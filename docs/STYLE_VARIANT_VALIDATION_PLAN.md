@@ -4112,3 +4112,6 @@ Date: 2026-05-17
   - `Promote / Go`: sleepy-moon × crayon, sleepy-moon × anime_storybook, first-zoo × crayon
   - `Conditional-Go`: sleepy-moon × soft_watercolor, first-zoo × soft_watercolor
   - `Blocked / Deferred`: first-zoo × anime_storybook
+- T5 closure status:
+  - normal create UI now filters styles by template exposure policy
+  - fixed-template backend now fail-closes blocked or unvalidated style pairings
