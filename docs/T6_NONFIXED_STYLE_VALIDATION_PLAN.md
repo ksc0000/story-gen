@@ -4734,3 +4734,306 @@ Documented pair status:
 - No private image URLs or storage tokens recorded
 - No manual visual QA
 - No pair verdict reopening beyond this documented pause decision
+
+## 37. T6-22 - Imagination x Crayon Smoke Input Design (Docs-Only)
+
+Date: 2026-05-18
+
+### 37.1 Objective
+
+Define the smoke input and execution design for `imagination x crayon` so T6-23 can execute the next pair safely and comparably after the T6-21 pivot decision.
+
+This slice is docs-only design work for:
+
+- Book I1 / Book I2 input profiles
+- execution policy
+- QA focus
+- evidence template
+- pair decision criteria
+
+Out of scope:
+
+- smoke generation
+- image generation
+- manual visual QA
+- code or runner changes
+
+### 37.2 Why `imagination x crayon` Is Next
+
+Selection basis after T6-21:
+
+- `bedtime x soft_watercolor` is paused at `Hold / Paused`
+- matrix progress needs a healthier lane that is more likely to reach image generation
+- `crayon` already has stronger portability evidence from `bedtime x crayon -> Go`
+- `imagination` expands category coverage beyond bedtime and tests a higher-variance scene family
+
+Why this pair is worth doing now:
+
+- it adds a new `categoryGroupId`
+- it keeps a style with proven prior stability
+- it provides a stronger signal on category portability than staying within bedtime
+
+### 37.3 What To Reuse From `bedtime x crayon`
+
+`bedtime x crayon` success pattern to reuse:
+
+- two-book structure:
+  - anchored moderate lane
+  - rich lane
+- age kept in the lower-stable range
+- one explicit grounding object or motif
+- enough scene detail to avoid thin quality-gate output
+- no-reference mode
+- same evidence frame:
+  - structural health
+  - BF-4
+  - BF-3
+  - style adherence
+  - emotional fit
+  - story-image match
+
+Why the A2/B structure still fits:
+
+- A2-like anchoring reduced quality-gate fragility without over-constraining the generation
+- B-like richer input gives a second sample with more scene entropy
+- together they show whether the pair is robust across both a safer and a more expressive lane
+
+### 37.4 Pair-Specific Design Principles
+
+For `imagination x crayon`, the design should:
+
+- preserve the child-safe crayon storybook feeling
+- allow category expansion into magical / pretend-adventure scenes
+- avoid high-prop chaos that could create BF-4 noise
+- keep one concrete quest object so the story goal stays trackable
+- keep scene progression visible enough to satisfy quality gate
+
+Avoid:
+
+- vague fantasy-only wording with no quest object
+- too many named fantasy elements in one profile
+- overly abstract `dream`, `magic`, or `sky` language without place / action anchors
+- branded or label-prone objects such as control panels, signs, maps, books with titles, posters, or gadget screens
+
+### 37.5 Proposed Book I1 / I2 Profiles
+
+#### Book I1 - Anchored Moderate (`i1`)
+
+Design intent:
+
+- safest imagination lane
+- keep one pretend-adventure object and one simple setting
+- maximize structural viability
+
+Recommended input shape:
+
+| field | design |
+| --- | --- |
+| childAge | 4 |
+| childName | simple common name |
+| favorites | one quest-friendly object such as `段ボールロケット` or `ほしのステッキ` |
+| colorMood | warm playful crayon twilight / cozy adventure |
+| place | one clear pretend setting such as `おへやのなかの手づくり宇宙ごっこ` |
+| parentMessage | supportive line that frames a beginning, small discovery, and safe return |
+
+Recommended narrative lane:
+
+- child starts with a handmade pretend-adventure object
+- imagination expands the room into a magical world
+- one small discovery or problem
+- one reassuring payoff
+- safe return or emotional closure
+
+Suggested watchwords:
+
+- `handmade`
+- `pretend`
+- `safe`
+- `small discovery`
+- `gentle adventure`
+
+#### Book I2 - Rich (`i2`)
+
+Design intent:
+
+- richer imagination lane with more visual variety
+- still child-safe and story-goal anchored
+
+Recommended input shape:
+
+| field | design |
+| --- | --- |
+| childAge | 4 or 5 |
+| childName | different simple common name |
+| favorites | one main pretend-adventure object plus one supporting motif |
+| colorMood | bright adventurous crayon with warm highlights |
+| place | slightly broader world such as `おへやからつながる星のこみち` or `ふしぎな cardboard rocket world` |
+| parentMessage | encourages brave exploration, noticing, and returning safely |
+
+Recommended narrative lane:
+
+- stronger sense of departure and exploration
+- one magical helper or one recurring non-human friend at most
+- richer environment details than I1
+- still one clear story-goal thread
+
+Constraint:
+
+- do not let I2 become a generic fantasy collage
+- keep the same quest object central across the book
+
+### 37.6 Draft Input Direction
+
+The actual T6-23 runner inputs should likely follow a shape like:
+
+#### I1 draft direction
+
+- age: `4`
+- favorites: one object such as `だんぼーるロケット`
+- place: `おへやのなかの手づくり宇宙ごっこ`
+- parentMessage emphasis:
+  - child imagines a gentle journey
+  - notices small stars / sounds / pathways
+  - feels safe and proud
+  - comes back or settles happily
+
+#### I2 draft direction
+
+- age: `4` or `5`
+- favorites: one main object plus one recurring motif
+- place: `おへやからつながるふしぎな空のこみち`
+- parentMessage emphasis:
+  - curious exploration
+  - one magical friend or guide at most
+  - one moment of small uncertainty
+  - reassuring payoff and safe closure
+
+### 37.7 Imagination-Specific QA Watchpoints
+
+Structural / quality-gate watchpoints:
+
+- storyGoal or mainQuestObject drifting into vague fantasy mood only
+- too many invented elements causing weak page-to-page continuity
+- thin scene detail from overly abstract wonder language
+- loss of recurring motif or payoff cue
+
+Image-level watchpoints for later QA:
+
+- BF-4:
+  - star maps, signs, labels, charts, control panels, spell books, rocket dashboards, banners, emblems, pseudo-runes
+- BF-3:
+  - child identity drift across scene-heavy fantasy pages
+  - magical helper turning into inconsistent character forms
+- style adherence:
+  - crayon warmth being replaced by smoother watercolor-like rendering
+- story-image match:
+  - image spectacle outrunning the page text
+
+Commercial-fit watchpoints:
+
+- scenes becoming too chaotic for preschool readers
+- adventure becoming too dramatic or unsafe
+- visual density overwhelming the page
+
+### 37.8 T6-23 Execution Policy
+
+T6-23 should follow this execution policy:
+
+- generate exactly 2 books:
+  - Book I1 anchored moderate
+  - Book I2 rich
+- keep style fixed to `crayon`
+- keep theme fixed to `imagination`
+- keep no-reference mode
+- run dry-run first for both profiles
+- if dry-run payloads look correct, run write generation for both
+- record monitor / inspect evidence before any visual QA
+
+Expected T6-23 evidence fields:
+
+- `bookId`
+- `runId`
+- `status`
+- `pageCount`
+- `failed`
+- `fallback`
+- `timedOut`
+- `selectedStyleId`
+- `imageModel`
+- `imageAttemptCount`
+- `referenceImagesUsed`
+- `usedCharacterReference`
+- inspect expected-page-count result
+
+### 37.9 T6-24 Visual QA Separation
+
+T6-24 should remain a separate slice for:
+
+- manual visual QA of I1 / I2
+- BF-4 and BF-3 page review
+- style adherence review
+- emotional fit / story-image match review
+- pair-level verdict
+
+This separation is important because:
+
+- `imagination` is expected to have higher image-level variance than bedtime
+- structural pass alone will not be enough to clear the pair
+- visual QA is where the real category-stress evidence will appear
+
+### 37.10 Evidence Template For T6-23 / T6-24
+
+Recommended T6-23 structural table:
+
+| sample | bookId | profile | status | pages | failed | fallback | timedOut | reference |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Book I1 | TBD | anchored moderate / `i1` | TBD | TBD | TBD | TBD | TBD | no-reference |
+| Book I2 | TBD | rich / `i2` | TBD | TBD | TBD | TBD | TBD | no-reference |
+
+Recommended T6-24 visual QA lenses:
+
+- BF-4: readable text / pseudo-text / signage / map-like surfaces
+- BF-3: protagonist identity continuity
+- style adherence: crayon texture, warmth, hand-drawn readability
+- emotional fit: wonder without fear or overstimulation
+- story-image match: quest object and discovery arc remain legible
+
+### 37.11 Pair Decision Criteria
+
+For `imagination x crayon`, a pair-level `Go` should likely require:
+
+- both books structurally pass
+- no BF-4 fail pages
+- no BF-3 fail book
+- style adherence at least acceptable across both books
+- emotional fit at least acceptable, with no frightening or chaotic outlier pages
+- story-image match strong enough that the quest object / recurring motif remains clear
+
+Recommended hold triggers:
+
+- any BF-4 fail page
+- repeated pseudo-symbol / map / control-panel text surfaces
+- strong child identity drift
+- adventure tone becoming too intense for target age
+- structural quality-gate failure in both books
+
+### 37.12 Exclusions
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No manual visual QA
