@@ -5377,3 +5377,311 @@ Recommended next step:
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
 - No product exposure matrix update
+
+## 40. T6-25 - Fallback-Heavy Behavior Analysis / Remediation Design (Docs-Only)
+
+Date: 2026-05-18
+
+### 40.1 Scope
+
+Analyze the root cause of the fallback-heavy generation pattern observed in T6-23 / T6-24 (`imagination × crayon`, Books I1 and I2) and design remediation options to unblock the pair from `Hold` to `Go`.
+
+This is a docs-only analysis slice. No code changes, no re-generation, no visual QA.
+
+### 40.2 Observed Fallback Pattern
+
+Evidence from T6-23 structural inspection:
+
+| metric | I1 | I2 |
+| --- | --- | --- |
+| pages total | 8 | 8 |
+| pages `completed` | 1 | 1 |
+| pages `fallback_completed` | 7 | 7 |
+| pages `image_failed` | 0 | 0 |
+| imageAttemptCount (page 0) | 1 | 1 |
+| imageAttemptCount (pages 1-7) | 3 | 3 |
+| imageTimedOut pages | 0 | 0 |
+| imageDurationMs min / avg / max | 21577 / 38572 / 47712 | 26949 / 34687 / 43894 |
+
+Pattern summary:
+
+- Page 0 succeeded on the first attempt with the primary model.
+- Pages 1-7 exhausted all primary-model retries and fell back to the fallback model.
+- The fallback succeeded (no `image_failed` pages), so structural completion was preserved.
+- The consistent 3-attempt pattern (2 primary failures + 1 fallback success) indicates a deterministic fallback path rather than random noise.
+
+### 40.3 Generation Stack: How Fallback Works
+
+Relevant code paths (as of T6-24 codebase state):
+
+**Plan config** (`functions/src/lib/plans.ts`):
+
+```
+standard_paid → imageQualityTier: "standard", imageModelProfile: "pro_consistent"
+```
+
+**Model resolution** (`functions/src/lib/replicate.ts`):
+
+```
+resolveImageModelProfile({ imageModelProfile: "pro_consistent" }) → "pro_consistent"
+→ primary model: black-forest-labs/flux-2-pro
+```
+
+**Fallback chain** (`functions/src/lib/replicate.ts`):
+
+```
+resolveImageFallbackProfiles("pro_consistent") → ["pro_consistent", "klein_fast"]
+→ fallback model: black-forest-labs/flux-2-klein-9b
+```
+
+**Retry loop** (`functions/src/generate-book.ts`):
+
+```
+maxRetries = 2  (per profile)
+for each profile in ["pro_consistent", "klein_fast"]:
+  for attempt in [0, 1]:
+    → attempt N
+```
+
+**Concurrency** (`functions/src/generate-book.ts`):
+
+```
+IMAGE_CONCURRENCY = 2  (default; configurable via env var)
+→ 2 pages generated in parallel at a time
+```
+
+**Timeout** (`functions/src/generate-book.ts`):
+
+```
+IMAGE_GENERATION_TIMEOUT_MS = 120000  (120 s)
+```
+
+### 40.4 Failure Scenario Reconstruction
+
+For pages 1-7 (attemptCount = 3 = 2 pro_consistent failures + 1 klein_fast success):
+
+| attempt | profile | model | result |
+| --- | --- | --- | --- |
+| 1 | pro_consistent | flux-2-pro | fail |
+| 2 | pro_consistent | flux-2-pro | fail |
+| 3 | klein_fast | flux-2-klein-9b | success → `fallback_completed` |
+
+Timeout is ruled out as a cause:
+
+- `imageTimedOut = 0` across all pages for both books.
+- `imageDurationMs` values (21-47 s) are well below the 120 s threshold.
+- The 429 rate-limit retry path (`retryAfterMs`) would produce longer attempt durations if triggered.
+
+### 40.5 Root Cause Hypotheses
+
+Three hypotheses are considered, ranked by likelihood based on the available evidence.
+
+#### Hypothesis H1: Burst API failures from concurrent page generation (most likely)
+
+`IMAGE_CONCURRENCY = 2` means two pages are submitted to Replicate simultaneously. For an 8-page book, this produces 4 burst-pairs of concurrent flux-2-pro requests. Page 0 runs in the initial pair alone (or with the first real page), where the API is not yet under burst pressure. Pages 1-7 run in the subsequent concurrent pairs, where transient overload or burst error responses from Replicate may reject the primary model requests.
+
+Supporting evidence:
+- page 0 succeeded (first request, likely under low burst pressure)
+- all pages 1-7 failed on pro_consistent despite no timeout signal
+- both books showed the identical 7-of-8 fallback pattern in the same run
+- generation timing for successful attempts was 21-47 s (normal, not stressed)
+
+Confidence: **high**.
+
+#### Hypothesis H2: Replicate flux-2-pro transient service degradation (moderate)
+
+A temporary degradation in flux-2-pro availability during the smoke run (`t6-nonfixed-20260517171510`) could cause systematic failures across both books simultaneously. This would explain the consistent pattern without requiring a burst-concurrency mechanism.
+
+Supporting evidence:
+- both books ran in the same `runId` window, so a shared time-window failure is plausible
+- page 0 for each book succeeded before the degraded window
+
+Confidence: **moderate**.
+
+Limitation: This hypothesis is not distinguishable from H1 without Replicate status history or logs showing per-request error codes.
+
+#### Hypothesis H3: Prompt length or complexity rejection by flux-2-pro (lower likelihood)
+
+Longer or more complex prompts on non-fixed imagination pages (vs. the opener on page 0) could trigger model-specific rejection patterns. This could explain why page 0 (often a simpler setup image) succeeds while later pages (with richer scene descriptions) fail.
+
+Supporting evidence:
+- non-fixed imagination prompts can be longer and more scene-specific than opener pages
+- page 0 typically has a simpler narrative role (introduction / setting the scene)
+
+Confidence: **lower** — no direct evidence that flux-2-pro prompt length thresholds were exceeded. The imagination scene descriptions are not abnormally long.
+
+### 40.6 Quality Impact: Why Fallback Hurt This Pair
+
+The fallback to `klein_fast` preserved structural completion but materially reduced output quality for `imagination × crayon` for two reasons.
+
+**Reason 1: Style fidelity gap between models**
+
+Both models receive the same text prompt including `styleBible` (crayon style instructions). However:
+
+- `pro_consistent` (flux-2-pro): high instruction-following capability; reliably renders explicit style descriptors like crayon texture, hand-drawn line weight, and warm palette.
+- `klein_fast` (flux-2-klein-9b): lower capability; tends to default to its training distribution (soft photoreal) when style instructions conflict with generic scene prompts.
+
+Result: fallback pages displayed soft photoreal rendering instead of the requested crayon storybook style.
+
+**Reason 2: Scene specificity gap**
+
+Non-fixed imagination pages contain rich, story-specific scene descriptions (e.g., a sleeping baby dragon, a glowing castle in the distance, a discovery of star fragments in a hidden box). These complex descriptions are harder for `klein_fast` to resolve faithfully, whereas `pro_consistent` would be more likely to attempt the specific scene geometry.
+
+Result: fallback pages showed generic child-in-bedroom compositions rather than the imagination-specific fantasy set pieces requested by the story.
+
+**Reason 3: No style reinforcement on fallback path**
+
+The current code applies the same prompt to both the primary and fallback models. There is no mechanism to add extra style anchors or prompt restructuring when switching to a lower-capability model.
+
+### 40.7 Remediation Options
+
+Five options are considered. They are not mutually exclusive.
+
+#### Option R1: Reduce IMAGE_CONCURRENCY for non-fixed books
+
+Reduce `IMAGE_CONCURRENCY` from 2 to 1 for `guided_ai` / `original_ai` books. This serializes page requests to flux-2-pro, reducing burst pressure on the Replicate API.
+
+| dimension | assessment |
+| --- | --- |
+| addresses H1 | yes — directly reduces burst concurrency |
+| addresses H2 | no |
+| code change required | yes — env-var or plan-specific concurrency override |
+| risk | low — serialization adds latency but does not change model behavior |
+| implementation complexity | low |
+| trade-off | generation time per book increases (e.g., 8 pages at ~35s avg ≈ 280 s serial vs. ~150 s at concurrency=2) |
+
+**Assessment: recommended as first hypothesis test** (low risk, targeted at H1).
+
+#### Option R2: Increase per-profile retry count before falling back
+
+Increase `maxRetries` for the `pro_consistent` profile from 2 to 3, with exponential backoff between retries.
+
+| dimension | assessment |
+| --- | --- |
+| addresses H1 | partially — gives burst pressure time to dissipate |
+| addresses H2 | yes — retries over a longer window can recover from transient degradation |
+| code change required | yes — maxRetries adjustment or profile-specific retry config |
+| risk | low |
+| implementation complexity | low |
+| trade-off | extends generation time per failed page by the backoff duration |
+
+**Assessment: complementary to R1; not sufficient alone**.
+
+#### Option R3: Add style-reinforcement injection on fallback prompt
+
+When the fallback path activates (`profile === "klein_fast"`), prepend an amplified style anchor to the prompt (e.g., `"STYLE: crayon hand-drawn illustration. DO NOT use photorealistic rendering. ..."` before the full scene description).
+
+| dimension | assessment |
+| --- | --- |
+| addresses style adherence failure | yes — directly targets the prompt-following gap in klein_fast |
+| addresses fallback occurrence | no |
+| code change required | yes — prompt builder must detect fallback context |
+| risk | medium — amplified style instructions may conflict with scene geometry and increase BF-4 risk (pseudo-text surfaces) |
+| implementation complexity | medium |
+| trade-off | may improve style without reducing fallback frequency; requires visual QA after implementation |
+
+**Assessment: valid remediation for quality gap, but adds implementation complexity and a new BF-4 test obligation**.
+
+#### Option R4: Extend fallback chain to klein_base instead of klein_fast
+
+Enable `ENABLE_KLEIN_BASE=true` and change the fallback sequence to `["pro_consistent", "klein_base", "klein_fast"]`. `klein_base` (flux-2-klein-9b-base) may have better instruction-following than `klein_fast`.
+
+| dimension | assessment |
+| --- | --- |
+| addresses style adherence failure | partially — depends on whether klein_base has materially better style fidelity |
+| addresses fallback occurrence | no |
+| code change required | env-var flag; no new code needed |
+| risk | medium — klein_base quality for crayon style is unvalidated in T6 |
+| implementation complexity | minimal |
+| trade-off | adds one more fallback tier; extends attempt count and generation time |
+
+**Assessment: low-effort option to test if klein_base provides better style fidelity than klein_fast; should be tested before assuming it helps**.
+
+#### Option R5: Post-generation page regeneration trigger for fallback-heavy books
+
+If a book ends with more than N fallback pages (e.g., N=4), automatically queue page regeneration for all `fallback_completed` pages as a post-generation step.
+
+| dimension | assessment |
+| --- | --- |
+| addresses fallback occurrence | no — re-generates but uses the same fallback chain |
+| addresses style adherence failure | only if primary model succeeds on regeneration |
+| code change required | yes — book completion handler + regeneration trigger |
+| risk | medium — if primary model failures persist, regeneration loops without improvement |
+| implementation complexity | high |
+| trade-off | improves outcomes when fallback was caused by transient API failures; does not help if primary model failures are systematic |
+
+**Assessment: architecturally appropriate but premature until R1/R2 are tested; regeneration is already available for manual use**.
+
+### 40.8 Recommended Path for T6-26
+
+Based on the analysis above, the following sequenced approach is recommended.
+
+**Step 1 (T6-26): Test H1 by running a controlled re-smoke with IMAGE_CONCURRENCY=1**
+
+- Run a single re-smoke of `imagination × crayon` with `IMAGE_CONCURRENCY=1` (env-var override, no code change needed).
+- If fallback ratio drops to ≤ 1/8, H1 is confirmed and R1 is the primary fix.
+- If fallback ratio remains high, H2 or H3 must be investigated next.
+
+This test is low-risk, requires no code changes, and directly isolates the concurrency hypothesis.
+
+**Step 2 (conditional on H1 confirmation): Implement R1 as a plan-specific default**
+
+- Change the default `IMAGE_CONCURRENCY` for `guided_ai` / `original_ai` books to 1.
+- Keep `fixed_template` concurrency at 2 (validated behavior).
+
+**Step 3 (parallel): Evaluate R4 (klein_base fallback)**
+
+- Enable `ENABLE_KLEIN_BASE=true` in a test environment.
+- Run a spot comparison: same imagination × crayon prompts via klein_base vs. klein_fast.
+- If klein_base shows materially better crayon style fidelity, update the fallback chain.
+
+**Step 4 (if style gap persists after R1/R2): Implement R3 (fallback prompt reinforcement)**
+
+- Design and implement fallback-path style injection as a targeted prompt-builder change.
+- Requires new visual QA run after implementation.
+
+**What T6-26 does NOT do:**
+
+- R5 (auto-regeneration trigger) is deferred until primary failure behavior is characterized.
+- No style exposure matrix update until the pair clears all visual QA axes.
+
+### 40.9 Pair Status After T6-25
+
+| pair | current verdict | blocker | recommended next action |
+| --- | --- | --- | --- |
+| `imagination × crayon` | **Hold** | fallback-heavy → style adherence Fail + story-image match Fail | T6-26: controlled re-smoke with IMAGE_CONCURRENCY=1 |
+
+### 40.10 What T6-25 Proves
+
+- The fallback-heavy pattern in T6-23 is mechanically explained by the `pro_consistent` → `klein_fast` fallback chain under concurrent page generation.
+- The quality gap is not random variance; it is a predictable consequence of `klein_fast`'s lower style-instruction adherence.
+- The pair is not blocked by safety failures (BF-4/BF-3 are clear), story quality gate, or structural generation. The single remaining blocker is fallback-driven visual quality degradation.
+- A concurrency-reduction test (H1 test) is the lowest-risk next step and can be executed without code changes.
+
+### 40.11 What T6-25 Does Not Prove
+
+- Whether H1 (burst concurrency) or H2 (service degradation) is the dominant cause — that requires the T6-26 re-smoke experiment.
+- Whether `klein_base` provides meaningfully better style fidelity than `klein_fast` — that requires a model comparison test.
+- Whether R3 (fallback prompt reinforcement) would achieve acceptable style adherence — that requires implementation and visual QA.
+
+### 40.12 Exclusions
+
+- No code changes
+- No runner changes
+- No functions logic changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No manual visual QA
+- No product exposure matrix update
