@@ -4519,3 +4519,218 @@ Current pair state after T6-20:
 - No detailed manual visual QA
 - No final pair verdict update
 - No S2 regeneration
+
+## 36. T6-21 - Bedtime x Soft_Watercolor Quality-Gate Root-Cause / Pause-or-Pivot Decision (Docs-Only)
+
+Date: 2026-05-18
+
+### 36.1 Objective
+
+Decide whether `bedtime x soft_watercolor` should:
+
+1. remain fixed at `Hold` while validation work pivots to another pair, or
+2. continue immediately with more work on the quality-gate / story-generation interaction before returning to the pair
+
+This slice is docs-only decision work.
+
+### 36.2 Decision Context
+
+Current post-hardening retry outcomes:
+
+| sample | bookId | profile | status | failureStage | image phase reached |
+| --- | --- | --- | --- | --- | --- |
+| S1RR-H1 | `DtBgZfT7rVKhLuH0A7l4` | `s1rr` | failed | `quality_gate` | no |
+| S3 | `oj1VACCdTyTTObUILPGL` | `s3` | failed | `quality_gate` | no |
+
+Pre-hardening visual evidence remains:
+
+| sample | bookId | result | issue |
+| --- | --- | --- | --- |
+| S1 | `uwhwhq3DmuGPekxBVn0a` | Hold | page 6 readable Japanese paragraph block |
+| S1R | `YVsHLGjXJ1svdhzWMDn9` | Hold | page 2 shelf-box `SAKURA` |
+| S1RR | `7silOATa4vPfvfXNHNIt` | Hold | pages 0 / 1 / 6 bookshelf / book-surface readable Japanese text |
+| S2 control | `PFuh3zu7q4VmNn4qA3dU` | Go | clean control |
+
+Pair state entering T6-21:
+
+- `bedtime x soft_watercolor`: **Hold**
+
+### 36.3 Pre-Hardening vs Post-Hardening Failure Type Shift
+
+The failure mode has shifted materially across the thread.
+
+#### Pre-hardening
+
+Observed failure family:
+
+- image-level BF-4 failures on readable text surfaces
+- concrete evidence existed on generated pages
+- manual visual QA was possible
+- root problem was in the rendered image output
+
+#### Post-hardening
+
+Observed failure family:
+
+- upstream `quality_gate` failure before page generation
+- no page docs
+- no image outputs
+- no manual visual QA possible
+- root problem is currently structural/story-generation viability rather than observable image BF-4 output
+
+Interpretation:
+
+- T6-17 likely changed the system enough that the active bottleneck moved upstream
+- this does not prove the BF-4 issue is solved
+- it also means current retries are no longer measuring the original blocker directly
+
+### 36.4 T6-18 vs T6-20 Failure Comparison
+
+| dimension | T6-18 `s1rr` | T6-20 `s3` | reading |
+| --- | --- | --- | --- |
+| input style | strong room-no-text suppression | rebalanced bunny / sleep progression | S3 improved narrative grounding somewhat |
+| status | failed | failed | no structural recovery |
+| failureStage | `quality_gate` | `quality_gate` | same upstream blocker |
+| generatedTextPreview | 8 pages | 8 pages | text generation still works |
+| page docs | 0 | 0 | image phase still unreachable |
+| narrativeDevice | `null` | `null` | motif weakness persisted |
+| repeated goal-link warnings | yes | yes | story-goal linkage still unstable |
+
+What changed:
+
+- S3 improved local bedtime routine grounding on early pages
+- S3 reduced the most extreme room-no-text overconstraint pattern from `s1rr`
+
+What did not change:
+
+- both runs still failed before image generation
+- both runs still showed repeated `page_text_not_connected_to_story_goal`
+- both runs still lacked usable narrative-device support
+- neither run produced evidence that can validate T6-17 BF-4 hardening
+
+### 36.5 Root-Cause Summary
+
+Current best root-cause reading:
+
+1. the original pair problem was image-level readable text on bedroom-object surfaces
+2. T6-17 introduced a necessary production-layer hardening change for that surface family
+3. after hardening, the active blocker shifted upstream into story quality gate fragility for this retry lane
+4. repeated input-only retries are now mostly exploring story-generation / quality-gate coupling, not the original BF-4 image issue
+
+Most likely contributing factors:
+
+- bedtime lane tolerates quiet text poorly once story-goal continuity weakens
+- retry inputs increasingly blend `bunny`, `sleep`, and `light` into a diffuse quest
+- `narrativeDevice` remains absent, leaving motif-based checks unsatisfied
+- repeated retries are no longer giving efficient signal on whether `soft_watercolor` image behavior improved
+
+### 36.6 Risk of Continuing Retries Immediately
+
+If retries continue immediately in the same pair, the risks are:
+
+- more time spent without generating any new visual evidence
+- more runner-profile drift away from the original product behavior
+- confusion between `quality_gate` tuning issues and BF-4 image-quality issues
+- delayed progress on the wider T6 matrix while one pair remains blocked on an upstream interaction problem
+- reduced confidence that new results are measuring the same thing as the original S1 / S1R / S1RR BF-4 failures
+
+Practical project risk:
+
+- this pair can consume multiple additional slices without producing a single reviewable image
+- that is a poor validation tradeoff compared with exploring a fresh pair that can still generate output
+
+### 36.7 Pivot Candidate Comparison
+
+Possible next directions:
+
+| option | upside | downside | decision read |
+| --- | --- | --- | --- |
+| continue immediate retries on `bedtime x soft_watercolor` | preserves continuity on one blocked pair | likely continues upstream gate exploration without visual evidence | weak |
+| pause pair and pivot to next T6 pair | restores broader matrix momentum and avoids getting stuck | leaves `bedtime x soft_watercolor` unresolved for now | strong |
+| launch a deeper investigation specifically into quality-gate / story-generation interaction before any new pair work | could eventually explain both T6-18 and T6-20 | becomes a subsystem investigation, not pair validation | valid later, but not as immediate default |
+
+Important distinction:
+
+- `pivot` does not mean `clear` or `abandon`
+- it means treating the pair as a documented `Hold` while work moves to a healthier validation lane
+
+### 36.8 Recommended Decision
+
+Recommended T6-21 decision:
+
+- **Option 1: hold `bedtime x soft_watercolor` fixed and pivot to the next pair**
+
+Decision statement:
+
+- `bedtime x soft_watercolor` should remain **Hold**
+- further retries on this pair should be paused for now
+- the team should pivot to another pair for forward validation progress
+- if this pair is revisited later, it should be revisited as a focused quality-gate / story-generation interaction investigation, not as another routine smoke retry
+
+### 36.9 Why Pivot Is Preferred Now
+
+Pivot is preferred because:
+
+- two consecutive post-hardening retries failed at the same upstream stage
+- neither retry produced image evidence
+- the pair is no longer the fastest route to learning about image-level BF-4 behavior
+- the original T6 objective is broader pair validation, not indefinite iteration on one structurally blocked lane
+- S2 already proves `bedtime x soft_watercolor` is not globally broken, so pausing does not erase the positive evidence
+
+What this decision is *not* saying:
+
+- not saying T6-17 hardening was wrong
+- not saying `soft_watercolor` is unsuitable for bedtime
+- not saying the pair is permanently abandoned
+
+What it *is* saying:
+
+- current retry economics are poor
+- the next unit of work should maximize new signal, not preserve continuity for its own sake
+
+### 36.10 Recommended Next Action
+
+Recommended next action after T6-21:
+
+- mark `bedtime x soft_watercolor` as **Hold / Paused**
+- move to the next pair in the T6 queue
+- optionally schedule a later dedicated investigation track for:
+  - non-fixed bedtime quality-gate fragility
+  - narrativeDevice / storyGoal coupling in quiet bedtime lanes
+  - whether prompt hardening indirectly increases gate fragility in low-action themes
+
+If/when this pair is revisited later, entry criteria should likely be:
+
+- explicit investigation scope
+- success metric defined around clearing `quality_gate` first
+- no assumption that the existing smoke runner profiles are still the right vehicle
+
+### 36.11 Pair Status After Decision
+
+Documented pair status:
+
+| pair | status | decision |
+| --- | --- | --- |
+| `bedtime x soft_watercolor` | **Hold** | paused after two consecutive post-hardening `quality_gate` failures |
+
+### 36.12 Exclusions
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No manual visual QA
+- No pair verdict reopening beyond this documented pause decision
