@@ -704,3 +704,357 @@ Scope (code):
 - only implementable after T6-8 design and sufficient T6-5/T6-6/T6-7 evidence
 
 ---
+
+## 16. T6-2 Input Profile and First Smoke Candidate Design
+
+Date: 2026-05-17
+
+### 16.1 Purpose
+
+T6-2 concretizes the inputs, execution conditions, evidence format, and pass criteria that T6-3 will use when running the first non-fixed L1 smoke for `bedtime × crayon`.
+
+T6-3 cannot run without:
+
+- a defined input profile taxonomy (minimal / moderate / rich)
+- concrete `bedtime × crayon` input specimens
+- defined evidence recording fields
+- defined L1 pass / hold criteria
+
+This slice delivers all of the above as docs-only artifacts.
+
+### 16.2 Non-Fixed Input Fields Reference
+
+Fields available in `BookInput` for guided_ai books:
+
+| field | type | description |
+| --- | --- | --- |
+| `childName` | string | required in all templates |
+| `childAge` | number? | child age in years |
+| `favorites` | string? | what the child loves |
+| `lessonToTeach` | string? | value or behavior to reinforce |
+| `memoryToRecreate` | string? | a real event to illustrate |
+| `characterLook` | string? | physical appearance hint |
+| `signatureItem` | string? | a specific object tied to the child |
+| `colorMood` | string? | color or mood directive |
+| `place` | string? | a location hint |
+| `familyMembers` | string? | relevant family members |
+| `season` | string? | time of year hint |
+| `parentMessage` | string? | a message from the parent |
+| `storyRequest` | string? | freeform story request (original_ai only) |
+
+For the guided_ai `bedtime` theme specifically:
+
+- required: `childName`
+- optional: `parentMessage`, `colorMood`
+
+All other optional fields are accepted by the create flow and passed to the LLM system prompt, but the `bedtime` template metadata does not surface them as primary fields in the UI.
+
+### 16.3 Input Profile Taxonomy
+
+T6 defines three input profile levels to standardize what inputs are used during validation runs.
+
+#### Minimal Profile
+
+Fields filled: `childName` only (plus `childAge` if the template recommends an age range)
+
+Purpose:
+
+- establish the absolute floor of LLM behavior with the least user context
+- not sufficient as the only evidence for a Go verdict (per T6-1 requirements)
+- useful as a comparison baseline against moderate and rich profiles
+
+Risk:
+
+- LLM may generate generic, template-like scenes without distinctive content
+- minimal input may not expose style × user-input interaction risks
+- a pass at minimal profile alone is not meaningful evidence for product exposure
+
+#### Moderate Profile
+
+Fields filled: `childName` + `childAge` + all theme-primary optional fields + at least 1 additional optional field from the theme's available options
+
+Purpose:
+
+- represents realistic everyday user behavior
+- the T6-1 required minimum for any Go verdict
+- exposes LLM × style interaction under real-world input volume
+
+For `bedtime` theme moderate profile:
+
+- `childName` ✓
+- `childAge` ✓
+- `parentMessage` ✓
+- `colorMood` ✓
+
+#### Rich Profile
+
+Fields filled: `childName` + `childAge` + all theme-primary optional fields + at least one field outside the theme's primary UI surface
+
+Purpose:
+
+- stress-tests the style under complex, multi-dimensional user input
+- exposes LLM-generated scene variety that simpler profiles would not produce
+- required as the second book in the T6 minimum 2-book pair requirement
+
+For `bedtime` theme rich profile:
+
+- `childName` ✓
+- `childAge` ✓
+- `parentMessage` ✓
+- `colorMood` ✓
+- `favorites` ✓ (not a primary bedtime field, but accepted by the create flow and passed to the LLM)
+
+### 16.4 First Smoke Candidate: `bedtime × crayon`
+
+Rationale:
+
+- `bedtime` is the lowest-BF-4-risk category in the initial T6 matrix (quiet, low-prop environments)
+- `crayon` is the most portable and strongest validated style in the T5 fixed-template baseline
+- their combination represents the most likely non-fixed Go candidate in the entire T6 matrix
+- a failure here would be a strong signal that non-fixed style validation is harder than expected
+
+Expected behavior:
+
+- LLM generates quiet evening / night bedtime scenes with low prop complexity
+- crayon rendering produces warm, textured, hand-drawn page illustrations
+- main risk: dense crayon strokes on fabric, blanket patterns, or toy surfaces resembling handwriting (BF-4)
+- secondary risk: protagonist appearance across page transitions if the LLM shifts scenes dramatically
+
+### 16.5 Concrete Input Specimens for `bedtime × crayon`
+
+Two books are required per T6-1 pair requirement.
+
+#### Book A — Moderate Profile
+
+| field | value |
+| --- | --- |
+| childName | さくら |
+| childAge | 4 |
+| parentMessage | きょうもたくさんあそんだね。おやすみ、さくら。 |
+| colorMood | soft warm |
+| favorites | (none) |
+| style | crayon |
+| theme | bedtime |
+| creationMode | guided_ai |
+| productPlan | free |
+| childProfileSnapshot | none |
+
+Rationale:
+
+- `さくら` is a familiar Japanese name the LLM handles cleanly
+- age 4 is mid-range for the bedtime template (1–6)
+- `parentMessage` provides a brief emotional anchor without injecting complex scene props
+- `colorMood: "soft warm"` aligns with bedtime expectations and should not stress crayon style
+
+#### Book B — Rich Profile
+
+| field | value |
+| --- | --- |
+| childName | けんた |
+| childAge | 3 |
+| parentMessage | げんきでよかった。また明日もいっしょに遊ぼうね。おやすみ。 |
+| colorMood | deep cozy night |
+| favorites | ミニカーとぬいぐるみ |
+| style | crayon |
+| theme | bedtime |
+| creationMode | guided_ai |
+| productPlan | free |
+| childProfileSnapshot | none |
+
+Rationale:
+
+- `けんた` age 3 tests a younger child, different name, and different implicit gender expression
+- `colorMood: "deep cozy night"` pushes toward darker scene content, a mild BF-4 risk surface for crayon (darker areas may produce denser, stroke-heavy textures)
+- `favorites: "ミニカーとぬいぐるみ"` introduces props into LLM-generated scenes
+  - toy car (ミニカー): small, flat, potentially logo-like prop → moderate BF-4 watch surface
+  - stuffed animal (ぬいぐるみ): soft, rounded → low BF-4 risk, good BF-3 test for recurring object
+- both toys are manageable prop types but warrant BF-4 review on any page they appear
+
+### 16.6 L1 Execution Conditions
+
+Before execution:
+
+- confirm the `bedtime` guided_ai template is active in the target Firestore instance
+- confirm no pending template changes to the `bedtime` theme
+- confirm `crayon` style resolves canonically (no alias collision in the style picker)
+- confirm the create flow is pointing to the intended environment (dev or QA; prefer non-production for validation runs)
+
+During execution:
+
+- use the standard create flow (not an admin override path)
+- do not attach a `childProfileSnapshot` (no photo reference) for either book
+- use `productPlan: "free"` unless premium path is the explicit target of this run
+- record the resulting `bookId` immediately after creation
+- do not modify or retry the book after creation; review the raw generated output
+
+After execution:
+
+- review every page, not only pages 0–1
+- capture the bookId, page count, and any available generation metadata
+- complete the evidence recording template below for each book before issuing any verdict
+
+### 16.7 L1 Evidence Recording Template
+
+Use this template per book for T6-3.
+
+```
+## Book Evidence Record
+
+bookId:
+date:
+theme: bedtime
+categoryGroupId: bedtime
+styleId: crayon
+creationMode: guided_ai
+childAge: [value used]
+inputProfile: moderate | rich
+childName: [value used]
+parentMessage: [value used]
+colorMood: [value used]
+favorites: [value used, or "none"]
+childProfileSnapshot: none
+
+### Structural Health
+total pages generated:
+broken / black images:
+placeholder images:
+verdict: pass | fail
+
+### BF-4 Safety (per page)
+| page | verdict | notes |
+|------|---------|-------|
+| 0    |         |       |
+| 1    |         |       |
+| 2    |         |       |
+| 3    |         |       |
+| 4    |         |       |
+| 5    |         |       |
+| 6    |         |       |
+| 7    |         |       |
+BF-4 summary verdict: pass | watch | fail
+BF-4 worst surface observed:
+
+### BF-3 Continuity
+child identity consistent across pages: yes | no
+age impression consistent: yes | no
+hairstyle / outfit consistent: yes | no
+notable identity shift (if any):
+BF-3 summary verdict: pass | watch | fail
+
+### Style Adherence
+crayon texture visible: yes | partial | no
+hand-drawn warmth present: yes | partial | no
+style consistent across pages: yes | partial | no
+style distinguishable from soft_watercolor: yes | no
+style adherence verdict: strong | acceptable | weak | off-target
+
+### Emotional Fit
+bedtime mood present: yes | partial | no
+child-safe, warm, gentle feeling: yes | partial | no
+scene meaning preserved: yes | partial | no
+emotional fit verdict: high-fit | acceptable | mismatch
+
+### LLM-Generated Scene Notes
+notable scenes the LLM invented (not directly from user input):
+any scene that introduced unexpected prop complexity:
+any scene that produced unexpected setting detail:
+
+### Overall Book Verdict
+verdict: Go | Conditional-Go | Conditional | Hold
+notes:
+```
+
+### 16.8 L1 Pair Verdict Criteria
+
+After both books have been recorded, use these rules to issue the `bedtime × crayon` pair verdict.
+
+#### Go
+
+All of the following must be true:
+
+- structural health: `pass` for both books
+- BF-4: no `fail` in either book; combined `watch` count ≤ 2 across all pages of both books
+- BF-3: `pass` for both books
+- style adherence: `acceptable` or `strong` for both books
+- emotional fit: `acceptable` or `high-fit` for both books
+- LLM variability: results are consistent between the two books; no safety failure appears in one while absent in the other
+
+#### Conditional-Go
+
+All primary axes pass, but:
+
+- 1 persistent `watch` item across BF-4 or BF-3 that is documented but judged non-blocking
+
+#### Conditional
+
+Any of the following:
+
+- style adherence is `weak` for one book and `acceptable` for the other (inconsistent style output)
+- emotional fit is `mismatch` for one book
+- LLM scene variability is meaningfully different between the two books without a safety failure
+
+#### Hold
+
+Any of the following:
+
+- BF-4 `fail` in any page of either book
+- BF-3 `fail` in more than one book
+- structural health `fail` in any book
+- style adherence `off-target` for either book
+
+### 16.9 Pair Verdict Recording Location
+
+After T6-3 execution, record the pair verdict in this document using this format:
+
+```
+## Pair Verdict: bedtime × crayon
+
+books sampled: 2
+Book A (moderate): [bookId] — verdict: [Go | Conditional-Go | Conditional | Hold]
+Book B (rich): [bookId] — verdict: [Go | Conditional-Go | Conditional | Hold]
+
+BF-4 aggregate: pass | watch | fail
+BF-3 aggregate: pass | watch | fail
+style adherence aggregate: strong | acceptable | weak | off-target
+emotional fit aggregate: high-fit | acceptable | mismatch
+LLM variability: stable | variable | fail
+
+pair verdict: Go | Conditional-Go | Conditional | Hold
+promotion eligibility: eligible for category-level | watch | block
+notes:
+```
+
+### 16.10 Decision After T6-3
+
+If `bedtime × crayon` pair verdict is `Go` or `Conditional-Go`:
+
+- proceed to T6-4: `bedtime × soft_watercolor` L1 spot-check
+- the two results together will give the first multi-style category comparison for `bedtime`
+
+If `bedtime × crayon` pair verdict is `Hold`:
+
+- do not expand to additional matrix pairs before investigating the cause
+- determine whether the issue is bedtime-specific or crayon-specific
+- document the failure pattern in full before deciding next step
+- candidates: retry with minimal profile to isolate LLM vs style contribution; or try `imagination × crayon` to isolate category contribution
+
+If `bedtime × crayon` pair verdict is `Conditional`:
+
+- proceed cautiously to `bedtime × soft_watercolor` as a comparison point
+- do not promote `bedtime` as a validated category until at least one pair reaches `Go` or `Conditional-Go`
+
+### 16.11 Exclusions
+
+- No code changes performed
+- No UI changes performed
+- No functions changes performed
+- No Firestore schema or rules changes performed
+- No smoke generation performed
+- No image generation performed
+- No Admin regeneration performed
+- No reference-flow generation performed
+- No Firebase Auth changes
+- No Storage token rotation / revocation
+- No runner changes
+- No style profile changes
+- No service account JSON, secrets, URLs, or tokens recorded
