@@ -1035,6 +1035,7 @@ export async function processBookGeneration(
           focusCharacterId: storyPage.focusCharacterId,
           childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
           scenePolicy: normalizedBookData.scenePolicy,
+          categoryGroupId: template.categoryGroupId,
         }
       );
 

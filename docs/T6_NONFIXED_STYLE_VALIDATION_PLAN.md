@@ -3698,3 +3698,166 @@ T6-18 evaluation intent:
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
 - No private image URLs or storage tokens recorded
+
+## 32. T6-17 - Non-Fixed Bedtime No-Text Guardrail Implementation
+
+Date: 2026-05-18
+
+### 32.1 Scope
+
+Implement the T6-16 design in the production non-fixed prompt path, including:
+
+- shared printed-surface no-text guidance in non-fixed image prompts
+- bedtime-local bedroom-object no-text guidance
+- prompt-builder option plumbing for `categoryGroupId`
+- targeted tests
+- docs update
+
+Out of scope for this slice:
+
+- smoke generation
+- image generation
+- Firestore write
+- runner changes
+- style profile changes
+
+### 32.2 Files Updated
+
+Updated implementation files:
+
+- `functions/src/lib/prompt-builder.ts`
+- `functions/src/generate-book.ts`
+- `functions/test/prompt-builder.test.ts`
+
+Docs updated:
+
+- `docs/T6_NONFIXED_STYLE_VALIDATION_PLAN.md`
+
+No changes made to:
+
+- smoke runner scripts
+- `functions/src/lib/illustration-styles.ts`
+- seed-template data
+- style exposure matrix
+
+### 32.3 Prompt-Builder Implementation
+
+Implemented in `functions/src/lib/prompt-builder.ts`:
+
+- added `buildSharedPrintedSurfaceNoTextGuidance()`
+- added `buildBedtimeRoomPropNoTextGuidance()`
+- added `buildCategoryGroupNoTextGuidance(categoryGroupId?: string)`
+- extended `buildImagePrompt(...)` options with `categoryGroupId?: string`
+
+Behavior now added to non-fixed prompt assembly:
+
+- shared guidance explicitly suppresses readable text on:
+  - books
+  - book covers
+  - book spines
+  - labels
+  - posters
+  - framed prints
+  - packaging
+  - cards
+  - storage bins
+  - toy boxes
+  - shelf props
+- bedtime-local guidance additionally suppresses:
+  - bedroom bookshelf readable titles
+  - spine writing
+  - shelf labels
+  - toy-bin / container labels
+  - nursery cards
+  - framed wall art
+  - printed packaging graphics
+
+Insertion point used:
+
+- the new shared and category-local guidance is appended through the `backgroundGuidance` segment inside `buildImagePrompt(...)`
+
+Why this matches the design:
+
+- it affects the production non-fixed path directly
+- it stays reusable and composable like fixed-template helper patterns
+- it avoids smoke-runner-only drift
+
+### 32.4 Call-Site Plumbing
+
+Updated `functions/src/generate-book.ts` so the prompt-builder now receives:
+
+- `categoryGroupId: template.categoryGroupId`
+
+This keeps the bedtime-local clause explicitly keyed to template metadata rather than inferred from prompt wording.
+
+### 32.5 Tests Added / Verification
+
+Added targeted tests in `functions/test/prompt-builder.test.ts` to verify:
+
+- shared printed-surface no-text guidance appears in non-fixed prompts
+- bedtime-local room-prop guidance appears when `categoryGroupId === "bedtime"`
+- bedtime-local guidance does not appear for non-bedtime category groups
+
+Verification commands executed:
+
+```bash
+npm --prefix functions run build
+npm --prefix functions test -- prompt-builder.test.ts generate-book.test.ts
+npm run guard:hygiene
+```
+
+Verification result:
+
+- `functions` TypeScript build: **PASS**
+- `prompt-builder.test.ts`: **PASS**
+- `generate-book.test.ts`: **PASS**
+- `guard:hygiene`: **PASS**
+
+Execution note:
+
+- the initial sandboxed Vitest run hit `spawn EPERM`
+- the same test command was re-run with approval outside the sandbox and passed
+
+### 32.6 Style-Specific Non-Changes
+
+No style-specific changes were made in this slice.
+
+Explicitly unchanged:
+
+- `functions/src/lib/illustration-styles.ts`
+- `soft_watercolor` negativeStyleRules
+
+Reason:
+
+- T6-16 defined shared + bedtime-local hardening as the first causal fix
+- current evidence still does not justify blaming `soft_watercolor` alone
+- keeping styles unchanged preserves a cleaner T6-18 validation signal
+
+### 32.7 T6-18 Handoff
+
+T6-18 should validate this implementation by running the post-hardening non-fixed bedtime smoke retry lane only.
+
+T6-18 focus:
+
+- confirm structural health still passes
+- confirm BF-4 readable bookshelf / book-surface text is reduced or eliminated
+- keep no-reference mode
+- defer final pair verdict until post-generation visual QA
+
+### 32.8 Exclusions
+
+- No smoke generation
+- No image generation
+- No Firestore write
+- No runner changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded

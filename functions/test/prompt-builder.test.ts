@@ -247,6 +247,45 @@ describe("buildImagePrompt", () => {
     expect(result).toContain("Rounded 3D toy storybook style");
     expect(result).not.toContain("reference image");
   });
+  it("adds shared printed-surface no-text guidance for non-fixed prompts", () => {
+    const result = buildImagePrompt("A child reading before bed", "soft_watercolor");
+    expect(result).toContain("Printed-surface guardrail:");
+    expect(result).toContain("book covers");
+    expect(result).toContain("book spines");
+    expect(result).toContain("storage bins");
+    expect(result).toContain("pseudo-writing");
+  });
+  it("adds bedtime-local bedroom-object no-text guidance only for bedtime categoryGroup", () => {
+    const result = buildImagePrompt(
+      "A sleepy child resting in a cozy bedroom",
+      "soft_watercolor",
+      undefined,
+      undefined,
+      {
+        categoryGroupId: "bedtime",
+      }
+    );
+
+    expect(result).toContain("Bedtime room-prop guardrail:");
+    expect(result).toContain("nursery cards");
+    expect(result).toContain("shelf labels");
+    expect(result).toContain("printed packaging graphics");
+  });
+  it("does not add bedtime-local room guidance for non-bedtime categoryGroup", () => {
+    const result = buildImagePrompt(
+      "A child sharing cake with family",
+      "soft_watercolor",
+      undefined,
+      undefined,
+      {
+        categoryGroupId: "seasonal-events",
+      }
+    );
+
+    expect(result).toContain("Printed-surface guardrail:");
+    expect(result).not.toContain("Bedtime room-prop guardrail:");
+    expect(result).not.toContain("nursery cards");
+  });
   it("returns a style reference image path", () => {
     expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.png");
   });

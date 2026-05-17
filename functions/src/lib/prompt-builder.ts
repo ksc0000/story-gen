@@ -252,6 +252,28 @@ function buildScenePolicyGuidance(
   ].join(" ");
 }
 
+function buildSharedPrintedSurfaceNoTextGuidance(): string {
+  return [
+    "Printed-surface guardrail: keep books, book covers, book spines, labels, posters, framed prints, packaging, cards, storage bins, toy boxes, and shelf props plain, unlabeled, and non-readable.",
+    "Do not add readable titles, spine writing, pseudo-writing, glyph-like marks, decorative letters, numbers, logo-like marks, or watermark-like printed details on background objects.",
+  ].join(" ");
+}
+
+function buildBedtimeRoomPropNoTextGuidance(): string {
+  return [
+    "Bedtime room-prop guardrail: bedroom bookshelf objects, nursery cards, framed wall art, toy bins, storage containers, packaging, and paper items must stay visual-only, plain, and non-readable.",
+    "Do not show readable book titles, spine writing, shelf labels, container labels, printed posters, word art, or printed packaging graphics anywhere in the bedroom scene.",
+  ].join(" ");
+}
+
+function buildCategoryGroupNoTextGuidance(categoryGroupId?: string): string {
+  if (categoryGroupId !== "bedtime") {
+    return "";
+  }
+
+  return buildBedtimeRoomPropNoTextGuidance();
+}
+
 function describeCharacterKind(kind: StoryCharacterKind | undefined): string {
   switch (kind) {
     case "human_child":
@@ -488,6 +510,7 @@ export function buildImagePrompt(
     focusCharacterId?: string;
     childProfileBasePrompt?: string;
     scenePolicy?: ScenePolicy;
+    categoryGroupId?: string;
   }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
@@ -532,6 +555,8 @@ export function buildImagePrompt(
     "Show meaningful surroundings, not just the protagonist.",
     "Keep the scene rich but not cluttered.",
     buildScenePolicyGuidance(scenePolicy, options?.childProfileBasePrompt),
+    buildSharedPrintedSurfaceNoTextGuidance(),
+    buildCategoryGroupNoTextGuidance(options?.categoryGroupId),
     scenePolicy?.backgroundMode === "fixed"
       ? buildFixedProfileConstraintGuidance(options?.childProfileBasePrompt)
       : "",
