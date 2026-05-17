@@ -846,6 +846,84 @@ describe("processBookGeneration", () => {
     );
   });
 
+  it("fails closed for blocked fixed-template style pairings before generation starts", async () => {
+    deps.getTemplate.mockResolvedValue(fixedTemplate);
+    const blockedBook: BookData = {
+      ...baseBookData,
+      theme: "fixed-first-zoo-8p",
+      templateId: "fixed-first-zoo-8p",
+      creationMode: "fixed_template",
+      style: "anime_storybook",
+      input: {
+        childName: "ゆうた",
+        place: "上野動物園",
+        familyMembers: "ママとパパ",
+      },
+    };
+
+    await processBookGeneration("book-fixed-blocked", blockedBook, deps);
+
+    expect(deps.updateBookFailure).toHaveBeenCalledWith(
+      "book-fixed-blocked",
+      "この絵のタッチは、今はこのテンプレートでは選べません。別のタッチを選んでください。"
+    );
+    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
+      "book-fixed-blocked",
+      expect.objectContaining({
+        failureStage: "validation",
+        failureProvider: "system",
+        retryable: false,
+        technicalErrorMessage: expect.stringContaining(
+          "style_exposure_blocked: template=fixed-first-zoo-8p style=anime_storybook status=blocked"
+        ),
+      })
+    );
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed-blocked", "failed");
+    expect(deps.getUserPlan).not.toHaveBeenCalled();
+    expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
+    expect(deps.imageClient.generateImage).not.toHaveBeenCalled();
+    expect(deps.writePage).not.toHaveBeenCalled();
+  });
+
+  it("fails closed for unvalidated fixed-template style pairings before generation starts", async () => {
+    deps.getTemplate.mockResolvedValue(fixedTemplate);
+    const unvalidatedBook: BookData = {
+      ...baseBookData,
+      theme: "fixed-first-zoo-8p",
+      templateId: "fixed-first-zoo-8p",
+      creationMode: "fixed_template",
+      style: "toy_3d",
+      input: {
+        childName: "ゆうた",
+        place: "上野動物園",
+        familyMembers: "ママとパパ",
+      },
+    };
+
+    await processBookGeneration("book-fixed-unvalidated", unvalidatedBook, deps);
+
+    expect(deps.updateBookFailure).toHaveBeenCalledWith(
+      "book-fixed-unvalidated",
+      "この絵のタッチは、今はこのテンプレートでは選べません。別のタッチを選んでください。"
+    );
+    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
+      "book-fixed-unvalidated",
+      expect.objectContaining({
+        failureStage: "validation",
+        failureProvider: "system",
+        retryable: false,
+        technicalErrorMessage: expect.stringContaining(
+          "style_exposure_blocked: template=fixed-first-zoo-8p style=toy_3d status=internal"
+        ),
+      })
+    );
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed-unvalidated", "failed");
+    expect(deps.getUserPlan).not.toHaveBeenCalled();
+    expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
+    expect(deps.imageClient.generateImage).not.toHaveBeenCalled();
+    expect(deps.writePage).not.toHaveBeenCalled();
+  });
+
   it("uses premium model metadata when imageQualityTier is premium", async () => {
     const premiumBook: BookData = {
       ...baseBookData,

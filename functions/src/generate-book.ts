@@ -48,6 +48,10 @@ import {
 } from "./lib/story-quality";
 import { removeUndefinedDeep } from "./lib/firestore-sanitize";
 import { getIllustrationStyleProfile } from "./lib/illustration-styles";
+import {
+  getStyleTemplateExposure,
+  isAllowedStyleExposureStatus,
+} from "./lib/style-exposure";
 
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
 const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCURRENCY ?? "2")));
@@ -58,6 +62,8 @@ const STORY_SCHEMA_FAILURE_USER_MESSAGE =
   "絵本の構成データを整える途中で失敗しました。入力内容が原因ではない可能性があります。もう一度お試しください。";
 const STORY_QUALITY_FAILURE_USER_MESSAGE =
   "絵本の内容を整えきれませんでした。もう一度作成すると、別の構成で成功する場合があります。";
+const STYLE_EXPOSURE_BLOCKED_USER_MESSAGE =
+  "この絵のタッチは、今はこのテンプレートでは選べません。別のタッチを選んでください。";
 
 function createUpdatedAtPatch() {
   return {
@@ -755,6 +761,27 @@ export async function processBookGeneration(
 
     // Step 2: Get template and normalize plan settings
     const template = await deps.getTemplate(bookData.theme);
+    const resolvedTemplateId = bookData.templateId ?? bookData.theme;
+    const resolvedCreationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
+    if (resolvedCreationMode === "fixed_template") {
+      const exposure = getStyleTemplateExposure(resolvedTemplateId, bookData.style);
+      if (!isAllowedStyleExposureStatus(exposure.status)) {
+        const technicalMessage =
+          `style_exposure_blocked: template=${resolvedTemplateId} style=${String(bookData.style)} ` +
+          `status=${exposure.status} rationale=${exposure.rationale}`;
+        console.error(`Style exposure validation failed for ${bookId}: ${technicalMessage}`);
+        await deps.updateBookFailure(bookId, STYLE_EXPOSURE_BLOCKED_USER_MESSAGE);
+        await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
+          failureStage: "validation",
+          failureProvider: "system",
+          failureReason: "unknown",
+          retryable: false,
+          technicalErrorMessage: technicalMessage,
+        }));
+        await deps.updateBookStatus(bookId, "failed");
+        return;
+      }
+    }
     const userPlan = await deps.getUserPlan(bookData.userId);
     const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
     const readingProfile = getAgeReadingProfile(mergedInput.childAge);

@@ -1284,3 +1284,133 @@ T5-5 planning verdict:
 - No Firebase Auth changes
 - No Storage token rotation/revocation
 - No service account JSON, secrets, URLs, or tokens recorded
+
+## 18. T5-6 Server-Side Exposure Validation Implementation
+
+### 18.1 Scope
+
+Implemented server-side style exposure validation inside the functions generation path.
+
+Primary changes:
+
+- added `functions/src/lib/style-exposure.ts`
+- added early exposure validation in `functions/src/generate-book.ts`
+- added targeted tests in `functions/test/generate-book.test.ts`
+
+This slice intentionally does **not** add:
+
+- UI changes
+- Firestore schema changes
+- admin override behavior
+- client fallback recommendation UX
+
+### 18.2 Validation Insertion Point
+
+The validation is now performed in `processBookGeneration(...)`:
+
+- after template fetch succeeds
+- before quota-sensitive generation work
+- before story generation
+- before image generation
+
+This matches the T5-5 planning decision that the Firestore-trigger path is the real server-side enforcement point.
+
+### 18.3 Functions Mirror Config
+
+Added a functions-side exposure mirror with:
+
+- canonical style validation
+- legacy style alias normalization
+  - `watercolor -> soft_watercolor`
+  - `flat -> flat_illustration`
+- legacy template alias normalization
+  - `fixed-first-zoo -> fixed-first-zoo-8p`
+  - `fixed-sleepy-moon-adventure -> fixed-sleepy-moon-adventure-8p`
+- minimal exposure matrix for currently product-tracked validated pairings
+
+### 18.4 Enforcement Behavior
+
+Operative pair resolution:
+
+- template side: `bookData.templateId ?? bookData.theme`
+- style side: `bookData.style`
+
+Allow policy:
+
+- `promote`
+- `available`
+
+Fail-closed policy:
+
+- `internal`
+- `blocked`
+- unknown style ids
+- unlisted pairings
+
+Current rollout narrowing:
+
+- enforcement is applied only when `creationMode === "fixed_template"`
+
+Reason:
+
+- this blocks known invalid fixed-template pairings immediately
+- it avoids unintentionally changing existing non-fixed generation behavior in the same slice
+- it keeps T5-6 small, auditable, and production-safe
+
+### 18.5 Failure Recording
+
+Blocked or unvalidated server-side pairings now:
+
+- call `updateBookFailure(...)` with a short user-facing message
+- call `updateBookFailureMetadata(...)` with:
+  - `failureStage: "validation"`
+  - `failureProvider: "system"`
+  - `retryable: false`
+  - `technicalErrorMessage` beginning with `style_exposure_blocked:`
+- mark the book status as `failed`
+- exit before story or image generation starts
+
+### 18.6 Test Coverage
+
+Added targeted coverage for:
+
+- blocked fixed-template pairing fails before generation work
+- unvalidated fixed-template pairing fails before generation work
+
+Also confirmed legacy fixed-template tests still pass after:
+
+- style alias normalization
+- legacy template alias normalization
+
+### 18.7 Validation Results
+
+Executed:
+
+- `npm run guard:hygiene`
+- `npm --prefix functions run build`
+- `npm --prefix functions test -- test/generate-book.test.ts`
+
+Result:
+
+- hygiene: pass
+- functions build: pass
+- targeted functions tests: pass (`48 passed`)
+
+### 18.8 Outcome
+
+T5-6 implementation verdict:
+
+- server-side exposure validation is now active for fixed-template generation
+- known blocked pairing `fixed-first-zoo-8p × anime_storybook` is no longer bypassable through direct Firestore writes
+- unvalidated fixed-template pairings now fail closed on the backend
+
+### 18.9 Follow-Up
+
+Recommended next slice:
+
+- T5-7 server-side validation closure / integration review
+
+Possible later expansion:
+
+- extend the same policy to broader non-fixed product paths after a dedicated audit
+- add server/client recovery guidance if blocked-pair UX needs improvement
