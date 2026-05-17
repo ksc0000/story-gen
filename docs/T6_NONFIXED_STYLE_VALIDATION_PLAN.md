@@ -2069,3 +2069,217 @@ Current status before T6-8:
 - No private image URLs or storage tokens recorded
 - No detailed manual visual QA completion
 - No final pair verdict confirmation
+
+---
+
+## 23. T6-8 - Bedtime x Soft_Watercolor Manual Visual QA / Pair Verdict
+
+Date: 2026-05-17
+
+### 23.1 Scope
+
+- scope: manual visual QA for `bedtime x soft_watercolor` pair (`bookId=uwhwhq3DmuGPekxBVn0a`, `bookId=PFuh3zu7q4VmNn4qA3dU`)
+- unit: `categoryGroupId x styleId` = `bedtime x soft_watercolor`
+- pages reviewed: 8 pages per book, 16 pages total
+- review axes: BF-4, BF-3, style adherence, emotional fit, story-image match, structural carry-over
+- evidence source: Firestore page images/text reviewed page-by-page; no regeneration or post-edit
+
+### 23.2 Book Evidence Record - Book S1 (anchored moderate)
+
+bookId: `uwhwhq3DmuGPekxBVn0a`
+date: 2026-05-17
+theme: bedtime
+categoryGroupId: bedtime
+styleId: soft_watercolor
+creationMode: guided_ai
+childAge: 4
+inputProfile: anchored moderate (`s1`)
+childName: さくら
+parentMessage: きょうもたくさんあそんだね。おきにいりのうさぎさんといっしょに、あたたかいおへやでゆっくりねむろうね。おやすみ、さくら。
+colorMood: soft warm watercolor night
+favorites: うさぎのぬいぐるみ
+childProfileSnapshot: none
+
+#### Structural Health
+
+- total pages generated: 8
+- broken / black images: 0
+- placeholder images: 0
+- structural carry-over: pass (same child identity, pink pajamas, and bunny plush motif remain recognizable across the sequence)
+- verdict: pass
+
+#### BF-4 Safety (per page)
+
+| page | verdict | notes |
+| --- | --- | --- |
+| 0 | pass | no readable text or unsafe symbol cluster |
+| 1 | pass | stars / constellation motif only; no BF-4 trigger |
+| 2 | pass | bedroom scene remains text-free |
+| 3 | pass | close-up crop clean; no embedded lettering |
+| 4 | pass | plush close-up remains safe |
+| 5 | pass | sleeping composition clean |
+| 6 | fail | lower-left quadrant contains a large readable Japanese text block unrelated to the story scene |
+| 7 | pass | quiet ending close-up free of text artifacts |
+
+BF-4 summary verdict: fail
+BF-4 worst surface observed: page 6 lower-left readable Japanese paragraph block; blocking BF-4 artifact.
+
+#### BF-3 Continuity
+
+- child identity consistent across pages: yes
+- age impression consistent: yes
+- hairstyle / outfit consistent: yes
+- notable identity shift (if any): none critical
+- BF-3 summary verdict: pass
+
+#### Style Adherence
+
+- watercolor texture visible: yes
+- soft warm palette present: yes
+- style consistent across pages: yes
+- style distinguishable from crayon / anime_storybook: yes
+- style adherence verdict: strong
+
+#### Emotional Fit
+
+- bedtime mood present: yes
+- child-safe, warm, gentle feeling: yes
+- scene meaning preserved: partial (page 6 composition is emotionally fitting, but the text artifact breaks the intended wordless visual finish)
+- emotional fit verdict: acceptable
+
+#### Story-Image Match
+
+- page text and visual scene alignment: strong on pages 0-5 and 7
+- recurring motif alignment (`fuwafuwa rabbit`, moon/stars, bedtime wind-down): strong
+- mismatch pages: page 6 (blocking readable text overlay introduces a non-story element)
+
+#### LLM-Generated Scene Notes
+
+- notable scenes the LLM invented (not directly from user input): smiling moon face, bunny-shaped star motif in the night sky
+- any scene that introduced unexpected prop complexity: none
+- any scene that produced unexpected setting detail: page 6 inserted a large unrelated readable text block
+
+#### Overall Book Verdict
+
+- verdict: Hold
+- notes: soft watercolor look and bedtime tone are strong overall, but page 6 is a clear BF-4 blocker and prevents book-level clearance.
+
+### 23.3 Book Evidence Record - Book S2 (rich)
+
+bookId: `PFuh3zu7q4VmNn4qA3dU`
+date: 2026-05-17
+theme: bedtime
+categoryGroupId: bedtime
+styleId: soft_watercolor
+creationMode: guided_ai
+childAge: 3
+inputProfile: rich (`s2`)
+childName: けんた
+parentMessage: げんきでよかった。また明日もいっしょに遊ぼうね。おつきさまとおほしさまをみながら、やさしいきもちでねむろうね。おやすみ。
+colorMood: pale cozy night
+favorites: うさぎのぬいぐるみとミニカー
+childProfileSnapshot: none
+
+#### Structural Health
+
+- total pages generated: 8
+- broken / black images: 0
+- placeholder images: 0
+- structural carry-over: pass (same boy identity, blue star pajamas, bunny plush, and bedtime room logic remain coherent)
+- verdict: pass
+
+#### BF-4 Safety (per page)
+
+| page | verdict | notes |
+| --- | --- | --- |
+| 0 | pass | moon / bedroom establishing shot is clean |
+| 1 | pass | no readable text, labels, or signage |
+| 2 | pass | bed close-up free of unsafe marks |
+| 3 | pass | pointing scene contains no text artifact |
+| 4 | pass | plush close-up safe; no readable stitched text |
+| 5 | pass | sleeping scene remains clean |
+| 6 | pass | dream-cloud scene uses symbolic stars only; no BF-4 issue |
+| 7 | pass | ending sleep close-up remains text-free |
+
+BF-4 summary verdict: pass
+BF-4 worst surface observed: none blocking.
+
+#### BF-3 Continuity
+
+- child identity consistent across pages: yes
+- age impression consistent: yes
+- hairstyle / outfit consistent: yes
+- notable identity shift (if any): none
+- BF-3 summary verdict: pass
+
+#### Style Adherence
+
+- watercolor texture visible: yes
+- soft warm / pale night palette present: yes
+- style consistent across pages: yes
+- style distinguishable from crayon / anime_storybook: yes
+- style adherence verdict: strong
+
+#### Emotional Fit
+
+- bedtime mood present: yes
+- child-safe, warm, gentle feeling: yes
+- scene meaning preserved: yes
+- emotional fit verdict: high-fit
+
+#### Story-Image Match
+
+- page text and visual scene alignment: strong overall
+- recurring motif alignment (moon/stars, bunny plush, sleep transition, cozy room): strong
+- mismatch pages: none
+
+#### LLM-Generated Scene Notes
+
+- notable scenes the LLM invented (not directly from user input): rabbit-eye star reflection close-up on page 4, cloud-travel dream scene on page 6
+- any scene that introduced unexpected prop complexity: none
+- any scene that produced unexpected setting detail: dreamy cloud-travel image expands beyond the bedroom but remains aligned with the text's dream-travel beat
+
+#### Overall Book Verdict
+
+- verdict: Go
+- notes: visually coherent, emotionally on-target, and safety-clean across all 8 pages.
+
+### 23.4 Pair Verdict: bedtime x soft_watercolor (L1)
+
+books sampled: 2
+Book S1 (anchored moderate): `uwhwhq3DmuGPekxBVn0a` - verdict: Hold
+Book S2 (rich): `PFuh3zu7q4VmNn4qA3dU` - verdict: Go
+
+BF-4 aggregate: fail
+BF-3 aggregate: pass
+style adherence aggregate: strong
+emotional fit aggregate: high-fit
+story-image match aggregate: strong with one blocker (S1 page 6)
+LLM variability: variable (one profile clean, one profile produced a blocking readable-text artifact)
+
+Final pair verdict: **Hold**
+
+Rationale:
+
+- structural health passed for both books
+- Book S2 demonstrates that `bedtime x soft_watercolor` can produce commercially coherent, bedtime-appropriate output
+- however, S1 page 6 contains a clear BF-4 blocker: a large readable Japanese text block inserted into the illustration
+- pair-level criteria in 21.9 require `BF-4 no fail pages`; that condition is not met
+- therefore the pair is not cleared for promotion yet, despite otherwise strong style and emotional fit
+
+### 23.5 Exclusions (T6-8)
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
