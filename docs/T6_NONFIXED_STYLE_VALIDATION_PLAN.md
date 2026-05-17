@@ -3258,3 +3258,181 @@ Operational conclusion:
 - No private image URLs or storage tokens recorded
 - No S2 regeneration
 - No further S1 retry generation
+
+## 30. T6-15 - Broader Non-Fixed No-Text Hardening Design (Docs-Only)
+
+Date: 2026-05-18
+
+### 30.1 Objective
+
+Define the next-layer remediation design for persistent BF-4 readable-text failures in the non-fixed generation path after the one-off bedtime retry lane failed to converge.
+
+This slice is docs-only design work for the next implementation stage.
+
+Out of scope:
+
+- code changes
+- runner changes
+- new smoke generation
+- pair verdict reopening
+
+### 30.2 Failure Migration Summary
+
+Observed retry history for `bedtime x soft_watercolor`:
+
+| sample | bookId | failing surface | interpretation |
+| --- | --- | --- | --- |
+| original S1 | `uwhwhq3DmuGPekxBVn0a` | page `6` lower-left paragraph-like Japanese block | large accidental text panel style artifact |
+| S1R | `YVsHLGjXJ1svdhzWMDn9` | page `2` shelf-box label `SAKURA` | narrower labeled-surface artifact after local page-6 steering |
+| S1RR | `7silOATa4vPfvfXNHNIt` | pages `0`, `1`, `6` bookshelf / book-cover / spine Japanese text | broader room-object readable print persisted after bedroom-object steering |
+
+What changed across retries:
+
+- the original paragraph block was removable
+- the shelf-box label was removable
+- the broader bedroom bookshelf / book-surface failure remained reproducible
+
+What did not change:
+
+- BF-3 stayed acceptable
+- `soft_watercolor` style adherence stayed strong
+- bedtime emotional fit stayed high-fit
+- S2 control stayed clean and commercially viable
+
+### 30.3 Why One-Off Retries Should Stop
+
+Repeated one-off retries should stop for this pair because:
+
+- the failure is no longer page-specific
+- the failure migrated across different object surfaces instead of disappearing
+- input-profile steering changed *where* the readable text appeared, but did not make the no-text outcome stable
+- additional narrow retries would likely continue moving the artifact among bookshelf, box, print, packaging, or wall-object surfaces without materially de-risking the non-fixed path
+
+Operational reading of T6-8 through T6-14:
+
+- the current retry lane is useful for diagnosis
+- it is not a reliable remediation layer
+- the next change needs to live closer to shared prompt construction, not only smoke-book input phrasing
+
+### 30.4 Existing Guardrail Baseline
+
+Current evidence from the implementation layers:
+
+- non-fixed prompt assembly already includes a broad scene-level rule equivalent to `Do not add readable text, signs, labels, logos, brand marks, numbers, watermarks, or random symbols.`
+- illustration styles, including `soft_watercolor`, already include a generic negative rule equivalent to `Do not add readable text, logos, or watermarks.`
+- fixed-template paths already use more concrete object-surface guardrails for some categories
+- fixed bedtime template guardrails explicitly suppress readable book covers, spine writing, nursery cards, wall art, packaging graphics, and shelf objects
+
+Design implication:
+
+- the current non-fixed guard is too generic for bedroom-object printed surfaces
+- fixed-template evidence suggests concrete surface-level wording is more effective than generic `no text` alone
+
+### 30.5 Hardening Candidate Comparison
+
+| candidate | scope | upside | downside | design verdict |
+| --- | --- | --- | --- | --- |
+| input profile only | smoke inputs such as `parentMessage` / `place` | smallest blast radius, fast to test | already tried indirectly in S1R and S1RR; only relocates failures | reject as primary solution |
+| smoke runner no-text suffix | only smoke generation tool path | useful for experiments | does not protect real production non-fixed generation | reject as final remediation layer |
+| non-fixed prompt assembly | shared guided-ai/original-ai prompt construction | broad protection, applies to real path, can add concrete printed-surface language | needs careful wording to avoid over-constraining scenes | strong candidate |
+| style-specific negative rule | `soft_watercolor` only | targets current pair quickly | issue is not proven style-specific; risks masking broader lane issue | secondary candidate only |
+| categoryGroup-specific guardrail | bedtime group only | good balance of specificity and shared protection for bedroom-like scenes | may miss similar object-surface failures in adjacent indoor categories | strong candidate |
+| fixed-template-like local guardrail | reusable helper pattern modeled after fixed templates | proven pattern, concrete surfaces, maintainable if wrapped well | needs implementation design so it fits non-fixed path cleanly | strong candidate |
+
+### 30.6 Implementation Layer Comparison
+
+Recommended comparison of the requested implementation layers:
+
+#### Input profile only
+
+- good for diagnosis
+- not sufficient for stable BF-4 protection
+- should not be the main T6-16 answer
+
+#### Smoke runner no-text suffix
+
+- acceptable for temporary probing
+- wrong abstraction boundary for production quality control
+- should not carry the long-term guardrail responsibility
+
+#### Non-fixed prompt assembly
+
+- best place for a shared baseline printed-surface suppression clause
+- can apply across all pages regardless of local input phrasing
+- should carry the primary hardening clause
+
+#### Style-specific negative rule
+
+- too narrow as the lead fix because the issue is not yet proven unique to `soft_watercolor`
+- may still be useful later if one style shows higher text-surface susceptibility after shared hardening lands
+
+#### CategoryGroup-specific guardrail
+
+- strong fit for bedtime because the failing surfaces are bedroom bookshelf / book / nursery-prop objects
+- lets us add concrete room-object wording without burdening all non-fixed categories equally
+- should carry the first category-local extension after the shared baseline
+
+#### Fixed-template-like local guardrail
+
+- best structural model for implementation shape
+- lets us encode explicit clauses such as `plain unlabeled shelf objects`, `no readable book covers`, `no spine writing`, `no nursery cards`, `no framed word art`, `no packaging graphics`
+- should be implemented as a reusable helper or clause generator, not as ad hoc string duplication
+
+### 30.7 Recommended T6-16 Direction
+
+Recommended implementation direction for T6-16:
+
+1. add a shared non-fixed prompt-assembly hardening clause for printed surfaces
+2. add a bedtime/categoryGroup-local room-prop no-text clause modeled after fixed-template guardrails
+3. keep style profiles unchanged for the first pass
+4. avoid further smoke-runner-only mitigation except as validation input
+
+Recommended design shape:
+
+- shared baseline clause:
+  - suppress readable text not only on signs/logos, but also on books, book spines, labels, posters, framed prints, packaging, cards, storage bins, toy boxes, and shelf props
+- bedtime-local clause:
+  - describe bedroom props as plain, unlabeled, non-readable, and simplified
+  - explicitly call out bookshelves, nursery cards, wall art, packaging graphics, and container labels
+- implementation style:
+  - follow the fixed-template pattern of composable guardrail helpers rather than embedding one long repeated suffix in many callsites
+
+Why this is the recommended minimum viable broader fix:
+
+- it moves the guardrail into the production non-fixed path
+- it targets the actual migrating failure surface
+- it avoids prematurely blaming `soft_watercolor`
+- it preserves the option to add style-specific hardening later only if shared + category-local protection still proves insufficient
+
+### 30.8 Proposed T6-16 Success Criteria
+
+T6-16 should be considered correctly implemented if it delivers:
+
+- a shared non-fixed no-text hardening layer beyond the current generic `no readable text` wording
+- a bedtime/category-local room-object printed-surface guardrail
+- no runner-only dependency for the production fix
+- no style exposure matrix change
+- no style profile change in the first pass
+
+Validation expectations after implementation:
+
+- retry generation should test whether bookshelf / book-cover / spine text disappears without harming BF-3, bedtime emotional fit, or `soft_watercolor` adherence
+- if readable text still persists after this broader hardening, escalate to style-specific or deeper prompt-policy changes rather than more ad hoc S1 retries
+
+### 30.9 Exclusions
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
