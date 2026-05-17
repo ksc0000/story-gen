@@ -3138,3 +3138,123 @@ Current status before T6-14:
 - No private image URLs or storage tokens recorded
 - No detailed manual visual QA completion
 - No final pair verdict confirmation
+
+## 29. T6-14 - Bedtime x Soft_Watercolor S1RR Manual Visual QA / Pair Re-Evaluation
+
+Date: 2026-05-18
+
+### 29.1 Scope
+
+Perform manual visual QA for the T6-13 retry book `7silOATa4vPfvfXNHNIt` and reassess the pair using:
+
+- Book S1RR retry: `7silOATa4vPfvfXNHNIt`
+- existing clean control Book S2: `PFuh3zu7q4VmNn4qA3dU`
+
+Out of scope for this slice:
+
+- further regeneration
+- runner or functions changes
+- style profile changes
+- S2 regeneration
+
+### 29.2 Priority BF-4 Checks
+
+Priority checks requested for T6-14:
+
+- page `2` shelf / storage surfaces
+- page `6` regression versus the original S1 Japanese paragraph blocker
+- full-book sweep for additional bedroom-object readable text surfaces
+
+Priority-check result:
+
+- page `2`: **pass** for BF-4; the prior `SAKURA` shelf-box blocker from S1R did not recur
+- page `6`: original lower-left Japanese paragraph blocker did not recur, but new readable book-spine text remained on the right bookshelf
+- additional full-book sweep found comparable readable bookshelf / book-cover text on pages `0` and `1`
+
+### 29.3 Manual Visual QA Notes
+
+#### Book S1RR - `7silOATa4vPfvfXNHNIt`
+
+| page | visual QA notes |
+| --- | --- |
+| 0 | Cozy bedtime setup and strong watercolor mood, but right bookshelf contains multiple readable Japanese book-cover / spine text elements; **BF-4 fail** |
+| 1 | Calm room-lighting scene fits bedtime tone, but readable Japanese text remains on right-side bookshelf objects; **BF-4 fail** |
+| 2 | Child-in-bed bunny scene is warm and commercially strong; no readable shelf / storage text found; BF-4 pass |
+| 3 | Intimate bunny cuddle close-up is clean and emotionally strong; BF-4 pass |
+| 4 | Soft bunny detail shot remains clean, gentle, and on-style; BF-4 pass |
+| 5 | Quiet imagination / sleep-transition scene is clean; BF-4 pass |
+| 6 | Original paragraph-block regression is resolved, but right bookshelf still shows readable Japanese book-spine text; **BF-4 fail** |
+| 7 | Sleep ending lands softly and appears clean at manual QA level; BF-4 pass |
+
+Visual strengths that remained stable:
+
+- `soft_watercolor` adherence stayed strong across all pages
+- bedtime emotional fit stayed high-fit
+- story-image match stayed strong
+- BF-3 continuity remained acceptable across the full book
+
+Observed blocker pattern after the T6-13 retry:
+
+- the page `2` shelf-box surface improved as intended
+- BF-4 failure did not disappear; it migrated to broader bookshelf / book-object surfaces
+- readable text now appears in multiple bedroom-object locations rather than one isolated page surface
+
+### 29.4 Book-Level Verdict
+
+| sample | bookId | profile | verdict | rationale |
+| --- | --- | --- | --- | --- |
+| Book S1RR | `7silOATa4vPfvfXNHNIt` | bedroom-object no-text retry / `s1rr` | **Hold** | BF-4 fails remain on pages `0`, `1`, and `6` due to readable bookshelf / book-surface text despite otherwise strong style and emotional fit |
+
+### 29.5 Pair Re-Evaluation
+
+Pair comparison set used for re-evaluation:
+
+| sample | bookId | status in pair review |
+| --- | --- | --- |
+| Book S1RR | `7silOATa4vPfvfXNHNIt` | retry candidate under review |
+| Book S2 | `PFuh3zu7q4VmNn4qA3dU` | clean control retained from T6-8 |
+
+Pair verdict after T6-14:
+
+| pair | verdict |
+| --- | --- |
+| `bedtime x soft_watercolor` | **Hold** |
+
+Reasoning:
+
+- Book S2 remains clean and commercially viable control evidence
+- Book S1RR improved the earlier localized blockers but still failed pair-clearing BF-4 criteria
+- the T6-12 escalation rule is triggered because readable text persists on bedroom-object surfaces after the broader room-no-text retry
+
+### 29.6 Interpretation
+
+What T6-14 shows:
+
+- the issue is no longer well-described as a single page-specific defect
+- the issue is now better described as persistent bedroom bookshelf / book-surface readable text generation within the non-fixed lane
+- `soft_watercolor` remains visually strong for bedtime, but current no-text suppression is not stable enough to clear BF-4
+
+Operational conclusion:
+
+- stop one-off S1 retries at this stage
+- keep `bedtime x soft_watercolor` at **Hold**
+- move next work, if any, to broader non-fixed no-text hardening rather than another narrow sample retry
+
+### 29.7 Exclusions
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No S2 regeneration
+- No further S1 retry generation
