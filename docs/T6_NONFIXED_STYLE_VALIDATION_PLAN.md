@@ -10600,3 +10600,117 @@ This supersedes the T6-47 definition written in Section 61.7.
 **Tier 2 gate**: RESOLVED ✅
 **Remaining blocker**: Organization Identity review approval (submitted, awaiting OpenAI decision).
 **Next milestone**: Identity approved → T6-48 smoke re-run.
+
+## Section 63: T6-48 — OpenAI I2 Smoke Re-run (post Identity Approval) (2026-05-18)
+
+### 63.1 Context
+
+T6-47 confirmed that Organization Identity review was submitted. The human operator confirmed:
+- Organization Identity: **approved** (identity review completed by OpenAI)
+- Usage Tier: **Tier 2** (confirmed)
+- Selected strategy: **Option A** (I2 reference path via Responses API)
+
+T6-48 re-runs the I2 smoke with the identity gate resolved.
+
+### 63.2 Pre-run Checks
+
+| Check | Result |
+| --- | --- |
+| git status | clean, on `origin/main` at `02a6921` |
+| hygiene | PASS |
+| `OPENAI_API_KEY` Secret | present (Firebase Secret Manager) |
+| Functions deployed | `generateBook` v2 (asia-northeast1) active |
+| Code changes since T6-45 | none (T6-46, T6-47 were docs-only) |
+| Reference image URL | `https://story-gen-8a769.web.app/images/templates/animals.png` — HTTP 200 ✅ |
+
+### 63.3 Smoke Run 1 (Diagnostic) — Identity gate resolved, new failure uncovered
+
+**bookId**: `smoke-openai-i2-1779113477267`
+**Run time**: 2026-05-18
+
+| Metric | Value |
+| --- | --- |
+| book status | `failed` |
+| completed pages | 0/8 |
+| image_failed pages | 8/8 |
+| `usedCharacterReference` | `true` (all pages) |
+| `inputReferenceCount` | 1 (all pages) |
+| `imageAttemptCount` | 2 (all pages — primary + retry, same profile) |
+| `imageFailureReason` | `"No image output from OpenAI Responses API"` |
+| previous 403 error | **GONE** ✅ — Identity gate confirmed resolved |
+
+**Root cause analysis**: The 403 `Your organization must be verified to use the model gpt-4o` error from T6-45 is no longer present. The Responses API call reaches `gpt-4o` but returns without an `image_generation_call` in the output. Diagnosis: `tool_choice` was not specified in the `responses.create()` call. Without `tool_choice: { type: "image_generation" }`, `gpt-4o` defaults to `tool_choice: "auto"` and may respond with text instead of invoking the image_generation tool. Timing (5–13s per attempt) is consistent with a fast text-only response, not image generation.
+
+### 63.4 Code Fix: `tool_choice` Added to Responses API Call
+
+**File**: `functions/src/lib/openai-image.ts`
+
+Added `tool_choice: { type: "image_generation" }` to the `responses.create()` call in `generateWithReferenceImages()`:
+
+```diff
+  tools: [{ type: "image_generation", moderation: this.opts.moderation, size: this.opts.size, quality: this.opts.quality }],
++ tool_choice: { type: "image_generation" },
+```
+
+This forces `gpt-4o` to invoke the `image_generation` built-in tool instead of optionally choosing text response. The fix is minimal and targeted — no routing or profile changes.
+
+**Build**: `cd functions && npm run build` — PASS
+**Tests**: 691/691 — PASS
+**Deploy**: `generateBook` (asia-northeast1) — re-deployed successfully
+
+### 63.5 Smoke Run 2 (Final) — I2 PASS
+
+**bookId**: `smoke-openai-i2-1779114815350`
+**Run time**: 2026-05-18
+
+| Metric | Value |
+| --- | --- |
+| book status | `completed` ✅ |
+| completed pages | 8/8 ✅ |
+| image_failed pages | 0/8 ✅ |
+| `imageModelProfile` (per page) | `openai_image_candidate` (all pages) ✅ |
+| `imageFallbackUsed` | `undefined` — no fallback used ✅ |
+| `imageAttemptCount` | 1 (all pages) ✅ |
+| `imageTimedOut` | `undefined` ✅ |
+| `usedCharacterReference` | `true` (all pages) ✅ |
+| `inputReferenceCount` | 1 (all pages) ✅ |
+| `imageDurationMs` (range) | 28,746–51,998 ms (p50 ~33s) |
+| `imageModel` field (Firestore) | `black-forest-labs/flux-2-klein-9b` (static metadata — see Note) |
+
+> **Note on `imageModel` field**: The `imageModel` field in Firestore is pre-computed by `resolveReplicateModel()` before generation and returns the default Replicate model name for unrecognized profiles (e.g., `openai_image_candidate` → `klein_fast` → `flux-2-klein-9b`). This is a legacy metadata artifact and does NOT indicate Replicate was used. The authoritative field is `imageModelProfile: openai_image_candidate`, confirmed on all 8 pages. No fallback was used (`imageFallbackUsed: undefined`, `imageAttemptCount: 1`).
+
+### 63.6 Success Criteria Check
+
+| Criterion | Target | Actual | Result |
+| --- | --- | --- | --- |
+| `image_failed` pages | ≤ 2/8 | 0/8 | ✅ PASS |
+| `usedCharacterReference` | `true` all pages | `true` (8/8) | ✅ PASS |
+| `imageModelProfile` | `openai_image_candidate` | confirmed (8/8) | ✅ PASS |
+| No fallback used | `imageFallbackUsed` undefined | undefined (8/8) | ✅ PASS |
+
+**T6-48 result: I2 PASS** ✅
+
+### 63.7 Findings Summary
+
+| Finding | Detail |
+| --- | --- |
+| 403 Identity gate | RESOLVED — error is gone after Identity approval |
+| New bug found | `tool_choice` not set → gpt-4o responded with text (Run 1) |
+| Fix applied | `tool_choice: { type: "image_generation" }` in `openai-image.ts` |
+| I2 path functional | Responses API + reference images works after fix |
+| Reference path used | `usedCharacterReference: true`, `inputReferenceCount: 1` on all pages |
+| Fallback required | No — `imageAttemptCount: 1`, `imageFallbackUsed: undefined` |
+| imageDuration p50 | ~33s (28–52s range) |
+
+### 63.8 Overall OpenAI Validation State (as of T6-48)
+
+| Capability | Mode | API Path | Status | Remaining gate |
+| --- | --- | --- | --- | --- |
+| Text-to-image generation | — | Images API / gpt-image-1-mini | ✅ I1 PASS | None |
+| Visual QA (structural) | — | — | ✅ CONDITIONAL PASS | Human review pending |
+| Reference image consistency | all_pages | Responses API / gpt-4o | ✅ I2 PASS | None |
+
+**403 Identity gate**: RESOLVED ✅
+**Tier 2 gate**: RESOLVED ✅
+**tool_choice fix**: applied and deployed ✅
+**Next milestone**: T6-49 — I2 manual visual QA (reference image consistency quality check).

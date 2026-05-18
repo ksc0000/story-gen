@@ -117,6 +117,7 @@ export class OpenAIImageClient implements ImageClient {
         },
       ],
       tools: [{ type: "image_generation", moderation: this.opts.moderation, size: this.opts.size, quality: this.opts.quality }],
+      tool_choice: { type: "image_generation" },
     });
 
     // Extract image from Responses API output

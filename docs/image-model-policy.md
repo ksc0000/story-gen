@@ -723,3 +723,56 @@ Resolve the account-tier gate, then re-run I2 smoke as T6-47.
 | Responses API (gpt-4o) | ⏳ WAITING — Identity review (Tier 2 resolved) |
 | reference path code | ✅ Ready (no code change needed) |
 | 次フェーズ | T6-48: I2 smoke re-run (trigger: Identity review approved) |
+
+---
+
+## T6-48 Update: I2 Smoke PASS (2026-05-18)
+
+### Identity Gate Resolved
+
+Organization Identity review was approved by OpenAI. Usage Tier 2 confirmed.
+T6-48 re-ran the I2 smoke (`node scripts/create-openai-i2-smoke-book.js --write`).
+
+### Run 1 (Diagnostic): New Bug Found
+
+**bookId**: `smoke-openai-i2-1779113477267`
+
+The 403 error (`Your organization must be verified to use the model gpt-4o`) from T6-45 is **gone** — Identity gate confirmed resolved. However, a new failure was found:
+
+- `imageFailureReason: "No image output from OpenAI Responses API"` on all 8 pages
+- `imageAttemptCount: 2` (primary + retry, same profile)
+- **Root cause**: `tool_choice` not set in `responses.create()` → `gpt-4o` with `tool_choice: "auto"` responded with text instead of calling the `image_generation` tool. Timing (5–13s per attempt) confirmed text-only response pattern.
+
+### Code Fix Applied
+
+**`functions/src/lib/openai-image.ts`** — Added `tool_choice: { type: "image_generation" }` to the Responses API call to force `gpt-4o` to invoke the `image_generation` built-in tool.
+
+- Build: PASS | Tests: 691/691 PASS
+- `generateBook` re-deployed (asia-northeast1)
+
+### Run 2 (Final): I2 PASS
+
+**bookId**: `smoke-openai-i2-1779114815350`
+
+| Metric | Result |
+| --- | --- |
+| book status | `completed` ✅ |
+| completed pages | 8/8 ✅ |
+| image_failed pages | 0/8 ✅ |
+| `imageModelProfile` | `openai_image_candidate` (all pages) ✅ |
+| `imageFallbackUsed` | `undefined` — no fallback ✅ |
+| `imageAttemptCount` | 1 (all pages) ✅ |
+| `usedCharacterReference` | `true` (all pages) ✅ |
+| `inputReferenceCount` | 1 (all pages) ✅ |
+| `imageDurationMs` range | 28–52s |
+
+**T6-48: I2 PASS** ✅
+
+### Updated OpenAI Validation State
+
+| Capability | API Path | Status |
+| --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS |
+| Reference image consistency | Responses API / gpt-4o | ✅ **I2 PASS** |
+
+**Next**: T6-49 — I2 manual visual QA (reference image consistency quality check).
