@@ -626,3 +626,49 @@ After 5 attempts over 60+ minutes, error persists. This is an account-tier gate.
 | Responses API (gpt-4o) | ❌ BLOCKED — account-tier gate |
 | reference path code | ✅ Correct (routing confirmed) |
 | 次フェーズ | T6-46: resolve tier gate OR redesign reference path |
+
+---
+
+### T6-46: OpenAI Reference Path Unblock Decision (2026-05-18)
+
+**Decision: Option A — Unblock gpt-4o via Organization Verification + Tier 2 upgrade**
+
+Do NOT pivot to alternative API paths or providers at this stage.
+Resolve the account-tier gate, then re-run I2 smoke as T6-47.
+
+**Blocker summary**:
+
+| Axis | Requirement | Note |
+| --- | --- | --- |
+| Organization Verification | Identity verification via platform.openai.com | Submit + await approval (1–3 business days) |
+| Usage Tier | Tier 2+ ($50+ cumulative API spend) | Auto-promotion once threshold met |
+
+**Key fact**: `gpt-image-1-mini` via Images API works without this gate (I1 PASS ✓).
+`gpt-4o` via Responses API requires Org Verification AND Tier 2+.
+
+**Human action list** (required before T6-47):
+1. Complete Organization Verification at https://platform.openai.com/settings/organization/general
+2. Confirm Tier 2+ at https://platform.openai.com/settings/organization/limits
+3. Manually verify `gpt-4o` access returns 200 (not 403)
+4. Trigger T6-47 smoke re-run
+
+**No code changes required** — implementation is ready and correct.
+
+**Fallback** (if Org Verification denied):
+- `/v1/images/edits` endpoint with `gpt-image-1` (different tier requirements, single-turn only)
+- Or accept `cover_only` mode as validated capability for now
+
+**T6-47 definition**: I2 smoke re-run after Tier 2 unblock
+- Prerequisites: Org Verified + Tier 2+ + gpt-4o test returns 200
+- Script: `node scripts/create-openai-i2-smoke-book.js --write`
+- Success: image_failed ≤ 2/8, usedCharacterReference=true all pages
+- Pass → T6-48 (I2 manual visual QA)
+
+**ペアステータス**:
+
+| 項目 | 状態 |
+| --- | --- |
+| Images API (gpt-image-1-mini) | ✅ I1 CONDITIONAL PASS (T6-44) |
+| Responses API (gpt-4o) | ❌ BLOCKED — awaiting Org Verification + Tier 2 |
+| reference path code | ✅ Ready (no code change needed for T6-47) |
+| 次フェーズ | T6-47: I2 smoke re-run (human prerequisite: Tier 2 unblock) |

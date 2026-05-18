@@ -10347,3 +10347,153 @@ required. See: https://platform.openai.com/docs/guides/rate-limits#usage-tiers
 - Code changes in this task (gpt-4o model fix, responsesModel field) are correct and
   represent the right architecture for when access becomes available
 - Commit and push current changes as T6-45 work product
+
+---
+
+## Section 61: T6-46 — OpenAI Reference Path Unblock Decision: Option A (2026-05-18)
+
+### 61.1 Decision
+
+**Adopted: Option A — Unblock gpt-4o via Organization Verification + Tier upgrade**
+
+Do NOT pivot to `/v1/images/edits` workaround or alternative providers at this stage.
+The existing Responses API routing code is architecturally correct. The only blocker is
+account access. Resolve the account-tier gate, then re-run I2 smoke as T6-47.
+
+**Rationale**:
+- Code routing is verified correct (usedCharacterReference=true, inputReferenceCount=1)
+- gpt-4o is the documented model for Responses API `image_generation` tool
+- Re-architecting to `/v1/images/edits` adds implementation cost without clear benefit
+- OpenAI Tier 2 upgrade is low cost ($50 API spend) and unblocks the intended path
+- Option A keeps the architecture aligned with OpenAI's recommended Responses API design
+
+### 61.2 Blocker Analysis
+
+**Error**: `403 Your organization must be verified to use the model gpt-4o`
+
+The blocker has two independent axes:
+
+| Axis | Requirement | Status |
+| --- | --- | --- |
+| Organization Verification | Identity/business verification via platform.openai.com | Unknown — may be incomplete |
+| Usage Tier | Tier 2+ requires $50+ cumulative API spend | Unknown — likely Tier 1 |
+
+**Key finding from API docs** (OpenAI developers.openai.com, 2026-05-18):
+- For Responses API: "gpt-5 and newer models should support the image generation tool"
+- Organization Verification is required "before using GPT Image models" AND for `gpt-4o` Responses access
+- `gpt-image-1-mini` via Images API (`/v1/images/generations`) works without this gate (I1 PASS ✓)
+- The two APIs have different access gates: Images API is more permissive for mini models
+
+**Why gpt-4o specifically fails**:
+`gpt-4o` is a "mainline" language model with multimodal capabilities — distinct from `gpt-image-1`
+family. OpenAI gates `gpt-4o` API access to verified organizations to prevent misuse.
+
+### 61.3 Human Action Checklist
+
+The following actions must be completed by the operator **before T6-47 can proceed**:
+
+**Step 1: Organization Verification**
+- URL: https://platform.openai.com/settings/organization/general
+- Action: Click "Verify Organization" and complete the identity verification flow
+- Documents typically required: government-issued ID (individual) or business registration docs
+- Timeline: Approval can take 1–3 business days after submission
+- Verify completion: Status should show "Verified" on the organization settings page
+
+**Step 2: Confirm API Usage Tier**
+- URL: https://platform.openai.com/settings/organization/limits
+- Check current tier: Tier 1 requires no prior spend; Tier 2 requires $50+ cumulative spend
+- If on Tier 1: Make a small API payment / ensure $50+ in usage to trigger Tier 2 promotion
+- Note: Tier promotion is automatic once threshold is reached
+
+**Step 3: Verify gpt-4o Access**
+After verification and tier upgrade, test directly:
+```
+curl https://api.openai.com/v1/responses \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-4o","input":"test","tools":[{"type":"image_generation"}]}'
+```
+Expected: 200 with image output (not 403)
+
+**Step 4: Notify and run T6-47**
+Once Steps 1–3 are verified, re-run I2 smoke (T6-47).
+
+### 61.4 Responses API Model Selection — T6-47 Readiness
+
+Current implementation in `openai-image.ts`:
+```typescript
+// Correct — gpt-4o is the right model for Responses API image_generation tool
+OPENAI_IMAGE_CANDIDATE_PROFILE.responsesModel = "gpt-4o"
+```
+
+If `gpt-4o` remains restricted after verification, try these models in order:
+1. `"gpt-4o"` — current setting (documented baseline)
+2. `"gpt-4o-mini"` — lower-cost mainline model; may support `image_generation` tool
+3. `"gpt-4.5"` / `"gpt-5"` — newer mainline models if available on the account
+
+No code changes are needed before T6-47. Only the account-tier gate must be resolved.
+
+### 61.5 Fallback Branch (if Option A cannot be resolved)
+
+If Organization Verification is denied OR Tier 2 upgrade is not feasible:
+
+**Fallback: `/v1/images/edits` endpoint**
+
+The Image Edits API (`POST /v1/images/edits`) accepts reference images alongside a text prompt
+and generates a new image using `gpt-image-1`. This is a different API path from the Responses
+API, and may have different tier requirements.
+
+| Item | Responses API (current) | Images/Edits API (fallback) |
+| --- | --- | --- |
+| Endpoint | `/v1/responses` | `/v1/images/edits` |
+| Model | `gpt-4o` (requires Tier 2+) | `gpt-image-1` (may work at Tier 1) |
+| Reference image input | `input_image` in message array | `image` + optional `mask` params |
+| Generation output | `image_generation_call` in `output` | base64 in `data[0].b64_json` |
+| Multi-turn support | Yes | No |
+| Implementation change | None (current code) | New `generateWithEditsAPI()` method |
+
+Fallback decision criteria:
+- Only pursue if Option A is explicitly blocked (e.g., organization verification denied)
+- Implementation cost: ~1–2 days (new method, same interface)
+- Functional difference: single-turn only (acceptable for storybook page generation)
+
+### 61.6 Alternative: Accept cover_only as Current Validated Capability
+
+If neither Option A nor Fallback B is feasible within the project timeline:
+
+- The `cover_only` characterConsistencyMode is already working with `gpt-image-1-mini`
+- This means reference images are used for the **cover page only** (not all pages)
+- The `all_pages` mode can be gated behind a "Tier 2 available" feature flag
+- Document `cover_only` as "validated" and `all_pages` as "pending Tier 2 access"
+
+This option requires no code change and no deployment.
+
+### 61.7 T6-47 Definition
+
+**T6-47: OpenAI I2 Smoke Re-run (post Tier 2 unblock)**
+
+**Prerequisites** (all must be satisfied):
+1. Organization Verification approved at platform.openai.com
+2. API Tier confirmed as Tier 2+
+3. gpt-4o test request returns 200 (manual curl verification)
+
+**Scope**:
+- Re-run `node scripts/create-openai-i2-smoke-book.js --write`
+- Wait for generation, inspect result
+- Success: image_failed ≤ 2/8 AND usedCharacterReference=true all pages
+- Pass → proceed to T6-48 (I2 manual visual QA)
+- Fail → investigate specific error (moderation, prompt, timeout)
+
+**No code changes required** — the existing implementation is ready.
+
+### 61.8 Overall OpenAI Validation State (as of T6-46)
+
+| Capability | Mode | API Path | Status | Blocker |
+| --- | --- | --- | --- | --- |
+| Text-to-image generation | — | Images API / gpt-image-1-mini | ✅ I1 PASS | None |
+| Visual QA (structural) | — | — | ✅ CONDITIONAL PASS | Human review pending |
+| Reference image consistency | cover_only | Responses API / gpt-4o | ❌ BLOCKED | Tier 2 + Org Verification |
+| Reference image consistency | all_pages | Responses API / gpt-4o | ❌ BLOCKED | Tier 2 + Org Verification |
+
+**Working today**: OpenAI `gpt-image-1-mini` via Images API for text-to-image (no reference).
+**Blocked**: All reference-image paths until gpt-4o access is granted.
