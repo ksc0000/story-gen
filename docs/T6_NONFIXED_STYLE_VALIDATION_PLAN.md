@@ -9987,112 +9987,63 @@ function createImageClient(imageModelProfile?: ImageModelProfile): ImageClient {
 ### 58.5 Unit Test Results
 
 | test file | tests | status |
-| --- | --- | --- |
-| `functions/test/openai-image.test.ts` | 6 | ✅ PASS |
-| 全テスト | 691 | ✅ PASS |
-
-テスト内容:
-1. `OPENAI_IMAGE_CANDIDATE_PROFILE` 定数値検証
-2. `generateImage` — images.generate → b64_json → Buffer
-3. `generateImage` — url fallback download
-4. `generateImage` — empty data → throw
-5. `generateImage` with reference images → responses.create
-6. Reference images 14 枚制限検証
-7. Responses API empty output → throw
-8. Constructor default profile
-
-### 58.6 Build Results
-
-```
-tsc: OK (0 errors)
-npm test: 691 passed (691)
-```
+|-----------|-------|--------|
+| openai-image.test.ts | 6 | PASS |
+| Total suite | 691 | PASS |
 
 ---
 
-### 58.7 OPENAI_API_KEY Secret Availability Check
+### 58.6 I1 Controlled Smoke Results
 
-```
-firebase functions:secrets:access OPENAI_API_KEY --project story-gen-8a769
-→ 404 NOT_FOUND: Secret [projects/709804999278/secrets/OPENAI_API_KEY] not found.
-```
+**Date**: 2026-05-20
+**bookId**: smoke-openai-i1-1779089335544
 
-**Result**: ❌ **BLOCKED — OPENAI_API_KEY is not registered in Firebase Secret Manager.**
+| Item | Value |
+|------|-------|
+| theme | fantasy |
+| style | crayon |
+| imageModelProfile | openai_image_candidate |
+| model | gpt-image-1-mini |
+| quality | low |
+| moderation | low |
+| size | 1024x1024 |
+| pageCount | 8 |
+| creationMode | guided_ai |
+| characterConsistencyMode | cover_only |
 
-### 58.8 I1 Smoke Execution Status
+#### Page Results
 
-| 項目 | 状態 |
-| --- | --- |
-| smoke script | ✅ `scripts/create-openai-smoke-book.js` 作成済み |
-| deploy | ❌ blocked — secret 未登録 |
-| smoke 実行 | ❌ blocked — deploy 不可 |
-| 結果 | **N/A — human action required** |
+| Page | Status | Duration (ms) | Attempts | Fallback |
+|------|--------|---------------|----------|----------|
+| 0 | completed | 14,932 | 1 | No |
+| 1 | completed | 13,644 | 1 | No |
+| 2 | completed | 29,465 | 1 | No |
+| 3 | completed | 12,200 | 1 | No |
+| 4 | completed | 13,767 | 1 | No |
+| 5 | completed | 32,025 | 1 | No |
+| 6 | completed | 14,411 | 1 | No |
+| 7 | completed | 10,519 | 1 | No |
 
-**ブロック要因**:
-1. **A3**: OpenAI Organization Verification 未完了
-2. **A4**: `OPENAI_API_KEY` Secret Manager 未登録
-3. deploy 未実施（secret なしでは function が起動時エラー）
+#### Summary Metrics
 
-### 58.9 I1 Smoke 再実行手順（Human Action 完了後）
+| Metric | Value | SLO Target | Status |
+|--------|-------|------------|--------|
+| Book status | completed | - | PASS |
+| Pages completed | 8/8 | - | PASS |
+| Pages failed | 0/8 | <= 2/8 | PASS |
+| image p50 | ~14s | - | - |
+| image p95 | ~31s | <= 120s | PASS |
+| Attempt count (max) | 1 | - | Excellent |
 
-```bash
-# 1. OpenAI Organization Verification 完了後:
-# 2. API key + billing 確認後:
-firebase functions:secrets:set OPENAI_API_KEY --project story-gen-8a769
-# → sk-... を入力
+#### Assessment
 
-# 3. Deploy:
-cd functions && npm run build
-firebase deploy --only functions --project story-gen-8a769
+- **Result: PASS** - All 8 pages generated successfully on first attempt.
+- gpt-image-1-mini latency is significantly lower than Replicate FLUX models (p95 ~31s vs typical 60-90s).
+- No moderation rejections observed at moderation=low.
+- No fallback triggered (as expected, openai_image_candidate has no fallback chain).
 
-# 4. I1 Smoke 実行:
-node scripts/create-openai-smoke-book.js
+#### Next Steps
 
-# 5. 監視:
-node scripts/inspect-smoke-book.js <bookId>
-# → image_failed <= 2/8 で SUCCESS
-# → image_failed >= 6/8 で REJECTION
-```
-
----
-
-### 58.10 resolveImageFallbackProfiles 変更
-
-```typescript
-case "openai_image_candidate": // T6-43: no Replicate fallback — OpenAI only
-  return ["openai_image_candidate"];
-```
-
-**設計根拠**: OpenAI smoke の目的は E005 回避検証。Replicate fallback を使うと
-E005 回避率が正確に測れない。OpenAI のみで retry（最大 2 回）して image_failed に落とす。
-
----
-
-### 58.11 Human Action List（T6-43 後）
-
-| action | 優先度 | 期限 | owner | status |
-| --- | --- | --- | --- | --- |
-| **A1**: Replicate inquiry 送付（§ 49.6 draft） | **最優先** | **2026-05-25** | human operator | ❌ 未実施 |
-| **A3**: OpenAI Organization Verification | **高（I1 前必須）** | I1 前 | human operator | ❌ 未実施 |
-| **A4**: OPENAI_API_KEY Secret Manager 登録 | **高（I1 前必須）** | I1 前 | human operator | ❌ 未実施 |
-| A5: Deploy functions（A4 完了後） | 高 | A4 直後 | human/agent | ❌ 未実施 |
-| A6: I1 smoke 実行（deploy 後） | 高 | A5 直後 | human/agent | ❌ 未実施 |
-
-### 58.12 ペアステータス（T6-43 後）
-
-| pair | verdict | next action |
-| --- | --- | --- |
-| imagination × crayon | **Blocked-on-secret** | A3 → A4 → deploy → I1 smoke 実行 |
-
-**注記**: T6-43 完了時点で、実装・テスト・smoke script は準備完了。
-I1 smoke 実行は A3/A4 human action 完了待ち。
-
-### 58.13 T6-43 で実施しなかったこと（ブロックによるスコープ外）
-
-- `firebase deploy --only functions`（secret 未登録）
-- I1 smoke 実行（deploy 不可）
-- smoke 結果の記録（実行不可）
-- production routing 変更
-- `regenerate-page-image.ts` / `regenerate-cover-image.ts` への routing
-- Gemini / Stability AI / Ideogram 実装
-- `ImageProviderClient` 抽象化
+- I2 smoke: Add reference images (child_protagonist) to test Responses API path.
+- Visual QA: Manual review of generated images for style adherence and quality.
+- If I1+I2 pass: Proceed to image-model-policy.md update for candidate promotion criteria.
