@@ -10497,3 +10497,106 @@ This option requires no code change and no deployment.
 
 **Working today**: OpenAI `gpt-image-1-mini` via Images API for text-to-image (no reference).
 **Blocked**: All reference-image paths until gpt-4o access is granted.
+
+---
+
+## Section 62: T6-47 — Usage Tier 2 Reached / Organization Identity Review Tracking (2026-05-18)
+
+### 62.1 Scope
+
+This section is a **docs-only tracking / readiness decision** entry.
+
+No code changes, no deploy, no smoke run, no image generation, no visual QA were performed in this task.
+
+The purpose is to record the human-confirmed account state update and re-assess I2 smoke readiness.
+
+### 62.2 Account State Update (Human-Confirmed, 2026-05-18)
+
+| Axis | T6-46 state | T6-47 state | Delta |
+| --- | --- | --- | --- |
+| Usage Tier | Tier 1 (below $50) | **Tier 2 ✅ reached** | RESOLVED |
+| Organization Identity | Not started | **Identity in review 🔄** | Submitted, pending approval |
+
+**Tier 2 Axis**: RESOLVED. Credit / spend threshold met; account auto-promoted to Tier 2.
+
+**Identity Axis**: PARTIALLY unblocked. Organization Verification submitted and under review. Not yet approved. Approval is required before `gpt-4o` Responses API calls will succeed.
+
+### 62.3 T6-45 Blocker Decomposition Update
+
+T6-45 established that the 403 `Your organization must be verified to use the model gpt-4o` error is caused by TWO independent gates. Status after T6-47 human actions:
+
+| Gate | Gate type | Required | T6-45 state | T6-47 state |
+| --- | --- | --- | --- | --- |
+| Usage Tier | API spend threshold | Tier 2+ ($50+ cumulative) | ❌ Not met | ✅ Met |
+| Organization Identity | Identity verification | Org Verified by OpenAI | ❌ Not submitted | 🔄 In review |
+
+**Conclusion**: Tier 2 gate is no longer a blocker. Identity review gate is the sole remaining blocker.
+
+### 62.4 I2 Retry Prohibition (updated)
+
+I2 smoke (`characterConsistencyMode: all_pages`, Responses API, gpt-4o) must NOT be retried until:
+
+- [x] ~~Usage Tier 2+ reached~~ ✅ DONE
+- [ ] Organization Identity review **approved** (not just submitted)
+
+Submitting the identity review does NOT guarantee the next attempt will succeed. Premature retry wastes credits and produces misleading failure logs. Do NOT retry until identity is confirmed as approved at platform.openai.com/settings/organization/general.
+
+### 62.5 I2 Retry Permission Criteria (updated for T6-47)
+
+Retry is permitted **only when ALL of the following are true**:
+
+| # | Condition | How to verify |
+| --- | --- | --- |
+| 1 | Tier 2+ confirmed | platform.openai.com/settings/organization/limits → Usage tier shows Tier 2 or higher |
+| 2 | Identity review approved | platform.openai.com/settings/organization/general → Verification status = Verified |
+| 3 | Manual gpt-4o test passes | `curl` or Playground call via Responses API returns 200 (not 403) |
+
+When all three are met → proceed to T6-48 (I2 smoke re-run).
+
+### 62.6 Human Action List (updated)
+
+| # | Action | Status |
+| --- | --- | --- |
+| 1 | Reach Usage Tier 2+ ($50+ cumulative spend) | ✅ Done |
+| 2 | Submit Organization Verification | ✅ Done (identity in review) |
+| 3 | **Await identity approval** from OpenAI (check platform.openai.com) | ⏳ Pending |
+| 4 | Manual gpt-4o test: Responses API call returns 200 | ⏳ Blocked by step 3 |
+| 5 | Trigger T6-48 smoke re-run | ⏳ Blocked by steps 3–4 |
+
+No further human actions are currently possible — waiting for OpenAI identity review completion.
+
+### 62.7 T6-48 Definition (updated)
+
+**T6-48: OpenAI I2 Smoke Re-run (post Identity Approval)**
+
+This supersedes the T6-47 definition written in Section 61.7.
+
+**Trigger**: Human confirms identity review approved AND manual gpt-4o test returns 200.
+
+**Scope**:
+- Script: `node scripts/create-openai-i2-smoke-book.js --write`
+- No code changes needed before running
+- Monitor generation to completion
+- Inspect: image_failed count, usedCharacterReference per page, imageModel per page
+
+**Success criteria**:
+- `image_failed` ≤ 2 of 8 pages
+- `usedCharacterReference: true` on all pages
+- `imageModel` contains `gpt-4o` on reference pages
+
+**On PASS** → proceed to T6-49 (I2 manual visual QA)
+**On FAIL** → investigate specific error response (moderation, prompt, timeout, quota exhausted)
+
+### 62.8 Overall OpenAI Validation State (as of T6-47)
+
+| Capability | Mode | API Path | Status | Remaining gate |
+| --- | --- | --- | --- | --- |
+| Text-to-image generation | — | Images API / gpt-image-1-mini | ✅ I1 PASS | None |
+| Visual QA (structural) | — | — | ✅ CONDITIONAL PASS | Human review pending |
+| Reference image consistency | cover_only | Responses API / gpt-4o | ⏳ WAITING | Identity review approval |
+| Reference image consistency | all_pages | Responses API / gpt-4o | ⏳ WAITING | Identity review approval |
+
+**Working today**: `gpt-image-1-mini` via Images API (no reference). Unchanged from T6-46.
+**Tier 2 gate**: RESOLVED ✅
+**Remaining blocker**: Organization Identity review approval (submitted, awaiting OpenAI decision).
+**Next milestone**: Identity approved → T6-48 smoke re-run.

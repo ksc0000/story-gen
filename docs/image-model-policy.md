@@ -672,3 +672,54 @@ Resolve the account-tier gate, then re-run I2 smoke as T6-47.
 | Responses API (gpt-4o) | ❌ BLOCKED — awaiting Org Verification + Tier 2 |
 | reference path code | ✅ Ready (no code change needed for T6-47) |
 | 次フェーズ | T6-47: I2 smoke re-run (human prerequisite: Tier 2 unblock) |
+
+---
+
+### T6-47: Usage Tier 2 Reached / Organization Identity Review Tracking (2026-05-18)
+
+**Status: docs-only tracking — no code change, no deploy, no smoke run**
+
+**Human-confirmed account state (2026-05-18)**:
+
+| Axis | T6-46 state | T6-47 state |
+| --- | --- | --- |
+| Usage Tier | Tier 1 | **Tier 2 ✅ reached** |
+| Organization Identity | Not started | **Identity in review 🔄** |
+
+**Blocker decomposition update**:
+
+| Gate | T6-45 state | T6-47 state |
+| --- | --- | --- |
+| Usage Tier gate | ❌ Not met | ✅ RESOLVED |
+| Identity verification gate | ❌ Not submitted | 🔄 Submitted, awaiting approval |
+
+**Tier 2 gate**: RESOLVED. No longer a blocker.
+**Remaining blocker**: Organization Identity review — submitted, not yet approved.
+
+**I2 retry prohibition**: Do NOT retry I2 smoke until identity review is confirmed as **approved** at platform.openai.com/settings/organization/general.
+
+**Remaining human actions**:
+
+| # | Action | Status |
+| --- | --- | --- |
+| 1 | Reach Usage Tier 2+ | ✅ Done |
+| 2 | Submit Organization Verification | ✅ Done |
+| 3 | Await identity approval from OpenAI | ⏳ Pending |
+| 4 | Manual gpt-4o Responses API test → 200 | ⏳ Blocked by step 3 |
+| 5 | Trigger T6-48 smoke re-run | ⏳ Blocked by steps 3–4 |
+
+**T6-48 definition** (I2 smoke re-run, supersedes T6-47 definition in T6-46 section):
+- Trigger: Identity approved + gpt-4o manual test returns 200
+- Script: `node scripts/create-openai-i2-smoke-book.js --write`
+- No code changes needed
+- Success: image_failed ≤ 2/8, usedCharacterReference=true all pages
+- Pass → T6-49 (I2 manual visual QA)
+
+**ペアステータス**:
+
+| 項目 | 状態 |
+| --- | --- |
+| Images API (gpt-image-1-mini) | ✅ I1 CONDITIONAL PASS (T6-44) |
+| Responses API (gpt-4o) | ⏳ WAITING — Identity review (Tier 2 resolved) |
+| reference path code | ✅ Ready (no code change needed) |
+| 次フェーズ | T6-48: I2 smoke re-run (trigger: Identity review approved) |
