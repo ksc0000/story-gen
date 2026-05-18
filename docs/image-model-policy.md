@@ -915,3 +915,67 @@ Attempt 1 (`smoke-openai-i3-1779118088199`) failed at `schema_validation` due to
 | Reference image I3 — visual QA | — | ⏳ PENDING (T6-52) | Human operator review |
 
 **Next**: T6-52 — Human operator visual QA of I3 book → contamination verdict → routing decision.
+
+---
+
+## T6-52: I3 Visual QA — Photorealistic Passthrough Contamination (2026-05-19)
+
+### Verdict: FAIL (2/8 photorealistic passthrough)
+
+Visual QA of `smoke-openai-i3-1779118258364` (8 pages, adventure × crayon, real child photo reference, `openai_image_candidate` profile).
+
+**New contamination type discovered: photorealistic passthrough**
+Pages P2 and P7 output the reference photo itself as the book page, rather than generating a crayon illustration. This is distinct from the animals.png contamination found in T6-49.
+
+### T6-52 QA Results Summary
+
+| Page | Verdict | Note |
+| --- | --- | --- |
+| P0 | PASS | Crayon back-shot walk, correct protagonist features |
+| P1 | PASS | Excellent crayon, yellow dress, butterfly encounter |
+| P2 | **FAIL** | Photorealistic reference photo passthrough |
+| P3 | PASS | Crayon, holding map, surprised expression |
+| P4 | PASS | Crayon, yellow dress, fork-in-path scene |
+| P5 | PASS | Excellent crayon, butterfly + flower hairpin |
+| P6 | PASS | Excellent crayon, magical berry tree |
+| P7 | **FAIL** | Photorealistic reference photo passthrough |
+
+**6/8 PASS, 2/8 FAIL** — FAIL threshold: ≥ 2/8 contamination → FAIL
+
+### Contamination Type Comparison (T6-49 vs T6-52)
+
+| | T6-49 (animals.png) | T6-52 (real child photo) |
+| --- | --- | --- |
+| Failure mode | Animals drawn as story subjects | Reference photo output directly |
+| Affected pages | P2, P5 | P2, P7 |
+| Failure rate | 2/8 (25%) | 2/8 (25%) |
+| Severity | Medium | **High** |
+| Production risk | Wrong characters in book | **Child's real photo appears as book page** |
+
+The photorealistic passthrough is more severe. In production:
+- The child's real reference photo would appear on 2 out of 8 book pages
+- Those pages would show a photograph instead of an illustration
+- This is a **privacy and safety concern** that is unacceptable for production
+
+### Root Cause
+
+gpt-4o Responses API `image_generation` tool, given a photorealistic reference + "crayon illustration" style prompt, has a ~25% per-page probability of outputting a photorealistic result anchored to the reference image style, overriding the styleBible instructions. The contamination rate is consistent across I2 (25%) and I3 (25%).
+
+### Updated OpenAI Validation State (as of T6-52)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | None |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ **FAIL** (T6-52) | 2/8 photorealistic passthrough |
+
+**OpenAI reference path status: BLOCKED — production blocker (photorealistic passthrough at 25% per-page rate)**
+
+### Required Fix Before Production (T6-53)
+
+Add explicit anti-photorealistic instruction to Responses API prompt:
+> "Output MUST be a crayon-style illustration. Do NOT output a photograph. Do NOT replicate the reference image. Use the reference image ONLY for the child's facial features."
+
+**Next**: T6-53 — Prompt fix for photorealistic passthrough → re-run I4 smoke → confirm fix effectiveness.

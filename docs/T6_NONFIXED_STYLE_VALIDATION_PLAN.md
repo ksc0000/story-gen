@@ -11204,3 +11204,147 @@ The Human operator must view the 8 generated images in Firebase Storage (`books/
 | Reference image I3 (real photo) — visual | — | ⏳ PENDING (T6-52) | Human operator visual QA |
 
 **Next milestone**: T6-52 — Human operator visual QA of `smoke-openai-i3-1779118258364`.
+
+---
+
+## Section 67: T6-52 — OpenAI I3 Manual Visual QA (2026-05-19)
+
+### 67.1 Status
+
+**✅ COMPLETED** — Visual QA performed. Verdict: **FAIL (2/8 photorealistic passthrough)**
+
+### 67.2 QA Target
+
+**bookId**: `smoke-openai-i3-1779118258364` (T6-51 I3 smoke — real child photo reference)
+
+### 67.3 Page-Level QA Results
+
+| Page | Style | Protagonist | Story match | Reference contamination | BF-3 | BF-4 | Verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| P0 | ✅ crayon/colored-pencil | ✅ (pigtails, flower clips, red shoes; back-shot walk) | ✅ forest opening walk | ❌ none | ✅ | ✅ | PASS |
+| P1 | ✅ strong crayon | ✅ (yellow dress, pigtails, red shoes, rosy cheeks) | ✅ glowing butterfly encounter | ❌ none | ✅ | ✅ | PASS |
+| P2 | ❌ photorealistic | ❌ reference photo passthrough (not illustrated) | ❌ not a scene | ⚠️ **PHOTO PASSTHROUGH** | n/a | n/a | **FAIL** |
+| P3 | ✅ crayon/colored-pencil | ✅ (pigtails, flower clips, holding map, surprised expression) | ✅ finding the treasure map | ❌ none | ✅ | ✅ | PASS |
+| P4 | ✅ crayon | ✅ (yellow dress, pigtails, red shoes, holding map) | ✅ fork-in-path with map | ❌ none | ✅ | ✅ | PASS |
+| P5 | ✅ strong crayon | ✅ (yellow dress, pigtails, flower clips, red shoes) | ✅ butterfly touches flower hairpin | ❌ none | ✅ | ✅ | PASS |
+| P6 | ✅ strong crayon | ✅ (yellow dress, pigtails, red shoes, pointing at magical berry) | ✅ finding the glowing berry tree | ❌ none | ✅ | ✅ | PASS |
+| P7 | ❌ photorealistic | ❌ reference photo passthrough (not illustrated) | ❌ not a scene | ⚠️ **PHOTO PASSTHROUGH** | n/a | n/a | **FAIL** |
+
+**Result: 6/8 PASS, 2/8 FAIL**
+
+### 67.4 New Contamination Type: Photorealistic Passthrough
+
+**T6-52 finding** — when reference image is a real child photo, a different contamination type appears:
+
+| contamination type | T6-49 (animals.png) | T6-52 (real child photo) |
+| --- | --- | --- |
+| failure mode | Animals from reference photo drawn as story subjects | Reference photo output directly as page image (photorealistic) |
+| affected pages | P2, P5 | P2, P7 |
+| failure rate | 2/8 (25%) | 2/8 (25%) |
+| severity | Moderate — wrong characters drawn | **High — real child photo appears in book** |
+| style | "wrong subject but correct illustration style" | "correct subject but photo, not illustration" |
+
+**Critical: P2 and P7 show the reference photo itself** (photorealistic: white sweater, outdoor background with mountains). This is NOT a generated crayon illustration — the actual reference photo appeared as a book page.
+
+This is more severe than animals.png contamination because:
+1. In production, this would expose the real child's reference photo directly in the book
+2. The page has no story scene — it is just the reference photo
+3. Parents would see a photo of their child instead of an illustration on those pages
+
+### 67.5 Root Cause Analysis
+
+gpt-4o Responses API, when given a photorealistic reference image + crayon-style prompt, sometimes:
+
+1. **Returns the reference image as output** — possible if the `image_generation` tool call returned the input image unchanged
+2. **OR generates a highly photorealistic portrait** anchored to the reference image style — overriding the styleBible crayon instructions
+
+**Key insight**: The contamination is positively correlated with using a photorealistic image as reference. When gpt-4o receives a photo-quality reference + illustration-style prompt, there is a ~25% per-page probability of:
+- Style anchoring failure (output inherits photo style from reference)
+- Reference passthrough (reference photo output directly)
+
+This failure mode is **distinct from and independent of the animals.png contamination**. Both failures are caused by gpt-4o's Responses API reference handling, but in different ways.
+
+### 67.6 Additional Observations
+
+**Outfit inconsistency (P0)**: P0 shows white top + pink skirt instead of the yellow sundress (characterBible). This suggests the reference image's clothing (white sweater) influenced the P0 illustration's outfit. Not a hard FAIL (illustration style maintained) but a consistency gap.
+
+**Cross-page consistency (PASS pages)**: Excellent on P1, P3–P6. Same pigtails, flower clips, bright eyes, rosy cheeks across all PASS pages. Reference-based character anchoring is working correctly on 6/8 pages.
+
+**Crayon style quality (PASS pages)**: Strong crayon/colored-pencil texture visible on P1, P3–P6. P0 is lighter (back shot, outdoor scene). Overall crayon style is good on PASS pages.
+
+**BF checks (PASS pages)**:
+- BF-3 (no readable text): ✅ all 6 PASS pages (P0, P1, P3, P4, P5, P6)
+- BF-4 (no anatomy errors): ✅ all 6 PASS pages
+- Age-appropriate content: ✅ all 6 PASS pages
+
+### 67.7 I3 Visual QA Verdict
+
+| criterion | target | result |
+| --- | --- | --- |
+| Protagonist visible | 8/8 | ⚠️ 6/8 (P2, P7: photo passthrough) |
+| 0/8 reference contamination | 0 | ❌ 2/8 (photo passthrough) |
+| Crayon style | 8/8 | ⚠️ 6/8 (P2, P7: photorealistic) |
+| Cross-page consistency | PASS | ✅ (6 PASS pages) |
+| BF-3 | 8/8 | ✅ 6/6 (PASS pages) |
+| BF-4 | 8/8 | ✅ 6/6 (PASS pages) |
+
+**I3 Visual QA Verdict: FAIL**
+
+By defined criteria (Fail: ≥ 2/8 contamination): **2/8 contamination = FAIL threshold exactly**.
+
+The contamination type (photorealistic passthrough) is more severe than anticipated. This is a production blocker.
+
+### 67.8 Updated OpenAI Reference Path Status
+
+| issue | status | severity |
+| --- | --- | --- |
+| animals.png contamination (T6-49) | Known — smoke artifact | Medium |
+| Real photo contamination — photorealistic passthrough (T6-52) | **Newly confirmed** | **High — production blocker** |
+| Contamination rate | 25% (2/8) — consistent across I2/I3 | Blocking |
+
+**The OpenAI Responses API reference path has a consistent 25% per-page contamination rate** regardless of reference image type. The contamination type changes (animal echo vs. photo passthrough) but the rate remains ~2/8.
+
+### 67.9 `imagination × crayon` Pair Verdict Update
+
+| Layer | Status |
+| --- | --- |
+| I1 (no reference) | ✅ PASS (T6-43) |
+| I1 visual QA | ✅ CONDITIONAL PASS (T6-44) |
+| I2 (reference path) | ✅ FUNCTIONAL (T6-48) |
+| I2 visual QA | ✅ CONDITIONAL PASS (T6-49) — animals.png artifact |
+| I3 technical | ✅ TECHNICAL PASS (T6-51) |
+| I3 visual QA | ❌ **FAIL** (T6-52) — photorealistic passthrough |
+
+**Updated overall pair verdict**: `imagination × crayon` × OpenAI candidate reference path = **BLOCKED** (production blocker identified)
+
+### 67.10 Recommended Next Steps (T6-53)
+
+**Option A (recommended)**: Prompt fix — add explicit anti-photorealistic instruction to the Responses API call:
+> "Output MUST be a crayon-style illustration. Do NOT output a photograph. Do NOT replicate the reference image. Use the reference image ONLY for the child's facial features."
+
+**Option B**: Post-generation style check — detect photorealistic output (e.g. check image entropy or use a classifier) and retry.
+
+**Option C**: Accept current behavior — treat 2/8 as acceptable for production (NOT recommended given privacy risk of photo passthrough).
+
+**T6-53 recommendation**: Implement Option A (prompt fix) and re-run I3 smoke to verify fix effectiveness.
+
+### 67.11 What T6-52 Did NOT Do
+
+- No code changes
+- No routing changes
+- No Firestore schema changes
+- No Storage URL committed to docs
+- No downloaded images committed
+- No reference URL recorded in docs
+
+### 67.12 OpenAI Validation State (as of T6-52)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | None |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ **FAIL** (T6-52) | 2/8 photorealistic passthrough |
+
+**Next milestone**: T6-53 — Prompt fix for photorealistic passthrough + I4 smoke re-run.
