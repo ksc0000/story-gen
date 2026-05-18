@@ -1113,6 +1113,41 @@ Tests updated: 9/9 PASS (`openai-image.test.ts`). Full suite: 692/692 PASS.
 | Reference image I3 — visual QA | — | ❌ FAIL (T6-52) | 2/8 photorealistic passthrough |
 | Reference path prompt hardening | — | ✅ IMPLEMENTED (T6-54) | System message + prefix/suffix |
 | Reference image I4 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-54) | 8/8 generated |
-| Reference image I4 — visual QA | — | ⏳ PENDING (T6-55) | Human operator review |
+| Reference image I4 — visual QA | — | ✅ PASS (T6-55) | 0/8 contamination, passthrough resolved |
 
-**Next**: T6-55 — Human operator visual QA of `smoke-openai-i3-1779121690630`. Confirm passthrough contamination resolved by prompt hardening.
+**Next**: T6-56 — I5 smoke (second clean run to confirm repeatability) + visual QA. If PASS, advance to production routing gate review.
+
+---
+
+## T6-55: I4 Visual QA — PASS
+
+**Book**: `smoke-openai-i3-1779121690630` (I4 smoke, `imageModelProfile: openai_image_candidate`)
+
+**Verdict: PASS ✅**
+
+Prompt hardening (T6-54) fully resolved the photorealistic passthrough contamination found in T6-52:
+
+| Metric | T6-52 (I3) | T6-55 (I4) |
+|--------|-----------|----------|
+| Type B contamination (passthrough) | 2/8 FAIL | **0/8 PASS** |
+| Illustration style | 6/8 | 8/8 |
+| Protagonist visible | 6/8 | 8/8 |
+| BF-3 (no text) | 8/8 | 7/8 (P0 signpost soft flag) |
+| BF-4 (anatomy) | 8/8 | 8/8 |
+
+- P2 (was FAIL in T6-52): now shows Hinata in crayon style reaching toward star companion
+- P7 (was FAIL in T6-52): now shows Hinata in crayon style walking home on golden path
+- All 3 fix components effective: system message, prompt prefix, prompt suffix
+
+**Updated Validation State (as of T6-55)**:
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ FAIL (T6-52) | 2/8 photorealistic passthrough |
+| Reference path prompt hardening | — | ✅ IMPLEMENTED (T6-54) | System message + prefix/suffix |
+| Reference image I4 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-54) | 8/8 generated |
+| Reference image I4 — visual QA | — | ✅ PASS (T6-55) | 0/8 contamination, passthrough resolved |
