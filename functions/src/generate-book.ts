@@ -35,6 +35,7 @@ import {
   withImageTimeout,
   ImageTimeoutError,
 } from "./lib/replicate";
+import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE } from "./lib/openai-image";
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
 import { canUseProductPlan } from "./lib/entitlements";
 import { canGenerateBookThisMonth } from "./lib/usage";
@@ -2080,11 +2081,23 @@ function getRetryAfterMs(err: unknown): number {
 // Firebase Cloud Function
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
+const openaiApiKey = defineSecret("OPENAI_API_KEY");
+
+function createImageClient(imageModelProfile?: ImageModelProfile): ImageClient {
+  if (imageModelProfile === "openai_image_candidate") {
+    const key = openaiApiKey.value();
+    if (!key) {
+      throw new Error("OPENAI_API_KEY secret is not configured");
+    }
+    return new OpenAIImageClient(key, OPENAI_IMAGE_CANDIDATE_PROFILE);
+  }
+  return new ReplicateImageClient(replicateApiToken.value());
+}
 
 export const generateBook = onDocumentCreated(
   {
     document: "books/{bookId}",
-    secrets: [geminiApiKey, replicateApiToken],
+    secrets: [geminiApiKey, replicateApiToken, openaiApiKey],
     region: "asia-northeast1",
     memory: "1GiB",
     timeoutSeconds: 540,
@@ -2125,7 +2138,7 @@ export const generateBook = onDocumentCreated(
       },
 
       llmClient: new GeminiClient(geminiApiKey.value()),
-      imageClient: new ReplicateImageClient(replicateApiToken.value()),
+      imageClient: createImageClient(bookData.imageModelProfile),
 
       uploadImage: async (bookId: string, pageNumber: number, buffer: Buffer) => {
         const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");

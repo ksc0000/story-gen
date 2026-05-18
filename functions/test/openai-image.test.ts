@@ -1,0 +1,155 @@
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE } from "../src/lib/openai-image";
+
+const mockGenerate = vi.fn();
+const mockResponsesCreate = vi.fn();
+
+vi.mock("openai", () => {
+  return {
+    default: vi.fn().mockImplementation(() => ({
+      images: { generate: mockGenerate },
+      responses: { create: mockResponsesCreate },
+    })),
+  };
+});
+
+describe("OpenAIImageClient", () => {
+  beforeEach(() => {
+    mockGenerate.mockReset();
+    mockResponsesCreate.mockReset();
+  });
+
+  describe("OPENAI_IMAGE_CANDIDATE_PROFILE", () => {
+    it("has expected smoke profile values", () => {
+      expect(OPENAI_IMAGE_CANDIDATE_PROFILE).toEqual({
+        model: "gpt-image-1-mini",
+        moderation: "low",
+        quality: "low",
+        size: "1024x1024",
+      });
+    });
+  });
+
+  describe("generateImage (text-to-image)", () => {
+    it("calls images.generate and returns buffer from b64_json", async () => {
+      const fakeB64 = Buffer.from("fake-image-data").toString("base64");
+      mockGenerate.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      const client = new OpenAIImageClient("sk-test-key", OPENAI_IMAGE_CANDIDATE_PROFILE);
+      const result = await client.generateImage("a crayon illustration of a cat");
+
+      expect(result).toBeInstanceOf(Buffer);
+      expect(result.toString()).toBe("fake-image-data");
+      expect(mockGenerate).toHaveBeenCalledOnce();
+      expect(mockGenerate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "gpt-image-1-mini",
+          prompt: "a crayon illustration of a cat",
+          n: 1,
+          size: "1024x1024",
+          moderation: "low",
+          quality: "low",
+          output_format: "png",
+        })
+      );
+    });
+
+    it("downloads from url if b64_json is not present", async () => {
+      const fakeImageBuffer = Buffer.from("downloaded-image");
+      mockGenerate.mockResolvedValue({
+        data: [{ url: "https://example.com/image.png" }],
+      });
+
+      // Mock global fetch
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(fakeImageBuffer.buffer.slice(
+          fakeImageBuffer.byteOffset,
+          fakeImageBuffer.byteOffset + fakeImageBuffer.byteLength
+        )),
+      });
+      vi.stubGlobal("fetch", mockFetch);
+
+      const client = new OpenAIImageClient("sk-test-key", OPENAI_IMAGE_CANDIDATE_PROFILE);
+      const result = await client.generateImage("test prompt");
+
+      expect(result).toBeInstanceOf(Buffer);
+      expect(mockFetch).toHaveBeenCalledWith("https://example.com/image.png");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("throws if no data returned", async () => {
+      mockGenerate.mockResolvedValue({ data: [] });
+
+      const client = new OpenAIImageClient("sk-test-key", OPENAI_IMAGE_CANDIDATE_PROFILE);
+      await expect(client.generateImage("test")).rejects.toThrow("No image output from OpenAI Image API");
+    });
+  });
+
+  describe("generateImage (with reference images)", () => {
+    it("calls responses.create when inputImageUrls are provided", async () => {
+      const fakeB64 = Buffer.from("ref-image-data").toString("base64");
+      mockResponsesCreate.mockResolvedValue({
+        output: [{ type: "image_generation_call", result: fakeB64 }],
+      });
+
+      const client = new OpenAIImageClient("sk-test-key", OPENAI_IMAGE_CANDIDATE_PROFILE);
+      const result = await client.generateImage("a cat with reference", {
+        inputImageUrls: ["https://example.com/ref1.png"],
+      });
+
+      expect(result).toBeInstanceOf(Buffer);
+      expect(result.toString()).toBe("ref-image-data");
+      expect(mockResponsesCreate).toHaveBeenCalledOnce();
+      expect(mockResponsesCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "gpt-image-1-mini",
+          input: expect.arrayContaining([
+            expect.objectContaining({
+              role: "user",
+              content: expect.arrayContaining([
+                expect.objectContaining({ type: "input_image", image_url: "https://example.com/ref1.png" }),
+                expect.objectContaining({ type: "input_text", text: "a cat with reference" }),
+              ]),
+            }),
+          ]),
+        })
+      );
+    });
+
+    it("limits reference images to 14", async () => {
+      const fakeB64 = Buffer.from("data").toString("base64");
+      mockResponsesCreate.mockResolvedValue({
+        output: [{ type: "image_generation_call", result: fakeB64 }],
+      });
+
+      const urls = Array.from({ length: 20 }, (_, i) => `https://example.com/ref${i}.png`);
+      const client = new OpenAIImageClient("sk-test-key", OPENAI_IMAGE_CANDIDATE_PROFILE);
+      await client.generateImage("test", { inputImageUrls: urls });
+
+      const call = mockResponsesCreate.mock.calls[0][0];
+      const imageInputs = call.input[0].content.filter((c: any) => c.type === "input_image");
+      expect(imageInputs).toHaveLength(14);
+    });
+
+    it("throws if no image output from Responses API", async () => {
+      mockResponsesCreate.mockResolvedValue({ output: [] });
+
+      const client = new OpenAIImageClient("sk-test-key", OPENAI_IMAGE_CANDIDATE_PROFILE);
+      await expect(
+        client.generateImage("test", { inputImageUrls: ["https://example.com/ref.png"] })
+      ).rejects.toThrow("No image output from OpenAI Responses API");
+    });
+  });
+
+  describe("constructor", () => {
+    it("uses default profile when none specified", () => {
+      const client = new OpenAIImageClient("sk-test-key");
+      // Client should be created without error
+      expect(client).toBeDefined();
+    });
+  });
+});

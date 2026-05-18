@@ -19,7 +19,8 @@ export type ImageModelProfile =
   | "klein_base"
   | "pro_consistent"
   | "kontext_reference"
-  | "flux11_pro_candidate"; // T6-37: diagnostic only — not for production routing
+  | "flux11_pro_candidate"    // T6-37: diagnostic only — not for production routing
+  | "openai_image_candidate"; // T6-43: diagnostic only — OpenAI Image E005 smoke test
 export type InputImageRole = "character_reference" | "style_reference";
 export type InputImageSource =
   | "approvedImageUrl"

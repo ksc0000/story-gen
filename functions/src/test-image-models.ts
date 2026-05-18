@@ -10,9 +10,11 @@ import type {
   InputImageRole,
 } from "./lib/types";
 import { ReplicateImageClient, resolveReplicateModel } from "./lib/replicate";
+import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE } from "./lib/openai-image";
 import { getIllustrationStyleProfile } from "./lib/illustration-styles";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
+const openaiApiKey = defineSecret("OPENAI_API_KEY");
 const DEFAULT_TIERS: ImageQualityTier[] = ["light", "standard", "premium"];
 const DEFAULT_MODEL_PROFILES: ImageModelProfile[] = [
   "klein_fast",
@@ -74,7 +76,7 @@ export function normalizeTestImageModelsRequest(data: TestImageModelsRequest): {
 export const testImageModels = onCall(
   {
     region: "asia-northeast1",
-    secrets: [replicateApiToken],
+    secrets: [replicateApiToken, openaiApiKey],
     memory: "1GiB",
     timeoutSeconds: 300,
   },
@@ -102,7 +104,10 @@ export const testImageModels = onCall(
       inputImageRoles,
     } = normalized;
 
-    const imageClient = new ReplicateImageClient(replicateApiToken.value());
+    const useOpenAI = modelProfiles.includes("openai_image_candidate");
+    const imageClient = useOpenAI
+      ? new OpenAIImageClient(openaiApiKey.value(), OPENAI_IMAGE_CANDIDATE_PROFILE)
+      : new ReplicateImageClient(replicateApiToken.value());
     const bucket = admin.storage().bucket("story-gen-8a769.firebasestorage.app");
     const batchId = randomUUID();
     const results: Array<{

@@ -9900,3 +9900,199 @@ export interface ImageProviderClient {
 - production routing 変更
 - Responses API 型の実際の確認（SDK インストール前のため — T6-43 で実施）
 - Ideogram / Stability AI の追加調査（T6-42 以降で任意）
+
+
+---
+
+## Section 58: T6-43 — OpenAI Image Client Minimal Implementation + I1 Smoke (2026-05-18)
+
+### 58.1 Task Summary
+
+| 項目 | 詳細 |
+| --- | --- |
+| タスク ID | T6-43 |
+| タイプ | implementation + controlled smoke |
+| 日付 | 2026-05-18 |
+| depends-on | T6-42 (`78ccf1e`) |
+| 目的 | OpenAI Image Client 最小実装 + I1 smoke 準備（key 未登録のため smoke 実行は blocked） |
+| コード変更 | ✅ あり |
+| deploy | ❌ blocked（OPENAI_API_KEY 未登録） |
+| smoke 実行 | ❌ blocked（同上） |
+
+### 58.2 B-O2 State Confirmation（T6-43 時点）
+
+| 項目 | 状態 |
+| --- | --- |
+| B-O2 送付 | ❌ **依然未送付** |
+| B-O2 期限 | 2026-05-25 |
+| T6-43 への影響 | B-O2 応答を待たず OpenAI Image 実装を並行実施（方針変更なし） |
+
+---
+
+### 58.3 実装成果物
+
+| # | ファイル | 種類 | 内容 |
+| --- | --- | --- | --- |
+| 1 | `functions/src/lib/openai-image.ts` | **新規** | `OpenAIImageClient` クラス（`ImageClient` implements） |
+| 2 | `functions/src/lib/types.ts` | 変更 | `ImageModelProfile` に `"openai_image_candidate"` 追加 |
+| 3 | `functions/src/lib/replicate.ts` | 変更 | `resolveImageFallbackProfiles` に `openai_image_candidate` case 追加 |
+| 4 | `functions/src/generate-book.ts` | 変更 | `createImageClient` factory + `openaiApiKey` secret + routing |
+| 5 | `functions/src/test-image-models.ts` | 変更 | OpenAI routing + `openaiApiKey` secret |
+| 6 | `functions/test/openai-image.test.ts` | **新規** | Unit tests（6 tests） |
+| 7 | `functions/package.json` | 変更 | `openai: ^4.x` dependency 追加 |
+| 8 | `scripts/create-openai-smoke-book.js` | **新規** | I1 smoke 実行スクリプト |
+
+### 58.4 OpenAIImageClient 実装詳細
+
+#### 58.4.1 テキスト → 画像（参照画像なし）
+
+```
+API: POST /v1/images/generations
+model: gpt-image-1-mini (configurable)
+moderation: "low"
+quality: "low"
+size: "1024x1024"
+output_format: "png"
+response: b64_json → Buffer
+fallback: url download → Buffer
+```
+
+#### 58.4.2 参照画像あり
+
+```
+API: Responses API (client.responses.create)
+reference images: up to 14 (sliced)
+input format: [{ type: "input_image", image_url }, ..., { type: "input_text", text: prompt }]
+tools: [{ type: "image_generation", moderation, size, quality }]
+output: output[].type === "image_generation_call" → result (base64) → Buffer
+```
+
+#### 58.4.3 Routing 設計
+
+```typescript
+// generate-book.ts
+function createImageClient(imageModelProfile?: ImageModelProfile): ImageClient {
+  if (imageModelProfile === "openai_image_candidate") {
+    return new OpenAIImageClient(openaiApiKey.value(), OPENAI_IMAGE_CANDIDATE_PROFILE);
+  }
+  return new ReplicateImageClient(replicateApiToken.value());
+}
+```
+
+既存の Replicate デフォルトパスは一切変更なし。
+`imageModelProfile === "openai_image_candidate"` の場合のみ OpenAI に分岐。
+
+---
+
+### 58.5 Unit Test Results
+
+| test file | tests | status |
+| --- | --- | --- |
+| `functions/test/openai-image.test.ts` | 6 | ✅ PASS |
+| 全テスト | 691 | ✅ PASS |
+
+テスト内容:
+1. `OPENAI_IMAGE_CANDIDATE_PROFILE` 定数値検証
+2. `generateImage` — images.generate → b64_json → Buffer
+3. `generateImage` — url fallback download
+4. `generateImage` — empty data → throw
+5. `generateImage` with reference images → responses.create
+6. Reference images 14 枚制限検証
+7. Responses API empty output → throw
+8. Constructor default profile
+
+### 58.6 Build Results
+
+```
+tsc: OK (0 errors)
+npm test: 691 passed (691)
+```
+
+---
+
+### 58.7 OPENAI_API_KEY Secret Availability Check
+
+```
+firebase functions:secrets:access OPENAI_API_KEY --project story-gen-8a769
+→ 404 NOT_FOUND: Secret [projects/709804999278/secrets/OPENAI_API_KEY] not found.
+```
+
+**Result**: ❌ **BLOCKED — OPENAI_API_KEY is not registered in Firebase Secret Manager.**
+
+### 58.8 I1 Smoke Execution Status
+
+| 項目 | 状態 |
+| --- | --- |
+| smoke script | ✅ `scripts/create-openai-smoke-book.js` 作成済み |
+| deploy | ❌ blocked — secret 未登録 |
+| smoke 実行 | ❌ blocked — deploy 不可 |
+| 結果 | **N/A — human action required** |
+
+**ブロック要因**:
+1. **A3**: OpenAI Organization Verification 未完了
+2. **A4**: `OPENAI_API_KEY` Secret Manager 未登録
+3. deploy 未実施（secret なしでは function が起動時エラー）
+
+### 58.9 I1 Smoke 再実行手順（Human Action 完了後）
+
+```bash
+# 1. OpenAI Organization Verification 完了後:
+# 2. API key + billing 確認後:
+firebase functions:secrets:set OPENAI_API_KEY --project story-gen-8a769
+# → sk-... を入力
+
+# 3. Deploy:
+cd functions && npm run build
+firebase deploy --only functions --project story-gen-8a769
+
+# 4. I1 Smoke 実行:
+node scripts/create-openai-smoke-book.js
+
+# 5. 監視:
+node scripts/inspect-smoke-book.js <bookId>
+# → image_failed <= 2/8 で SUCCESS
+# → image_failed >= 6/8 で REJECTION
+```
+
+---
+
+### 58.10 resolveImageFallbackProfiles 変更
+
+```typescript
+case "openai_image_candidate": // T6-43: no Replicate fallback — OpenAI only
+  return ["openai_image_candidate"];
+```
+
+**設計根拠**: OpenAI smoke の目的は E005 回避検証。Replicate fallback を使うと
+E005 回避率が正確に測れない。OpenAI のみで retry（最大 2 回）して image_failed に落とす。
+
+---
+
+### 58.11 Human Action List（T6-43 後）
+
+| action | 優先度 | 期限 | owner | status |
+| --- | --- | --- | --- | --- |
+| **A1**: Replicate inquiry 送付（§ 49.6 draft） | **最優先** | **2026-05-25** | human operator | ❌ 未実施 |
+| **A3**: OpenAI Organization Verification | **高（I1 前必須）** | I1 前 | human operator | ❌ 未実施 |
+| **A4**: OPENAI_API_KEY Secret Manager 登録 | **高（I1 前必須）** | I1 前 | human operator | ❌ 未実施 |
+| A5: Deploy functions（A4 完了後） | 高 | A4 直後 | human/agent | ❌ 未実施 |
+| A6: I1 smoke 実行（deploy 後） | 高 | A5 直後 | human/agent | ❌ 未実施 |
+
+### 58.12 ペアステータス（T6-43 後）
+
+| pair | verdict | next action |
+| --- | --- | --- |
+| imagination × crayon | **Blocked-on-secret** | A3 → A4 → deploy → I1 smoke 実行 |
+
+**注記**: T6-43 完了時点で、実装・テスト・smoke script は準備完了。
+I1 smoke 実行は A3/A4 human action 完了待ち。
+
+### 58.13 T6-43 で実施しなかったこと（ブロックによるスコープ外）
+
+- `firebase deploy --only functions`（secret 未登録）
+- I1 smoke 実行（deploy 不可）
+- smoke 結果の記録（実行不可）
+- production routing 変更
+- `regenerate-page-image.ts` / `regenerate-cover-image.ts` への routing
+- Gemini / Stability AI / Ideogram 実装
+- `ImageProviderClient` 抽象化
