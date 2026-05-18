@@ -6954,3 +6954,235 @@ mitigations alone. The pair remains Hold pending Replicate policy inquiry (T6-33
 - No private image URLs or storage tokens recorded
 - No manual visual QA (deferred to T6-33)
 - No product exposure matrix update
+
+---
+
+## 48. T6-33 - E005 Mitigation Closure / Escalation Decision (Docs-Only)
+
+### 48.1 Task Summary
+
+| item | value |
+| --- | --- |
+| task | T6-33 |
+| type | docs-only closure / decision |
+| date | 2026-05-18 |
+| commit | (see git log) |
+
+This is a docs-only decision task. No code changes. No runner changes. No new smoke generation.
+Based on the cumulative evidence from T6-27 through T6-32, formally close the prompt-side E005
+mitigation track, confirm the pair's blocked status, and decide the escalation path for T6-34.
+
+### 48.2 Background — E005 Mitigation Track History
+
+| task | action | I1 fallback | I2 fallback | verdict |
+| --- | --- | ---: | ---: | --- |
+| T6-23 | baseline (untreated) | 7/8 | 7/8 | E005 confirmed as primary failure |
+| T6-26 | IMAGE_CONCURRENCY=1 | 6/8 | 7/8 | no improvement |
+| T6-27 | cloud log audit | — | — | E005 confirmed as model-level rejection |
+| T6-28 | L1+L2+L3 design | — | — | design complete, L3 deferred |
+| T6-29 | L1+L2 implemented | — | — | deployed |
+| T6-30 | L1+L2 re-smoke | 6/8 | 7/8 | no improvement vs baseline |
+| T6-31 | Klein primary rejected | — | — | style adherence Fail + story-image match Fail |
+| T6-32 | L3 regex sanitizer | 5/8 | 6/8 | marginal improvement (+1/book); threshold NOT met |
+
+### 48.3 Prompt-Side Mitigation Stack — Closure
+
+All three designed prompt-side layers have now been implemented and evaluated.
+
+| layer | mechanism | deployed | measured effect |
+| --- | --- | --- | --- |
+| L1 | Gemini system prompt: fantasy/imagination no-text rule block | T6-29/T6-30 | no measurable E005 reduction |
+| L2 | Runtime imagination guardrail injected into buildImagePrompt() | T6-29/T6-30 | no measurable E005 reduction |
+| L3 | sanitizeImagePromptText() regex token replacement | T6-32 | marginal: +1 primary page per book |
+
+**Conclusion:** The prompt-side mitigation track is exhausted. All three layers are deployed and
+have produced at most marginal improvement. The E005 rejection rate remains at 5–6/8 pages per
+imagination-category book, far above the target threshold of < 3/8.
+
+**Root cause determination:** E005 is not primarily caused by specific token presence in the
+image prompt. The rejection is triggered by the nature of imagination/fantasy scene content
+itself — visual contexts (magical objects, constellation imagery, symbolic overlays, celestial
+environments) that flux-2-pro's content sensitivity filter classifies as text-bearing regardless
+of prompt wording. Prompt-level adjustments cannot change the model's internal classification
+of the scene type.
+
+### 48.4 Klein Primary — Status Reconfirmed
+
+Klein primary was formally rejected in T6-31. That decision is unchanged.
+
+| evaluation | result |
+| --- | --- |
+| Style adherence (crayon) | **Fail** — BF-3/BF-4 structural artifacts; no waxy crayon texture |
+| Story-image match | **Fail** — fantasy scene narrative does not translate to klein output |
+| E005 bypass | **Pass** — klein_fast does not trigger E005 |
+| Trade-off | E005 is bypassed but product quality is below commercial bar |
+| Decision | **Klein primary: Reject** (T6-31, confirmed in T6-33) |
+
+### 48.5 Pair Status Transition
+
+| field | previous (T6-32) | current (T6-33) |
+| --- | --- | --- |
+| pair | imagination × crayon | imagination × crayon |
+| verdict | **Hold** (pending L3 result) | **Blocked-on-model-policy** |
+| primary model | flux-2-pro (pro_consistent) | flux-2-pro (pro_consistent), unchanged |
+| fallback | klein_fast (active) | klein_fast (active), unchanged |
+| prompt mitigation | L1+L2+L3 all deployed | L1+L2+L3 all deployed — **track closed** |
+| Klein primary | Rejected (T6-31) | Rejected (T6-31), confirmed |
+| blocking factor | E005 model-level content policy | E005 model-level content policy |
+
+The pair is now formally **Blocked-on-model-policy**. This means:
+- Books in the `imagination` category with the `crayon` style will continue to rely on
+  `klein_fast` fallback for 5–6 out of 8 pages until the model-level blocking is resolved.
+- The pair cannot be promoted or released without resolving the E005 blocking factor.
+- Further prompt-side changes are not expected to produce material improvement.
+
+### 48.6 Escalation Options Analysis
+
+Options O2–O6 from T6-31 section 46.5 remain available. O1 (L3 sanitizer) is now complete.
+
+#### O2: Replicate E005 Policy Inquiry (External)
+
+Contact Replicate support to ask whether flux-2-pro's E005 threshold can be adjusted or
+bypassed for explicitly labeled children's picture book fantasy content, or whether a custom
+model variant is available.
+
+| dimension | assessment |
+| --- | --- |
+| E005 reduction potential | **High** if Replicate agrees to adjust policy |
+| Code cost | None |
+| Risk | None (external inquiry only) |
+| Dependency | Replicate response timeline unknown |
+| Downside | Replicate may decline or require special commercial agreement |
+| Time to result | 1 day to send inquiry; response timeline unpredictable |
+
+**Assessment: Highest immediate priority. Zero implementation cost. Should be initiated now.**
+
+#### O3: Alternative Primary Model Evaluation for Imagination
+
+Test a replacement model for pro_consistent on imagination books — a model that has higher
+tolerance for fantasy visual content while maintaining crayon-style instruction following.
+Candidates include new Replicate model releases or non-Replicate providers.
+
+| dimension | assessment |
+| --- | --- |
+| E005 reduction potential | **Unknown** — depends on model content policy |
+| Style fidelity potential | **Unknown** — requires controlled evaluation |
+| Code change required | Medium — new ImageModelProfile + fallback chain update |
+| Risk | Medium — unvalidated quality |
+| Time to evidence | Model selection (docs) + 1 smoke + visual QA |
+| Dependency | Requires identifying a viable candidate model first |
+
+**Assessment: Activate as T6-35 if O2 yields no usable result within 1 week after inquiry.**
+
+#### O4: Imagination Story Narrative Redesign
+
+Adjust Gemini story prompt to minimize fantasy text-bearing objects (spell books, star charts,
+scrolls) and favor purely visual fantasy elements (glowing orbs, cloud formations, rocket shapes).
+
+| dimension | assessment |
+| --- | --- |
+| E005 reduction potential | Moderate-High — reduces scene types that trigger E005 |
+| Style fidelity impact | Neutral to positive |
+| Story variety impact | **Negative** — reduces available narrative motifs for imagination category |
+| Code change required | Medium — story generation prompt update |
+| Risk | Medium — may reduce imagination story quality and diversity |
+
+**Assessment: Valid long-term option. Defer until O2+O3 are evaluated. Story variety loss
+is a meaningful product cost that needs separate PM decision before implementation.**
+
+#### O5: Accept E005 + Invest in Klein Fallback Quality (Rejected)
+
+Already rejected in T6-31. Klein quality is structurally below commercial bar for crayon style.
+Not reconsidered here.
+
+#### O6: Pause imagination × crayon
+
+Formally pause the pair (similar to bedtime × soft_watercolor pause in T6-21).
+
+| dimension | assessment |
+| --- | --- |
+| Risk | None |
+| Resource cost | Frees T6 focus for other pairs |
+| Signal value | Low |
+| Opportunity cost | Delays imagination × crayon readiness |
+| Reversibility | Full |
+
+**Assessment: Reserve option. Activate only if O2+O3 both fail to produce a usable path
+within 2 additional T6 slices. Do not pause yet — O2 should be attempted first.**
+
+### 48.7 Decision Summary
+
+| option | action | timing |
+| --- | --- | --- |
+| O2: Replicate inquiry | **Activate — T6-34 primary** | Immediately |
+| O3: Alternative model evaluation | Prepare candidate list | T6-35 if O2 fails/delays |
+| O4: Story narrative redesign | Defer | Post-O2/O3 evaluation |
+| O5: Accept E005 + Klein | **Rejected** | — |
+| O6: Pause pair | In reserve | If O2+O3 both fail within 2 slices |
+
+### 48.8 T6-34 Recommended Scope
+
+**T6-34: Replicate E005 Policy Inquiry + Alternative Model Candidate Research (Docs-Only)**
+
+Scope:
+
+1. Prepare and document a Replicate support inquiry for E005 policy on children's picture book
+   fantasy content (scope of inquiry, evidence package, ask).
+2. Research alternative model candidates for O3 — identify models available on Replicate or
+   other providers that have demonstrated:
+   - Higher tolerance for fantasy/imagination visual content (lower content sensitivity rejection)
+   - Instruction-following capability sufficient for crayon-style picture book output
+3. Document the candidate shortlist and evaluation criteria.
+4. If Replicate inquiry has been sent and a response received, record the response and
+   revise the recommended path accordingly.
+
+Success criteria for T6-34:
+
+- Replicate inquiry documented and ready to send (or already sent).
+- At least 2 alternative model candidates identified with preliminary evidence.
+- Decision documented: proceed with O2 response testing, or proceed directly to O3 evaluation.
+
+**This is a docs-only task unless a specific quick model test (single page) is warranted
+as a no-cost validation step.**
+
+### 48.9 Visual QA Status
+
+Manual visual QA of T6-32 books (`RuaBwnAiJInyqtyHrZBH`, `d3R64tiAsq7X5yuqmXpa`) was
+originally scoped for T6-33 (per T6-31 section 46.7, T6-32 section 47.10).
+
+Given that the re-smoke threshold was not met and the pair is now Blocked-on-model-policy,
+visual QA of the current books will not change the escalation decision. Visual QA is
+therefore **deferred** until one of the following conditions is met:
+
+- A new smoke run is generated after O2 or O3 produces a model-level fix.
+- An explicit operator decision is made to QA the current books for product evidence purposes.
+
+### 48.10 Pair Status After T6-33
+
+| pair | verdict | primary model | E005 status | Klein primary | next action |
+| --- | --- | --- | --- | --- | --- |
+| imagination × crayon | **Blocked-on-model-policy** | flux-2-pro (pro_consistent) | L1+L2+L3 deployed — prompt track closed | **Rejected** (T6-31, confirmed T6-33) | T6-34: Replicate inquiry + alt model candidate research |
+
+### 48.11 What T6-33 Did NOT Do
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No manual visual QA
+- No Klein primary implementation
+- No additional prompt sanitizer implementation
+- No product exposure matrix update

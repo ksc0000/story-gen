@@ -120,3 +120,33 @@ E005 の主因は fantasy シーン内容に対する flux-2-pro のモデルレ
 | E005 対応状況 | L1+L2+L3 すべて実装・デプロイ済み |
 | fallback | klein_fast が fallback として機能（スタイル品質問題あり）|
 | 次フェーズ | T6-33: manual visual QA + Replicate policy inquiry 推進 |
+
+### T6-33 Closure（2026-05-18）
+
+プロンプト側 E005 対策トラック（L1+L2+L3）を正式 closure。
+
+**主要決定:**
+
+- **プロンプト側対策トラック: クローズ** — L1+L2+L3 の全3層を実施。効果は marginal（+1ページ/book）のみ。E005 の根本原因はモデルレベルの content policy であり、プロンプト変更では解決できない。
+- **Klein primary: Reject 確認** — T6-31 決定を T6-33 で再確認。変更なし。
+- **ペアステータス変更:** Hold → **Blocked-on-model-policy**
+
+**エスカレーション方針:**
+
+| オプション | アクション |
+| --- | --- |
+| O2: Replicate policy inquiry | **T6-34 primary** — E005 閾値調整またはカスタムモデルの可否を問い合わせ |
+| O3: 代替モデル評価 | T6-35 — O2 が1週間以内に有効な回答を得られない場合に発動 |
+| O4: story narrative 再設計 | Defer — O2/O3 後に評価 |
+| O5: E005 受容 + Klein 品質改善 | **Reject** — 商品品質基準未達 |
+| O6: ペア一時停止 | Reserve — O2+O3 が2スライス失敗した場合に発動 |
+
+**現在の対応状況（T6-33 時点）:**
+
+| 項目 | 状態 |
+| --- | --- |
+| ペアステータス | **Blocked-on-model-policy** |
+| primary モデル | flux-2-pro (`pro_consistent`) のまま変更しない |
+| E005 対応状況 | L1+L2+L3 実装済み — プロンプト側トラック closed |
+| fallback | klein_fast が fallback として機能（スタイル品質問題あり）|
+| 次フェーズ | T6-34: Replicate inquiry + 代替モデル候補調査（docs-only） |
