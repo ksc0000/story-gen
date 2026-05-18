@@ -18,7 +18,8 @@ export type ImageModelProfile =
   | "klein_fast"
   | "klein_base"
   | "pro_consistent"
-  | "kontext_reference";
+  | "kontext_reference"
+  | "flux11_pro_candidate"; // T6-37: diagnostic only — not for production routing
 export type InputImageRole = "character_reference" | "style_reference";
 export type InputImageSource =
   | "approvedImageUrl"

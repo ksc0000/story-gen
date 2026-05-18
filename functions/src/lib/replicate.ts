@@ -12,13 +12,16 @@ const FLUX_KLEIN_FAST_MODEL = "black-forest-labs/flux-2-klein-9b" as const;
 const FLUX_KLEIN_BASE_MODEL = "black-forest-labs/flux-2-klein-9b-base" as const;
 const FLUX_PRO_MODEL = "black-forest-labs/flux-2-pro" as const;
 const FLUX_KONTEXT_PRO_MODEL = "black-forest-labs/flux-kontext-pro" as const;
+// T6-37: diagnostic candidate only — not exposed in production default routing
+const FLUX_11_PRO_MODEL = "black-forest-labs/flux-1.1-pro" as const;
 
 export type ReplicateModelName =
   | typeof LEGACY_FLUX_SCHNELL_MODEL
   | typeof FLUX_KLEIN_FAST_MODEL
   | typeof FLUX_KLEIN_BASE_MODEL
   | typeof FLUX_PRO_MODEL
-  | typeof FLUX_KONTEXT_PRO_MODEL;
+  | typeof FLUX_KONTEXT_PRO_MODEL
+  | typeof FLUX_11_PRO_MODEL;
 
 type ReplicateInputPayload = {
   prompt: string;
@@ -28,8 +31,11 @@ type ReplicateInputPayload = {
   images?: string[];
   input_images?: string[];
   input_image?: string;
+  image_prompt?: string;      // flux-1.1-pro: Flux Redux single-image composition reference
   megapixels?: "1";
   go_fast?: boolean;
+  safety_tolerance?: number;  // flux-1.1-pro: 1=strict … 6=permissive (default 2)
+  prompt_upsampling?: boolean;
 };
 
 export interface ImageGenerationMetadata {
@@ -53,6 +59,8 @@ function resolveProfileModel(imageModelProfile: ImageModelProfile): ReplicateMod
       return FLUX_PRO_MODEL;
     case "kontext_reference":
       return FLUX_KONTEXT_PRO_MODEL;
+    case "flux11_pro_candidate": // T6-37: diagnostic only
+      return FLUX_11_PRO_MODEL;
     case "klein_fast":
     default:
       return FLUX_KLEIN_FAST_MODEL;
@@ -123,6 +131,8 @@ export function resolveImageFallbackProfiles(profile: ImageModelProfile): ImageM
       return ["klein_base", "klein_fast"];
     case "kontext_reference":
       return ["kontext_reference", "klein_fast"];
+    case "flux11_pro_candidate": // T6-37: diagnostic only
+      return ["flux11_pro_candidate", "klein_fast"];
     case "klein_fast":
     default:
       return ["klein_fast"];
@@ -168,6 +178,22 @@ export function buildReplicateInput(params: {
       output_format: "png",
       ...(dedupedInputImageUrls.length > 0
         ? { input_image: dedupedInputImageUrls[0] }
+        : {}),
+    };
+  }
+
+  // T6-37: flux-1.1-pro diagnostic candidate
+  // Uses safety_tolerance=5 for children's fantasy content (default is 2, scale 1-6).
+  // Uses image_prompt (single URI) instead of input_images — Flux Redux composition reference.
+  if (params.model === FLUX_11_PRO_MODEL) {
+    return {
+      prompt: params.prompt,
+      aspect_ratio: "4:3",
+      output_format: "png",
+      safety_tolerance: 5,
+      prompt_upsampling: false,
+      ...(dedupedInputImageUrls.length > 0
+        ? { image_prompt: dedupedInputImageUrls[0] }
         : {}),
     };
   }

@@ -8030,3 +8030,105 @@ Steps:
 - No product exposure matrix update
 - No Klein primary implementation
 - No additional prompt sanitizer implementation
+
+---
+
+## Section 52: T6-37 — flux-1.1-pro Diagnostic Profile Implementation + I1 Controlled Smoke (2026-05-18)
+
+### 52.1 Task Summary
+
+| 項目 | 詳細 |
+| --- | --- |
+| タスク ID | T6-37 |
+| 目的 | `flux11_pro_candidate` 診断プロファイルを実装し、I1 制御スモークを実行して E005 抑制効果を計測する |
+| 関連設計 | T6-36 section 51（flux-1.1-pro smoke design） |
+| smoke book ID | `rnmwt87dG4cXOf7yM7XM` |
+| run ID | `t6-nonfixed-20260518023952` |
+
+### 52.2 実装内容
+
+#### 52.2.1 ImageModelProfile union に `flux11_pro_candidate` を追加 (types.ts)
+diagnostic only — not for production routing
+
+#### 52.2.2 replicate.ts
+- `FLUX_11_PRO_MODEL = "black-forest-labs/flux-1.1-pro"` 定数追加
+- `resolveProfileModel()`: `flux11_pro_candidate` → `FLUX_11_PRO_MODEL`
+- `resolveImageFallbackProfiles()`: `flux11_pro_candidate` → `["flux11_pro_candidate", "klein_fast"]`
+- `buildReplicateInput()` に flux-1.1-pro 専用ブランチ追加:
+  - `safety_tolerance: 5`（scale 1–6、default 2。children's fantasy 向け緩和）
+  - `prompt_upsampling: false`
+  - reference 画像がある場合: `image_prompt: urls[0]`（Flux Redux — 単一 URI、`input_images` 配列ではない）
+
+#### 52.2.3 generate-book.ts — book-level imageModelProfile 優先修正
+スモークユーザーは Firebase Auth なし → `getUserPlan` が `"free"` を返す → プランの `pro_consistent` が book doc の `flux11_pro_candidate` を上書きする問題を修正。`bookData.imageModelProfile ?? normalizedPlanConfig.imageModelProfile` に統一（book-level 明示時は常に優先）。本番動作への影響なし。
+
+#### 52.2.4 smoke script
+`create-nonfixed-smoke-book.js` に `--model-profile=` フラグを追加
+
+#### 52.2.5 テスト追加
+新規 3 テスト（合計 683 tests、全 PASS）
+
+### 52.3 I1 スモーク結果
+
+**プロファイル**: I1（anchored moderate — ひかり 4 歳 / fantasy × crayon）
+**モデル**: `flux11_pro_candidate`（flux-1.1-pro, `safety_tolerance=5`）
+**フォールバックチェーン**: `["flux11_pro_candidate", "klein_fast"]`
+
+| ページ | status | imageAttemptCount | imageDurationMs |
+| --- | --- | --- | --- |
+| 0 | completed | 1 | 4,765 |
+| 1 | completed | 1 | 3,789 |
+| 2 | fallback_completed | 3 | 24,928 |
+| 3 | fallback_completed | 3 | 16,885 |
+| 4 | fallback_completed | 3 | 11,913 |
+| 5 | fallback_completed | 3 | 8,920 |
+| 6 | fallback_completed | 3 | 9,347 |
+| 7 | fallback_completed | 3 | 9,303 |
+
+`imageModel` フィールドは PRIMARY プロファイルから事前計算（line 992）。`fallback_completed` ページの実際の使用モデルは `replicateModel` フィールドに格納（`flux-2-klein-9b`）。
+
+**フォールバック動作内訳**（imageAttemptCount=3 ページ）:
+- Attempt 1: flux-1.1-pro → E005
+- Attempt 2: flux-1.1-pro → E005（maxRetries=2 exhausted）
+- Attempt 3: klein_fast → 成功 → `fallback_completed`
+
+### 52.4 E005 発生状況と T6-36 基準照合
+
+| 指標 | 値 |
+| --- | --- |
+| E005 発生ページ | **6/8**（pages 2–7） |
+| image_failed | 0/8 |
+| `safety_tolerance` | 5（最大寛容方向）|
+
+**T6-36 判定基準との照合**:
+
+| 閾値 | 実績 | 判定 |
+| --- | --- | --- |
+| E005 ≤ 2/8 → PASS | 6/8 | ❌ |
+| E005 ≥ 5/8 → Clear Fail | 6/8 | ❌ **Clear Fail** |
+
+**→ I2 スキップ。flux-1.1-pro DISQUALIFIED。**
+
+ベースライン比較: flux-2-pro T6-32 I1 = 5/8 E005 → flux-1.1-pro は改善なし（むしろ悪化）。
+
+### 52.5 考察
+
+- `safety_tolerance=5` はプラットフォームレベルのコンテンツ分類（E005）に効果なし。同社（Black Forest Labs）の別世代モデルも同一の拒否率 → コンテンツポリシーはモデルバージョンではなくプラットフォームで統一管理されている。
+- プロンプト側 L1–L3 最適化適用済みでも 6/8 E005 → プロンプト最適化だけでは不十分であることを再確認。
+- O2（Replicate 問い合わせ回答）がプラットフォームレベル緩和の唯一の方向性。
+
+### 52.6 次フェーズ
+
+**ペアステータス**: 引き続き **Blocked-on-model-policy**
+
+- **オプション A（優先）**: O2 Replicate inquiry 回答待機 — 追加スモーク予算消費なし
+- **オプション B**: T6-38 flux-dev（rank 2）candidate smoke — T6-35 ranking rank 2 = `black-forest-labs/flux-dev`
+
+### 52.7 T6-37 で実施しなかったこと（意図的スコープ外）
+- I2 スモーク（Clear Fail のため skip）
+- flux-dev 実装（T6-38 スコープ）
+- プロダクション routing 変更
+- UI 変更
+- Firestore schema/rules 変更
+- Replicate inquiry 実際の送付（手動ステップ — see § 50.3）
+- service account JSON、secrets、private URL、storage token の記録なし

@@ -46,6 +46,12 @@ describe("resolveReplicateModel", () => {
         imageModelProfile: "kontext_reference",
       })
     ).toBe("black-forest-labs/flux-kontext-pro");
+    expect(
+      resolveReplicateModel({
+        purpose: "book_page",
+        imageModelProfile: "flux11_pro_candidate",
+      })
+    ).toBe("black-forest-labs/flux-1.1-pro");
   });
 
   it("keeps child avatar generation on flux-2-pro regardless of requested profile", () => {
@@ -82,6 +88,10 @@ describe("resolveImageFallbackProfiles", () => {
 
   it("returns only klein_fast for klein_fast (no further fallback)", () => {
     expect(resolveImageFallbackProfiles("klein_fast")).toEqual(["klein_fast"]);
+  });
+
+  it("returns flux11_pro_candidate then klein_fast for flux11_pro_candidate", () => {
+    expect(resolveImageFallbackProfiles("flux11_pro_candidate")).toEqual(["flux11_pro_candidate", "klein_fast"]);
   });
 });
 
@@ -219,6 +229,38 @@ describe("buildReplicateInput", () => {
       aspect_ratio: "4:3",
       output_format: "png",
       input_image: "https://example.com/1.png",
+    });
+  });
+
+  it("builds flux-1.1-pro input with safety_tolerance and prompt_upsampling, no image_prompt when no reference", () => {
+    expect(
+      buildReplicateInput({
+        model: "black-forest-labs/flux-1.1-pro",
+        prompt: "test prompt",
+      })
+    ).toEqual({
+      prompt: "test prompt",
+      aspect_ratio: "4:3",
+      output_format: "png",
+      safety_tolerance: 5,
+      prompt_upsampling: false,
+    });
+  });
+
+  it("builds flux-1.1-pro input with image_prompt (first URL only) when reference URLs provided", () => {
+    expect(
+      buildReplicateInput({
+        model: "black-forest-labs/flux-1.1-pro",
+        prompt: "test prompt",
+        inputImageUrls: ["https://example.com/1.png", "https://example.com/2.png"],
+      })
+    ).toEqual({
+      prompt: "test prompt",
+      aspect_ratio: "4:3",
+      output_format: "png",
+      safety_tolerance: 5,
+      prompt_upsampling: false,
+      image_prompt: "https://example.com/1.png",
     });
   });
 });

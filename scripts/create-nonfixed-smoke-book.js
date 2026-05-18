@@ -279,6 +279,7 @@ async function main() {
   const themeId = parseArg(args, "--theme-id=") ?? "bedtime";
   const styleId = parseArg(args, "--style-id=") ?? "crayon";
   const profileKey = (parseArg(args, "--profile=") ?? "a").toLowerCase();
+  const modelProfileOverride = parseArg(args, "--model-profile=") ?? null;
 
   const styleProfile = STYLE_PROFILE_REGISTRY[styleId];
   if (!styleProfile) {
@@ -330,6 +331,7 @@ async function main() {
     updatedAt: FieldValue.serverTimestamp(),
     updatedAtMs: nowMs,
     expiresAt: null,
+    ...(modelProfileOverride ? { imageModelProfile: modelProfileOverride } : {}),
     smokeTestMetadata: {
       isSmokeTest: true,
       suite: "nonfixed_t6",
@@ -340,21 +342,23 @@ async function main() {
       inputProfile: profileSpec.label,
       createdAtIso: new Date(nowMs).toISOString(),
       withReference: false,
+      ...(modelProfileOverride ? { modelProfileOverride } : {}),
     },
   };
 
   if (dryRun) {
     console.log("[dry-run] Payload preview (no Firestore write):");
-    console.log(`  themeId:       ${themeId}`);
-    console.log(`  styleId:       ${styleId}`);
-    console.log(`  profile:       ${profileKey} (${profileSpec.label})`);
-    console.log(`  creationMode:  ${payload.creationMode}`);
-    console.log(`  productPlan:   ${payload.productPlan}`);
-    console.log(`  pageCount:     ${payload.pageCount}`);
-    console.log(`  characterMode: ${payload.characterConsistencyMode}`);
-    console.log(`  withReference: false`);
-    console.log(`  input:         ${JSON.stringify(payload.input)}`);
-    console.log(`  runId:         ${smokeRunId}`);
+    console.log(`  themeId:            ${themeId}`);
+    console.log(`  styleId:            ${styleId}`);
+    console.log(`  profile:            ${profileKey} (${profileSpec.label})`);
+    console.log(`  creationMode:       ${payload.creationMode}`);
+    console.log(`  productPlan:        ${payload.productPlan}`);
+    console.log(`  pageCount:          ${payload.pageCount}`);
+    console.log(`  characterMode:      ${payload.characterConsistencyMode}`);
+    console.log(`  withReference:      false`);
+    console.log(`  modelProfileOverride: ${modelProfileOverride ?? "(none)"}`);
+    console.log(`  input:              ${JSON.stringify(payload.input)}`);
+    console.log(`  runId:              ${smokeRunId}`);
     console.log("[dry-run] done. Run with --write to create the book.");
     return;
   }

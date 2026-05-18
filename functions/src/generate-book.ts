@@ -1322,9 +1322,10 @@ function normalizeBookForGeneration(
     characterConsistencyMode:
       bookData.characterConsistencyMode ?? normalizedPlanConfig.characterConsistencyMode,
     imageModelProfile:
-      userPlan === "premium"
-        ? bookData.imageModelProfile ?? normalizedPlanConfig.imageModelProfile
-        : normalizedPlanConfig.imageModelProfile ?? bookData.imageModelProfile,
+      // Explicit imageModelProfile on the book document always takes priority over plan default.
+      // This allows smoke/diagnostic overrides (e.g. flux11_pro_candidate) without requiring
+      // a premium user account. If not set on the book, the plan config default applies.
+      bookData.imageModelProfile ?? normalizedPlanConfig.imageModelProfile,
     scenePolicy: resolveScenePolicy(bookData, template),
     pageCount: normalizedPageCount,
     generationMode: normalizedPlanConfig.generationMode,
