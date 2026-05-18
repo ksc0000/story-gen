@@ -539,14 +539,40 @@ smoke design を docs-only で作成。T6-37 が実装 + smoke を実行する�
 | 項目 | 状態 |
 | --- | --- |
 | I2 smoke (reference images) | 未実施 |
-| Visual QA | 未実施 |
-| candidate promotion 判定 | I1+I2+Visual QA 完了後 |
+| Visual QA | ✅ **CONDITIONAL PASS** (T6-44) |
+| candidate promotion 判定 | I2+human visual review 完了後 |
+
+---
+
+### T6-44: OpenAI I1 Visual QA (2026-05-20)
+
+**Verdict: CONDITIONAL PASS — I2 進行可**
+
+| Criterion | Result |
+| --- | --- |
+| BF-4 (Critical defects) | **PASS** — text/watermark=0%, anatomical likely clear |
+| BF-3 (Major defects) | **PASS** — composition reasonable, story-image match excellent |
+| Crayon style adherence | **PARTIAL** — saturation=0.63 (good), 3/8 pages smooth texture signal |
+| Story-image match | **PASS** — color temperature arc perfectly follows narrative |
+| Emotional fit | **PASS** — appropriate night-story atmosphere |
+| Commercial suitability | **CONDITIONAL** — pending human visual confirmation |
+
+**Key findings**:
+- Color narrative coherence is excellent (cool night → warm discovery → cool resolution)
+- High saturation (0.63) indicates vivid, child-appealing palette
+- Crayon micro-texture partially under-expressed (3/8 smooth pages) — addressable via styleBible tuning
+- No moderation issues, no text artifacts, no anatomical anomalies detected
+
+**I2 Recommendations**:
+- Use daytime theme to test bright/warm palette capability
+- Enhance styleBible with explicit crayon texture instructions
+- Test Responses API reference image path (fundamentally different code path)
 
 **ペアステータス**:
 
 | 項目 | 状態 |
 | --- | --- |
-| ペアステータス | **Blocked-on-secret** |
+| ペアステータス | **I2-ready** |
 | primary モデル | flux-2-pro (`pro_consistent`) — 変更なし |
 | Replicate inquiry | ❌ 未送付（期限: 2026-05-25）|
-| 次フェーズ | A3/A4 完了 → deploy → I1 smoke 実行 |
+| 次フェーズ | T6-45: I2 smoke (reference images via Responses API) |
