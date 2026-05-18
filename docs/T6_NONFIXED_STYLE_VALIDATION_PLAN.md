@@ -8587,3 +8587,300 @@ T6-40 の scope は B-O2 状態と O2 結果によって決定する:
 - generated artifacts の commit
 - Replicate inquiry の実際の送付（手動ステップ — see § 50.3）
 - flux-dev の実装
+
+---
+
+## Section 55: T6-40 — Inquiry Submission Record / Non-BFL Image Provider Audit Kickoff (2026-05-18)
+
+### 55.1 Task Summary
+
+| 項目 | 詳細 |
+| --- | --- |
+| タスク ID | T6-40 |
+| タイプ | docs-only tracking / audit kickoff |
+| 日付 | 2026-05-18 |
+| depends-on | T6-39 (`1e129fc`) |
+| 目的 | (1) Replicate inquiry 送付状態の正式確認 (2) non-BFL image provider audit の開始 (3) T6-41 scope の確定 |
+| コード変更 | なし |
+| deploy | なし |
+| smoke | なし |
+
+### 55.2 Primary Conclusion
+
+> **B-O2 still active. External dependency not yet activated.**
+> Replicate inquiry has not been submitted as of 2026-05-18.
+> Non-BFL provider evaluation is now initiated in parallel to reduce dependency on O2 response.
+> OpenAI Image API (moderation: "low" parameter) and Google Gemini Image / Nano Banana
+> are identified as high-priority candidates with independent content policy infrastructure.
+
+### 55.3 Replicate Inquiry B-O2 Tracking（T6-40 時点）
+
+#### 55.3.1 送付状態
+
+| 項目 | 状態 |
+| --- | --- |
+| Inquiry draft | ✅ 完了（T6-34, `4bfe802`） |
+| Draft 所在 | `docs/T6_NONFIXED_STYLE_VALIDATION_PLAN.md` § 49.6 |
+| 送付状態 | ❌ **未送付** |
+| Ticket ID | (未取得) |
+| B-O2 status | **STILL ACTIVE** |
+| 初回送付期限 | 2026-05-25 |
+| Escalation 期限 | 送付日 + 14 営業日 |
+
+#### 55.3.2 B-O2 Escalation Rule（再確認）
+
+| 状況 | アクション |
+| --- | --- |
+| 2026-05-25 までに送付 | § 50.4 に記録 → O2 応答待機 |
+| 2026-05-25 を超過 | T6-41 で B-O2 escalation として docs 記録 + 再送付要求 |
+| 応答なし（送付日 + 14 営業日後） | O2-NoResponse として T6-42 scope 確定 |
+
+### 55.4 BFL-Only Path の限界
+
+| 試行 | 結果 | 理由 |
+| --- | --- | --- |
+| flux-2-pro（pro_consistent） | ❌ E005 5–7/8 | Replicate プラットフォームレベル content classifier |
+| flux-1.1-pro（flux11_pro_candidate） | ❌ E005 6/8（safety_tolerance=5） | 同上; `safety_tolerance` は platform classifier に無効 |
+| flux-dev | ❌ NO-GO | C4/C5 失敗; `disable_safety_checker` Replicate でロック済み |
+| プロンプト L1–L3 | ❌ 効果限定的（7→5/8） | モデルよりプラットフォームフィルタが支配的 |
+
+**結論**: BFL ファミリーのモデル変更では E005 を解消できない。Replicate プラットフォームの外に出ることが必要。
+
+### 55.5 Non-BFL Candidate Buckets
+
+| bucket | candidates | initial judgment |
+| --- | --- | --- |
+| **OpenAI Image family** | `gpt-image-2`, `gpt-image-1`, `gpt-image-1-mini` | **High-priority** — `moderation: "low"` パラメータで content filtering を明示的に緩和可能 |
+| **Google Gemini Image / Nano Banana** | `gemini-3.1-flash-image-preview`, `gemini-3-pro-image-preview`, `gemini-2.5-flash-image` | **High-priority** — BFL と独立したコンテンツポリシー; 最大 14 枚 reference 画像対応 |
+| **Stability / SD family** | `stability-ai/stable-diffusion-3.5-large` (Replicate) | Medium — 独立アーキテクチャで独立コンテンツポリシー; Replicate 経由なら platform filter は同じリスク |
+| **Ideogram family** | `ideogram-ai/ideogram-v2`, v3 | Medium — text-avoidance 設計; BF-4 に有利; E005 相当の動作未確認 |
+| **BFL/Replicate continuation** | flux-dev | **Low / NO-GO** — C5 未解消; T6-39 判定維持 |
+| **Pause category** | imagination blocked | **Safe fallback** — production routing 変更なし; BF-3/BF-4 compliant books は他 pair で提供継続 |
+
+### 55.6 OpenAI Image API 候補評価
+
+#### 55.6.1 API 概要
+
+| 項目 | 内容 |
+| --- | --- |
+| 主要モデル | `gpt-image-2`（最新）, `gpt-image-1`, `gpt-image-1-mini` |
+| API エンドポイント | Image API（`/v1/images/generations`）または Responses API |
+| 出力形式 | base64 または URL（PNG / JPEG / WebP） |
+| ソース | `developers.openai.com/api/docs/guides/image-generation`（2026-05-18 確認） |
+
+#### 55.6.2 コンテンツポリシー — 最重要項目
+
+```
+moderation parameter (gpt-image-2, gpt-image-1, gpt-image-1.5, gpt-image-1-mini):
+  - "auto" (default): Standard filtering — limits potentially age-inappropriate content
+  - "low": Less restrictive filtering
+```
+
+**これが OpenAI Image を High-priority とする最大の理由**:
+- Replicate BFL モデルは `safety_tolerance=5` でも E005 6/8 → プラットフォームレベルで制御不可
+- OpenAI は `moderation: "low"` という明示的なパラメータで content filtering を緩和できる
+- children's fantasy 絵本（3–6 歳対象、クレヨンスタイル、空飛ぶロケット等）は `moderation: "low"` で通過する可能性が高い
+
+#### 55.6.3 Reference Image 対応
+
+| 用途 | サポート |
+| --- | --- |
+| キャラクター参照 | ✅ Responses API で複数 input image を content array に含められる（base64 / URL / File ID） |
+| img2img (style transfer) | ✅ `edits` エンドポイントまたは Responses API |
+| 現行 `input_images` との互換性 | ⚠️ API schema が Replicate と異なる — 専用 `ImageClient` 実装が必要 |
+
+#### 55.6.4 コスト概算
+
+| モデル | quality: low | quality: medium | quality: high |
+| --- | --- | --- | --- |
+| gpt-image-2 (1024x1024) | $0.006 | $0.053 | $0.211 |
+| gpt-image-1 (1024x1024) | $0.011 | $0.042 | $0.167 |
+| gpt-image-1-mini (1024x1024) | $0.005 | $0.011 | $0.036 |
+
+8 ページ × `quality: "low"` で `gpt-image-2` = $0.048 / book → 現行 flux-2-pro ($0.025/image × 8 = $0.20) と比較して low quality なら安価。medium 以上は高コスト。
+
+#### 55.6.5 Firebase Functions 統合評価
+
+| 項目 | 評価 |
+| --- | --- |
+| Node.js SDK | `openai` npm パッケージ（公式）。Functions に追加可能 |
+| 認証 | `OPENAI_API_KEY` 環境変数 — Firebase Secret Manager 管理可 |
+| API schema | HTTP POST / base64 応答 — `ImageClient` 新規実装が必要 |
+| API Organization Verification | gpt-image-2 以降は組織認証が必要（`platform.openai.com/settings/organization/general`） |
+| レイテンシ | "Complex prompts may take up to 2 minutes" — 8 ページ並列生成で許容範囲を検証要 |
+| SLA | 標準 API SLA（Enterprise 契約で改善可） |
+
+#### 55.6.6 OpenAI Image 評価サマリー
+
+| 評価軸 | 評価 | 根拠 |
+| --- | --- | --- |
+| child-safe fantasy completion | ✅ High | `moderation: "low"` で明示緩和可能 |
+| crayon style fidelity | ⚠️ 未確認 | T6-41 で smoke design 要 |
+| story-image match | ⚠️ 未確認 | instruction-following は既知優秀 |
+| BF-4 safety (no text) | ✅ 良好 | OpenAI モデルの text-in-image 制御は良好 |
+| BF-3 continuity | ⚠️ 条件付き | Responses API で reference images 使用可 |
+| API schema fit | ⚠️ 新規実装必要 | Replicate とは別 `ImageClient` |
+| cost (medium quality) | ⚠️ 高め | $0.042–$0.053 / image vs $0.025 |
+| latency p95 | ⚠️ 未確認 | 最大 2 分の記載あり — 実測要 |
+| commercial terms | ✅ | 標準 API 商用利用可 |
+| observability | ✅ | エラーレスポンス・rate limit が明確 |
+
+### 55.7 Google Gemini Image / Nano Banana 候補評価
+
+#### 55.7.1 API 概要
+
+| 項目 | 内容 |
+| --- | --- |
+| モデル（速度重視） | `gemini-3.1-flash-image-preview`（Nano Banana 2）|
+| モデル（品質重視） | `gemini-3-pro-image-preview`（Nano Banana Pro）|
+| モデル（低レイテンシ） | `gemini-2.5-flash-image`（Nano Banana）|
+| API | Google Gemini API（`ai.google.dev`）|
+| SDK | `@google/generative-ai`（Node.js）|
+| ソース | `ai.google.dev/gemini-api/docs/image-generation`（2026-05-18 確認）|
+| ステータス | `gemini-3.1-flash-image-preview`, `gemini-3-pro-image-preview` は **EXPERIMENT（プレビュー）** |
+
+#### 55.7.2 コンテンツポリシー
+
+| 項目 | 内容 |
+| --- | --- |
+| コンテンツ方針ドキュメント | Google AI 利用ポリシー（`policies.google.com/terms/generative-ai/use-policy`）|
+| moderation パラメータ | **明示的な `moderation: "low"` 相当のパラメータなし**（T6-40 時点の確認） |
+| E005 相当動作 | 不明 — children's fantasy への応答を実測で確認要 |
+| SynthID 透かし | 全生成画像に埋め込み（不可視）— 商用利用には問題なし |
+| 評価 | BFL / Replicate と独立したポリシー基盤 → E005 相当エラーの発生率は低い可能性 |
+
+#### 55.7.3 Reference Image 対応（重要）
+
+| 項目 | Gemini 3 Pro | Gemini 3.1 Flash |
+| --- | --- | --- |
+| 参照画像総数 | 最大 14 枚 | 最大 14 枚 |
+| キャラクター一貫性用 | 最大 5 枚 | 最大 4 枚 |
+| オブジェクト忠実度用 | 最大 6 枚 | 最大 10 枚 |
+| 現行 `input_images` との互換性 | ⚠️ Gemini API 固有の schema（inline_data / File ID） |
+
+#### 55.7.4 アスペクト比・解像度
+
+| アスペクト比 | サポート | 出力サイズ例（1K） |
+| --- | --- | --- |
+| 4:3 | ✅ | 1,200 × 896（Gemini 3.1 Flash） |
+| 16:9 | ✅ | 1,376 × 768 |
+| 1:1 | ✅ | 1,024 × 1,024 |
+
+**4:3 ✅** — 現行生成パイプラインのアスペクト比と互換。
+
+#### 55.7.5 Firebase Functions 統合評価
+
+| 項目 | 評価 |
+| --- | --- |
+| Node.js SDK | `@google/generative-ai` npm パッケージ。Functions に追加可能 |
+| 認証 | `GEMINI_API_KEY` — Firebase Secret Manager 管理可 |
+| API schema | Gemini 独自フォーマット（`inline_data`, `response_modalities`）— 新規 `ImageClient` 必要 |
+| レイテンシ | Flash Image は速度最適化 — 低レイテンシが期待される |
+| プレビューリスク | `gemini-3.1-flash-image-preview` は EXPERIMENT ラベル — API 変更・廃止リスクあり |
+| コスト | 要確認（pricing ページ参照）— 概算は T6-41 で調査 |
+
+#### 55.7.6 Gemini Image 評価サマリー
+
+| 評価軸 | 評価 | 根拠 |
+| --- | --- | --- |
+| child-safe fantasy completion | ⚠️ 期待値高いが未確認 | BFL/Replicate と独立ポリシー; moderation param なし |
+| crayon style fidelity | ⚠️ 未確認 | illustration スタイル対応は良好と言われるが要実測 |
+| story-image match | ⚠️ 未確認 | 思考モードで複雑指示への対応力は高い |
+| BF-4 safety (no text) | ✅ 比較的良好 | テキスト挿入回避の指示対応は確認されている |
+| BF-3 continuity | ✅ 条件付き | 参照画像最大 14 枚（キャラクター最大 4–5 枚）|
+| API schema fit | ⚠️ 新規実装必要 | Gemini 固有 SDK |
+| cost | ⚠️ 要確認 | T6-41 で調査 |
+| latency p95 | ✅ 期待値高 | Flash Image は速度最適化 |
+| commercial terms | ✅ | Gemini API 商用利用可 |
+| プレビューリスク | ⚠️ 中 | EXPERIMENT ラベル（Gemini 3 系） |
+
+### 55.8 補助候補（Medium Priority）
+
+#### 55.8.1 Stability AI SD3.5-L（Replicate 経由）
+
+| 項目 | 評価 |
+| --- | --- |
+| Replicate model string | `stability-ai/stable-diffusion-3.5-large` |
+| アーキテクチャ | Stable Diffusion 3.5（BFL と独立）|
+| content policy | Stability AI 独自 → BFL と異なる分類器 |
+| 注意点 | Replicate 経由 → プラットフォームレベル safety は BFL モデルと同様に適用される可能性 |
+| 評価 | Replicate を経由する場合は platform filter のリスクが残る; Stability AI 直接 API なら独立性が高い |
+| 優先度 | Medium（Replicate の platform classifier が問題の源泉なら効果限定的）|
+
+#### 55.8.2 Ideogram v2/v3（Replicate または直接 API）
+
+| 項目 | 評価 |
+| --- | --- |
+| モデル | `ideogram-ai/ideogram-v2` (Replicate) または Ideogram API |
+| 特徴 | text-in-image 制御が設計思想の中心 → BF-4（テキスト不出力）に有利 |
+| content policy | Ideogram 独自 → children's content への E005 相当動作未確認 |
+| 評価 | text-avoidance は利点; style adherence は要検証 |
+| 優先度 | Medium（text 問題には有効; E005 相当は未確認）|
+
+### 55.9 評価軸定義（T6-41 以降の smoke design に使用）
+
+| 評価軸 | 定義 | 測定方法 |
+| --- | --- | --- |
+| child-safe fantasy completion | E005 相当の拒否が ≤ 2/8 per book | I1 smoke で測定 |
+| crayon style fidelity | クレヨン質感スコア ≥ 3/5 | 手動 QA（1–5 スケール）|
+| story-image match | cloud ship / fox / lantern 等の主要要素出現率 | 手動 QA（per page）|
+| BF-4 safety | readable text / pseudo text の不出現 | 手動 QA（0-fail / 1-pass）|
+| BF-3 continuity | child character の視覚的一貫性 | cover page 比較（1–5 スケール）|
+| API schema fit | Firebase Functions から最小コードで呼べるか | 実装設計 doc で判断 |
+| cost per book | 8 ページ medium quality での概算コスト | API pricing page |
+| latency p95 | 1 ページ生成時間 p95 ≤ 120 s | smoke で imageAttemptMs を測定 |
+| commercial terms | SaaS 商用利用可否 | 各プロバイダの利用規約確認 |
+| observability | エラーコード・ログ・サポート体制 | API doc / support page 確認 |
+
+### 55.10 T6-41 推奨方針
+
+**T6-41 — Non-BFL Image Provider Candidate Audit（docs-only）**
+
+| 項目 | 内容 |
+| --- | --- |
+| タイプ | docs-only（API doc 調査 / integration plan 設計 / cost model）|
+| 実装 | なし |
+| smoke | なし |
+| 主要スコープ | OpenAI gpt-image-2（`moderation: "low"`）vs. Gemini Nano Banana の詳細比較 |
+| 優先対象 | OpenAI Image（`moderation` パラメータが決定的な差別化要因）|
+| 副次対象 | Gemini 3.1 Flash Image Preview（latency / reference image 対応）|
+| 参考調査 | SD3.5-L Direct API（非 Replicate 経由）/ Ideogram API |
+| 成果物 | rank 1 provider 選定 + T6-42 実装 scope 定義 |
+
+T6-42: rank 1 の最小実装設計へ進む（ImageClient 新規実装 + smoke script 対応）。
+
+### 55.11 Human Action List
+
+| アクション | 優先度 | 期限 | 担当 |
+| --- | --- | --- | --- |
+| **A1**: Replicate inquiry を § 49.6 draft から送付 | 最優先 | 2026-05-25 | human operator |
+| **A2**: 送付後に § 50.4 に送付日・Ticket ID を記入 | 高（A1 直後） | — | human operator |
+| **A3**: OpenAI API Organization Verification（`platform.openai.com/settings/organization/general`）を確認・完了 | 高 | T6-42 実装前 | human operator |
+| A4: Gemini API pricing を `ai.google.dev/gemini-api/docs/pricing` で確認 | 中 | T6-41 内 | agent / docs |
+
+### 55.12 ペアステータス
+
+| pair | verdict | primary model | E005 status | next action |
+| --- | --- | --- | --- | --- |
+| imagination × crayon | **Blocked-on-model-policy** | flux-2-pro (`pro_consistent`) | Dominant | B-O2 送付（2026-05-25）+ T6-41 non-BFL audit |
+
+### 55.13 T6-40 で実施しなかったこと（意図的スコープ外）
+- コード変更
+- functions 変更
+- lib 変更
+- prompt 変更
+- model routing 変更
+- deploy
+- smoke
+- image generation
+- visual QA
+- Firestore schema / rules 変更
+- Admin regeneration
+- reference-flow generation
+- service account JSON / secrets / URL / token の記録
+- private image URL / storage token の記録
+- raw Cloud Logs dump の commit
+- generated artifacts の commit
+- production routing 変更
+- Replicate inquiry の実際の送付（手動ステップ — see § 50.3）
+- OpenAI Image / Gemini Image の実装（T6-42 スコープ）
