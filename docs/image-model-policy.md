@@ -832,3 +832,51 @@ Condition: Validate with real child photo reference (not animals.png template) b
 ### Next: T6-50 Recommendation
 
 Run I3 smoke with a real child photo reference image to confirm the contamination pattern does not occur in production-equivalent conditions. If clean → proceed to routing decision.
+
+---
+
+## T6-50 Update: I3 Smoke Design — Real Child Photo Reference (2026-05-19)
+
+### Status
+
+**⏳ PENDING** — Human operator must provide real child photo reference URL before smoke execution.
+
+### Purpose
+
+Validate that P2/P5 reference contamination (animals.png pattern from T6-49) does **not** occur when the reference image is a real child photo (production-equivalent). This is the final gate before the OpenAI Responses API reference path can be promoted to a production routing candidate.
+
+### `animals.png` Prohibition Rule (effective after T6-49)
+
+`animals.png` and all `/images/templates/*.png` / `/images/styles/*.png` MUST NOT be used as `referenceImageUrl` in any future OpenAI reference-path smoke test. Enforced in `scripts/create-openai-i3-smoke-book.js` via runtime guard.
+
+### I3 Reference Image Requirements
+
+| requirement | detail |
+| --- | --- |
+| Subject | Single child, clearly visible face |
+| Consent | Testing use allowed |
+| Background | No text, logos, character merchandise |
+| Hosting | Stable `https://` URL — NOT committed to repo |
+
+### I3 Script
+
+`scripts/create-openai-i3-smoke-book.js` — accepts `--reference-url <URL>` (required), guards against prohibited template URLs, does not store URL in `smokeTestMetadata`.
+
+### I3 Success Criteria
+
+| verdict | condition |
+| --- | --- |
+| PASS | 8/8 generated, 0/8 contamination |
+| CONDITIONAL PASS | ≤ 1/8 contamination |
+| FAIL | ≥ 2/8 contamination |
+
+### Updated OpenAI Validation State
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | None |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Real child photo required |
+| Reference image I3 (real photo) | Responses API / gpt-4o | ⏳ PENDING (T6-50) | Awaiting Human reference image |
+
+**Next**: T6-50 execution (Human operator provides reference URL) → T6-51 visual QA → routing decision.

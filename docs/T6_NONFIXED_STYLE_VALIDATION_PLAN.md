@@ -10874,3 +10874,199 @@ On all 6 PASS pages, the child protagonist (Hinata) is rendered with:
 | Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS | Real child photo required in production |
 
 **Next milestone**: T6-50 — I3 smoke with real child photo reference (confirm no contamination pattern).
+
+---
+
+## Section 65: T6-50 — I3 Smoke Design: Real Child Photo Reference (2026-05-19)
+
+### 65.1 Status
+
+**⏳ PENDING — Human prerequisite not yet satisfied.**
+
+I3 smoke execution requires a real child photo (or consented test-person photo) to be provided by the Human operator. This section covers the full design and execution plan. Execution will proceed once the operator confirms the reference image prerequisite is met.
+
+### 65.2 Purpose
+
+Validate that the reference-image contamination observed in T6-49 (P2/P5 echoing `animals.png` content) does **not** occur when the reference image is a real child photo (production-equivalent conditions).
+
+This is the final gate before the OpenAI reference path (`imagination × crayon` × OpenAI candidate) can be promoted to a production routing candidate.
+
+### 65.3 Background: T6-49 Contamination Finding
+
+| item | detail |
+| --- | --- |
+| Reference used (T6-49) | `animals.png` — animals template placeholder |
+| Contamination pattern | P2, P5: bear, rabbit, fox, bluebird drawn instead of child protagonist Hinata |
+| Root cause | `gpt-4o` sometimes echoes reference image content as drawn subjects when the reference contains non-human subjects (animals, objects) |
+| Affected pages | 2/8 (P2, P5) |
+| Production relevance | Low — production always uses real child photo reference, which eliminates this pattern |
+
+### 65.4 `animals.png` Prohibition Rule
+
+**Effective immediately after T6-49:**
+
+> `animals.png` (or any `/images/templates/*.png` or `/images/styles/*.png`) MUST NOT be used as `referenceImageUrl` in any future OpenAI reference-path smoke test.
+
+Enforcement:
+
+- `scripts/create-openai-i3-smoke-book.js` includes a runtime guard that rejects URLs matching `animals.png`, `templates/`, or `/images/styles/` patterns.
+- Future smoke scripts for OpenAI I2+ path must implement the same guard.
+- This rule applies to `characterConsistencyMode: all_pages` smoke runs only. Style preview images (`stylePreviewUsedAsReference: false`) are unaffected.
+
+### 65.5 I3 Reference Image Requirements
+
+| requirement | detail |
+| --- | --- |
+| Subject | Single child (protagonist — Hinata or equivalent test persona) |
+| Type | Real child photo OR consented test-person photo |
+| Consent | Testing use explicitly allowed |
+| Face | Clearly visible, front-facing or slight angle |
+| Lighting | Even, good natural or indoor lighting |
+| Background | No readable text, logos, posters, character merchandise |
+| Clothing | No readable text or brand logos |
+| Age appearance | Clearly child (consistent with characterBible: 4-year-old girl) |
+| Format | JPEG or PNG, min 512×512 px |
+| Privacy | URL must NOT be committed to repo; not stored in smokeTestMetadata |
+| Hosting | Firebase Storage (signed or public object URL) or equivalent stable https:// URL |
+
+### 65.6 I3 Smoke Input Specification
+
+| field | value |
+| --- | --- |
+| `userId` | `smoke-test-openai-i3` |
+| `bookId` | `smoke-openai-i3-{timestamp}` |
+| `theme` | `imagination` |
+| `style` | `crayon` |
+| `imageModelProfile` | `openai_image_candidate` |
+| `characterConsistencyMode` | `all_pages` |
+| `pageCount` | 8 |
+| `styleBible` | CRAYON_STYLE_BIBLE_V2 (same as T6-48/49) |
+| `childProfileSnapshot.visualProfile.referenceImageUrl` | real child photo URL (provided by Human) |
+| `characterBible` | same as T6-48/49 (Hinata, pigtails, yellow dress, red shoes) |
+| `smokeTestMetadata.suite` | `openai_i3` |
+| `smokeTestMetadata.referenceImageType` | `real_child_photo` |
+
+**Differences from I2 (T6-48/49):**
+
+- Reference image is a real child photo (not `animals.png`)
+- `smokeTestMetadata.suite`: `openai_i3` (distinguishable in Firestore)
+- `referenceImageType` field added to metadata
+- Runtime guard enforces prohibition of template images
+
+### 65.7 Script: `create-openai-i3-smoke-book.js`
+
+**Location**: `scripts/create-openai-i3-smoke-book.js` (created in T6-50)
+
+**Usage**:
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS = "$env:USERPROFILE\secrets\service-account.json"
+node scripts/create-openai-i3-smoke-book.js --reference-url "https://..." --dry-run
+node scripts/create-openai-i3-smoke-book.js --reference-url "https://..." --write
+```
+
+**Guards**:
+- Rejects `animals.png` / `templates/` / `/images/styles/` in URL
+- Requires `https://` scheme
+- Requires `--reference-url` argument (explicit error if missing)
+- Does NOT store reference URL in `smokeTestMetadata` (privacy)
+
+### 65.8 Human Operator Prerequisites Checklist
+
+Before running I3 smoke, the Human operator must confirm all items:
+
+- [ ] Reference image is a real child photo or consented test-person image
+- [ ] Consent for testing use obtained
+- [ ] Clear face visible, single child, good lighting
+- [ ] No readable text / logos / character merchandise in frame
+- [ ] No clothing text/logos
+- [ ] Image is hosted at a stable `https://` URL accessible to Firebase Cloud Functions (asia-northeast1)
+- [ ] URL will NOT be committed to the repository
+- [ ] URL will NOT be recorded in docs, comments, or commit messages
+- [ ] `GOOGLE_APPLICATION_CREDENTIALS` set to service account JSON
+- [ ] Functions deployed with T6-48 fix (`tool_choice: { type: "image_generation" }`)
+
+### 65.9 I3 Success Criteria
+
+| verdict | condition |
+| --- | --- |
+| **PASS** | 8/8 pages generated, child protagonist (Hinata) visible on all pages, 0/8 reference contamination |
+| **CONDITIONAL PASS** | ≤ 1/8 pages with contamination; contamination pattern is clearly anomalous |
+| **FAIL** | ≥ 2/8 pages with contamination; or ≥ 2/8 image_failed |
+| **HARD FAIL** | ≥ 6/8 image_failed or errors |
+
+**Key checks (via `inspect-smoke-book.js`)**:
+
+- `usedCharacterReference: true` on all completed pages (confirms Responses API reference path was taken)
+- `imageFallbackUsed`: should be undefined/false (no Replicate fallback)
+- `imageAttemptCount`: should be 1 on all pages (no retry needed)
+- `imageDurationMs`: expected 5–25s per page
+
+### 65.10 Execution Plan (when Human prerequisites are met)
+
+```powershell
+# Step 1: Dry-run validation
+$env:GOOGLE_APPLICATION_CREDENTIALS = "$env:USERPROFILE\secrets\service-account.json"
+node scripts/create-openai-i3-smoke-book.js --reference-url "<REAL_PHOTO_URL>" --dry-run
+
+# Step 2: Write (create Firestore document — triggers generation)
+node scripts/create-openai-i3-smoke-book.js --reference-url "<REAL_PHOTO_URL>" --write
+# Note bookId from output
+
+# Step 3: Monitor (poll until completed)
+node scripts/monitor-smoke-book.js smoke-openai-i3-<timestamp>
+
+# Step 4: Inspect
+node scripts/inspect-smoke-book.js smoke-openai-i3-<timestamp>
+
+# Step 5: Visual QA → T6-51
+```
+
+### 65.11 Visual QA Separation
+
+I3 visual QA (page-by-page image review) is **separated into T6-51** to maintain slice boundaries.
+
+T6-51 checklist:
+- Protagonist visible on all PASS pages (no animal/object echo)
+- Cross-page character consistency (same face/outfit across pages)
+- Crayon style strength (same BF-5/BF-7 criteria as T6-44/49)
+- BF-3: no readable text
+- BF-4: no anatomy errors
+- Reference contamination: 0/8 pages expected
+
+### 65.12 Planned Routing Decision (post T6-51)
+
+If I3 visual QA passes:
+
+| decision | criteria |
+| --- | --- |
+| Promote OpenAI to production routing candidate | I3 PASS + no contamination |
+| Conditional promotion with safeguard | I3 CONDITIONAL PASS (1 contamination) + prompt safeguard |
+| Hold on OpenAI reference path | I3 FAIL (≥ 2 contamination) |
+
+If promoted, the next milestone is a production routing A/B test between Replicate `pro_consistent` and OpenAI Responses API for the `imagination × crayon` pair.
+
+### 65.13 What T6-50 Did NOT Do
+
+- No production/default routing changes
+- No style exposure matrix changes
+- No quality gate threshold changes
+- No prompt modifications
+- No Firestore schema changes
+- No Admin regeneration
+- No secrets / token recorded
+- No raw Storage URL recorded
+- No generated image committed
+- No real child image committed
+
+### 65.14 Artifacts Created in T6-50
+
+| artifact | location | purpose |
+| --- | --- | --- |
+| `create-openai-i3-smoke-book.js` | `scripts/` | I3 smoke book creation (ready to run when Human provides reference URL) |
+| Section 65 | `docs/T6_NONFIXED_STYLE_VALIDATION_PLAN.md` | T6-50 design record |
+| T6-50 summary | `docs/image-model-policy.md` | Policy state update |
+
+### 65.15 Next Milestone
+
+**T6-50 execution**: Human operator provides real child photo reference URL → run I3 smoke.
+**T6-51**: I3 visual QA (page-by-page image review + pair verdict update).
