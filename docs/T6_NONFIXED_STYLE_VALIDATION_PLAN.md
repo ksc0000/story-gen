@@ -8132,3 +8132,191 @@ diagnostic only — not for production routing
 - Firestore schema/rules 変更
 - Replicate inquiry 実際の送付（手動ステップ — see § 50.3）
 - service account JSON、secrets、private URL、storage token の記録なし
+
+---
+
+## Section 53: T6-38 — Post-flux-1.1 Decision / flux-dev vs Replicate Inquiry (2026-05-18)
+
+### 53.1 Task Summary
+
+| 項目 | 詳細 |
+| --- | --- |
+| タスク ID | T6-38 |
+| タイプ | docs-only decision / tracking |
+| 日付 | 2026-05-18 |
+| depends-on | T6-37 (`37d8f5b`) |
+| 目的 | flux-1.1-pro DISQUALIFIED を受けて、次の行動方針を決定する |
+| コード変更 | なし |
+| deploy | なし |
+| 煙テスト | なし |
+
+### 53.2 現在地の整理
+
+#### 53.2.1 E005 実績累積
+
+| タスク | モデル | I1 E005/8 | I2 E005/8 | 判定 |
+| --- | --- | --- | --- | --- |
+| T6-23 (baseline) | flux-2-pro | 7/8 | 7/8 | Blocked |
+| T6-30 (L1+L2) | flux-2-pro | 6/8 | 7/8 | Blocked |
+| T6-32 (L1+L2+L3) | flux-2-pro | 5/8 | 6/8 | Blocked |
+| T6-37 (flux11_pro) | flux-1.1-pro | 6/8 | — | Clear Fail |
+
+**プロンプト側ミティゲーション（L1–L3）は closed**。モデル変更による試みも flux-1.1-pro で失敗。
+
+#### 53.2.2 Replicate inquiry 送付状況（T6-38 時点）
+
+| 項目 | 状態 |
+| --- | --- |
+| Inquiry draft | ✅ 完了（T6-34, `4bfe802`） |
+| Draft 所在 | `docs/T6_NONFIXED_STYLE_VALIDATION_PLAN.md` § 49.6 |
+| 実際の送付 | ⏳ **未送付（手動アクション待ち）** |
+| Ticket ID | (未記録) |
+| Response received | (未受信) |
+
+**→ O2（Replicate inquiry）は draft 完了のまま送付されていない。これが T6-38 の Critical Path。**
+
+### 53.3 flux-dev 評価（rank 2 候補の扱い）
+
+#### 53.3.1 flux-dev の基本情報
+
+| 項目 | 内容 |
+| --- | --- |
+| Replicate model string | `black-forest-labs/flux-dev` |
+| アーキテクチャ | FLUX 系 open-weights |
+| 位置づけ | Development / fine-tune base。Pro 系より品質上限が低い |
+| content filter | Replicate プラットフォーム共通フィルタが適用される（推定） |
+| ライセンス | FLUX.1 Dev は Non-Commercial license（要確認） |
+| 商用利用 | **要確認**。Children's picture book service は商業利用に該当する可能性が高い |
+| Enterprise SLA | なし |
+| T6-35 ranking | rank 2 (backup) |
+
+#### 53.3.2 flux-dev の期待値評価
+
+**E005 がプラットフォームレベルかモデルレベルかが問題の核心**。
+
+Evidence:
+
+| 観察 | 示唆 |
+| --- | --- |
+| flux-2-pro: E005 5–7/8（全 runs） | Pro-family のコンテンツフィルタ |
+| flux-1.1-pro + safety_tolerance=5: E005 6/8 | `safety_tolerance` パラメータが E005 に無効 |
+| Pages 0–1 は一貫して通過（或いは高確率で通過） | プラットフォームフィルタはプロンプト内容依存 |
+| プロンプト最適化（L1–L3）で 7→5/8（わずか改善） | コンテンツ分類はプロンプトより画像生成結果を見ている可能性 |
+
+**結論**: E005 は Replicate プラットフォームレベルのポスト生成コンテンツ分類器によって発生している可能性が高い。flux-dev も同一 Replicate プラットフォームで動作するため、モデル変更だけでは E005 が解消しない可能性がある。
+
+#### 53.3.3 flux-dev を試す場合の最小条件
+
+flux-dev smoke に進む場合、以下の **前提確認がすべて OK** であることを docs-only audit（T6-39 または T6-39 の一部）で事前検証する。
+
+| 条件 | 確認内容 | 確認方法 |
+| --- | --- | --- |
+| C1: ライセンス確認 | FLUX.1 Dev が商用サービスで使用可能か | BFL 公式ライセンス / Replicate ドキュメント確認 |
+| C2: Model ID 確認 | `black-forest-labs/flux-dev` が Replicate API で現在 available か | Replicate API / model page 確認 |
+| C3: Input schema 確認 | `buildReplicateInput()` の既存パラメータ（`aspect_ratio`, `output_format`）が使えるか | Replicate API schema 確認 |
+| C4: reference image 対応確認 | `image_prompt` または `input_images` でキャラクター参照が使えるか | schema 確認 |
+| C5: E005 行動差分の根拠 | flux-dev が pro 系と異なるコンテンツ分類を受けるという外部証拠があるか | Replicate コミュニティ / ドキュメント確認 |
+
+**C5 が確認できない場合、flux-dev smoke は low-expectation diagnostic に分類する**（失敗リスクが高い割に投資対効果が低い）。
+
+#### 53.3.4 BFL ファミリー継続の期待値
+
+| モデル | 試行済み | E005 結果 | 継続価値 |
+| --- | --- | --- | --- |
+| flux-2-pro | ✅ | 5–7/8（全 runs） | ❌ DISQUALIFIED |
+| flux-1.1-pro | ✅ | 6/8（T6-37） | ❌ DISQUALIFIED |
+| flux-dev | 未試行 | — | ⚠️ Low expectation（C1–C5 確認必要） |
+| flux-1.1-pro-ultra | 未試行 | — | ❌ 同じ BFL platform、期待薄 |
+| fal.ai FLUX endpoint | 未試行 | — | 要別途 ImageClient 実装、Tier C |
+
+**現時点での BFL ファミリー継続方針**: flux-dev は docs-only audit を通過した場合のみ低期待値診断として実施可。それ以外の BFL 系は評価を保留。
+
+### 53.4 O2 Replicate inquiry 優先方針
+
+#### 53.4.1 O2 が Critical Path である理由
+
+- E005 がプラットフォームレベルであれば、**モデル変更ではなくアカウント/プロジェクトレベルのポリシー変更**だけが根本解決になる
+- Replicate inquiry は children's picture book を対象としたコンテンツポリシー例外・緩和を依頼する唯一の手段
+- draft は T6-34 で完成済み。送付コストは低い（5 分以内）
+
+#### 53.4.2 O2 待機期限の定義
+
+| マイルストーン | 日付 / 条件 |
+| --- | --- |
+| 送付デッドライン | 2026-05-25（T6-38 以降最初の作業日） |
+| 初回応答待機期限 | 送付日 + 7 営業日 |
+| エスカレーション判断期限 | 送付日 + 14 営業日（応答なし or decline の場合 T6-40 へ） |
+| 応答内容 → 次アクション | 53.4.3 参照 |
+
+#### 53.4.3 O2 応答シナリオと T6-40 方針
+
+| シナリオ | 条件 | T6-40 アクション |
+| --- | --- | --- |
+| O2-Success | Replicate がポリシー変更・パラメータ提供 | 指示に従い実装 / smoke → production enablement 評価 |
+| O2-Partial | 代替モデルまたは回避策の提示 | 指示内容を T6-40 で実装・評価 |
+| O2-NoResponse | 期限内に応答なし | flux-dev audit 結果に基づき判断。audit NG なら Tier B/C 評価へ |
+| O2-Decline | ポリシー変更不可と明示 | Tier B（SD3.5-L など）または Tier C（代替プロバイダ）評価へ |
+
+### 53.5 T6-39 推奨方針の決定
+
+#### 53.5.1 T6-39 推奨アクション
+
+**T6-39 = O2 inquiry 送付確認 + flux-dev docs-only audit**
+
+| アクション | 優先度 | 型 |
+| --- | --- | --- |
+| A1: Replicate inquiry 実際の送付（手動） | **最優先** | 手動操作（CI 外） |
+| A2: 送付記録を section 50.4 に記入 | 高（A1 直後） | docs-only |
+| A3: flux-dev docs-only audit（C1–C5 確認） | 中 | docs-only |
+| A4: audit 結果に基づき flux-dev smoke 可否を判断 | 中（A3 後） | docs-only 判断 |
+
+**T6-39 はコード変更なし・deploy なし・smoke なし。docs-only タスク。**
+
+#### 53.5.2 T6-39 での flux-dev smoke に進む条件
+
+以下をすべて満たした場合のみ T6-40 以降で flux-dev smoke を検討する:
+
+- [ ] C1: FLUX.1 Dev ライセンスが商用サービスで利用可能と確認
+- [ ] C2: `black-forest-labs/flux-dev` が Replicate API で active
+- [ ] C3: Input schema が既存 `buildReplicateInput()` と互換（または最小変更で対応可能）
+- [ ] C5: flux-dev が Replicate プラットフォームの E005 フィルタから異なる扱いを受けるという根拠が存在する
+
+**C5 が確認できない場合、flux-dev smoke は実施しない。** O2-NoResponse / O2-Decline を待ち、Tier B（SD3.5-L）評価へ移行する。
+
+#### 53.5.3 T6-39 スコープ外
+
+- コード変更（flux-dev の実装）
+- functions deploy
+- smoke 生成
+- visual QA
+- production routing 変更
+
+### 53.6 ペアステータス
+
+| pair | verdict | primary model | E005 status | next action |
+| --- | --- | --- | --- | --- |
+| imagination × crayon | **Blocked-on-model-policy** | flux-2-pro (`pro_consistent`) | Dominant（5–7/8 全試行） | T6-39: O2 送付確認 + flux-dev audit |
+
+### 53.7 T6-38 で実施しなかったこと（意図的スコープ外）
+- コード変更
+- runner 変更
+- functions 変更
+- UI 変更
+- style exposure matrix 変更
+- style profile 変更
+- quality gate threshold 変更
+- seed-template data 変更
+- Firestore schema / rules 変更
+- new smoke generation
+- image generation
+- deploy
+- Admin regeneration
+- reference-flow generation
+- Firebase Auth 変更
+- Storage token rotation / revocation
+- service account JSON / secrets / URL / token の記録
+- private image URL / storage token の記録
+- raw Cloud Logs dump の commit
+- product exposure matrix 更新
+- Replicate inquiry の実際の送付（手動ステップ — see § 50.3）
+- flux-dev の実装（T6-40 以降のスコープ）
