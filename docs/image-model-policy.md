@@ -95,3 +95,28 @@
 | E005 対応状況 | L1+L2 実装済み、L3 regex sanitizer は未実装（deferred） |
 | fallback | klein_fast が引き続き fallback として機能（品質問題あり）|
 | 次フェーズ | L3 sanitizer 実装 → re-smoke → 改善不十分なら Replicate policy 確認または代替モデル評価 |
+
+### T6-32 結果更新（2026-05-18）
+
+L3 regex sanitizer を実装・デプロイし、`imagination × crayon` I1/I2 re-smoke を実施。
+
+| 指標 | T6-30 (L1+L2) | T6-32 (L1+L2+L3) |
+| --- | ---: | ---: |
+| I1 fallback_completed | 6/8 | 5/8 |
+| I2 fallback_completed | 7/8 | 6/8 |
+| imageTimedOut | 0 | 0 |
+| image_failed | 0 | 0 |
+
+**評価:** L3 により各1ページ分の改善（marginal）。threshold (< 3/8) は未達。
+E005 の主因は fantasy シーン内容に対する flux-2-pro のモデルレベルの content policy であり、
+プロンプト側のサニタイザー3層すべて（L1+L2+L3）を適用しても根本解決に至らない。
+
+**現在の対応状況（T6-32 時点）:**
+
+| 項目 | 状態 |
+| --- | --- |
+| ペアステータス | **Hold** |
+| primary モデル | flux-2-pro (`pro_consistent`) のまま変更しない |
+| E005 対応状況 | L1+L2+L3 すべて実装・デプロイ済み |
+| fallback | klein_fast が fallback として機能（スタイル品質問題あり）|
+| 次フェーズ | T6-33: manual visual QA + Replicate policy inquiry 推進 |

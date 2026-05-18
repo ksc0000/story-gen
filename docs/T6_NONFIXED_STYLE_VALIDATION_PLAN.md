@@ -6787,3 +6787,170 @@ Parallel action:
 - No Klein primary implementation
 - No additional Klein quality evaluation generation
 - No product exposure matrix update
+
+---
+
+## 47. T6-32 - L3 Imagination Regex Sanitizer Implementation + Re-Smoke
+
+### 47.1 Task Summary
+
+| item | value |
+| --- | --- |
+| task | T6-32 |
+| type | implementation + deploy + re-smoke |
+| date | 2026-05-18 |
+| commit | (see git log) |
+
+### 47.2 Scope
+
+Implement the L3 regex sanitizer extension to `sanitizeImagePromptText()` (designed in T6-28 section 43.3.3),
+deploy, and run controlled re-smoke on `imagination × crayon` I1/I2 to measure E005 improvement.
+
+### 47.3 Implementation
+
+**File changed:** `functions/src/lib/prompt-builder.ts`
+
+Added imagination-specific text-risk token replacements to `sanitizeImagePromptText()`:
+
+```ts
+// L3: imagination-specific text-risk token replacements (T6-32)
+.replace(/\bstar charts?\b/gi, "night sky")
+.replace(/\btreasure maps?\b/gi, "illustrated landscape")
+.replace(/\bcelestial maps?\b/gi, "sky scene")
+.replace(/\bannotat(ed|ion[s]?)\b/gi, "")
+.replace(/\brune[s]?\b/gi, "")
+.replace(/\bglyph[s]?\b/gi, "")
+.replace(/\binscription[s]?\b/gi, "")
+.replace(/\bcompass\b/gi, "round object")
+.replace(/\bscroll with\b/gi, "scroll")
+.replace(/\bparchment with\b/gi, "parchment")
+.replace(/\b(magical|glowing|enchanted|mystical|ancient)\s+(text|writing|marks?|letters?|symbols?)\b/gi, "")
+```
+
+These replacements apply to `basePrompt` (Gemini-generated `imagePrompt`), `compositionHint`, `visualMotif/visualMotifUsage`, and `hiddenDetail`.
+
+**Test file changed:** `functions/test/prompt-builder.test.ts`
+
+Added `L3 imagination regex sanitizer (T6-32)` describe block with 7 targeted test cases covering all new replacement rules.
+
+**Build/test results:**
+- 680 tests passed (20 test files)
+- TypeScript build: exit 0
+- hygiene check: PASS
+
+### 47.4 Deploy
+
+Deployed to `story-gen-8a769` with `firebase deploy --only functions`.
+All 13 functions updated successfully.
+
+### 47.5 Controlled Re-Smoke
+
+**Profiles used:** Same as T6-30 (for direct comparison)
+
+| run | bookId | profile | template |
+| --- | --- | --- | --- |
+| T6-32 I1 | `RuaBwnAiJInyqtyHrZBH` | i1 (anchored moderate) | fantasy × crayon |
+| T6-32 I2 | `d3R64tiAsq7X5yuqmXpa` | i2 (rich) | fantasy × crayon |
+
+**Note:** The script uses `--theme-id=fantasy` (not `--theme-id=imagination`). The `fantasy` templateId maps to the imagination-category `まほうの世界` template in Firestore.
+
+### 47.6 Smoke Results
+
+#### T6-32 I1 — `RuaBwnAiJInyqtyHrZBH`
+
+| page | status | attempts | model |
+| ---: | --- | ---: | --- |
+| 0 | completed | 1 | flux-2-pro |
+| 1 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+| 2 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+| 3 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+| 4 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+| 5 | completed | 1 | flux-2-pro |
+| 6 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+| 7 | completed | 1 | flux-2-pro |
+
+- status: **completed** ✓
+- pageCount: 8/8 ✓
+- fallback_completed: **5/8**
+- likely E005 on pro_consistent: **5/8**
+- imageTimedOut: 0 ✓
+- reference usage: 0 ✓
+- image_failed: 0 ✓
+
+#### T6-32 I2 — `d3R64tiAsq7X5yuqmXpa`
+
+| page | status | attempts | model |
+| ---: | --- | ---: | --- |
+| 0 | completed | 1 | flux-2-pro |
+| 1 | completed | 1 | flux-2-pro |
+| 2 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+| 3 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+| 4 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+| 5 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+| 6 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+| 7 | fallback_completed | 3 | flux-2-klein-9b (from pro_consistent) |
+
+- status: **completed** ✓
+- pageCount: 8/8 ✓
+- fallback_completed: **6/8**
+- likely E005 on pro_consistent: **6/8**
+- imageTimedOut: 0 ✓
+- reference usage: 0 ✓
+- image_failed: 0 ✓
+
+### 47.7 Baseline Comparison
+
+| phase | I1 fallback | I2 fallback |
+| --- | ---: | ---: |
+| T6-23 untreated | 7/8 | 7/8 |
+| T6-26 `IMAGE_CONCURRENCY=1` | 6/8 | 7/8 |
+| T6-30 L1+L2 sanitizer | 6/8 | 7/8 |
+| **T6-32 L1+L2+L3 sanitizer** | **5/8** | **6/8** |
+
+### 47.8 Assessment
+
+**L3 effect:** Marginal improvement of 1 page per book (I1: 6→5, I2: 7→6).
+
+**Threshold:** Target was `< 3/8 fallback_completed`. **NOT MET.**
+
+**Root cause analysis:**
+- L3 removes specific tokens (star chart, rune, glyph, inscription, compass, etc.) from the Gemini-generated `imagePrompt`.
+- The marginal improvement confirms that a subset of E005 triggers was caused by these tokens.
+- However, the majority of E005 rejections persist from other imagination/fantasy scene descriptions
+  that flux-2-pro's content sensitivity filter flags as text-bearing.
+- The Gemini-generated story content for imagination themes inherently contains fantasy imagery
+  (magical objects, constellation scenes, symbolic overlays) that triggers E005 even without
+  explicit text-bearing tokens.
+- All three sanitizer layers (L1 system prompt, L2 runtime guardrail, L3 regex) together
+  provide only marginal E005 reduction because the root cause is model-level content policy,
+  not prompt phrasing alone.
+
+**Conclusion:** The full sanitizer stack (L1+L2+L3) has been implemented and deployed,
+but the `imagination × crayon` pair cannot clear the fallback threshold with prompt-side
+mitigations alone. The pair remains Hold pending Replicate policy inquiry (T6-33+).
+
+### 47.9 Pair Status After T6-32
+
+| pair | verdict | primary model | sanitizer status | Klein role | next action |
+| --- | --- | --- | --- | --- | --- |
+| imagination × crayon | **Hold** | flux-2-pro (pro_consistent) | L1+L2+L3 all deployed | fallback safety net only | T6-33: manual visual QA + Replicate inquiry escalation |
+
+### 47.10 What T6-32 Did NOT Do
+
+- No Klein primary implementation
+- No alternative model implementation
+- No runner changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No manual visual QA (deferred to T6-33)
+- No product exposure matrix update

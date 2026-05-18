@@ -330,4 +330,85 @@ describe("buildImagePrompt", () => {
   it("returns a style reference image path", () => {
     expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.png");
   });
+  describe("L3 imagination regex sanitizer (T6-32)", () => {
+    it("replaces 'star chart' with 'night sky' in compositionHint", () => {
+      const result = buildImagePrompt(
+        "A child in a forest",
+        "crayon",
+        undefined,
+        undefined,
+        { compositionHint: "The child studies a star chart spread on the ground" }
+      );
+      expect(result).not.toMatch(/\bstar charts?\b/i);
+      expect(result).toContain("night sky");
+    });
+    it("replaces 'treasure map' with 'illustrated landscape' in compositionHint", () => {
+      const result = buildImagePrompt(
+        "A child in a cave",
+        "crayon",
+        undefined,
+        undefined,
+        { compositionHint: "A treasure map pinned to the wall" }
+      );
+      expect(result).not.toMatch(/\btreasure maps?\b/i);
+      expect(result).toContain("illustrated landscape");
+    });
+    it("removes 'rune' and 'glyph' tokens from visualMotif", () => {
+      const result = buildImagePrompt(
+        "A child in a temple",
+        "crayon",
+        undefined,
+        undefined,
+        { visualMotif: "ancient runes carved into glowing glyphs" }
+      );
+      // The guardrail text itself uses "glyph patterns" / "rune carvings" as negative instructions,
+      // so we only verify the user-provided visualMotif phrase is not reproduced verbatim.
+      expect(result).not.toContain("ancient runes carved into glowing glyphs");
+      // The Visual motif: section should not contain the raw tokens
+      const motifSection = result.match(/Visual motif:.*?(?=\n|$)/)?.[0] ?? "";
+      expect(motifSection).not.toMatch(/\brune[s]?\b/i);
+      expect(motifSection).not.toMatch(/\bglyph[s]?\b/i);
+    });
+    it("removes 'inscription' token from hiddenDetail", () => {
+      const result = buildImagePrompt(
+        "A child near a pillar",
+        "crayon",
+        undefined,
+        undefined,
+        { hiddenDetail: "a small inscription on the stone" }
+      );
+      expect(result).not.toMatch(/\binscription[s]?\b/i);
+    });
+    it("replaces 'compass' with 'round object' in compositionHint", () => {
+      const result = buildImagePrompt(
+        "A child on a ship",
+        "crayon",
+        undefined,
+        undefined,
+        { compositionHint: "The child holds a brass compass" }
+      );
+      expect(result).not.toMatch(/\bcompass\b/i);
+      expect(result).toContain("round object");
+    });
+    it("removes 'magical text' compound token from compositionHint", () => {
+      const result = buildImagePrompt(
+        "A wizard child",
+        "crayon",
+        undefined,
+        undefined,
+        { compositionHint: "swirling magical text surrounds the wand" }
+      );
+      expect(result).not.toMatch(/\bmagical\s+text\b/i);
+    });
+    it("preserves 'scroll' when not followed by 'with'", () => {
+      const result = buildImagePrompt(
+        "A child holding something",
+        "crayon",
+        undefined,
+        undefined,
+        { compositionHint: "the child holds a scroll in both hands" }
+      );
+      expect(result).toContain("scroll");
+    });
+  });
 });
