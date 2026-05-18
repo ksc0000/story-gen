@@ -979,3 +979,84 @@ Add explicit anti-photorealistic instruction to Responses API prompt:
 > "Output MUST be a crayon-style illustration. Do NOT output a photograph. Do NOT replicate the reference image. Use the reference image ONLY for the child's facial features."
 
 **Next**: T6-53 — Prompt fix for photorealistic passthrough → re-run I4 smoke → confirm fix effectiveness.
+
+---
+
+## T6-53: OpenAI Reference Path Passthrough Remediation Design (2026-05-19)
+
+### Status: ✅ COMPLETED (docs-only)
+
+Remediation design for the photorealistic passthrough contamination found in T6-52. No code changes in this slice.
+
+### Root Cause (confirmed)
+
+gpt-4o Responses API `image_generation` tool currently receives no explicit instruction to:
+- Generate an illustration (not a photograph)
+- Ignore the reference image's style
+- Use the reference image only for facial features
+
+Without these constraints, the model probabilistically anchors to the photorealistic style of the reference image on ~25% of pages, producing photorealistic output rather than the requested crayon illustration.
+
+### Remediation: Prompt Hardening (Option A)
+
+**Change location**: `functions/src/lib/openai-image.ts` → `generateWithReferenceImages()`
+
+**Three additions to the Responses API call:**
+
+**1. System message (before user message)**
+```
+You are an expert children's book illustrator.
+When given a reference photo of a child, use ONLY their facial features (face shape, eye color, hair color/style, skin tone) as character reference.
+ALWAYS generate a NEW illustration in the art style specified. NEVER output a photograph. NEVER copy the reference image. NEVER use its background, clothing, or setting.
+```
+
+**2. Prompt prefix (before existing prompt text)**
+```
+[GENERATE ILLUSTRATION — NOT A PHOTOGRAPH]
+Output: A NEW illustration in the art style below.
+Reference image(s): Use ONLY for the child character's facial features.
+Ignore the reference image's style, background, clothing, and setting.
+```
+
+**3. Prompt suffix (after existing prompt text)**
+```
+REMINDER: Output MUST be an illustration in the style above, NOT a photograph.
+Generate a completely new scene. Do NOT copy or reproduce the reference image.
+```
+
+### I4 Smoke Success Criteria
+
+| criterion | threshold | note |
+| --- | --- | --- |
+| Photorealistic passthrough (Type B) | **0/8** (mandatory) | This is the specific defect being fixed |
+| Reference subject contamination (Type A) | **0/8** (mandatory) | Animals/objects from reference drawn as characters |
+| Crayon illustration style | ≥ 7/8 pages | |
+| Protagonist visible | ≥ 7/8 pages | |
+| BF-3 (no text) | 8/8 | |
+| BF-4 (no anatomy) | 8/8 | |
+
+**PASS**: 0/8 contamination + all targets met  
+**CONDITIONAL PASS**: 0/8 contamination + ≥ 6/8 style/protagonist (allows `candidate` state)  
+**FAIL**: ≥ 1/8 contamination (any type)
+
+### Production Routing Gate
+
+OpenAI reference path remains BLOCKED until:
+1. T6-54 code fix (prompt hardening) implemented, built, deployed
+2. I4 smoke: 8/8 generated
+3. I4 visual QA: PASS or CONDITIONAL PASS (0/8 contamination mandatory)
+4. I5 smoke (second clean run): PASS or CONDITIONAL PASS
+5. Product review approval
+
+### Updated OpenAI Validation State (as of T6-53)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ FAIL (T6-52) | 2/8 photorealistic passthrough |
+| Reference path — production routing | — | ❌ BLOCKED | Pending T6-54 fix + I4 smoke |
+
+**Next**: T6-54 — Implement prompt hardening (`generateWithReferenceImages` system message + prefix/suffix) → build → deploy → I4 smoke execution → I4 visual QA.

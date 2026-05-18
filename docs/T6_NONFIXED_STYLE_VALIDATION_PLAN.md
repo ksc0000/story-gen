@@ -11348,3 +11348,288 @@ The contamination type (photorealistic passthrough) is more severe than anticipa
 | Reference image I3 — visual QA | — | ❌ **FAIL** (T6-52) | 2/8 photorealistic passthrough |
 
 **Next milestone**: T6-53 — Prompt fix for photorealistic passthrough + I4 smoke re-run.
+
+---
+
+## Section 68: T6-53 — OpenAI Reference Path Passthrough Remediation Design (2026-05-19)
+
+### 68.1 Status
+
+**✅ COMPLETED** — docs-only remediation design. No code changes.
+
+### 68.2 Background
+
+T6-52 confirmed that the OpenAI Responses API reference path has a **photorealistic passthrough contamination type (Type B)** at a rate of 2/8 (25%) per book. The OpenAI reference path is currently BLOCKED for production use.
+
+This section documents the root cause analysis, remediation strategy, prompt hardening plan, and I4 smoke acceptance criteria required to unblock the path.
+
+### 68.3 Root Cause Analysis
+
+**Observed behavior (T6-52):**
+- Pages P2 and P7 of `smoke-openai-i3-1779118258364` output the reference photo itself instead of a crayon illustration.
+- The reference image was a photorealistic photograph of a child.
+- All other pages (P0, P1, P3–P6) correctly generated crayon illustrations.
+
+**Prior observation (T6-49, animals.png):**
+- Pages P2 and P5 of the I2 smoke drew the animals from `animals.png` as story characters.
+- This confirms that any photographic or photorealistic reference image can leak into output.
+
+**Root cause hypotheses (in order of likelihood):**
+
+| Hypothesis | Label | Likelihood | Evidence |
+| --- | --- | --- | --- |
+| gpt-4o `image_generation` tool anchors to the style of the most prominent input image when no explicit anti-style instruction is present | **H1: Style anchoring** | High | Same 2/8 rate in T6-49 and T6-52; different reference image types both fail |
+| Responses API occasionally passes the reference image through as output when text prompt is ambiguous or generation budget is tight | **H2: Reference passthrough** | Medium | P2/P7 output is photographically identical to the reference (not a new generation) |
+| In multimodal Responses API context, image modality has higher weight than text prompt modality for the `image_generation` tool; crayon style text instruction is overridden by photo style visual input | **H3: Modality priority imbalance** | Medium | 25% rate (not 100%) suggests probabilistic override, not systematic |
+| No explicit instruction exists in the current prompt telling the model to ignore the reference image's overall style | **H4: Missing explicit anti-photo instruction** | Confirmed | Current code does not include any "do not replicate" or "illustration only" hardening |
+
+**H4 is confirmed and directly actionable.** H1/H2/H3 may co-occur; all are addressed by the same prompt hardening fix.
+
+**Why 25% rate?**
+The non-uniform per-page contamination (2/8 rather than 8/8) suggests that gpt-4o's `image_generation` tool applies stochastic attention weighting across the reference image and text prompt. On most pages the text prompt dominates; on some pages the reference image dominates. Without explicit instruction, the probability of style anchoring failure is ~25%.
+
+### 68.4 Current Prompt Structure (as-is)
+
+In `functions/src/lib/openai-image.ts`, method `generateWithReferenceImages`:
+
+```typescript
+input: [
+  {
+    role: "user",
+    content: [
+      // reference images passed as input_image items (up to 14)
+      ...inputImageUrls.slice(0, 14).map((url) => ({
+        type: "input_image",
+        image_url: url,
+      })),
+      // the page-level prompt (styleBible + scene description)
+      { type: "input_text", text: prompt },
+    ],
+  },
+],
+tools: [{
+  type: "image_generation",
+  moderation: this.opts.moderation,
+  size: this.opts.size,
+  quality: this.opts.quality,
+}],
+tool_choice: { type: "image_generation" },
+```
+
+**Current prompt structure gaps:**
+1. No system-role message providing illustrator role framing
+2. No explicit instruction that the reference image must NOT influence the output style
+3. No explicit instruction that the output must be an illustration, not a photograph
+4. No explicit instruction that the reference image is for facial features only
+
+### 68.5 Remediation Strategy Options
+
+Three options were evaluated:
+
+| Option | Description | Risk | Cost impact |
+| --- | --- | --- | --- |
+| **A: Prompt hardening** | Add system message + prefix/suffix text to existing prompt | Low — text-only change | None |
+| B: Two-stage generation | Vision call to extract features, then text-to-image without reference | Low contamination risk | 2× API calls per page |
+| C: Post-generation detection | Classify output; retry if photorealistic | Adds complexity and latency | +latency on fail pages |
+
+**Recommended: Option A (prompt hardening)** — lowest complexity, immediately testable, directly addresses H4 (confirmed root cause). Options B and C are fallback if Option A does not reduce contamination sufficiently.
+
+### 68.6 Prompt Hardening Design
+
+#### 68.6.1 System Message (new)
+
+Add a system-role message **before** the user message in the Responses API `input` array:
+
+```
+You are an expert children's book illustrator.
+
+Your job is to create NEW illustrations for a children's picture book.
+
+When you are given a reference photograph of a child, use it ONLY to identify the child's facial features: face shape, eye shape and color, hair color and style, and skin tone. Carry those features forward into the illustrated character.
+
+IMPORTANT RULES:
+- ALWAYS generate a brand-new illustration from scratch in the art style described in the user message.
+- NEVER output a photograph.
+- NEVER copy or replicate the reference image.
+- NEVER use the reference image's clothing, background, setting, or photographic style.
+- The output MUST be a hand-drawn or painted illustration (crayon, watercolor, etc.) as specified.
+```
+
+#### 68.6.2 Prompt Prefix (text prefix before existing prompt)
+
+Add at the **start** of the `input_text` content, before the existing `prompt`:
+
+```
+[GENERATE ILLUSTRATION — NOT A PHOTOGRAPH]
+This is a children's book illustration request.
+Output: A NEW illustration in the art style below.
+Reference image(s): Use ONLY for the child character's facial features. Ignore the reference image's style, background, clothing, and setting.
+```
+
+#### 68.6.3 Prompt Suffix (text suffix after existing prompt)
+
+Add at the **end** of the `input_text` content, after the existing `prompt`:
+
+```
+REMINDER: The final output MUST be an illustration in the art style described above, NOT a photograph. Generate a completely new scene as described. Do NOT copy or reproduce the reference image.
+```
+
+#### 68.6.4 Combined Prompt Template (to-be)
+
+```typescript
+// SYSTEM message
+{
+  role: "system",
+  content: REFERENCE_ILLUSTRATION_SYSTEM_INSTRUCTION,
+}
+// USER message
+{
+  role: "user",
+  content: [
+    ...inputImageUrls.slice(0, 14).map((url) => ({
+      type: "input_image",
+      image_url: url,
+    })),
+    {
+      type: "input_text",
+      text: REFERENCE_ILLUSTRATION_PROMPT_PREFIX + "\n\n" + prompt + "\n\n" + REFERENCE_ILLUSTRATION_PROMPT_SUFFIX,
+    },
+  ],
+}
+```
+
+Constants should be defined as named string constants in `openai-image.ts` for easy adjustment.
+
+### 68.7 Insertion Points in Codebase
+
+| Location | File | Change type |
+| --- | --- | --- |
+| `generateWithReferenceImages()` — `input` array | `functions/src/lib/openai-image.ts` | Add system message before user message |
+| `generateWithReferenceImages()` — `input_text` value | `functions/src/lib/openai-image.ts` | Wrap prompt with prefix + suffix constants |
+| Named constants for hardening text | `functions/src/lib/openai-image.ts` (top of file) | Add 3 string constants |
+
+**No changes required to:**
+- `generate-book.js` / `generateBook` function
+- Firestore schema
+- Firestore security rules
+- Cloud Storage
+- Routing logic
+- Style profile definitions
+- `create-openai-i3-smoke-book.js` script
+
+### 68.8 I4 Smoke Execution Plan
+
+I4 smoke = I3 configuration + prompt hardening fix applied.
+
+**Book configuration (same as I3):**
+
+| field | value |
+| --- | --- |
+| theme | `adventure` |
+| style | `crayon` |
+| imageModelProfile | `openai_image_candidate` |
+| API path | OpenAI Responses API / gpt-4o |
+| pages | 8 |
+| reference image | real child photo (same URL guard: no animals.png, no templates, no styles) |
+| smoke script | `create-openai-i3-smoke-book.js` (unchanged, same I3 config) |
+
+**Prerequisites for I4 execution (not done in T6-53):**
+1. Code fix implemented and committed (`functions/src/lib/openai-image.ts`)
+2. Functions built (`cd functions && npm run build`)
+3. Functions deployed (`firebase deploy --only functions --project story-gen-8a769`)
+4. Smoke book created (`node scripts/create-openai-i3-smoke-book.js --reference-url "..." --write`)
+5. Book monitored until all pages complete or fail
+
+**Expected generation metrics (unchanged from T6-51):**
+- imageDurationMs p95 ≤ 120 s (SLO)
+- imageAttemptCount 1 per page
+- usedCharacterReference: true all pages
+
+### 68.9 I4 Visual QA Success Criteria
+
+#### Mandatory (FAIL if not met)
+
+| criterion | threshold | rationale |
+| --- | --- | --- |
+| Photorealistic passthrough (Type B) | **0/8** | This was the specific defect being fixed |
+| Reference subject contamination (Type A) | **0/8** | Animals.png or other non-protagonist subjects drawn as characters |
+| Any reference photo visible as page image | **0/8** | Combined zero-contamination requirement |
+
+#### Target (CONDITIONAL PASS if all mandatory met + ≥ 6/8 on targets)
+
+| criterion | threshold |
+| --- | --- |
+| Crayon illustration style | ≥ 7/8 pages |
+| Protagonist visible with correct features | ≥ 7/8 pages |
+| Story scene match | ≥ 6/8 pages |
+| BF-3 (no readable text in image) | 8/8 pages |
+| BF-4 (no anatomy errors) | 8/8 pages |
+
+#### Overall verdict mapping
+
+| result | condition |
+| --- | --- |
+| PASS | 0/8 contamination + all target criteria met |
+| CONDITIONAL PASS | 0/8 contamination + ≥ 6/8 on style/protagonist/scene |
+| FAIL | ≥ 1/8 contamination (any type), regardless of other criteria |
+
+#### Notes on CONDITIONAL PASS acceptance
+
+If I4 achieves CONDITIONAL PASS (0 contamination, style/protagonist ≥ 6/8), the OpenAI reference path can be promoted to `candidate` state, allowing controlled production exposure. Hard PASS (all targets met) is required for default routing promotion.
+
+### 68.10 Production Routing Gate Update
+
+**Current state (as of T6-52):**
+
+| gate | status | condition to unblock |
+| --- | --- | --- |
+| OpenAI I1 (no reference) | ✅ CLEARED | — |
+| OpenAI I2 reference path (animals.png smoke) | ✅ CLEARED with caveat | Real child photo required in production |
+| OpenAI I3 reference path (real photo) — technical | ✅ CLEARED | — |
+| OpenAI I3 reference path (real photo) — visual | ❌ BLOCKED | T6-53 code fix + I4 smoke + I4 visual QA PASS |
+| OpenAI reference path — production routing | ❌ BLOCKED | Requires visual PASS + 2× consecutive clean smokes |
+
+**Gate to unblock production routing:**
+
+1. T6-53 code fix implemented + tests pass
+2. I4 smoke: 8/8 pages generated
+3. I4 visual QA: PASS or CONDITIONAL PASS (0/8 contamination mandatory)
+4. I5 smoke (second run, different reference photo): PASS or CONDITIONAL PASS
+5. Product review approval
+
+**Non-goals for this gate:** Replicate routing changes, SLO monitoring changes, FLUX model changes.
+
+### 68.11 Risk Assessment
+
+| risk | likelihood | mitigation |
+| --- | --- | --- |
+| Prompt hardening text is too long and exceeds context | Low | Keep prefix/suffix concise; test with I4 smoke |
+| gpt-4o ignores system message for image_generation tool | Medium | Verify in I4 visual QA; escalate to Option B if persists |
+| Prompt hardening fixes passthrough but creates new artifacts (e.g. protagonist style mismatch) | Low-Medium | I4 visual QA checks protagonist consistency across pages |
+| OpenAI API changes behavior with system message in Responses API | Low | Monitor via I4 technical metrics |
+| 25% contamination rate is not addressable by prompt alone | Low-Medium | Option B (two-stage) available as fallback |
+
+### 68.12 What T6-53 Did NOT Do
+
+- No code changes
+- No functions changes
+- No prompt implementation changes
+- No deploy
+- No smoke generation
+- No image generation
+- No visual QA
+- No routing changes
+- No OpenAI promoted to production default
+
+### 68.13 OpenAI Validation State (as of T6-53)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ FAIL (T6-52) | 2/8 photorealistic passthrough |
+| Reference path — production routing | — | ❌ BLOCKED | Pending T6-54 code fix + I4 smoke |
+
+**Next milestone**: T6-54 — Implement prompt hardening fix (`generateWithReferenceImages` system message + prefix/suffix) → build → deploy → I4 smoke execution.
