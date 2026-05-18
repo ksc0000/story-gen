@@ -7726,3 +7726,307 @@ the candidate. A production switch is a separate decision after T6-36 results ar
 - No Klein primary implementation
 - No additional prompt sanitizer implementation
 - No actual Replicate inquiry submission (manual step — see § 50.3)
+
+---
+
+## 51. T6-36 - flux-1.1-pro Alternate Primary Model Smoke Design (Docs-Only)
+
+### 51.1 Task Summary
+
+| item | value |
+| --- | --- |
+| task | T6-36 |
+| type | docs-only smoke design |
+| date | 2026-05-18 |
+| depends-on | T6-35 candidate selection (`69db216`) |
+
+This is a docs-only task. Design the controlled smoke plan for validating `flux-1.1-pro` as
+an alternate primary model for `imagination × crayon`. No code changes, no deploy, no generation.
+
+T6-37 will execute the implementation + smoke based on this design.
+
+### 51.2 Scope Boundary
+
+| item | T6-36 | T6-37 |
+| --- | --- | --- |
+| Design document | ✅ This file | — |
+| `types.ts` profile addition | ❌ | ✅ |
+| `replicate.ts` constant + switch | ❌ | ✅ |
+| Smoke script flag | ❌ | ✅ |
+| Functions deploy (staging) | ❌ | ✅ |
+| I1 smoke generation | ❌ | ✅ |
+| E005 assessment | ❌ | ✅ |
+| I2 smoke generation (conditional) | ❌ | ✅ |
+| Production model switch | ❌ | ❌ (separate decision after T6-37) |
+
+### 51.3 Why flux-1.1-pro
+
+| rationale | detail |
+| --- | --- |
+| Same FLUX family | Minimizes integration risk vs switching provider architecture |
+| Earlier release | Released before flux-2-pro; content filter parameters may differ |
+| `safety_tolerance` parameter | flux-1.1-pro exposes a `safety_tolerance` API field (1–6 scale) that flux-2-pro may not surface; this is the primary hypothesis for lower E005 rate |
+| Instruction-following | Known to handle style/composition instructions well |
+| `input_images` compatibility | Supports reference image field for character consistency pages |
+| Replicate-native | No new provider integration required |
+
+### 51.4 Integration Design
+
+#### 51.4.1 New Diagnostic Profile
+
+Add a **temporary diagnostic-only** profile: `"flux11_pro_candidate"`.
+
+This profile is:
+- Used only in smoke books (marked `smokeTestMetadata.isSmokeTest: true`)
+- NOT exposed through any production code path
+- NOT used as default or fallback for any tier
+- Removed or promoted to `pro_consistent` mapping in a follow-up task after validated
+
+**Do NOT rename or replace `pro_consistent` → `flux-1.1-pro` in this task.**
+`pro_consistent` continues to map to `flux-2-pro` throughout T6-37.
+
+#### 51.4.2 Files to Modify in T6-37
+
+| file | change |
+| --- | --- |
+| `functions/src/lib/types.ts` | Add `"flux11_pro_candidate"` to `ImageModelProfile` union |
+| `functions/src/lib/replicate.ts` | Add `FLUX_11_PRO_MODEL` constant; add case in `resolveProfileModel()`; update `buildReplicateInput()` default arm; update `resolveImageFallbackProfiles()` |
+| `functions/test/replicate.test.ts` | Add tests for `flux11_pro_candidate` profile routing and payload |
+| `scripts/create-nonfixed-smoke-book.js` | Accept `--model-profile=<profile>` flag; write `imageModelProfile` to Firestore payload when specified |
+
+#### 51.4.3 Type Change (T6-37 target)
+
+```ts
+// functions/src/lib/types.ts — before
+export type ImageModelProfile =
+  | "klein_fast"
+  | "klein_base"
+  | "pro_consistent"
+  | "kontext_reference";
+
+// functions/src/lib/types.ts — after
+export type ImageModelProfile =
+  | "klein_fast"
+  | "klein_base"
+  | "pro_consistent"
+  | "kontext_reference"
+  | "flux11_pro_candidate";   // T6-36/T6-37: diagnostic only
+```
+
+#### 51.4.4 replicate.ts Changes (T6-37 target)
+
+```ts
+// New constant
+const FLUX_11_PRO_MODEL = "black-forest-labs/flux-1.1-pro" as const;
+
+// Updated union
+export type ReplicateModelName =
+  | typeof LEGACY_FLUX_SCHNELL_MODEL
+  | typeof FLUX_KLEIN_FAST_MODEL
+  | typeof FLUX_KLEIN_BASE_MODEL
+  | typeof FLUX_PRO_MODEL
+  | typeof FLUX_KONTEXT_PRO_MODEL
+  | typeof FLUX_11_PRO_MODEL;  // T6-37
+
+// Updated resolveProfileModel()
+case "flux11_pro_candidate":
+  return FLUX_11_PRO_MODEL;
+
+// Updated resolveImageFallbackProfiles()
+case "flux11_pro_candidate":
+  return ["flux11_pro_candidate", "klein_fast"];
+
+// buildReplicateInput() — flux-1.1-pro uses same payload arm as flux-2-pro (default case)
+// No new branch needed if FLUX_11_PRO_MODEL falls through to the default return.
+// VERIFY: confirm flux-1.1-pro accepts `input_images` field (not `image_prompt`) on Replicate.
+```
+
+#### 51.4.5 API Compatibility Verification (Required Before T6-37 Implementation)
+
+Before writing the implementation, verify the following on the Replicate model page for
+`black-forest-labs/flux-1.1-pro`:
+
+| field | flux-2-pro behavior | flux-1.1-pro — to verify |
+| --- | --- | --- |
+| `input_images` | accepts array of URLs for reference | **Verify** — may be `image_prompt` or `extra_lora` instead |
+| `aspect_ratio` | `"4:3"` supported | **Verify** — should be supported |
+| `output_format` | `"png"` | **Verify** |
+| `safety_tolerance` | not exposed (or fixed) | **Key field** — if exposed, test with value `5` or `6` for children's content |
+| `prompt_upsampling` | not available | **Verify** — flux-1.1-pro may expose this; set to `false` for deterministic prompts |
+| `output_quality` | not exposed | **Verify** — may default to 80; can leave default |
+
+**Critical:** If `flux-1.1-pro` uses a different field name for reference images (e.g., `image_prompt`
+instead of `input_images`), `buildReplicateInput()` must have a dedicated case for `FLUX_11_PRO_MODEL`,
+not fall through to the default arm.
+
+#### 51.4.6 smoke script flag design
+
+Add `--model-profile=<profile>` to `create-nonfixed-smoke-book.js`:
+
+```js
+// T6-37 addition to smoke script
+const modelProfileArg = parseArg(args, "--model-profile=");
+
+// Write to payload if specified
+...(modelProfileArg ? { imageModelProfile: modelProfileArg } : {}),
+```
+
+The Cloud Function `generateBook` must read `imageModelProfile` from the Firestore book document
+and pass it through to `generateImageWithMetadata`. Verify this path exists (or add it) in T6-37.
+
+### 51.5 Smoke Execution Plan
+
+#### 51.5.1 Sequence: I1 first, then conditional I2
+
+Run I1 smoke only first. Assess E005 rate before committing to I2.
+This conserves Replicate API calls if flux-1.1-pro has a similar E005 rate to flux-2-pro.
+
+```
+Phase 1 (T6-37):
+  Run I1 smoke with flux11_pro_candidate
+  Wait for completion (~10 min)
+  Inspect E005 rate on I1
+
+Phase 2 (T6-37, conditional on Phase 1 result):
+  If I1 E005 ≤ 4/8: proceed with I2 smoke
+  If I1 E005 ≥ 5/8: disqualify; skip I2; document result
+```
+
+#### 51.5.2 Smoke Commands (T6-37 target)
+
+```powershell
+# I1 smoke — imagination × crayon × flux11_pro_candidate
+$env:GOOGLE_APPLICATION_CREDENTIALS = "C:\Users\CN63738\secure\story-gen-8a769-service-account.json"
+node scripts/create-nonfixed-smoke-book.js `
+  --write `
+  --theme-id=fantasy `
+  --style-id=crayon `
+  --profile=i1 `
+  --model-profile=flux11_pro_candidate
+
+# Monitor
+node scripts/monitor-smoke-book.js <bookId>
+
+# Inspect
+node scripts/inspect-smoke-book.js <bookId>
+```
+
+```powershell
+# I2 smoke — conditional on I1 result
+node scripts/create-nonfixed-smoke-book.js `
+  --write `
+  --theme-id=fantasy `
+  --style-id=crayon `
+  --profile=i2 `
+  --model-profile=flux11_pro_candidate
+```
+
+#### 51.5.3 Metrics to Record
+
+| metric | source | record location |
+| --- | --- | --- |
+| E005 pages / 8 | inspect output or Cloud Logs | T6_NONFIXED § 52 |
+| Fallback pages / 8 | `imageFallbackUsed: true` count | T6_NONFIXED § 52 |
+| Fallback model | `imageModel` on fallback pages | T6_NONFIXED § 52 |
+| p50 / p95 latency | `imageDurationMs` per page | T6_NONFIXED § 52 |
+| Crayon texture score | manual visual 1–5 | T6_NONFIXED § 52 |
+| Composition accuracy | manual visual 1–5 | T6_NONFIXED § 52 |
+
+### 51.6 Success Criteria
+
+| criterion | threshold | consequence of failure |
+| --- | --- | --- |
+| E005 rate — I1 | ≤ 2/8 pages | Disqualify if ≥ 5/8; marginal if 3–4/8 |
+| E005 rate — I2 | ≤ 2/8 pages | Disqualify if ≥ 5/8; marginal if 3–4/8 |
+| Crayon texture | ≥ 3/5 manual score | Must pass; below 3 = style insufficient |
+| p95 latency | ≤ 120 s | Flag for tracking; not immediate disqualifier unless > 150 s |
+
+**PASS** = E005 ≤ 2/8 on BOTH I1 + I2 AND crayon score ≥ 3/5.
+
+### 51.7 Failure Branches
+
+| scenario | I1 result | T6-37 outcome | T6-38 action |
+| --- | --- | --- | --- |
+| **Clear pass** | E005 ≤ 2/8, score ≥ 3 | Run I2; if I2 also passes → proceed to production planning | T6-38: production model switch design |
+| **Marginal** | E005 = 3–4/8 | Run I2; if I2 ≤ 2/8 → conditional pass; if I2 ≥ 5/8 → disqualify | If conditional pass: team review before production switch |
+| **Clear fail** | E005 ≥ 5/8 | Skip I2; disqualify flux-1.1-pro | T6-38: evaluate flux-dev (rank 2) with same smoke design |
+| **Quality fail** | E005 ≤ 2/8, but score < 2 | Run I2 for completeness; note style insufficient | T6-38: team review; may still switch if score improves with prompt tuning |
+| **API incompatible** | Error on model call | Fix `buildReplicateInput()` field mapping and retry within T6-37 | — |
+
+### 51.8 Comparison Baseline
+
+Results from T6-37 must be compared against:
+
+| run | model | E005 / 8 | fallback / 8 |
+| --- | --- | ---: | ---: |
+| I1 T6-32 (baseline) | flux-2-pro | 5 | 5 |
+| I2 T6-32 (baseline) | flux-2-pro | 6 | 6 |
+
+**Target:** flux-1.1-pro must improve I1 to ≤ 2/8 AND I2 to ≤ 2/8 to be considered a viable
+alternate primary model.
+
+### 51.9 If `safety_tolerance` Is Exposed on flux-1.1-pro
+
+If API verification (§ 51.4.5) confirms `safety_tolerance` is a valid parameter for `flux-1.1-pro`
+on Replicate, T6-37 implementation should:
+
+1. Add `safety_tolerance?: number` to `ReplicateInputPayload` type (optional)
+2. Set `safety_tolerance: 5` in the `flux11_pro_candidate` case of `buildReplicateInput()`
+3. Document in smoke results whether `safety_tolerance` contributed to E005 reduction
+4. If confirmed effective, include in the T6-38 production switch design notes
+
+This parameter is **not** to be added to `pro_consistent` (flux-2-pro) path unless specifically
+tested and approved — do not inadvertently modify the existing production path.
+
+### 51.10 T6-37 Recommended Scope
+
+```
+T6-37: flux-1.1-pro smoke implementation + controlled re-smoke
+
+Steps:
+  1. Verify flux-1.1-pro API fields on Replicate model page (input_images / safety_tolerance)
+  2. Add "flux11_pro_candidate" to ImageModelProfile type in types.ts
+  3. Add FLUX_11_PRO_MODEL constant and profile case in replicate.ts
+  4. Add --model-profile flag to create-nonfixed-smoke-book.js
+  5. Verify generateBook Cloud Function reads imageModelProfile from Firestore doc
+  6. Build functions: cd functions && npm run build
+  7. Run test suite: cd functions && npm test  (target: all existing tests pass)
+  8. Deploy functions (staging): firebase deploy --only functions --project story-gen-8a769
+  9. Run I1 smoke: create-nonfixed-smoke-book.js --write --theme-id=fantasy --style-id=crayon
+     --profile=i1 --model-profile=flux11_pro_candidate
+ 10. Monitor + inspect I1 result
+ 11. Assess: if I1 E005 ≤ 4/8, run I2 smoke with same flags
+ 12. Record metrics in section 52 (T6-37 results)
+ 13. Commit: feat: execute T6-37 flux-1.1-pro candidate smoke implementation
+```
+
+### 51.11 Pair Status After T6-36
+
+| pair | verdict | primary model | E005 status | next action |
+| --- | --- | --- | --- | --- |
+| imagination × crayon | **Blocked-on-model-policy** | flux-2-pro (`pro_consistent`) | Dominant (5–6/8 pages) | T6-37: flux-1.1-pro implementation + smoke |
+
+### 51.12 What T6-36 Did NOT Do
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No deploy
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No raw Cloud Logs dump
+- No product exposure matrix update
+- No Klein primary implementation
+- No additional prompt sanitizer implementation
