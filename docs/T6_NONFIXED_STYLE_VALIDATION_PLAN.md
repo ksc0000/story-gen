@@ -11070,3 +11070,137 @@ If promoted, the next milestone is a production routing A/B test between Replica
 
 **T6-50 execution**: Human operator provides real child photo reference URL → run I3 smoke.
 **T6-51**: I3 visual QA (page-by-page image review + pair verdict update).
+
+---
+
+## Section 66: T6-51 — I3 Smoke Execution: Real Child Photo Reference (2026-05-19)
+
+### 66.1 Status
+
+**✅ COMPLETED** — I3 smoke 8/8 pages generated. Visual QA pending (Human operator).
+
+### 66.2 Reference Image
+
+- **Type**: Consented test-person reference image (publicly-hosted HTTPS URL)
+- **Note**: URL is NOT stored in this document. Stored only in Firestore `childProfileSnapshot.visualProfile.referenceImageUrl` (Firestore-only, not in git).
+- **Operator confirmation**: acceptance checklist confirmed (single person, clear face, no text/logos, consented test use)
+
+### 66.3 Execution Log
+
+#### Attempt 1 — FAILED (schema_validation)
+
+| item | value |
+| --- | --- |
+| bookId | `smoke-openai-i3-1779118088199` |
+| theme | `imagination` |
+| status | `failed` |
+| failureStage | `schema_validation` |
+| failureReason | Gemini returned truncated/malformed JSON for imagination theme |
+| technicalErrorMessage | `Failed to parse LLM JSON response: {"title": "ひなたと いろのない おはな", ...` |
+
+**Root cause**: Gemini transient JSON generation failure (known issue). `imagination` theme generates a more complex story prompt that occasionally produces truncated JSON responses. Not related to image generation or reference path.
+
+**Fix**: Changed theme from `imagination` to `adventure` in `scripts/create-openai-i3-smoke-book.js` (same as T6-48/49 which was confirmed working). The I3 goal is to test reference contamination, not theme-specific story generation.
+
+#### Attempt 2 — SUCCESS
+
+| item | value |
+| --- | --- |
+| bookId | `smoke-openai-i3-1779118258364` |
+| theme | `adventure` |
+| style | `crayon` |
+| imageModelProfile | `openai_image_candidate` |
+| characterConsistencyMode | `all_pages` |
+| status | `completed` |
+| progress | 100% |
+
+### 66.4 Page-Level Technical Results
+
+| Page | status | inputReferenceCount | usedCharacterReference | imageAttemptCount | imageDurationMs |
+| --- | --- | --- | --- | --- | --- |
+| P0 | completed | 1 | true | 1 | 31,161 ms |
+| P1 | completed | 1 | true | 1 | 29,327 ms |
+| P2 | completed | 1 | true | 1 | 26,937 ms |
+| P3 | completed | 1 | true | 1 | 46,745 ms |
+| P4 | completed | 1 | true | 1 | 35,239 ms |
+| P5 | completed | 1 | true | 1 | 33,826 ms |
+| P6 | completed | 1 | true | 1 | 35,565 ms |
+| P7 | completed | 1 | true | 1 | 43,156 ms |
+
+**8/8 completed, 8/8 reference path used, 0/8 failed**
+
+### 66.5 Performance Metrics
+
+| metric | value |
+| --- | --- |
+| Completed pages | 8/8 |
+| Failed pages | 0/8 |
+| Reference path used | 8/8 |
+| imageAttemptCount | 1 (all pages — no retry needed) |
+| imageDurationMs range | 26,937 – 46,745 ms |
+| imageDurationMs p50 | ~34 s |
+| imageDurationMs p95 | ~46 s |
+| SLO (p95 ≤ 120 s) | ✅ PASS |
+| imageFallbackUsed | not set (no Replicate fallback) |
+
+**Note on `imageModel` field**: Firestore shows `black-forest-labs/flux-2-klein-9b` — this is the pre-computed static metadata from `resolveReplicateModel()` which has no case for `openai_image_candidate`. The actual generator is OpenAI Responses API / gpt-4o. Authoritative field is `imageModelProfile: openai_image_candidate`.
+
+### 66.6 I3 Technical Success Criteria — Results
+
+| criterion | target | result |
+| --- | --- | --- |
+| Completed pages | 8/8 | ✅ 8/8 |
+| Reference path used | 8/8 | ✅ 8/8 |
+| `usedCharacterReference: true` | all pages | ✅ all pages |
+| `imageFallbackUsed` | not set | ✅ not set |
+| `imageAttemptCount` | 1 | ✅ 1 all pages |
+| p95 duration | ≤ 120 s | ✅ 46 s |
+
+**Technical result: PASS** — All I3 technical success criteria satisfied.
+
+### 66.7 Visual QA Status
+
+**⏳ PENDING — Human operator visual QA required.**
+
+The Human operator must view the 8 generated images in Firebase Storage (`books/smoke-openai-i3-1779118258364/pages/`) and confirm:
+
+- [ ] Child protagonist (Hinata characterBible) visible on all 8 pages
+- [ ] **0/8 reference contamination** — no non-human subject echo from reference image
+- [ ] Cross-page character consistency (same visual appearance across pages)
+- [ ] Crayon style visible (waxy strokes, paper grain texture)
+- [ ] BF-3: no readable text on any page
+- [ ] BF-4: no anatomy errors (face, hands)
+- [ ] Age-appropriate content: safe, gentle, child-suitable
+
+**Expected outcome**: With a real human photo reference (as opposed to animals.png), `gpt-4o` should draw the child protagonist without echoing non-human reference content. No animal/object contamination expected.
+
+**Visual QA milestone**: T6-52 — Human operator reviews images and records page-level QA table.
+
+### 66.8 Script Fix Applied in T6-51
+
+`scripts/create-openai-i3-smoke-book.js` updated:
+- `theme` changed from `imagination` → `adventure` (consistent with T6-48/49 baseline)
+- `templateId` changed from `imagination` → `adventure`
+- `parentMessage` updated to match adventure theme
+- Header comment updated to reflect T6-51 and rationale
+
+### 66.9 What T6-51 Did NOT Do
+
+- No production/default routing changes
+- No style exposure matrix changes
+- No Firestore schema changes
+- No reference URL committed to git (URL used only as CLI argument)
+- No generated images committed
+- No service account JSON committed
+
+### 66.10 OpenAI Validation State (as of T6-51)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | None |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Real child photo required |
+| Reference image I3 (real photo) — technical | Responses API / gpt-4o | ✅ **TECHNICAL PASS** (T6-51) | 8/8 generated, visual QA pending |
+| Reference image I3 (real photo) — visual | — | ⏳ PENDING (T6-52) | Human operator visual QA |
+
+**Next milestone**: T6-52 — Human operator visual QA of `smoke-openai-i3-1779118258364`.

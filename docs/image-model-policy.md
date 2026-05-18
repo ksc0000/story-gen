@@ -880,3 +880,38 @@ Validate that P2/P5 reference contamination (animals.png pattern from T6-49) doe
 | Reference image I3 (real photo) | Responses API / gpt-4o | ⏳ PENDING (T6-50) | Awaiting Human reference image |
 
 **Next**: T6-50 execution (Human operator provides reference URL) → T6-51 visual QA → routing decision.
+
+---
+
+## T6-51 Update: I3 Smoke Execution — TECHNICAL PASS (2026-05-19)
+
+### Execution Summary
+
+**bookId**: `smoke-openai-i3-1779118258364` (adventure × crayon, `openai_image_candidate`)
+
+| metric | result |
+| --- | --- |
+| Completed pages | 8/8 |
+| Failed pages | 0/8 |
+| Reference path used (`usedCharacterReference`) | 8/8 |
+| imageAttemptCount | 1 all pages |
+| imageDurationMs p95 | ~46 s (SLO ≤ 120 s ✅) |
+| imageFallbackUsed | not set |
+
+**No reference contamination detected at technical level.** Visual QA by Human operator is required to confirm image content.
+
+### First Attempt Failure Note
+
+Attempt 1 (`smoke-openai-i3-1779118088199`) failed at `schema_validation` due to Gemini JSON truncation on `imagination` theme. Script updated to use `adventure` theme (consistent with T6-48/49 baseline). This is a known transient LLM issue, unrelated to image generation or reference path.
+
+### Updated OpenAI Validation State
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | None |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Real child photo required |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ **TECHNICAL PASS** (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ⏳ PENDING (T6-52) | Human operator review |
+
+**Next**: T6-52 — Human operator visual QA of I3 book → contamination verdict → routing decision.

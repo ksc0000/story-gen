@@ -1,8 +1,12 @@
 /**
- * T6-50: I3 Smoke — OpenAI Responses API + Real Child Photo Reference.
+ * T6-51: I3 Smoke — OpenAI Responses API + Real Child Photo Reference.
  *
  * PURPOSE: Confirm that reference-image contamination (observed with animals.png in T6-49)
  * does NOT occur when the reference is a real child photo (production-equivalent conditions).
+ *
+ * NOTE: Uses theme=adventure (same as T6-48/49 I2 smoke) to avoid Gemini JSON truncation
+ * that can occur with imagination theme. The I3 goal is to test reference contamination,
+ * not theme-specific story generation.
  *
  * CRITICAL: Do NOT use animals.png or any template image as the reference.
  * The reference image MUST be a real child photo (or consented test-person photo).
@@ -141,8 +145,8 @@ async function main() {
   const bookData = {
     userId,
     status: "generating",
-    theme: "imagination",
-    templateId: "imagination",
+    theme: "adventure",
+    templateId: "adventure",
     style: "crayon",
     selectedStyleId: "crayon",
     selectedStyleName: "クレヨンで描いた絵本",
@@ -158,7 +162,7 @@ async function main() {
     input: {
       childName: "ひなた",
       childAge: 4,
-      parentMessage: "お外でたくさん遊んで、お花と仲良しになれるかな。",
+      parentMessage: "お外でたくさん冒険して、元気いっぱい遅んでね。",
     },
     childProfileSnapshot: {
       displayName: "ひなた",
@@ -186,7 +190,7 @@ async function main() {
       isSmokeTest: true,
       suite: "openai_i3",
       sourceScript: "scripts/create-openai-i3-smoke-book.js",
-      themeId: "imagination",
+      themeId: "adventure",
       styleId: "crayon",
       styleBibleVersion: "v2_texture_hardened",
       modelProfileOverride: "openai_image_candidate",
