@@ -9406,3 +9406,497 @@ SD3.5 / Stable Image API の aspect_ratio enum（platform.stability.ai/docs/api-
 - production routing 変更
 - Gemini Imagen 4 の詳細調査（T6-42 以降）
 - Stability AI 4:3 回避策の実装検討（T6-42 以降）
+
+
+---
+
+## Section 57: T6-42 — OpenAI Image Client 実装設計（2026-05-18）
+
+### 57.1 Task Summary
+
+| 項目 | 詳細 |
+| --- | --- |
+| タスク ID | T6-42 |
+| タイプ | docs-only / 実装設計 |
+| 日付 | 2026-05-18 |
+| depends-on | T6-41 (`3549923`) |
+| 目的 | T6-41 で選定した rank 1 provider（OpenAI Image）の実装設計書を記述し、T6-43 最小実装（smoke）に備える |
+| コード変更 | なし |
+| deploy | なし |
+| smoke | なし |
+
+### 57.2 B-O2 State Confirmation（T6-42 時点）
+
+| 項目 | 状態 |
+| --- | --- |
+| B-O2 送付 | ❌ **依然未送付** |
+| B-O2 期限 | 2026-05-25 |
+| T6-42 への影響 | B-O2 応答を待たず OpenAI Image 設計を並行実施（方針変更なし） |
+
+---
+
+### 57.3 既存アーキテクチャ調査結果
+
+#### 57.3.1 `ImageClient` インターフェース（現状）
+
+```typescript
+// functions/src/lib/types.ts — 現行インターフェース
+export interface ImageClient {
+  generateImage(
+    prompt: string,
+    options?: {
+      inputImageUrls?: string[];
+      purpose?: ImagePurpose;
+      imageQualityTier?: ImageQualityTier;
+      imageModelProfile?: ImageModelProfile;
+    }
+  ): Promise<Buffer>;
+}
+```
+
+T6-43 最小実装では `ImageClient` を拡張しない。`OpenAIImageClient` は既存 `ImageClient` を implements する。
+`ImageProviderClient`（`supportedStyles()` / `providerName()` を持つ上位抽象）は T6-45+ 以降に延期。
+
+#### 57.3.2 `ImageModelProfile` 型（現状）
+
+```typescript
+// functions/src/lib/types.ts — 現行
+export type ImageModelProfile =
+  | "klein_fast"
+  | "klein_base"
+  | "pro_consistent"
+  | "kontext_reference"
+  | "flux11_pro_candidate"; // T6-37: diagnostic only
+```
+
+T6-43 では `"openai_image_candidate"` を追加する（diagnostic only — smoke 専用）。
+
+#### 57.3.3 `ReplicateImageClient` 呼び出し箇所
+
+| ファイル | 用途 |
+| --- | --- |
+| `functions/src/lib/replicate.ts` | `ReplicateImageClient` 本体 |
+| `functions/src/generate-book.ts` | メインブック生成 |
+| `functions/src/regenerate-page-image.ts` | ページ再生成 |
+| `functions/src/regenerate-cover-image.ts` | カバー再生成 |
+| `functions/src/generate-child-character.ts` | 子供キャラクター生成 |
+| `functions/src/test-image-models.ts` | 診断用テスト |
+
+**設計方針**: T6-43 では `imageModelProfile === "openai_image_candidate"` の場合のみ
+`OpenAIImageClient` に分岐する。既存の Replicate 呼び出し箇所は変更しない。
+
+---
+
+### 57.4 T6-43 実装スコープ（最小）
+
+T6-42 の設計書が対象とする T6-43 最小実装範囲：
+
+| # | 成果物 | ファイル | 概要 |
+| --- | --- | --- | --- |
+| 1 | `OpenAIImageClient` クラス | `functions/src/lib/openai-image.ts` | 新規 |
+| 2 | `ImageModelProfile` 型拡張 | `functions/src/lib/types.ts` | `"openai_image_candidate"` 追加 |
+| 3 | routing 分岐 | `functions/src/generate-book.ts` | profile 検出 → OpenAI 使用 |
+| 4 | routing 分岐 | `functions/src/test-image-models.ts` | 診断テスト対応 |
+| 5 | secret 定義 | `functions/src/generate-book.ts`, `test-image-models.ts` | `defineSecret("OPENAI_API_KEY")` |
+| 6 | smoke script | `scripts/create-openai-smoke-book.js` | I1 smoke 実行用 |
+| 7 | unit tests | `functions/test/openai-image.test.ts` | OpenAIImageClient テスト |
+
+**T6-43 スコープ外（明示）**:
+- `ImageProviderClient` 新規抽象インターフェース（T6-45+ で検討）
+- `regenerate-page-image.ts` / `regenerate-cover-image.ts` への OpenAI routing（T6-44+）
+- production routing 変更（T6-45+ QA PASS 後）
+
+---
+
+### 57.5 `OpenAIImageClient` 詳細設計
+
+#### 57.5.1 ファイル配置
+
+```
+functions/src/lib/openai-image.ts  (新規)
+```
+
+#### 57.5.2 依存パッケージ
+
+```json
+// functions/package.json に追加（T6-43）
+"openai": "^4.x"
+```
+
+#### 57.5.3 型定義
+
+```typescript
+// functions/src/lib/openai-image.ts
+
+export type OpenAIImageModelName =
+  | "gpt-image-2"
+  | "gpt-image-1.5"
+  | "gpt-image-1"
+  | "gpt-image-1-mini";
+
+export type OpenAIImageModeration = "auto" | "low";
+export type OpenAIImageQuality = "low" | "medium" | "high";
+
+// 4:3 対応サイズ一覧
+// gpt-image-1-mini / gpt-image-1 は 1024×1024 のみ対応
+// gpt-image-2 は任意サイズ（64px 単位、最大 4096×4096）
+export type OpenAIImageSize =
+  | "1024x1024"   // all models（smoke 用 square）
+  | "1536x1152"   // gpt-image-2 only: 4:3 (1.5MP — EhonAI ページ本番用候補)
+  | "2048x1536"   // gpt-image-2 only: 4:3 (3MP — 高品質候補)
+  | "1024x768";   // gpt-image-2 only: 4:3 (0.75MP — 低コスト候補)
+
+export type OpenAIClientOptions = {
+  model: OpenAIImageModelName;
+  moderation: OpenAIImageModeration;
+  quality: OpenAIImageQuality;
+  size: OpenAIImageSize;
+};
+
+// I1 smoke 用デフォルトプロファイル（openai_image_candidate）
+export const OPENAI_IMAGE_CANDIDATE_PROFILE: OpenAIClientOptions = {
+  model: "gpt-image-1-mini",
+  moderation: "low",
+  quality: "low",
+  size: "1024x1024",
+};
+```
+
+#### 57.5.4 クラス設計（疑似コード）
+
+```typescript
+export class OpenAIImageClient implements ImageClient {
+  private client: OpenAI;
+  private opts: OpenAIClientOptions;
+
+  constructor(apiKey: string, opts: OpenAIClientOptions = OPENAI_IMAGE_CANDIDATE_PROFILE) {
+    this.client = new OpenAI({ apiKey });
+    this.opts = opts;
+  }
+
+  async generateImage(
+    prompt: string,
+    options?: {
+      inputImageUrls?: string[];
+      purpose?: ImagePurpose;
+      imageQualityTier?: ImageQualityTier;
+      imageModelProfile?: ImageModelProfile;
+    }
+  ): Promise<Buffer> {
+    const inputImageUrls = options?.inputImageUrls ?? [];
+    if (inputImageUrls.length > 0) {
+      return this._generateWithReferenceImages(prompt, inputImageUrls);
+    }
+    return this._generateTextToImage(prompt);
+  }
+
+  // テキスト → 画像（参照画像なし）: Image API /v1/images/generations
+  private async _generateTextToImage(prompt: string): Promise<Buffer> {
+    const response = await this.client.images.generate({
+      model: this.opts.model,
+      prompt,
+      n: 1,
+      size: this.opts.size as /* sdk type */ any,
+      moderation: this.opts.moderation,
+      output_format: "png",
+      response_format: "b64_json",
+    });
+    return Buffer.from(response.data[0].b64_json!, "base64");
+  }
+
+  // テキスト + 参照画像 → 画像: Responses API /v1/responses
+  // 参照画像は最大 14 枚（Gemini との差別化ポイント: EhonAI BF-3 対応）
+  private async _generateWithReferenceImages(
+    prompt: string,
+    inputImageUrls: string[]
+  ): Promise<Buffer> {
+    // ⚠️ Responses API の正確な型・レスポンス構造は T6-43 で openai SDK バージョン確認後に確定
+    const response = await (this.client as any).responses.create({
+      model: this.opts.model,
+      input: [
+        {
+          role: "user",
+          content: [
+            ...inputImageUrls.slice(0, 14).map((url) => ({
+              type: "input_image",
+              image_url: url,
+            })),
+            { type: "input_text", text: prompt },
+          ],
+        },
+      ],
+      moderation: this.opts.moderation,
+    });
+    const output = response?.output;
+    if (!output || output.length === 0 || !output[0]?.result) {
+      throw new Error("No image output from OpenAI Responses API");
+    }
+    return Buffer.from(output[0].result, "base64");
+  }
+}
+```
+
+> ⚠️ **T6-43 実装注意**: Responses API の正確なレスポンス形式・型定義は、
+> 実際の `openai` SDK バージョン（4.x）のドキュメントを参照して確定すること。
+> 上記の `any` キャストと `response.output[0].result` は設計段階の仮定。
+
+#### 57.5.5 エラーハンドリング設計
+
+| エラー種別 | HTTP status / 条件 | 対処 |
+| --- | --- | --- |
+| コンテンツ拒否（E005 相当） | HTTP 400 / `type: "content_policy_violation"` | `ImageGenerationError` として rethrow → `image_failed` ページ扱い（fallback chain は呼ばない） |
+| 認証エラー | HTTP 401 | function 起動失敗 → `failed` status |
+| 課金エラー | HTTP 402 | エラーログ記録 → hard fail |
+| レート制限 | HTTP 429 | retry 1 回（500ms wait）→ fail |
+| タイムアウト | ≥ 120,000 ms | 既存 `withImageTimeout`（`replicate.ts` から流用）を使用 |
+| 未知エラー | その他 | エラーログ → `image_failed` ページ扱い |
+
+---
+
+### 57.6 `ImageModelProfile` 拡張設計（T6-43 で types.ts に追加）
+
+```typescript
+// functions/src/lib/types.ts — T6-43 変更後
+export type ImageModelProfile =
+  | "klein_fast"
+  | "klein_base"
+  | "pro_consistent"
+  | "kontext_reference"
+  | "flux11_pro_candidate"    // T6-37: diagnostic only
+  | "openai_image_candidate"; // T6-42: diagnostic only — OpenAI Image smoke test
+```
+
+**使用制約**:
+- `"openai_image_candidate"` は smoke / 診断目的のみ（production routing 変更は T6-45 以降）
+- 既存 `resolveReplicateModel()` では `default:` に fallthrough させ `klein_fast` を返す
+  （Replicate 側コードへの影響を最小化）
+- 既存 `resolveImageFallbackProfiles()` でも同様
+
+---
+
+### 57.7 Routing 設計（generate-book.ts / test-image-models.ts）
+
+#### 57.7.1 generate-book.ts への最小変更（T6-43 設計）
+
+```typescript
+// functions/src/generate-book.ts — T6-43 での変更箇所（設計）
+
+// 追加: secret 定義
+const openaiApiKey = defineSecret("OPENAI_API_KEY");
+
+// 追加: import
+import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE } from "./lib/openai-image";
+
+// 変更: imageClient 生成関数（既存の直接 new を factory 関数に置き換え）
+function createImageClient(imageModelProfile?: ImageModelProfile): ImageClient {
+  if (imageModelProfile === "openai_image_candidate") {
+    return new OpenAIImageClient(openaiApiKey.value(), OPENAI_IMAGE_CANDIDATE_PROFILE);
+  }
+  return new ReplicateImageClient(replicateApiToken.value());
+}
+```
+
+#### 57.7.2 test-image-models.ts への最小変更（T6-43 設計）
+
+```typescript
+// functions/src/test-image-models.ts — T6-43 での変更箇所（設計）
+
+// 追加: secret + import
+const openaiApiKey = defineSecret("OPENAI_API_KEY");
+import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE } from "./lib/openai-image";
+
+// 変更: imageClient 生成
+const imageClient: ImageClient =
+  (data.modelProfiles ?? []).includes("openai_image_candidate")
+    ? new OpenAIImageClient(openaiApiKey.value(), OPENAI_IMAGE_CANDIDATE_PROFILE)
+    : new ReplicateImageClient(replicateApiToken.value());
+```
+
+> **T6-43 実装注意**: `test-image-models.ts` は単一 imageClient を生成しているため、
+> `openai_image_candidate` が含まれる場合は OpenAI、それ以外は Replicate という分岐になる。
+> 複数プロバイダの同時テストは T6-45+ で `ImageProviderClient` 抽象化後に対応。
+
+---
+
+### 57.8 `OPENAI_API_KEY` Secret 設計
+
+#### 57.8.1 Firebase Secret Manager 登録（Human Action A4）
+
+```bash
+# T6-43 実装・deploy 前に human operator が実行
+firebase functions:secrets:set OPENAI_API_KEY --project story-gen-8a769
+# プロンプトで OpenAI API key（sk-...）を入力
+# ※ Organization Verification 完了済み・billing 有効状態で実行すること（A3 前提）
+```
+
+#### 57.8.2 Cloud Function への secrets 追加（T6-43 コード変更）
+
+```typescript
+// generate-book.ts
+export const generateBook = onDocumentCreated({
+  // ... 既存設定 ...
+  secrets: [replicateApiToken, geminiApiKey, openaiApiKey], // openaiApiKey 追加
+}, handler);
+
+// test-image-models.ts
+export const testImageModels = onCall({
+  // ... 既存設定 ...
+  secrets: [replicateApiToken, openaiApiKey], // openaiApiKey 追加
+}, handler);
+```
+
+#### 57.8.3 アクセス制御
+
+| 項目 | 設定 |
+| --- | --- |
+| Secret name | `OPENAI_API_KEY` |
+| 対象 Functions | `generateBook`, `testImageModels` |
+| 環境 | Firebase production（story-gen-8a769） |
+| local dev | `.env.local` に `OPENAI_API_KEY=sk-...`（gitignore 対象 — 追記不要、既存） |
+
+---
+
+### 57.9 openai_image_candidate Diagnostic Profile 仕様
+
+| パラメータ | 値 | 根拠 |
+| --- | --- | --- |
+| `provider` | `"openai"` | OpenAI Image API |
+| `model` | `"gpt-image-1-mini"` | 最低コスト・E005 回避検証に十分 ($0.005/img) |
+| `moderation` | `"low"` | E005 相当フィルタリング緩和の主目的（Rank 1 選定理由） |
+| `quality` | `"low"` | smoke コスト最小化 |
+| `size` | `"1024x1024"` | smoke コスト最小化（非 4:3 — smoke 段階では許容） |
+| 目的 | E005 回避検証 smoke（imagination × crayon 8 pages） | — |
+| 本番使用 | ❌ 禁止（smoke・診断のみ） | — |
+
+**4:3 への移行設計（T6-45+ 候補 — T6-42 では確定しない）**:
+
+| 段階 | model | size | quality | 用途 |
+| --- | --- | --- | --- | --- |
+| I1 smoke (T6-43) | gpt-image-1-mini | 1024×1024 | low | E005 回避検証 |
+| I2 quality QA (T6-44) | gpt-image-1 | 1024×1024 | medium | 品質評価 |
+| I3 4:3 production (T6-45+) | gpt-image-2 | 1536×1152 | medium | 本番候補 |
+
+---
+
+### 57.10 I1 Smoke 設計（T6-43 実施用）
+
+| 項目 | 詳細 |
+| --- | --- |
+| smoke ID | I1 |
+| 対象 pair | `imagination` theme × `crayon` style |
+| target profile | `openai_image_candidate` |
+| book count | 1 |
+| page count | 8 |
+| fallback | `klein_fast`（変更なし） |
+| success criterion | `image_failed` pages ≤ 2/8（E005 rate ≤ 25%） |
+| rejection criterion | `image_failed` pages ≥ 6/8（≥ Replicate E005 rate 75%） |
+| script | `scripts/create-openai-smoke-book.js`（T6-43 で新規作成） |
+| cost estimate | $0.005 × 8 = **$0.040**（gpt-image-1-mini quality:low） |
+| B-O2 依存 | なし（Replicate inquiry 応答前でも実施可能） |
+
+**I1 smoke 実行前提条件（T6-43 pre-condition）**:
+1. ✅ T6-42 設計書完成（本 Section 57）
+2. A3: OpenAI Organization Verification 完了（human operator）
+3. A4: `OPENAI_API_KEY` Secret Manager 登録完了（human operator）
+4. T6-43: `OpenAIImageClient` 実装 + functions deploy 完了
+
+---
+
+### 57.11 コスト見積り（I1 Smoke）
+
+| 項目 | 単価 | 数量 | 合計 |
+| --- | --- | --- | --- |
+| gpt-image-1-mini (quality: low, 1024×1024) | $0.005/img | 8 pages | **$0.040** |
+| Gemini rank 2 smoke（比較用 — T6-44+） | $0.067/img | 8 pages | $0.536 |
+| gpt-image-1 medium 品質 QA（T6-44 参考） | $0.042/img | 8 pages | $0.336 |
+| gpt-image-2 medium 4:3（T6-45 参考） | $0.053/img | 8 pages | $0.424 |
+
+I1 smoke の直接コストは **$0.040**。Organization Verification が必要なため事前準備が必須。
+
+---
+
+### 57.12 ImageProviderClient 抽象化（将来設計 — T6-45+ 参考）
+
+T6-43 の最小実装では **導入しない**。複数 provider が production で共存する段階（T6-45+）で検討。
+
+```typescript
+// T6-45+ 参考（T6-42 時点では実装しない）
+export interface ImageProviderClient {
+  generateImage(params: GenerateImageParams): Promise<GenerateImageResult>;
+  supportedStyles(): IllustrationStyle[];
+  providerName(): string;
+  supportedProfiles(): ImageModelProfile[];
+}
+// ReplicateImageClient, OpenAIImageClient が implements
+```
+
+導入条件: production routing で OpenAI / Replicate を動的に切り替え、
+かつ style ごとに provider を選択する必要が生じた場合。
+
+---
+
+### 57.13 T6-43 への引き継ぎ事項
+
+#### 57.13.1 実装 To-Do（T6-43）
+
+| # | 作業 | ファイル | 注意 |
+| --- | --- | --- | --- |
+| 1 | `openai` npm package 追加 | `functions/package.json` | 4.x 系を明示 |
+| 2 | `OpenAIImageClient` 実装 | `functions/src/lib/openai-image.ts` | §57.5 設計に従う |
+| 3 | `ImageModelProfile` 拡張 | `functions/src/lib/types.ts` | `"openai_image_candidate"` 追加 |
+| 4 | secret 定義追加 | `generate-book.ts`, `test-image-models.ts` | `defineSecret("OPENAI_API_KEY")` |
+| 5 | routing 分岐追加 | `generate-book.ts` | §57.7.1 参照 |
+| 6 | routing 分岐追加 | `test-image-models.ts` | §57.7.2 参照 |
+| 7 | smoke script 作成 | `scripts/create-openai-smoke-book.js` | §57.10 I1 smoke 設計参照 |
+| 8 | unit tests 追加 | `functions/test/openai-image.test.ts` | mock openai SDK |
+| 9 | `cd functions && npm run build && npm test` PASS | — | 683+ tests |
+| 10 | `firebase deploy --only functions` | — | A3/A4 完了後 |
+| 11 | I1 smoke 実行 + 結果確認 | — | success criterion §57.10 |
+
+#### 57.13.2 Responses API 確認事項（T6-43 で確定）
+
+- `openai` npm 4.x の Responses API 型定義確認（`client.responses` が存在するか）
+- 画像出力の base64 取得方法（`response.output[0]` の構造確認）
+- `moderation: "low"` が Responses API でも有効かどうかの確認
+- Image API generations と Responses API の `output_format: "png"` / `response_format: "b64_json"` 差異
+
+#### 57.13.3 Human Pre-conditions（T6-43 前）
+
+| action | 優先度 |
+| --- | --- |
+| **A3**: OpenAI Organization Verification 完了 | **必須（T6-43 実装前）** |
+| **A4**: OpenAI API key + billing 確認 + Secret Manager 登録 | **必須（T6-43 deploy 前）** |
+| **A1**: Replicate inquiry 送付（期限 2026-05-25） | **最優先（T6-42 完了後即実施）** |
+
+---
+
+### 57.14 Human Action List（T6-42 後）
+
+| action | 優先度 | 期限 | owner | notes |
+| --- | --- | --- | --- | --- |
+| **A1**: Replicate inquiry 送付（§ 49.6 draft） | **最優先** | **2026-05-25** | **human operator** | B-O2 critical path — T6-42 完了後即実施 |
+| **A2**: 送付後に § 50.4 に Ticket ID 記録 | 最優先 | A1 直後 | human operator | — |
+| **A3**: OpenAI Organization Verification | **高（T6-43 前必須）** | T6-43 前 | human operator | `platform.openai.com/settings/organization/general` |
+| **A4**: OpenAI API key + billing 設定 + Secret Manager 登録 | **高（T6-43 前必須）** | T6-43 前 | human operator | §57.8.1 手順参照 |
+| A5: Gemini API key + 有料プラン確認 | 中 | rank 2 smoke 前 | human operator | I1 smoke 失敗時の rank 2 備え |
+| A6: SynthID disclosure policy 確認 | 中 | Gemini smoke 前 | human operator | 商用アプリ向け disclosure 義務 |
+
+### 57.15 ペアステータス（T6-42 後）
+
+| pair | verdict | next action |
+| --- | --- | --- |
+| imagination × crayon | **Blocked-on-model-policy** | A1（Replicate inquiry 2026-05-25）→ A3/A4（OpenAI 準備）→ T6-43（実装 + I1 smoke） |
+
+### 57.16 T6-42 でしなかったこと（スコープ外）
+
+- コード変更（functions / lib / scripts）
+- npm install / package.json 変更
+- Secret Manager への実際の登録
+- deploy
+- smoke 実行
+- image generation
+- `ImageProviderClient` 抽象化の実装
+- `regenerate-page-image.ts` / `regenerate-cover-image.ts` への routing 変更
+- production routing 変更
+- Responses API 型の実際の確認（SDK インストール前のため — T6-43 で実施）
+- Ideogram / Stability AI の追加調査（T6-42 以降で任意）
