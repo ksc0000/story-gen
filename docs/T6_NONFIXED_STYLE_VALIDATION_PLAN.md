@@ -11743,11 +11743,11 @@ IMPORTANT RULES:
 
 ---
 
-## Section 70: T6-55 窶・I4 Visual QA (prompt hardening confirmation)
+## Section 70: T6-55 — I4 Visual QA (prompt hardening confirmation)
 
-**Date**: 2025-07-XX  
+**Date**: 2026-05-19  
 **Book ID**: `smoke-openai-i3-1779121690630` (I4 smoke, `imageModelProfile: openai_image_candidate`)  
-**Status**: 笨・PASS  
+**Status**: ✅ PASS  
 **Purpose**: Human operator visual QA of I4 book to confirm T6-54 prompt hardening resolved photorealistic passthrough contamination found in T6-52.
 
 ### 70.1 QA Setup
@@ -11761,32 +11761,32 @@ IMPORTANT RULES:
 
 | Page | Style | Protagonist | Type A contam | Type B contam | BF-3 | BF-4 | Verdict |
 |------|-------|-------------|--------------|--------------|------|------|---------|
-| P0 | 笨・crayon/colored-pencil | 笨・Hinata (yellow floral dress, pigtails, red shoes) | 笶・none | 笶・none | 笞・・"adventure this way!" on signpost (story element, soft flag) | 笨・OK | 笨・PASS |
-| P1 | 笨・painterly illustration | 笨・Hinata crouching, meeting star companion | 笶・none | 笶・none | 笨・none | 笨・OK | 笨・PASS |
-| P2 | 笨・crayon | 笨・Hinata reaching toward star companion, forest path | 笶・none | 笶・none | 笨・none | 笨・OK | 笨・PASS (T6-52 was FAIL 窶・resolved) |
-| P3 | 笨・crayon | 笨・Hinata running joyfully, star companion, signpost | 笶・none | 笶・none | 笨・none | 笨・OK | 笨・PASS |
-| P4 | 笨・crayon | 笨・Hinata thinking at fork-in-path, star companion | 笶・none | 笶・none | 笨・none | 笨・OK | 笨・PASS |
-| P5 | 笨・crayon | 笨・Hinata crouching at magical glowing flowers | 笶・none | 笶・none | 笨・none | 笨・OK | 笨・PASS |
-| P6 | 笨・crayon | 笨・Hinata (hands clasped) at quest flower, deer/rabbit background | 笶・none | 笶・none | 笨・none | 笨・OK | 笨・PASS |
-| P7 | 笨・crayon | 笨・Hinata walking home on golden path, star companion | 笶・none | 笶・none | 笨・none | 笨・OK | 笨・PASS (T6-52 was FAIL 窶・resolved) |
+| P0 | ✅ crayon/colored-pencil | ✅ Hinata (yellow floral dress, pigtails, red shoes) | ❌ none | ❌ none | ⚠️ "adventure this way!" on signpost (story element, soft flag) | ✅ OK | ✅ PASS |
+| P1 | ✅ painterly illustration | ✅ Hinata crouching, meeting star companion | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P2 | ✅ crayon | ✅ Hinata reaching toward star companion, forest path | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS (T6-52 was FAIL — resolved) |
+| P3 | ✅ crayon | ✅ Hinata running joyfully, star companion, signpost | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P4 | ✅ crayon | ✅ Hinata thinking at fork-in-path, star companion | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P5 | ✅ crayon | ✅ Hinata crouching at magical glowing flowers | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P6 | ✅ crayon | ✅ Hinata (hands clasped) at quest flower, deer/rabbit background | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P7 | ✅ crayon | ✅ Hinata walking home on golden path, star companion | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS (T6-52 was FAIL — resolved) |
 
 ### 70.3 Key Findings
 
 **Type B contamination (photorealistic passthrough)**:
 - T6-52: 2/8 FAIL (P2 and P7 showed the reference photograph directly as the page image)
-- T6-55 (I4): 0/8 FAIL 窶・prompt hardening **completely resolved** both contamination pages
+- T6-55 (I4): 0/8 FAIL — prompt hardening **completely resolved** both contamination pages
   - P2: Now shows Hinata in crayon style reaching toward star companion in forest
   - P7: Now shows Hinata in crayon style walking home on golden path
 
-**Type A contamination**: 0/8 窶・no reference image subject echo observed
+**Type A contamination**: 0/8 — no reference image subject echo observed
 
-**Illustration style**: 8/8 窶・all pages rendered as illustration (7 crayon/colored-pencil, 1 painterly). Not photorealistic on any page.
+**Illustration style**: 8/8 — all pages rendered as illustration (7 crayon/colored-pencil, 1 painterly). Not photorealistic on any page.
 
-**Protagonist consistency**: 8/8 窶・Hinata visible on all pages with consistent features (dark hair, pigtails, yellow floral sundress, red shoes, rosy cheeks)
+**Protagonist consistency**: 8/8 — Hinata visible on all pages with consistent features (dark hair, pigtails, yellow floral sundress, red shoes, rosy cheeks)
 
-**BF-3 (no readable text)**: 7/8 clean. P0 signpost shows "adventure this way!" 窶・accepted as story narrative element, not arbitrary text injection. Soft flag only.
+**BF-3 (no readable text)**: 7/8 clean. P0 signpost shows "adventure this way!" — accepted as story narrative element, not arbitrary text injection. Soft flag only.
 
-**BF-4 (anatomy/proportions)**: 8/8 OK 窶・no visible anatomy errors
+**BF-4 (anatomy/proportions)**: 8/8 OK — no visible anatomy errors
 
 ### 70.4 T6-54 Fix Effectiveness
 
@@ -11795,14 +11795,14 @@ The prompt hardening implemented in T6-54 (`REFERENCE_IMAGE_SYSTEM_INSTRUCTION`,
 | Fix component | Effect observed |
 |---|---|
 | System message: "NEVER output photograph, ALWAYS generate illustration" | P2/P7 now illustrations instead of reference photo |
-| Prompt prefix: `[GENERATE ILLUSTRATION 窶・NOT A PHOTOGRAPH]` | Style direction enforced on all pages |
+| Prompt prefix: `[GENERATE ILLUSTRATION — NOT A PHOTOGRAPH]` | Style direction enforced on all pages |
 | Prompt suffix: `REMINDER: output MUST be illustration, NOT photograph` | Reinforcement applied consistently |
 
 ### 70.5 T6-55 Final Verdict
 
-**PASS 笨・*
+**PASS ✅**
 
-- 0/8 Type B contamination (photorealistic passthrough) 窶・**resolved from T6-52's 2/8**
+- 0/8 Type B contamination (photorealistic passthrough) — **resolved from T6-52's 2/8**
 - 0/8 Type A contamination
 - 8/8 illustration style maintained
 - 8/8 protagonist visible
@@ -11814,13 +11814,13 @@ The prompt hardening implemented in T6-54 (`REFERENCE_IMAGE_SYSTEM_INSTRUCTION`,
 
 | Capability | API Path | Status | Condition |
 | --- | --- | --- | --- |
-| Text-to-image (no reference) | Images API / gpt-image-1-mini | 笨・I1 PASS | 窶・|
-| Visual QA I1 | 窶・| 笨・CONDITIONAL PASS (T6-44) | Human review confirmed |
-| Reference image consistency (I2) | Responses API / gpt-4o | 笨・CONDITIONAL PASS (T6-49) | Animals.png artifact noted |
-| Reference image I3 窶・technical | Responses API / gpt-4o | 笨・TECHNICAL PASS (T6-51) | 8/8 generated |
-| Reference image I3 窶・visual QA | 窶・| 笶・FAIL (T6-52) | 2/8 photorealistic passthrough |
-| Reference path prompt hardening | 窶・| 笨・IMPLEMENTED (T6-54) | System message + prefix/suffix |
-| Reference image I4 窶・technical | Responses API / gpt-4o | 笨・TECHNICAL PASS (T6-54) | 8/8 generated |
-| Reference image I4 窶・visual QA | 窶・| 笨・PASS (T6-55) | 0/8 contamination, passthrough resolved |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact noted |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ FAIL (T6-52) | 2/8 photorealistic passthrough |
+| Reference path prompt hardening | — | ✅ IMPLEMENTED (T6-54) | System message + prefix/suffix |
+| Reference image I4 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-54) | 8/8 generated |
+| Reference image I4 — visual QA | — | ✅ PASS (T6-55) | 0/8 contamination, passthrough resolved |
 
-**Next milestone**: T6-56 窶・I5 smoke (second clean run to confirm repeatability) + visual QA. If PASS, advance to production routing gate review.
+**Next milestone**: T6-56 — I5 smoke (second clean run to confirm repeatability) + visual QA. If PASS, advance to production routing gate review.
