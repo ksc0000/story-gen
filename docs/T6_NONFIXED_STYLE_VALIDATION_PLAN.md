@@ -10714,3 +10714,163 @@ This forces `gpt-4o` to invoke the `image_generation` built-in tool instead of o
 **Tier 2 gate**: RESOLVED ✅
 **tool_choice fix**: applied and deployed ✅
 **Next milestone**: T6-49 — I2 manual visual QA (reference image consistency quality check).
+
+## Section 64: T6-49 — OpenAI I2 Manual Visual QA (2026-05-18)
+
+### 64.1 Context
+
+T6-49 performs manual visual QA on the I2 smoke book generated in T6-48.
+
+**Target book**: `smoke-openai-i2-1779114815350`
+**Provider path**: OpenAI Responses API + reference image (`all_pages` mode)
+**Reference image used**: `https://story-gen-8a769.web.app/images/templates/animals.png` (animals template — placeholder for smoke test)
+**Style**: `crayon` / `imagination × crayon` pair
+
+**No code changes. No new generation. Docs-only update.**
+
+### 64.2 Book Technical State (confirmed from T6-48)
+
+| Field | Value |
+| --- | --- |
+| status | `completed` |
+| completed pages | 8/8 |
+| image_failed pages | 0/8 |
+| `imageModelProfile` | `openai_image_candidate` (all pages) |
+| `imageFallbackUsed` | `undefined` (no fallback, all pages) |
+| `imageAttemptCount` | 1 (all pages) |
+| `usedCharacterReference` | `true` (all pages) |
+| `inputReferenceCount` | 1 (all pages) |
+| `imageDurationMs` range | 28,746–51,998 ms |
+
+### 64.3 Page-Level Visual QA
+
+**Character profile specified (characterBible)**:
+> A cheerful 4-year-old Japanese girl with shoulder-length black hair tied in two small pigtails. She has round, bright eyes and rosy cheeks. She wears a yellow sundress with a small flower pattern and red shoes. Signature item: small flower-shaped hair clips.
+
+**Magic friend (magic_friend_01) specified**: A tiny non-human glowing butterfly/star creature with rainbow wings and sparkling trail.
+
+| Page | Hinata present | Crayon texture | Story-image match | BF-3 (no text) | BF-4 (anatomy) | Verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| P0 | ✅ full body (kneeling, reaching) | ✅ strong waxy strokes | ✅ flower meadow, rainbow butterfly first encounter | ✅ | ✅ | **PASS** |
+| P1 | ✅ medium shot (worried expression) | ✅ visible crayon grain | ✅ wilted flower, star creature hovering | ✅ | ✅ | **PASS** |
+| P2 | ❌ animals (bear, rabbit, fox, bird) | ❌ smooth digital | ❌ wrong scene (reference contamination) | ✅ | ✅ | **FAIL** |
+| P3 | ✅ full body (fork in path, thinking) | ⚠️ soft/partial | ✅ Y-fork path, uncertainty pose | ✅ | ✅ | **PASS** |
+| P4 | ✅ close-up hands | ✅ crayon texture on flower | ✅ hand pointing at rainbow marker flower | ✅ | ✅ | **PASS** |
+| P5 | ❌ animals (bear, rabbit, fox, bird) | ❌ smooth digital | ❌ wrong scene (reference contamination) | ✅ | ✅ | **FAIL** |
+| P6 | ✅ close-up hands | ✅ crayon strokes on petals | ✅ placing rainbow petal back to flower | ✅ | ✅ | **PASS** |
+| P7 | ✅ full body (happy, smiling) | ✅ visible crayon marks | ✅ quiet ending in flower meadow with butterfly | ✅ | ✅ | **PASS** |
+
+**Summary: 6/8 PASS, 2/8 FAIL (P2, P5)**
+
+### 64.4 Root Cause of P2 and P5 Failures
+
+P2 and P5 both show the 4 animals from the reference image (`animals.png` — animals template with bear, rabbit, fox, bluebird) instead of the child protagonist Hinata. This is a **reference image contamination** issue:
+
+- `animals.png` is a template preview image showing cartoon animals.
+- When gpt-4o receives this as `input_image` (character reference), it sometimes treats it as "the character to draw" rather than a style guide or consistency anchor.
+- On some pages (P2, P5), the model generated the animal content from the reference image, ignoring the `characterBible` specification for the human child Hinata.
+- On other pages (P0, P1, P3, P4, P6, P7), the model correctly followed the `characterBible` and generated Hinata.
+
+**This is a smoke test limitation, not a production blocker.** In production, the reference image is always an actual photo of the child user (uploaded via `generateChildCharacter`). A real child photo would:
+1. Not contain animals for gpt-4o to "echo"
+2. Provide a clear child face/body for character anchoring
+3. Reduce or eliminate the contamination pattern
+
+### 64.5 Character Consistency Analysis (PASS pages only)
+
+On all 6 PASS pages, the child protagonist (Hinata) is rendered with:
+
+| Feature | P0 | P1 | P3 | P4 | P6 | P7 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Black pigtails | ✅ | ✅ | ✅ | N/A (hand close-up) | N/A (hand close-up) | ✅ |
+| Flower hair clips | ✅ | ✅ | ✅ | N/A | N/A | ✅ |
+| Yellow sundress | ✅ | ✅ | ✅ | ✅ (sleeve) | ✅ (sleeve) | ✅ |
+| Red shoes | ✅ | ✅ | ✅ | N/A | N/A | ✅ |
+| ~4 years old | ✅ | ✅ | ✅ | N/A | N/A | ✅ |
+| Rosy cheeks | ✅ | ✅ | ✅ | N/A | N/A | ✅ |
+| magic_friend_01 | ✅ rainbow butterfly | ✅ star creature | ✅ rainbow butterfly | ✅ butterfly | ✅ butterfly | ✅ rainbow butterfly |
+
+**Cross-page consistency is excellent** on PASS pages. gpt-4o maintains character identity effectively when the reference image does not introduce conflicting content.
+
+### 64.6 Style Assessment (crayon)
+
+| Aspect | Assessment |
+| --- | --- |
+| Waxy crayon strokes | Present on P0, P1, P4, P6, P7 (strong); P3 softer; P2/P5 absent (digital) |
+| Paper grain texture | Visible on PASS pages |
+| Outline character | Soft, hand-drawn — matches spec |
+| Color palette | Warm, saturated, childlike — correct |
+| "Vector-clean" lines | Not detected (correct — guardrail met) |
+| Overall crayon fidelity | ✅ PASS for 6/8 pages |
+
+**Style note**: On P3, the crayon texture is softer/more watercolor-like than the other PASS pages. This is within acceptable variation for a production book and does not constitute a blocking failure.
+
+### 64.7 Commercial Suitability Assessment (PASS pages)
+
+| Dimension | Assessment |
+| --- | --- |
+| Visual appeal for children | ✅ HIGH — warm colors, lovable characters, inviting scenes |
+| BF-3 (no visible text) | ✅ All 8 pages pass |
+| BF-4 (no anatomy errors) | ✅ All 8 pages pass — no uncanny faces, no extra fingers |
+| Age appropriateness | ✅ Content is gentle, safe, and suitable for 3–6 years |
+| Premium perception | ✅ PASS pages have high-quality illustration feel; commercial-grade output |
+
+### 64.8 Book-Level Verdict
+
+**T6-49 book verdict: CONDITIONAL PASS**
+
+| Criterion | Result |
+| --- | --- |
+| Pages readable | 6/8 (75%) |
+| Hard failed pages | 0/8 (images generated, though 2 have wrong content) |
+| BF-3 violations | 0/8 |
+| BF-4 violations | 0/8 |
+| Crayon style adherence | 6/8 |
+| Story-image match | 6/8 |
+| Cross-page character consistency (PASS pages) | ✅ excellent |
+| Reference path functional | ✅ confirmed |
+
+**Conditions**:
+1. The 2/8 content failures (P2, P5) are caused by the `animals.png` placeholder reference, not by the Responses API or character consistency logic.
+2. In production, a real child photo reference image is required. Smoke tests using the animals template cannot be used to assess character consistency quality for production.
+
+### 64.9 `imagination × crayon` Pair Verdict — OpenAI Candidate Update
+
+**Prior state (from T6-43 / T6-44)**: I1 CONDITIONAL PASS
+
+**New state after T6-48 + T6-49**:
+
+| Layer | Status | Notes |
+| --- | --- | --- |
+| I1 (no reference) | ✅ PASS | T6-43: 8/8 pages, p95 ~31s |
+| I1 visual QA | ✅ CONDITIONAL PASS | T6-44: structural QA passed |
+| I2 (reference path) | ✅ FUNCTIONAL | T6-48: 8/8 generated, Responses API confirmed |
+| I2 visual QA | ✅ CONDITIONAL PASS | T6-49: 6/8 PASS; 2 failures = animals.png placeholder artifact |
+| Cross-page consistency | ✅ excellent | Same Hinata on all 6 PASS pages |
+| Crayon fidelity | ✅ PASS (6/8) | Strong on P0, P1, P4, P6, P7 |
+| Commercial quality | ✅ PASS pages | Production-grade illustration quality |
+| BF-3 / BF-4 | ✅ all pages | No text, no anatomy errors on any page |
+
+**`imagination × crayon` × OpenAI candidate verdict**: **CONDITIONAL PASS (I2)**
+
+**Condition to upgrade to full PASS**: Validate with a real child photo reference image (not animals.png template) to confirm contamination pattern is absent.
+
+### 64.10 T6-50 Recommendation
+
+| Option | Description | Priority |
+| --- | --- | --- |
+| Option A | **I3 smoke with real child photo reference** — confirm contamination pattern does not occur with real photo; if clean → promote OpenAI to production routing candidate | High |
+| Option B | **Accept CONDITIONAL PASS; proceed to production routing decision** — treat animals.png contamination as expected smoke test artifact; document production requirement (real child photo) | Medium |
+| Option C | **Add additional safeguard prompt** — add explicit "do not draw the reference image's content directly; use it only for facial consistency" instruction to the reference image prompt | Low |
+
+**Recommended T6-50**: Option A — run a focused I2 smoke with a real child photo reference image to confirm that reference image contamination does not occur in production-equivalent conditions. If clean → proceed to routing decision.
+
+### 64.11 Overall OpenAI Validation State (as of T6-49)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | None |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS | Human review pending |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS | Real child photo required in production |
+
+**Next milestone**: T6-50 — I3 smoke with real child photo reference (confirm no contamination pattern).

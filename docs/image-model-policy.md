@@ -776,3 +776,59 @@ The 403 error (`Your organization must be verified to use the model gpt-4o`) fro
 | Reference image consistency | Responses API / gpt-4o | ✅ **I2 PASS** |
 
 **Next**: T6-49 — I2 manual visual QA (reference image consistency quality check).
+
+---
+
+## T6-49 Update: I2 Manual Visual QA — CONDITIONAL PASS (2026-05-18)
+
+### QA Target
+
+**bookId**: `smoke-openai-i2-1779114815350` (generated in T6-48)
+
+### Page-Level Results
+
+| Page | Hinata (protagonist) | Crayon | Story match | Verdict |
+| --- | --- | --- | --- | --- |
+| P0 | ✅ full body | ✅ strong | ✅ | PASS |
+| P1 | ✅ medium shot | ✅ present | ✅ | PASS |
+| P2 | ❌ animals from ref | ❌ smooth digital | ❌ | FAIL |
+| P3 | ✅ full body | ⚠️ soft | ✅ | PASS |
+| P4 | ✅ hands close-up | ✅ present | ✅ | PASS |
+| P5 | ❌ animals from ref | ❌ smooth digital | ❌ | FAIL |
+| P6 | ✅ hands close-up | ✅ present | ✅ | PASS |
+| P7 | ✅ full body | ✅ present | ✅ | PASS |
+
+**6/8 PASS, 2/8 FAIL**
+
+### Root Cause of P2 / P5 Failures
+
+Reference image used: `animals.png` (animals template — smoke test placeholder)
+
+`gpt-4o` on P2 and P5 "echoed" the animal content of the reference image (bear, rabbit, fox, bluebird) instead of following the `characterBible` for the child protagonist Hinata. This is a **smoke test artifact**, not a production blocker:
+
+- In production, the reference image is always a real child photo (from `generateChildCharacter`)
+- A real child photo would not contain animals to echo
+- Cross-page character consistency was **excellent** on all 6 PASS pages
+
+### BF and Anatomy Check
+
+- **BF-3 (no readable text)**: ✅ All 8 pages — no text, logos, or labels visible
+- **BF-4 (no anatomy errors)**: ✅ All 8 pages — no uncanny faces, no distorted hands
+- **Age-appropriate content**: ✅ All 8 pages — safe, gentle, child-suitable
+
+### `imagination × crayon` Pair Verdict Update
+
+| Layer | Status |
+| --- | --- |
+| I1 (no reference) | ✅ PASS (T6-43) |
+| I1 visual QA | ✅ CONDITIONAL PASS (T6-44) |
+| I2 (reference path) | ✅ FUNCTIONAL (T6-48) |
+| I2 visual QA | ✅ **CONDITIONAL PASS** (T6-49) |
+
+**Overall `imagination × crayon` × OpenAI candidate verdict**: **CONDITIONAL PASS (I2)**
+
+Condition: Validate with real child photo reference (not animals.png template) before production routing decision.
+
+### Next: T6-50 Recommendation
+
+Run I3 smoke with a real child photo reference image to confirm the contamination pattern does not occur in production-equivalent conditions. If clean → proceed to routing decision.
