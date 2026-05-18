@@ -10210,3 +10210,140 @@ signals consistent with hand-drawn style.
 - Enhance styleBible with explicit crayon texture instructions
   (e.g., "visible waxy crayon strokes, paper grain texture, slightly rough edges")
 - Compare reference image fidelity with Replicate character consistency
+
+---
+
+## Section 60: T6-45 — OpenAI I2 Smoke (Responses API + Reference Images) (2026-05-18)
+
+### 60.1 Overview
+
+T6-45 tests the OpenAI Responses API path (`image_generation` tool) with character reference
+images. This path is used when `characterConsistencyMode: "all_pages"` and a
+`childProfileSnapshot.visualProfile.referenceImageUrl` is present.
+
+**Objective**: Confirm that the Responses API routing works end-to-end with reference images,
+8 pages complete successfully, and `usedCharacterReference=true` on all pages.
+
+### 60.2 Smoke Configuration
+
+| Field | Value |
+| --- | --- |
+| theme | `adventure` |
+| style | `crayon` |
+| imageModelProfile | `openai_image_candidate` |
+| Images API model | `gpt-image-1-mini` |
+| Responses API model | `gpt-4o` |
+| characterConsistencyMode | `all_pages` |
+| referenceImageUrl | animals.png (placeholder) |
+| styleBible | v2 (crayon texture hardened) |
+| pageCount | 8 |
+
+### 60.3 Pre-Smoke Findings (Model Selection Investigation)
+
+During T6-45 model selection investigation, two incorrect models were attempted:
+
+| Attempt | Model | Error |
+| --- | --- | --- |
+| 1 | `gpt-image-1-mini` | `404 Model not found` (not available in Responses API) |
+| 2 | `gpt-image-1` | `400 The requested model 'gpt-image-1' is not supported with the Responses API.` |
+| 3 | `gpt-4o` | `403 Your organization must be verified to use the model gpt-4o` (propagation delay) |
+
+**Finding**: Responses API `image_generation` tool requires `gpt-4o` family (not `gpt-image-1` family).
+The `gpt-image-1` series is exclusively for the `/v1/images/generations` endpoint.
+
+**Routing verification** (confirmed across all failed books):
+- `usedCharacterReference: true` — correct Responses API path being called ✓
+- `inputReferenceCount: 1` — reference image included in request ✓
+
+### 60.4 Code Changes
+
+**`functions/src/lib/openai-image.ts`**:
+- `OpenAIClientOptions.responsesModel` field type changed from `OpenAIImageModelName` to `string`
+  (to allow `gpt-4o` which is not in the `OpenAIImageModelName` union)
+- `OPENAI_IMAGE_CANDIDATE_PROFILE.responsesModel` set to `"gpt-4o"`
+- `resolveResponsesModel()` returns `"gpt-4o"` (hardcoded fallback for Responses API)
+
+**`functions/test/openai-image.test.ts`**:
+- Profile snapshot test updated: `responsesModel: "gpt-4o"`
+- Responses API mock assertion updated: `model: "gpt-4o"`
+
+### 60.5 Smoke Execution Log
+
+| # | bookId | status | error |
+| --- | --- | --- | --- |
+| 1 | smoke-openai-i2-1779091985702 | failed (8/8) | gpt-image-1-mini: 404 not in Responses API |
+| 2 | smoke-openai-i2-1779093237746 | failed (8/8) | gpt-image-1: 400 not supported in Responses API |
+| 3 | smoke-openai-i2-1779093878709 | failed (8/8) | gpt-4o: 403 Org verification propagation |
+| 4 | smoke-openai-i2-1779094858672 | failed (8/8) | gpt-4o: 403 Org verification propagation |
+| 5 | smoke-openai-i2-1779097351344 | failed (8/8) | gpt-4o: 403 Org verification — persistent (60+ min) |
+
+### 60.6 Smoke Result
+
+> **STATUS: BLOCKED** — `gpt-4o` model access requires OpenAI Organization Verification
+> (identity/tier gate). 5 smoke attempts over 60+ minutes all returned the same 403.
+> This is a persistent account-tier blocker, not a propagation delay.
+
+**Final inspection**: `smoke-openai-i2-1779097351344`
+
+| metric | value |
+| --- | --- |
+| Completed pages | 0 / 8 |
+| Failed pages | 8 / 8 |
+| Reference path reached | ✓ (usedCharacterReference=true all pages) |
+| inputReferenceCount | 1 (all pages) |
+| Failure reason | `403 Your organization must be verified to use the model gpt-4o` |
+| Duration (typical) | 450–2100 ms (fast rejection, not generation timeout) |
+
+**Routing confirmation** (positive finding):
+The Responses API routing code is correct. `usedCharacterReference=true` and
+`inputReferenceCount=1` on all pages confirms the reference path is being invoked properly.
+The failure is exclusively an account-tier access gate, not a code routing issue.
+
+### 60.7 Blocker: OpenAI Organization Verification (Account Tier Gate)
+
+**Error**: `403 Your organization must be verified to use the model gpt-4o.`
+**URL**: https://platform.openai.com/settings/organization/general
+
+**Root cause analysis**:
+The `gpt-4o` model via Responses API requires OpenAI Organization Verification.
+After 5 attempts over 60+ minutes (well beyond the stated 15-minute propagation window),
+the 403 persists. This is an **account-tier access gate**, not a propagation delay.
+
+Likely root cause: The API key's organization is on Usage Tier 1 or below, which does not
+include access to `gpt-4o`. OpenAI Tier 2 or higher (requiring $50+ in API spending) may be
+required. See: https://platform.openai.com/docs/guides/rate-limits#usage-tiers
+
+**Affected path**: Responses API (`/v1/responses`) with `image_generation` tool only.
+**Unaffected**: Images API (`/v1/images/generations`) with `gpt-image-1-mini` — I1 PASS ✓
+
+**Resolution options**:
+1. Upgrade OpenAI organization to Tier 2+ (requires API spend history)
+2. Complete full identity/business verification at platform.openai.com
+3. Alternative: Redesign reference image path to use `gpt-image-1` edit endpoint
+   (different from Responses API — uses `/v1/images/edits`)
+
+**T6-45 outcome**: BLOCKED — I2 smoke cannot pass until gpt-4o access is granted.
+
+### 60.8 Next Steps
+
+**T6-45 status**: BLOCKED on account-tier access gate.
+
+**Option A — Tier upgrade path** (recommended if commercial deployment intended):
+- Upgrade OpenAI organization to Usage Tier 2+ (requires ~$50 API spend or invoice payment)
+- Re-run I2 smoke after tier upgrade
+- Proceed to T6-46 (manual visual QA) once I2 PASS
+
+**Option B — Alternative reference implementation**:
+- Investigate `gpt-image-1` edit endpoint (`/v1/images/edits`) for reference image support
+  (different API path, potentially different tier requirements)
+- Design alternate reference path that avoids Responses API dependency
+
+**Option C — Accept I2 SKIP for now**:
+- Document `all_pages` characterConsistencyMode as "not yet validated on OpenAI provider"
+- Proceed with I1 CONDITIONAL PASS results for `cover_only` mode
+- Revisit reference path when tier upgrade is available
+
+**Regardless of option chosen**:
+- Code changes in this task (gpt-4o model fix, responsesModel field) are correct and
+  represent the right architecture for when access becomes available
+- Commit and push current changes as T6-45 work product

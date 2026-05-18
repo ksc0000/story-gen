@@ -23,6 +23,7 @@ describe("OpenAIImageClient", () => {
     it("has expected smoke profile values", () => {
       expect(OPENAI_IMAGE_CANDIDATE_PROFILE).toEqual({
         model: "gpt-image-1-mini",
+        responsesModel: "gpt-4o",
         moderation: "low",
         quality: "low",
         size: "1024x1024",
@@ -106,7 +107,7 @@ describe("OpenAIImageClient", () => {
       expect(mockResponsesCreate).toHaveBeenCalledOnce();
       expect(mockResponsesCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: "gpt-image-1-mini",
+          model: "gpt-4o", // Responses API uses gpt-4o (image_generation tool)
           input: expect.arrayContaining([
             expect.objectContaining({
               role: "user",

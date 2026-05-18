@@ -23,14 +23,17 @@ export type OpenAIImageSize =
 
 export type OpenAIClientOptions = {
   model: OpenAIImageModelName;
+  /** Model for Responses API (reference images). Must support image_generation tool (e.g. gpt-4o). */
+  responsesModel?: string;
   moderation: OpenAIImageModeration;
   quality: OpenAIImageQuality;
   size: OpenAIImageSize;
 };
 
-/** I1 smoke profile: lowest cost, E005 relaxation test */
+/** I1/I2 smoke profile: lowest cost, E005 relaxation test */
 export const OPENAI_IMAGE_CANDIDATE_PROFILE: OpenAIClientOptions = {
   model: "gpt-image-1-mini",
+  responsesModel: "gpt-4o",
   moderation: "low",
   quality: "low",
   size: "1024x1024",
@@ -96,9 +99,11 @@ export class OpenAIImageClient implements ImageClient {
     prompt: string,
     inputImageUrls: string[]
   ): Promise<Buffer> {
-    // Use Responses API for reference images
+    // Use Responses API for reference images.
+    // gpt-image-1-mini is not available via Responses API; use responsesModel fallback.
+    const model = this.opts.responsesModel ?? this.resolveResponsesModel();
     const response = await (this.client as any).responses.create({
-      model: this.opts.model,
+      model,
       input: [
         {
           role: "user",
@@ -125,5 +130,11 @@ export class OpenAIImageClient implements ImageClient {
     }
 
     throw new Error("No image output from OpenAI Responses API");
+  }
+
+  /** gpt-image-1-mini and gpt-image-1 are not available via Responses API;
+   * Responses API requires a model that supports the image_generation tool (e.g. gpt-4o). */
+  private resolveResponsesModel(): string {
+    return "gpt-4o";
   }
 }
