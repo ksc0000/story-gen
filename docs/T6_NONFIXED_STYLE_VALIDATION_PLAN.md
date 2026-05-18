@@ -7468,3 +7468,261 @@ smoke test before being considered as a production replacement.
 - No product exposure matrix update
 - No Klein primary implementation
 - No additional prompt sanitizer implementation
+
+---
+
+## 50. T6-35 - Replicate Inquiry Submission Record / Alternate Primary Model Candidate Selection (Docs-Only)
+
+### 50.1 Task Summary
+
+| item | value |
+| --- | --- |
+| task | T6-35 |
+| type | docs-only planning / tracking |
+| date | 2026-05-18 |
+| depends-on | T6-34 (inquiry package `4bfe802`) |
+
+This is a docs-only task. Record the Replicate inquiry submission status and produce a
+structured alternate primary model candidate selection design for use in T6-36.
+
+No code changes, deploy, smoke generation, or image generation.
+
+### 50.2 Replicate Inquiry Submission Status
+
+As of 2026-05-18, the inquiry **draft** was completed in T6-34 and committed to this repository.
+The actual submission to Replicate support is a **manual step outside the CI/CD pipeline**,
+to be performed by the operator.
+
+| item | status |
+| --- | --- |
+| Inquiry draft | ✅ Complete (T6-34, `4bfe802`) |
+| Draft location | `docs/T6_NONFIXED_STYLE_VALIDATION_PLAN.md` § 49.6 |
+| Actual submission | ⏳ Pending human action |
+| Submission channel | Replicate support portal / `support@replicate.com` |
+| Ticket ID | (fill after submission) |
+| Submitted by | (fill after submission) |
+| Submission date | (fill after submission) |
+
+### 50.3 Submission Checklist
+
+Before submitting the inquiry, confirm the following:
+
+- [ ] Use the draft text from section 49.6 of this file
+- [ ] Replace `[Your name / organization]` and `[Replicate account email]` with actual values
+- [ ] Confirm no private tokens, storage URLs, or service account data are included
+- [ ] Attach 2–3 sanitized example prompts (from section 49.3.3 of this file) if the portal allows attachments
+- [ ] Note the submission date and ticket/reference ID received
+- [ ] Record submission details in section 50.4 below
+
+### 50.4 Post-Submission Record
+
+Fill this section after the inquiry is submitted.
+
+| item | value |
+| --- | --- |
+| Submission date | (TBD) |
+| Channel | (email / portal ticket) |
+| Ticket / reference ID | (TBD) |
+| Response deadline | (submission date + 7 days) |
+| Response received | (TBD: Yes / No / Partial) |
+| Response date | (TBD) |
+| Response summary | (TBD) |
+| T6-36 trigger | (TBD: O2-Success / O2-Partial / O2-NoResponse / O2-Decline) |
+
+### 50.5 Alternate Primary Model Candidate Selection Context
+
+The goal of this selection design is to produce:
+
+1. A **ranked candidate shortlist** of models that could replace `flux-2-pro` as the primary
+   model for the `imagination × crayon` pair
+2. **Concrete evaluation criteria** for a controlled single-book smoke test in T6-36
+3. A clear **infrastructure compatibility check** against the existing `ReplicateImageClient`
+   and `replicate.ts` integration
+
+#### 50.5.1 Why `flux-kontext-pro` Is NOT a Candidate
+
+`flux-kontext-pro` (`FLUX_KONTEXT_PRO_MODEL`) is already defined in `functions/src/lib/replicate.ts`
+as the `kontext_reference` profile. However, it is **not a viable replacement** for `pro_consistent`
+on regular pages because:
+
+- It requires `input_image` (single image, image-to-image mode) — mandatory for kontext operation
+- Regular book pages are text-to-image (no mandatory reference image)
+- Using kontext-pro without a meaningful `input_image` produces degraded output
+- Its purpose is character consistency reference, not general scene generation
+
+**Conclusion:** `flux-kontext-pro` remains in its current `kontext_reference` role and is
+**excluded from this candidate selection.**
+
+#### 50.5.2 What the Replacement Model Must Provide
+
+A viable replacement for `pro_consistent` on imagination × crayon must satisfy:
+
+| requirement | detail |
+| --- | --- |
+| Text-to-image | Works without mandatory input image |
+| Optional reference images | Supports `input_images` or `images` field for child_protagonist reference pages |
+| E005 avoidance | ≥ 6/8 pages on I1/I2 imagination smoke books (currently 2–3/8 on flux-2-pro) |
+| Style instruction following | Responds to crayon texture, waxy strokes, warm palette, storybook framing cues |
+| Composition control | Accepts shot direction, framing, and perspective instructions |
+| 4:3 aspect ratio | Native or supported |
+| Latency | p95 ≤ 120 s (current SLO target) |
+| Replicate availability | Hosted on Replicate (no new provider integration required for T6-36) |
+| Input payload compatibility | Compatible with existing `buildReplicateInput()` or adaptable with minimal change |
+
+#### 50.5.3 Existing Models Already in Codebase (for Reference)
+
+| constant | model string | profile | current use |
+| --- | --- | --- | --- |
+| `FLUX_PRO_MODEL` | `black-forest-labs/flux-2-pro` | `pro_consistent` | Primary (blocked by E005) |
+| `FLUX_KLEIN_FAST_MODEL` | `black-forest-labs/flux-2-klein-9b` | `klein_fast` | Fallback |
+| `FLUX_KLEIN_BASE_MODEL` | `black-forest-labs/flux-2-klein-9b-base` | `klein_base` | Standard tier (ENABLE_KLEIN_BASE gate) |
+| `FLUX_KONTEXT_PRO_MODEL` | `black-forest-labs/flux-kontext-pro` | `kontext_reference` | Character reference only |
+| `LEGACY_FLUX_SCHNELL_MODEL` | `black-forest-labs/flux-schnell` | (legacy) | Legacy fallback only — not used in production |
+
+### 50.6 Candidate Selection Criteria
+
+#### 50.6.1 Primary Criteria (Pass/Fail)
+
+These must be met for a candidate to proceed to smoke test:
+
+| criterion | threshold | rationale |
+| --- | --- | --- |
+| E005 avoidance (expected) | ≥ 6/8 pages on imagination smoke | Better than current pro_consistent (2–3/8) |
+| Replicate API availability | Must be callable via `replicate.run()` | No new provider integration for T6-36 |
+| Text-to-image mode | Works without mandatory `input_image` | Page generation requires text-to-image |
+| 4:3 output | Natively supported | All pages are 4:3 |
+| No explicit harmful-content model | Excluded (NSFW-only models) | Children's app |
+
+#### 50.6.2 Secondary Criteria (Scored 1–5)
+
+These are evaluated in the T6-36 smoke test and scored relative to current output:
+
+| criterion | weight | definition |
+| --- | --- | --- |
+| Crayon texture quality | ×3 | Waxy hand-drawn strokes, warm palette, storybook feel |
+| Composition accuracy | ×2 | Shot framing matches prompt (wide/medium/close) |
+| Character consistency | ×2 | Child protagonist recognizable across pages when reference image provided |
+| Detail & resolution | ×1 | Sharpness and visual richness at 1MP |
+| Latency (p50 / p95) | ×1 | Lower is better; p95 must stay ≤ 120 s |
+
+Minimum acceptable total score (weighted): **≥ 22/45** (≥ 49% weighted quality bar).
+For reference: current `klein_fast` fallback is estimated at ~18/45 (below bar).
+
+#### 50.6.3 Disqualification Conditions
+
+| condition | action |
+| --- | --- |
+| E005 rate ≥ 5/8 on smoke (no better than pro_consistent) | Disqualify; move to next candidate |
+| Crayon texture score ≤ 1 | Disqualify; style instruction following insufficient |
+| p95 latency > 150 s observed | Flag for further evaluation; not immediate disqualification |
+| Not available on Replicate | Skip for T6-36 (may revisit if O2 path requires new provider) |
+
+### 50.7 Candidate Shortlist (Detailed)
+
+#### Tier A — FLUX Family, Replicate-Native (Preferred)
+
+These candidates use the FLUX architecture and are Replicate-hosted. They are the lowest-risk
+integration path because they can reuse most of `buildReplicateInput()`.
+
+| # | model string | alias | assessment |
+| --- | --- | --- | --- |
+| A1 | `black-forest-labs/flux-1.1-pro` | flux-1.1-pro | **Top candidate.** Widely used; strong instruction-following; earlier release before the flux-2-pro content filter tightening; likely different E005 policy. Supports `input_images`. |
+| A2 | `black-forest-labs/flux-1.1-pro-ultra` | flux-1.1-pro-ultra | Ultra-resolution variant of flux-1.1-pro. Higher quality ceiling but potentially higher latency. E005 behavior not confirmed different from 1.1-pro. |
+| A3 | `black-forest-labs/flux-dev` | flux-dev | Development/fine-tune base; good for style-specific outputs but lacks the polish of pro variants. Open-weights; potentially looser content filter. |
+
+**Note on input_images compatibility:** `flux-1.1-pro` accepts `input_images` field for style/character
+reference. Payload can be built with `input_images: [url]` (same structure as current pro_consistent path
+in `buildReplicateInput()`). Verify field name during T6-36 implementation planning.
+
+#### Tier B — Non-FLUX, Replicate-Native (Secondary)
+
+These candidates use different architectures. They offer independent content filter policies but
+require style adherence verification.
+
+| # | model string | alias | assessment |
+| --- | --- | --- | --- |
+| B1 | `stability-ai/stable-diffusion-3.5-large` | SD3.5-L | Different architecture and content policy. Strong style instruction following. Likely different E005 analog (Safety Checker). May require different input payload structure. |
+| B2 | `ideogram-ai/ideogram-v2` | Ideogram v2 | Strong text-avoidance and style adherence. Designed to avoid unwanted text in output (aligns with our no-text requirement). Content filter behavior for fantasy content unknown. |
+
+#### Tier C — Alternative Provider (Deferred)
+
+These require new provider integration. Only activate if Tier A and B fail.
+
+| # | provider | candidate | note |
+| --- | --- | --- | --- |
+| C1 | fal.ai | FLUX 1.1 Pro / FLUX 2 Pro endpoints | Same underlying models; may have different content policy enforcement. Requires new `ImageClient` implementation. |
+| C2 | Together AI | FLUX.1 schnell/dev endpoints | Lower quality tier. Only relevant as last resort. |
+
+### 50.8 Recommended Candidate Ranking
+
+| rank | candidate | primary reason | risk |
+| --- | --- | --- | --- |
+| **1 (primary)** | `black-forest-labs/flux-1.1-pro` | FLUX family, earlier E005 policy; minimal integration change; proven instruction-following | E005 behavior not confirmed — verify in T6-36 smoke |
+| **2 (backup)** | `black-forest-labs/flux-dev` | Open-weights FLUX base; likely more permissive content filter | Lower quality ceiling than 1.1-pro; no enterprise SLA |
+| **3 (tertiary)** | `stability-ai/stable-diffusion-3.5-large` | Fully independent architecture and content policy | API payload structure change required; style match unverified |
+
+**Recommendation for T6-36:** Start with rank 1 (`flux-1.1-pro`) only.
+If rank 1 fails on E005 or quality, escalate to rank 2 in a follow-up task.
+
+### 50.9 T6-36 Recommended Scope
+
+T6-36 is contingent on the O2 outcome from the Replicate inquiry:
+
+#### Case A: O2 is actionable (Replicate provides a solution)
+
+T6-36 scope:
+- Implement the recommended solution (e.g., API parameter, model swap to Replicate-recommended model)
+- Run I1 + I2 controlled smoke (same setup as T6-30 / T6-32)
+- Assess E005 rate and quality
+- If E005 ≤ 2/8: proceed to production enablement planning
+- If E005 still > 2/8: fall through to Case B
+
+#### Case B: O2 is not actionable (no useful response, partial, or decline)
+
+T6-36 scope (candidate evaluation smoke):
+
+| step | detail |
+| --- | --- |
+| Model | `black-forest-labs/flux-1.1-pro` (rank 1 candidate) |
+| Books | I1 + I2 imagination × crayon (same theme/profile as T6-30/T6-32) |
+| Metric | E005 pages / 8 per book; crayon texture score (manual 1–5); p95 latency |
+| Pass criteria | E005 ≤ 2/8 AND crayon score ≥ 3 AND p95 ≤ 120 s |
+| Fail action | Evaluate rank 2 candidate in a subsequent task |
+| Implementation | Add `FLUX_11_PRO_MODEL` constant in `replicate.ts`; add `flux11_pro` `ImageModelProfile`; add to `buildReplicateInput()` with same payload structure as `pro_consistent` (verify `input_images` field name); update `resolveImageFallbackProfiles()` |
+| Deploy | Staging functions deploy + controlled smoke (no production switch until validated) |
+| Revert plan | If E005 ≥ 5/8 or score < 2, do not update `pro_consistent` mapping; revert constant addition |
+
+**T6-36 is NOT a production model switch.** It is a single-book controlled smoke to validate
+the candidate. A production switch is a separate decision after T6-36 results are assessed.
+
+### 50.10 Pair Status After T6-35
+
+| pair | verdict | primary model | E005 status | next action |
+| --- | --- | --- | --- | --- |
+| imagination × crayon | **Blocked-on-model-policy** | flux-2-pro (`pro_consistent`) | Dominant (5–6/8 pages) | T6-36: O2 response assessment OR flux-1.1-pro candidate smoke |
+
+### 50.11 What T6-35 Did NOT Do
+
+- No code changes
+- No runner changes
+- No functions changes
+- No UI changes
+- No style exposure matrix changes
+- No style profile changes
+- No quality gate threshold changes
+- No seed-template data changes
+- No Firestore schema/rules changes
+- No new smoke generation
+- No image generation
+- No deploy
+- No Admin regeneration
+- No reference-flow generation
+- No Firebase Auth changes
+- No Storage token rotation/revocation
+- No service account JSON, secrets, URLs, or tokens recorded
+- No private image URLs or storage tokens recorded
+- No raw Cloud Logs dump
+- No product exposure matrix update
+- No Klein primary implementation
+- No additional prompt sanitizer implementation
+- No actual Replicate inquiry submission (manual step — see § 50.3)

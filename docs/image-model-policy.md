@@ -194,3 +194,45 @@ Replicate support への問い合わせパッケージを docs-only で作成。
 | Replicate inquiry | パッケージ作成済み — 送付準備完了 |
 | fallback | klein_fast が fallback として機能（スタイル品質問題あり）|
 | 次フェーズ | T6-35: O2 回答評価 + O3 代替モデル候補調査 |
+
+### T6-35 Inquiry Submission Record / Alternate Model Selection（2026-05-18）
+
+Replicate inquiry 送付状況の記録 + 代替 primary モデル候補選定設計を docs-only で実施。
+
+**Replicate inquiry 送付状況:**
+
+| 項目 | 状態 |
+| --- | --- |
+| 問い合わせドラフト | ✅ 完了（T6-34 `4bfe802`、§ 49.6） |
+| 実際の送付 | ⏳ 未送付（手動ステップ — 送付後に記録） |
+| 送付先 | Replicate support portal / `support@replicate.com` |
+| Ticket ID | （送付後に記録） |
+| 返答期限 | 送付日 + 7日 |
+
+**代替 primary モデル候補ランキング（T6-36 smoke 対象）:**
+
+| rank | モデル | 評価理由 | リスク |
+| --- | --- | --- | --- |
+| 1（推奨） | `black-forest-labs/flux-1.1-pro` | FLUX family で flux-2-pro より早期リリース。E005 ポリシーが異なる可能性が最も高い。input_images サポート済み。既存 `buildReplicateInput()` 構造と互換性高い | E005 動作未確認 — T6-36 smoke で検証必須 |
+| 2（バックアップ） | `black-forest-labs/flux-dev` | オープンウェイト FLUX ベース。コンテンツフィルター緩め。Fine-tune 可能 | 品質天井が 1.1-pro より低い可能性 |
+| 3（第三候補） | `stability-ai/stable-diffusion-3.5-large` | 独立アーキテクチャ＋独立コンテンツポリシー | API payload 構造変更が必要; スタイル適合未検証 |
+
+**通過基準（T6-36 smoke）:**
+
+| 基準 | 閾値 |
+| --- | --- |
+| E005 rate | ≤ 2/8 ページ（I1 + I2 両方） |
+| crayon texture スコア | ≥ 3/5（主観評価） |
+| p95 latency | ≤ 120 s |
+
+**現在の対応状況（T6-35 時点）:**
+
+| 項目 | 状態 |
+| --- | --- |
+| ペアステータス | **Blocked-on-model-policy** |
+| primary モデル | flux-2-pro (`pro_consistent`) のまま変更しない |
+| E005 対応状況 | L1+L2+L3 実装済み — プロンプト側トラック closed |
+| Replicate inquiry | パッケージ完了 — 送付待ち（手動）|
+| 代替候補選定 | 設計完了 — T6-36 smoke 対象: `flux-1.1-pro` |
+| fallback | klein_fast が fallback として機能（スタイル品質問題あり）|
+| 次フェーズ | T6-36: O2 回答評価 OR `flux-1.1-pro` controlled smoke |
