@@ -11633,3 +11633,108 @@ If I4 achieves CONDITIONAL PASS (0 contamination, style/protagonist ≥ 6/8), th
 | Reference path — production routing | — | ❌ BLOCKED | Pending T6-54 code fix + I4 smoke |
 
 **Next milestone**: T6-54 — Implement prompt hardening fix (`generateWithReferenceImages` system message + prefix/suffix) → build → deploy → I4 smoke execution.
+
+---
+
+## Section 69: T6-54 — Prompt Hardening Implementation + I4 Smoke Execution (2026-05-19)
+
+### 69.1 Status
+
+**✅ COMPLETED** — Prompt hardening implemented, tests updated, deployed, I4 smoke executed. Technical PASS 8/8.
+
+### 69.2 Implementation Summary
+
+**File modified**: `functions/src/lib/openai-image.ts`
+
+**Changes:**
+1. Added three exported string constants before `OPENAI_IMAGE_CANDIDATE_PROFILE`:
+   - `REFERENCE_IMAGE_SYSTEM_INSTRUCTION` — illustrator role + anti-photo rules
+   - `REFERENCE_IMAGE_PROMPT_PREFIX` — `[GENERATE ILLUSTRATION — NOT A PHOTOGRAPH]` prefix
+   - `REFERENCE_IMAGE_PROMPT_SUFFIX` — `REMINDER: output MUST be illustration` suffix
+
+2. Modified `generateWithReferenceImages()`:
+   - Added system-role message as first entry in `input` array (before user message)
+   - Wrapped the `input_text` content: `PREFIX + original prompt + SUFFIX`
+   - System message content: `REFERENCE_IMAGE_SYSTEM_INSTRUCTION`
+
+**System message added (T6-53 H4 fix):**
+```
+You are an expert children's book illustrator.
+When you receive a reference photograph of a child, use ONLY their facial features
+(face shape, eye color, hair color and style, skin tone) as character reference.
+IMPORTANT RULES:
+- ALWAYS generate a brand-new illustration from scratch in the art style described in the user message.
+- NEVER output a photograph.
+- NEVER copy or replicate the reference image.
+- NEVER use the reference image's clothing, background, setting, or photographic style.
+- The output MUST be a hand-drawn or painted illustration (crayon, watercolor, etc.) as specified.
+```
+
+**File modified**: `functions/test/openai-image.test.ts`
+
+**Test changes:**
+- Imported new constants: `REFERENCE_IMAGE_SYSTEM_INSTRUCTION`, `REFERENCE_IMAGE_PROMPT_PREFIX`, `REFERENCE_IMAGE_PROMPT_SUFFIX`
+- Updated "calls responses.create" test: checks `input[0]` = system message, `input[1]` = user message with hardened prompt
+- Added "hardening: system instruction and prompt wrap are applied (T6-53)" test: verifies exact string matching of constants
+- Updated "limits reference images to 14" test: accesses `input[1].content` (after system message)
+
+**Test result**: 9/9 tests PASS in `openai-image.test.ts`. Full suite: 21 test files / 692 tests all PASS.
+
+### 69.3 I4 Smoke Book
+
+**bookId**: `smoke-openai-i3-1779121690630`
+
+| field | value |
+| --- | --- |
+| theme | `adventure` |
+| style | `crayon` |
+| imageModelProfile | `openai_image_candidate` |
+| API path | OpenAI Responses API / gpt-4o |
+| pages | 8 |
+| reference image | real child photo |
+| prompt hardening | ✅ system message + prefix/suffix applied |
+
+### 69.4 I4 Technical Results
+
+| metric | value | SLO |
+| --- | --- | --- |
+| Book status | `completed` | — |
+| Completed pages | 8/8 | — |
+| Failed pages | 0/8 | — |
+| usedCharacterReference | 8/8 | — |
+| imageAttemptCount | 1 all pages | — |
+| imageDurationMs min | 23,725 ms | — |
+| imageDurationMs max | 52,753 ms | ≤ 120,000 ms ✅ |
+| imageDurationMs p95 (est.) | ~52,753 ms | ✅ |
+| imageFallbackUsed | not set | — |
+
+**I4 Technical PASS** — 8/8 generated with reference path active and prompt hardening applied.
+
+### 69.5 `imagination × crayon` + `openai_image_candidate` Pair Status Update
+
+| Layer | Status |
+| --- | --- |
+| I1 (no reference) | ✅ PASS (T6-43) |
+| I1 visual QA | ✅ CONDITIONAL PASS (T6-44) |
+| I2 (reference path, animals.png) | ✅ FUNCTIONAL (T6-48) |
+| I2 visual QA | ✅ CONDITIONAL PASS (T6-49) — animals.png artifact |
+| I3 technical (real photo) | ✅ TECHNICAL PASS (T6-51) |
+| I3 visual QA | ❌ FAIL (T6-52) — passthrough |
+| I4 prompt hardening | ✅ IMPLEMENTED (T6-54) |
+| I4 technical | ✅ TECHNICAL PASS (T6-54) — 8/8 generated |
+| I4 visual QA | ⏳ PENDING (T6-55) |
+
+### 69.6 OpenAI Validation State (as of T6-54)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ FAIL (T6-52) | 2/8 photorealistic passthrough |
+| Reference path prompt hardening | — | ✅ IMPLEMENTED (T6-54) | System message + prefix/suffix |
+| Reference image I4 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-54) | 8/8 generated |
+| Reference image I4 — visual QA | — | ⏳ PENDING (T6-55) | Human operator visual QA |
+
+**Next milestone**: T6-55 — Human operator visual QA of `smoke-openai-i3-1779121690630`. Confirm passthrough contamination resolved.

@@ -30,6 +30,42 @@ export type OpenAIClientOptions = {
   size: OpenAIImageSize;
 };
 
+/**
+ * System message for Responses API reference image calls.
+ * Prevents photorealistic passthrough (T6-53 remediation: H4 fix).
+ * Instructs gpt-4o to always generate a new illustration, never copy or replicate the reference photo.
+ */
+export const REFERENCE_IMAGE_SYSTEM_INSTRUCTION =
+  "You are an expert children's book illustrator.\n" +
+  "When you receive a reference photograph of a child, use ONLY their facial features " +
+  "(face shape, eye color, hair color and style, skin tone) as character reference.\n" +
+  "IMPORTANT RULES:\n" +
+  "- ALWAYS generate a brand-new illustration from scratch in the art style described in the user message.\n" +
+  "- NEVER output a photograph.\n" +
+  "- NEVER copy or replicate the reference image.\n" +
+  "- NEVER use the reference image's clothing, background, setting, or photographic style.\n" +
+  "- The output MUST be a hand-drawn or painted illustration (crayon, watercolor, etc.) as specified.";
+
+/**
+ * Prefix prepended to the page prompt for Responses API reference image calls.
+ * Reinforces illustration-only output at the start of the text instruction.
+ */
+export const REFERENCE_IMAGE_PROMPT_PREFIX =
+  "[GENERATE ILLUSTRATION — NOT A PHOTOGRAPH]\n" +
+  "This is a children's book illustration request.\n" +
+  "Output: A NEW illustration in the art style below.\n" +
+  "Reference image(s): Use ONLY for the child character's facial features. " +
+  "Ignore the reference image's style, background, clothing, and setting.\n\n";
+
+/**
+ * Suffix appended to the page prompt for Responses API reference image calls.
+ * Final reminder to produce illustration output, not a photograph.
+ */
+export const REFERENCE_IMAGE_PROMPT_SUFFIX =
+  "\n\nREMINDER: The final output MUST be an illustration in the art style described above, " +
+  "NOT a photograph. Generate a completely new scene as described. " +
+  "Do NOT copy or reproduce the reference image.";
+
 /** I1/I2 smoke profile: lowest cost, E005 relaxation test */
 export const OPENAI_IMAGE_CANDIDATE_PROFILE: OpenAIClientOptions = {
   model: "gpt-image-1-mini",
@@ -102,9 +138,16 @@ export class OpenAIImageClient implements ImageClient {
     // Use Responses API for reference images.
     // gpt-image-1-mini is not available via Responses API; use responsesModel fallback.
     const model = this.opts.responsesModel ?? this.resolveResponsesModel();
+    // Wrap prompt with hardening prefix/suffix to prevent photorealistic passthrough (T6-53).
+    const hardenedPrompt = REFERENCE_IMAGE_PROMPT_PREFIX + prompt + REFERENCE_IMAGE_PROMPT_SUFFIX;
     const response = await (this.client as any).responses.create({
       model,
       input: [
+        {
+          // System message: illustrator role + anti-photo rules (T6-53 H4 fix).
+          role: "system",
+          content: REFERENCE_IMAGE_SYSTEM_INSTRUCTION,
+        },
         {
           role: "user",
           content: [
@@ -112,7 +155,7 @@ export class OpenAIImageClient implements ImageClient {
               type: "input_image",
               image_url: url,
             })),
-            { type: "input_text", text: prompt },
+            { type: "input_text", text: hardenedPrompt },
           ],
         },
       ],

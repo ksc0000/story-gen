@@ -1,5 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE } from "../src/lib/openai-image";
+import {
+  OpenAIImageClient,
+  OPENAI_IMAGE_CANDIDATE_PROFILE,
+  REFERENCE_IMAGE_SYSTEM_INSTRUCTION,
+  REFERENCE_IMAGE_PROMPT_PREFIX,
+  REFERENCE_IMAGE_PROMPT_SUFFIX,
+} from "../src/lib/openai-image";
 
 const mockGenerate = vi.fn();
 const mockResponsesCreate = vi.fn();
@@ -105,19 +111,50 @@ describe("OpenAIImageClient", () => {
       expect(result).toBeInstanceOf(Buffer);
       expect(result.toString()).toBe("ref-image-data");
       expect(mockResponsesCreate).toHaveBeenCalledOnce();
-      expect(mockResponsesCreate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: "gpt-4o", // Responses API uses gpt-4o (image_generation tool)
-          input: expect.arrayContaining([
-            expect.objectContaining({
-              role: "user",
-              content: expect.arrayContaining([
-                expect.objectContaining({ type: "input_image", image_url: "https://example.com/ref1.png" }),
-                expect.objectContaining({ type: "input_text", text: "a cat with reference" }),
-              ]),
-            }),
-          ]),
-        })
+
+      const call = mockResponsesCreate.mock.calls[0][0];
+      expect(call.model).toBe("gpt-4o");
+
+      // system message is first (T6-53 hardening)
+      expect(call.input).toHaveLength(2);
+      expect(call.input[0]).toMatchObject({ role: "system" });
+      expect(typeof call.input[0].content).toBe("string");
+      expect(call.input[0].content).toContain("NEVER output a photograph");
+
+      // user message is second
+      expect(call.input[1]).toMatchObject({ role: "user" });
+      const userContent = call.input[1].content;
+      const imageInputs = userContent.filter((c: any) => c.type === "input_image");
+      const textInputs = userContent.filter((c: any) => c.type === "input_text");
+      expect(imageInputs).toHaveLength(1);
+      expect(imageInputs[0].image_url).toBe("https://example.com/ref1.png");
+      expect(textInputs).toHaveLength(1);
+      // prompt is wrapped with hardening prefix/suffix
+      expect(textInputs[0].text).toContain("a cat with reference");
+      expect(textInputs[0].text).toContain("GENERATE ILLUSTRATION");
+      expect(textInputs[0].text).toContain("REMINDER");
+    });
+
+    it("hardening: system instruction and prompt wrap are applied (T6-53)", async () => {
+      const fakeB64 = Buffer.from("data").toString("base64");
+      mockResponsesCreate.mockResolvedValue({
+        output: [{ type: "image_generation_call", result: fakeB64 }],
+      });
+
+      const client = new OpenAIImageClient("sk-test-key", OPENAI_IMAGE_CANDIDATE_PROFILE);
+      await client.generateImage("draw a forest scene", {
+        inputImageUrls: ["https://example.com/child.png"],
+      });
+
+      const call = mockResponsesCreate.mock.calls[0][0];
+
+      // system message exactly matches the exported constant
+      expect(call.input[0].content).toBe(REFERENCE_IMAGE_SYSTEM_INSTRUCTION);
+
+      // prompt text = prefix + original + suffix
+      const textItem = call.input[1].content.find((c: any) => c.type === "input_text");
+      expect(textItem.text).toBe(
+        REFERENCE_IMAGE_PROMPT_PREFIX + "draw a forest scene" + REFERENCE_IMAGE_PROMPT_SUFFIX
       );
     });
 
@@ -132,7 +169,8 @@ describe("OpenAIImageClient", () => {
       await client.generateImage("test", { inputImageUrls: urls });
 
       const call = mockResponsesCreate.mock.calls[0][0];
-      const imageInputs = call.input[0].content.filter((c: any) => c.type === "input_image");
+      // user message is at input[1] (input[0] is system message)
+      const imageInputs = call.input[1].content.filter((c: any) => c.type === "input_image");
       expect(imageInputs).toHaveLength(14);
     });
 

@@ -1060,3 +1060,59 @@ OpenAI reference path remains BLOCKED until:
 | Reference path — production routing | — | ❌ BLOCKED | Pending T6-54 fix + I4 smoke |
 
 **Next**: T6-54 — Implement prompt hardening (`generateWithReferenceImages` system message + prefix/suffix) → build → deploy → I4 smoke execution → I4 visual QA.
+
+---
+
+## T6-54: Prompt Hardening Implementation + I4 Smoke Technical PASS (2026-05-19)
+
+### Implementation
+
+**`functions/src/lib/openai-image.ts` — `generateWithReferenceImages()`**:
+
+Three new exported constants added:
+- `REFERENCE_IMAGE_SYSTEM_INSTRUCTION` — illustrator role + 5 NEVER/ALWAYS rules
+- `REFERENCE_IMAGE_PROMPT_PREFIX` — `[GENERATE ILLUSTRATION — NOT A PHOTOGRAPH]` + reference image usage rule
+- `REFERENCE_IMAGE_PROMPT_SUFFIX` — `REMINDER: output must be illustration, not photograph`
+
+`responses.create()` input array structure changed from:
+```
+[{ role: "user", content: [...images, text(original_prompt)] }]
+```
+to:
+```
+[
+  { role: "system", content: REFERENCE_IMAGE_SYSTEM_INSTRUCTION },
+  { role: "user", content: [...images, text(PREFIX + original_prompt + SUFFIX)] }
+]
+```
+
+Tests updated: 9/9 PASS (`openai-image.test.ts`). Full suite: 692/692 PASS.
+
+### I4 Smoke: `smoke-openai-i3-1779121690630`
+
+| metric | value | SLO check |
+| --- | --- | --- |
+| Status | completed | — |
+| Completed pages | 8/8 | — |
+| Failed pages | 0/8 | — |
+| usedCharacterReference | 8/8 | — |
+| imageAttemptCount | 1 all pages | — |
+| imageDurationMs max | 52,753 ms | ≤ 120,000 ms ✅ |
+| imageFallbackUsed | not set | — |
+
+**I4 Technical PASS** — prompt hardening deployed and functional.
+
+### Updated OpenAI Validation State (as of T6-54)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ FAIL (T6-52) | 2/8 photorealistic passthrough |
+| Reference path prompt hardening | — | ✅ IMPLEMENTED (T6-54) | System message + prefix/suffix |
+| Reference image I4 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-54) | 8/8 generated |
+| Reference image I4 — visual QA | — | ⏳ PENDING (T6-55) | Human operator review |
+
+**Next**: T6-55 — Human operator visual QA of `smoke-openai-i3-1779121690630`. Confirm passthrough contamination resolved by prompt hardening.
