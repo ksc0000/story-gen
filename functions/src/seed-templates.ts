@@ -239,6 +239,10 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     icon: "🐾",
     genre: "Animal",
     sampleImageUrl: "/images/templates/animals.webp",
+    sampleImages: {
+      light: "/images/samples/animals_light.webp",
+      premium: "/images/samples/animals_premium.webp",
+    },
     sampleImageAlt: "森の中でくま、うさぎ、きつね、小鳥が笑っている絵本表紙",
     visualDirection:
       "Soft woodland picture-book mood with fluffy friendly animals, warm sunlight, leafy greens, cream background, rounded character shapes, gentle smiling faces, and a cozy approachable cover-like composition.",
@@ -254,6 +258,10 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     icon: "⛰️",
     genre: "Adventure",
     sampleImageUrl: "/images/templates/adventure.webp",
+    sampleImages: {
+      light: "/images/samples/adventure_light.webp",
+      premium: "/images/samples/adventure_premium.webp",
+    },
     sampleImageAlt: "光るコンパスを持った子どもたちが広い景色へ走り出す絵本表紙",
     visualDirection:
       "Bright adventurous picture-book mood with wide landscapes, sparkling compass motifs, blue sky, green hills, winding paths, dynamic running poses, clear sense of movement, discovery, and safe excitement.",
@@ -270,7 +278,8 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     genre: "Fantasy",
     sampleImageUrl: "/images/templates/fantasy.webp",
     sampleImages: {
-      premium: "/images/templates/fantasy.webp",
+      light: "/images/samples/fantasy_light.webp",
+      premium: "/images/samples/fantasy_premium.webp",
     },
     sampleImageAlt: "星空の魔法学校で魔法使いの子とドラゴンが見上げている絵本表紙",
     visualDirection:
@@ -288,7 +297,8 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     genre: "Bedtime",
     sampleImageUrl: "/images/templates/bedtime.webp",
     sampleImages: {
-      premium: "/images/templates/bedtime.webp",
+      light: "/images/samples/bedtime_light.webp",
+      premium: "/images/samples/bedtime_premium.webp",
     },
     sampleImageAlt: "星空の部屋で子どもがぬいぐるみを抱いて眠る絵本表紙",
     visualDirection:
@@ -305,6 +315,10 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     icon: "⭐",
     genre: "Emotional Growth",
     sampleImageUrl: "/images/templates/emotional-growth.webp",
+    sampleImages: {
+      light: "/images/samples/emotional-growth_light.webp",
+      premium: "/images/samples/emotional-growth_premium.webp",
+    },
     sampleImageAlt: "小さな子が友だちを助け、胸の光る種が輝く絵本表紙",
     visualDirection:
       "Warm emotional-growth picture-book tone with golden sunlight, expressive child faces, gentle hand-holding, small glowing seed or heart motif, garden path, soft flowers, and an encouraging tender mood.",
