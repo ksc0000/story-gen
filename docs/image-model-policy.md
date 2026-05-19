@@ -1410,7 +1410,7 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 | T7-2 | Create missing UI illustrations & icons (P0) | ✅ COMPLETE (2026-05-19, commit `fcf6673`) |
 | T7-2.5 | Live UI verification / broken image regression check | ✅ COMPLETE (2026-05-19) — all 7 HTTP 200 image/webp confirmed |
 | T7-3a | Design: Group A style preview regeneration | ✅ COMPLETE (2026-05-19) |
-| T7-3b | Generate + QA: Group A style previews (execute) | Pending |
+| T7-3b | Generate + QA: Group A style previews (execute) | ✅ COMPLETE (2026-05-19) |
 | T7-4 | Regenerate template thumbnails (P2) | Pending |
 | T7-5 | Create real quality samples (P3) | Pending |
 
