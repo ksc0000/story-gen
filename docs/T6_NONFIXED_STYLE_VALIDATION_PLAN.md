@@ -11899,5 +11899,201 @@ The prompt hardening implemented in T6-54 (`REFERENCE_IMAGE_SYSTEM_INSTRUCTION`,
 | Reference image I4 — visual QA | — | ✅ PASS (T6-55) | 0/8 contamination, passthrough resolved |
 | Reference image I5 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-56) | 8/8 generated |
 | Reference image I5 — visual QA | — | ✅ PASS (T6-56) | 0/8 contamination, repeatability confirmed |
+| Production routing gate review | — | ✅ CANDIDATE PROMOTED (T6-57) | Must-fix: metadata bug (T6-58) |
 
-**Next milestone**: T6-57 — Production routing gate review / candidate promotion decision.
+**Next milestone**: T6-58 — `imageModel` metadata bug fix + T6-59 controlled production exposure gate.
+
+---
+
+## Section 72: T6-57 — Production Routing Gate Review / Candidate Promotion Decision
+
+**Date**: 2026-05-19  
+**Status**: ✅ CANDIDATE PROMOTED  
+**Type**: docs-only decision — no code change, no deploy, no routing change  
+**Purpose**: Formal gate review of the OpenAI image path (no-reference + reference) based on T6-43〜T6-56 evidence. Determine whether the `openai_image_candidate` profile is eligible for controlled production exposure.
+
+---
+
+### 72.1 T6-53 Production Routing Gate Checklist
+
+These were the 5 conditions defined in T6-53 for unblocking the OpenAI reference path:
+
+| # | Condition | Status |
+|---|-----------|--------|
+| 1 | T6-54 prompt hardening implemented, built, deployed | ✅ DONE (`afbd806`) |
+| 2 | I4 smoke: 8/8 generated | ✅ DONE (`smoke-openai-i3-1779121690630`) |
+| 3 | I4 visual QA: PASS or CONDITIONAL PASS (0/8 contamination mandatory) | ✅ PASS (T6-55, `a68f624`) |
+| 4 | I5 smoke (second clean run): PASS or CONDITIONAL PASS | ✅ PASS (T6-56, `5a669ed`) |
+| 5 | Product review approval | ✅ T6-57 (this section) |
+
+**All 5 conditions satisfied. Gate OPEN.**
+
+---
+
+### 72.2 OpenAI No-Reference Path (Images API / gpt-image-1-mini)
+
+**Evidence summary:**
+
+| Milestone | Result | Detail |
+|-----------|--------|--------|
+| T6-43: I1 technical | ✅ PASS | 8/8 generated, 0 E005, p95 ~31 s |
+| T6-44: I1 visual QA | ⚠️ CONDITIONAL PASS | BF-3/BF-4 clear; crayon texture partial (3/8 smooth pages) |
+| E005 resolution | ✅ EFFECTIVE | moderation:"low" eliminates E005 for imagination × crayon |
+
+**Remaining concern:**
+- Crayon micro-texture partially under-expressed on 3/8 pages (T6-44). Addressable via `styleBible` tuning before full production routing.
+
+**Decision: CANDIDATE / GATED**
+
+- Eligible for controlled production exposure on `imagination × crayon` pair as E005 mitigation.
+- NOT eligible for default routing until styleBible tuning resolves crayon adherence gap.
+- Human visual review of styled output recommended before opening to all users.
+
+---
+
+### 72.3 OpenAI Reference Path (Responses API / gpt-4o + image_generation tool)
+
+**Evidence summary:**
+
+| Milestone | Result | Detail |
+|-----------|--------|--------|
+| T6-48: I2 technical | ✅ PASS | 8/8, tool_choice fix applied |
+| T6-49: I2 visual QA | ⚠️ CONDITIONAL PASS | animals.png artifact; real-child photo required |
+| T6-51: I3 technical | ✅ PASS | 8/8, real child photo reference |
+| T6-52: I3 visual QA | ❌ FAIL | 2/8 photorealistic passthrough (P2, P7) |
+| T6-54: Prompt hardening | ✅ IMPLEMENTED | system message + prefix + suffix |
+| T6-55: I4 visual QA | ✅ PASS | 0/8 Type A, 0/8 Type B; 8/8 crayon; 8/8 protagonist |
+| T6-56: I5 visual QA | ✅ PASS | 0/8 Type A, 0/8 Type B; 8/8 crayon; 8/8 protagonist |
+| Repeatability | ✅ CONFIRMED | I4 + I5 = 2 consecutive clean runs |
+
+**BF-3 soft flags (I4 + I5):**
+
+| Book | Page | Text | Severity |
+|------|------|------|----------|
+| I4 | P0 | "adventure this way!" (signpost) | Soft — story narrative element |
+| I5 | P2 | "ぼうけんのみち" (signpost) | Soft — story narrative element |
+| I5 | P7 | "Hinata 4さい" (signpost) | Soft — character introduction element |
+
+All BF-3 flags are soft (story/character context). No arbitrary text injection on any page.
+
+**Decision: CANDIDATE PROMOTED**
+
+- OpenAI reference path is no longer BLOCKED.
+- Eligible for controlled production exposure (gated by must-fix items below).
+- Production default routing remains unchanged — this is candidate status, not default.
+
+---
+
+### 72.4 Risk Assessment
+
+| Risk | Severity | Status | Mitigation |
+|------|----------|--------|------------|
+| Photorealistic passthrough (Type B) | Critical | ✅ RESOLVED (T6-54) | Prompt hardening: system msg + prefix + suffix |
+| `imageModel` metadata bug | Medium | ❌ OPEN | `resolveReplicateModel()` returns FLUX name for `openai_image_candidate`; misleads operators |
+| BF-3 signpost text | Low | ⚠️ Monitor | Soft flags only; story/character context; not arbitrary injection |
+| Crayon style (no-reference) | Low | ⚠️ Watch | Partial texture on 3/8 pages (T6-44); address via styleBible before default routing |
+| Latency | Low | ✅ Within SLO | I4: p95 52.8 s; I5: p95 32.3 s — both ≤ 120 s SLO |
+| Cost | Low | ✅ Acceptable | ~$0.030–0.050 per 8-page book (Responses API gpt-4o) |
+| animals.png contamination | Eliminated | ✅ RESOLVED | Script guard + real-child-photo policy (T6-50) |
+
+---
+
+### 72.5 Candidate Promotion Decision
+
+#### OpenAI reference path
+
+```
+Status: CANDIDATE PROMOTED
+Profile: openai_image_candidate
+API path: OpenAI Responses API / gpt-4o + image_generation tool
+Contamination: 0/8 Type A, 0/8 Type B (I4 + I5 confirmed)
+Gate status: OPEN (all T6-53 conditions satisfied)
+Production default: UNCHANGED (pro_consistent / flux-2-pro remains default)
+Next required action: T6-58 metadata bug fix before production exposure
+```
+
+#### OpenAI no-reference path
+
+```
+Status: CANDIDATE / GATED
+Profile: openai_image_candidate (same profile, text-to-image branch)
+API path: OpenAI Images API / gpt-image-1-mini
+E005 resolution: EFFECTIVE (imagination × crayon)
+Remaining concern: crayon texture partial (3/8 pages, T6-44)
+Production default: UNCHANGED
+Next required action: styleBible tuning + re-QA before default routing
+```
+
+---
+
+### 72.6 Production Default Routing: UNCHANGED
+
+**This slice makes no routing changes.**
+
+Current production default remains:
+
+| Path | Profile | Model |
+|------|---------|-------|
+| No-reference (standard) | `pro_consistent` | `black-forest-labs/flux-2-pro` |
+| Reference (character consistency) | `pro_consistent` | `black-forest-labs/flux-2-pro` |
+| Fallback | `klein_fast` | `black-forest-labs/flux-2-klein-9b` |
+
+OpenAI path (`openai_image_candidate`) remains diagnostic/candidate only. No user traffic is routed to it until T6-59 controlled exposure gate is approved.
+
+---
+
+### 72.7 Must-Fix Before Production: imageModel Metadata Bug (T6-58)
+
+**Bug**: Firestore page documents store `imageModel: "black-forest-labs/flux-2-klein-9b"` for all pages generated via `openai_image_candidate` profile.
+
+**Root cause**: `generate-book.ts` line ~997 calls `resolveReplicateModel()` to populate the `imageModel` field. `resolveReplicateModel()` has no entry for `openai_image_candidate` in its switch statement, defaulting to `FLUX_KLEIN_FAST_MODEL`.
+
+**Impact**:
+- Operators inspecting Firestore cannot determine whether a page was generated by OpenAI or FLUX without checking `imageModelProfile`.
+- Tooling that uses `imageModel` for routing decisions or billing attribution would be incorrect.
+- Monitoring dashboards relying on `imageModel` would under-count OpenAI usage.
+
+**Required fix (T6-58)**:
+- Update `resolveReplicateModel()` or the `imageModel` population logic in `generate-book.ts` to return `"openai/gpt-4o"` (or equivalent label) when `imageModelProfile === "openai_image_candidate"`.
+- Update `inspect-smoke-book.js` and `monitor-smoke-book.js` to display `imageModelProfile` alongside `imageModel` for clarity.
+
+**Gate**: Must be fixed and deployed before T6-59 controlled production exposure.
+
+---
+
+### 72.8 T7 Track: Public Sample Regeneration
+
+**Scope**: After OpenAI path reaches production routing (T6-59), regenerate public sample books using the new path to demonstrate quality improvement.
+
+**Rationale**: Public-facing sample books (style previews, landing page illustrations) were generated with Replicate FLUX. Regenerating them with OpenAI Responses API would showcase the quality level users can expect.
+
+**T7 definition (preliminary)**:
+
+| Step | Action |
+|------|--------|
+| T7-1 | Identify public sample book IDs used in UI |
+| T7-2 | Regenerate each book via `openai_image_candidate` path |
+| T7-3 | Human visual QA of regenerated samples |
+| T7-4 | Deploy regenerated samples if QA passes |
+
+**T7 dependency**: T6-59 controlled production exposure must complete first.
+
+---
+
+### 72.9 Updated OpenAI Validation State (as of T6-57)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact noted |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ FAIL (T6-52) | 2/8 photorealistic passthrough |
+| Reference path prompt hardening | — | ✅ IMPLEMENTED (T6-54) | System message + prefix/suffix |
+| Reference image I4 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-54) | 8/8 generated |
+| Reference image I4 — visual QA | — | ✅ PASS (T6-55) | 0/8 contamination, passthrough resolved |
+| Reference image I5 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-56) | 8/8 generated |
+| Reference image I5 — visual QA | — | ✅ PASS (T6-56) | 0/8 contamination, repeatability confirmed |
+| **Production routing gate** | — | ✅ **CANDIDATE PROMOTED (T6-57)** | Must-fix: T6-58 metadata bug |
+
+**Next milestone**: T6-58 — Fix `imageModel` metadata bug in `generate-book.ts` + `resolveReplicateModel()`. Deploy. Then T6-59 — controlled production exposure gate.
