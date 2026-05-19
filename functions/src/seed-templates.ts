@@ -238,7 +238,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     description: "ふわふわ動物たちと友だちになるやさしい物語",
     icon: "🐾",
     genre: "Animal",
-    sampleImageUrl: "/images/templates/animals.png",
+    sampleImageUrl: "/images/templates/animals.webp",
     sampleImageAlt: "森の中でくま、うさぎ、きつね、小鳥が笑っている絵本表紙",
     visualDirection:
       "Soft woodland picture-book mood with fluffy friendly animals, warm sunlight, leafy greens, cream background, rounded character shapes, gentle smiling faces, and a cozy approachable cover-like composition.",
@@ -253,7 +253,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     description: "森・海・空へ出かける発見いっぱいの冒険",
     icon: "⛰️",
     genre: "Adventure",
-    sampleImageUrl: "/images/templates/adventure.png",
+    sampleImageUrl: "/images/templates/adventure.webp",
     sampleImageAlt: "光るコンパスを持った子どもたちが広い景色へ走り出す絵本表紙",
     visualDirection:
       "Bright adventurous picture-book mood with wide landscapes, sparkling compass motifs, blue sky, green hills, winding paths, dynamic running poses, clear sense of movement, discovery, and safe excitement.",
@@ -268,9 +268,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     description: "魔法や妖精、ドラゴンが出てくる夢の世界",
     icon: "🪄",
     genre: "Fantasy",
-    sampleImageUrl: "/images/templates/fantasy.png",
+    sampleImageUrl: "/images/templates/fantasy.webp",
     sampleImages: {
-      premium: "/images/templates/fantasy.png",
+      premium: "/images/templates/fantasy.webp",
     },
     sampleImageAlt: "星空の魔法学校で魔法使いの子とドラゴンが見上げている絵本表紙",
     visualDirection:
@@ -286,9 +286,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     description: "月と星に包まれる静かな寝かしつけ絵本",
     icon: "🌙",
     genre: "Bedtime",
-    sampleImageUrl: "/images/templates/bedtime.png",
+    sampleImageUrl: "/images/templates/bedtime.webp",
     sampleImages: {
-      premium: "/images/templates/bedtime.png",
+      premium: "/images/templates/bedtime.webp",
     },
     sampleImageAlt: "星空の部屋で子どもがぬいぐるみを抱いて眠る絵本表紙",
     visualDirection:
@@ -304,7 +304,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     description: "勇気・やさしさ・自己肯定感を育てる物語",
     icon: "⭐",
     genre: "Emotional Growth",
-    sampleImageUrl: "/images/templates/emotional-growth.png",
+    sampleImageUrl: "/images/templates/emotional-growth.webp",
     sampleImageAlt: "小さな子が友だちを助け、胸の光る種が輝く絵本表紙",
     visualDirection:
       "Warm emotional-growth picture-book tone with golden sunlight, expressive child faces, gentle hand-holding, small glowing seed or heart motif, garden path, soft flowers, and an encouraging tender mood.",
@@ -319,7 +319,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     description: "歯みがき・片づけ・あいさつを楽しく練習",
     icon: "🪥",
     genre: "Daily Habits",
-    sampleImageUrl: "/images/templates/daily-habits.png",
+    sampleImageUrl: "/images/templates/daily-habits.webp",
     sampleImageAlt: "歯ブラシ列車と子どもたちが歯みがきをする明るい絵本表紙",
     visualDirection:
       "Cheerful practical daily-habit picture-book style with clean bathroom or home scenes, bright primary colors, cute anthropomorphic tools, step-by-step visual clarity, rounded shapes, and a reassuring parent-child learning mood.",
@@ -334,7 +334,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     description: "数字・色・形・ひらがなを遊びながら学ぶ",
     icon: "🔤",
     genre: "Educational",
-    sampleImageUrl: "/images/templates/educational.png",
+    sampleImageUrl: "/images/templates/educational.webp",
     sampleImageAlt: "数字、色、形、文字の世界を子どもたちが冒険する絵本表紙",
     visualDirection:
       "Colorful educational picture-book mood with numbers, simple shapes, hiragana-like learning motifs, rainbow accents, blocks, cheerful animal helpers, diagram-like clarity, and playful classroom-adventure composition.",
@@ -349,7 +349,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     description: "パンや野菜、スイーツが主役のかわいい物語",
     icon: "🍳",
     genre: "Food",
-    sampleImageUrl: "/images/templates/food.png",
+    sampleImageUrl: "/images/templates/food.webp",
     sampleImageAlt: "焼きたてパンと笑顔のパンたちが並ぶあたたかい絵本表紙",
     visualDirection:
       "Warm delicious food picture-book mood with cozy bakery or kitchen lighting, round cute smiling foods, golden browns, soft steam, gingham cloth, appetizing textures, and a pop yet gentle composition.",
@@ -364,7 +364,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     description: "春夏秋冬、誕生日や行事を楽しむ絵本",
     icon: "🌸",
     genre: "Seasonal",
-    sampleImageUrl: "/images/templates/seasonal.png",
+    sampleImageUrl: "/images/templates/seasonal.webp",
     sampleImageAlt: "春夏秋冬と行事を一枚に描いたにぎやかな絵本表紙",
     visualDirection:
       "Festive seasonal picture-book style with clearly readable spring, summer, autumn, and winter scenes, sakura, beach, autumn leaves, snow, holiday decorations, bright joyful children, and watercolor-like seasonal color blocks.",
@@ -379,7 +379,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     description: "電車・車・飛行機・ロボットの楽しい世界",
     icon: "🤖",
     genre: "Vehicles & Robots",
-    sampleImageUrl: "/images/templates/vehicles-robots.png",
+    sampleImageUrl: "/images/templates/vehicles-robots.webp",
     sampleImageAlt: "空飛ぶロボットバスに子どもたちが乗っている絵本表紙",
     visualDirection:
       "Pop and exciting vehicles-and-robots picture-book mood with blue sky, friendly robot bus or trains, clean futuristic city, rounded mechanical shapes, white clouds, orange and blue accents, smiling children, and energetic safe motion.",
@@ -404,7 +404,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/animals.png",
+    sampleImageUrl: "/images/templates/animals.webp",
     sampleImageAlt: "家族と動物園を楽しむ子どものやさしい絵本イメージ",
     visualDirection:
       "Gentle family memory picture-book cover with warm daylight, friendly zoo atmosphere, soft smiles, and a keepsake-photo feeling.",
@@ -491,7 +491,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/food.png",
+    sampleImageUrl: "/images/templates/food.webp",
     sampleImageAlt: "家族で誕生日をお祝いする子どものやさしい絵本イメージ",
     visualDirection:
       "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling.",
@@ -580,7 +580,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/food.png",
+    sampleImageUrl: "/images/templates/food.webp",
     sampleImageAlt: "家族で誕生日をお祝いする子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling over a gentle 8-page rhythm.",
@@ -731,7 +731,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/animals.png",
+    sampleImageUrl: "/images/templates/animals.webp",
     sampleImageAlt: "家族と動物園を楽しむ子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Gentle family memory picture-book cover with warm daylight, friendly zoo atmosphere, soft smiles, and a keepsake-photo feeling over a gentle 8-page rhythm.",
@@ -882,7 +882,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/bedtime.png",
+    sampleImageUrl: "/images/templates/bedtime.webp",
     sampleImageAlt: "寝る前に安心して眠る子どものやさしい絵本イメージ",
     visualDirection:
       "Cozy sleepy bedtime storybook mood with moonlight, soft blankets, tiny stars, quiet room, and reassuring end-of-day warmth.",
@@ -971,7 +971,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/daily-habits.png",
+    sampleImageUrl: "/images/templates/daily-habits.webp",
     sampleImageAlt: "はみがきをがんばる子どものやさしい絵本イメージ",
     visualDirection:
       "Bright but calm daily-habit picture-book mood with clean bathroom setting, rounded shapes, friendly routine support, and reassuring smiles.",
@@ -1055,7 +1055,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/daily-habits.png",
+    sampleImageUrl: "/images/templates/daily-habits.webp",
     sampleImageAlt: "歯みがきをがんばる子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Bright but calm daily-habit picture-book mood with clean bathroom setting, rounded shapes, friendly routine support, and reassuring smiles over a gentle 8-page rhythm.",
@@ -1206,7 +1206,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.png",
+    sampleImageUrl: "/images/templates/seasonal.webp",
     sampleImageAlt: "家族でクリスマスを楽しむ子どものやさしい絵本イメージ",
     visualDirection:
       "Warm Christmas picture-book mood with soft lights, family warmth, festive decorations, child-safe wonder, and cozy winter colors.",
@@ -1292,7 +1292,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/emotional-growth.png",
+    sampleImageUrl: "/images/templates/emotional-growth.webp",
     sampleImageAlt: "おもちゃをわけっこして笑い合う子どもたちのやさしい絵本イメージ",
     visualDirection:
       "Warm emotional-growth picture-book mood with gentle eye contact, shared toys, supportive smiles, and a small kindness spark motif.",
@@ -1382,7 +1382,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.png",
+    sampleImageUrl: "/images/templates/fantasy.webp",
     sampleImageAlt: "月あかりの部屋で安心して眠る子どもの絵本イメージ",
     visualDirection:
       "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination scenes, and calm reassuring expressions.",
@@ -1468,7 +1468,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.png",
+    sampleImageUrl: "/images/templates/fantasy.webp",
     sampleImageAlt: "月あかりの冒険をゆっくり楽しむ子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination cloud-and-star adventure, and calm reassuring expressions over an 8-page rhythm.",
@@ -1618,7 +1618,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/adventure.png",
+    sampleImageUrl: "/images/templates/adventure.webp",
     sampleImageAlt: "ダンボールロケットで想像の冒険をする子どもの絵本イメージ",
     visualDirection:
       "Warm imaginative playroom mood with cardboard rocket pretend play, symbolic stars and planets, and safe adventurous excitement.",
@@ -1704,7 +1704,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.png",
+    sampleImageUrl: "/images/templates/seasonal.webp",
     sampleImageAlt: "雨の日の水たまりに映る空を見つめる子どもの絵本イメージ",
     visualDirection:
       "Cozy rainy-day picture-book mood with reflective puddles, soft umbrellas, gentle outdoor light, and warm after-rain comfort.",
@@ -1797,7 +1797,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/emotional-growth.png",
+    sampleImageUrl: "/images/templates/emotional-growth.webp",
     sampleImageAlt: "家族のお手伝いをして笑顔になる子どもの絵本イメージ",
     visualDirection:
       "Warm family home picture-book mood with safe helper tasks, gentle gratitude, and calm everyday confidence-building moments.",
@@ -1891,7 +1891,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "original_ai",
     priceTier: "matsu",
     storyCostLevel: "standard",
-    sampleImageUrl: "/images/templates/fantasy.png",
+    sampleImageUrl: "/images/templates/fantasy.webp",
     sampleImageAlt: "自由なアイデアから広がるオリジナル絵本イメージ",
     visualDirection:
       "Flexible premium storybook mood that can adapt to many scenes while staying warm, child-friendly, expressive, and visually cohesive.",

@@ -1413,7 +1413,7 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 | T7-3b | Generate + QA: Group A style previews (execute) | ✅ COMPLETE (2026-05-19) |
 | T7-3.5 | Live StylePicker verification + toy_3d hotfix | ✅ COMPLETE (2026-05-19, commit `d8d38b4`) |
 | T7-4a | Design: Group B template thumbnail regeneration | ✅ COMPLETE (2026-05-20) |
-| T7-4b | Generate + QA: Group B (template thumbnails, execute) | Pending |
+| T7-4b | Generate + QA: Group B (template thumbnails, execute) | ✅ COMPLETE (2026-05-20) |
 | T7-5 | Create real quality samples (P3) | Pending |
 
 **T7-2 operational notes**:
