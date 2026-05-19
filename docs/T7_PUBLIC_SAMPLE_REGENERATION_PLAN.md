@@ -1440,7 +1440,7 @@ ThemeCard で「仕上がりサンプルを見る」ボタンが 5 テンプレ�
 
 **Date**: 2026-05-20  
 **Starting HEAD**: `d2e9053` docs(T7-5b): Firestore sampleImages 5/5 applied and verified  
-**Ending HEAD**: (この docs commit 後に更新)  
+**Ending HEAD**: `34fab78` docs(T7-5c): record Group D quality sample live QA — 37/37 HTTP 200, PASS  
 **Production URL**: https://story-gen-8a769.web.app
 
 ### 1. URL / HTTP Status Check
