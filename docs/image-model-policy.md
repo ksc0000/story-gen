@@ -1411,6 +1411,7 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 | T7-2.5 | Live UI verification / broken image regression check | ✅ COMPLETE (2026-05-19) — all 7 HTTP 200 image/webp confirmed |
 | T7-3a | Design: Group A style preview regeneration | ✅ COMPLETE (2026-05-19) |
 | T7-3b | Generate + QA: Group A style previews (execute) | ✅ COMPLETE (2026-05-19) |
+| T7-3.5 | Live StylePicker verification + toy_3d hotfix | ✅ COMPLETE (2026-05-19, commit `d8d38b4`) |
 | T7-4 | Regenerate template thumbnails (P2) | Pending |
 | T7-5 | Create real quality samples (P3) | Pending |
 
@@ -1418,6 +1419,10 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 - OpenAI Images API (`gpt-image-1`) required corporate proxy (`HTTPS_PROXY`) for local Node.js execution.
 - Firebase Secrets OPENAI_API_KEY output includes an "Error:" line in stdout; must extract the `sk-` line only.
 - `npm run build` exits with code 0 (actual). Code 1 observed only when using `2>&1` in PowerShell — caused by Next.js workspace-root warning to stderr being captured as `NativeCommandError`.
+
+**T7-3b / T7-3.5 operational notes**:
+- Style preview images are embedded in a Next.js JS chunk (`app/(app)/create/style/page-*.js`), not the static HTML. Verification requires checking the JS bundle, not the page HTML.
+- Regex for style IDs must use `[a-z0-9_]+` (not `[a-z_]+`) to handle IDs with digits (e.g., `toy_3d`). The T7-3b helper script missed `toy_3d` due to this, fixed in T7-3.5 hotfix.
 - Generation script: `scripts/generate-ui-assets.js` (dry-run/write mode, proxy-aware via `HttpsProxyAgent`).
 
 ### Generation strategy
