@@ -1252,3 +1252,36 @@ After T6-59 controlled production exposure, regenerate public sample books (styl
 | **Production routing gate** | — | ✅ **CANDIDATE PROMOTED (T6-57)** | Must-fix: T6-58 metadata bug before exposure |
 
 **Next**: T6-58 — Fix `imageModel` metadata bug in `generate-book.ts` / `resolveReplicateModel()` → deploy → T6-59 controlled production exposure gate.
+
+---
+
+## T6-58: imageModel Metadata Labeling Bug Fix (2026-05-19)
+
+### Status: ✅ COMPLETED
+
+**Bug**: Firestore pages generated via `openai_image_candidate` stored `imageModel: "black-forest-labs/flux-2-klein-9b"` — the FLUX Klein Fast model name — because `resolveReplicateModel()` had no case for `openai_image_candidate` and fell through to the default.
+
+### Fix
+
+**`functions/src/lib/openai-image.ts`** — New exported function `resolveOpenAIModelLabel(hasReferenceImages: boolean): string`:
+- Returns `"openai/gpt-4o"` for reference path (Responses API)
+- Returns `"openai/gpt-image-1-mini"` for no-reference path (Images API)
+
+**`functions/src/generate-book.ts`** — `pageData` construction updated:
+- `imageModel` uses `resolveOpenAIModelLabel()` when `usedProfile === "openai_image_candidate"`
+- `replicateModel` set to `undefined` (omitted) for OpenAI-generated pages
+
+### Tests
+
+3 new unit tests in `openai-image.test.ts`. Full suite: **695/695 PASS**.
+
+### Updated OpenAI Validation State (as of T6-58)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Reference image I5 — visual QA | — | ✅ PASS (T6-56) | 0/8 contamination, repeatability confirmed |
+| Production routing gate | — | ✅ CANDIDATE PROMOTED (T6-57) | — |
+| **imageModel metadata bug** | — | ✅ **FIXED (T6-58)** | `resolveOpenAIModelLabel()` + `generate-book.ts` |
+
+**Next**: T6-59 — Controlled production exposure gate.

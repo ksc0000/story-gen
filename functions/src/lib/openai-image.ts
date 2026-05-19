@@ -75,6 +75,19 @@ export const OPENAI_IMAGE_CANDIDATE_PROFILE: OpenAIClientOptions = {
   size: "1024x1024",
 };
 
+/**
+ * Returns the correct imageModel label for Firestore page metadata when using OpenAI generation.
+ * Two APIs are used depending on whether reference images are present:
+ *   - Reference images present → Responses API / gpt-4o   → "openai/gpt-4o"
+ *   - No reference images      → Images API / gpt-image-1-mini → "openai/gpt-image-1-mini"
+ * T6-58: fixes misleading "black-forest-labs/flux-2-klein-9b" label on OpenAI-generated pages.
+ */
+export function resolveOpenAIModelLabel(hasReferenceImages: boolean): string {
+  return hasReferenceImages
+    ? `openai/${OPENAI_IMAGE_CANDIDATE_PROFILE.responsesModel ?? "gpt-4o"}`
+    : `openai/${OPENAI_IMAGE_CANDIDATE_PROFILE.model}`;
+}
+
 export class OpenAIImageClient implements ImageClient {
   private client: OpenAI;
   private opts: OpenAIClientOptions;

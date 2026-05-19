@@ -35,7 +35,7 @@ import {
   withImageTimeout,
   ImageTimeoutError,
 } from "./lib/replicate";
-import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE } from "./lib/openai-image";
+import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE, resolveOpenAIModelLabel } from "./lib/openai-image";
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
 import { canUseProductPlan } from "./lib/entitlements";
 import { canGenerateBookThisMonth } from "./lib/usage";
@@ -1083,7 +1083,9 @@ export async function processBookGeneration(
         textSentenceCount: countSentences(storyPage.text),
         textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
         status: pageStatus as PageData["status"],
-        imageModel,
+        imageModel: imageResult.usedProfile === "openai_image_candidate"
+          ? resolveOpenAIModelLabel(inputImageUrls.length > 0)
+          : imageModel,
         imageQualityTier,
         imagePurpose,
         inputImageRoles,
@@ -1106,11 +1108,13 @@ export async function processBookGeneration(
         imageFallbackUsed: imageResult.fallbackUsed || undefined,
         imageFailureReason: imageResult.failureReason,
         imageRetryable: imageResult.retryable,
-        replicateModel: resolveReplicateModel({
-          purpose: imagePurpose,
-          imageQualityTier,
-          imageModelProfile: imageResult.usedProfile,
-        }),
+        replicateModel: imageResult.usedProfile === "openai_image_candidate"
+          ? undefined
+          : resolveReplicateModel({
+              purpose: imagePurpose,
+              imageQualityTier,
+              imageModelProfile: imageResult.usedProfile,
+            }),
       });
 
       await deps.writePage(bookId, pageData);

@@ -12097,3 +12097,92 @@ OpenAI path (`openai_image_candidate`) remains diagnostic/candidate only. No use
 | **Production routing gate** | — | ✅ **CANDIDATE PROMOTED (T6-57)** | Must-fix: T6-58 metadata bug |
 
 **Next milestone**: T6-58 — Fix `imageModel` metadata bug in `generate-book.ts` + `resolveReplicateModel()`. Deploy. Then T6-59 — controlled production exposure gate.
+
+---
+
+## Section 73: T6-58 — imageModel Metadata Labeling Bug Fix
+
+**Date**: 2026-05-19  
+**Status**: ✅ COMPLETED  
+**Type**: Code change + test  
+**Scope**: `functions/src/lib/openai-image.ts`, `functions/src/generate-book.ts`, `functions/test/openai-image.test.ts`
+
+### 73.1 Bug Summary
+
+For all pages generated via `imageModelProfile: "openai_image_candidate"`, Firestore stored:
+
+```text
+imageModel: "black-forest-labs/flux-2-klein-9b"
+```
+
+**Root cause**: `generate-book.ts` called `resolveReplicateModel()` to populate `imageModel`. `resolveReplicateModel()` calls `resolveProfileModel()`, which had no case for `openai_image_candidate` and fell through to `default: return FLUX_KLEIN_FAST_MODEL`. This returned the FLUX Klein Fast model name regardless of which API actually generated the image.
+
+Same bug also affected `replicateModel` field: it stored a FLUX model name for OpenAI-generated pages.
+
+### 73.2 Fix Implementation
+
+**`functions/src/lib/openai-image.ts`** — New exported function:
+
+```ts
+export function resolveOpenAIModelLabel(hasReferenceImages: boolean): string {
+  return hasReferenceImages
+    ? `openai/${OPENAI_IMAGE_CANDIDATE_PROFILE.responsesModel ?? "gpt-4o"}`
+    : `openai/${OPENAI_IMAGE_CANDIDATE_PROFILE.model}`;
+}
+```
+
+Returns:
+- `"openai/gpt-4o"` when reference images present (Responses API)
+- `"openai/gpt-image-1-mini"` when no reference images (Images API)
+
+**`functions/src/generate-book.ts`** — Two changes in `pageData` construction:
+
+1. `imageModel` override:
+```ts
+imageModel: imageResult.usedProfile === "openai_image_candidate"
+  ? resolveOpenAIModelLabel(inputImageUrls.length > 0)
+  : imageModel,
+```
+
+2. `replicateModel` skip for OpenAI pages:
+```ts
+replicateModel: imageResult.usedProfile === "openai_image_candidate"
+  ? undefined
+  : resolveReplicateModel({ purpose: imagePurpose, imageQualityTier, imageModelProfile: imageResult.usedProfile }),
+```
+
+### 73.3 Test Results
+
+**`functions/test/openai-image.test.ts`** — 3 new tests added:
+
+| Test | Result |
+|------|--------|
+| resolveOpenAIModelLabel returns `openai/gpt-4o` when reference images present | ✅ PASS |
+| resolveOpenAIModelLabel returns `openai/gpt-image-1-mini` when no reference images | ✅ PASS |
+| resolveOpenAIModelLabel reflects OPENAI_IMAGE_CANDIDATE_PROFILE constants | ✅ PASS |
+
+Full suite: **695/695 PASS** (was 692 before T6-58).
+
+### 73.4 Firestore Impact
+
+After this fix, pages generated via `openai_image_candidate` will store:
+
+| Field | Before (wrong) | After (correct) |
+|-------|----------------|------------------|
+| `imageModel` | `black-forest-labs/flux-2-klein-9b` | `openai/gpt-4o` (ref) or `openai/gpt-image-1-mini` (no-ref) |
+| `replicateModel` | `black-forest-labs/flux-2-klein-9b` | `undefined` (omitted) |
+| `imageModelProfile` | `openai_image_candidate` (correct) | `openai_image_candidate` (correct, unchanged) |
+
+Existing Firestore documents (smoke books I1〜I5) retain the old wrong label — this fix applies to future generations only.
+
+### 73.5 Updated OpenAI Validation State (as of T6-58)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image I5 — visual QA | — | ✅ PASS (T6-56) | 0/8 contamination, repeatability confirmed |
+| Production routing gate | — | ✅ CANDIDATE PROMOTED (T6-57) | — |
+| **imageModel metadata bug** | — | ✅ **FIXED (T6-58)** | resolveOpenAIModelLabel() + generate-book.ts |
+
+**Next milestone**: T6-59 — Controlled production exposure gate (actual routing change, deploy, monitoring).

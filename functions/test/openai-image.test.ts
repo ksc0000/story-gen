@@ -5,6 +5,7 @@ import {
   REFERENCE_IMAGE_SYSTEM_INSTRUCTION,
   REFERENCE_IMAGE_PROMPT_PREFIX,
   REFERENCE_IMAGE_PROMPT_SUFFIX,
+  resolveOpenAIModelLabel,
 } from "../src/lib/openai-image";
 
 const mockGenerate = vi.fn();
@@ -34,6 +35,21 @@ describe("OpenAIImageClient", () => {
         quality: "low",
         size: "1024x1024",
       });
+    });
+  });
+
+  describe("resolveOpenAIModelLabel (T6-58)", () => {
+    it("returns openai/gpt-4o when reference images are present", () => {
+      expect(resolveOpenAIModelLabel(true)).toBe("openai/gpt-4o");
+    });
+
+    it("returns openai/gpt-image-1-mini when no reference images", () => {
+      expect(resolveOpenAIModelLabel(false)).toBe("openai/gpt-image-1-mini");
+    });
+
+    it("reflects OPENAI_IMAGE_CANDIDATE_PROFILE model constants", () => {
+      expect(resolveOpenAIModelLabel(false)).toContain(OPENAI_IMAGE_CANDIDATE_PROFILE.model);
+      expect(resolveOpenAIModelLabel(true)).toContain(OPENAI_IMAGE_CANDIDATE_PROFILE.responsesModel ?? "");
     });
   });
 
