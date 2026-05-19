@@ -6,6 +6,7 @@
     "dev": "next dev",
     "clean": "node scripts/clean-build.mjs",
     "guard:hygiene": "node scripts/check-hygiene.mjs",
+    "check:public-assets": "node scripts/check-public-assets.mjs",
     "smoke:create-template-books": "node scripts/create-template-smoke-books.js",
     "smoke:create-nonfixed-book": "node scripts/create-nonfixed-smoke-book.js",
     "smoke:monitor": "node scripts/monitor-smoke-book.js",

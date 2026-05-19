@@ -375,7 +375,7 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 | P2-2 | ✅ COMPLETE — see P2-2 Implementation Note below |
 | P2-3 | ✅ COMPLETE — see P2-3 Implementation Note below |
 | P2-4 | ✅ COMPLETE — see P2-4 Implementation Note below |
-| P2-5 | Pending |
+| P2-5 | ✅ COMPLETE — see P2-5 Implementation Note below |
 | P2-6 | Pending |
 | P2-7 | Pending |
 | P2-8 | Pending |
@@ -582,3 +582,87 @@ Total suite after P2-4: **802/805 pass** (48 new P2-4 tests, all green).
 All tested functions were already exported pure helpers:
 - `gateImageModelProfile` (generate-book.ts)
 - `isCandidateProfile`, `CANDIDATE_IMAGE_PROFILES`, `resolveImageModelProfile`, `resolveImageFallbackProfiles` (replicate.ts)
+
+---
+
+## P2-5 Implementation Note
+
+**Commit**: chore(P2-5): add public asset URL smoke checker  
+**Files changed**:
+- `scripts/check-public-assets.mjs` (new) — HTTP smoke checker for all 37 public WebP asset URLs
+- `package.json` — `check:public-assets` npm script added
+
+**No production code changes.** Read-only script.
+
+### Purpose
+
+Turns T7-5c's 37/37 manual HTTP 200 verification into a repeatable automated check.
+Baseline: T7-5c verified 37/37 HTTP 200 (2026-05-19).
+
+### Asset groups
+
+| Group | Description | Count | Source of truth |
+|---|---|---|---|
+| A | Style preview images | 10 | `src/lib/illustration-styles.ts` `previewImageUrl` |
+| B | Template thumbnail images | 10 | `functions/src/seed-templates.ts` `sampleImageUrl` |
+| C | UI illustrations & icons | 7 | Hardcoded in `src/app/` and `src/components/` |
+| D | Quality sample images | 10 | `functions/src/seed-templates.ts` `sampleImages.{light,premium}` |
+| **Total** | | **37** | |
+
+### Usage
+
+```sh
+# Full check (all 37 URLs)
+npm run check:public-assets
+
+# With corporate proxy
+HTTPS_PROXY=http://proxy.hq.melco.co.jp:9515 node scripts/check-public-assets.mjs
+
+# Single group
+node scripts/check-public-assets.mjs --group A
+
+# Dry run (list URLs only)
+node scripts/check-public-assets.mjs --list
+
+# Stale .png reference guard
+node scripts/check-public-assets.mjs --stale-png
+
+# Against local dev server
+node scripts/check-public-assets.mjs --base-url http://localhost:3000
+```
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | All checks passed |
+| 1 | One or more asset URL checks failed |
+| 2 | Stale .png references detected (--stale-png mode) |
+
+### Proxy support
+
+On Windows the system proxy is NOT read by Node.js automatically.
+Set `HTTPS_PROXY` environment variable before running:
+```sh
+$env:HTTPS_PROXY = 'http://proxy.hq.melco.co.jp:9515'
+node scripts/check-public-assets.mjs
+```
+
+Implementation uses Node.js built-in `http`/`https`/`tls` modules with an HTTPS CONNECT
+tunnel — no external dependencies required.
+
+### Verification result (P2-5 baseline)
+
+```
+Group A: Style previews            10/10 PASS
+Group B: Template thumbnails       10/10 PASS
+Group C: UI illustrations/icons     7/7 PASS
+Group D: Quality samples           10/10 PASS
+Total:                             37/37 PASS
+```
+
+### Known limitations
+
+- Asset manifest is hardcoded in the script. If new assets are added, the manifest must be updated manually.
+- Requires `HTTPS_PROXY` to be set explicitly in Node.js environments behind a corporate HTTP proxy.
+- Checks HTTP status only; does not validate image content or pixel dimensions.
