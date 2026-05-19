@@ -257,7 +257,8 @@ All other templates: `sampleImages` not set → "仕上がりサンプルを見�
 | T7-1 | Inventory (this document) | ✅ COMPLETE |
 | T7-2 | Generate + QA: Group C (missing UI illustrations & icons) | ✅ COMPLETE |
 | T7-2.5 | Live UI verification / broken image regression check | ✅ COMPLETE |
-| T7-3 | Generate + QA: Group A (style preview images, P1) | Pending |
+| T7-3a | Group A style preview regeneration design (this section) | ✅ COMPLETE |
+| T7-3b | Generate + QA: Group A (style preview images, execute) | Pending |
 | T7-4 | Generate + QA: Group B (template thumbnails, P2) | Pending |
 | T7-5 | Generate + QA: Group D (quality samples, P3) | Pending |
 
@@ -333,6 +334,211 @@ These are lint warnings, not errors. Build output is fully valid.
 ### T7-2.5 Verdict
 
 ✅ **PASS** — All 7 Group C assets are live, serving correctly, no broken images in production. T7-2 deploy is confirmed closed.
+
+---
+
+## T7-3a: Group A Style Preview Regeneration Design
+
+**Date**: 2026-05-19  
+**Scope**: Design the regeneration strategy for the 10 style preview images (`public/images/styles/*.png`).  
+**This slice is docs-only. No image generation, file replacement, or deploy is performed here.**
+
+---
+
+### Current State
+
+| Property | Value |
+|---|---|
+| Count | 10 PNG files |
+| Dimensions | All 1024×1536 (2:3 portrait) |
+| File size | 2,422 – 3,839 KB each (avg ~2,869 KB) |
+| Total size | ~28.7 MB |
+| Format | PNG |
+| Origin model | Untracked (pre-T-series, likely Replicate FLUX) |
+| `usePreviewAsReference` | `false` for all — display-only |
+
+### Display Spec (StylePicker)
+
+- **Component**: `src/components/style-picker.tsx`
+- **Container**: `aspect-[2/3]` — portrait, exactly 2:3 ratio
+- **Image rendering**: `object-cover` (image fills container, cropped if needed)
+- **Display width**: ~180px on desktop (`lg:grid-cols-5`), ~45vw on tablet, ~90vw on mobile
+- **`sizes` hint**: `(min-width: 1024px) 180px, (min-width: 640px) 45vw, 90vw`
+- **Alt text**: `{styleName}のサンプル画像`
+
+**Implication**: The images must be in 2:3 portrait orientation for pixel-perfect fill. The OpenAI Images API supports `1024x1536` natively — this matches the current PNG dimensions exactly.
+
+---
+
+### Design Principle: Common Base Scene
+
+All 10 style previews will use the **same subject, composition, and setting**. Only the visual style changes between images. This enables users to:
+- Compare styles fairly (same scene, different look)
+- Understand what their book's style will look like
+- Avoid misleading expectations from different compositions
+
+**Scene specification**:
+- A small child (3–5 years old, stylized/non-photorealistic, gender-neutral) sitting cross-legged on a soft rug in a cozy reading nook
+- The child holds an open picture book; from the book's pages, tiny magical creatures emerge (a small rabbit, a little bear, a bluebird) surrounded by soft glowing stars and gentle sparkles
+- Warm, diffused indoor lighting
+- Vertical portrait composition (2:3), child centered in frame, full-body or 3/4 view
+- Minimal, uncluttered background
+- **No readable text, no signs, no logos, no watermarks, no photorealistic rendering**
+
+---
+
+### Generation Configuration
+
+| Parameter | Value |
+|---|---|
+| Model | `gpt-image-1` |
+| Size | `1024x1536` (portrait, 2:3 — matches current PNG dimensions) |
+| Output from API | base64 PNG |
+| Post-processing | sharp: `toFormat('webp', { quality: 85, effort: 6 })` — no resize (native 1024×1536) |
+| Output file | `public/images/styles/{style_id}.webp` |
+| Expected file size | < 250 KB per file (vs 2.4–3.8 MB current) |
+| Proxy | `HTTPS_PROXY` required (corporate network) |
+| API key source | Firebase Secrets `OPENAI_API_KEY` (sk- line only) |
+
+---
+
+### Per-Style Prompts
+
+Each prompt = **BASE_SCENE** + **STYLE_MODIFIER** + **NEGATIVE_RULES**.
+
+**BASE_SCENE** (shared across all 10):
+```
+A small child (3 to 5 years old, stylized and child-friendly, not photorealistic)
+sitting cross-legged on a soft rug in a cozy reading nook, holding an open picture book.
+From the pages of the book, tiny magical creatures emerge — a small rabbit, a little bear,
+a bluebird — surrounded by soft glowing stars and gentle sparkles.
+Warm diffused indoor lighting. Vertical portrait composition, full-body view, child centered.
+No readable text, no letters, no logos, no watermarks.
+```
+
+**NEGATIVE_RULES** (appended to all):
+```
+Do not add any readable text, signs, labels, logos, or watermarks anywhere.
+Do not render any element in a photorealistic style.
+Do not use a dark, threatening, or adult mood.
+```
+
+**Per-style STYLE_MODIFIER**:
+
+| Style ID | Style Name | STYLE_MODIFIER |
+|---|---|---|
+| `soft_watercolor` | やさしい水彩 | Japanese children's picture book watercolor style, soft warm colors, pale gentle pigment blooms, hand-painted paper texture, cozy tender atmosphere. |
+| `fluffy_pastel` | ふんわりパステル | Fluffy pastel picture book style, soft rounded forms, airy pale colors, gentle edges, cute toddler-friendly design, plush comforting mood. |
+| `crayon` | クレヨンで描いた絵本 | Crayon storybook style, warm hand-drawn strokes with visible waxy texture, playful childlike imperfect lines, colorful but gentle page design. |
+| `flat_illustration` | シンプルフラット | Simple flat illustration style, bright clean colors, readable shapes with minimal shadows and gradients, modern child-friendly picture book layout. |
+| `anime_storybook` | わくわくアニメ風 | Anime-inspired picture book style, expressive large eyes with sparkling highlights, vivid but soft family-safe colors, lively framing with warm fantasy energy. |
+| `classic_picture_book` | クラシック絵本 | Classic picture book illustration style, traditional fairytale warmth, detailed painterly linework, rich textures, timeless storybook atmosphere. |
+| `toy_3d` | ぷっくり3Dトイ風 | Rounded 3D toy storybook style, clay-like forms, playful miniature diorama feeling, soft plastic texture with gentle highlights, bright child-safe lighting. |
+| `paper_collage` | 紙あそびコラージュ | Paper cut collage picture book style, layered handmade paper textures with visible torn edges, tactile warm craft feeling, playful child-friendly composition. |
+| `pencil_sketch` | やさしい鉛筆スケッチ | Gentle pencil sketch picture book style, delicate hand-drawn line art with subtle color tinting, nostalgic quiet mood, soft nostalgic crafted feeling. |
+| `colorful_pop` | カラフルポップ | Colorful pop picture book style, vivid joyful saturated colors, friendly rounded forms, playful graphic energy, clear child-safe staging. |
+
+---
+
+### File Format & Output Path Decision
+
+**Decision: Generate new WebP files alongside existing PNGs, then update `previewImageUrl`.**
+
+| Option | Pros | Cons |
+|---|---|---|
+| A. Replace PNGs in-place (overwrite) | No source change needed | Loses original files; rollback harder |
+| B. Add `.webp` files, update `previewImageUrl` in source | Clean rollback; smaller files; both versions in git | Requires source change in 2 files |
+| **C (chosen): B + keep original PNGs committed** | Full rollback by reverting 2 source files; originals preserved forever | Repo size increases temporarily |
+
+**Output paths** (new files):
+```
+public/images/styles/soft_watercolor.webp
+public/images/styles/fluffy_pastel.webp
+public/images/styles/crayon.webp
+public/images/styles/flat_illustration.webp
+public/images/styles/anime_storybook.webp
+public/images/styles/classic_picture_book.webp
+public/images/styles/toy_3d.webp
+public/images/styles/paper_collage.webp
+public/images/styles/pencil_sketch.webp
+public/images/styles/colorful_pop.webp
+```
+
+**Source files to update** (after QA PASS only):
+- `src/lib/illustration-styles.ts` — 12 entries (10 canonical + 2 aliases `watercolor`, `flat` share existing paths)
+  - Change: `previewImageUrl: "/images/styles/{id}.png"` → `"/images/styles/{id}.webp"`
+  - Note: `watercolor` alias → `soft_watercolor.webp`; `flat` alias → `flat_illustration.webp`
+- `functions/src/lib/illustration-styles.ts` — identical update (server-side copy)
+
+---
+
+### Rollback Strategy
+
+If any style preview WebP is judged worse than the current PNG after QA:
+1. **Full rollback**: `git revert` the `previewImageUrl` commits → all 10 styles revert to original PNGs automatically
+2. **Partial rollback**: Manually revert only the failing style's `previewImageUrl` entry; keep other WebP updates
+3. **Original PNGs are never deleted** in T7-3b — they remain committed
+
+Rollback is safe and fully reversible at any time.
+
+---
+
+### QA Criteria for T7-3b
+
+After generating all 10 images, apply the following checks before committing:
+
+| # | Criterion | Check method |
+|---|---|---|
+| Q1 | No readable text / logos / watermarks anywhere | Visual inspection |
+| Q2 | No photorealistic elements (hair, skin, objects) | Visual inspection |
+| Q3 | Each of the 10 images is visually distinct in style | Side-by-side comparison |
+| Q4 | All 10 images depict the same base scene (child + book + creatures) | Visual inspection |
+| Q5 | Child-safe: no dark, threatening, or violent mood | Visual inspection |
+| Q6 | Portrait orientation (taller than wide) | `sharp.metadata()` — height > width |
+| Q7 | Dimensions exactly 1024×1536 | `sharp.metadata()` — width=1024, height=1536 |
+| Q8 | File format WebP | File extension + Content-Type after deploy |
+| Q9 | File size < 250 KB each | `fs.statSync().size` |
+| Q10 | `featured` styles (`crayon`, `anime_storybook`) meet higher bar | These are the most visible; extra QA attention |
+
+**Pass threshold**: Q1–Q8 must all pass. Q9 must pass (if any file exceeds 250 KB, reduce WebP quality or target size). Q10 is a soft gate — operator judgment.
+
+**QA method**: Use `view_image` tool for each of the 10 WebP files before committing.
+
+---
+
+### T7-3b Execution Scope
+
+**What T7-3b will do** (next slice, generation + QA + commit):
+
+1. Ensure `OPENAI_API_KEY` loaded (Firebase Secrets, sk- line only)
+2. Ensure `HTTPS_PROXY` set (`http://proxy.hq.melco.co.jp:9515/`)
+3. Create `scripts/generate-style-previews.js`:
+   - Same pattern as `scripts/generate-ui-assets.js` (dry-run / write mode, proxy-aware)
+   - 10 assets: `gpt-image-1`, `size: "1024x1536"`, base64 → sharp WebP, no resize step
+   - `--asset {id}` flag for single-image regeneration
+4. Dry-run validation
+5. Generate all 10 with `--write`
+6. Visual QA all 10 with `view_image` — record pass/fail per style
+7. If all QA PASS:
+   - Update `src/lib/illustration-styles.ts` — 10 `.png` → `.webp`
+   - Update `functions/src/lib/illustration-styles.ts` — same
+   - `npm run build` verify
+   - `git add public/images/styles/*.webp scripts/generate-style-previews.js src/lib/illustration-styles.ts functions/src/lib/illustration-styles.ts`
+   - `git commit -m "feat(T7-3b): regenerate Group A style previews via OpenAI, WebP"`
+   - `git push origin main`
+   - `firebase deploy --only hosting`
+8. If any QA FAIL:
+   - Record which style(s) failed and why
+   - Do not update `previewImageUrl` for failing styles
+   - Commit WebP files only for passing styles (partial update is acceptable)
+   - Document result in T7-3b verdict section
+
+**What T7-3b will NOT do**:
+- Replace or delete original PNG files
+- Deploy Cloud Functions
+- Modify Firestore or Storage
+- Change production routing
+- Display or record OPENAI_API_KEY value
 
 ---
 
