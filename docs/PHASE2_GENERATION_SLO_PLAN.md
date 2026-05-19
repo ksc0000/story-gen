@@ -376,7 +376,7 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 | P2-3 | ✅ COMPLETE — see P2-3 Implementation Note below |
 | P2-4 | ✅ COMPLETE — see P2-4 Implementation Note below |
 | P2-5 | ✅ COMPLETE — see P2-5 Implementation Note below |
-| P2-6 | Pending |
+| P2-6 | ✅ COMPLETE — see P2-6 Implementation Note below |
 | P2-7 | Pending |
 | P2-8 | Pending |
 | P2-9 | Pending |
@@ -530,9 +530,9 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 
 ### Remaining gaps (for future slices)
 
-- **P2-6**: Stale `.png` reference guard in hygiene script
 - Story generation latency is not yet measured (Gemini latency not stored per-book)
 - `generation_started` does not know the final `creationMode` (resolved in `processBookGeneration`, not the Cloud Function trigger)
+- Automated SLO report from Cloud Logging export covered in P2-6
 
 ---
 
@@ -666,3 +666,115 @@ Total:                             37/37 PASS
 - Asset manifest is hardcoded in the script. If new assets are added, the manifest must be updated manually.
 - Requires `HTTPS_PROXY` to be set explicitly in Node.js environments behind a corporate HTTP proxy.
 - Checks HTTP status only; does not validate image content or pixel dimensions.
+
+---
+
+## P2-6 Implementation Note
+
+**Commit**: chore(P2-6): add generation SLO report script  
+**Files changed**:
+- `scripts/report-generation-slo.mjs` (new) — local SLO report from structured generation event logs
+- `package.json` — `report:generation-slo` npm script added
+
+**No production code changes.** Read-only reporting script.
+
+### Purpose
+
+Aggregates structured generation event logs (exported from Cloud Logging) into a concise
+SLO report, making it possible to measure generation health without live Firebase/Firestore access.
+
+Events are written by `functions/src/lib/generation-event-logger.ts` (P2-2/P2-3).
+
+### Input formats
+
+| Format | Description |
+|---|---|
+| NDJSON | One JSON object per line (`.ndjson`). Supports Cloud Logging bulk export. |
+| JSON array | Array of JSON objects (`.json`). Cloud Logging download format. |
+
+Both formats support Cloud Logging envelope wrapping (`{ jsonPayload: { ... } }`).
+
+### Usage
+
+```sh
+# Console report (default)
+node scripts/report-generation-slo.mjs --input ./tmp/events.json
+
+# Markdown report
+node scripts/report-generation-slo.mjs --input ./tmp/events.json --format markdown
+
+# JSON report (machine-readable)
+node scripts/report-generation-slo.mjs --input ./tmp/events.json --format json
+
+# npm shortcut
+npm run report:generation-slo -- --input ./tmp/events.json
+
+# Self-test (no input file required)
+node scripts/report-generation-slo.mjs --self-test
+```
+
+### Metrics produced
+
+| Metric | Source events |
+|---|---|
+| generation_started count | `generation_started` |
+| book_outcome count | `book_outcome` |
+| completed / partial_completed / failed counts & rates | `book_outcome` |
+| readable rate (comp + partial) | `book_outcome` |
+| book_early_failed count & error categories | `book_early_failed` |
+| page_image_failed count | `page_image_failed` |
+| errorCategory counts | `page_image_failed` |
+| errorCode counts (E005, TIMEOUT, PROVIDER_5XX, etc.) | `page_image_failed` |
+| provider counts (replicate / openai) | `page_image_failed` |
+| primaryProfile / imageModelProfile counts | `page_image_failed` |
+| resolvedImageModelProfile counts | `book_outcome` |
+| candidateRequested / candidateAllowed / blocked counts | `generation_started` |
+| book durationMs p50 / p95 | `book_outcome` |
+| page image durationMs p50 / p95 | `page_image_failed` |
+
+### Privacy safeguards
+
+- Events never contain raw userId, prompts, child names, or story text (enforced by event type definitions).
+- Script additionally ignores any unexpected raw text fields that might appear in input.
+- All output is aggregated counts and percentiles — no per-event details printed.
+- `BLOCKED_FIELDS` set: `userId`, `uid`, `rawPrompt`, `imagePrompt`, `storyText`, `childName`, etc.
+- A data quality warning is printed if any blocked field is detected in input.
+
+### Self-test results (P2-6 baseline)
+
+```
+Results: 49 passed, 0 failed
+OK: All self-tests passed.
+```
+
+Self-test covers:
+- NDJSON parsing (with malformed line handling)
+- JSON array parsing
+- missing / unknown eventName handling
+- completed / partial_completed / failed counts and rates
+- errorCategory and errorCode counts
+- provider and profile counts
+- p50 / p95 durationMs calculation
+- privacy guard (userId, rawPrompt, childName not in output)
+- markdown output section presence
+- JSON output shape stability
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Report produced (or self-test passed) |
+| 1 | Unrecoverable input error (file not found, empty input) |
+| 2 | Self-test failure |
+
+### Known limitations
+
+- Requires manual export from Cloud Logging; does not connect to GCP directly.
+- Book durationMs p50/p95 covers only books that emitted `book_outcome` events. Books that failed before stage 9 (`book_early_failed`) are excluded from latency.
+- Story generation latency (Gemini) is not yet measured per-book.
+- `generation_started.creationMode` is not available (resolved downstream in `processBookGeneration`).
+
+### What remains for P2-7 / P2-8
+
+- **P2-7**: Operational runbook — document how to pull Cloud Logging export, run the report, and interpret results in the context of SLO targets.
+- **P2-8**: Automated SLO snapshot comparison — diff two report JSON outputs to detect regressions between snapshots.
