@@ -11823,4 +11823,81 @@ The prompt hardening implemented in T6-54 (`REFERENCE_IMAGE_SYSTEM_INSTRUCTION`,
 | Reference image I4 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-54) | 8/8 generated |
 | Reference image I4 — visual QA | — | ✅ PASS (T6-55) | 0/8 contamination, passthrough resolved |
 
-**Next milestone**: T6-56 — I5 smoke (second clean run to confirm repeatability) + visual QA. If PASS, advance to production routing gate review.
+**Next milestone**: T6-57 — Production routing gate review / candidate promotion decision.
+
+---
+
+## Section 71: T6-56 — I5 Visual QA (repeatability confirmation)
+
+**Date**: 2026-05-19  
+**Book ID**: `smoke-openai-i3-1779149454010` (I5 smoke, `imageModelProfile: openai_image_candidate`)  
+**Status**: ✅ PASS  
+**Purpose**: Second clean run to confirm T6-54 prompt hardening repeatability. I4 (T6-55) PASS must be reproducible on a fresh book.
+
+### 71.1 QA Setup
+
+- All 8 page images downloaded from Cloud Storage to `_qa_tmp_i5/` (local temp, not committed)
+- Each page reviewed against: illustration style, protagonist presence, Type A/B contamination, BF-3 (no text), BF-4 (anatomy)
+- Same reference image, same visual bible, same prompt hardening as I4 (T6-55)
+- Special attention to confirming 0/8 photorealistic passthrough (T6-55 result)
+
+### 71.2 Page-by-Page QA Table
+
+| Page | Style | Protagonist | Type A contam | Type B contam | BF-3 | BF-4 | Verdict |
+|------|-------|-------------|--------------|--------------|------|------|---------|
+| P0 | ✅ crayon/colored-pencil | ✅ Hinata (yellow floral dress, pigtails, red shoes) | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P1 | ✅ crayon/colored-pencil | ✅ Hinata + star companion, crouching in garden | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P2 | ✅ crayon/colored-pencil | ✅ Hinata running on forest path, star companion, signpost | ❌ none | ❌ none | ⚠️ signpost "ぼうけんのみち" (story element, soft flag) | ✅ OK | ✅ PASS |
+| P3 | ✅ crayon/colored-pencil | ✅ Hinata in forest examining leaf, star companion | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P4 | ✅ colored-pencil | ✅ Hinata crouching at white flower, star companion | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P5 | ✅ crayon/colored-pencil | ✅ Hinata in flower garden (daisy/cosmos), star companion | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P6 | ✅ crayon/colored-pencil | ✅ Hinata (hands clasped) at creek with flowers, star companion | ❌ none | ❌ none | ✅ none | ✅ OK | ✅ PASS |
+| P7 | ✅ crayon/colored-pencil | ✅ Hinata waving at departing star companion, cottage background | ❌ none | ❌ none | ⚠️ signpost "Hinata 4さい" (character intro element, soft flag) | ✅ OK | ✅ PASS |
+
+### 71.3 Key Findings
+
+**Type B contamination (photorealistic passthrough)**:
+- T6-55 (I4): 0/8 FAIL
+- T6-56 (I5): 0/8 FAIL — repeatability **confirmed**
+- T6-54 prompt hardening is effective across two independent smoke runs
+
+**Type A contamination**: 0/8 — no reference image subject echo observed
+
+**Illustration style**: 8/8 — all pages rendered as crayon or colored-pencil illustration. High quality output consistent with OpenAI gpt-4o + image_generation tool characteristics.
+
+**Protagonist consistency**: 8/8 — Hinata visible on all pages with consistent features (dark hair, pigtails, yellow floral sundress, red shoes, rosy cheeks)
+
+**BF-3 (no readable text)**: 6/8 clean. P2 signpost "ぼうけんのみち" (adventure path) and P7 signpost "Hinata 4さい" accepted as story/character narrative elements. Soft flags only.
+
+**BF-4 (anatomy/proportions)**: 8/8 OK — no anatomy errors
+
+**Note on imageModel Firestore field**: Pages store `imageModel: black-forest-labs/flux-2-klein-9b`. This is a misleading metadata label — `resolveReplicateModel()` falls through to the FLUX default for `openai_image_candidate` profile. Actual generation was via `OpenAIImageClient` (gpt-4o Responses API + `image_generation` tool) as confirmed by `imageModelProfile: openai_image_candidate` on all pages and per-page duration 25–32 s (consistent with OpenAI; FLUX klein is typically 5–15 s).
+
+### 71.4 T6-56 Final Verdict
+
+**PASS ✅**
+
+- 0/8 Type B contamination (photorealistic passthrough) — **confirmed for second run**
+- 0/8 Type A contamination
+- 8/8 illustration style maintained
+- 8/8 protagonist visible
+- 8/8 story match
+- BF-3: 6/8 clean (P2, P7 soft flags — signpost story/character elements)
+- BF-4: 8/8 OK
+
+### 71.5 OpenAI Validation State (as of T6-56)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact noted |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ FAIL (T6-52) | 2/8 photorealistic passthrough |
+| Reference path prompt hardening | — | ✅ IMPLEMENTED (T6-54) | System message + prefix/suffix |
+| Reference image I4 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-54) | 8/8 generated |
+| Reference image I4 — visual QA | — | ✅ PASS (T6-55) | 0/8 contamination, passthrough resolved |
+| Reference image I5 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-56) | 8/8 generated |
+| Reference image I5 — visual QA | — | ✅ PASS (T6-56) | 0/8 contamination, repeatability confirmed |
+
+**Next milestone**: T6-57 — Production routing gate review / candidate promotion decision.

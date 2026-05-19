@@ -1151,3 +1151,41 @@ Prompt hardening (T6-54) fully resolved the photorealistic passthrough contamina
 | Reference path prompt hardening | — | ✅ IMPLEMENTED (T6-54) | System message + prefix/suffix |
 | Reference image I4 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-54) | 8/8 generated |
 | Reference image I4 — visual QA | — | ✅ PASS (T6-55) | 0/8 contamination, passthrough resolved |
+
+---
+
+## T6-56: I5 Visual QA — PASS (repeatability confirmation)
+
+**Book**: `smoke-openai-i3-1779149454010` (I5 smoke, `imageModelProfile: openai_image_candidate`)
+
+**Verdict: PASS ✅**
+
+Second clean run confirms T6-54 prompt hardening is repeatable. I4 (T6-55) result was not a fluke.
+
+| Metric | T6-52 (I3) | T6-55 (I4) | T6-56 (I5) |
+|--------|-----------|----------|----------|
+| Type B contamination (passthrough) | 2/8 FAIL | 0/8 PASS | **0/8 PASS** |
+| Illustration style | 6/8 | 8/8 | 8/8 |
+| Protagonist visible | 6/8 | 8/8 | 8/8 |
+| BF-3 (no text) | 8/8 | 7/8 (P0 soft) | 6/8 (P2, P7 soft) |
+| BF-4 (anatomy) | 8/8 | 8/8 | 8/8 |
+
+- BF-3 soft flags in I5: P2 "ぼうけんのみち" signpost, P7 "Hinata 4さい" signpost — both story/character narrative elements, not arbitrary text injection
+- imageModel metadata shows `black-forest-labs/flux-2-klein-9b` (misleading label from `resolveReplicateModel` default); actual generation via OpenAI gpt-4o Responses API confirmed by `imageModelProfile` field and 25–32 s per-page duration
+
+**Updated Validation State (as of T6-56)**:
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Visual QA I1 | — | ✅ CONDITIONAL PASS (T6-44) | Human review confirmed |
+| Reference image consistency (I2) | Responses API / gpt-4o | ✅ CONDITIONAL PASS (T6-49) | Animals.png artifact |
+| Reference image I3 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-51) | 8/8 generated |
+| Reference image I3 — visual QA | — | ❌ FAIL (T6-52) | 2/8 photorealistic passthrough |
+| Reference path prompt hardening | — | ✅ IMPLEMENTED (T6-54) | System message + prefix/suffix |
+| Reference image I4 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-54) | 8/8 generated |
+| Reference image I4 — visual QA | — | ✅ PASS (T6-55) | 0/8 contamination, passthrough resolved |
+| Reference image I5 — technical | Responses API / gpt-4o | ✅ TECHNICAL PASS (T6-56) | 8/8 generated |
+| Reference image I5 — visual QA | — | ✅ PASS (T6-56) | 0/8 contamination, repeatability confirmed |
+
+**Next**: T6-57 — Production routing gate review / candidate promotion decision.
