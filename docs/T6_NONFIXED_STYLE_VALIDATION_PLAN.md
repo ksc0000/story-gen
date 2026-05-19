@@ -12320,3 +12320,99 @@ This makes it visible in Cloud Logging when a user attempts to use a candidate p
 | **Controlled exposure gate** | — | ✅ **IMPLEMENTED (T6-59)** | `generationOverride.allowCandidateProfile` required |
 
 **Next milestone**: Deploy functions + enroll smoke user + I6 smoke run to confirm gate-pass behavior.
+
+---
+
+## Section 75 — T6-60: Gate-Pass + Gate-Block Verification (Production Deploy)
+
+**Date**: 2026-05-19
+**Commit ref**: T6-59 HEAD (`0d64ad7`) → T6-60 scripts + docs
+
+### 75.1 Objective
+
+Deploy the T6-59 controlled gate to production Cloud Functions and verify:
+1. **Gate-pass** — enrolled user with `allowCandidateProfile: true` successfully routes to `openai_image_candidate`.
+2. **Gate-block** — unenrolled user has `openai_image_candidate` stripped by the gate; book generates with plan-default FLUX.
+
+### 75.2 Pre-Deploy Checks
+
+| Check | Result |
+| --- | --- |
+| `OPENAI_API_KEY` secret (Version 2) | ✅ ENABLED |
+| `git status` (HEAD `0d64ad7`) | ✅ Clean |
+| `npm run build` (functions) | ✅ 0 errors |
+| `npm test` (functions) | ✅ 703/703 tests pass |
+
+### 75.3 Deploy
+
+```
+firebase deploy --only functions --project story-gen-8a769
+```
+
+All 13 functions deployed successfully (`generateBook` included). `+  Deploy complete!`
+
+### 75.4 Smoke User Enrollment
+
+**Script created**: `scripts/enroll-candidate-profile.js` — sets `generationOverride.allowCandidateProfile: true` on a specified user doc.
+
+**Users enrolled** (pre-existing smoke users updated via `--write`):
+
+| userId | Before | After |
+| --- | --- | --- |
+| `smoke-test-openai-i1` | `{ bypassMonthlyLimit: true }` | `+ allowCandidateProfile: true` |
+| `smoke-test-openai-i3` | `{ bypassMonthlyLimit: true }` | `+ allowCandidateProfile: true` |
+
+**New scripts also updated**: `create-openai-smoke-book.js`, `create-openai-i3-smoke-book.js` now include `allowCandidateProfile: true` in new user doc creation.
+
+### 75.5 I6 Gate-Pass Smoke (No-Reference Path)
+
+**Script**: `scripts/create-openai-i6-gate-smoke-book.js`
+**Book**: `smoke-openai-i6-1779154500956`
+**User**: `smoke-test-openai-i6` (created with `allowCandidateProfile: true`)
+**Profile requested**: `openai_image_candidate`
+
+| Criterion | Result |
+| --- | --- |
+| Book status | ✅ `completed` |
+| Pages completed | ✅ 8/8 |
+| Pages failed | ✅ 0/8 |
+| imageModel (all pages) | ✅ `openai/gpt-image-1-mini` |
+| imageModelProfile (all pages) | ✅ `openai_image_candidate` |
+| imageFallbackUsed (all pages) | ✅ `false` |
+| Gate warning in Cloud Logs | ✅ None emitted (gate passed) |
+
+**Verdict**: **PASS** — enrolled user routes to OpenAI Images API as expected.
+
+### 75.6 Gate-Block Negative Smoke
+
+**Script**: `scripts/create-gate-block-smoke-book.js`
+**Book**: `smoke-gate-block-1779154508318`
+**User**: `smoke-test-gate-block-1779154508318` (ephemeral, no `allowCandidateProfile`)
+**Profile requested**: `openai_image_candidate` (will be gated)
+
+| Criterion | Result |
+| --- | --- |
+| Cloud Log gate warning | ✅ `"Candidate image profile gated out — user not enrolled"` |
+| Effective profile (book-level) | ✅ `pro_consistent` (plan default, NOT `openai_image_candidate`) |
+| Pages completed | ✅ 8/8 |
+| imageModel (all pages) | ✅ `black-forest-labs/flux-2-pro` (NOT `openai/gpt-image-1-mini`) |
+| imageModelProfile (pages 1-7) | ✅ `klein_fast` (fallback from `pro_consistent` due to E005) |
+| OpenAI API called | ✅ Not called (gate blocked before imageClient invocation) |
+
+Note: `pro_consistent` → `klein_fast` fallback on pages 1-7 is normal FLUX behavior (E005 sensitivity flag on adventure theme) and is unrelated to the gate test.
+
+**Verdict**: **PASS** — unenrolled user request is gated out; FLUX generates the book with zero OpenAI involvement.
+
+### 75.7 Updated OpenAI Validation State (as of T6-60)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Reference image I5 — visual QA | Responses API / gpt-4o | ✅ PASS (T6-56) | 0/8 contamination |
+| Production routing gate | — | ✅ CANDIDATE PROMOTED (T6-57) | — |
+| imageModel metadata bug | — | ✅ FIXED (T6-58) | — |
+| Controlled exposure gate | — | ✅ IMPLEMENTED (T6-59) | `allowCandidateProfile` required |
+| **Gate-pass verification (I6)** | Images API | ✅ **VERIFIED (T6-60)** | 8/8 pages `openai/gpt-image-1-mini` |
+| **Gate-block verification** | — | ✅ **VERIFIED (T6-60)** | FLUX fallback confirmed, warning logged |
+
+**T6-60 COMPLETE.** The controlled production gate for `openai_image_candidate` is live, tested, and verified gate-pass + gate-block in production Cloud Functions.

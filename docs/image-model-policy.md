@@ -1332,7 +1332,7 @@ Required for smoke test user (`smoke-test-openai-i3`) before running smoke scrip
 |------|--------|
 | Enroll smoke user in Firestore | ⚠️ Pending (admin op) |
 | Deploy functions | ⚠️ Pending |
-| I6 smoke run (gate-pass confirmation) | ⚠️ Pending |
+| I6 smoke run (gate-pass confirmation) | ✅ PASS (T6-60) |
 
 ### Updated OpenAI Validation State (as of T6-59)
 
@@ -1344,3 +1344,43 @@ Required for smoke test user (`smoke-test-openai-i3`) before running smoke scrip
 | **Controlled exposure gate** | — | ✅ **IMPLEMENTED (T6-59)** | `allowCandidateProfile` required |
 
 **Next**: Deploy + smoke user enrollment + I6 gate-pass smoke run.
+
+---
+
+## T6-60: Gate-Pass + Gate-Block Verification (2026-05-19)
+
+Deployed T6-59 gate to production and ran gate-pass + gate-block smoke verification.
+
+### Deploy
+
+```
+firebase deploy --only functions --project story-gen-8a769
+```
+
+All 13 functions updated. `generateBook` live with T6-59 gate.
+
+### I6 Gate-Pass Result
+
+Book `smoke-openai-i6-1779154500956` — user `smoke-test-openai-i6` (enrolled with `allowCandidateProfile: true`):
+
+- 8/8 pages `completed`
+- All pages: `imageModel: "openai/gpt-image-1-mini"` ✅
+- No gate warning in Cloud Logs ✅
+
+### Gate-Block Result
+
+Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508318` (no `allowCandidateProfile`):
+
+- Cloud Log: `"Candidate image profile gated out — user not enrolled"` ✅
+- Book-level `imageModelProfile` → `pro_consistent` (plan default) ✅
+- All pages: `imageModel: "black-forest-labs/flux-2-pro"` — zero OpenAI calls ✅
+
+### Updated Validation State (as of T6-60)
+
+| Capability | Status |
+| --- | --- |
+| Gate-pass (I6 smoke, enrolled user) | ✅ VERIFIED |
+| Gate-block (negative smoke, unenrolled user) | ✅ VERIFIED |
+| Production routing (no breakage) | ✅ Confirmed |
+
+**T6-60 COMPLETE.** Gate is live. Production default routing unchanged.

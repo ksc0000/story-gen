@@ -232,7 +232,10 @@ async function main() {
     await userRef.set({
       plan: "premium",
       createdAt: FieldValue.serverTimestamp(),
-      generationOverride: { bypassMonthlyLimit: true },
+      generationOverride: {
+        bypassMonthlyLimit: true,
+        allowCandidateProfile: true, // T6-59: candidate profile gate enrollment
+      },
     });
     console.log(`  Created user: ${userId}`);
   }
