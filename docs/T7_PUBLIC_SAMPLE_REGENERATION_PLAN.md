@@ -265,7 +265,7 @@ All other templates: `sampleImages` not set → "仕上がりサンプルを見�
 | T7-4.5 | Live ThemeCard verification / template thumbnail regression check | ✅ COMPLETE |
 | T7-4.6 | PNG reference cleanup / test regression fix | ✅ COMPLETE |
 | T7-5a | Design: Group D quality sample generation | ✅ COMPLETE |
-| T7-5b | Generate + QA + promote: Group D quality samples (execute) | Pending |
+| T7-5b | Generate + QA + promote: Group D quality samples (execute) | ✅ COMPLETE |
 
 ---
 
@@ -1355,7 +1355,81 @@ Rollback does NOT affect template thumbnails, style previews, or any Groups A/B/
 | Slice | Scope | Status |
 |---|---|---|
 | T7-5a | Design: Group D quality sample generation (this section) | ✅ COMPLETE |
-| T7-5b | Generate + QA + promote: Group D quality samples (execute) | Pending |
+| T7-5b | Generate + QA + promote: Group D quality samples (execute) | ✅ COMPLETE |
+| T7-5c | Live QA: ThemeCard "仕上がりサンプルを見る" regression + Firestore update | Pending |
+
+---
+
+## T7-5b Generation & QA Results
+
+**Date**: 2026-05-20  
+**Commit**: `05e863b feat(T7-5b): add Group D quality sample images and sampleImages URLs`  
+**Scope**: Generate 10 WebP quality samples (5 templates × light/premium), QA, promote, wire sampleImages URLs, build + deploy.
+
+### Generation Summary
+
+- Script: `scripts/generate-quality-samples.js`
+- Model: gpt-image-1, size 1024×1536, base64 → sharp WebP quality 85
+- Staging dir: `_tmp_t7_quality_candidates/`
+- Destination: `public/images/samples/`
+- Result: 10/10 generated successfully
+
+### Visual QA Results (Q1–Q11 criteria)
+
+| Sample | File Size | Q1 Appealing | Q2 Child | Q3 Story-page | Q4 Palette | Q5 No text | Q6 Portrait | Q7 1024×1536 | Q8 WebP | Verdict |
+|---|---|---|---|---|---|---|---|---|---|---|
+| fantasy_light | 347 KB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **PASS** |
+| fantasy_premium | 318 KB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **PASS** |
+| bedtime_light | 395 KB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **PASS** |
+| bedtime_premium | 364 KB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **PASS** |
+| animals_light | 306 KB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **PASS** |
+| animals_premium | 376 KB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **PASS** |
+| adventure_light | 394 KB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **PASS** |
+| adventure_premium | 296 KB | ✅ | ✅ | ✅ | ✅ | ⚠️ treasure map X mark (design element) | ✅ | ✅ | ✅ | **PASS** (soft note) |
+| emotional-growth_light | 340 KB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **PASS** |
+| emotional-growth_premium | 420 KB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **PASS** |
+
+**Overall QA**: ✅ 10/10 PASS
+
+### Actions Taken
+
+1. Generated 10 candidates to `_tmp_t7_quality_candidates/` via `gpt-image-1` (1024×1536, quality 85 WebP)
+2. Visual QA: all 10 PASS
+3. All 10 promoted to `public/images/samples/*.webp` via `--promote-all`
+4. `functions/src/seed-templates.ts` updated: `sampleImages.light` + `.premium` for 5 guided_ai templates
+5. `src/lib/demo.ts` updated: same 5 templates for demo mode consistency
+6. `cd functions && npm run build` PASS (exit 0), `npm test -- seed-templates` 385/385 PASS
+7. `npm run build` (frontend) PASS (19/19 static pages)
+8. `node scripts/check-hygiene.mjs` PASS
+9. `firebase deploy --only hosting --project story-gen-8a769` COMPLETE
+10. Live verification: **10/10 URLs return HTTP 200 image/webp**
+11. Committed `feat(T7-5b)`, pushed `origin/main`
+
+### Live URL Verification
+
+| Sample | HTTP | Content-Type |
+|---|---|---|
+| fantasy_light | 200 | image/webp |
+| fantasy_premium | 200 | image/webp |
+| bedtime_light | 200 | image/webp |
+| bedtime_premium | 200 | image/webp |
+| animals_light | 200 | image/webp |
+| animals_premium | 200 | image/webp |
+| adventure_light | 200 | image/webp |
+| adventure_premium | 200 | image/webp |
+| emotional-growth_light | 200 | image/webp |
+| emotional-growth_premium | 200 | image/webp |
+
+### Pending: Firestore Update (T7-5c)
+
+`scripts/update-quality-sample-urls.js` was written but not yet executed. It requires:
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS = "path/to/service-account.json"
+node scripts/update-quality-sample-urls.js            # dry-run
+node scripts/update-quality-sample-urls.js --write    # apply
+```
+The script also auto-detects `service-account.json` in the repo root (same pattern as `backfill-book-timestamps.js`).  
+Until Firestore is updated, ThemeCard will NOT show "仕上がりサンプルを見る" for the 5 guided_ai templates in production (demo mode works correctly via `src/lib/demo.ts`).
 
 ---
 

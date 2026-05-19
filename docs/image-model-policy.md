@@ -1417,7 +1417,7 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 | T7-4.5 | Live ThemeCard verification / template thumbnail regression check | ✅ COMPLETE (2026-05-20) |
 | T7-4.6 | PNG reference cleanup / test regression fix | ✅ COMPLETE (2026-05-20) |
 | T7-5a | Design: Group D quality sample generation | ✅ COMPLETE (2026-05-19) |
-| T7-5b | Generate + QA + promote: Group D quality samples (execute) | Pending |
+| T7-5b | Generate + QA + promote: Group D quality samples (execute) | ✅ COMPLETE (2026-05-20) |
 
 **T7-2 operational notes**:
 - OpenAI Images API (`gpt-image-1`) required corporate proxy (`HTTPS_PROXY`) for local Node.js execution.
