@@ -32,6 +32,7 @@ import {
   resolveImageModelProfile,
   resolveReplicateModel,
   resolveImageFallbackProfiles,
+  isCandidateProfile,
   withImageTimeout,
   ImageTimeoutError,
 } from "./lib/replicate";
@@ -2082,6 +2083,22 @@ function getRetryAfterMs(err: unknown): number {
   return 0;
 }
 
+/**
+ * T6-59: Controlled production exposure gate for candidate image profiles.
+ * Strips candidate profiles (e.g. "openai_image_candidate", "flux11_pro_candidate")
+ * for users who have not been explicitly enrolled via generationOverride.allowCandidateProfile.
+ * Returns undefined when gated (→ normalizeBookForGeneration falls back to plan default).
+ */
+export function gateImageModelProfile(
+  requestedProfile: ImageModelProfile | undefined,
+  candidateProfileEnabled: boolean
+): ImageModelProfile | undefined {
+  if (isCandidateProfile(requestedProfile) && !candidateProfileEnabled) {
+    return undefined;
+  }
+  return requestedProfile;
+}
+
 // Firebase Cloud Function
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
@@ -2124,6 +2141,29 @@ export const generateBook = onDocumentCreated(
     const db = admin.firestore();
     const storage = admin.storage();
 
+    // T6-59: Controlled production exposure gate.
+    // Read user doc once to check candidate profile enrollment AND plan (avoids duplicate reads).
+    // Candidate profiles (openai_image_candidate, flux11_pro_candidate) are stripped for users
+    // without generationOverride.allowCandidateProfile === true.
+    const gateUserDoc = await db.collection("users").doc(bookData.userId).get();
+    const gateUserData = gateUserDoc.data();
+    const candidateProfileEnabled =
+      gateUserData?.generationOverride?.allowCandidateProfile === true;
+    const gatedModelProfile = gateImageModelProfile(bookData.imageModelProfile, candidateProfileEnabled);
+    if (gatedModelProfile !== bookData.imageModelProfile) {
+      logger.warn("Candidate image profile gated out — user not enrolled", {
+        bookId,
+        userId: bookData.userId,
+        requestedProfile: bookData.imageModelProfile,
+        effectiveProfile: gatedModelProfile ?? "(plan default)",
+      });
+    }
+    // Apply gated profile to bookData before deps and processBookGeneration.
+    const bookDataForProcessing: BookData =
+      gatedModelProfile !== bookData.imageModelProfile
+        ? { ...bookData, imageModelProfile: gatedModelProfile }
+        : bookData;
+
     // Create production dependencies
     const deps: GenerationDeps = {
       getTemplate: async (theme: string) => {
@@ -2133,8 +2173,11 @@ export const generateBook = onDocumentCreated(
       },
 
       getUserPlan: async (userId: string) => {
-        const userDoc = await db.collection("users").doc(userId).get();
-        const userData = userDoc.data();
+        // Re-use pre-fetched gateUserData for the generating user to avoid a duplicate read.
+        const userData =
+          userId === bookData.userId
+            ? gateUserData
+            : (await db.collection("users").doc(userId).get()).data();
         if (userData?.generationOverride?.bypassMonthlyLimit === true) {
           return "premium";
         }
@@ -2142,7 +2185,7 @@ export const generateBook = onDocumentCreated(
       },
 
       llmClient: new GeminiClient(geminiApiKey.value()),
-      imageClient: createImageClient(bookData.imageModelProfile),
+      imageClient: createImageClient(gatedModelProfile),
 
       uploadImage: async (bookId: string, pageNumber: number, buffer: Buffer) => {
         const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");
@@ -2241,6 +2284,6 @@ export const generateBook = onDocumentCreated(
       },
     };
 
-    await processBookGeneration(bookId, bookData, deps);
+    await processBookGeneration(bookId, bookDataForProcessing, deps);
   }
 );

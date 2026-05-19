@@ -141,6 +141,25 @@ export function resolveImageFallbackProfiles(profile: ImageModelProfile): ImageM
   }
 }
 
+/**
+ * Candidate profiles that require explicit user-level enrollment before production use.
+ * These profiles are NOT part of the default production routing.
+ * T6-59: Used by the controlled exposure gate in the generateBook Cloud Function.
+ */
+export const CANDIDATE_IMAGE_PROFILES: readonly ImageModelProfile[] = [
+  "openai_image_candidate", // T6-43: OpenAI Image path (E005 resolution candidate)
+  "flux11_pro_candidate",   // T6-37: FLUX 1.1 pro diagnostic candidate
+] as const;
+
+/**
+ * Returns true if the given profile is a candidate profile requiring user enrollment.
+ * Candidate profiles are not accessible to users by default.
+ * T6-59: Gate check — if true, user must have generationOverride.allowCandidateProfile === true.
+ */
+export function isCandidateProfile(profile: ImageModelProfile | undefined): boolean {
+  return profile !== undefined && CANDIDATE_IMAGE_PROFILES.includes(profile);
+}
+
 export function buildReplicateInput(params: {
   model: ReplicateModelName;
   prompt: string;

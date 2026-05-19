@@ -4,6 +4,7 @@ import {
   shouldUseCharacterReferenceForPage,
   normalizeStoryCastWithChildProfile,
   shouldFailBookForQuality,
+  gateImageModelProfile,
 } from "../src/generate-book";
 import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
 
@@ -1634,5 +1635,29 @@ describe("cover image generation", () => {
       })
     );
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-upload-fail", "completed");
+  });
+});
+
+describe("gateImageModelProfile (T6-59)", () => {
+  it("passes undefined through unchanged", () => {
+    expect(gateImageModelProfile(undefined, false)).toBeUndefined();
+    expect(gateImageModelProfile(undefined, true)).toBeUndefined();
+  });
+
+  it("passes non-candidate profiles through unchanged regardless of enrollment", () => {
+    expect(gateImageModelProfile("pro_consistent", false)).toBe("pro_consistent");
+    expect(gateImageModelProfile("klein_fast", false)).toBe("klein_fast");
+    expect(gateImageModelProfile("klein_base", false)).toBe("klein_base");
+    expect(gateImageModelProfile("kontext_reference", false)).toBe("kontext_reference");
+  });
+
+  it("strips candidate profile when user is not enrolled", () => {
+    expect(gateImageModelProfile("openai_image_candidate", false)).toBeUndefined();
+    expect(gateImageModelProfile("flux11_pro_candidate", false)).toBeUndefined();
+  });
+
+  it("passes candidate profile when user is enrolled", () => {
+    expect(gateImageModelProfile("openai_image_candidate", true)).toBe("openai_image_candidate");
+    expect(gateImageModelProfile("flux11_pro_candidate", true)).toBe("flux11_pro_candidate");
   });
 });

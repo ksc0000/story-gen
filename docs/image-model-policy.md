@@ -1285,3 +1285,62 @@ After T6-59 controlled production exposure, regenerate public sample books (styl
 | **imageModel metadata bug** | — | ✅ **FIXED (T6-58)** | `resolveOpenAIModelLabel()` + `generate-book.ts` |
 
 **Next**: T6-59 — Controlled production exposure gate.
+
+---
+
+## T6-59: Controlled Production Exposure Gate (2026-05-19)
+
+### Status: ✅ IMPLEMENTED (deploy pending)
+
+Server-side gate that restricts `openai_image_candidate` (and `flux11_pro_candidate`) to users explicitly enrolled via `generationOverride.allowCandidateProfile === true` on their Firestore user document.
+
+**Production default routing: UNCHANGED.**
+
+### Design
+
+**Gate check** runs at the top of the `generateBook` Cloud Function trigger:
+1. Read user doc (once, shared with `getUserPlan` to avoid duplicate reads)
+2. If `generationOverride.allowCandidateProfile !== true` AND `imageModelProfile` is a candidate: strip to `undefined` (→ plan default)
+3. Use gated profile for both `createImageClient()` and `normalizeBookForGeneration()`
+4. Log warning when stripped
+
+### New exports (functions/src/lib/replicate.ts)
+
+- `CANDIDATE_IMAGE_PROFILES: readonly ImageModelProfile[]` — `["openai_image_candidate", "flux11_pro_candidate"]`
+- `isCandidateProfile(profile: ImageModelProfile | undefined): boolean`
+
+### New export (functions/src/generate-book.ts)
+
+- `gateImageModelProfile(requestedProfile, candidateProfileEnabled): ImageModelProfile | undefined`
+
+### Admin Enrollment
+
+Set on user document to enable candidate profiles:
+```json
+{ "generationOverride": { "allowCandidateProfile": true } }
+```
+
+Required for smoke test user (`smoke-test-openai-i3`) before running smoke scripts.
+
+### Tests
+
+8 new unit tests (`replicate.test.ts` + `generate-book.test.ts`). Full suite: **703/703 PASS**.
+
+### Remaining Steps
+
+| Step | Status |
+|------|--------|
+| Enroll smoke user in Firestore | ⚠️ Pending (admin op) |
+| Deploy functions | ⚠️ Pending |
+| I6 smoke run (gate-pass confirmation) | ⚠️ Pending |
+
+### Updated OpenAI Validation State (as of T6-59)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Reference image I5 visual QA | Responses API / gpt-4o | ✅ PASS (T6-56) | 0/8 contamination |
+| Production routing gate | — | ✅ CANDIDATE PROMOTED (T6-57) | — |
+| imageModel metadata bug | — | ✅ FIXED (T6-58) | — |
+| **Controlled exposure gate** | — | ✅ **IMPLEMENTED (T6-59)** | `allowCandidateProfile` required |
+
+**Next**: Deploy + smoke user enrollment + I6 gate-pass smoke run.

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   buildReplicateInput,
+  CANDIDATE_IMAGE_PROFILES,
   ImageTimeoutError,
+  isCandidateProfile,
   resolveImageFallbackProfiles,
   resolveImageModelProfile,
   resolveReplicateModel,
@@ -262,5 +264,30 @@ describe("buildReplicateInput", () => {
       prompt_upsampling: false,
       image_prompt: "https://example.com/1.png",
     });
+  });
+});
+
+describe("isCandidateProfile (T6-59)", () => {
+  it("returns false for undefined", () => {
+    expect(isCandidateProfile(undefined)).toBe(false);
+  });
+
+  it("returns false for production routing profiles", () => {
+    expect(isCandidateProfile("klein_fast")).toBe(false);
+    expect(isCandidateProfile("klein_base")).toBe(false);
+    expect(isCandidateProfile("pro_consistent")).toBe(false);
+    expect(isCandidateProfile("kontext_reference")).toBe(false);
+  });
+
+  it("returns true for candidate profiles", () => {
+    expect(isCandidateProfile("openai_image_candidate")).toBe(true);
+    expect(isCandidateProfile("flux11_pro_candidate")).toBe(true);
+  });
+
+  it("CANDIDATE_IMAGE_PROFILES contains exactly the candidate entries", () => {
+    expect(CANDIDATE_IMAGE_PROFILES).toContain("openai_image_candidate");
+    expect(CANDIDATE_IMAGE_PROFILES).toContain("flux11_pro_candidate");
+    expect(CANDIDATE_IMAGE_PROFILES).not.toContain("pro_consistent");
+    expect(CANDIDATE_IMAGE_PROFILES).not.toContain("klein_fast");
   });
 });

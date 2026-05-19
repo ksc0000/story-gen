@@ -12186,3 +12186,137 @@ Existing Firestore documents (smoke books I1〜I5) retain the old wrong label �
 | **imageModel metadata bug** | — | ✅ **FIXED (T6-58)** | resolveOpenAIModelLabel() + generate-book.ts |
 
 **Next milestone**: T6-59 — Controlled production exposure gate (actual routing change, deploy, monitoring).
+
+---
+
+## Section 74: T6-59 — Controlled Production Exposure Gate
+
+**Date**: 2026-05-19  
+**Status**: ✅ IMPLEMENTED  
+**Type**: Code change + test + docs  
+**Scope**: `functions/src/lib/replicate.ts`, `functions/src/generate-book.ts`, tests
+
+### 74.1 Design: What is the gate?
+
+The `openai_image_candidate` profile (and any future candidate profiles) is blocked from general user access. Only users whose Firestore user document has `generationOverride.allowCandidateProfile === true` can trigger generation with these profiles. All other requests have the candidate profile stripped and fall back to the plan default.
+
+**Production default routing: UNCHANGED.** Regular users continue to use the Replicate FLUX path.
+
+### 74.2 Gate Mechanism
+
+**Two layers of gating:**
+
+| Layer | What happens |
+|-------|--------------|
+| **Cloud Function pre-check** | On every book generation trigger, the user's Firestore document is read. If `generationOverride.allowCandidateProfile !== true` AND the book's `imageModelProfile` is a candidate profile, the profile is stripped to `undefined` (→ plan default). |
+| **imageClient selection** | `createImageClient(gatedModelProfile)` — the gated (stripped) profile is used to select the image client, ensuring `ReplicateImageClient` is used when the candidate is gated out. |
+
+**Candidate profiles** (require enrollment):
+- `openai_image_candidate` (T6-43)
+- `flux11_pro_candidate` (T6-37)
+
+### 74.3 Implementation
+
+**`functions/src/lib/replicate.ts`**
+
+New exports:
+```ts
+export const CANDIDATE_IMAGE_PROFILES: readonly ImageModelProfile[] = [
+  "openai_image_candidate",
+  "flux11_pro_candidate",
+] as const;
+
+export function isCandidateProfile(profile: ImageModelProfile | undefined): boolean {
+  return profile !== undefined && CANDIDATE_IMAGE_PROFILES.includes(profile);
+}
+```
+
+**`functions/src/generate-book.ts`**
+
+New exported function:
+```ts
+export function gateImageModelProfile(
+  requestedProfile: ImageModelProfile | undefined,
+  candidateProfileEnabled: boolean
+): ImageModelProfile | undefined {
+  if (isCandidateProfile(requestedProfile) && !candidateProfileEnabled) {
+    return undefined;
+  }
+  return requestedProfile;
+}
+```
+
+Cloud Function handler changes:
+- Read user doc ONCE at gate check time (avoids duplicate read vs `getUserPlan`)
+- Check `generationOverride.allowCandidateProfile === true`
+- Apply `gateImageModelProfile()` to produce `gatedModelProfile`
+- Log a warning if candidate profile is stripped
+- Pass `gatedModelProfile` to both `createImageClient()` and `processBookGeneration()` (via `bookDataForProcessing`)
+
+### 74.4 Admin Enrollment Process
+
+To enable OpenAI path for a specific user (admin or smoke test user), set the following field on their Firestore user document:
+
+```json
+{
+  "generationOverride": {
+    "allowCandidateProfile": true
+  }
+}
+```
+
+**Required for smoke scripts**: The smoke user (`smoke-test-openai-i3` etc.) must have this field set. Use the Admin SDK console or Firebase console to set it before running smoke scripts.
+
+**Admin bootstrap command** (to be added to `scripts/bootstrap-admin.js`):
+
+```bash
+node scripts/bootstrap-admin.js --set-candidate-profile-enabled smoke-test-openai-i3
+```
+
+*(This script update is deferred to post-T6-59 housekeeping.)*
+
+### 74.5 Tests
+
+| Test file | New tests | What is tested |
+|-----------|-----------|----------------|
+| `replicate.test.ts` | 4 | `isCandidateProfile` — undefined, production profiles, candidate profiles, `CANDIDATE_IMAGE_PROFILES` contents |
+| `generate-book.test.ts` | 4 | `gateImageModelProfile` — undefined, non-candidate, candidate gated out, candidate enrolled |
+
+Full suite: **703/703 PASS** (was 695 before T6-58, 703 after T6-59).
+
+### 74.6 Observability
+
+When a candidate profile is gated out, the Cloud Function logs a warning:
+```json
+{
+  "message": "Candidate image profile gated out — user not enrolled",
+  "bookId": "...",
+  "userId": "...",
+  "requestedProfile": "openai_image_candidate",
+  "effectiveProfile": "(plan default)"
+}
+```
+
+This makes it visible in Cloud Logging when a user attempts to use a candidate profile without enrollment.
+
+### 74.7 Remaining Steps for Full Production Exposure
+
+| Step | Description | Owner |
+|------|-------------|-------|
+| Smoke user enrollment | Set `generationOverride.allowCandidateProfile: true` on `smoke-test-openai-i3` user in Firestore | Admin |
+| Deploy | `firebase deploy --only functions --project story-gen-8a769` | Operator |
+| Smoke run | Run I6 smoke book with reference image to confirm gate passes for enrolled user | QA |
+| E2E gate test | Confirm unenrolled user book falls back to FLUX | QA |
+| Production monitoring | Monitor Cloud Logging for gating events post-deploy | Ops |
+
+### 74.8 Updated OpenAI Validation State (as of T6-59)
+
+| Capability | API Path | Status | Condition |
+| --- | --- | --- | --- |
+| Text-to-image (no reference) | Images API / gpt-image-1-mini | ✅ I1 PASS | — |
+| Reference image I5 — visual QA | Responses API / gpt-4o | ✅ PASS (T6-56) | 0/8 contamination |
+| Production routing gate | — | ✅ CANDIDATE PROMOTED (T6-57) | — |
+| imageModel metadata bug | — | ✅ FIXED (T6-58) | — |
+| **Controlled exposure gate** | — | ✅ **IMPLEMENTED (T6-59)** | `generationOverride.allowCandidateProfile` required |
+
+**Next milestone**: Deploy functions + enroll smoke user + I6 smoke run to confirm gate-pass behavior.
