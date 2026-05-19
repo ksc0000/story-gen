@@ -262,6 +262,7 @@ All other templates: `sampleImages` not set → "仕上がりサンプルを見�
 | T7-3.5 | Live StylePicker verification / style preview regression check | ✅ COMPLETE |
 | T7-4a | Design: Group B template thumbnail regeneration | ✅ COMPLETE |
 | T7-4b | Generate + QA: Group B (template thumbnails, execute) | ✅ COMPLETE |
+| T7-4.5 | Live ThemeCard verification / template thumbnail regression check | ✅ COMPLETE |
 | T7-5 | Generate + QA: Group D (quality samples, P3) | Pending |
 
 ---
@@ -944,3 +945,102 @@ docs/image-model-policy.md
 
 Not committed: `functions/lib/` (compiled output), `scripts/_update_template_urls.js` (one-off helper), `_tmp_t7_template_candidates/` (candidate images).
 Original PNGs in public/images/templates/ preserved on disk for rollback.
+
+---
+
+## T7-4.5 Live ThemeCard Verification Results
+
+**Date**: 2026-05-20
+**Scope**: Verify production ThemeCard / theme selection UI correctly displays .webp thumbnails after T7-4b Firestore update. Verification-only slice.
+
+### 1. Git / Hygiene
+
+| Item | Result |
+|---|---|
+| HEAD commit | c656144 feat(T7-4b): regenerate Group B template thumbnails via OpenAI, WebP |
+| origin/main | synced |
+| Working tree | clean (3 untracked tmp dirs, not committed) |
+
+### 2. Live WebP Asset Check
+
+| ID | HTTP Status | Content-Type | Size (KB) |
+|---|---|---|---|
+| animals | 200 | image/webp | 174.1 |
+| adventure | 200 | image/webp | 313.3 |
+| fantasy | 200 | image/webp | 423.7 |
+| bedtime | 200 | image/webp | 227.6 |
+| emotional-growth | 200 | image/webp | 286.4 |
+| daily-habits | 200 | image/webp | 141.2 |
+| educational | 200 | image/webp | 357.0 |
+| food | 200 | image/webp | 281.2 |
+| seasonal | 200 | image/webp | 354.2 |
+| vehicles-robots | 200 | image/webp | 266.6 |
+
+**Result**: 10/10 live and serving correct content type.
+
+### 3. Firestore sampleImageUrl Verification
+
+| Layer | Verification method | Result |
+|---|---|---|
+| 10 canonical guided_ai templates | dry-run update-canonical-thumbnail-urls.js | 10/10 already .webp |
+| 14 fixed_template docs | npm run template:sync:check (diff empty) | 14/14 synced |
+
+All 24 Firestore documents have sampleImageUrl pointing to .webp.
+
+### 4. ThemeCard Data Flow
+
+- useTemplates (src/lib/hooks/use-templates.ts) reads Firestore templates collection via onSnapshot
+- ThemeCard (src/components/theme-card.tsx) renders src={template.sampleImageUrl}
+- No hardcoded sampleImageUrl in ThemeCard or theme page; fully Firestore-driven
+- Conclusion: ThemeCard will display .webp files as of Firestore update
+
+### 5. PNG Reference Audit
+
+| Location | PNG reference | Severity | Notes |
+|---|---|---|---|
+| src/app/(auth)/login/page.tsx:43 | /images/templates/bedtime.png (decorative login image) | Low | PNG still deployed for rollback; not broken. Update to .webp in follow-up. |
+| functions/test/seed-templates.test.ts | TEMPLATE_IMAGE_ASSET_URLS and EXPECTED_FIXED_SAMPLE_IMAGES use .png | Medium | Test regression from T7-4b: 26 tests FAIL. Test expectations must be updated to .webp. Fix in cleanup. |
+| functions/test/generate-book.test.ts:24 | sampleImageUrl: .png in mock fixture | Low | Test mock only; does not affect production. Update in same cleanup pass. |
+
+Old PNGs on Hosting: Original .png files are still deployed (preserved for rollback) and return HTTP 200. This is intentional. UI does not reference them via Firestore.
+
+### 6. educational.webp UX Assessment
+
+- Numerals 1-9 appear as illustrative learning motifs (blackboard style)
+- Intentional design elements matching the educational template theme
+- No incidental readable text in unexpected positions
+- Verdict: UX acceptable. Soft note retained; no rework required.
+
+### 7. File Size Soft Notes
+
+| ID | Size | vs 250 KB threshold |
+|---|---|---|
+| adventure | 313 KB | +25% |
+| fantasy | 424 KB | +70% |
+| emotional-growth | 286 KB | +14% |
+| educational | 357 KB | +43% |
+| food | 281 KB | +12% |
+| seasonal | 354 KB | +42% |
+| vehicles-robots | 267 KB | +7% |
+
+All files are 5-15x smaller than originals. Max ThemeCard display width is 180px. No LCP regression. Optimization deferred.
+
+### 8. Overall Verdict
+
+| Check | Result |
+|---|---|
+| 10 WebP URLs live | PASS |
+| Firestore 24 docs .webp | PASS |
+| ThemeCard data flow | PASS |
+| No broken images / 404 | PASS |
+| No layout collapse | PASS |
+| educational UX | PASS (soft note) |
+| PNG reference audit | 2 findings (test regression + login decorative) |
+
+**T7-4.5 PASS.** No rework needed for core display. Test expectations and login decoration require follow-up cleanup.
+
+### Follow-up Items (not T7-4.5 scope)
+
+1. Update functions/test/seed-templates.test.ts TEMPLATE_IMAGE_ASSET_URLS and EXPECTED_FIXED_SAMPLE_IMAGES to .webp (unblocks 26 failing tests)
+2. Update src/app/(auth)/login/page.tsx:43 to use /images/templates/bedtime.webp
+3. Update functions/test/generate-book.test.ts:24 mock fixture to .webp
