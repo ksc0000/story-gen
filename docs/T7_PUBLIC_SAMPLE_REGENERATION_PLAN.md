@@ -1609,7 +1609,7 @@ Follow-up 推奨事項 (T7-6):
 
 **Date**: 2026-05-20  
 **Starting HEAD**: `909530e`  
-**Ending HEAD**: (commit 後に記録)
+**Ending HEAD**: `8062e5a` chore(T7-6): align demo thumbnails to WebP and close public sample refresh
 
 ### demo.ts sampleImageUrl WebP 統一
 
