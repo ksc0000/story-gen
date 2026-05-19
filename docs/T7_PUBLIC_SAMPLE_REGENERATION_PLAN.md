@@ -260,7 +260,8 @@ All other templates: `sampleImages` not set → "仕上がりサンプルを見�
 | T7-3a | Group A style preview regeneration design (this section) | ✅ COMPLETE |
 | T7-3b | Generate + QA: Group A (style preview images, execute) | ✅ COMPLETE |
 | T7-3.5 | Live StylePicker verification / style preview regression check | ✅ COMPLETE |
-| T7-4 | Generate + QA: Group B (template thumbnails, P2) | Pending |
+| T7-4a | Design: Group B template thumbnail regeneration | ✅ COMPLETE |
+| T7-4b | Generate + QA: Group B (template thumbnails, execute) | Pending |
 | T7-5 | Generate + QA: Group D (quality samples, P3) | Pending |
 
 ---
@@ -495,6 +496,214 @@ After generating all 10 images, apply the following checks before committing:
 | Q3 | Each of the 10 images is visually distinct in style | Side-by-side comparison |
 | Q4 | All 10 images depict the same base scene (child + book + creatures) | Visual inspection |
 | Q5 | Child-safe: no dark, threatening, or violent mood | Visual inspection |
+
+---
+
+## T7-4a: Group B Template Thumbnail Regeneration Design
+
+**Date**: 2026-05-20  
+**Scope**: Design the regeneration strategy for the 10 template thumbnail images (`public/images/templates/*.png`).  
+**This slice is docs-only. No image generation, file replacement, or Firestore update is performed here.**
+
+---
+
+### Current State
+
+| Property | Value |
+|---|---|
+| Count | 10 PNG files |
+| Dimensions | All 1055×1491 (ratio 0.708, ≈ 1:√2 portrait) |
+| File size | 2,097 – 2,945 KB each (avg ~2,566 KB) |
+| Total size | ~25.7 MB |
+| Format | PNG |
+| Origin model | Untracked (pre-T-series, likely Replicate FLUX) |
+| Display role | Category selection — each image represents one genre/theme |
+
+**Per-file inventory:**
+
+| File | Template key(s) using this image | Genre | Size |
+|---|---|---|---|
+| `templates/animals.png` | `animals`, `fixed-first-zoo`, `fixed-first-zoo-8p` | Animal | 2,395 KB |
+| `templates/adventure.png` | `adventure`, `fixed-cardboard-rocket` | Adventure | 2,773 KB |
+| `templates/fantasy.png` | `fantasy`, `fixed-sleepy-moon-adventure`, `fixed-sleepy-moon-adventure-8p` | Fantasy | 2,828 KB |
+| `templates/bedtime.png` | `bedtime`, `fixed-bedtime-good-day` | Bedtime | 2,457 KB |
+| `templates/emotional-growth.png` | `emotional-growth`, `fixed-sharing-friends`, `fixed-little-helper` | Emotional Growth | 2,687 KB |
+| `templates/daily-habits.png` | `daily-habits`, `fixed-brush-teeth`, `fixed-brush-teeth-8p` | Daily Habits | 2,097 KB |
+| `templates/educational.png` | `educational` | Educational | 2,648 KB |
+| `templates/food.png` | `food`, `fixed-first-birthday`, `fixed-first-birthday-8p` | Food | 2,393 KB |
+| `templates/seasonal.png` | `seasonal`, `fixed-first-christmas`, `fixed-rainy-day-puddle` | Seasonal | 2,945 KB |
+| `templates/vehicles-robots.png` | `vehicles-robots` | Vehicles & Robots | 2,661 KB |
+
+---
+
+### Display Spec (ThemeCard)
+
+- **Component**: `src/components/theme-card.tsx`
+- **Container**: `aspect-[3/4]` = 0.75 (portrait — slightly wider relative to height than current PNGs)
+- **Image rendering**: `object-cover` with `fill` (image fills container, cropped if needed)
+- **Display width**: ~180px on desktop (`sm:grid-cols-3` or `grid-cols-2`), ~45vw on mobile
+- **`sizes` hint**: `(min-width: 640px) 180px, 45vw`
+
+**Crop analysis** (1024×1536 at 3:4 display):
+
+| | Value |
+|---|---|
+| OpenAI output ratio | 0.667 (1024/1536) |
+| Container ratio | 0.750 (3:4) |
+| Effective crop | Image width fills container; height overflows ~11% (top + bottom combined) |
+| Mitigation | Compose subject in vertical center; leave margin at top and bottom edges |
+
+Using `1024x1536` (OpenAI portrait native) is preferred over `1024x1024` (square) because the square option would lose ~25% from left/right sides. The 11% vertical overflow is minimal and composable.
+
+---
+
+### Design Principle: Per-Theme Scenes
+
+Unlike Group A style previews (which all show the **same scene in different styles**), Group B thumbnails each depict a **different scene representing a distinct genre/theme**. A consistent visual language is applied across all 10 to ensure visual cohesion in the theme picker.
+
+| Axis | Group A (style previews) | Group B (template thumbnails) |
+|---|---|---|
+| Scene | Same across all 10 | Unique per theme |
+| Style | Different per image | Common style language |
+| Goal | Compare rendering styles | Identify theme/genre at a glance |
+
+**Design guideline**: Each thumbnail must be immediately recognizable as its genre even when displayed at ~180px wide and cropped to 3:4 ratio. Central subject should be unambiguous and child-friendly.
+
+---
+
+### Generation Configuration
+
+| Parameter | Value |
+|---|---|
+| Model | `gpt-image-1` |
+| Size | `1024x1536` (portrait, 2:3 — native OpenAI option) |
+| Output from API | base64 PNG |
+| Post-processing | sharp: `toFormat('webp', { quality: 85, effort: 6 })` — no resize |
+| Output file | `public/images/templates/{id}.webp` |
+| Staging area | `_tmp_t7_template_candidates/` |
+| Expected file size | < 300 KB per file (vs 2.1–2.9 MB current) |
+| Proxy | `HTTPS_PROXY=http://proxy.hq.melco.co.jp:9515/` (corporate network) |
+| API key source | Firebase Secrets `OPENAI_API_KEY` (extract `sk-` line only) |
+
+---
+
+### Common Visual Language
+
+The following base modifier is **appended to every thumbnail prompt**. It enforces child-safe, non-photorealistic, text-free output and visual cohesion across the 10 images:
+
+```
+Children's picture book illustration style, bright warm inviting colors, rounded friendly shapes, soft diffused lighting, portrait orientation with subject centered vertically. No readable text, no letters, no signs, no logos, no watermarks anywhere. Not photorealistic, not dark, not threatening.
+```
+
+---
+
+### Per-Thumbnail Prompts
+
+Each prompt = **SCENE** + **VISUAL_LANGUAGE** (common above).
+
+The scene descriptions are derived from the `visualDirection` field in `functions/src/seed-templates.ts`.
+
+| Thumbnail file | Key | SCENE |
+|---|---|---|
+| `animals.png` | `animals` | Soft woodland picture-book cover. A fluffy bear, rabbit, fox, and small bird gathered in a sunlit forest clearing, smiling and playing together. Warm dappled sunlight filtering through leafy trees, cream-toned background, rounded friendly shapes and gentle smiling faces. Cozy approachable composition. |
+| `adventure.png` | `adventure` | Bright adventurous picture-book cover. A small child holding a sparkling golden compass stands on a green hilltop, wide open landscape stretching ahead — rolling hills, blue sky, winding path. Dynamic outward-facing pose conveying discovery and joyful safe excitement. |
+| `fantasy.png` | `fantasy` | Dreamy magical night picture-book cover. A child and a friendly baby dragon stand together under a deep navy starry sky, a glowing wand in the child's hand, floating open books and soft sparkles around them, a luminous castle with glowing windows in the background. Gold and navy palette, ornate but child-friendly details. |
+| `bedtime.png` | `bedtime` | Calm bedtime picture-book cover. A small child in cozy pajamas sits in bed hugging a plush stuffed bear, a smiling crescent moon glowing through the bedroom window with tiny twinkling stars, soft warm lamp light beside the bed. Muted blues, slow peaceful composition, sleepy tender mood. |
+| `emotional-growth.png` | `emotional-growth` | Warm emotional-growth picture-book cover. Two small children holding hands gently in a golden sunlit flower garden, faces full of warmth and kindness. A small glowing heart or seed motif at the center. Soft afternoon light, encouraging and tender mood. |
+| `daily-habits.png` | `daily-habits` | Cheerful daily-habit picture-book cover. A small child brushing teeth alongside a smiling anthropomorphic toothbrush character in a bright clean bathroom. Bright primary colors, clear and tidy composition, reassuring parent-child learning mood. |
+| `educational.png` | `educational` | Colorful educational picture-book cover. A child reaching up to floating numbers, colorful shape blocks, and letter motifs in a rainbow-bright magical learning space. Small cheerful animal helpers assist. Playful diagram-like clarity, classroom-adventure composition. |
+| `food.png` | `food` | Warm food picture-book cover. Round smiling bread rolls and cheerful fruit characters gathered in a cozy golden bakery, soft steam rising, gingham cloth on the counter. Warm golden-brown lighting, inviting appetizing atmosphere, cute anthropomorphic food designs. |
+| `seasonal.png` | `seasonal` | Festive seasonal picture-book cover. A vibrant illustration showing all four seasons together: sakura blossoms (spring), sunny beach (summer), golden fallen leaves (autumn), and a snowy snowman scene (winter). Bright joyful children in each seasonal vignette. Watercolor-like seasonal color blocks. |
+| `vehicles-robots.png` | `vehicles-robots` | Pop and exciting vehicles picture-book cover. A friendly smiling robot bus with happy children waving from windows, rolling under a blue sky with white puffy clouds, a clean futuristic city in the background. Rounded mechanical shapes, orange and blue accents, energetic safe motion. |
+
+---
+
+### File Format & Output Path Decision
+
+**Decision: Same as T7-3b (Option C) — generate `.webp` files alongside existing `.png`, then update `sampleImageUrl`.**
+
+| Option | Pros | Cons |
+|---|---|---|
+| A. Replace PNGs in-place | No source change needed | Loses originals; rollback harder |
+| B. Add `.webp`, update source only | Smaller files; clear rollback path | Requires source + Firestore update |
+| **C (chosen): B + keep original PNGs committed** | Full rollback by reverting source; originals preserved | Repo size increases temporarily |
+
+**Output paths** (new WebP files):
+```
+public/images/templates/animals.webp
+public/images/templates/adventure.webp
+public/images/templates/fantasy.webp
+public/images/templates/bedtime.webp
+public/images/templates/emotional-growth.webp
+public/images/templates/daily-habits.webp
+public/images/templates/educational.webp
+public/images/templates/food.webp
+public/images/templates/seasonal.webp
+public/images/templates/vehicles-robots.webp
+```
+
+---
+
+### Source Update Plan (T7-4b scope)
+
+Template thumbnails differ from style previews in one important way: `sampleImageUrl` is stored in **Firestore** (seeded from `functions/src/seed-templates.ts`), not just a local TypeScript file. Updating requires two layers:
+
+**Layer 1 — Static file commit:**
+- Generate 10 WebP to `public/images/templates/*.webp`
+- Commit to repo and deploy via `firebase deploy --only hosting`
+
+**Layer 2 — Firestore `sampleImageUrl` update:**
+- Update `functions/src/seed-templates.ts`: change `sampleImageUrl: "/images/templates/{id}.png"` → `"/images/templates/{id}.webp"` for all 10 canonical templates and 14 fixed templates
+- Run `cd functions && npm run build` to compile
+- **Fixed templates** (`fixed-*`, creationMode=`fixed_template`): sync via `npm run template:sync:write`
+- **Canonical templates** (`animals`, `adventure`, etc., creationMode=`guided_ai`): `sync-fixed-template-seeds.js` does NOT cover these — requires a targeted admin update script (to be written in T7-4b) or re-seeding via the `seedTemplates` Cloud Function
+
+**T7-4b must include a targeted sampleImageUrl update mechanism** for the 10 canonical guided_ai templates. Suggested approach: a lightweight one-off admin script that batch-updates only the `sampleImageUrl` and `updatedAt` fields for the 10 specified template IDs.
+
+---
+
+### Rollback Strategy
+
+If any thumbnail WebP fails QA or causes a regression:
+1. **Full rollback**: Revert `sampleImageUrl` changes in `functions/src/seed-templates.ts`, rebuild, re-sync Firestore, redeploy hosting → all templates revert to original PNGs immediately
+2. **Partial rollback**: Revert only the failing thumbnail's `sampleImageUrl`; keep passing thumbnails as WebP
+3. **Original PNGs are never deleted** in T7-4b — they remain committed for immediate recovery
+
+---
+
+### QA Criteria for T7-4b
+
+After generating all 10 images, apply the following checks before committing:
+
+| # | Criterion | Check method |
+|---|---|---|
+| Q1 | No readable text / logos / watermarks anywhere | Visual inspection |
+| Q2 | No photorealistic elements | Visual inspection |
+| Q3 | Each image clearly and immediately identifies its theme (without text) | Side-by-side comparison |
+| Q4 | All 10 images have consistent visual quality level (no outliers) | Side-by-side comparison |
+| Q5 | Child-safe: no dark, threatening, or violent mood | Visual inspection |
+| Q6 | Portrait orientation, subject centered vertically — usable at 3:4 crop | Visual (simulate 3:4 center-crop) |
+| Q7 | No significant content loss at ~180px display width | Visual (scale down preview) |
+
+---
+
+### T7-4b Execution Scope
+
+T7-4b is the execution slice for this design. Its scope is:
+
+1. **Write generation script** `scripts/generate-template-thumbnails.js` — modeled after `scripts/generate-style-previews.js`, with `--dry-run`, `--write [--thumb <id>]`, and `--promote-all` modes; uses `[a-z0-9-]+` regex for template IDs (contains hyphens and digits)
+2. **Dry-run verification** — confirm 10 prompts are correctly assembled
+3. **Generate 10 WebP** to `_tmp_t7_template_candidates/`
+4. **Visual QA (Q1–Q7)** — all 10 images reviewed against criteria above
+5. **Promote to `public/images/templates/*.webp`** (on QA PASS)
+6. **Update `functions/src/seed-templates.ts`** — change `.png` → `.webp` in all `sampleImageUrl` fields (canonical + fixed templates); use `replace_string_in_file` tool (do NOT use PowerShell `Set-Content` — UTF-8 risk)
+7. **Build functions**: `cd functions && npm run build`
+8. **Sync Firestore** — `npm run template:sync:write` (fixed templates) + targeted admin script (canonical templates)
+9. **Frontend build**: `npm run build`
+10. **Deploy hosting**: `firebase deploy --only hosting --project story-gen-8a769`
+11. **Live verification** — check 10 WebP URLs return HTTP 200; confirm JS bundle references updated (analogous to T7-3.5)
+
+**Script note**: Template IDs contain hyphens (`emotional-growth`, `daily-habits`, `vehicles-robots`). All regex patterns for template IDs must use `[a-z0-9-]+` (not `[a-z_]+` or `[a-z0-9_]+`). This is the Group B analog of the `toy_3d` digit lesson from T7-3b.
 | Q6 | Portrait orientation (taller than wide) | `sharp.metadata()` — height > width |
 | Q7 | Dimensions exactly 1024×1536 | `sharp.metadata()` — width=1024, height=1536 |
 | Q8 | File format WebP | File extension + Content-Type after deploy |

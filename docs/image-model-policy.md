@@ -1412,7 +1412,8 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 | T7-3a | Design: Group A style preview regeneration | ✅ COMPLETE (2026-05-19) |
 | T7-3b | Generate + QA: Group A style previews (execute) | ✅ COMPLETE (2026-05-19) |
 | T7-3.5 | Live StylePicker verification + toy_3d hotfix | ✅ COMPLETE (2026-05-19, commit `d8d38b4`) |
-| T7-4 | Regenerate template thumbnails (P2) | Pending |
+| T7-4a | Design: Group B template thumbnail regeneration | ✅ COMPLETE (2026-05-20) |
+| T7-4b | Generate + QA: Group B (template thumbnails, execute) | Pending |
 | T7-5 | Create real quality samples (P3) | Pending |
 
 **T7-2 operational notes**:
@@ -1424,6 +1425,13 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 - Style preview images are embedded in a Next.js JS chunk (`app/(app)/create/style/page-*.js`), not the static HTML. Verification requires checking the JS bundle, not the page HTML.
 - Regex for style IDs must use `[a-z0-9_]+` (not `[a-z_]+`) to handle IDs with digits (e.g., `toy_3d`). The T7-3b helper script missed `toy_3d` due to this, fixed in T7-3.5 hotfix.
 - Generation script: `scripts/generate-ui-assets.js` (dry-run/write mode, proxy-aware via `HttpsProxyAgent`).
+
+**T7-4a design notes (Group B template thumbnails)**:
+- ThemeCard container is `aspect-[3/4]` (0.75); OpenAI `1024x1536` (0.667) loses ~11% top+bottom with `object-cover` — acceptable with centered composition.
+- Unlike Group A (same scene, different styles), Group B uses a unique per-theme scene per thumbnail. Common visual language applied to all 10 for cohesion.
+- Prompts derived from `visualDirection` field in `functions/src/seed-templates.ts`.
+- `sampleImageUrl` is stored in Firestore (seeded via `seedTemplates` Cloud Function). Updating requires: `functions/src/seed-templates.ts` edit → `cd functions && npm run build` → `npm run template:sync:write` (fixed templates only) + targeted admin script for 10 canonical guided_ai templates.
+- Template IDs contain hyphens (`emotional-growth`, `daily-habits`, `vehicles-robots`). Regex must use `[a-z0-9-]+`, not `[a-z_]+` or `[a-z0-9_]+`.
 
 ### Generation strategy
 
