@@ -57,6 +57,8 @@ import {
 import {
   logGenerationEvent,
   categorizeError,
+  classifyError,
+  resolveProviderFromProfile,
   type CandidateDecision,
 } from "./lib/generation-event-logger";
 
@@ -568,6 +570,7 @@ async function generatePageImageWithFallback(params: {
   let totalAttempts = 0;
   let timeoutCount = 0;
   let lastFailureReason: string | undefined;
+  let lastError: unknown; // P2-3: preserve original error for richer classification
 
   for (const profile of fallbackProfiles) {
     const maxRetries = 2;
@@ -598,6 +601,7 @@ async function generatePageImageWithFallback(params: {
         if (err instanceof ImageTimeoutError) {
           timeoutCount++;
           lastFailureReason = "image_timeout";
+          lastError = err; // P2-3
           logger.warn("Image generation timeout", {
             bookId: params.bookId,
             pageIndex,
@@ -609,6 +613,7 @@ async function generatePageImageWithFallback(params: {
         }
         const retryAfterMs = getRetryAfterMs(err);
         lastFailureReason = err instanceof Error ? err.message : "unknown";
+        lastError = err; // P2-3
         logger.warn("Image generation attempt failed", {
           bookId: params.bookId,
           pageIndex,
@@ -627,20 +632,26 @@ async function generatePageImageWithFallback(params: {
     }
   }
 
-  // P2-2: Log page-level image failure after all fallback profiles are exhausted.
+  // P2-2/P2-3: Log page-level image failure after all fallback profiles are exhausted.
   const finalDurationMs = Date.now() - startMs;
   const finalProfile = fallbackProfiles[fallbackProfiles.length - 1];
+  const normalized = classifyError(lastError ?? lastFailureReason);
   logGenerationEvent({
     eventName: "page_image_failed",
     bookId: params.bookId,
     pageIndex,
+    primaryProfile: params.primaryProfile,
     imageModelProfile: finalProfile,
+    provider: resolveProviderFromProfile(finalProfile),
+    isFinalFallbackFailure: true,
+    fallbackUsed: fallbackProfiles.length > 1,
     attemptCount: totalAttempts,
     timeoutCount,
     durationMs: finalDurationMs,
     // Truncate to 120 chars; prompts are never the failure reason
     failureReason: lastFailureReason ? lastFailureReason.slice(0, 120) : undefined,
-    errorCategory: categorizeError(lastFailureReason),
+    errorCategory: normalized.errorCategory,
+    errorCode: normalized.errorCode,
   });
 
   return {

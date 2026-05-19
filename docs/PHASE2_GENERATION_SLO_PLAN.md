@@ -373,7 +373,7 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 |---|---|
 | P2-1 | ✅ COMPLETE (this doc) |
 | P2-2 | ✅ COMPLETE — see P2-2 Implementation Note below |
-| P2-3 | Pending |
+| P2-3 | ✅ COMPLETE — see P2-3 Implementation Note below |
 | P2-4 | Pending |
 | P2-5 | Pending |
 | P2-6 | Pending |
@@ -446,7 +446,75 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 | `firestore` | `firestore` |
 | `unknown` | Default when no pattern matches |
 
-**Limitation**: Classification is keyword-based on free-form reason strings. If Replicate changes its E005 error format, `safety_or_policy` may be missed. P2-3 (provider error taxonomy) should improve this with structured error codes.
+**Limitation**: Classification is keyword-based on free-form reason strings. If Replicate changes its E005 error format, `safety_or_policy` may be missed. P2-3 improved this with structured `ErrorCode` values and a typed `classifyError(unknown)` helper.
+
+---
+
+## P2-3 Implementation Note
+
+**Commit**: feat(P2-3): normalize provider error taxonomy for generation logs  
+**Files changed**:
+- `functions/src/lib/generation-event-logger.ts` — new types, new functions, updated event
+- `functions/src/generate-book.ts` — `page_image_failed` event updated
+- `functions/test/generation-event-logger.test.ts` — 54 tests (was 21)
+
+### New types
+
+| Type | Values |
+|---|---|
+| `ErrorCode` | `"E005" \| "TIMEOUT" \| "PROVIDER_5XX" \| "PROVIDER_4XX" \| "QUOTA_EXCEEDED" \| "VALIDATION_FAILED" \| "FIRESTORE_WRITE_FAILED" \| "NETWORK_ERROR" \| "UNKNOWN"` |
+| `NormalizedErrorInfo` | `{ errorCategory: ErrorCategory; errorCode: ErrorCode }` |
+| `ImageProvider` | `"replicate" \| "openai"` |
+
+### New functions
+
+| Function | Purpose |
+|---|---|
+| `classifyError(err: unknown): NormalizedErrorInfo` | Accepts Error objects, strings, or undefined. Checks `.name === "ImageTimeoutError"` first (avoids circular import). Keyword-based classification returning both `errorCategory` and `errorCode`. |
+| `resolveProviderFromProfile(profile: ImageModelProfile): ImageProvider` | `openai_image_candidate` → `"openai"`, all others → `"replicate"`. |
+
+### Updated event: `PageImageFailedEvent`
+
+New required fields added:
+
+| Field | Type | Notes |
+|---|---|---|
+| `primaryProfile` | `ImageModelProfile` | Originally requested profile (before fallback) |
+| `provider` | `ImageProvider` | `"replicate"` or `"openai"` |
+| `isFinalFallbackFailure` | `boolean` | Always `true` when emitted (all profiles exhausted) |
+| `fallbackUsed` | `boolean` | `true` when a fallback profile was attempted |
+| `errorCode` | `ErrorCode` | Structured code for SLO aggregation |
+
+### What can now be counted in Cloud Logging
+
+```
+# E005 rate (safety/policy rejections)
+jsonPayload.message = "generation_event" AND jsonPayload.eventName = "page_image_failed" AND jsonPayload.errorCode = "E005"
+
+# Timeout rate by profile
+jsonPayload.message = "generation_event" AND jsonPayload.eventName = "page_image_failed" AND jsonPayload.errorCode = "TIMEOUT"
+
+# Provider 5xx rate
+jsonPayload.message = "generation_event" AND jsonPayload.eventName = "page_image_failed" AND jsonPayload.errorCode = "PROVIDER_5XX"
+
+# Failures by provider
+jsonPayload.message = "generation_event" AND jsonPayload.eventName = "page_image_failed" AND jsonPayload.provider = "openai"
+```
+
+### Classification priority order
+
+1. `ImageTimeoutError` by `.name` → TIMEOUT
+2. Timeout keywords → TIMEOUT
+3. E005 / content policy / safety → E005
+4. HTTP 429 / rate limit / quota → QUOTA_EXCEEDED
+5. HTTP 5xx keywords → PROVIDER_5XX
+6. HTTP 4xx keywords → PROVIDER_4XX
+7. Network connectivity keywords → NETWORK_ERROR
+8. Firestore → FIRESTORE_WRITE_FAILED
+9. Schema / validation → VALIDATION_FAILED
+10. Default → UNKNOWN
+
+**Limitation**: Still keyword-based; if providers change error message formats the classification may drift. P2-4+ can improve with structured provider error codes if needed.
 
 ### Cloud Logging query
 
@@ -462,7 +530,6 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 
 ### Remaining gaps (for future slices)
 
-- **P2-3**: Error taxonomy should use structured provider error codes (not keyword matching)
 - **P2-4**: Candidate gate integration test (gate → createImageClient path)
 - **P2-6**: Stale `.png` reference guard in hygiene script
 - Story generation latency is not yet measured (Gemini latency not stored per-book)
