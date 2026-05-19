@@ -1416,7 +1416,8 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 | T7-4b | Generate + QA: Group B (template thumbnails, execute) | ✅ COMPLETE (2026-05-20) |
 | T7-4.5 | Live ThemeCard verification / template thumbnail regression check | ✅ COMPLETE (2026-05-20) |
 | T7-4.6 | PNG reference cleanup / test regression fix | ✅ COMPLETE (2026-05-20) |
-| T7-5 | Create real quality samples (P3) | Pending |
+| T7-5a | Design: Group D quality sample generation | ✅ COMPLETE (2026-05-19) |
+| T7-5b | Generate + QA + promote: Group D quality samples (execute) | Pending |
 
 **T7-2 operational notes**:
 - OpenAI Images API (`gpt-image-1`) required corporate proxy (`HTTPS_PROXY`) for local Node.js execution.
@@ -1441,4 +1442,4 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 - **Format target**: WebP for new files; PNG can be converted to WebP to reduce size
 - **Groups A & B prompts**: Derived from `styleBible` / `visualDirection` fields in code
 - **Groups A & B** are static file commits to repo + `firebase deploy --only hosting` — no Storage or Firestore writes
-- **Group D** (quality samples) requires Storage upload + Firestore `sampleImages` field write
+- **Group D** (quality samples): static WebP files committed to `public/images/samples/` + Firestore `sampleImages` field write via targeted admin script. No Firebase Storage involvement. 5 templates × 2 tiers = 10 images.
