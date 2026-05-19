@@ -76,7 +76,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "toy_3d",
     name: "ぷっくり3Dトイ風",
-    previewImageUrl: "/images/styles/toy_3d.png",
+    previewImageUrl: "/images/styles/toy_3d.webp",
     styleBible:
       "Rounded 3D toy storybook style, clay-like forms, playful miniature diorama feeling, soft plastic texture, bright child-safe lighting.",
     negativeStyleRules: [
