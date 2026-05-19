@@ -54,6 +54,11 @@ import {
   getStyleTemplateExposure,
   isAllowedStyleExposureStatus,
 } from "./lib/style-exposure";
+import {
+  logGenerationEvent,
+  categorizeError,
+  type CandidateDecision,
+} from "./lib/generation-event-logger";
 
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
 const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCURRENCY ?? "2")));
@@ -622,15 +627,31 @@ async function generatePageImageWithFallback(params: {
     }
   }
 
+  // P2-2: Log page-level image failure after all fallback profiles are exhausted.
+  const finalDurationMs = Date.now() - startMs;
+  const finalProfile = fallbackProfiles[fallbackProfiles.length - 1];
+  logGenerationEvent({
+    eventName: "page_image_failed",
+    bookId: params.bookId,
+    pageIndex,
+    imageModelProfile: finalProfile,
+    attemptCount: totalAttempts,
+    timeoutCount,
+    durationMs: finalDurationMs,
+    // Truncate to 120 chars; prompts are never the failure reason
+    failureReason: lastFailureReason ? lastFailureReason.slice(0, 120) : undefined,
+    errorCategory: categorizeError(lastFailureReason),
+  });
+
   return {
     ...base,
     success: false,
     imageUrl: "",
-    usedProfile: fallbackProfiles[fallbackProfiles.length - 1],
+    usedProfile: finalProfile,
     fallbackUsed: fallbackProfiles.length > 1,
     attemptCount: totalAttempts,
     timeoutCount,
-    durationMs: Date.now() - startMs,
+    durationMs: finalDurationMs,
     failureReason: lastFailureReason,
     retryable: true,
   };
@@ -869,6 +890,17 @@ export async function processBookGeneration(
           technicalErrorMessage: technicalMessage,
         }));
         await deps.updateBookStatus(bookId, "failed");
+        logGenerationEvent({
+          eventName: "book_early_failed",
+          bookId,
+          userPresent: !!bookData.userId,
+          templateId: resolvedTemplateId,
+          creationMode: resolvedCreationMode as import("./lib/types").CreationMode,
+          failureStage: "story_generation",
+          failureProvider: "gemini",
+          errorCategory: "provider_error",
+          retryable: true,
+        });
         return;
       }
 
@@ -883,6 +915,17 @@ export async function processBookGeneration(
           technicalErrorMessage: technicalMessage,
         }));
         await deps.updateBookStatus(bookId, "failed");
+        logGenerationEvent({
+          eventName: "book_early_failed",
+          bookId,
+          userPresent: !!bookData.userId,
+          templateId: resolvedTemplateId,
+          creationMode: resolvedCreationMode as import("./lib/types").CreationMode,
+          failureStage: "schema_validation",
+          failureProvider: "gemini",
+          errorCategory: "validation",
+          retryable: false,
+        });
         return;
       }
 
@@ -1258,6 +1301,23 @@ export async function processBookGeneration(
     }
 
     console.log(`Book ${bookId} generation ${bookStatus}: ${imageSuccessCount}/${totalPages} pages succeeded`);
+
+    // P2-2: Log book outcome for SLO measurement.
+    logGenerationEvent({
+      eventName: "book_outcome",
+      bookId,
+      userPresent: !!bookData.userId,
+      templateId: resolvedTemplateId,
+      creationMode: resolvedCreationMode as import("./lib/types").CreationMode,
+      resolvedImageModelProfile: normalizedBookData.imageModelProfile,
+      bookStatus,
+      totalPages,
+      completedPages: imageSuccessCount,
+      failedPages: imageFailureCount,
+      fallbackPages: pageResults.filter((r) => r.fallbackUsed).length,
+      timedOutPages: pageResults.filter((r) => r.timeoutCount > 0).length,
+      durationMs: generationDurationMs,
+    });
   } catch (err) {
     console.error(`Book generation failed for ${bookId}:`, err);
     const message = err instanceof Error ? err.message : "Unknown generation error";
@@ -1270,6 +1330,17 @@ export async function processBookGeneration(
       technicalErrorMessage: message,
     }));
     await deps.updateBookStatus(bookId, "failed");
+    // P2-2: Log unexpected failure. templateId/creationMode not in scope here (declared inside try).
+    logGenerationEvent({
+      eventName: "book_early_failed",
+      bookId,
+      userPresent: !!bookData.userId,
+      templateId: bookData.templateId ?? bookData.theme,
+      failureStage: "unexpected",
+      failureProvider: "system",
+      errorCategory: categorizeError(message),
+      retryable: false,
+    });
   }
 }
 
@@ -2163,6 +2234,24 @@ export const generateBook = onDocumentCreated(
       gatedModelProfile !== bookData.imageModelProfile
         ? { ...bookData, imageModelProfile: gatedModelProfile }
         : bookData;
+
+    // P2-2: Log generation start with gate decision for SLO measurement.
+    // Raw userId is intentionally omitted; userPresent is sufficient.
+    const candidateWasRequested = isCandidateProfile(bookData.imageModelProfile);
+    const candidateDecision: CandidateDecision = candidateWasRequested
+      ? (candidateProfileEnabled ? "pass" : "blocked")
+      : "not_applicable";
+    logGenerationEvent({
+      eventName: "generation_started",
+      bookId,
+      userPresent: !!bookData.userId,
+      templateId: bookData.templateId ?? bookData.theme,
+      requestedImageModelProfile: bookData.imageModelProfile,
+      resolvedImageModelProfile: gatedModelProfile,
+      candidateRequested: candidateWasRequested,
+      candidateAllowed: candidateProfileEnabled,
+      candidateDecision,
+    });
 
     // Create production dependencies
     const deps: GenerationDeps = {

@@ -372,7 +372,7 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 | Slice | Status |
 |---|---|
 | P2-1 | ✅ COMPLETE (this doc) |
-| P2-2 | Pending |
+| P2-2 | ✅ COMPLETE — see P2-2 Implementation Note below |
 | P2-3 | Pending |
 | P2-4 | Pending |
 | P2-5 | Pending |
@@ -381,3 +381,89 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 | P2-8 | Pending |
 | P2-9 | Pending |
 | P2-10 | Pending |
+
+---
+
+## P2-2 Implementation Note
+
+**Commit**: feat(P2-2): add structured generation event logging  
+**Files changed**:
+- `functions/src/lib/generation-event-logger.ts` (new) — typed event shapes, error taxonomy, emit helper
+- `functions/src/generate-book.ts` — 4 log call sites added
+- `functions/test/generation-event-logger.test.ts` (new) — 21 tests
+
+### Events added
+
+| Event name | Emitted from | When |
+|---|---|---|
+| `generation_started` | `generateBook` Cloud Function (export) | After candidate gate check, before `processBookGeneration` |
+| `book_early_failed` | `processBookGeneration` | Gemini 503, schema validation, or unexpected outer catch |
+| `book_outcome` | `processBookGeneration` | After step-9 `updateBookStatus` (completed / partial_completed / all-pages-failed) |
+| `page_image_failed` | `generatePageImageWithFallback` | After all fallback profiles exhausted |
+
+### Fields included
+
+| Field | Included in | Notes |
+|---|---|---|
+| `eventName` | all | Constant label per event type |
+| `bookId` | all | System-generated UUID — safe |
+| `userPresent` | all | Boolean; raw userId intentionally omitted |
+| `templateId` | start, outcome, early_failed | Template key (e.g. `"animals"`) |
+| `creationMode` | outcome, early_failed | `"fixed_template"` / `"guided_ai"` / `"original_ai"` |
+| `requestedImageModelProfile` | start | Profile as sent on the book document |
+| `resolvedImageModelProfile` | start, outcome | Profile after candidate gate |
+| `candidateRequested` | start | Boolean |
+| `candidateAllowed` | start | Boolean — user enrollment check outcome |
+| `candidateDecision` | start | `"pass"` / `"blocked"` / `"not_applicable"` |
+| `bookStatus` | outcome | `"completed"` / `"partial_completed"` / `"failed"` |
+| `totalPages`, `completedPages`, `failedPages` | outcome | Page counts |
+| `fallbackPages`, `timedOutPages` | outcome | From `pageResults` |
+| `durationMs` | outcome | Full generation wall-clock time |
+| `failureStage`, `failureProvider` | early_failed | Stage and provider at failure |
+| `errorCategory` | early_failed, page_image_failed | See taxonomy below |
+| `retryable` | early_failed | Whether user should retry |
+| `pageIndex`, `imageModelProfile` | page_image_failed | Page position and final tried profile |
+| `attemptCount`, `timeoutCount` | page_image_failed | Attempt and timeout counts |
+| `failureReason` | page_image_failed | Truncated to 120 chars; prompts never appear here |
+
+### Intentionally NOT logged
+
+- Raw userId (any user identifier)
+- Raw prompts (image prompts or story prompts)
+- Child names, story text, or any user-provided personal content
+- `technicalErrorMessage` (contains provider error details; logged separately by existing `logger.error` / `logger.warn` calls)
+- Page image content / URLs
+
+### Error taxonomy (`ErrorCategory`)
+
+| Category | Detection |
+|---|---|
+| `timeout` | `image_timeout`, `timeout`, `deadline exceeded` in reason string |
+| `safety_or_policy` | `e005`, `content policy`, `safety policy`, `safety filter` |
+| `provider_error` | `replicate`, `openai`, `api error`, `http error` |
+| `validation` | `schema`, `validation`, `parse error` |
+| `quota` | `monthly`, `quota`, `rate limit` |
+| `firestore` | `firestore` |
+| `unknown` | Default when no pattern matches |
+
+**Limitation**: Classification is keyword-based on free-form reason strings. If Replicate changes its E005 error format, `safety_or_policy` may be missed. P2-3 (provider error taxonomy) should improve this with structured error codes.
+
+### Cloud Logging query
+
+All events can be queried in Cloud Logging with:
+```
+jsonPayload.message = "generation_event"
+```
+
+Filter to a specific event type:
+```
+jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outcome"
+```
+
+### Remaining gaps (for future slices)
+
+- **P2-3**: Error taxonomy should use structured provider error codes (not keyword matching)
+- **P2-4**: Candidate gate integration test (gate → createImageClient path)
+- **P2-6**: Stale `.png` reference guard in hygiene script
+- Story generation latency is not yet measured (Gemini latency not stored per-book)
+- `generation_started` does not know the final `creationMode` (resolved in `processBookGeneration`, not the Cloud Function trigger)
