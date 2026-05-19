@@ -1407,10 +1407,17 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 | Slice | Scope | Status |
 |---|---|---|
 | T7-1 | Inventory | ✅ COMPLETE (2026-05-19) |
-| T7-2 | Create missing UI illustrations & icons (P0) | Pending |
+| T7-2 | Create missing UI illustrations & icons (P0) | ✅ COMPLETE (2026-05-19, commit `fcf6673`) |
+| T7-2.5 | Live UI verification / broken image regression check | ✅ COMPLETE (2026-05-19) — all 7 HTTP 200 image/webp confirmed |
 | T7-3 | Regenerate style preview images (P1) | Pending |
 | T7-4 | Regenerate template thumbnails (P2) | Pending |
 | T7-5 | Create real quality samples (P3) | Pending |
+
+**T7-2 operational notes**:
+- OpenAI Images API (`gpt-image-1`) required corporate proxy (`HTTPS_PROXY`) for local Node.js execution.
+- Firebase Secrets OPENAI_API_KEY output includes an "Error:" line in stdout; must extract the `sk-` line only.
+- `npm run build` exits with code 0 (actual). Code 1 observed only when using `2>&1` in PowerShell — caused by Next.js workspace-root warning to stderr being captured as `NativeCommandError`.
+- Generation script: `scripts/generate-ui-assets.js` (dry-run/write mode, proxy-aware via `HttpsProxyAgent`).
 
 ### Generation strategy
 
