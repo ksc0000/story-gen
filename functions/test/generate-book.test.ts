@@ -21,7 +21,7 @@ const mockTemplate: TemplateData = {
   name: "おたんじょうび", description: "誕生日", icon: "🎂", order: 1,
   creationMode: "guided_ai", priceTier: "take", storyCostLevel: "standard",
   systemPrompt: "誕生日テーマで物語を作って", active: true,
-  sampleImageUrl: "/images/templates/animals.png",
+  sampleImageUrl: "/images/templates/animals.webp",
 };
 
 const fixedTemplate: TemplateData = {
