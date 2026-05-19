@@ -1384,3 +1384,38 @@ Book `smoke-gate-block-1779154508318` — user `smoke-test-gate-block-1779154508
 | Production routing (no breakage) | ✅ Confirmed |
 
 **T6-60 COMPLETE.** Gate is live. Production default routing unchanged.
+
+---
+
+## T7 Track: Public Sample Asset Regeneration (started 2026-05-19)
+
+**Goal**: Replace or create all publicly visible sample/demo images using the OpenAI Images API validated in T6.
+
+**Full plan**: `docs/T7_PUBLIC_SAMPLE_REGENERATION_PLAN.md`
+
+### Key findings from T7-1 Inventory
+
+| Finding | Impact |
+|---|---|
+| 7 UI images missing (`icons/`, `illustrations/`) | ⛔ Broken images on landing, home, generating pages — P0 |
+| 10 style preview PNGs exist (Group A) | 2.4–3.8 MB each, untracked origin model — P1 regen candidate |
+| 10 template thumbnail PNGs exist (Group B) | Shared across 1–4 templates each — P2 regen candidate |
+| Quality samples (`sampleImages.light/premium`) | Placeholder-only for 2 templates — P3 |
+
+### T7 slice map
+
+| Slice | Scope | Status |
+|---|---|---|
+| T7-1 | Inventory | ✅ COMPLETE (2026-05-19) |
+| T7-2 | Create missing UI illustrations & icons (P0) | Pending |
+| T7-3 | Regenerate style preview images (P1) | Pending |
+| T7-4 | Regenerate template thumbnails (P2) | Pending |
+| T7-5 | Create real quality samples (P3) | Pending |
+
+### Generation strategy
+
+- **Model**: OpenAI Images API `gpt-image-1-mini` (no reference, text-to-image) — validated I1 PASS in T6
+- **Format target**: WebP for new files; PNG can be converted to WebP to reduce size
+- **Groups A & B prompts**: Derived from `styleBible` / `visualDirection` fields in code
+- **Groups A & B** are static file commits to repo + `firebase deploy --only hosting` — no Storage or Firestore writes
+- **Group D** (quality samples) requires Storage upload + Firestore `sampleImages` field write
