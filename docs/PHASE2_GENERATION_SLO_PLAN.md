@@ -374,7 +374,7 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 | P2-1 | ✅ COMPLETE (this doc) |
 | P2-2 | ✅ COMPLETE — see P2-2 Implementation Note below |
 | P2-3 | ✅ COMPLETE — see P2-3 Implementation Note below |
-| P2-4 | Pending |
+| P2-4 | ✅ COMPLETE — see P2-4 Implementation Note below |
 | P2-5 | Pending |
 | P2-6 | Pending |
 | P2-7 | Pending |
@@ -530,7 +530,55 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 
 ### Remaining gaps (for future slices)
 
-- **P2-4**: Candidate gate integration test (gate → createImageClient path)
 - **P2-6**: Stale `.png` reference guard in hygiene script
 - Story generation latency is not yet measured (Gemini latency not stored per-book)
 - `generation_started` does not know the final `creationMode` (resolved in `processBookGeneration`, not the Cloud Function trigger)
+
+---
+
+## P2-4 Implementation Note
+
+**Commit**: test(P2-4): lock candidate image profile gating behavior  
+**Files changed**:
+- `functions/test/candidate-gate.test.ts` (new) — 48 regression tests
+- `docs/PHASE2_GENERATION_SLO_PLAN.md` — this note
+
+**No production code changes.** All helpers under test were already exported pure functions.
+
+### Coverage
+
+| Section | Tests | What it guards |
+|---|---|---|
+| `CANDIDATE_IMAGE_PROFILES` registry | 3 | Exact membership; length regression (fails if new candidate added silently) |
+| `isCandidateProfile` production profiles | 7 | Production profiles never classified as candidate |
+| Default routing never returns candidate | 8 | `resolveImageModelProfile` cannot produce a candidate from any default input |
+| Gate-block | 3 | `openai_image_candidate` and `flux11_pro_candidate` blocked when not enrolled |
+| Gate-pass | 3 | Candidate profiles preserved when `candidateProfileEnabled=true` |
+| `allowCandidateProfile === true` strictness | 6 | Falsy/truthy non-boolean values (null, undefined, "1", 1) all blocked |
+| Non-candidate pass-through | 3 | Production profiles not accidentally gated |
+| Combined gate + resolve | 5 | Blocked candidate → undefined → `resolveImageModelProfile` returns safe default |
+| `openai_image_candidate` fallback isolation | 4 | No Replicate fallback in chain; length exactly 1 |
+| Regression guards | 6 | Named `REGRESSION:` tests that explicitly describe what failure means |
+
+### Key regression guards
+
+- `CANDIDATE_IMAGE_PROFILES` length === 2 — fails if new candidate added without review
+- `resolveImageModelProfile({})` result is never a candidate — fails if default routing changes
+- `allowCandidateProfile` missing/null/false/truthy-non-boolean all block candidates
+- `pro_consistent` and `klein_fast` never classified as candidate
+- `openai_image_candidate` fallback chain length === 1
+
+### Pre-existing test failures (unchanged from P2-3)
+
+3 pre-existing failures remain unrelated to P2-4:
+- `test/generate-book.test.ts` ×1
+- `test/prompt-builder.test.ts` ×1
+- `test/test-image-models.test.ts` ×1
+
+Total suite after P2-4: **802/805 pass** (48 new P2-4 tests, all green).
+
+### No helper extraction required
+
+All tested functions were already exported pure helpers:
+- `gateImageModelProfile` (generate-book.ts)
+- `isCandidateProfile`, `CANDIDATE_IMAGE_PROFILES`, `resolveImageModelProfile`, `resolveImageFallbackProfiles` (replicate.ts)
