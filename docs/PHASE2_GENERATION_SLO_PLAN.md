@@ -377,7 +377,7 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 | P2-4 | ✅ COMPLETE — see P2-4 Implementation Note below |
 | P2-5 | ✅ COMPLETE — see P2-5 Implementation Note below |
 | P2-6 | ✅ COMPLETE — see P2-6 Implementation Note below |
-| P2-7 | Pending |
+| P2-7 | ✅ COMPLETE — see P2-7 Implementation Note below |
 | P2-8 | Pending |
 | P2-9 | Pending |
 | P2-10 | Pending |
@@ -532,7 +532,8 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 
 - Story generation latency is not yet measured (Gemini latency not stored per-book)
 - `generation_started` does not know the final `creationMode` (resolved in `processBookGeneration`, not the Cloud Function trigger)
-- Automated SLO report from Cloud Logging export covered in P2-6
+- Automated SLO report from Cloud Logging export: covered in P2-6
+- Operational runbook: covered in P2-7
 
 ---
 
@@ -776,5 +777,50 @@ Self-test covers:
 
 ### What remains for P2-7 / P2-8
 
-- **P2-7**: Operational runbook — document how to pull Cloud Logging export, run the report, and interpret results in the context of SLO targets.
-- **P2-8**: Automated SLO snapshot comparison — diff two report JSON outputs to detect regressions between snapshots.
+- **P2-7**: Operational runbook — document how to pull Cloud Logging export, run the report, and interpret results in the context of SLO targets. Covered in P2-7.
+- **P2-8**: CI guard selection / non-network guardrails — identify which checks can run in CI without network access.
+
+---
+
+## P2-7 Implementation Note
+
+**Commit**: docs(P2-7): add generation SLO operational runbook  
+**Files changed**:
+- `docs/GENERATION_SLO_RUNBOOK.md` (new) — operational runbook for generation health monitoring
+- `docs/PHASE2_GENERATION_SLO_PLAN.md` — P2-7 implementation note + slice map update
+
+**No production code changes.** Docs-only.
+
+### Purpose
+
+Provides a single reference document for developers and operators to:
+- Collect structured generation events from Cloud Logging
+- Run the SLO report and interpret results
+- Respond to common generation incidents
+
+### Sections documented
+
+| Section | Contents |
+|---|---|
+| 1. Purpose and audience | Runbook scope, intended audience |
+| 2. Current observability components | P2-2 through P2-6 component inventory |
+| 3. How to collect logs | Cloud Logging filter, gcloud CLI examples, UI export steps, privacy requirements |
+| 4. How to run the SLO report | Console / markdown / json modes, corporate proxy note |
+| 5. How to run asset checks | Full check, group check, stale PNG guard, dry run, proxy note |
+| 6. SLO / SLI interpretation guide | How to read each metric: completion rate, failure rate, error codes, provider/profile, candidate gate, latency |
+| 7. Suggested initial thresholds | Conservative starting thresholds (readable rate, failure rate, E005, timeout, asset URL, candidateAllowed) |
+| 8. Incident response playbooks | 10 scenarios: E005 spike, timeout spike, provider error/quota, partial_completed increase, candidate leakage, OpenAI unexpected, asset failures, stale PNG, Firestore consistency, latency p95 spike |
+| 9. Change safety rules | No routing change during triage, no candidate promotion, privacy rules |
+| 10. Verification checklist | Weekly review checklist, pre-deploy checklist, post-deploy checklist |
+| 11. Relationship to remaining P2 tasks | P2-8 (CI guards), P2-9 (dashboard automation), P2-10 (threshold tuning) |
+| Appendix | Key files reference |
+
+### Runbook path
+
+`docs/GENERATION_SLO_RUNBOOK.md`
+
+### Known limitations
+
+- gcloud CLI export commands are examples — project ID and log filters should be confirmed before running.
+- Suggested thresholds in Section 7 are conservative starting values. Tune after observing real traffic patterns.
+- Story generation latency (Gemini) is not yet measurable from event logs (not stored per-book).
