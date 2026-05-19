@@ -1356,7 +1356,7 @@ Rollback does NOT affect template thumbnails, style previews, or any Groups A/B/
 |---|---|---|
 | T7-5a | Design: Group D quality sample generation (this section) | ✅ COMPLETE |
 | T7-5b | Generate + QA + promote: Group D quality samples (execute) | ✅ COMPLETE |
-| T7-5c | Live QA: ThemeCard "仕上がりサンプルを見る" regression + Firestore update | Pending |
+| T7-5c | Live QA: ThemeCard "仕上がりサンプルを見る" regression + Firestore update | ✅ COMPLETE (Firestore 5/5 verified) |
 
 ---
 
@@ -1420,16 +1420,19 @@ Rollback does NOT affect template thumbnails, style previews, or any Groups A/B/
 | emotional-growth_light | 200 | image/webp |
 | emotional-growth_premium | 200 | image/webp |
 
-### Pending: Firestore Update (T7-5c)
+### Firestore Update
 
-`scripts/update-quality-sample-urls.js` was written but not yet executed. It requires:
-```powershell
-$env:GOOGLE_APPLICATION_CREDENTIALS = "path/to/service-account.json"
-node scripts/update-quality-sample-urls.js            # dry-run
-node scripts/update-quality-sample-urls.js --write    # apply
-```
-The script also auto-detects `service-account.json` in the repo root (same pattern as `backfill-book-timestamps.js`).  
-Until Firestore is updated, ThemeCard will NOT show "仕上がりサンプルを見る" for the 5 guided_ai templates in production (demo mode works correctly via `src/lib/demo.ts`).
+`scripts/update-quality-sample-urls.js --write` を実行。5/5 テンプレートの `sampleImages` 書き込み・検証済み (2026-05-20)。
+
+| Template | Before | After |
+|---|---|---|
+| fantasy | `{ premium: "/images/templates/fantasy.png" }` | `{ light: "…fantasy_light.webp", premium: "…fantasy_premium.webp" }` |
+| bedtime | `{ premium: "/images/templates/bedtime.png" }` | `{ light: "…bedtime_light.webp", premium: "…bedtime_premium.webp" }` |
+| animals | null | `{ light: "…animals_light.webp", premium: "…animals_premium.webp" }` |
+| adventure | null | `{ light: "…adventure_light.webp", premium: "…adventure_premium.webp" }` |
+| emotional-growth | null | `{ light: "…emotional-growth_light.webp", premium: "…emotional-growth_premium.webp" }` |
+
+ThemeCard で「仕上がりサンプルを見る」ボタンが 5 テンプレートに表示されるようになった。
 
 ---
 
