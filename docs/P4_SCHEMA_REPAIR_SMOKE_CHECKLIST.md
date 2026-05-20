@@ -519,4 +519,6 @@ P4-7 is validated. Recommended next task:
 
 ---
 
-**P4-7 COMPLETE AND VALIDATED** — `mainQuestObject` prompt hardening effective. No `schema_validation` / `field_type_mismatch` recurrence in P4-7s smoke. Next: P4-8 response_schema migration design.
+**P4-7 COMPLETE AND VALIDATED** — `mainQuestObject` prompt hardening effective. No `schema_validation` / `field_type_mismatch` recurrence in P4-7s smoke.
+
+**P4-8 DESIGN COMPLETE** (2026-05-21) — `response_schema` migration plan documented in [P4_GEMINI_RESPONSE_SCHEMA_MIGRATION_PLAN.md](P4_GEMINI_RESPONSE_SCHEMA_MIGRATION_PLAN.md). Recommended approach: Option E (hybrid response_schema + existing validator). Next implementation slice: P4-9 (schema constant, not wired).

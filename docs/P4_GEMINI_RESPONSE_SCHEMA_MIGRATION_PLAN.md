@@ -1,0 +1,729 @@
+# P4-8: Gemini `response_schema` Migration Design
+
+**Created**: 2026-05-21  
+**Task**: P4-8 — design Gemini response_schema migration  
+**Status**: DESIGN COMPLETE (docs-only)  
+**Branch**: main  
+**Starting commit**: fd17514  
+**Depends on**: P4-7s validated (prompt hardening smoke PASS)
+
+---
+
+## 1. Purpose
+
+P4-7 added explicit field type constraints to the system prompt (`STORY_JSON_FIELD_TYPE_CONTRACT`) and P4-7s validated that `mainQuestObject must be a string` no longer recurred across 5 live smoke books. However, prompt-level instructions are a **soft contract** — the LLM can still violate them under edge conditions (temperature variance, long context, model updates).
+
+Gemini's `response_schema` (structured output) provides a **hard API-level contract** that enforces the JSON shape and field types at the model output layer. This eliminates `field_type_mismatch` and `schema_structural` failures at the source, rather than detecting them after generation.
+
+### Why now
+
+- P4-7s smoke PASS confirms prompt hardening works for the immediate `mainQuestObject` issue.
+- `response_schema` is the next defensive layer — it prevents the class of errors, not just the observed instance.
+- The `@google/generative-ai` SDK (v0.24.0+) supports `responseSchema` in `generationConfig`.
+- If `response_schema` migration is too risky or limited, P4 can continue relying on prompt hardening + `validateStory()` as the safety net.
+
+---
+
+## 2. Current State
+
+### 2.1 JSON Constraint Stack (as of P4-7s)
+
+| Layer | Mechanism | Defense level | Status |
+|---|---|---|---|
+| L1: Prompt instruction | `STORY_JSON_FIELD_TYPE_CONTRACT` in `buildSystemPrompt()` | Soft — LLM can ignore | ✅ P4-7 |
+| L2: `responseMimeType` | `"application/json"` in `generationConfig` | Medium — forces JSON output, no schema enforcement | ✅ Already active |
+| L3: JSON extraction | `extractJSON()` / `extractJsonFromLLMResponse()` (P4-4) | Recovery — strips markdown fences | ✅ P4-4/P4-5 (flag-gated) |
+| L4: Runtime validator | `validateStory()` in `gemini.ts` | Hard — throws on type mismatch | ✅ Always active |
+| L5: `response_schema` | Gemini structured output API contract | Hard — model enforces types at output | ❌ Not yet implemented |
+
+### 2.2 Production Flag State
+
+| Flag | Value |
+|---|---|
+| `ENABLE_SCHEMA_REPAIR_RETRY` | absent / OFF |
+| `response_schema` | not implemented |
+
+### 2.3 P4 History
+
+| Task | Summary |
+|---|---|
+| P4-1 | Inventory and design doc |
+| P4-2 | `StoryJsonFailureCategory` taxonomy + `classifyStoryJsonFailure()` |
+| P4-3 | Unit fixtures for malformed / wrong-type Gemini responses |
+| P4-4 | `extractJsonFromLLMResponse()` pure helper (test-only) |
+| P4-5 | One-shot schema repair retry behind `ENABLE_SCHEMA_REPAIR_RETRY` flag |
+| P4-6 | Live smoke for repair retry (PASS with limitation) |
+| P4-7 | `STORY_JSON_FIELD_TYPE_CONTRACT` prompt hardening |
+| P4-7s | Targeted smoke — 0/5 `mainQuestObject` recurrence ✅ |
+| **P4-8** | **This document — `response_schema` migration design** |
+
+---
+
+## 3. Current Gemini API Usage Inventory
+
+### 3.1 SDK
+
+| Item | Value |
+|---|---|
+| Package | `@google/generative-ai` |
+| Version | `^0.24.0` (from `functions/package.json`) |
+| Import | `GoogleGenerativeAI`, `HarmCategory`, `HarmBlockThreshold` |
+| File | `functions/src/lib/gemini.ts` |
+
+### 3.2 Model Selection
+
+| Context | Model candidates |
+|---|---|
+| Default (free/guided_ai) | `gemini-2.5-flash`, `gemini-2.0-flash` |
+| `standard_paid` | `gemini-2.5-flash`, `gemini-2.5-pro` |
+| `premium_paid` / `original_ai` / memory theme | `gemini-2.5-pro`, `gemini-2.5-flash` |
+| Env override | `GEMINI_STORY_MODEL_PRIMARY` / `GEMINI_STORY_MODEL_FALLBACKS` |
+
+### 3.3 Generation Config
+
+Current `generationConfig` passed to all story generation calls:
+
+```typescript
+generationConfig: { responseMimeType: "application/json" as const }
+```
+
+- **No `responseSchema`** is set.
+- **No `temperature`** is explicitly set (uses model default).
+- **No `maxOutputTokens`** is explicitly set.
+
+### 3.4 Request Shape
+
+```typescript
+const request = {
+  contents: [{ role: "user", parts: [{ text: userParts.join("\n") }] }],
+  systemInstruction: { role: "system", parts: [{ text: params.systemPrompt }] },
+  generationConfig: { responseMimeType: "application/json" },
+};
+```
+
+### 3.5 JSON Parsing Path
+
+```
+result.text()
+  → extractJSON()          // strips markdown fences (always)
+  → JSON.parse()           // parse raw text
+  OR (when ENABLE_SCHEMA_REPAIR_RETRY=true):
+  → extractJsonFromLLMResponse()  // P4-4 enhanced extractor
+  → parsed value
+  → validateStory(parsed)  // runtime type checks + normalization
+  → GeneratedStory object
+```
+
+### 3.6 Runtime Validator (`validateStory`)
+
+Location: `gemini.ts`, lines ~430–550
+
+The validator performs imperative type checking:
+- Root: must be object
+- `title`: required string
+- `characterBible`: required string
+- `styleBible`: required string
+- `pages`: required non-empty array
+- Each page: `text` string, `imagePrompt` string required; optional `compositionHint`, `visualMotifUsage`, `hiddenDetail`, `pageVisualRole` — all strings when present
+- `narrativeDevice`: optional object with string sub-fields + `hiddenDetails` string array
+- `storyGoal`, `mainQuestObject`, `titleSpreadText`, `openingNarration`, `coverImagePrompt`: optional strings
+- `forbiddenQuestObjects`: optional string array
+- `cast`: optional array of character objects with required `characterId`, `displayName`, `visualBible` strings
+
+### 3.7 Rewrite Path
+
+`rewriteStoryText()` also uses `responseMimeType: "application/json"` but no `responseSchema`. This is out of P4-8 scope — rewrite has a simpler schema (`{pages: [{text: string}]}`).
+
+---
+
+## 4. Story Schema Inventory
+
+### 4.1 Root Fields
+
+| Field | Type | Required | Validated by | P4-3 fixture? | Notes |
+|---|---|---|---|---|---|
+| `title` | `string` | ✅ | `validateStory` | — | |
+| `characterBible` | `string` | ✅ | `validateStory` | — | |
+| `styleBible` | `string` | ✅ | `validateStory` | — | |
+| `storyGoal` | `string` | ❌ | `validateStory` | — | |
+| `mainQuestObject` | `string` | ❌ | `validateStory` | ✅ `field_type_mismatch` | P4-6 observed as array |
+| `forbiddenQuestObjects` | `string[]` | ❌ | `validateStory` | — | |
+| `titleSpreadText` | `string` | ❌ | `validateStory` | — | |
+| `openingNarration` | `string` | ❌ | `validateStory` | — | |
+| `coverImagePrompt` | `string` | ❌ | `validateStory` | — | |
+| `narrativeDevice` | `object` | ❌ | `validateStory` | ✅ `schema_structural` | |
+| `cast` | `StoryCharacter[]` | ❌ | `validateStoryCast` | — | Complex nested object |
+| `pages` | `GeneratedStoryPage[]` | ✅ | `validateStory` | ✅ `schema_structural` | Non-empty array |
+
+### 4.2 Page Fields (`pages[]`)
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `text` | `string` | ✅ | P4-7 prompt-hardened |
+| `imagePrompt` | `string` | ✅ | P4-7 prompt-hardened |
+| `compositionHint` | `string` | ❌ | |
+| `visualMotifUsage` | `string` | ❌ | |
+| `hiddenDetail` | `string` | ❌ | |
+| `pageVisualRole` | `PageVisualRole` (enum) | ❌ | Normalized via alias map |
+| `appearingCharacterIds` | `string[]` | ❌ | Filtered against cast |
+| `focusCharacterId` | `string` | ❌ | Validated against cast |
+
+### 4.3 Narrative Device Fields (`narrativeDevice`)
+
+| Field | Type | Required |
+|---|---|---|
+| `repeatedPhrase` | `string` | ❌ |
+| `visualMotif` | `string` | ❌ |
+| `setup` | `string` | ❌ |
+| `payoff` | `string` | ❌ |
+| `hiddenDetails` | `string[]` | ❌ |
+
+### 4.4 Cast Character Fields (`cast[]`)
+
+| Field | Type | Required |
+|---|---|---|
+| `characterId` | `string` | ✅ |
+| `displayName` | `string` | ✅ |
+| `role` | `StoryCharacterRole` (enum) | ✅ (normalized) |
+| `visualBible` | `string` | ✅ |
+| `characterKind` | `StoryCharacterKind` (enum) | ❌ (inferred from role) |
+| `nonHuman` | `boolean` | ❌ |
+| `noHumanFace` | `boolean` | ❌ |
+| `noHumanBody` | `boolean` | ❌ |
+| `scaleHint` | `string` | ❌ |
+| `silhouette` | `string` | ❌ |
+| `colorPalette` | `string[]` | ❌ |
+| `signatureItems` | `string[]` | ❌ |
+| `doNotChange` | `string[]` | ❌ |
+| `negativeCharacterRules` | `string[]` | ❌ |
+| `canChangeByScene` | `string[]` | ❌ |
+
+### 4.5 Known Problematic Fields (from P4-3/P4-6)
+
+| Field | Observed failure | Category |
+|---|---|---|
+| `mainQuestObject` | Returned as array instead of string | `field_type_mismatch` |
+| `pages` | Missing or non-array | `schema_structural` |
+| `narrativeDevice` | Non-object value | `schema_structural` |
+| `pageVisualRole` | Unknown enum value | `field_value_invalid` |
+
+---
+
+## 5. Response Schema Target Design
+
+### 5.1 Gemini `responseSchema` Compatibility
+
+The `@google/generative-ai` SDK supports `responseSchema` via `generationConfig`:
+
+```typescript
+generationConfig: {
+  responseMimeType: "application/json",
+  responseSchema: { /* JSON Schema subset */ },
+}
+```
+
+Gemini structured output supports a **subset** of JSON Schema:
+- `type`: `"string"`, `"number"`, `"integer"`, `"boolean"`, `"array"`, `"object"`
+- `properties` + `required` for objects
+- `items` for arrays
+- `enum` for string enums
+- `description` for field documentation
+- `nullable` for optional fields
+
+**Not supported** (or with limitations):
+- `oneOf`, `anyOf`, `allOf`, `$ref` — not supported
+- `additionalProperties` — behavior varies
+- `minItems`, `maxItems` — may not be enforced
+- `pattern` (regex) — not supported
+- Default values — not supported
+
+### 5.2 Draft Schema
+
+```typescript
+const STORY_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    title: {
+      type: "string",
+      description: "Book title in Japanese",
+    },
+    characterBible: {
+      type: "string",
+      description: "Detailed visual description of the child protagonist",
+    },
+    styleBible: {
+      type: "string",
+      description: "Illustration style description for consistent page images",
+    },
+    storyGoal: {
+      type: "string",
+      description: "Central narrative goal of the story",
+      nullable: true,
+    },
+    mainQuestObject: {
+      type: "string",
+      description: "Primary quest object as a single string, not an array",
+      nullable: true,
+    },
+    forbiddenQuestObjects: {
+      type: "array",
+      items: { type: "string" },
+      description: "Objects that must not become the main quest",
+      nullable: true,
+    },
+    titleSpreadText: {
+      type: "string",
+      description: "Text for title spread page",
+      nullable: true,
+    },
+    openingNarration: {
+      type: "string",
+      description: "Opening narration text",
+      nullable: true,
+    },
+    coverImagePrompt: {
+      type: "string",
+      description: "Image prompt for the book cover",
+      nullable: true,
+    },
+    narrativeDevice: {
+      type: "object",
+      properties: {
+        repeatedPhrase: { type: "string", nullable: true },
+        visualMotif: { type: "string", nullable: true },
+        setup: { type: "string", nullable: true },
+        payoff: { type: "string", nullable: true },
+        hiddenDetails: {
+          type: "array",
+          items: { type: "string" },
+          nullable: true,
+        },
+      },
+      nullable: true,
+    },
+    cast: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          characterId: { type: "string" },
+          displayName: { type: "string" },
+          role: {
+            type: "string",
+            enum: [
+              "protagonist", "buddy", "parent", "sibling",
+              "animal", "magical_friend", "object_character",
+              "background_recurring",
+            ],
+          },
+          visualBible: { type: "string" },
+          characterKind: {
+            type: "string",
+            enum: [
+              "human_child", "human_adult", "animal",
+              "magical_creature", "object_character", "background",
+            ],
+            nullable: true,
+          },
+          nonHuman: { type: "boolean", nullable: true },
+          noHumanFace: { type: "boolean", nullable: true },
+          noHumanBody: { type: "boolean", nullable: true },
+          scaleHint: { type: "string", nullable: true },
+          silhouette: { type: "string", nullable: true },
+          colorPalette: {
+            type: "array", items: { type: "string" }, nullable: true,
+          },
+          signatureItems: {
+            type: "array", items: { type: "string" }, nullable: true,
+          },
+          doNotChange: {
+            type: "array", items: { type: "string" }, nullable: true,
+          },
+          negativeCharacterRules: {
+            type: "array", items: { type: "string" }, nullable: true,
+          },
+          canChangeByScene: {
+            type: "array", items: { type: "string" }, nullable: true,
+          },
+        },
+        required: ["characterId", "displayName", "role", "visualBible"],
+      },
+      nullable: true,
+    },
+    pages: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          text: { type: "string" },
+          imagePrompt: { type: "string" },
+          compositionHint: { type: "string", nullable: true },
+          visualMotifUsage: { type: "string", nullable: true },
+          hiddenDetail: { type: "string", nullable: true },
+          pageVisualRole: {
+            type: "string",
+            enum: [
+              "opening_establishing", "discovery", "action",
+              "emotional_closeup", "object_detail",
+              "setback_or_question", "payoff", "quiet_ending",
+            ],
+            nullable: true,
+          },
+          appearingCharacterIds: {
+            type: "array", items: { type: "string" }, nullable: true,
+          },
+          focusCharacterId: { type: "string", nullable: true },
+        },
+        required: ["text", "imagePrompt"],
+      },
+    },
+  },
+  required: ["title", "characterBible", "styleBible", "pages"],
+};
+```
+
+### 5.3 Schema Design Notes
+
+1. **`nullable: true`** is used for all optional fields. Gemini structured output requires either `required` or `nullable` — omitting both may cause the model to always include the field with an empty value.
+
+2. **`pageVisualRole` enum** is defined in the schema. The existing `normalizePageVisualRole()` alias map handles non-enum values gracefully; with `response_schema`, only valid enum values should appear. The alias map remains as a safety net.
+
+3. **`cast[].role` enum** is defined in the schema. `normalizeStoryCharacterRole()` similarly normalizes unknown values. The schema enforces the canonical set.
+
+4. **Page count** (`minItems`/`maxItems`) is NOT enforced in the schema — Gemini JSON Schema subset may not support these constraints. Page count validation remains in `validateStory()` and the quality gate.
+
+5. **Fields not in schema**: `storyModel`, `storyModelFallbackUsed`, `storyGenerationAttempts` are added by the client after generation. They are NOT part of the LLM output schema.
+
+---
+
+## 6. Migration Options
+
+### Option A: Keep Prompt-Only (No Schema)
+
+**Description**: Continue with P4-7 prompt hardening + `validateStory()` runtime validator. No `responseSchema` wiring.
+
+| | Detail |
+|---|---|
+| **Benefit** | Zero risk. No SDK behavior change. P4-7s validated. |
+| **Risk** | `field_type_mismatch` can still recur under model updates or edge inputs. Prompt is a soft contract. |
+| **Complexity** | None |
+| **When to choose** | If `response_schema` testing reveals creativity degradation or SDK limitations that block adoption. |
+
+### Option B: `responseMimeType: "application/json"` Only (Current State)
+
+**Description**: Already active. Forces JSON output but does not enforce field types or structure.
+
+| | Detail |
+|---|---|
+| **Benefit** | Already deployed. Reduces `malformed_json` (non-JSON output). |
+| **Risk** | Does not prevent `field_type_mismatch` or `schema_structural`. |
+| **Complexity** | None — already live |
+
+### Option C: `response_schema` for Root Fields Only
+
+**Description**: Add `responseSchema` with only the top-level required fields (`title`, `characterBible`, `styleBible`, `pages` as array of objects). Leave page and cast sub-fields untyped.
+
+| | Detail |
+|---|---|
+| **Benefit** | Prevents `schema_structural` failures (missing `pages`, wrong root type). Low complexity. |
+| **Risk** | Does not prevent `field_type_mismatch` on `mainQuestObject` or page sub-fields. Partial schema may confuse model. |
+| **Complexity** | Low |
+| **When to choose** | If full schema causes model issues but root-level enforcement is sufficient. |
+
+### Option D: Full `response_schema` for Story + Pages + Enums
+
+**Description**: Use the complete schema from §5.2 with all fields, page array items, cast array items, and enum constraints.
+
+| | Detail |
+|---|---|
+| **Benefit** | Maximum type safety. Eliminates `field_type_mismatch` and `field_value_invalid` at the API level. `validateStory()` becomes a redundant safety net (kept for defense-in-depth). |
+| **Risk** | Schema too strict may cause model failures or degraded creativity. Large schema increases prompt token count. Complex nested schema may hit SDK limitations. Enum constraints may prevent valid alias values. |
+| **Complexity** | Medium-high |
+| **When to choose** | If testing confirms no creativity regression and SDK supports the full schema shape. |
+
+### Option E: Hybrid — `response_schema` + Existing Validator (Recommended)
+
+**Description**: Wire `response_schema` with the full schema behind a feature flag. Keep `validateStory()` as the source of truth. The schema is the first line of defense; the validator is the final safety net. Alias normalization (e.g., `pageVisualRole` aliases) continues to operate on the validated output.
+
+| | Detail |
+|---|---|
+| **Benefit** | Best of both worlds. Schema prevents most type errors at the API level. Validator catches anything the schema misses. Rollback by disabling flag restores current behavior. |
+| **Risk** | Schema/validator mismatch drift if maintained separately. Must keep both in sync. |
+| **Complexity** | Medium |
+| **When to choose** | **Recommended default approach.** |
+
+### Recommendation
+
+**Option E (Hybrid)** is recommended. The `response_schema` is additive — it makes `validateStory()` failures less likely, not unnecessary. The feature flag ensures zero-risk rollback.
+
+---
+
+## 7. Recommended Staged Plan
+
+### P4-9: Add TypeScript JSON Schema Constant (Not Wired)
+
+**Goal**: Define the `STORY_RESPONSE_SCHEMA` constant in a new file (`functions/src/lib/story-response-schema.ts`). Not imported by `gemini.ts`.
+
+**Deliverables**:
+- New file with schema constant matching §5.2
+- Unit tests asserting schema shape, required fields, enum values
+- Schema snapshot test to detect drift
+
+**Constraints**: No runtime import, no generation behavior change.
+
+---
+
+### P4-10: Schema Compatibility Tests Against Fixtures
+
+**Goal**: Validate that the schema constant is compatible with P4-3 fixtures and valid story samples.
+
+**Deliverables**:
+- Test: valid `GeneratedStory` samples pass Ajv (or manual) schema validation
+- Test: `field_type_mismatch` fixture samples fail schema validation
+- Test: `field_value_invalid` fixture samples (bad enum) fail schema validation
+- Test: schema `required` fields match `validateStory()` required fields
+
+**Constraints**: No runtime change, no live Gemini calls.
+
+---
+
+### P4-11: Wire `responseSchema` Behind Feature Flag
+
+**Goal**: Add `ENABLE_RESPONSE_SCHEMA` feature flag. When ON, include `responseSchema` in `generationConfig` for `generateStory()`.
+
+**Deliverables**:
+- `enableResponseSchema()` flag helper in `gemini.ts`
+- When flag ON: `generationConfig: { responseMimeType: "application/json", responseSchema: STORY_RESPONSE_SCHEMA }`
+- When flag OFF: current behavior unchanged
+- `validateStory()` remains the final validator regardless of flag state
+- Unit tests: flag ON includes schema in config, flag OFF does not
+
+**Constraints**: Flag defaults to OFF. No prompt change. No validator change. `extractJSON()` / `extractJsonFromLLMResponse()` still called (schema should make fence-stripping unnecessary, but defense-in-depth).
+
+---
+
+### P4-12: Live Smoke with Feature Flag
+
+**Goal**: Deploy with `ENABLE_RESPONSE_SCHEMA=true` and run targeted smoke.
+
+**Deliverables**:
+- Deploy functions with flag ON
+- Run 3–5 smoke books (bedtime / soft_watercolor / profile=a — same scenario as P4-7s)
+- Record: status, page count, schema_validation failures, field_type_mismatch recurrence
+- Compare with P4-7s baseline
+
+**Acceptance**: All books complete or fail for unrelated reasons. No new `schema_validation` or `field_type_mismatch` errors. No creativity regression (manual spot check of generated text).
+
+---
+
+### P4-13: Compare `schema_validation` Rate Before/After
+
+**Goal**: Run SLO report or analyze production logs to compare `schema_validation` failure rate before and after `response_schema` enablement.
+
+**Deliverables**:
+- SLO report for pre-flag window (P4-7s smoke period)
+- SLO report for post-flag window (P4-12 smoke period)
+- Compare `schema_validation` count, `field_type_mismatch` count
+- Document whether the rate improved
+
+---
+
+### P4-14: Decide Rollout or Rollback
+
+**Goal**: Based on P4-12/P4-13 results, decide whether to:
+- **Rollout**: Remove flag guard, make `response_schema` the default
+- **Rollback**: Disable flag, continue with prompt-hardening + validator
+- **Iterate**: Adjust schema (e.g., remove enum constraints, simplify cast) and re-smoke
+
+---
+
+## 8. Test Strategy
+
+### 8.1 Schema Snapshot Tests (P4-9)
+
+```
+describe("STORY_RESPONSE_SCHEMA") {
+  it("has required root fields: title, characterBible, styleBible, pages")
+  it("pages items have required fields: text, imagePrompt")
+  it("mainQuestObject is type string, nullable true")
+  it("forbiddenQuestObjects is type array of strings, nullable true")
+  it("pageVisualRole enum matches PAGE_VISUAL_ROLES constant")
+  it("cast role enum matches allowed StoryCharacterRole values")
+  it("schema is a stable snapshot (detect unintended drift)")
+}
+```
+
+### 8.2 Schema Compatibility Tests (P4-10)
+
+```
+describe("schema validates correctly against fixtures") {
+  it("accepts a valid GeneratedStory sample")
+  it("accepts a minimal story (only required fields)")
+  it("rejects mainQuestObject as array (field_type_mismatch)")
+  it("rejects pages as non-array")
+  it("rejects page missing text field")
+  it("rejects unknown pageVisualRole enum value")
+  it("accepts valid pageVisualRole enum values")
+  it("accepts story with cast array")
+  it("rejects cast entry missing characterId")
+}
+```
+
+### 8.3 Feature Flag Tests (P4-11)
+
+```
+describe("ENABLE_RESPONSE_SCHEMA flag") {
+  it("does not include responseSchema when flag is OFF")
+  it("includes responseSchema in generationConfig when flag is ON")
+  it("validateStory() is still called when flag is ON")
+  it("flag defaults to OFF")
+}
+```
+
+### 8.4 General Test Rules
+
+- No live Gemini calls in unit tests
+- All schema tests use mock data or P4-3 fixtures
+- Feature flag default is OFF in all test environments
+- No PII (child name, story text, prompt content) in test fixtures
+
+---
+
+## 9. Runtime Safety
+
+### 9.1 Feature Flag Required
+
+The `response_schema` wiring MUST be behind `ENABLE_RESPONSE_SCHEMA` (or equivalent). Default: OFF.
+
+### 9.2 Default Behavior Unchanged
+
+When the flag is OFF, the generation path is identical to P4-7s production behavior:
+- `generationConfig: { responseMimeType: "application/json" }`
+- `extractJSON()` / `extractJsonFromLLMResponse()` parsing
+- `validateStory()` validation
+
+### 9.3 Privacy Preservation
+
+- No prompt content, `childName`, `storyText`, or raw userId in logs
+- `responseSchema` does not contain user data — it is a static schema definition
+- Existing privacy rules in `generation-event-logger.ts` remain unchanged
+
+### 9.4 Validator as Source of Truth
+
+`validateStory()` remains the authoritative validator. `response_schema` is additive defense-in-depth:
+- Schema reduces the probability of type errors reaching the validator
+- Validator catches anything the schema misses (e.g., app-level business rules, page count, cast ID cross-references)
+- Both must be maintained in sync
+
+### 9.5 Rollback Path
+
+1. Remove `ENABLE_RESPONSE_SCHEMA=true` from `functions/.env.story-gen-8a769`
+2. Redeploy: `firebase deploy --only functions --project story-gen-8a769`
+3. No code change required for rollback
+
+---
+
+## 10. Risk Analysis
+
+### R1: SDK Incompatibility
+
+**Risk**: The `@google/generative-ai` v0.24.0 SDK may not support `responseSchema` or may have breaking differences from the Gemini API docs.
+
+**Mitigation**: Test SDK type definitions in P4-9. If `responseSchema` is not in the SDK types, check if it can be passed as `Record<string, unknown>` or if an SDK upgrade is needed.
+
+**Severity**: Medium. Blocks P4-11 if SDK upgrade is required.
+
+### R2: JSON Schema Subset Limitations
+
+**Risk**: Gemini's JSON Schema support is a subset. Features like `oneOf`, `$ref`, `pattern`, `minItems`/`maxItems` are not supported. Complex nested structures (cast with 15+ optional fields) may hit undocumented limits.
+
+**Mitigation**: Start with the full schema in P4-9 tests. If specific fields cause issues, simplify incrementally (e.g., remove cast sub-schema, keep only root + pages).
+
+**Severity**: Low-medium. Can degrade gracefully by simplifying schema.
+
+### R3: Optional / Nullable Mismatch
+
+**Risk**: Gemini may treat `nullable: true` differently from "field absent." The current validator accepts both `undefined` and field-not-present. If Gemini outputs `null` for every nullable field, the validator must handle `null` as equivalent to `undefined`.
+
+**Mitigation**: Add `null`-handling to `validateStory()` (or normalizer) if needed. Test with P4-10 fixtures.
+
+**Severity**: Medium. May require a small code change in P4-11.
+
+### R4: Creativity Degradation
+
+**Risk**: Structured output may constrain the model's generation quality. Forcing enum values and strict types may reduce the variety of story content.
+
+**Mitigation**: P4-12 live smoke includes manual quality spot-check. Compare story text quality with P4-7s baseline. If degradation is observed, iterate on schema (e.g., remove enum constraints for `pageVisualRole`) or rollback.
+
+**Severity**: Medium. Primary concern. Addressed by manual review in P4-12.
+
+### R5: Increased Latency / Token Usage
+
+**Risk**: `responseSchema` adds schema tokens to the generation request. Large schemas (especially with nested cast definition) may increase input token count and latency.
+
+**Mitigation**: Measure `storyDurationMs` in P4-12 smoke and compare with P4-7s baseline. If latency increases >20%, simplify schema or evaluate trade-off.
+
+**Severity**: Low. Schema is ~2KB, small relative to system prompt.
+
+### R6: Schema Too Strict — Model Failures
+
+**Risk**: If the schema is too restrictive (e.g., strict enum on `pageVisualRole` without aliases), the model may fail to generate a valid response, causing generation errors.
+
+**Mitigation**: The existing normalizer handles aliases. With `response_schema`, the model should only output canonical enum values. If model still produces aliases, the `validateStory()` normalizer will handle them. If the model outright fails, the flag can be disabled.
+
+**Severity**: Low-medium. Addressed by the hybrid approach (Option E).
+
+### R7: Schema/Validator Drift
+
+**Risk**: If the schema and validator are maintained separately, they may drift out of sync. A field added to the validator but not the schema (or vice versa) creates a gap.
+
+**Mitigation**: P4-10 adds cross-validation tests between schema and `validateStory()` required fields. P4-9 adds a snapshot test. CI should catch drift.
+
+**Severity**: Low. Addressed by test strategy.
+
+### R8: `rewriteStoryText()` Not Covered
+
+**Risk**: The rewrite path also uses `responseMimeType: "application/json"` but has a different, simpler schema (`{pages: [{text: string}]}`). If `response_schema` is only added to `generateStory()`, the rewrite path remains unprotected.
+
+**Mitigation**: Rewrite failures are less critical (story text already exists; rewrite is an enhancement). A separate schema for rewrite can be added in a follow-up task if needed. Out of P4-8 scope.
+
+**Severity**: Low. Out of scope.
+
+---
+
+## 11. Acceptance Criteria (for Future Implementation)
+
+| Criterion | Verification |
+|---|---|
+| No default runtime change until flag enabled | Flag OFF → identical behavior to P4-7s |
+| Full test suite passes | `npx vitest run` 1311+ PASS |
+| `check:phase2` passes | 122+ PASS |
+| Build clean | `npm run build` exits 0 |
+| Hygiene pass | `check-hygiene.mjs` PASS |
+| Live smoke passes (P4-12) | 3+ books complete with flag ON |
+| `schema_validation` rate improves (P4-13) | 0 `field_type_mismatch` with flag ON |
+| No candidate gate change | Not touched |
+| No ImageProvider routing change | Not touched |
+| `validateStory()` still called | Source of truth regardless of flag |
+| Rollback tested | Flag OFF → redeploy → books still complete |
+
+---
+
+## 12. Relationship to P4-7s
+
+- **P4-7s validated** that prompt hardening (`STORY_JSON_FIELD_TYPE_CONTRACT`) eliminates `mainQuestObject must be a string` in the observed scenario (5/5 no recurrence).
+- **P4-8 (`response_schema`)** is the next defensive layer — it prevents the entire **class** of `field_type_mismatch` errors at the API level, not just the specific `mainQuestObject` instance.
+- If `response_schema` migration proves too risky or limited by SDK constraints, P4 can **stop at P4-7** with prompt hardening + `validateStory()` as the permanent safety net. The system is already improved.
+- `response_schema` does NOT replace `validateStory()` — it supplements it. The validator handles business rules (cast cross-references, page visual role normalization, alias mapping) that are beyond JSON Schema's capability.
+
+---
+
+## 13. Open Questions (to resolve in P4-9)
+
+1. Does `@google/generative-ai` v0.24.0 export a `responseSchema` type in `GenerationConfig`? If not, what is the minimum version required?
+2. Does Gemini handle `nullable: true` on nested objects (e.g., `narrativeDevice`) correctly — returning `null` vs. omitting the field?
+3. Does the `enum` constraint on `pageVisualRole` cause the model to fail when it would otherwise return a valid alias (e.g., `"closeup"` instead of `"emotional_closeup"`)?
+4. Is there a maximum schema depth or property count that Gemini enforces?
+5. Does the `cast` sub-schema (15+ optional properties per item, in an array) cause performance issues or model confusion?
+
+These will be answered empirically in P4-9/P4-10 through SDK inspection and local testing.

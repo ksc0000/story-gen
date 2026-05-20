@@ -587,7 +587,26 @@ Candidate gate changed: No ✅
 
 ---
 
+### P4-8 — Gemini `response_schema` Migration Design ✅ COMPLETE
 
+**Status**: ✅ DESIGN COMPLETE (2026-05-21) — docs-only  
+**Deliverable**: [P4_GEMINI_RESPONSE_SCHEMA_MIGRATION_PLAN.md](P4_GEMINI_RESPONSE_SCHEMA_MIGRATION_PLAN.md)  
+**Runtime change**: None  
+
+**Summary**:  
+- Inventoried current Gemini API usage: `@google/generative-ai` v0.24.0, `responseMimeType: "application/json"`, no `responseSchema`  
+- Documented full story schema (root, pages, narrativeDevice, cast) with field types, required/optional, enum values  
+- Drafted Gemini-compatible `STORY_RESPONSE_SCHEMA` constant  
+- Compared 5 migration options (A–E); recommended **Option E: hybrid response_schema + existing validator**  
+- Proposed 6-slice staged plan: P4-9 through P4-14  
+- Defined test strategy, runtime safety rules, risk analysis, acceptance criteria  
+- No runtime code change, no prompt change, no feature flag wiring  
+
+**Next**: P4-9 — add TypeScript JSON schema constant (not wired).
+
+---
+
+## 7. Acceptance Criteria for P4 Hardening
 
 The following criteria must hold across all P4 slices:
 
