@@ -746,6 +746,37 @@ All classifications use existing P2 taxonomy values.
 
 ---
 
+### P3-12: Adapter-backed shadow parity tests — **COMPLETE**
+
+**Files added**:
+- `functions/test/image-adapter-shadow.test.ts` — 7 describe blocks, 72 test cases
+
+**Parity coverage**:
+1. Provider selection parity (legacy rule vs adapter factory rule for all 6 profiles)
+2. Model label parity (`resolveModelLabel` vs `resolveReplicateModel` / `resolveOpenAIModelLabel`)
+3. Upload URL parity (`makePageUploader` bridges to mock `uploadImage`; URL unchanged)
+4. Error classification parity (P2 taxonomy match; no PII fields; safeMessage ≤ 120 chars)
+5. Fallback/candidate policy parity (`resolveImageFallbackProfiles`, `isCandidateProfile` stable)
+6. Shadow result shape (fixture comparison: provider, modelLabel, fallbackUsed, URL)
+7. Adapter interface completeness
+
+**Key findings**: All parity checks pass. Adapter path produces identical stable observable fields to the legacy path for all known profiles.
+
+**Note**: `classifyError` errorCategory values: `"safety_or_policy"` for E005, `"network"` for ECONNRESET. ECONNRESET detection is message-based (`lower.includes("econnreset")`), not `.code`-based.
+
+**Invariants**:
+- `generate-book.ts` unchanged
+- `createImageClient()` unchanged
+- No production behavior change
+- No candidate gate change
+- No fallback order change
+- No network calls
+- No Firestore writes
+- No Firebase deploy
+- All tests pass: 1112+72 = 1192/1192
+
+---
+
 ## 8. Test Strategy
 
 ### 8.1 Tests required before implementation

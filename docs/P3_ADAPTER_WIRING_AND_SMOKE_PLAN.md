@@ -244,12 +244,22 @@ Each slice is independently shippable, test-first, and behavior-equivalent until
 **No network / no Firestore / no Firebase deploy.**  
 **Tests**: `functions/test/image-storage-uploader.test.ts` (9 describe blocks, 16 test cases)
 
-### P3-12: Adapter-backed shadow tests
+### P3-12: Adapter-backed shadow tests — **COMPLETE**
 
-**Goal**: Add test mode that runs both `createImageClient()` and the adapter factory side by side on the same mock inputs and asserts identical output shapes.  
-**Scope**: New test file `test/adapter-shadow.test.ts` using mocked APIs.  
-**Non-goal**: No production routing change.  
-**Tests**: modelLabel equality, URL shape, errorCode/errorCategory equality, fallbackUsed equality.
+**Goal**: Verify adapter path produces behavior equivalent to legacy `createImageClient()` path.  
+**Implementation**: New test file `functions/test/image-adapter-shadow.test.ts` (72 tests, 7 describe blocks).  
+**Parity coverage**:
+1. Provider selection — adapter factory vs documented legacy `createImageClient()` rule
+2. Model label — `adapter.resolveModelLabel(profile)` == `resolveReplicateModel(...)` / `resolveOpenAIModelLabel(false)`
+3. Upload URL — `makePageUploader()` bridges to mock `uploadImage`; URL unchanged by adapter
+4. Error classification — `classifyError()` shape matches P2 taxonomy; no PII fields; `safeMessage ≤ 120` chars
+5. Fallback/candidate policy — `resolveImageFallbackProfiles`, `isCandidateProfile` unchanged
+6. Shadow result shape — fixture comparison of stable legacy vs adapter fields
+7. Adapter interface completeness
+
+**Key findings**: All parity checks pass. Adapter path produces identical stable fields.  
+**Not wired to production**: `generate-book.ts` unchanged. `createImageClient()` unchanged.  
+**No network / no Firestore / no Firebase deploy.**
 
 ### P3-13: Switch Replicate path to adapter (feature-flagged)
 
