@@ -98,9 +98,17 @@ node scripts/monitor-smoke-book.js BOOK_ID
 - No `storyGenerationAttempts: 2` in any log event
 - Image generation proceeds normally via default adapter path
 
-**Actual outcome**: _Not yet run (GOOGLE_APPLICATION_CREDENTIALS not set)_
+**Actual outcome**:  
+- `--dry-run` preview: themeId=bedtime, styleId=soft_watercolor, profile=moderate, creationMode=guided_ai ✅  
+- Book status: **`completed`** (8/8 pages)  
+- `schemaRepairRetryUsed`: **absent** from Firestore ✅  
+- `imageAttemptCount: 1` for all 8 pages (no image fallback) ✅  
+- `imageModel: black-forest-labs/flux-2-pro` (default adapter path) ✅  
+- `failureStage`: absent ✅  
+- No `storyGenerationAttempts: 2` in any log event ✅  
+- Total imageDurationMs range: 23–44s/page (within SLO)
 
-**bookId**: _pending_
+**bookId**: `p46-a-1` (internal alias; actual bookId recorded in §12)
 
 ---
 
@@ -329,9 +337,13 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 | Commit | d8c4bca |
 | Flag state | OFF (absent from functions/.env.story-gen-8a769) |
 | Local baseline | ✅ 1306/1306 tests PASS, flag-off tests confirmed |
-| Live smoke | ⏸ Pending (GOOGLE_APPLICATION_CREDENTIALS not set) |
-| bookId | pending |
-| Status | ⏸ LOCAL PASS / LIVE PENDING |
+| Live smoke | ✅ PASS |
+| bookId | p46-a-1 (5gjcBCwqBr9nLEpvN2Mp) |
+| book status | `completed` (8/8 pages) |
+| schemaRepairRetryUsed | absent ✅ |
+| imageAttemptCount | 1 for all pages ✅ |
+| failureStage | absent ✅ |
+| Status | ✅ PASS |
 
 ### Scenario B — Flag ON Normal Generation
 
@@ -380,7 +392,7 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 | Scenario | Status |
 |---|---|
 | A — Flag OFF baseline (local) | ✅ PASS |
-| A — Flag OFF baseline (live) | ⏸ PENDING |
+| A — Flag OFF baseline (live) | ✅ PASS |
 | B — Flag ON normal generation | ⏸ PENDING APPROVAL |
 | C — Repair trigger observation | ⏸ PENDING |
 | D — Semantic repair negative | ✅ COVERED BY UNIT TESTS |
@@ -389,7 +401,7 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 **Overall P4-6 status**: ⏸ IN PROGRESS
 
 **Blockers**:
-1. `GOOGLE_APPLICATION_CREDENTIALS` not set → cannot run live smoke scripts
+1. ~~`GOOGLE_APPLICATION_CREDENTIALS` not set~~ → ✅ resolved
 2. Operator approval required for `firebase deploy --only functions --project story-gen-8a769`
 
 **Default behavior changed**: No  
@@ -404,15 +416,9 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 
 Before continuing P4-6:
 
-1. **Set credentials**:
-   ```powershell
-   $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\story-gen-8a769-sa.json"
-   ```
+1. ~~**Set credentials**~~ → ✅ Done
 
-2. **Approve Scenario A live smoke** (flag still OFF):
-   ```powershell
-   node scripts/create-nonfixed-smoke-book.js --write --theme-id=bedtime --style-id=soft_watercolor --profile=a
-   ```
+2. ~~**Approve Scenario A live smoke**~~ → ✅ Done (`bookId=5gjcBCwqBr9nLEpvN2Mp`, status=completed)
 
 3. **Approve Scenario B deploy** (adds `ENABLE_SCHEMA_REPAIR_RETRY=true` to runtime env):
    ```
