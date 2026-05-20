@@ -359,15 +359,32 @@ T3-4j / T3-4k status update (2026-05-15):
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - production smoke evidence 確認
 
-### P4 推奨（P3 Closure から）
+### Phase 4: Gemini JSON Hardening（現在優先）
 
-- **P4-2（最優先）**: Gemini `schema_validation` エラー対応 — structured output またはプロンプト改善で book hard-fail 率低減
-- P4-1: `generateCoverImage()` を `ImageProvider` adapter へ移行
-- P4-3: `ensureRecurringCharacterReferences()` を `ImageProvider` adapter へ移行（P4-1 完了後）
-- P4-4: Cloud Logging クエリ自動化（smoke 実行の可観測性向上）
-- P4-5: provider コスト比較ダッシュボード（`imageModel` フィールド活用）
+**P4-1 設計 COMPLETE** — `docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md` 参照
 
-詳細: [PHASE3_IMAGE_PROVIDER_CLOSURE.md §10](./PHASE3_IMAGE_PROVIDER_CLOSURE.md)
+Gemini story JSON 生成・スキーマ検証失敗を P3 後の最優先信頼性課題として扱う。P3-15s smoke で `schema_validation` / `Failed to parse LLM JSON response` がページ生成前に発生したことを受けて設計を策定。
+
+#### P4 スライス
+
+| スライス | タイトル | 優先度 | 状態 |
+|---|---|---|---|
+| **P4-1** | Gemini JSON hardening inventory and design | 最優先 | ✅ COMPLETE |
+| **P4-2** | 構造化 story validation エラー taxonomy / logging | 高 | Planned |
+| **P4-3** | malformed/wrong-type Gemini レスポンス用 unit fixture | 高 | Planned |
+| **P4-4** | 安全な JSON extraction/repair helper（test-only first） | 中 | Planned |
+| **P4-5** | one-shot validation repair retry（flag 制御） | 中 | Planned（P4-2/P4-3 完了後） |
+| **P4-6** | repair フローの live smoke | 中 | Planned（P4-5 完了後） |
+| **P4-7** | メトリクスに基づくプロンプト instruction チューニング | 低 | P4-2 data 収集後 |
+
+#### P4 以降の追跡タスク（P3 Closure から）
+
+- P4-cover: `generateCoverImage()` を `ImageProvider` adapter へ移行
+- P4-ref: `ensureRecurringCharacterReferences()` を `ImageProvider` adapter へ移行（P4-cover 完了後）
+- P4-logging: Cloud Logging クエリ自動化（smoke 実行の可観測性向上）
+- P4-cost: provider コスト比較ダッシュボード（`imageModel` フィールド活用）
+
+詳細: [PHASE4_GEMINI_JSON_HARDENING_PLAN.md](./PHASE4_GEMINI_JSON_HARDENING_PLAN.md) / [PHASE3_IMAGE_PROVIDER_CLOSURE.md §10](./PHASE3_IMAGE_PROVIDER_CLOSURE.md)
 
 ---
 

@@ -626,6 +626,52 @@ node scripts/report-generation-slo.mjs --input tmp/events.json
 
 ---
 
+### 8.11 Story JSON Validation Failure (`schema_validation` / `quality_gate`)
+
+> **P4-1 Note**: Story JSON validation failures are **pre-image failures**. They must be triaged separately from page image failures (`page_image_failed`). See `docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md` for the full hardening plan.
+
+**Symptoms**:
+- Book reaches `status = "failed"` with `failureStage = "schema_validation"` or `failureStage = "quality_gate"` in Firestore.
+- `book_early_failed` events with `errorCategory = "validation"` appear in Cloud Logging.
+- Error message in Firestore `technicalErrorMessage` contains: `"Failed to parse LLM JSON response"`, `"'mainQuestObject' must be a string"`, `"narrativeDevice"`, `"pageVisualRole"`, or similar schema-level error strings.
+- No image generation was attempted (no `page_image_failed` events for the same book).
+
+**Cloud Logging filter**:
+```
+jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_early_failed" AND jsonPayload.failureStage = "schema_validation"
+```
+
+**Triage steps**:
+1. Confirm `failureStage` — is it `schema_validation` (parse/type error) or `quality_gate` (thin content) or `story_generation` (Gemini 5xx)?
+   - `schema_validation`: Gemini returned invalid JSON or wrong field types. Likely transient — manual retry often succeeds.
+   - `quality_gate`: Story passed JSON parsing but failed content quality checks. Usually means Gemini returned an unusually thin story. Manual retry may succeed.
+   - `story_generation`: Gemini returned 5xx / 503. Check Gemini API status.
+2. For `schema_validation` failures: this is **not** an image adapter regression. Do not touch `ReplicateImageAdapter`, `OpenAIImageAdapter`, or the candidate gate.
+3. Check `errorCategory` in the `book_early_failed` event — currently `"validation"` covers all story parse/type/quality failures (P4-2 will add sub-classification).
+4. If the failure is persistent (> 3 consecutive books fail at `schema_validation`): check whether the Gemini model response format has changed. Run a smoke book and inspect `technicalErrorMessage` in Firestore.
+5. Manual retry via admin console or re-trigger is the current recovery path. P4-5 will add automatic retry.
+
+**Important distinctions**:
+
+| Failure | `failureStage` | Caused by | Image generation started? |
+|---|---|---|---|
+| Story JSON parse failure | `schema_validation` | Gemini response format | **No** |
+| Story JSON type error | `schema_validation` | Gemini field type mismatch | **No** |
+| Story thin content failure | `quality_gate` | Gemini content quality | **No** |
+| Gemini 5xx unavailable | `story_generation` | Provider outage | **No** |
+| All pages failed | `image_generation` | Image provider errors | Yes |
+| Input rejection (NG word etc.) | `validation` | Content filter | **No** |
+
+**Safe first response**:
+1. Do NOT modify provider routing or adapters — this failure happens before image generation.
+2. Do NOT change `ENABLE_SCHEMA_REPAIR_RETRY` flag (if present in a future deploy) unless explicitly approved.
+3. If isolated to a specific book/user: manual retry via admin console.
+4. If widespread: check whether a recent Gemini model version change is causing consistent schema drift. Escalate to team.
+
+**Phase 4 tracking**: `docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md`
+
+---
+
 ## 9. Change Safety Rules
 
 The following rules must be followed during incident triage and normal development.

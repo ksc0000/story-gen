@@ -294,10 +294,16 @@ Priorities are ordered by reliability impact on production users.
 
 | Task | Description | Priority | Rationale |
 |---|---|---|---|
-| **P4-2** | Fix Gemini JSON schema parse failures (`schema_validation` errors) | **HIGH** | Directly causes book hard-fail; observed in P3-15s-A; highest reliability risk |
-| **P4-1** | Migrate cover image generation to `ImageProvider` adapter | Medium | Completes the migration; removes final `createImageClient()` usage |
-| **P4-3** | Migrate `ensureRecurringCharacterReferences()` to `ImageProvider` adapter | Medium | Required before `createImageClient()` can be removed |
-| **P4-4** | Automate Cloud Logging queries for smoke runs | Low | Operational improvement; reduces indirect verification reliance |
+| **P4-1 ✅** | Gemini JSON hardening inventory and design | **COMPLETE** | P4-1 design doc: [`docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md`](PHASE4_GEMINI_JSON_HARDENING_PLAN.md) |
+| **P4-2** | Structured story validation error taxonomy / logging | **HIGH** | Adds `storyJsonFailureCategory` sub-classification to `book_early_failed` events; prerequisite for all further hardening |
+| **P4-3** | Unit fixtures for malformed/wrong-type Gemini responses | **HIGH** | Locks failure behavior in tests before any code change |
+| **P4-4** | Safe JSON extraction/repair helper (test-only first) | Medium | Conservative repair for `malformed_json` (markdown fencing stripping only) |
+| **P4-5** | One-shot validation repair retry behind flag | Medium | Converts intermittent schema failures to successes; gated on P4-2/P4-3 |
+| **P4-6** | Live smoke for repaired flow | Medium | Validates P4-5 in production |
+| **P4-7** | Prompt instruction tuning after metrics | Low | Data-driven prompt fix; requires 2+ weeks of P4-2 data |
+| **P4-cover** | Migrate `generateCoverImage()` to `ImageProvider` adapter | Medium | Completes the migration; removes final `createImageClient()` usage |
+| **P4-ref** | Migrate `ensureRecurringCharacterReferences()` to `ImageProvider` adapter | Medium | Required before `createImageClient()` can be removed; after P4-cover |
+| **P4-logging** | Automate Cloud Logging queries for smoke runs | Low | Operational improvement; reduces indirect verification reliance |
 | **P4-5** | Cost/provider comparison dashboard | Low | `imageModel` field now populated per page — enables provider cost comparison |
 
 **Highest priority**: P4-2 (Gemini failures are the most frequent observed hard-fail cause
