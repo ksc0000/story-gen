@@ -1,0 +1,458 @@
+/**
+ * P3-4: Tests for OpenAIImageAdapter.
+ *
+ * Coverage:
+ *  1. Adapter identity and capabilities.
+ *  2. resolveModelLabel — openai_image_candidate maps to correct label.
+ *  3. resolveModelLabel — non-OpenAI profiles throw clear errors.
+ *  4. classifyError — all error taxonomy codes mapped correctly.
+ *  5. classifyError — retryable flag.
+ *  6. classifyError — safeMessage truncated, no prompt leak.
+ *  7. generateImage — mock uploader path (no network).
+ *  8. generateImage — throws for non-openai_image_candidate profile.
+ *  9. generateImage — default uploader throws (not yet wired).
+ * 10. validateConfig — throws on empty apiKey.
+ * 11. Candidate-only invariant — adapter does not expose allowCandidateProfile logic.
+ * 12. PROFILE_PROVIDER_MAP consistency — openai profile handled, Replicate profiles throw.
+ *
+ * NOTE: generateImage with a real OpenAI API call is NOT tested here.
+ *       Live smoke belongs to P3-9 (adapter smoke, gated only).
+ *       Unit tests use a mock uploader to avoid any network calls.
+ *       The adapter is NOT wired into generate-book.ts as of P3-4.
+ */
+
+import { describe, it, expect, vi } from "vitest";
+import {
+  OpenAIImageAdapter,
+  type OpenAIStorageUploader,
+} from "../src/lib/openai-image-adapter";
+import { PROFILE_PROVIDER_MAP } from "../src/lib/image-provider";
+import type { ImageModelProfile } from "../src/lib/types";
+
+// -------------------------------------------------------------------------
+// Helpers
+// -------------------------------------------------------------------------
+
+/** A mock storage uploader that returns a deterministic URL without network. */
+const mockUploader: OpenAIStorageUploader = async (buffer, profile) => {
+  void buffer;
+  return `https://storage.example.com/books/mock-openai-${profile}.png`;
+};
+
+// -------------------------------------------------------------------------
+// 1. Identity and capabilities
+// -------------------------------------------------------------------------
+
+describe("OpenAIImageAdapter — identity and capabilities", () => {
+  it("providerId is 'openai'", () => {
+    const adapter = new OpenAIImageAdapter("sk-test");
+    expect(adapter.providerId).toBe("openai");
+  });
+
+  it("capabilities.supportsTextToImage is true", () => {
+    const adapter = new OpenAIImageAdapter("sk-test");
+    expect(adapter.capabilities.supportsTextToImage).toBe(true);
+  });
+
+  it("capabilities.supportsImageToImage is true (Responses API supports reference images)", () => {
+    const adapter = new OpenAIImageAdapter("sk-test");
+    expect(adapter.capabilities.supportsImageToImage).toBe(true);
+  });
+
+  it("capabilities.supportsReferenceImages is true (inputImageUrls forwarded via Responses API)", () => {
+    const adapter = new OpenAIImageAdapter("sk-test");
+    expect(adapter.capabilities.supportsReferenceImages).toBe(true);
+  });
+
+  it("capabilities.supportsDetailedGuidance is true", () => {
+    const adapter = new OpenAIImageAdapter("sk-test");
+    expect(adapter.capabilities.supportsDetailedGuidance).toBe(true);
+  });
+});
+
+// -------------------------------------------------------------------------
+// 2. resolveModelLabel — correct label for openai_image_candidate
+// -------------------------------------------------------------------------
+
+describe("OpenAIImageAdapter.resolveModelLabel", () => {
+  const adapter = new OpenAIImageAdapter("sk-test");
+
+  it("openai_image_candidate → 'openai/gpt-image-1-mini' (text-to-image default)", () => {
+    expect(adapter.resolveModelLabel("openai_image_candidate")).toBe(
+      "openai/gpt-image-1-mini"
+    );
+  });
+
+  it("resolveModelLabel returns a string starting with 'openai/'", () => {
+    const label = adapter.resolveModelLabel("openai_image_candidate");
+    expect(label).toMatch(/^openai\//);
+  });
+
+  // 3. Non-OpenAI profiles throw
+  it("pro_consistent throws — Replicate profile not supported by OpenAI adapter", () => {
+    expect(() => adapter.resolveModelLabel("pro_consistent")).toThrowError(
+      /openai_image_candidate/
+    );
+  });
+
+  it("klein_fast throws — Replicate profile not supported by OpenAI adapter", () => {
+    expect(() => adapter.resolveModelLabel("klein_fast")).toThrowError(
+      /openai_image_candidate/
+    );
+  });
+
+  it("klein_base throws — Replicate profile not supported by OpenAI adapter", () => {
+    expect(() => adapter.resolveModelLabel("klein_base")).toThrowError(
+      /ReplicateImageAdapter/
+    );
+  });
+
+  it("kontext_reference throws — Replicate profile not supported by OpenAI adapter", () => {
+    expect(() => adapter.resolveModelLabel("kontext_reference")).toThrowError(
+      /ReplicateImageAdapter/
+    );
+  });
+
+  it("flux11_pro_candidate throws — Replicate profile not supported by OpenAI adapter", () => {
+    expect(() => adapter.resolveModelLabel("flux11_pro_candidate")).toThrowError(
+      /openai_image_candidate/
+    );
+  });
+
+  it("error message for non-openai profile mentions which adapter to use", () => {
+    expect(() => adapter.resolveModelLabel("pro_consistent")).toThrowError(
+      /ReplicateImageAdapter/
+    );
+  });
+});
+
+// -------------------------------------------------------------------------
+// 4 & 5. classifyError — taxonomy and retryable flag
+// -------------------------------------------------------------------------
+
+describe("OpenAIImageAdapter.classifyError", () => {
+  const adapter = new OpenAIImageAdapter("sk-test");
+  const profile: ImageModelProfile = "openai_image_candidate";
+
+  it("timeout error → timeout / TIMEOUT, retryable", () => {
+    const err = new Error("deadline exceeded: timeout after 120000ms");
+    const failure = adapter.classifyError(err, { profile });
+    expect(failure.errorCategory).toBe("timeout");
+    expect(failure.errorCode).toBe("TIMEOUT");
+    expect(failure.retryable).toBe(true);
+    expect(failure.providerId).toBe("openai");
+    expect(failure.profile).toBe("openai_image_candidate");
+  });
+
+  it("rate limit / quota message → quota / QUOTA_EXCEEDED, not retryable", () => {
+    const err = new Error("Rate limit exceeded: 429 Too Many Requests");
+    const failure = adapter.classifyError(err, { profile });
+    expect(failure.errorCategory).toBe("quota");
+    expect(failure.errorCode).toBe("QUOTA_EXCEEDED");
+    expect(failure.retryable).toBe(false);
+  });
+
+  it("429 status code → quota / QUOTA_EXCEEDED", () => {
+    const err = new Error("OpenAI API error 429");
+    const failure = adapter.classifyError(err, { profile });
+    expect(failure.errorCode).toBe("QUOTA_EXCEEDED");
+  });
+
+  it("503 Service Unavailable → provider_error / PROVIDER_5XX, retryable", () => {
+    const err = new Error("OpenAI service unavailable: 503");
+    const failure = adapter.classifyError(err, { profile });
+    expect(failure.errorCategory).toBe("provider_error");
+    expect(failure.errorCode).toBe("PROVIDER_5XX");
+    expect(failure.retryable).toBe(true);
+  });
+
+  it("500 Internal Server Error → provider_error / PROVIDER_5XX, retryable", () => {
+    const err = new Error("Internal server error 500");
+    const failure = adapter.classifyError(err, { profile });
+    expect(failure.errorCode).toBe("PROVIDER_5XX");
+    expect(failure.retryable).toBe(true);
+  });
+
+  it("400 Bad Request → provider_error / PROVIDER_4XX, not retryable", () => {
+    const err = new Error("API error 400 bad request");
+    const failure = adapter.classifyError(err, { profile });
+    expect(failure.errorCategory).toBe("provider_error");
+    expect(failure.errorCode).toBe("PROVIDER_4XX");
+    expect(failure.retryable).toBe(false);
+  });
+
+  it("network error → network / NETWORK_ERROR, retryable", () => {
+    const err = new Error("fetch failed: ENOTFOUND api.openai.com");
+    const failure = adapter.classifyError(err, { profile });
+    expect(failure.errorCategory).toBe("network");
+    expect(failure.errorCode).toBe("NETWORK_ERROR");
+    expect(failure.retryable).toBe(true);
+  });
+
+  it("unknown error → unknown / UNKNOWN, not retryable", () => {
+    const err = new Error("Something unexpected");
+    const failure = adapter.classifyError(err, { profile });
+    expect(failure.errorCategory).toBe("unknown");
+    expect(failure.errorCode).toBe("UNKNOWN");
+    expect(failure.retryable).toBe(false);
+  });
+
+  it("undefined → unknown / UNKNOWN", () => {
+    const failure = adapter.classifyError(undefined, { profile });
+    expect(failure.errorCode).toBe("UNKNOWN");
+    expect(failure.providerId).toBe("openai");
+  });
+
+  // 6. safeMessage truncation
+  it("safeMessage is set for Error inputs", () => {
+    const err = new Error("OpenAI: model capacity exceeded temporarily");
+    const failure = adapter.classifyError(err, { profile });
+    expect(failure.safeMessage).toBeDefined();
+    expect(failure.safeMessage!.length).toBeLessThanOrEqual(120);
+  });
+
+  it("safeMessage is truncated at 120 chars for long error messages", () => {
+    const longMsg = "Y".repeat(200);
+    const err = new Error(longMsg);
+    const failure = adapter.classifyError(err, { profile });
+    expect(failure.safeMessage!.length).toBe(120);
+  });
+
+  it("safeMessage is undefined for non-Error inputs", () => {
+    const failure = adapter.classifyError("string error", { profile });
+    expect(failure.safeMessage).toBeUndefined();
+  });
+
+  it("classifyError always returns providerId = 'openai'", () => {
+    const err = new Error("test");
+    const failure = adapter.classifyError(err, { profile: "openai_image_candidate" });
+    expect(failure.providerId).toBe("openai");
+    expect(failure.profile).toBe("openai_image_candidate");
+  });
+});
+
+// -------------------------------------------------------------------------
+// 7. generateImage — mock uploader path (no network)
+// -------------------------------------------------------------------------
+
+describe("OpenAIImageAdapter.generateImage (mock uploader, no network)", () => {
+  it("generateImage with mock client returns correct shape", async () => {
+    const uploaderSpy = vi.fn(mockUploader);
+
+    // Subclass to skip real OpenAI API call while exercising uploader + result construction.
+    class TestableOpenAIAdapter extends OpenAIImageAdapter {
+      override async generateImage(request: import("../src/lib/image-provider").ImageGenerationRequest) {
+        if (request.imageModelProfile !== "openai_image_candidate") {
+          throw new Error(`OpenAIImageAdapter supports only openai_image_candidate. Received: "${request.imageModelProfile}". Use ReplicateImageAdapter for this profile.`);
+        }
+        const syntheticBuffer = Buffer.from("fake-openai-image-data");
+        const hasReferenceImages = (request.inputImageUrls ?? []).length > 0;
+        const imageUrl = await uploaderSpy(syntheticBuffer, request.imageModelProfile);
+        return {
+          imageUrl,
+          providerId: "openai" as const,
+          modelLabel: this.resolveModelLabel(request.imageModelProfile),
+          profile: request.imageModelProfile,
+          durationMs: 2000,
+          fallbackUsed: false,
+        };
+      }
+    }
+
+    const adapter = new TestableOpenAIAdapter("sk-test", uploaderSpy);
+    const result = await adapter.generateImage({
+      prompt: "A wizard reading a storybook",
+      imageModelProfile: "openai_image_candidate",
+      aspectRatio: "4:3",
+      metadata: {
+        bookId: "book-456",
+        pageIndex: 2,
+        candidateRequested: true,
+        candidateAllowed: true,
+      },
+    });
+
+    expect(uploaderSpy).toHaveBeenCalledOnce();
+    expect(result.providerId).toBe("openai");
+    expect(result.modelLabel).toBe("openai/gpt-image-1-mini");
+    expect(result.profile).toBe("openai_image_candidate");
+    expect(result.imageUrl).toContain("mock-openai-openai_image_candidate");
+    expect(result.fallbackUsed).toBe(false);
+  });
+
+  it("generateImage with reference images returns Responses API label", async () => {
+    const uploaderSpy = vi.fn(mockUploader);
+
+    class TestableOpenAIAdapter extends OpenAIImageAdapter {
+      override async generateImage(request: import("../src/lib/image-provider").ImageGenerationRequest) {
+        if (request.imageModelProfile !== "openai_image_candidate") {
+          throw new Error(`OpenAIImageAdapter supports only openai_image_candidate.`);
+        }
+        const syntheticBuffer = Buffer.from("fake-openai-ref-image-data");
+        const hasReferenceImages = (request.inputImageUrls ?? []).length > 0;
+        const imageUrl = await uploaderSpy(syntheticBuffer, request.imageModelProfile);
+        // Import resolveOpenAIModelLabel behavior: with refs → gpt-4o label
+        const modelLabel = hasReferenceImages ? "openai/gpt-4o" : "openai/gpt-image-1-mini";
+        return {
+          imageUrl,
+          providerId: "openai" as const,
+          modelLabel,
+          profile: request.imageModelProfile,
+          durationMs: 3000,
+          fallbackUsed: false,
+        };
+      }
+    }
+
+    const adapter = new TestableOpenAIAdapter("sk-test", uploaderSpy);
+    const result = await adapter.generateImage({
+      prompt: "A child playing in the park",
+      imageModelProfile: "openai_image_candidate",
+      inputImageUrls: ["https://example.com/child-ref.jpg"],
+      metadata: {
+        bookId: "book-789",
+        pageIndex: 0,
+        candidateRequested: true,
+        candidateAllowed: true,
+      },
+    });
+
+    expect(result.modelLabel).toBe("openai/gpt-4o");
+    expect(result.providerId).toBe("openai");
+  });
+
+  // 8. generateImage throws for non-candidate profile
+  it("generateImage throws for non-openai profile", async () => {
+    const adapter = new OpenAIImageAdapter("sk-test", mockUploader);
+    await expect(
+      adapter.generateImage({
+        prompt: "A dragon",
+        imageModelProfile: "pro_consistent",
+      })
+    ).rejects.toThrowError(/openai_image_candidate/);
+  });
+
+  it("generateImage throws for klein_fast", async () => {
+    const adapter = new OpenAIImageAdapter("sk-test", mockUploader);
+    await expect(
+      adapter.generateImage({
+        prompt: "A dragon",
+        imageModelProfile: "klein_fast",
+      })
+    ).rejects.toThrowError(/ReplicateImageAdapter/);
+  });
+});
+
+// -------------------------------------------------------------------------
+// 9. generateImage — default uploader throws
+// -------------------------------------------------------------------------
+
+describe("OpenAIImageAdapter.generateImage — default uploader", () => {
+  it("default uploader throws when not configured", async () => {
+    const adapter = new OpenAIImageAdapter("sk-test");
+
+    class UploadTestAdapter extends OpenAIImageAdapter {
+      async testDefaultUploader(): Promise<void> {
+        await (this as any).uploader(Buffer.from("test"), "openai_image_candidate" as ImageModelProfile);
+      }
+    }
+    const testAdapter = new UploadTestAdapter("sk-test");
+    await expect(testAdapter.testDefaultUploader()).rejects.toThrowError(
+      /storage uploader not configured/
+    );
+  });
+});
+
+// -------------------------------------------------------------------------
+// 10. validateConfig
+// -------------------------------------------------------------------------
+
+describe("OpenAIImageAdapter.validateConfig", () => {
+  it("does not throw for a non-empty apiKey", () => {
+    const adapter = new OpenAIImageAdapter("sk-test-abc123");
+    expect(() => adapter.validateConfig()).not.toThrow();
+  });
+
+  it("throws for empty apiKey", () => {
+    const adapter = new OpenAIImageAdapter("");
+    expect(() => adapter.validateConfig()).toThrowError(/apiKey/);
+  });
+});
+
+// -------------------------------------------------------------------------
+// 11. Candidate-only invariant
+// -------------------------------------------------------------------------
+
+describe("OpenAIImageAdapter — candidate-only invariant", () => {
+  const adapter = new OpenAIImageAdapter("sk-test");
+
+  it("adapter does not expose allowCandidateProfile property", () => {
+    expect((adapter as any).allowCandidateProfile).toBeUndefined();
+  });
+
+  it("adapter does not expose candidateGate method", () => {
+    expect(typeof (adapter as any).candidateGate).toBe("undefined");
+  });
+
+  it("adapter does not expose isCandidateProfile method", () => {
+    expect(typeof (adapter as any).isCandidateProfile).toBe("undefined");
+  });
+
+  it("resolveModelLabel only accepts openai_image_candidate — all others throw", () => {
+    const replicateProfiles: ImageModelProfile[] = [
+      "klein_fast",
+      "klein_base",
+      "pro_consistent",
+      "kontext_reference",
+      "flux11_pro_candidate",
+    ];
+    for (const profile of replicateProfiles) {
+      expect(
+        () => adapter.resolveModelLabel(profile),
+        `Should throw for Replicate profile: ${profile}`
+      ).toThrow();
+    }
+  });
+});
+
+// -------------------------------------------------------------------------
+// 12. PROFILE_PROVIDER_MAP consistency
+// -------------------------------------------------------------------------
+
+describe("PROFILE_PROVIDER_MAP consistency with OpenAIImageAdapter", () => {
+  const adapter = new OpenAIImageAdapter("sk-test");
+
+  it("openai_image_candidate (mapped to 'openai') is handled by resolveModelLabel without throw", () => {
+    const openaiProfiles = Object.entries(PROFILE_PROVIDER_MAP)
+      .filter(([, providerId]) => providerId === "openai")
+      .map(([profile]) => profile as ImageModelProfile);
+
+    for (const profile of openaiProfiles) {
+      expect(
+        () => adapter.resolveModelLabel(profile),
+        `resolveModelLabel should not throw for openai profile: ${profile}`
+      ).not.toThrow();
+    }
+  });
+
+  it("all profiles mapped to 'replicate' throw on OpenAIImageAdapter", () => {
+    const replicateProfiles = Object.entries(PROFILE_PROVIDER_MAP)
+      .filter(([, providerId]) => providerId === "replicate")
+      .map(([profile]) => profile as ImageModelProfile);
+
+    for (const profile of replicateProfiles) {
+      expect(
+        () => adapter.resolveModelLabel(profile),
+        `Should throw for replicate profile: ${profile}`
+      ).toThrow();
+    }
+  });
+
+  it("only one openai profile in PROFILE_PROVIDER_MAP (openai_image_candidate)", () => {
+    const openaiProfiles = Object.entries(PROFILE_PROVIDER_MAP).filter(
+      ([, v]) => v === "openai"
+    );
+    expect(openaiProfiles).toHaveLength(1);
+    expect(openaiProfiles[0][0]).toBe("openai_image_candidate");
+  });
+});

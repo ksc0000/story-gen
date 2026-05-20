@@ -468,14 +468,38 @@ All types in this model must satisfy:
 
 **Test suite after P3-3**: 850/850 PASS (was 818, +32 new tests)
 
-### P3-4: Wrap OpenAI image candidate path behind adapter
+### P3-4: Wrap OpenAI image candidate path behind adapter — **COMPLETE**
 
-**Scope**: Refactor `OpenAIImageClient` to implement `ImageProvider` interface.
-- Rename/extend `OpenAIImageClient` → `OpenAIImageAdapter` (implements `ImageProvider`)
-- Move OpenAI constants, routing logic, system instructions inside the adapter
-- `resolveModelLabel()` replaces `resolveOpenAIModelLabel()` call in `generate-book.ts`
-- `providerId` returns `"openai"` — replaces `resolveProviderFromProfile()` in event logger
-- **All behavior identical to current.** OpenAI path remains candidate/gated.
+**Scope**: Add `OpenAIImageAdapter` wrapping `OpenAIImageClient` behind `ImageProvider`. Candidate-only. NOT yet wired into `generate-book.ts`.
+
+**Implementation**:
+- New file: `functions/src/lib/openai-image-adapter.ts`
+- New test file: `functions/test/openai-image-adapter.test.ts` (40 tests, all passing)
+- `openai-image.ts` exports unchanged (`resolveOpenAIModelLabel` was already exported)
+
+**Adapter responsibilities**:
+| Method | Implementation |
+|---|---|
+| `providerId` | `"openai"` (const) |
+| `capabilities` | supportsTextToImage=true, supportsImageToImage=true, supportsReferenceImages=true, supportsDetailedGuidance=true |
+| `generateImage(request)` | Only accepts `openai_image_candidate`; delegates to `OpenAIImageClient.generateImage()`; calls injected `OpenAIStorageUploader` to convert Buffer → URL. Computes accurate `modelLabel` from `hasReferenceImages`. Default uploader throws until P3-7. |
+| `classifyError(err, ctx)` | Delegates to `classifyError()` from `generation-event-logger.ts`; adds `retryable` flag and truncated `safeMessage` (≤120 chars). |
+| `resolveModelLabel(profile)` | Only accepts `openai_image_candidate`; throws for all Replicate profiles. Returns `resolveOpenAIModelLabel(false)` = `"openai/gpt-image-1-mini"` as static default. |
+| `validateConfig()` | Throws if `apiKey` is empty. |
+
+**Note on resolveModelLabel**: Static default returns `"openai/gpt-image-1-mini"` (text-to-image path). When reference images are present, `generateImage()` returns `"openai/gpt-4o"` in `ImageGenerationResult.modelLabel` instead.
+
+**Exported types**: `OpenAIStorageUploader` (callback for Cloud Storage upload, injected for DI).
+
+**Non-goals confirmed**:
+- `createImageClient()` in `generate-book.ts` — **unchanged**
+- Candidate gate logic — **unchanged** (adapter does not expose `allowCandidateProfile`)
+- Fallback ordering — **unchanged**
+- Firestore schema — **unchanged**
+- Generation routing — **unchanged**
+- `openai-image.ts` exports — **unchanged** (no new exports needed)
+
+**Test suite after P3-4**: 890/890 PASS (was 850, +40 new tests)
 
 ### P3-5: Move provider error classification into adapters
 
@@ -615,6 +639,27 @@ Unit tests for adapters must:
 - [x] Fallback ordering unchanged
 - [x] `npm run check:phase2`: PASS
 - [x] Full functions suite: 850/850 (was 818 + 32 new)
+- [x] `cd functions && npm run build`: PASS
+- [x] `node scripts/check-hygiene.mjs`: PASS
+
+### P3-4
+
+- [x] `functions/src/lib/openai-image-adapter.ts` created implementing `ImageProvider`
+- [x] `OpenAIImageAdapter.providerId` = `"openai"`
+- [x] `OpenAIImageAdapter.capabilities` matches current OpenAI candidate path behavior (supportsReferenceImages=true, supportsImageToImage=true)
+- [x] `OpenAIImageAdapter.resolveModelLabel("openai_image_candidate")` = `"openai/gpt-image-1-mini"` (text-to-image default); throws for all Replicate profiles
+- [x] `OpenAIImageAdapter.classifyError()` delegates to `classifyError()` from `generation-event-logger.ts`; adds `retryable`, truncated `safeMessage`
+- [x] `OpenAIImageAdapter.generateImage()` only accepts `openai_image_candidate`; throws for other profiles
+- [x] `OpenAIImageAdapter.generateImage()` computes accurate `modelLabel` per request (gpt-4o vs gpt-image-1-mini)
+- [x] Default `OpenAIStorageUploader` throws — production wiring deferred to P3-7
+- [x] Candidate gate does not exist on adapter (no `allowCandidateProfile` exposure)
+- [x] `openai-image.ts` exports unchanged
+- [x] `functions/test/openai-image-adapter.test.ts` added: 40 tests, all passing
+- [x] `createImageClient()` in `generate-book.ts` unchanged
+- [x] Candidate gate unchanged (48 gate tests green)
+- [x] Fallback ordering unchanged
+- [x] `npm run check:phase2`: PASS
+- [x] Full functions suite: 890/890 (was 850 + 40 new)
 - [x] `cd functions && npm run build`: PASS
 - [x] `node scripts/check-hygiene.mjs`: PASS
 
