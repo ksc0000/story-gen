@@ -487,20 +487,32 @@ This is not yet implemented — it is a target for P4-2.
 
 ---
 
-### P4-6 — Live Smoke for Repaired Flow
+### P4-6 — Live Smoke for Repaired Flow (IN PROGRESS)
 
 **Goal**: With `ENABLE_SCHEMA_REPAIR_RETRY=true` deployed to production, validate that:
 - Books that previously failed at `schema_validation` now succeed on retry
 - No regression in normal (non-failing) generation
 - Retry count metrics visible in Firestore and Cloud Logging
 
-**Deliverable**: Smoke checklist document (`docs/P4_SCHEMA_REPAIR_SMOKE_CHECKLIST.md`)
+**Deliverable**: [docs/P4_SCHEMA_REPAIR_SMOKE_CHECKLIST.md](P4_SCHEMA_REPAIR_SMOKE_CHECKLIST.md)
+
+**Status**: ⏸ IN PROGRESS — awaiting operator approval for deploy + GOOGLE_APPLICATION_CREDENTIALS
+
+**Local pre-flight (completed)**:
+- HEAD d8c4bca verified on `origin/main`
+- 1306/1306 tests pass; 122/122 check:phase2 pass; build clean; hygiene pass
+- `ENABLE_SCHEMA_REPAIR_RETRY` absent from `functions/.env.story-gen-8a769` → flag OFF confirmed
+- Firebase CLI 15.17.0 available; project `story-gen-8a769` accessible
+
+**Blockers**:
+- `GOOGLE_APPLICATION_CREDENTIALS` not set → live smoke scripts cannot run
+- Operator approval required for `firebase deploy --only functions --project story-gen-8a769`
 
 **Acceptance criteria**:
-- At least 3 books generated successfully
+- At least 2 books generated successfully with flag ON (no regression)
 - `storyGenerationAttempts` field present in Firestore on completed books
-- No candidate gate regression (gate-block scenario still blocks)
-- SLO metrics show reduction in `schema_validation` failures (if observable)
+- No candidate gate regression
+- Rollback confirmed: flag removed, redeploy, one final smoke PASS
 
 ---
 
@@ -697,7 +709,7 @@ The remaining legacy scope from P3 (`generateCoverImage()` and `ensureRecurringC
 | **P4-3** | Unit fixtures for malformed/wrong-type Gemini responses | Test | ✅ COMPLETE |
 | **P4-4** | Safe JSON extraction/repair helper, test-only | Code (new helper + tests) | ✅ COMPLETE |
 | **P4-5** | One-shot validation repair retry behind flag | Code | ✅ COMPLETE |
-| **P4-6** | Live smoke for repaired flow | Smoke | Planned |
+| **P4-6** | Live smoke for repaired flow | Smoke | ⏸ IN PROGRESS |
 | **P4-7** | Tune prompt instructions after metrics | Code (prompt + tests) | Gated on P4-2 data |
 
 ---
