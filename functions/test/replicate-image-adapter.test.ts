@@ -357,3 +357,71 @@ describe("PROFILE_PROVIDER_MAP consistency with ReplicateImageAdapter", () => {
     expect(openaiCount).toBeGreaterThanOrEqual(1);
   });
 });
+
+// -------------------------------------------------------------------------
+// P3-5: New provider-specific patterns (via classifyProviderError helper)
+// -------------------------------------------------------------------------
+
+describe("ReplicateImageAdapter.classifyError — P3-5 extended patterns", () => {
+  const adapter = new ReplicateImageAdapter("tok-test");
+  const profile = "pro_consistent" as ImageModelProfile;
+
+  it("ECONNRESET → NETWORK_ERROR, retryable true", () => {
+    const failure = adapter.classifyError(new Error("read ECONNRESET"), { profile });
+    expect(failure.errorCode).toBe("NETWORK_ERROR");
+    expect(failure.errorCategory).toBe("network");
+    expect(failure.retryable).toBe(true);
+  });
+
+  it("ETIMEDOUT → NETWORK_ERROR (not TIMEOUT), retryable true", () => {
+    const failure = adapter.classifyError(new Error("connect ETIMEDOUT 104.18.0.1:443"), { profile });
+    expect(failure.errorCode).toBe("NETWORK_ERROR");
+    expect(failure.retryable).toBe(true);
+    expect(failure.errorCode).not.toBe("TIMEOUT");
+  });
+
+  it("'overloaded' → PROVIDER_5XX, retryable true", () => {
+    const failure = adapter.classifyError(new Error("Model is overloaded, please retry"), { profile });
+    expect(failure.errorCode).toBe("PROVIDER_5XX");
+    expect(failure.errorCategory).toBe("provider_error");
+    expect(failure.retryable).toBe(true);
+  });
+
+  it("'content_policy' (underscore) → E005, retryable false", () => {
+    const failure = adapter.classifyError(new Error("Rejected: content_policy"), { profile });
+    expect(failure.errorCode).toBe("E005");
+    expect(failure.errorCategory).toBe("safety_or_policy");
+    expect(failure.retryable).toBe(false);
+  });
+
+  it("'moderation' → E005, retryable false", () => {
+    const failure = adapter.classifyError(new Error("blocked by moderation"), { profile });
+    expect(failure.errorCode).toBe("E005");
+    expect(failure.retryable).toBe(false);
+  });
+
+  it("'invalid input' → PROVIDER_4XX, retryable false", () => {
+    const failure = adapter.classifyError(new Error("invalid input: prompt too long"), { profile });
+    expect(failure.errorCode).toBe("PROVIDER_4XX");
+    expect(failure.retryable).toBe(false);
+  });
+
+  it("'invalid request' → PROVIDER_4XX, retryable false", () => {
+    const failure = adapter.classifyError(new Error("invalid request: unsupported ratio"), { profile });
+    expect(failure.errorCode).toBe("PROVIDER_4XX");
+    expect(failure.retryable).toBe(false);
+  });
+
+  it("safeMessage is ≤ 120 chars for all new patterns", () => {
+    const longMsg = "x".repeat(200);
+    const cases = [
+      new Error("read ECONNRESET " + longMsg),
+      new Error("overloaded " + longMsg),
+      new Error("content_policy " + longMsg),
+    ];
+    for (const err of cases) {
+      const failure = adapter.classifyError(err, { profile });
+      expect(failure.safeMessage.length).toBeLessThanOrEqual(120);
+    }
+  });
+});

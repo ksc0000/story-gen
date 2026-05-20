@@ -25,7 +25,7 @@ import type {
   ImageProvider,
   ImageProviderCapabilities,
 } from "./image-provider";
-import { classifyError } from "./generation-event-logger";
+import { classifyProviderError, isProviderErrorRetryable } from "./provider-error-classifier";
 import { ReplicateImageClient, resolveReplicateModel } from "./replicate";
 
 // -------------------------------------------------------------------------
@@ -132,8 +132,10 @@ export class ReplicateImageAdapter implements ImageProvider {
   /**
    * Classify an unknown error into a normalized ImageGenerationFailure.
    *
-   * Delegates error classification to the shared classifyError() taxonomy from
-   * generation-event-logger.ts. Constructs retryable flag from error code.
+   * P3-5: Uses classifyProviderError() which extends the shared taxonomy with
+   * Replicate-specific patterns (ECONNRESET, ETIMEDOUT, overloaded, content_policy,
+   * moderation, invalid input). Falls back to shared classifyError() for anything
+   * not matched. Taxonomy values (ErrorCategory/ErrorCode) are unchanged from P2.
    *
    * Privacy: safeMessage is truncated to 120 chars. Prompt text is never included.
    */
@@ -141,12 +143,8 @@ export class ReplicateImageAdapter implements ImageProvider {
     error: unknown,
     context: { profile: ImageModelProfile }
   ): ImageGenerationFailure {
-    const { errorCategory, errorCode } = classifyError(error);
-    // Provider 5xx, network errors, and timeouts are candidates for retry.
-    const retryable =
-      errorCode === "PROVIDER_5XX" ||
-      errorCode === "NETWORK_ERROR" ||
-      errorCode === "TIMEOUT";
+    const { errorCategory, errorCode } = classifyProviderError(error);
+    const retryable = isProviderErrorRetryable(errorCode);
 
     let safeMessage: string | undefined;
     if (error instanceof Error) {

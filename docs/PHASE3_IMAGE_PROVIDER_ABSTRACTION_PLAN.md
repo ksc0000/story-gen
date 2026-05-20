@@ -501,13 +501,52 @@ All types in this model must satisfy:
 
 **Test suite after P3-4**: 890/890 PASS (was 850, +40 new tests)
 
-### P3-5: Move provider error classification into adapters
+### P3-5: Move provider error classification into adapters — **COMPLETE**
 
 **Scope**: Each adapter's `classifyError()` handles provider-specific error shapes.
 - Replicate adapter: E005 detection (content policy string matching)
 - OpenAI adapter: OpenAI-specific quota/policy error detection
 - Shared `classifyError()` in `generation-event-logger.ts` becomes the canonical taxonomy; adapters call it or override specific cases
 - No change to logged error codes — same `ErrorCode` values emitted
+
+**Implementation**:
+- New file: `functions/src/lib/provider-error-classifier.ts`
+  - `classifyProviderError(error: unknown): NormalizedErrorInfo` — checks extended patterns first, falls back to shared `classifyError()` from `generation-event-logger.ts`
+  - `isProviderErrorRetryable(errorCode: ErrorCode): boolean` — centralizes retryable logic (PROVIDER_5XX | NETWORK_ERROR | TIMEOUT)
+- Updated: `functions/src/lib/replicate-image-adapter.ts` — uses `classifyProviderError` + `isProviderErrorRetryable`
+- Updated: `functions/src/lib/openai-image-adapter.ts` — same replacements
+- New tests: `functions/test/provider-error-classifier.test.ts` (44 tests)
+- New test cases added to `functions/test/replicate-image-adapter.test.ts` (+8 tests)
+- New test cases added to `functions/test/openai-image-adapter.test.ts` (+8 tests)
+
+**Extended patterns added beyond shared taxonomy**:
+| Pattern | Detected by | ErrorCode |
+|---|---|---|
+| `content_policy` (underscore) | both adapters | E005 |
+| `moderation` | both adapters | E005 |
+| `insufficient_quota` | OpenAI specific | QUOTA_EXCEEDED |
+| `timed out` (without 'timeout') | both | TIMEOUT |
+| `ECONNRESET` | both | NETWORK_ERROR |
+| `ETIMEDOUT` (TCP timeout) | both | NETWORK_ERROR (not TIMEOUT) |
+| `overloaded` | both | PROVIDER_5XX |
+| `provider unavailable` | both | PROVIDER_5XX |
+| `invalid input` | both | PROVIDER_4XX |
+| `invalid request` | both | PROVIDER_4XX |
+| `bad request` | both | PROVIDER_4XX |
+
+**Taxonomy constraint confirmed**: No new `ErrorCategory` or `ErrorCode` values introduced.
+All classifications use existing P2 taxonomy values.
+
+**Acceptance criteria**:
+- [x] `classifyProviderError()` recognizes all extended patterns
+- [x] Falls back to shared `classifyError()` for unmatched inputs
+- [x] `isProviderErrorRetryable()` matches existing retryable logic in both adapters
+- [x] Both adapters import from helper (not directly from generation-event-logger.ts for classification)
+- [x] ETIMEDOUT → NETWORK_ERROR (not TIMEOUT)
+- [x] `generate-book.ts` `createImageClient()` unchanged
+- [x] All gate/SLO/candidate tests unchanged
+- [x] safeMessage ≤ 120 chars for all new patterns
+- [x] 1034/1034 PASS (was 974, +60 new tests)
 
 ### P3-6: Add adapter contract tests — **COMPLETE**
 

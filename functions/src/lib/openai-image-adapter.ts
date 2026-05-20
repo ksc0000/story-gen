@@ -34,7 +34,7 @@ import type {
   ImageProvider,
   ImageProviderCapabilities,
 } from "./image-provider";
-import { classifyError } from "./generation-event-logger";
+import { classifyProviderError, isProviderErrorRetryable } from "./provider-error-classifier";
 import {
   OpenAIImageClient,
   OPENAI_IMAGE_CANDIDATE_PROFILE,
@@ -165,8 +165,10 @@ export class OpenAIImageAdapter implements ImageProvider {
   /**
    * Classify an unknown error into a normalized ImageGenerationFailure.
    *
-   * Delegates error classification to the shared classifyError() taxonomy from
-   * generation-event-logger.ts. Constructs retryable flag from error code.
+   * P3-5: Uses classifyProviderError() which extends the shared taxonomy with
+   * OpenAI-specific patterns (insufficient_quota, moderation, content_policy,
+   * ECONNRESET, ETIMEDOUT, overloaded, invalid request). Falls back to shared
+   * classifyError() for anything not matched. Taxonomy values are unchanged from P2.
    *
    * Privacy: safeMessage is truncated to 120 chars. Prompt text is never included.
    */
@@ -174,12 +176,8 @@ export class OpenAIImageAdapter implements ImageProvider {
     error: unknown,
     context: { profile: ImageModelProfile }
   ): ImageGenerationFailure {
-    const { errorCategory, errorCode } = classifyError(error);
-    // Provider 5xx, network errors, and timeouts are candidates for retry.
-    const retryable =
-      errorCode === "PROVIDER_5XX" ||
-      errorCode === "NETWORK_ERROR" ||
-      errorCode === "TIMEOUT";
+    const { errorCategory, errorCode } = classifyProviderError(error);
+    const retryable = isProviderErrorRetryable(errorCode);
 
     let safeMessage: string | undefined;
     if (error instanceof Error) {
