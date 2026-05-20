@@ -558,7 +558,36 @@ The current Gemini client uses JSON.parse / `extractJsonFromLLMResponse()` for r
 
 ---
 
-## 7. Acceptance Criteria for P4 Hardening
+### P4-7s — Targeted Live Smoke for `mainQuestObject` Prompt Hardening ✅ COMPLETE
+
+**Status**: ✅ PASS (2026-05-21)  
+**Commit deployed**: c798662  
+**Deploy command**: `firebase deploy --only functions --project story-gen-8a769` — 13/13 functions ✅  
+**ENABLE_SCHEMA_REPAIR_RETRY**: absent (flag OFF) throughout ✅  
+
+**Smoke scenario**: bedtime / soft_watercolor / profile=a / 5 books  
+
+| bookId | status | mainQuestObject error |
+|---|---|---|
+| zDBNFzRUXORgNOkCqaMb | `failed` / `quality_gate` (unrelated to P4-7) | None ✅ |
+| 8oYTXgIXz7KdHNb6M5Us | `completed` 8/8 | None ✅ |
+| 0l7pIfVv1n2vnLgU63MG | `completed` 8/8 | None ✅ |
+| 89lHtheKjgXFmhVFPH16 | `completed` 8/8 | None ✅ |
+| m45PuFg5U2mRINxX5T66 | `completed` 8/8 | None ✅ |
+
+`mainQuestObject must be a string` recurred: **0/5** ✅  
+`schema_validation` failures: **0/5** ✅  
+`schemaRepairRetryUsed`: absent on all books ✅  
+ImageProvider routing changed: No ✅  
+Candidate gate changed: No ✅  
+
+**Conclusion**: P4-7 prompt hardening validated. `mainQuestObject` field type contract in `buildSystemPrompt()` is effective. No recurrence of the P4-6 Scenario E `field_type_mismatch` error.
+
+**Next**: P4-8 — `response_schema` migration design (enforce field types at API level).
+
+---
+
+
 
 The following criteria must hold across all P4 slices:
 

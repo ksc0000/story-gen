@@ -452,3 +452,71 @@ Before continuing P4-6:
 
 **P4-7 follow-up note** (Scenario E `field_type_mismatch` limitation):  
 The 2 consecutive `mainQuestObject must be a string` failures observed in Scenario E post-rollback smoke are the primary target of P4-7. P4-7 adds an explicit `mainQuestObject` string-only type contract (with invalid/valid examples) to `buildSystemPrompt()` in `functions/src/lib/prompt-builder.ts`. See `docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md` P4-7 section for implementation details.
+
+---
+
+## 15. P4-7s — Targeted Prompt Hardening Smoke
+
+**Task**: P4-7s — targeted live smoke for `mainQuestObject` prompt hardening  
+**Created**: 2026-05-21  
+**Commit deployed**: c798662 (`fix(P4-7): harden Gemini story schema prompt field types`)  
+**Deploy command**: `firebase deploy --only functions --project story-gen-8a769`  
+**Deploy result**: 13/13 functions updated — Deploy complete ✅  
+**ENABLE_SCHEMA_REPAIR_RETRY**: absent (flag OFF) — confirmed in `functions/.env.story-gen-8a769` ✅  
+
+### Smoke Matrix
+
+| Parameter | Value |
+|---|---|
+| theme-id | bedtime |
+| style-id | soft_watercolor |
+| profile | a (moderate) |
+| ENABLE_SCHEMA_REPAIR_RETRY | absent (OFF) |
+| Number of books | 5 |
+
+### Results
+
+| # | bookId | status | pages | failureStage | error | mainQuestObject error recurred? | schemaRepairRetryUsed |
+|---|---|---|---|---|---|---|---|
+| 1 | zDBNFzRUXORgNOkCqaMb | `failed` | 0/8 | `quality_gate` | text_too_childish, missing_scene_detail, sentence_too_short_for_age, page_text_not_connected_to_story_goal, missing_visual_motif_in_text, missing_action_or_emotion | No ✅ | absent ✅ |
+| 2 | 8oYTXgIXz7KdHNb6M5Us | `completed` | 8/8 | — | — | No ✅ | absent ✅ |
+| 3 | 0l7pIfVv1n2vnLgU63MG | `completed` | 8/8 | — | — | No ✅ | absent ✅ |
+| 4 | 89lHtheKjgXFmhVFPH16 | `completed` | 8/8 | — | — | No ✅ | absent ✅ |
+| 5 | m45PuFg5U2mRINxX5T66 | `completed` | 8/8 | — | — | No ✅ | absent ✅ |
+
+### Image Details (completed books)
+
+| bookId | imageModel | imageAttemptCount | imageDurationMs range |
+|---|---|---|---|
+| 8oYTXgIXz7KdHNb6M5Us | `black-forest-labs/flux-2-pro` | 1 for all 8 pages | 20–46s |
+| 0l7pIfVv1n2vnLgU63MG | `black-forest-labs/flux-2-pro` | 1 for all 8 pages | 21–43s |
+| 89lHtheKjgXFmhVFPH16 | `black-forest-labs/flux-2-pro` | 1 for all 8 pages | 19–40s |
+| m45PuFg5U2mRINxX5T66 | `black-forest-labs/flux-2-pro` | 1 for all 8 pages | 23–43s |
+
+### Verdict
+
+| Criterion | Result |
+|---|---|
+| `mainQuestObject must be a string` recurred | **No** — 0/5 books ✅ |
+| All books free of `failureStage: schema_validation` | **Yes** — 0/5 books hit schema_validation ✅ |
+| Completed books | 4/5 (`quality_gate` on Book 1 is unrelated to P4-7 target) |
+| imageUrl populated on completed books | ✅ (4/4) |
+| imageModel | `black-forest-labs/flux-2-pro` — default adapter path unchanged ✅ |
+| ENABLE_SCHEMA_REPAIR_RETRY remained OFF | ✅ |
+| schemaRepairRetryUsed absent | ✅ (flag OFF — not set on any book) |
+| ImageProvider routing changed | No ✅ |
+| Candidate gate changed | No ✅ |
+
+**Book 1 quality_gate note**: The single failure was a `quality_gate` failure (thin text content), not a `schema_validation` / `field_type_mismatch` failure. This failure category is independent of P4-7 scope and was also observed in pre-P4-7 generation history.
+
+**Overall P4-7s status**: ✅ PASS  
+`mainQuestObject must be a string` prompt hardening validated — no recurrence across 5 smoke books.
+
+### Next Task Recommendation
+
+P4-7 is validated. Recommended next task:
+- **P4-8**: `response_schema` migration design — migrate Gemini client to use structured output / response schema to enforce field types at API level, eliminating `field_type_mismatch` entirely.
+
+---
+
+**P4-7 COMPLETE AND VALIDATED** — `mainQuestObject` prompt hardening effective. No `schema_validation` / `field_type_mismatch` recurrence in P4-7s smoke. Next: P4-8 response_schema migration design.
