@@ -257,7 +257,7 @@ describe("processBookGeneration", () => {
         storyModel: expect.any(String),
         selectedStyleId: "watercolor",
         selectedStyleName: "やさしい水彩",
-        stylePreviewImageUrl: "/images/styles/soft_watercolor.png",
+        stylePreviewImageUrl: "/images/styles/soft_watercolor.webp",
         stylePreviewUsedAsReference: false,
         styleBible: mockStory.styleBible,
         inputImageRoles: ["character_reference"],

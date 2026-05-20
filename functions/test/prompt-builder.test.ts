@@ -328,7 +328,7 @@ describe("buildImagePrompt", () => {
     expect(result).toContain("treasure maps with text labels");
   });
   it("returns a style reference image path", () => {
-    expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.png");
+    expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.webp");
   });
   describe("L3 imagination regex sanitizer (T6-32)", () => {
     it("replaces 'star chart' with 'night sky' in compositionHint", () => {

@@ -44,7 +44,7 @@ describe("normalizeTestImageModelsRequest", () => {
 
     expect(normalized.inputImageUrls).toEqual([
       "https://example.com/child-reference.png",
-      "https://story-gen-8a769.web.app/images/styles/toy_3d.png",
+      "https://story-gen-8a769.web.app/images/styles/toy_3d.webp",
     ]);
     expect(normalized.inputImageRoles).toEqual([
       "character_reference",
