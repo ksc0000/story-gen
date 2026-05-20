@@ -509,13 +509,34 @@ All types in this model must satisfy:
 - Shared `classifyError()` in `generation-event-logger.ts` becomes the canonical taxonomy; adapters call it or override specific cases
 - No change to logged error codes — same `ErrorCode` values emitted
 
-### P3-6: Add adapter contract tests
+### P3-6: Add adapter contract tests — **COMPLETE**
 
-**Scope**: Test coverage for the `ImageProvider` interface contract.
-- `test/replicate-adapter.test.ts` — golden tests for Replicate adapter
-- `test/openai-image-adapter.test.ts` — golden tests for OpenAI adapter
-- Tests verify: `providerId`, `supportsReferenceImages`, `generateImage()` mock, `classifyError()` for known error shapes, `resolveModelLabel()`
-- Existing `test/candidate-gate.test.ts` and `test/generation-event-logger.test.ts` continue to pass unchanged
+**Scope**: Shared contract tests verifying both adapters satisfy `ImageProvider` invariants.
+
+**Implementation**:
+- New file: `functions/test/image-provider-contract.test.ts`
+- 84 tests, all passing (parameterized with `describe.each` over both adapters)
+
+**Contract invariants covered**:
+| Section | Tests | Description |
+|---|---|---|
+| Interface shape | 5 × 2 adapters | `providerId`, `capabilities`, `generateImage`, `classifyError`, `resolveModelLabel` all present |
+| Provider identity | 3 × 2 | `providerId` value, PROFILE_PROVIDER_MAP alignment, valid ImageProviderId |
+| Capabilities | 5 × 2 | All 4 boolean fields present and stable across calls |
+| Supported profiles | 2 × 2 | Accept own profiles, reject foreign profiles |
+| Model label | 3 × 2 | Non-empty string, provider prefix pattern, helpful error for unsupported |
+| Error classification | 9 × 2 | Never throws, required fields, providerId matches, profile matches, UNKNOWN fallback, TIMEOUT consistent, retryable type |
+| Privacy / safeMessage | 6 × 2 | No `prompt`/`childName`/`storyText`/`userId` keys in result; safeMessage ≤ 120 chars |
+| No live network | 3 × 2 | Dummy keys, pure computation for resolveModelLabel and classifyError |
+| Cross-adapter exhaustiveness | 4 | Every profile handled by exactly one adapter; each profile rejected by all other adapters; fixture completeness |
+
+**Non-goals confirmed**:
+- `generate-book.ts` not imported
+- `createImageClient()` not called
+- Candidate gate not tested here (covered in `test/candidate-gate.test.ts`)
+- Adapters not wired into production generation
+
+**Test suite after P3-6**: 974/974 PASS (was 890, +84 new tests)
 
 ### P3-7: Update SLO logging to use provider-neutral fields
 
@@ -660,6 +681,26 @@ Unit tests for adapters must:
 - [x] Fallback ordering unchanged
 - [x] `npm run check:phase2`: PASS
 - [x] Full functions suite: 890/890 (was 850 + 40 new)
+- [x] `cd functions && npm run build`: PASS
+- [x] `node scripts/check-hygiene.mjs`: PASS
+
+### P3-6
+
+- [x] `functions/test/image-provider-contract.test.ts` added: 84 tests, all passing
+- [x] Interface shape contract (5 checks × 2 adapters)
+- [x] Provider identity contract (3 × 2) — providerId, PROFILE_PROVIDER_MAP alignment
+- [x] Capabilities contract (5 × 2) — all 4 boolean fields present and stable
+- [x] Supported profile contract (2 × 2) — accept own, reject foreign
+- [x] Model label contract (3 × 2) — non-empty, provider prefix, helpful error
+- [x] Error classification contract (9 × 2) — never throws, required fields, UNKNOWN/TIMEOUT
+- [x] Privacy contract (6 × 2) — no PII keys; safeMessage ≤ 120 chars
+- [x] No live network contract (3 × 2) — dummy keys, pure computation
+- [x] Cross-adapter exhaustiveness contract (4) — every profile handled by exactly one adapter
+- [x] `generate-book.ts` not imported in test
+- [x] `createImageClient()` not called in test
+- [x] Candidate gate unchanged (48 gate tests green)
+- [x] `npm run check:phase2`: PASS
+- [x] Full functions suite: 974/974 (was 890 + 84 new)
 - [x] `cd functions && npm run build`: PASS
 - [x] `node scripts/check-hygiene.mjs`: PASS
 
