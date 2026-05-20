@@ -472,8 +472,26 @@ function isStorySchemaValidationError(err: unknown): boolean {
     err.message.includes("LLM response") ||
     err.message.includes("Each page must") ||
     err.message.includes("narrativeDevice") ||
-    err.message.includes("pageVisualRole")
+    err.message.includes("pageVisualRole") ||
+    // P4-5: field_type_mismatch keywords — fixes P4-1 §5 routing gap so these errors
+    // are counted under "schema_validation" rather than falling to the outer catch.
+    err.message.includes("must be a string") ||
+    err.message.includes("must be an array") ||
+    err.message.includes("must be a number") ||
+    err.message.includes("must be a boolean") ||
+    err.message.includes("must be an object")
   );
+}
+
+/**
+ * P4-5: Feature flag for one-shot schema repair retry.
+ * When true, a single retry of generateStoryWithQualityGate() is attempted
+ * after a schema_validation failure before hard-failing the book.
+ * Also enables the enhanced extractJsonFromLLMResponse() parser in GeminiClient.
+ * Default: off. Enable via ENABLE_SCHEMA_REPAIR_RETRY=true env var.
+ */
+function enableSchemaRepairRetry(): boolean {
+  return process.env.ENABLE_SCHEMA_REPAIR_RETRY === "true";
 }
 
 function isRetryableGeminiFailure(err: unknown): boolean {
@@ -950,11 +968,13 @@ export async function processBookGeneration(
     // Step 5: Generate story JSON once with Gemini and validate it.
     // P4-2: Track story generation start time for storyDurationMs SLO field.
     const storyStartMs = Date.now();
-    let storyResult: {
+    let storyResult!: {
       story: GeneratedStory;
       qualityReport: StoryQualityReport;
       rewriteMetadata?: Pick<BookData, "storyTextRewriteUsed" | "storyTextRewriteModel" | "storyTextRewriteAttempts">;
     };
+    // P4-5: true when a schema repair retry succeeded; stored in Firestore metadata.
+    let schemaRepairRetryUsed = false;
     try {
       storyResult =
         template.creationMode === "fixed_template" && template.fixedStory
@@ -1012,34 +1032,83 @@ export async function processBookGeneration(
       }
 
       if (isStorySchemaValidationError(err)) {
-        const technicalMessage = err instanceof Error ? err.message : "Unknown schema validation error";
-        await deps.updateBookFailure(bookId, STORY_SCHEMA_FAILURE_USER_MESSAGE);
-        await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
-          failureStage: "schema_validation",
-          failureProvider: "gemini",
-          failureReason: "unknown",
-          retryable: false,
-          technicalErrorMessage: technicalMessage,
-        }));
-        await deps.updateBookStatus(bookId, "failed");
-        // P4-2: Include storyJsonFailureCategory for fine-grained SLO sub-classification.
-        logGenerationEvent({
-          eventName: "book_early_failed",
-          bookId,
-          userPresent: !!bookData.userId,
-          templateId: resolvedTemplateId,
-          creationMode: resolvedCreationMode as import("./lib/types").CreationMode,
-          failureStage: "schema_validation",
-          failureProvider: "gemini",
-          errorCategory: "validation",
-          retryable: false,
-          storyJsonFailureCategory: classifyStoryJsonFailure(err),
-          storyDurationMs,
-        });
-        return;
+        // P4-5: When ENABLE_SCHEMA_REPAIR_RETRY=true, attempt one retry before hard-failing.
+        // Only retry for non-fixed-template books (fixed templates don't call Gemini).
+        if (enableSchemaRepairRetry() && template.creationMode !== "fixed_template") {
+          try {
+            storyResult = await generateStoryWithQualityGate({
+              llmClient: deps.llmClient,
+              template,
+              normalizedBookData,
+              mergedInput,
+              readingProfile,
+            });
+            schemaRepairRetryUsed = true;
+            // Retry succeeded — do NOT throw; fall through the catch block to continue generation.
+          } catch (retryErr) {
+            // Both attempts failed. Hard-fail with storyGenerationAttempts=2.
+            const retryStoryDurationMs = Date.now() - storyStartMs;
+            const technicalMessage = retryErr instanceof Error ? retryErr.message : "Unknown schema validation error after retry";
+            await deps.updateBookFailure(bookId, STORY_SCHEMA_FAILURE_USER_MESSAGE);
+            await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
+              failureStage: "schema_validation",
+              failureProvider: "gemini",
+              failureReason: "unknown",
+              retryable: false,
+              technicalErrorMessage: technicalMessage,
+            }));
+            await deps.updateBookStatus(bookId, "failed");
+            logGenerationEvent({
+              eventName: "book_early_failed",
+              bookId,
+              userPresent: !!bookData.userId,
+              templateId: resolvedTemplateId,
+              creationMode: resolvedCreationMode as import("./lib/types").CreationMode,
+              failureStage: "schema_validation",
+              failureProvider: "gemini",
+              errorCategory: "validation",
+              retryable: false,
+              storyJsonFailureCategory: classifyStoryJsonFailure(retryErr),
+              storyDurationMs: retryStoryDurationMs,
+              storyGenerationAttempts: 2,
+            });
+            return;
+          }
+        } else {
+          // Flag off (or fixed_template): original behavior — fail immediately.
+          const technicalMessage = err instanceof Error ? err.message : "Unknown schema validation error";
+          await deps.updateBookFailure(bookId, STORY_SCHEMA_FAILURE_USER_MESSAGE);
+          await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
+            failureStage: "schema_validation",
+            failureProvider: "gemini",
+            failureReason: "unknown",
+            retryable: false,
+            technicalErrorMessage: technicalMessage,
+          }));
+          await deps.updateBookStatus(bookId, "failed");
+          // P4-2: Include storyJsonFailureCategory for fine-grained SLO sub-classification.
+          logGenerationEvent({
+            eventName: "book_early_failed",
+            bookId,
+            userPresent: !!bookData.userId,
+            templateId: resolvedTemplateId,
+            creationMode: resolvedCreationMode as import("./lib/types").CreationMode,
+            failureStage: "schema_validation",
+            failureProvider: "gemini",
+            errorCategory: "validation",
+            retryable: false,
+            storyJsonFailureCategory: classifyStoryJsonFailure(err),
+            storyDurationMs,
+          });
+          return;
+        }
       }
 
-      throw err;
+      // P4-5: If schema repair retry succeeded (schemaRepairRetryUsed = true), do not rethrow.
+      // Otherwise, rethrow any error not handled above.
+      if (!schemaRepairRetryUsed) {
+        throw err;
+      }
     }
     // P4-2: Capture story generation wall time for SLO fields on success path.
     const storyDurationMs = Date.now() - storyStartMs;
@@ -1069,6 +1138,8 @@ export async function processBookGeneration(
         storyModel: story.storyModel,
         storyModelFallbackUsed: story.storyModelFallbackUsed,
         storyGenerationAttempts: story.storyGenerationAttempts,
+        // P4-5: Record when schema repair retry was the reason the book recovered.
+        schemaRepairRetryUsed: schemaRepairRetryUsed ? true : undefined,
         selectedStyleId: selectedStyleProfile.id,
         selectedStyleName: selectedStyleProfile.name,
         styleBible: story.styleBible,

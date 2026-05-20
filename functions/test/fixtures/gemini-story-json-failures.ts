@@ -139,16 +139,18 @@ export const ALL_JSON_FAILURE_FIXTURES: JsonFailureFixture[] = [
     passesSchemaValidationCheck: true,
   },
   {
-    description: "mainQuestObject type mismatch (not in isStorySchemaValidationError)",
+    // P4-5: Extended isStorySchemaValidationError() to cover "must be a string/array/..." keywords.
+    description: "mainQuestObject type mismatch (routed to schema_validation after P4-5 routing gap fix)",
     error: FIELD_TYPE_MISMATCH_ERRORS.mainQuestObjectIsArray,
     expectedCategory: "field_type_mismatch",
-    passesSchemaValidationCheck: false,
+    passesSchemaValidationCheck: true,
   },
   {
-    description: "forbiddenQuestObjects type mismatch (not in isStorySchemaValidationError)",
+    // P4-5: Extended isStorySchemaValidationError() to cover "must be a string/array/..." keywords.
+    description: "forbiddenQuestObjects type mismatch (routed to schema_validation after P4-5 routing gap fix)",
     error: FIELD_TYPE_MISMATCH_ERRORS.forbiddenQuestObjectsIsString,
     expectedCategory: "field_type_mismatch",
-    passesSchemaValidationCheck: false,
+    passesSchemaValidationCheck: true,
   },
 ];
 

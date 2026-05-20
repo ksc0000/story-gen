@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { extractJsonFromLLMResponse } from "./llm-json-repair";
 import type {
   GeneratedStory,
   LLMClient,
@@ -59,6 +60,15 @@ function extractJSON(text: string): string {
 
 function shouldDelayGeminiRetries(): boolean {
   return process.env.NODE_ENV !== "test";
+}
+
+/**
+ * P4-5: Feature flag — enables the enhanced extractJsonFromLLMResponse() parser
+ * and the one-shot schema repair retry in generate-book.ts.
+ * Default: off. Enable via ENABLE_SCHEMA_REPAIR_RETRY=true env var.
+ */
+function isSchemaRepairEnabled(): boolean {
+  return process.env.ENABLE_SCHEMA_REPAIR_RETRY === "true";
 }
 
 function sleep(ms: number): Promise<void> {
@@ -726,7 +736,17 @@ export class GeminiClient implements LLMClient {
 
     let parsed: unknown;
     try {
-      parsed = JSON.parse(extractJSON(result.text));
+      if (isSchemaRepairEnabled()) {
+        // P4-5: Use enhanced extractor that handles markdown fences and outer delimiters.
+        const repairResult = extractJsonFromLLMResponse(result.text);
+        if (repairResult.status !== "unrepairable" && repairResult.parsed !== undefined) {
+          parsed = repairResult.parsed;
+        } else {
+          throw new Error("LLM response could not be extracted");
+        }
+      } else {
+        parsed = JSON.parse(extractJSON(result.text));
+      }
     } catch {
       throw new Error(`Failed to parse LLM JSON response: ${result.text.slice(0, 200)}`);
     }

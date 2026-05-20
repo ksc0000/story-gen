@@ -200,6 +200,12 @@ export interface BookEarlyFailedEvent {
   storyJsonFailureCategory?: StoryJsonFailureCategory;
   /** P4-2: Story generation wall time in ms (from Gemini call start to failure). */
   storyDurationMs?: number;
+  /**
+   * P4-5: Number of outer story generation attempts made before the final failure.
+   * Present only when a schema repair retry was attempted (ENABLE_SCHEMA_REPAIR_RETRY=true)
+   * and all attempts failed. Value 2 means both the initial attempt and the retry failed.
+   */
+  storyGenerationAttempts?: number;
 }
 
 /**

@@ -250,48 +250,57 @@ describe("processBookGeneration schema_validation path (P4-3)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 3. processBookGeneration — outer-catch path for field_type_mismatch
-//    Documents the P4-1 §5 routing gap: type-mismatch errors bypass schema_validation
+// 3. processBookGeneration — field_type_mismatch routing (P4-5 gap fix)
+//    P4-5 extended isStorySchemaValidationError to cover "must be a string/array/..."
+//    keywords, so these errors now route to schema_validation instead of outer catch.
 // ---------------------------------------------------------------------------
 
-describe("processBookGeneration outer-catch path for field_type_mismatch (P4-3)", () => {
+describe("processBookGeneration field_type_mismatch routing — schema_validation (P4-5 gap fix)", () => {
   let deps: ReturnType<typeof createMockDeps>;
 
   beforeEach(() => {
     deps = createMockDeps();
+    // Ensure retry flag is OFF so we test routing behavior without retry
+    delete process.env.ENABLE_SCHEMA_REPAIR_RETRY;
   });
 
-  it("'mainQuestObject must be a string' falls through to outer catch → failureStage: unexpected", async () => {
+  afterEach(() => {
+    delete process.env.ENABLE_SCHEMA_REPAIR_RETRY;
+  });
+
+  it("'mainQuestObject must be a string' routes to schema_validation (P4-5 routing gap fix)", async () => {
     deps.llmClient.generateStory.mockRejectedValue(FIELD_TYPE_MISMATCH_ERRORS.mainQuestObjectIsArray);
 
     await processBookGeneration("p43-type-mismatch-main", baseBookData, deps);
 
-    // Not schema_validation — falls to outer catch
+    // P4-5: now routes to schema_validation (not outer catch)
     expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
       "p43-type-mismatch-main",
-      expect.objectContaining({ failureStage: "validation" })
+      expect.objectContaining({ failureStage: "schema_validation" })
     );
     expect(deps.updateBookStatus).toHaveBeenCalledWith("p43-type-mismatch-main", "failed");
     expect(deps.imageClient.generateImage).not.toHaveBeenCalled();
   });
 
-  it("'forbiddenQuestObjects must be an array' falls through to outer catch", async () => {
+  it("'forbiddenQuestObjects must be an array' routes to schema_validation (P4-5 routing gap fix)", async () => {
     deps.llmClient.generateStory.mockRejectedValue(FIELD_TYPE_MISMATCH_ERRORS.forbiddenQuestObjectsIsString);
 
     await processBookGeneration("p43-type-mismatch-fqo", baseBookData, deps);
 
     expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
       "p43-type-mismatch-fqo",
-      expect.objectContaining({ failureStage: "validation" })
+      expect.objectContaining({ failureStage: "schema_validation" })
     );
     expect(deps.updateBookStatus).toHaveBeenCalledWith("p43-type-mismatch-fqo", "failed");
   });
 
-  it("fixture metadata: OUTER_CATCH_ROUTED_FIXTURES are all field_type_mismatch", () => {
-    for (const fixture of OUTER_CATCH_ROUTED_FIXTURES) {
-      expect(fixture.passesSchemaValidationCheck).toBe(false);
-      expect(fixture.expectedCategory).toBe("field_type_mismatch");
-    }
+  it("fixture metadata: OUTER_CATCH_ROUTED_FIXTURES is empty after P4-5 routing gap fix", () => {
+    // After P4-5, all field_type_mismatch errors are routed to schema_validation.
+    expect(OUTER_CATCH_ROUTED_FIXTURES).toHaveLength(0);
+  });
+
+  it("fixture metadata: SCHEMA_VALIDATION_ROUTED_FIXTURES covers all 7 failure scenarios", () => {
+    expect(SCHEMA_VALIDATION_ROUTED_FIXTURES).toHaveLength(ALL_JSON_FAILURE_FIXTURES.length);
   });
 });
 
