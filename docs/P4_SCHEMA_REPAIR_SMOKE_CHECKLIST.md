@@ -449,3 +449,6 @@ Before continuing P4-6:
 ---
 
 **P4-6 COMPLETE** — `ENABLE_SCHEMA_REPAIR_RETRY` flag is OFF in production. P4-7 prompt tuning may proceed.
+
+**P4-7 follow-up note** (Scenario E `field_type_mismatch` limitation):  
+The 2 consecutive `mainQuestObject must be a string` failures observed in Scenario E post-rollback smoke are the primary target of P4-7. P4-7 adds an explicit `mainQuestObject` string-only type contract (with invalid/valid examples) to `buildSystemPrompt()` in `functions/src/lib/prompt-builder.ts`. See `docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md` P4-7 section for implementation details.

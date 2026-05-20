@@ -61,6 +61,35 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("action:");
     expect(result).toContain("quiet_ending:");
   });
+
+  // P4-7: field type contract tests
+  it("includes explicit mainQuestObject string-only type contract (P4-7)", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("mainQuestObject must be a plain string, not an array or object");
+    expect(result).toContain("join them into one concise Japanese string");
+  });
+  it("includes mainQuestObject invalid/valid examples (P4-7)", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    // Invalid example: array syntax should appear as the bad pattern to avoid
+    expect(result).toContain('"mainQuestObject": ["鍵", "地図"]');
+    // Valid example: plain string
+    expect(result).toContain('"mainQuestObject": "鍵と地図"');
+  });
+  it("includes forbiddenQuestObjects array type contract (P4-7)", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("forbiddenQuestObjects must be an array of strings, not a single string");
+  });
+  it("includes pages text and imagePrompt string type contract (P4-7)", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("pages[].text must be a string, not an array or object");
+    expect(result).toContain("pages[].imagePrompt must be a string, not an array or object");
+  });
+  it("field type contract does not instruct to output arrays for mainQuestObject (P4-7)", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    // The contract must not contain any instruction that would encourage array output
+    // It must only show the array as the INVALID example pattern
+    expect(result).toContain("not an array or object");
+  });
 });
 
 describe("buildUserPrompt", () => {

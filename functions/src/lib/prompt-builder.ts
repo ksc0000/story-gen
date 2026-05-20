@@ -79,6 +79,17 @@ const CHARACTER_METADATA_RULES = [
   "pages[].focusCharacterId must be a single characterId string or omitted.",
 ].join(" ");
 
+// P4-7: Explicit JSON field type contract to prevent field_type_mismatch errors.
+// Addresses observed failure: 'mainQuestObject' must be a string when provided.
+const STORY_JSON_FIELD_TYPE_CONTRACT = [
+  'mainQuestObject must be a plain string, not an array or object.',
+  'If there are multiple quest items, join them into one concise Japanese string.',
+  'Invalid: "mainQuestObject": ["\u9375", "\u5730\u56f3"] — Valid: "mainQuestObject": "\u9375\u3068\u5730\u56f3"',
+  'forbiddenQuestObjects must be an array of strings, not a single string.',
+  'pages[].text must be a string, not an array or object.',
+  'pages[].imagePrompt must be a string, not an array or object.',
+].join(" ");
+
 const PAGE_TEXT_ROLE_RULES = [
   "opening_establishing: 場所、主人公の行動、storyGoal につながる小さな異変や発見、次ページへの予感を入れる。",
   "discovery: 見つけたもの、それがなぜ不思議か、何に困っているか、主人公の反応を入れる。場所や手元の状況も1文入れる。",
@@ -434,6 +445,7 @@ ${GOOD_TEXT_EXAMPLE}
 - Valid IDs are "child_protagonist" and ids from cast[].characterId.
 - Omit focusCharacterId if unsure.
 - cast を省略してはいけません。ただし完全に主人公だけの話なら空配列は可です。
+- JSON field type contract (must follow exactly): ${STORY_JSON_FIELD_TYPE_CONTRACT}
 
 ## 出力形式
 以下のJSON形式で出力してください。JSON以外のテキストは含めないでください。

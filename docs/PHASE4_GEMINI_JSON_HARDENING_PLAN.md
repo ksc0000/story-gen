@@ -518,17 +518,43 @@ This is not yet implemented — it is a target for P4-2.
 
 ### P4-7 — Prompt Instruction Tuning After Metrics
 
-**Goal**: After P4-2 logging is deployed and data is collected, tune `buildSystemPrompt()` based on observed failure categories.
+**Status**: ✅ COMPLETE (2026-05-20)
 
-**Candidates** (data-driven selection):
-- Add explicit `"Respond with raw JSON only — no markdown, no preamble"` instruction (targets `malformed_json`)
-- Add `"mainQuestObject must be a single string, not an array or null"` annotation (targets `field_type_mismatch`)
-- Add `"narrativeDevice must be an object with these exact keys: ..."` (targets `schema_structural`)
+**Observed failure (P4-6 Scenario E)**: `'mainQuestObject' must be a string when provided` — 2 consecutive `schema_validation` failures, classified as `field_type_mismatch`. Gemini returned `mainQuestObject` as an array instead of a string.
 
-**Constraints**:
-- Prompt changes must not alter creative output quality or story structure
-- Each change requires `prompt-builder.test.ts` update asserting new instruction is present
-- No changes until classification data from P4-2 is available (min 2 weeks of production events)
+**Goal**: Reduce Gemini story JSON `schema_validation` failures, especially `mainQuestObject must be a string`, by hardening prompt field type instructions.
+
+**Implementation**: Added `STORY_JSON_FIELD_TYPE_CONTRACT` constant to `functions/src/lib/prompt-builder.ts`. Wired into `buildSystemPrompt()` constraints section as:
+```
+- JSON field type contract (must follow exactly): <STORY_JSON_FIELD_TYPE_CONTRACT>
+```
+
+Contract content:
+- `mainQuestObject` must be a plain string, not an array or object. If multiple items, join as one concise Japanese string.
+- Invalid example: `"mainQuestObject": ["\u9375", "\u5730\u56f3"]` — Valid: `"mainQuestObject": "\u9375\u3068\u5730\u56f3"`
+- `forbiddenQuestObjects` must be an array of strings, not a single string.
+- `pages[].text` must be a string, not an array or object.
+- `pages[].imagePrompt` must be a string, not an array or object.
+
+**Tests added** (`functions/test/prompt-builder.test.ts`, 5 new tests):
+- `"includes explicit mainQuestObject string-only type contract (P4-7)"`
+- `"includes mainQuestObject invalid/valid examples (P4-7)"`
+- `"includes forbiddenQuestObjects array type contract (P4-7)"`
+- `"includes pages text and imagePrompt string type contract (P4-7)"`
+- `"field type contract does not instruct to output arrays for mainQuestObject (P4-7)"`
+
+**Constraints preserved**:
+- No semantic repair added
+- No additional Gemini API call added
+- No generation routing change
+- No candidate gate change
+- No Firebase deploy
+- No retry behavior change
+
+**Follow-up (Option B — response_schema migration)**:
+The current Gemini client uses JSON.parse / `extractJsonFromLLMResponse()` for response parsing. Migrating to Gemini structured outputs / response schema would enforce field types at the API level, eliminating `field_type_mismatch` entirely. This is NOT implemented in P4-7 — it requires a separate slice with its own integration tests and smoke validation.
+
+**Validation results**: 1311/1311 tests PASS, build clean, hygiene PASS, check:phase2 122/122 PASS.
 
 ---
 
@@ -709,8 +735,8 @@ The remaining legacy scope from P3 (`generateCoverImage()` and `ensureRecurringC
 | **P4-3** | Unit fixtures for malformed/wrong-type Gemini responses | Test | ✅ COMPLETE |
 | **P4-4** | Safe JSON extraction/repair helper, test-only | Code (new helper + tests) | ✅ COMPLETE |
 | **P4-5** | One-shot validation repair retry behind flag | Code | ✅ COMPLETE |
-| **P4-6** | Live smoke for repaired flow | Smoke | ⏸ IN PROGRESS |
-| **P4-7** | Tune prompt instructions after metrics | Code (prompt + tests) | Gated on P4-2 data |
+| **P4-6** | Live smoke for repaired flow | Smoke | ✅ COMPLETE (PASS with limitation; see P4_SCHEMA_REPAIR_SMOKE_CHECKLIST.md) |
+| **P4-7** | Tune prompt instructions after metrics | Code (prompt + tests) | ✅ COMPLETE |
 
 ---
 
