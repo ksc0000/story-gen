@@ -19,6 +19,7 @@
 
 import * as logger from "firebase-functions/logger";
 import type { BookStatus, CreationMode, ImageModelProfile } from "./types";
+import { PROFILE_PROVIDER_MAP } from "./image-provider";
 
 // -------------------------------------------------------------------------
 // Error taxonomy
@@ -357,10 +358,15 @@ export function classifyError(err: unknown): NormalizedErrorInfo {
 
 /**
  * Derive the provider family from an imageModelProfile.
- * Only `openai_image_candidate` uses OpenAI; all other profiles use Replicate.
+ *
+ * P3-7: Delegates to PROFILE_PROVIDER_MAP from image-provider.ts so there is a
+ * single source of truth for profile → provider attribution.
+ * Emitted values are unchanged: Replicate profiles → "replicate", openai_image_candidate → "openai".
+ *
+ * Falls back to "replicate" for any profile not present in the map (defensive default).
  */
 export function resolveProviderFromProfile(profile: ImageModelProfile): ImageProvider {
-  return profile === "openai_image_candidate" ? "openai" : "replicate";
+  return PROFILE_PROVIDER_MAP[profile] ?? "replicate";
 }
 
 // -------------------------------------------------------------------------

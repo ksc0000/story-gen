@@ -229,12 +229,13 @@ export interface ImageProvider {
 /**
  * Canonical mapping from each ImageModelProfile to its owning provider.
  *
+ * P3-7: This is now the single source of truth for profile → provider attribution.
+ * `resolveProviderFromProfile()` in generation-event-logger.ts delegates to this map.
+ *
  * IMPORTANT:
- *  - This constant is for tests and future routing logic ONLY.
- *  - It is NOT consumed by generate-book.ts or any production call path in P3-2.
+ *  - When adding a new ImageModelProfile to types.ts, add it here too.
  *  - Production routing is still handled by createImageClient() in generate-book.ts.
- *  - This mapping must stay consistent with resolveProviderFromProfile() in
- *    generation-event-logger.ts and CANDIDATE_IMAGE_PROFILES in replicate.ts.
+ *  - This mapping must stay consistent with CANDIDATE_IMAGE_PROFILES in replicate.ts.
  */
 export const PROFILE_PROVIDER_MAP: Record<ImageModelProfile, ImageProviderId> = {
   klein_fast:            "replicate",

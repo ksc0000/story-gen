@@ -22,6 +22,7 @@ import {
   type BookEarlyFailedEvent,
   type PageImageFailedEvent,
 } from "../src/lib/generation-event-logger";
+import { PROFILE_PROVIDER_MAP } from "../src/lib/image-provider";
 
 vi.mock("firebase-functions/logger");
 
@@ -234,6 +235,34 @@ describe("resolveProviderFromProfile", () => {
 
   it("returns 'replicate' for kontext_reference", () => {
     expect(resolveProviderFromProfile("kontext_reference")).toBe("replicate");
+  });
+});
+
+// P3-7: Verify resolveProviderFromProfile is aligned with PROFILE_PROVIDER_MAP
+describe("resolveProviderFromProfile — PROFILE_PROVIDER_MAP alignment (P3-7)", () => {
+  it("every profile in PROFILE_PROVIDER_MAP resolves identically via resolveProviderFromProfile", () => {
+    for (const [profile, expectedProvider] of Object.entries(PROFILE_PROVIDER_MAP)) {
+      expect(
+        resolveProviderFromProfile(profile as import("../src/lib/types").ImageModelProfile),
+        `profile ${profile} should resolve to ${expectedProvider}`
+      ).toBe(expectedProvider);
+    }
+  });
+
+  it("openai_image_candidate → 'openai' (from map)", () => {
+    expect(resolveProviderFromProfile("openai_image_candidate")).toBe(
+      PROFILE_PROVIDER_MAP["openai_image_candidate"]
+    );
+  });
+
+  it("all Replicate profiles in map → 'replicate'", () => {
+    const replicateProfiles = Object.entries(PROFILE_PROVIDER_MAP)
+      .filter(([, v]) => v === "replicate")
+      .map(([k]) => k as import("../src/lib/types").ImageModelProfile);
+
+    for (const profile of replicateProfiles) {
+      expect(resolveProviderFromProfile(profile)).toBe("replicate");
+    }
   });
 });
 

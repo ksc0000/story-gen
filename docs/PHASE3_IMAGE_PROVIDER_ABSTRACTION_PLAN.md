@@ -577,12 +577,46 @@ All classifications use existing P2 taxonomy values.
 
 **Test suite after P3-6**: 974/974 PASS (was 890, +84 new tests)
 
-### P3-7: Update SLO logging to use provider-neutral fields
+### P3-7: Update SLO logging to use provider-neutral fields — **COMPLETE**
 
-**Scope**: Replace `resolveProviderFromProfile()` call in event logger with `adapter.providerId`.
-- After P3-4 lands, `generate-book.ts` can pass `provider: adapter.providerId` directly to `logGenerationEvent()`
-- Remove `resolveProviderFromProfile()` function from `generation-event-logger.ts` (or keep as fallback)
-- No change to logged `provider` field values — same `"replicate"` / `"openai"` values
+**Scope**: Unify provider attribution for structured generation logs.
+
+**Implementation**:
+- `resolveProviderFromProfile()` in `generation-event-logger.ts` now delegates to `PROFILE_PROVIDER_MAP`
+  from `image-provider.ts`, making `PROFILE_PROVIDER_MAP` the single source of truth.
+- `PROFILE_PROVIDER_MAP` comment updated to note it is now canonical and consumed by `generation-event-logger.ts`.
+- No change to `generate-book.ts` — it still calls `resolveProviderFromProfile(finalProfile)` unchanged.
+- No change to event schema or emitted field names.
+- No change to `createImageClient()` or generation routing.
+
+**Why `resolveProviderFromProfile()` is kept** (not replaced by `adapter.providerId`):
+- `generate-book.ts` generates using the original `ReplicateImageClient` / `OpenAIImageClient` path
+  (adapters not yet wired). Provider identity at log time comes from the profile, not an adapter instance.
+- Replacing with `adapter.providerId` belongs to P3-8/P3-9 when adapters are wired into generation.
+- This slice only eliminates the dual-source-of-truth issue (map in image-provider.ts vs hardcoded check in generation-event-logger.ts).
+
+**Import safety**: `image-provider.ts` uses `import type { ErrorCategory, ErrorCode }` from
+`generation-event-logger.ts` (type-only, erased at runtime). `generation-event-logger.ts` now imports
+`PROFILE_PROVIDER_MAP` as a runtime value. No circular dependency at runtime.
+
+**Acceptance criteria**:
+- [x] `PROFILE_PROVIDER_MAP` is the single source of truth for profile → provider attribution
+- [x] `resolveProviderFromProfile()` delegates to `PROFILE_PROVIDER_MAP` with "replicate" fallback
+- [x] Emitted `provider` values unchanged: Replicate profiles → "replicate", openai_image_candidate → "openai"
+- [x] Event schema unchanged (field names, event names unchanged)
+- [x] `generate-book.ts` unchanged — still calls `resolveProviderFromProfile()`
+- [x] `createImageClient()` unchanged
+- [x] Generation routing unchanged, candidate gate unchanged, fallback order unchanged
+- [x] No circular imports (verified by TypeScript compiler and test runner)
+- [x] No Firebase deploy
+- [x] 1037/1037 PASS (was 1034, +3 alignment tests)
+
+**Files changed**:
+- `functions/src/lib/generation-event-logger.ts` — import PROFILE_PROVIDER_MAP; delegate resolveProviderFromProfile
+- `functions/src/lib/image-provider.ts` — update PROFILE_PROVIDER_MAP comment (canonical source)
+- `functions/test/generation-event-logger.test.ts` — import PROFILE_PROVIDER_MAP; add 3 alignment tests
+
+**Next step**: P3-8 — cleanup legacy Replicate-specific names, or P3-9 — gated OpenAI adapter smoke test.
 
 ### P3-8: Cleanup legacy Replicate-specific names where safe
 
