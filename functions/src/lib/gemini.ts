@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import type { ResponseSchema } from "@google/generative-ai";
 import { extractJsonFromLLMResponse } from "./llm-json-repair";
+import { STORY_RESPONSE_SCHEMA } from "./story-response-schema";
 import type {
   GeneratedStory,
   LLMClient,
@@ -69,6 +71,16 @@ function shouldDelayGeminiRetries(): boolean {
  */
 function isSchemaRepairEnabled(): boolean {
   return process.env.ENABLE_SCHEMA_REPAIR_RETRY === "true";
+}
+
+/**
+ * P4-11: Feature flag — includes STORY_RESPONSE_SCHEMA in Gemini generationConfig.
+ * When enabled, Gemini's structured output API enforces the JSON schema at the
+ * model output layer. validateStory() remains the runtime source of truth.
+ * Default: off. Enable via ENABLE_RESPONSE_SCHEMA=true env var.
+ */
+export function isResponseSchemaEnabled(): boolean {
+  return process.env.ENABLE_RESPONSE_SCHEMA === "true";
 }
 
 function sleep(ms: number): Promise<void> {
@@ -545,16 +557,22 @@ function validateStory(data: unknown): GeneratedStory {
   };
 }
 
+/** Gemini generationConfig shape — optionally includes responseSchema when flag is ON. */
+type StoryGenerationConfig = {
+  responseMimeType: "application/json";
+  responseSchema?: ResponseSchema;
+};
+
 async function generateContentWithRetry(params: {
   generateContent: (request: {
     contents: Array<{ role: "user"; parts: Array<{ text: string }> }>;
     systemInstruction: { role: "system"; parts: Array<{ text: string }> };
-    generationConfig: { responseMimeType: "application/json" };
+    generationConfig: StoryGenerationConfig;
   }) => Promise<{ response: { text: () => string } }>;
   request: {
     contents: Array<{ role: "user"; parts: Array<{ text: string }> }>;
     systemInstruction: { role: "system"; parts: Array<{ text: string }> };
-    generationConfig: { responseMimeType: "application/json" };
+    generationConfig: StoryGenerationConfig;
   };
   modelName: string;
 }): Promise<{ response: { text: () => string }; attempts: number }> {
@@ -597,7 +615,7 @@ async function runJsonGeneration(params: {
   request: {
     contents: Array<{ role: "user"; parts: Array<{ text: string }> }>;
     systemInstruction: { role: "system"; parts: Array<{ text: string }> };
-    generationConfig: { responseMimeType: "application/json" };
+    generationConfig: StoryGenerationConfig;
   };
   modelCandidates: string[];
 }): Promise<{ text: string; modelName: string; fallbackUsed: boolean; totalAttempts: number }> {
@@ -715,7 +733,12 @@ export class GeminiClient implements LLMClient {
     const request = {
       contents: [{ role: "user" as const, parts: [{ text: userParts.join("\n") }] }],
       systemInstruction: { role: "system" as const, parts: [{ text: params.systemPrompt }] },
-      generationConfig: { responseMimeType: "application/json" as const },
+      generationConfig: isResponseSchemaEnabled()
+        ? {
+            responseMimeType: "application/json" as const,
+            responseSchema: STORY_RESPONSE_SCHEMA as unknown as ResponseSchema,
+          }
+        : { responseMimeType: "application/json" as const },
     };
 
     const modelCandidates =

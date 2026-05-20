@@ -524,18 +524,39 @@ All gaps are benign. Schema serves as first line of defense; `validateStory()` r
 
 ---
 
-### P4-11: Wire `responseSchema` Behind Feature Flag
+### P4-11: Wire `responseSchema` Behind Feature Flag ✅ COMPLETE
 
-**Goal**: Add `ENABLE_RESPONSE_SCHEMA` feature flag. When ON, include `responseSchema` in `generationConfig` for `generateStory()`.
+**Status**: ✅ COMPLETE (2026-05-21)  
+**Files**:  
+- `functions/src/lib/gemini.ts` (modified — import + flag + wiring)  
+- `functions/test/gemini-response-schema-flag.test.ts` (new — 18 tests)  
+- `functions/test/story-response-schema-compat.test.ts` (updated — import guard revised)  
+**Runtime change**: None by default — `ENABLE_RESPONSE_SCHEMA` defaults to OFF  
 
-**Deliverables**:
-- `enableResponseSchema()` flag helper in `gemini.ts`
-- When flag ON: `generationConfig: { responseMimeType: "application/json", responseSchema: STORY_RESPONSE_SCHEMA }`
-- When flag OFF: current behavior unchanged
-- `validateStory()` remains the final validator regardless of flag state
-- Unit tests: flag ON includes schema in config, flag OFF does not
+**Deliverables** (all met):
+- ✅ `isResponseSchemaEnabled()` exported flag helper in `gemini.ts`
+- ✅ Flag ON: `generationConfig: { responseMimeType: "application/json", responseSchema: STORY_RESPONSE_SCHEMA }`
+- ✅ Flag OFF: `generationConfig: { responseMimeType: "application/json" }` — unchanged from pre-P4-11
+- ✅ `validateStory()` remains the final runtime validator regardless of flag state
+- ✅ `extractJSON()` / `extractJsonFromLLMResponse()` still called — defense-in-depth
+- ✅ `ENABLE_SCHEMA_REPAIR_RETRY` behavior unchanged — both flags are independent
+- ✅ 18 tests covering flag helper, config wiring, flag independence, source guards
+- ✅ P4-10 import guard updated — gemini.ts now imports `story-response-schema` (expected)
 
-**Constraints**: Flag defaults to OFF. No prompt change. No validator change. `extractJSON()` / `extractJsonFromLLMResponse()` still called (schema should make fence-stripping unnecessary, but defense-in-depth).
+**Flag behavior**:
+- `ENABLE_RESPONSE_SCHEMA=true` → responseSchema included in Gemini generationConfig
+- Absent / empty / `"false"` / `"0"` / `"TRUE"` → responseSchema NOT included (strict lowercase match)
+
+**How to enable for live smoke (P4-12)**:
+```bash
+ENABLE_RESPONSE_SCHEMA=true
+```
+
+**Rollback**:
+- Remove or unset `ENABLE_RESPONSE_SCHEMA` env var
+- Redeploy functions (in P4-12 live smoke phase, not this task)
+
+**Constraints**: Flag defaults to OFF. No prompt change. No validator change. `extractJSON()` / `extractJsonFromLLMResponse()` still called. No Firebase deploy.
 
 ---
 

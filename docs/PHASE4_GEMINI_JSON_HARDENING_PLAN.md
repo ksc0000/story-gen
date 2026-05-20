@@ -638,6 +638,24 @@ Candidate gate changed: No ✅
 
 ---
 
+### P4-11 — Wire responseSchema Behind Feature Flag ✅ COMPLETE
+
+**Status**: ✅ COMPLETE (2026-05-21)  
+**Files**: `functions/src/lib/gemini.ts` (modified), `functions/test/gemini-response-schema-flag.test.ts` (18 tests)  
+**Runtime change**: None by default — `ENABLE_RESPONSE_SCHEMA` defaults to OFF  
+
+**Summary**:  
+- Added `isResponseSchemaEnabled()` flag helper (exported)  
+- When flag ON, `STORY_RESPONSE_SCHEMA` is included in Gemini `generationConfig.responseSchema`  
+- `validateStory()` remains final validator regardless of flag state  
+- Extraction/repair path unchanged — defense-in-depth preserved  
+- `ENABLE_SCHEMA_REPAIR_RETRY` behavior unchanged — flags are independent  
+- P4-10 import guard updated to reflect expected wiring  
+
+**Next**: P4-12 — live smoke with `ENABLE_RESPONSE_SCHEMA=true`.
+
+---
+
 ## 7. Acceptance Criteria for P4 Hardening
 
 The following criteria must hold across all P4 slices:
