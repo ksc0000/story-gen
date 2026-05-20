@@ -439,9 +439,15 @@ This is not yet implemented — it is a target for P4-2.
 
 ---
 
-### P4-4 — Safe JSON Extraction / Repair Helper (Test-Only First)
+### P4-4 — Safe JSON Extraction / Repair Helper (Test-Only First) ✅ COMPLETE
 
-**Goal**: Add a `extractJsonFromLLMResponse(raw: string): unknown` helper that strips markdown fencing and recovers a parseable JSON object from common LLM output patterns. Wired to tests only; not yet called in production path.
+**Commit**: (see git log — implemented after P4-3)
+**Files**:
+- `functions/src/lib/llm-json-repair.ts` — pure helper, exports `extractJsonFromLLMResponse(raw: string): LlmJsonRepairResult`
+- `functions/test/llm-json-repair.test.ts` — 34 unit tests (valid_original, extracted-fence, extracted-delimiter, unrepairable, shape invariants, scope constraints, P4-3 fixture connection)
+- No production files changed; helper is not imported from `generate-book.ts` or `gemini.ts`
+
+**Goal**: Add a `extractJsonFromLLMResponse(raw: string): LlmJsonRepairResult` helper that strips markdown fencing and recovers a parseable JSON object from common LLM output patterns. Wired to tests only; not yet called in production path.
 
 **Changes**:
 - New file: `functions/src/lib/llm-json-repair.ts`
@@ -697,7 +703,7 @@ The remaining legacy scope from P3 (`generateCoverImage()` and `ensureRecurringC
 | **P4-1** | Gemini JSON hardening inventory and design | Docs | ✅ COMPLETE (this doc) |
 | **P4-2** | Structured story validation error taxonomy / logging | Code (logging only) | ✅ COMPLETE (bde7bb9) |
 | **P4-3** | Unit fixtures for malformed/wrong-type Gemini responses | Test | ✅ COMPLETE |
-| **P4-4** | Safe JSON extraction/repair helper, test-only | Code (new helper + tests) | Planned |
+| **P4-4** | Safe JSON extraction/repair helper, test-only | Code (new helper + tests) | ✅ COMPLETE |
 | **P4-5** | One-shot validation repair retry behind flag | Code | Planned |
 | **P4-6** | Live smoke for repaired flow | Smoke | Planned |
 | **P4-7** | Tune prompt instructions after metrics | Code (prompt + tests) | Gated on P4-2 data |
