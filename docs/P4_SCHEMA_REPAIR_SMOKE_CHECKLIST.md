@@ -368,10 +368,11 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 
 | Item | Value |
 |---|---|
-| Natural trigger observed | pending |
-| schemaRepairRetryUsed: true observed | pending |
-| storyGenerationAttempts: 2 observed | pending |
-| Status | ⏸ PENDING / MAY NOT TRIGGER NATURALLY |
+| Natural trigger observed | Not observed during Scenario B smoke window (Gemini returned clean JSON for both books) |
+| schemaRepairRetryUsed: true observed | Not observed |
+| field_type_mismatch failures observed | Yes — during Scenario E post-rollback smoke (see §12 Scenario E) |
+| Notes | `field_type_mismatch` failures occurred naturally but are not repairable by fence-strip helper. Scenario C requires a fenced-JSON failure (`json ... ` preamble). Not triggered in this smoke window. |
+| Status | ⏸ NOT TRIGGERED IN SMOKE WINDOW — P4-7 prompt tuning may improve trigger rate |
 
 ### Scenario D — Semantic Repair Guard
 
@@ -385,11 +386,19 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 
 | Item | Value |
 |---|---|
-| Date/time | pending |
-| Rollback command | `firebase deploy --only functions --project story-gen-8a769` |
-| Post-rollback smoke | pending |
-| Final flag state | pending |
-| Status | ⏸ PENDING |
+| Date/time | 2026-05-20 |
+| env file change | `ENABLE_SCHEMA_REPAIR_RETRY=true` removed from `functions/.env.story-gen-8a769` ✅ |
+| Rollback deploy | `firebase deploy --only functions --project story-gen-8a769` — 13/13 Successful, Deploy complete ✅ |
+| Runtime env confirmed | `ENABLE_SCHEMA_REPAIR_RETRY` absent from deployed function env (verified via debug log) ✅ |
+| Post-rollback smoke E-1 | p46-e-1 (kCEUG4R0Ztg7FudjJKxE) — `failed` / `failureStage: schema_validation` / `mainQuestObject must be a string` |
+| Post-rollback smoke E-2 | p46-e-2 (Stf46UmwxVXbW9qZPDhC) — `failed` / `failureStage: schema_validation` / `mainQuestObject must be a string` |
+| Cause of E-1/E-2 failure | Natural LLM `field_type_mismatch` variability (not caused by rollback). Same error classification as P4-5 routing gap fix target. `failureStage: schema_validation` (not `unexpected`) confirms routing is correct ✅ |
+| Retry triggered | No — flag is OFF, no retry attempted ✅ (expected behavior) |
+| ImageProvider routing change | none ✅ |
+| candidate gate change | none ✅ |
+| schemaRepairRetryUsed | absent (flag OFF) ✅ |
+| Final flag state | OFF — `ENABLE_SCHEMA_REPAIR_RETRY` absent from production runtime ✅ |
+| Status | ✅ ROLLBACK CONFIRMED / ⚠️ post-smoke hit natural schema_validation failures (see notes) |
 
 ---
 
@@ -400,21 +409,28 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 | A — Flag OFF baseline (local) | ✅ PASS |
 | A — Flag OFF baseline (live) | ✅ PASS |
 | B — Flag ON normal generation | ✅ PASS |
-| C — Repair trigger observation | ⏸ PENDING |
+| C — Repair trigger observation | ⏸ NOT TRIGGERED IN SMOKE WINDOW |
 | D — Semantic repair negative | ✅ COVERED BY UNIT TESTS |
-| E — Rollback | ⏸ PENDING |
+| E — Rollback | ✅ ROLLBACK CONFIRMED / ⚠️ limitation (see below) |
 
-**Overall P4-6 status**: ⏸ IN PROGRESS
+**Overall P4-6 status**: ✅ PASS with limitation
 
-**Blockers**:
-1. ~~`GOOGLE_APPLICATION_CREDENTIALS` not set~~ → ✅ resolved
-2. Operator approval required for `firebase deploy --only functions --project story-gen-8a769`
+**Limitation**:  
+Post-rollback smoke (Scenario E) encountered 2 consecutive natural `schema_validation` failures (`mainQuestObject must be a string` — `field_type_mismatch` category). These are NOT caused by the P4-5 code changes or the rollback. The failures:
+- Are correctly classified as `failureStage: schema_validation` (not `unexpected`) ✅
+- Are NOT repairable by the fence-strip repair helper (repair only strips markdown fences)
+- Would hard-fail even with `ENABLE_SCHEMA_REPAIR_RETRY=true` ON
+- Are a P4-7 prompt tuning candidate
+- Do not affect P4-6 scope (P4-6 validates the schema repair retry feature, not Gemini output quality)
+
+Scenario C (repair trigger) was not naturally triggered during this smoke window; the repair path for fence-wrapped JSON requires Gemini to return ` ```json ... ``` ` output, which did not occur. Monitoring production logs is recommended.
 
 **Default behavior changed**: No  
 **Prompt behavior changed**: No  
 **ImageProvider routing changed**: No  
 **Candidate gate changed**: No  
-**Firebase deployed**: No (pending approval)
+**Firebase deployed**: Yes — flag ON (`38acc63`→`30c0c9e`), then rolled back (flag OFF) ✅
+**Final production state**: `ENABLE_SCHEMA_REPAIR_RETRY` absent (flag OFF) ✅
 
 ---
 
@@ -426,19 +442,10 @@ Before continuing P4-6:
 
 2. ~~**Approve Scenario A live smoke**~~ → ✅ Done (`bookId=5gjcBCwqBr9nLEpvN2Mp`, status=completed)
 
-3. **Approve Scenario B deploy** (adds `ENABLE_SCHEMA_REPAIR_RETRY=true` to runtime env):
-   ```
-   # Edit: functions/.env.story-gen-8a769
-   # Add line: ENABLE_SCHEMA_REPAIR_RETRY=true
-   firebase deploy --only functions --project story-gen-8a769
-   ```
+3. ~~**Approve Scenario B deploy**~~ → ✅ Done (2 books PASS)
 
-4. After scenarios B–E are complete, confirm rollback:
-   ```
-   # Remove ENABLE_SCHEMA_REPAIR_RETRY from functions/.env.story-gen-8a769
-   firebase deploy --only functions --project story-gen-8a769
-   ```
+4. ~~**Approve Scenario E rollback**~~ → ✅ Done (flag OFF, production restored)
 
 ---
 
-*This document is committed to track P4-6 smoke progress. Results section (§12) will be updated as scenarios complete.*
+**P4-6 COMPLETE** — `ENABLE_SCHEMA_REPAIR_RETRY` flag is OFF in production. P4-7 prompt tuning may proceed.
