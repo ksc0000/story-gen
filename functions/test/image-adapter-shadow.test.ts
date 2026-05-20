@@ -21,8 +21,8 @@
  *  - No network calls (generateImage is not called — only label / classify / upload tested).
  *  - No Firestore writes.
  *  - generate-book.ts not imported.
- *  - createImageClient() not called.
- *  - Adapters are still NOT wired to production code as of P3-12.
+ *  - createImageClient() is not called in this file.
+ *  - Adapters are now wired to production page generation (P3-15).
  */
 
 import { describe, it, expect, vi } from "vitest";

@@ -1,25 +1,23 @@
 /**
- * P3-14: Feature-flagged OpenAI candidate adapter wiring tests.
+ * P3-15: OpenAI candidate adapter routing tests (updated from P3-14 feature-flag wiring).
  *
  * Verifies that:
- *   1. Default (USE_OPENAI_ADAPTER off) — legacy imageClient.generateImage is used for
- *      openai_image_candidate. No adapter call.
- *   2. USE_OPENAI_ADAPTER=true + openai_image_candidate — OpenAIImageAdapter is used,
+ *   1. No openaiApiKey — legacy imageClient.generateImage is used for
+ *      openai_image_candidate (test-environment fallback). No adapter call.
+ *   2. openaiApiKey present + openai_image_candidate — OpenAIImageAdapter is used,
  *      imageClient.generateImage is NOT called for pages, upload happens via makePageUploader.
  *   3. No double upload: caller upload block (if imageBuffer) is skipped because imageBuffer
  *      is undefined when adapter path returns imageUrl.
  *   4. imageModel label compatible: resolveOpenAIModelLabel(false) matches legacy computation.
- *   5. Replicate profiles not routed to OpenAI adapter even when USE_OPENAI_ADAPTER=true.
- *   6. Feature flag independence: USE_REPLICATE_ADAPTER and USE_OPENAI_ADAPTER work together.
+ *   5. Replicate profiles not routed to OpenAI adapter.
+ *   6. Both tokens present: routing by PROFILE_PROVIDER_MAP is correct.
  *   7. Candidate gate: unenrolled profile (already downgraded to Replicate by gate) does not
- *      reach OpenAI adapter regardless of USE_OPENAI_ADAPTER flag.
+ *      reach OpenAI adapter regardless of token presence.
  *   8. Error handling: adapter error propagates through fallback loop, book goes to "failed".
  *
- * Design:
- *   - OpenAIImageAdapter is vi.mock()'d — no real OpenAI API calls.
- *   - The mocked generateImage calls the injected uploader so deps.uploadImage is verified.
- *   - ReplicateImageAdapter is also vi.mock()'d to isolate P3-14 behavior.
- *   - All generate-book.ts logic (story gen, quality checks, etc.) runs normally.
+ * P3-15 change: USE_OPENAI_ADAPTER feature flag removed.
+ * Adapter path is now the default when openaiApiKey is present in deps.
+ * Tests that previously verified flag-off-overrides-token behavior are removed.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -236,57 +234,25 @@ function createMockDeps(
 // Tests
 // -------------------------------------------------------------------------
 
-describe("P3-14: OpenAI candidate adapter feature-flag wiring", () => {
-  const savedEnv: Record<string, string | undefined> = {};
-
+describe("P3-15: OpenAI candidate adapter routing", () => {
   beforeEach(() => {
-    savedEnv.USE_OPENAI_ADAPTER = process.env.USE_OPENAI_ADAPTER;
-    savedEnv.USE_REPLICATE_ADAPTER = process.env.USE_REPLICATE_ADAPTER;
     mockOpenAIAdapterGenerateImage.mockClear();
     mockReplicateAdapterGenerateImage.mockClear();
   });
 
-  afterEach(() => {
-    if (savedEnv.USE_OPENAI_ADAPTER === undefined) {
-      delete process.env.USE_OPENAI_ADAPTER;
-    } else {
-      process.env.USE_OPENAI_ADAPTER = savedEnv.USE_OPENAI_ADAPTER;
-    }
-    if (savedEnv.USE_REPLICATE_ADAPTER === undefined) {
-      delete process.env.USE_REPLICATE_ADAPTER;
-    } else {
-      process.env.USE_REPLICATE_ADAPTER = savedEnv.USE_REPLICATE_ADAPTER;
-    }
-  });
-
   // -----------------------------------------------------------------------
-  // 1. Default flag off: legacy path unchanged for openai_image_candidate
+  // 1. No openaiApiKey: legacy imageClient path (test-environment fallback)
   // -----------------------------------------------------------------------
 
-  describe("USE_OPENAI_ADAPTER=false (default)", () => {
-    beforeEach(() => {
-      delete process.env.USE_OPENAI_ADAPTER;
-      delete process.env.USE_REPLICATE_ADAPTER;
-    });
-
-    it("calls imageClient.generateImage (legacy path) when flag is off", async () => {
-      const deps = createMockDeps({ openaiApiKey: "sk-test" });
+  describe("Legacy fallback (no openaiApiKey)", () => {
+    it("calls imageClient.generateImage when no openaiApiKey is provided", async () => {
+      const deps = createMockDeps(); // no openaiApiKey
       await processBookGeneration("book-openai-legacy", openAIBookData, deps);
 
-      // Legacy path: imageClient.generateImage called for pages
+      // No key: legacy imageClient.generateImage is used (test-environment fallback)
       expect(deps.imageClient.generateImage).toHaveBeenCalled();
       // Adapter must NOT be called
       expect(mockOpenAIAdapterGenerateImage).not.toHaveBeenCalled();
-    });
-
-    it("does not use OpenAI adapter even when openaiApiKey is set and flag is off", async () => {
-      const deps = createMockDeps({ openaiApiKey: "sk-test-key" });
-      delete process.env.USE_OPENAI_ADAPTER;
-
-      await processBookGeneration("book-openai-legacy-2", openAIBookData, deps);
-
-      expect(mockOpenAIAdapterGenerateImage).not.toHaveBeenCalled();
-      expect(deps.imageClient.generateImage).toHaveBeenCalled();
     });
 
     it("uploadImage called via caller upload block (buffer returned from legacy path)", async () => {
@@ -299,13 +265,11 @@ describe("P3-14: OpenAI candidate adapter feature-flag wiring", () => {
   });
 
   // -----------------------------------------------------------------------
-  // 2. Flag on + openai_image_candidate: adapter path
+  // 2. openaiApiKey provided + openai_image_candidate: adapter path
   // -----------------------------------------------------------------------
 
-  describe("USE_OPENAI_ADAPTER=true + openai_image_candidate", () => {
+  describe("OpenAI adapter path (key provided + openai_image_candidate)", () => {
     beforeEach(() => {
-      process.env.USE_OPENAI_ADAPTER = "true";
-      delete process.env.USE_REPLICATE_ADAPTER;
     });
 
     it("calls OpenAIImageAdapter.generateImage instead of imageClient.generateImage", async () => {
@@ -383,13 +347,10 @@ describe("P3-14: OpenAI candidate adapter feature-flag wiring", () => {
   });
 
   // -----------------------------------------------------------------------
-  // 3. Candidate gate: unenrolled profile does NOT reach OpenAI adapter
+  // 3. Candidate gate safety
   // -----------------------------------------------------------------------
 
   describe("candidate gate safety", () => {
-    beforeEach(() => {
-      process.env.USE_OPENAI_ADAPTER = "true";
-    });
 
     it("Replicate profile does NOT route to OpenAI adapter even when USE_OPENAI_ADAPTER=true", async () => {
       // Simulates what the gate does: unenrolled user → profile downgraded to pro_consistent (Replicate)
@@ -411,16 +372,11 @@ describe("P3-14: OpenAI candidate adapter feature-flag wiring", () => {
   });
 
   // -----------------------------------------------------------------------
-  // 4. Replicate profiles unaffected by USE_OPENAI_ADAPTER=true
+  // 4. Replicate profiles unaffected by OpenAI adapter
   // -----------------------------------------------------------------------
 
-  describe("Replicate profiles unaffected by USE_OPENAI_ADAPTER", () => {
-    beforeEach(() => {
-      process.env.USE_OPENAI_ADAPTER = "true";
-      delete process.env.USE_REPLICATE_ADAPTER;
-    });
-
-    it("pro_consistent uses legacy imageClient path even when USE_OPENAI_ADAPTER=true", async () => {
+  describe("Replicate profiles not routed to OpenAI adapter", () => {
+    it("pro_consistent does not use OpenAI adapter even when openaiApiKey is provided", async () => {
       const deps = createMockDeps({ openaiApiKey: "sk-test" });
       // baseBookData → pro_consistent profile (Replicate)
       await processBookGeneration("book-replicate-unaffected", baseBookData, deps);
@@ -430,14 +386,10 @@ describe("P3-14: OpenAI candidate adapter feature-flag wiring", () => {
   });
 
   // -----------------------------------------------------------------------
-  // 5. Feature flag independence
+  // 5. Both tokens present: routing by PROFILE_PROVIDER_MAP
   // -----------------------------------------------------------------------
 
-  describe("feature flag independence (both flags on)", () => {
-    beforeEach(() => {
-      process.env.USE_OPENAI_ADAPTER = "true";
-      process.env.USE_REPLICATE_ADAPTER = "true";
-    });
+  describe("Both tokens present: profile-based routing", () => {
 
     it("openai_image_candidate uses OpenAI adapter when both flags on", async () => {
       const deps = createMockDeps({
@@ -470,10 +422,6 @@ describe("P3-14: OpenAI candidate adapter feature-flag wiring", () => {
   // -----------------------------------------------------------------------
 
   describe("adapter error handling", () => {
-    beforeEach(() => {
-      process.env.USE_OPENAI_ADAPTER = "true";
-      delete process.env.USE_REPLICATE_ADAPTER;
-    });
 
     afterEach(() => {
       // Restore success implementation

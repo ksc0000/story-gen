@@ -234,7 +234,9 @@ export interface ImageProvider {
  *
  * IMPORTANT:
  *  - When adding a new ImageModelProfile to types.ts, add it here too.
- *  - Production routing is still handled by createImageClient() in generate-book.ts.
+ *  - Page image generation routing is handled by PROFILE_PROVIDER_MAP in
+ *    generatePageImageWithFallback (generate-book.ts). (P3-15)
+ *  - Cover image and character reference generation still use the legacy imageClient path.
  *  - This mapping must stay consistent with CANDIDATE_IMAGE_PROFILES in replicate.ts.
  */
 export const PROFILE_PROVIDER_MAP: Record<ImageModelProfile, ImageProviderId> = {

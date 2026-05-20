@@ -1,21 +1,18 @@
 /**
- * P3-13: Feature-flagged Replicate adapter wiring tests.
+ * P3-15: Replicate adapter routing tests (updated from P3-13 feature-flag wiring).
  *
  * Verifies that:
- *   1. Default (USE_REPLICATE_ADAPTER off) — legacy imageClient.generateImage is used.
- *   2. USE_REPLICATE_ADAPTER=true + Replicate profile — ReplicateImageAdapter is used,
- *      imageClient.generateImage is NOT called, upload happens via makePageUploader.
- *   3. USE_REPLICATE_ADAPTER=true + openai_image_candidate — legacy path is still used
+ *   1. No replicateApiToken — legacy imageClient.generateImage is used (test-environment fallback).
+ *   2. replicateApiToken present + Replicate profile — ReplicateImageAdapter is used,
+ *      imageClient.generateImage is NOT called for pages, upload happens via makePageUploader.
+ *   3. replicateApiToken present + openai_image_candidate — Replicate adapter is NOT used
  *      (PROFILE_PROVIDER_MAP maps it to "openai", not "replicate").
  *   4. Fallback loop still triggers when adapter path throws.
  *   5. imageModel label in writePage is identical to the legacy path computation.
  *
- * Design:
- *   - ReplicateImageAdapter is vi.mock()'d — no network calls.
- *   - The mocked generateImage calls the injected uploader, so deps.uploadImage
- *     IS invoked (proving upload happens inside the adapter path).
- *   - All other generate-book.ts production code (story gen, quality checks, etc.)
- *     is exercised normally; only image generation is mocked.
+ * P3-15 change: USE_REPLICATE_ADAPTER feature flag removed.
+ * Adapter path is now the default when replicateApiToken is present in deps.
+ * Tests that previously verified flag-off-overrides-token behavior are removed.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -181,48 +178,23 @@ function createMockDeps(overrides: { replicateApiToken?: string } = {}) {
 // Tests
 // -------------------------------------------------------------------------
 
-describe("P3-13: Replicate adapter feature-flag wiring", () => {
-  const originalEnv = process.env.USE_REPLICATE_ADAPTER;
-
+describe("P3-15: Replicate adapter routing", () => {
   beforeEach(() => {
     mockAdapterGenerateImage.mockClear();
   });
 
-  afterEach(() => {
-    if (originalEnv === undefined) {
-      delete process.env.USE_REPLICATE_ADAPTER;
-    } else {
-      process.env.USE_REPLICATE_ADAPTER = originalEnv;
-    }
-  });
-
   // -----------------------------------------------------------------------
-  // 1. Default flag off: legacy path unchanged
+  // 1. No replicateApiToken: legacy imageClient path (test-environment fallback)
   // -----------------------------------------------------------------------
 
-  describe("USE_REPLICATE_ADAPTER=false (default)", () => {
-    beforeEach(() => {
-      delete process.env.USE_REPLICATE_ADAPTER;
-    });
-
-    it("calls imageClient.generateImage (legacy path) when flag is off", async () => {
+  describe("Legacy fallback (no replicateApiToken)", () => {
+    it("calls imageClient.generateImage when no replicateApiToken is provided", async () => {
       const deps = createMockDeps();
       await processBookGeneration("book-legacy", baseBookData, deps);
 
-      // Legacy path: imageClient.generateImage is called for pages
+      // No token: legacy imageClient.generateImage is used (test-environment fallback)
       expect(deps.imageClient.generateImage).toHaveBeenCalled();
       // Adapter should NOT be called
-      expect(mockAdapterGenerateImage).not.toHaveBeenCalled();
-    });
-
-    it("does not use adapter even when replicateApiToken is provided and flag is off", async () => {
-      const deps = createMockDeps({ replicateApiToken: "r8_test_token" });
-      delete process.env.USE_REPLICATE_ADAPTER;
-
-      await processBookGeneration("book-legacy-with-token", baseBookData, deps);
-
-      // Flag is off — legacy path wins regardless of token presence
-      expect(deps.imageClient.generateImage).toHaveBeenCalled();
       expect(mockAdapterGenerateImage).not.toHaveBeenCalled();
     });
 
@@ -237,12 +209,11 @@ describe("P3-13: Replicate adapter feature-flag wiring", () => {
   });
 
   // -----------------------------------------------------------------------
-  // 2. Flag on + Replicate profile: adapter path
+  // 2. replicateApiToken provided + Replicate profile: adapter path
   // -----------------------------------------------------------------------
 
-  describe("USE_REPLICATE_ADAPTER=true + Replicate profile", () => {
+  describe("Replicate adapter path (token provided)", () => {
     beforeEach(() => {
-      process.env.USE_REPLICATE_ADAPTER = "true";
     });
 
     it("calls ReplicateImageAdapter.generateImage instead of imageClient.generateImage", async () => {
@@ -325,15 +296,14 @@ describe("P3-13: Replicate adapter feature-flag wiring", () => {
   });
 
   // -----------------------------------------------------------------------
-  // 3. Flag on + openai_image_candidate: legacy path (provider = "openai")
+  // 3. openai_image_candidate: Replicate adapter NOT used (provider = "openai")
   // -----------------------------------------------------------------------
 
-  describe("USE_REPLICATE_ADAPTER=true + openai_image_candidate profile", () => {
+  describe("openai_image_candidate profile: Replicate adapter is skipped", () => {
     beforeEach(() => {
-      process.env.USE_REPLICATE_ADAPTER = "true";
     });
 
-    it("uses legacy imageClient path for openai_image_candidate (not Replicate)", async () => {
+    it("does not use ReplicateImageAdapter for openai_image_candidate (PROFILE_PROVIDER_MAP=\"openai\")", async () => {
       const bookDataWithOpenAI: BookData = {
         ...baseBookData,
         imageModelProfile: "openai_image_candidate",
@@ -343,7 +313,7 @@ describe("P3-13: Replicate adapter feature-flag wiring", () => {
       await processBookGeneration("book-openai-candidate", bookDataWithOpenAI, deps);
 
       // openai_image_candidate maps to provider "openai" in PROFILE_PROVIDER_MAP,
-      // so the adapter condition (=== "replicate") is false → legacy path is taken.
+      // so the Replicate adapter condition (=== "replicate") is false — legacy path taken.
       expect(mockAdapterGenerateImage).not.toHaveBeenCalled();
       expect(deps.imageClient.generateImage).toHaveBeenCalled();
     });
@@ -354,9 +324,6 @@ describe("P3-13: Replicate adapter feature-flag wiring", () => {
   // -----------------------------------------------------------------------
 
   describe("adapter error handling", () => {
-    beforeEach(() => {
-      process.env.USE_REPLICATE_ADAPTER = "true";
-    });
 
     afterEach(() => {
       // Restore success implementation so later tests are not affected

@@ -685,7 +685,7 @@ All classifications use existing P2 taxonomy values.
 | P3-12 | Adapter-backed shadow tests (side-by-side parity assertion) |
 | P3-13 | Switch Replicate path to adapter (feature-flagged) |
 | P3-14 | Switch OpenAI candidate path to adapter (enrolled users only) |
-| P3-15 | Remove legacy `createImageClient()` after parity proven |
+| P3-15 | Remove legacy feature-flag conditionals; adapters become canonical page generation path |
 
 **Acceptance criteria**:
 - [x] Docs-only output
@@ -862,6 +862,37 @@ All classifications use existing P2 taxonomy values.
 **No production behavior change.** No generation routing change.
 
 **P3-15 gate: READY.** All 5 scenarios PASS (2026-05-20). See checklist §12 for execution results.
+
+---
+
+### P3-15: Remove legacy feature-flag conditionals — **COMPLETE**
+
+**Completed**: 2026-05-20.
+
+**Files changed**:
+- `functions/src/generate-book.ts` — removed `useReplicateAdapter()` and `useOpenAIAdapter()` feature flag functions; adapter path now default for all page generation when tokens present.
+- `functions/src/lib/image-provider.ts` — updated `PROFILE_PROVIDER_MAP` comment.
+- `functions/test/generate-book-replicate-adapter.test.ts` — updated describes, removed 1 obsolete flag-specific test.
+- `functions/test/generate-book-openai-adapter.test.ts` — updated describes, removed 1 obsolete flag-specific test, fixed 1 test.
+- `docs/P3_ADAPTER_WIRING_AND_SMOKE_PLAN.md` — marked P3-15 complete.
+
+**Canonical page generation path** (post-P3-15):
+- Replicate profiles: `ReplicateImageAdapter` (via `PROFILE_PROVIDER_MAP === "replicate"` + `replicateApiToken` present)
+- OpenAI profiles: `OpenAIImageAdapter` (via `PROFILE_PROVIDER_MAP === "openai"` + `openaiApiKey` present)
+- Legacy `imageClient.generateImage()` path retained only when adapter tokens absent (test-environment fallback)
+
+**Remaining legacy paths** (out of P3-15 scope):
+- `generateCoverImage()` — still uses `deps.imageClient` (legacy `ReplicateImageClient` / `OpenAIImageClient`)
+- `ensureRecurringCharacterReferences()` — still uses `deps.imageClient`
+- `createImageClient()` function is NOT removed; it is retained for these non-page flows.
+
+**What did NOT change**:
+- Candidate gate (`gateImageModelProfile`) — unchanged
+- Fallback order (`resolveImageFallbackProfiles`) — unchanged
+- Firestore schema — unchanged
+- No Firebase deploy performed
+
+**Tests**: 1216/1216 PASS (1218 − 2 removed flag-specific tests). check:phase2 105/105.
 
 
 |---|---|---|

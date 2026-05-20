@@ -314,12 +314,30 @@ Each slice is independently shippable, test-first, and behavior-equivalent until
 **Status**: All 5 scenarios executed and PASS (2026-05-20, commit b9aca01). See checklist §12 for results summary.  
 **P3-15 gate**: **READY** — live smoke complete, rollback confirmed, 1218/1218 tests pass.
 
-### P3-15: Remove legacy `createImageClient()`
+### P3-15: Remove legacy `createImageClient()` page-generation path — **COMPLETE**
 
-**Goal**: Delete `createImageClient()`, `ReplicateImageClient` direct import, `OpenAIImageClient` direct import from `generate-book.ts`.  
-**Condition**: P3-13 and P3-14 both verified stable in production **AND** P3-14s live smoke checklist is fully executed and recorded.  
-**Unblocked**: P3-14s execution complete (2026-05-20) — see [`docs/P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md`](P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md) §12.  
-**Ready to proceed**: All gate criteria met.
+**Goal**: Remove `USE_REPLICATE_ADAPTER` and `USE_OPENAI_ADAPTER` feature flag conditionals from page image generation. Adapter path is now the canonical default for all page image generation.  
+**Completed**: 2026-05-20.  
+**What changed** (`functions/src/generate-book.ts`):
+- Removed `useReplicateAdapter()` and `useOpenAIAdapter()` feature flag helper functions.
+- Adapter path for Replicate profiles (`PROFILE_PROVIDER_MAP === "replicate"`) now runs whenever `replicateApiToken` is present in deps — no env var gate required.
+- Adapter path for OpenAI profiles (`PROFILE_PROVIDER_MAP === "openai"`) now runs whenever `openaiApiKey` is present in deps — no env var gate required.
+- `deps.replicateApiToken` and `deps.openaiApiKey` are now always set from Firebase secrets in the CF handler.
+- Legacy `imageClient.generateImage()` path in `generatePageImageWithFallback` is retained as a test-environment fallback for when adapter tokens are absent.
+
+**What did NOT change**:
+- `createImageClient()` is **not removed** — it is retained for cover image generation (`generateCoverImage`) and recurring character reference generation (`ensureRecurringCharacterReferences`). These non-page flows are out of P3-15 scope.
+- Candidate gate unchanged. `allowCandidateProfile === true` is still required for `openai_image_candidate`. Gate runs before adapter selection.
+- Fallback order unchanged. `resolveImageFallbackProfiles()` unmodified.
+- Firestore schema unchanged. No field changes.
+- `imageClient: ImageClient` stays in `GenerationDeps` for cover/char ref flows.
+
+**Tests updated**:
+- `test/generate-book-replicate-adapter.test.ts`: renamed describes, removed 1 test that verified flag-off-overrides-token (no longer applicable).
+- `test/generate-book-openai-adapter.test.ts`: renamed describes, removed 1 test that verified flag-off-overrides-token, fixed 1 test to use no-key instead of flag-off.
+- Full suite: 1216/1216 PASS (1218 − 2 removed flag-specific tests).
+
+**Firebase deploy**: NOT performed. Deploy is a separate operator step.
 
 ---
 

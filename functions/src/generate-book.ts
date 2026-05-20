@@ -69,15 +69,9 @@ import { PROFILE_PROVIDER_MAP } from "./lib/image-provider";
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
 const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCURRENCY ?? "2")));
 
-/** P3-13: Feature flag for Replicate adapter path. Off by default — legacy path unchanged. */
-function useReplicateAdapter(): boolean {
-  return process.env.USE_REPLICATE_ADAPTER === "true";
-}
-
-/** P3-14: Feature flag for OpenAI candidate adapter path. Off by default — legacy path unchanged. */
-function useOpenAIAdapter(): boolean {
-  return process.env.USE_OPENAI_ADAPTER === "true";
-}
+// P3-15: USE_REPLICATE_ADAPTER and USE_OPENAI_ADAPTER feature flags removed.
+// Adapter path is now the canonical page generation path (no env var gate required).
+// Routing is determined by PROFILE_PROVIDER_MAP[profile] when adapter tokens are present.
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
 const GEMINI_RETRYABLE_USER_MESSAGE =
   "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。";
@@ -506,9 +500,9 @@ export interface GenerationDeps {
   llmClient: LLMClient;
   imageClient: ImageClient;
   uploadImage: (bookId: string, pageNumber: number, buffer: Buffer) => Promise<string>;
-  /** P3-13: API token for ReplicateImageAdapter. Unused by default (USE_REPLICATE_ADAPTER off). */
+  /** API token for ReplicateImageAdapter. Always set in production; optional for test environments that mock imageClient directly. */
   replicateApiToken?: string;
-  /** P3-14: OpenAI API key for OpenAIImageAdapter. Unused by default (USE_OPENAI_ADAPTER off). */
+  /** OpenAI API key for OpenAIImageAdapter. Always set in production; optional for test environments that mock imageClient directly. */
   openaiApiKey?: string;
   uploadCoverImage?: (bookId: string, buffer: Buffer) => Promise<string>;
   updateBookTitle: (bookId: string, title: string) => Promise<void>;
@@ -567,11 +561,11 @@ async function generatePageImageWithFallback(params: {
   bookId: string;
   pageIndex: number;
   skip: boolean;
-  /** P3-13: API token for ReplicateImageAdapter. Used only when useReplicateAdapter() is true. */
+  /** API token for ReplicateImageAdapter. When present, adapter path is used for Replicate profiles. */
   replicateApiToken?: string;
-  /** P3-13: Upload function from GenerationDeps. Used only when useReplicateAdapter() is true. */
+  /** Upload function injected into the adapter via makePageUploader. Required when adapter tokens are present. */
   uploadFn?: PageImageUploadFn;
-  /** P3-14: OpenAI API key for OpenAIImageAdapter. Used only when useOpenAIAdapter() is true. */
+  /** OpenAI API key for OpenAIImageAdapter. When present, adapter path is used for OpenAI profiles. */
   openaiApiKey?: string;
 }): Promise<PageImageResult> {
   const { primaryProfile, pageIndex, skip } = params;
@@ -601,10 +595,12 @@ async function generatePageImageWithFallback(params: {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       totalAttempts++;
       try {
-        // P3-13: Feature-flagged Replicate adapter path.
+        // P3-15: Adapter path for Replicate profiles.
+        // useReplicateAdapter() flag removed — adapter is now the canonical page generation path.
         // Upload happens inside the adapter via makePageUploader; imageBuffer is not returned.
+        // Falls through to legacy imageClient path below only when replicateApiToken is absent
+        // (test environments that mock imageClient directly without providing adapter tokens).
         if (
-          useReplicateAdapter() &&
           params.replicateApiToken != null &&
           params.uploadFn != null &&
           PROFILE_PROVIDER_MAP[profile] === "replicate"
@@ -634,10 +630,10 @@ async function generatePageImageWithFallback(params: {
             durationMs: Date.now() - startMs,
           };
         }
-        // P3-14: Feature-flagged OpenAI candidate adapter path.
+        // P3-15: Adapter path for OpenAI profiles.
+        // useOpenAIAdapter() flag removed — adapter is now the canonical page generation path.
         // Upload happens inside the adapter via makePageUploader; imageBuffer is not returned.
         if (
-          useOpenAIAdapter() &&
           params.openaiApiKey != null &&
           params.uploadFn != null &&
           PROFILE_PROVIDER_MAP[profile] === "openai"
@@ -667,7 +663,9 @@ async function generatePageImageWithFallback(params: {
             durationMs: Date.now() - startMs,
           };
         }
-        // Default legacy path (unchanged)
+        // Legacy imageClient path — reached only when adapter tokens are absent
+        // (test environments that mock imageClient directly without providing adapter tokens).
+        // In production, replicateApiToken and openaiApiKey are always present via Firebase secrets.
         const buffer = await withImageTimeout(
           params.imageClient.generateImage(params.prompt, {
             purpose: params.imagePurpose,
@@ -1198,10 +1196,9 @@ export async function processBookGeneration(
         bookId,
         pageIndex: i,
         skip: isDev,
-        // P3-13: adapter-path params — used only when useReplicateAdapter() is true
+        // Adapter tokens: present in production (always), absent in test environments that mock imageClient directly.
         replicateApiToken: deps.replicateApiToken,
         uploadFn: deps.uploadImage,
-        // P3-14: adapter-path params — used only when useOpenAIAdapter() is true
         openaiApiKey: deps.openaiApiKey,
       });
 
@@ -2282,6 +2279,12 @@ const geminiApiKey = defineSecret("GEMINI_API_KEY");
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 const openaiApiKey = defineSecret("OPENAI_API_KEY");
 
+/**
+ * Legacy image client factory for non-page image flows.
+ * Used by: generateCoverImage() and ensureRecurringCharacterReferences().
+ * Page image generation uses ImageProvider adapters (ReplicateImageAdapter / OpenAIImageAdapter)
+ * via PROFILE_PROVIDER_MAP routing in generatePageImageWithFallback. (P3-15)
+ */
 function createImageClient(imageModelProfile?: ImageModelProfile): ImageClient {
   if (imageModelProfile === "openai_image_candidate") {
     const key = openaiApiKey.value();
@@ -2382,8 +2385,8 @@ export const generateBook = onDocumentCreated(
 
       llmClient: new GeminiClient(geminiApiKey.value()),
       imageClient: createImageClient(gatedModelProfile),
-      replicateApiToken: useReplicateAdapter() ? replicateApiToken.value() : undefined,
-      openaiApiKey: useOpenAIAdapter() ? openaiApiKey.value() : undefined,
+      replicateApiToken: replicateApiToken.value(),
+      openaiApiKey: openaiApiKey.value(),
 
       uploadImage: async (bookId: string, pageNumber: number, buffer: Buffer) => {
         const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");
