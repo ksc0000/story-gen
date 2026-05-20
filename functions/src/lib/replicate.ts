@@ -5,6 +5,22 @@ import type {
   ImagePurpose,
   ImageQualityTier,
 } from "./types";
+// P3-8: Policy functions extracted to image-model-policy.ts.
+// Imported here for local use (generateImageWithMetadata uses resolveImageModelProfile).
+// Re-exported here for backward compatibility so existing imports (generate-book.ts, tests)
+// continue to work without any changes on their side.
+import {
+  CANDIDATE_IMAGE_PROFILES,
+  isCandidateProfile,
+  resolveImageModelProfile,
+  resolveImageFallbackProfiles,
+} from "./image-model-policy";
+export {
+  CANDIDATE_IMAGE_PROFILES,
+  isCandidateProfile,
+  resolveImageModelProfile,
+  resolveImageFallbackProfiles,
+};
 
 // Legacy fallback only. Not used in normal generation.
 const LEGACY_FLUX_SCHNELL_MODEL = "black-forest-labs/flux-schnell" as const;
@@ -83,29 +99,8 @@ function resolveBookModelByTier(
   return FLUX_KLEIN_FAST_MODEL;
 }
 
-export function resolveImageModelProfile(params: {
-  purpose?: ImagePurpose;
-  imageQualityTier?: ImageQualityTier;
-  imageModelProfile?: ImageModelProfile;
-}): ImageModelProfile {
-  if (params.purpose === "child_avatar" || params.purpose === "child_avatar_revision") {
-    return "pro_consistent";
-  }
-
-  if (params.imageModelProfile) {
-    return params.imageModelProfile;
-  }
-
-  if (params.imageQualityTier === "premium") {
-    return "pro_consistent";
-  }
-
-  if (params.imageQualityTier === "standard" && isKleinBaseEnabled()) {
-    return "klein_base";
-  }
-
-  return "klein_fast";
-}
+// resolveImageFallbackProfiles, CANDIDATE_IMAGE_PROFILES, isCandidateProfile are
+// now defined in image-model-policy.ts and re-exported above.
 
 export function resolveReplicateModel(params: {
   purpose?: ImagePurpose;
@@ -123,42 +118,8 @@ export function resolveReplicateModel(params: {
   return resolveBookModelByTier(params.imageQualityTier);
 }
 
-export function resolveImageFallbackProfiles(profile: ImageModelProfile): ImageModelProfile[] {
-  switch (profile) {
-    case "pro_consistent":
-      return ["pro_consistent", "klein_fast"];
-    case "klein_base":
-      return ["klein_base", "klein_fast"];
-    case "kontext_reference":
-      return ["kontext_reference", "klein_fast"];
-    case "flux11_pro_candidate": // T6-37: diagnostic only
-      return ["flux11_pro_candidate", "klein_fast"];
-    case "openai_image_candidate": // T6-43: no Replicate fallback — OpenAI only
-      return ["openai_image_candidate"];
-    case "klein_fast":
-    default:
-      return ["klein_fast"];
-  }
-}
-
-/**
- * Candidate profiles that require explicit user-level enrollment before production use.
- * These profiles are NOT part of the default production routing.
- * T6-59: Used by the controlled exposure gate in the generateBook Cloud Function.
- */
-export const CANDIDATE_IMAGE_PROFILES: readonly ImageModelProfile[] = [
-  "openai_image_candidate", // T6-43: OpenAI Image path (E005 resolution candidate)
-  "flux11_pro_candidate",   // T6-37: FLUX 1.1 pro diagnostic candidate
-] as const;
-
-/**
- * Returns true if the given profile is a candidate profile requiring user enrollment.
- * Candidate profiles are not accessible to users by default.
- * T6-59: Gate check — if true, user must have generationOverride.allowCandidateProfile === true.
- */
-export function isCandidateProfile(profile: ImageModelProfile | undefined): boolean {
-  return profile !== undefined && CANDIDATE_IMAGE_PROFILES.includes(profile);
-}
+// resolveImageFallbackProfiles, CANDIDATE_IMAGE_PROFILES, isCandidateProfile are
+// now defined in image-model-policy.ts and re-exported above.
 
 export function buildReplicateInput(params: {
   model: ReplicateModelName;

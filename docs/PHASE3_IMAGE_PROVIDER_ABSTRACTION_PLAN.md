@@ -618,14 +618,51 @@ All classifications use existing P2 taxonomy values.
 
 **Next step**: P3-8 — cleanup legacy Replicate-specific names, or P3-9 — gated OpenAI adapter smoke test.
 
-### P3-8: Cleanup legacy Replicate-specific names where safe
+### P3-8: Legacy Replicate-specific naming cleanup and shared policy extraction — **COMPLETE**
 
-**Scope**: Remove or deprecate Replicate-specific names that leaked into shared code.
-- `resolveImageModelProfile()` moved to shared routing module
-- `resolveImageFallbackProfiles()` moved to shared routing module
-- `withImageTimeout()` moved to shared utility module
-- `ImageTimeoutError` moved to shared types
-- Replicate model name constants remain inside Replicate adapter
+**Scope**: Provider-neutral policy functions extracted from replicate.ts into a dedicated shared module.
+
+**New module**: `functions/src/lib/image-model-policy.ts`
+
+**Functions moved** (source of truth now in image-model-policy.ts):
+| Symbol | Direction |
+|---|---|
+| `CANDIDATE_IMAGE_PROFILES` | Moved to image-model-policy.ts; re-exported from replicate.ts |
+| `isCandidateProfile()` | Moved to image-model-policy.ts; re-exported from replicate.ts |
+| `resolveImageModelProfile()` | Moved to image-model-policy.ts; re-exported from replicate.ts |
+| `resolveImageFallbackProfiles()` | Moved to image-model-policy.ts; re-exported from replicate.ts |
+
+**Deferred** (churn too large for this slice; tracked for future cleanup):
+- `withImageTimeout()` — still in replicate.ts
+- `ImageTimeoutError` — still in replicate.ts
+
+**Compatibility strategy**:
+- `replicate.ts` imports from `image-model-policy.ts` and re-exports all four symbols.
+- `generate-book.ts` imports from `./lib/replicate` unchanged — continues to work via re-exports.
+- `candidate-gate.test.ts` imports from `../src/lib/replicate` unchanged — continues to work.
+- `replicate.test.ts` imports from `../src/lib/replicate` unchanged — continues to work.
+- No call site anywhere needed changing.
+
+**Acceptance criteria**:
+- [x] Policy functions have single source of truth in image-model-policy.ts
+- [x] replicate.ts re-exports verified to be same reference as policy module exports
+- [x] CANDIDATE_IMAGE_PROFILES membership unchanged
+- [x] resolveImageFallbackProfiles order unchanged for all 6 profiles
+- [x] isCandidateProfile behavior unchanged
+- [x] resolveImageModelProfile default, purpose, tier, and candidate pass-through unchanged
+- [x] generate-book.ts unchanged
+- [x] createImageClient() unchanged
+- [x] Generation routing unchanged, candidate gate unchanged, fallback order unchanged
+- [x] No Firebase deploy
+- [x] 1074/1074 PASS (was 1037, +37 new tests)
+- [x] npm run check:phase2: PASS
+
+**Files changed**:
+- `functions/src/lib/image-model-policy.ts` — new file (canonical source)
+- `functions/src/lib/replicate.ts` — removed policy implementations; added import + re-export
+- `functions/test/image-model-policy.test.ts` — new file (37 tests covering all policy functions)
+
+**Next step**: P3-9 — gated OpenAI adapter smoke test, or adapter wiring design (phase gate).
 
 ### P3-9: OpenAI adapter live smoke, gated only
 
