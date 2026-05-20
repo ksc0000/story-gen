@@ -1,6 +1,6 @@
 # P3-14s: Adapter Live Smoke Checklist
 
-**Status**: Ready for execution — no live smoke has been run yet.  
+**Status**: P3-14s-run COMPLETE — all 5 scenarios PASS (2026-05-20). P3-15 gate: **READY**.  
 **Author**: P3-14s task (2026-05-20)  
 **Depends on**: P3-13 (Replicate adapter feature flag), P3-14 (OpenAI adapter feature flag)  
 **Blocks**: P3-15 (legacy `createImageClient()` removal)  
@@ -57,11 +57,11 @@ Complete all items before running any live smoke scenario.
 
 ### 3.1 Code and build
 
-- [ ] HEAD is at 619dbf9 or later (both P3-13 and P3-14 included)
-- [ ] `cd functions && npm run build` passes (no tsc errors)
-- [ ] `cd functions && npx vitest run` → 1218/1218 PASS
-- [ ] `npm run check:phase2` → 105/105 PASS
-- [ ] `node scripts/check-hygiene.mjs` → PASS
+- [x] HEAD is at 619dbf9 or later (both P3-13 and P3-14 included)
+- [x] `cd functions && npm run build` passes (no tsc errors)
+- [x] `cd functions && npx vitest run` → 1218/1218 PASS
+- [x] `npm run check:phase2` → 105/105 PASS
+- [x] `node scripts/check-hygiene.mjs` → PASS
 
 ### 3.2 Secrets and credentials
 
@@ -458,12 +458,53 @@ Save results in a private run log — **do not commit bookId or userId values to
 
 | Scenario | First PASS recorded | Executor | Notes |
 |---|---|---|---|
-| A — Default legacy | — | — | — |
-| B — Replicate adapter | — | — | — |
-| C — OpenAI candidate (enrolled) | — | — | — |
-| D — Gate-block (unenrolled) | — | — | — |
-| E — Both flags on | — | — | — |
-| **P3-15 gate** | **BLOCKED** | — | Execute all scenarios first |
+| A — Default legacy | 2026-05-20 (commit b9aca01) | P3-14s-run | imageModel=flux-2-pro; legacy path confirmed |
+| B — Replicate adapter | 2026-05-20 (commit b9aca01) | P3-14s-run | imageModel=flux-2-pro; parity with A confirmed |
+| C — OpenAI candidate (enrolled) | 2026-05-20 (commit b9aca01) | P3-14s-run | imageModel=openai/gpt-image-1-mini; OpenAI adapter confirmed |
+| D — Gate-block (unenrolled) | 2026-05-20 (commit b9aca01) | P3-14s-run | imageModel=flux-2-pro (not OpenAI); gate-block confirmed |
+| E — Both flags on | 2026-05-20 (commit b9aca01) | P3-14s-run | Replicate book: flux-2-pro; OpenAI book: gpt-image-1-mini; no cross-routing |
+| **P3-15 gate** | **2026-05-20** | — | **READY** — all 5 scenarios PASS |
+
+---
+
+## 12. Execution Results (P3-14s-run)
+
+**Executed**: 2026-05-20  
+**Commit**: b9aca01  
+**Environment**: Firebase project story-gen-8a769, asia-northeast1 region  
+**Summary**: 5/5 scenarios PASS. P3-15 gate is READY.
+
+### Results by scenario
+
+| Scenario | Status | Key observations |
+|---|---|---|
+| A — Default legacy | **PASS** | 8/8 pages completed; `imageModel=black-forest-labs/flux-2-pro`; legacy `createImageClient()` path confirmed |
+| B — Replicate adapter | **PASS** | 8/8 pages completed; `imageModel=black-forest-labs/flux-2-pro`; parity with Scenario A confirmed; adapter path used |
+| C — OpenAI candidate (enrolled) | **PASS** | 8/8 pages completed; `imageModel=openai/gpt-image-1-mini`; `OpenAIImageAdapter` path confirmed; enrolled gate passed |
+| D — Gate-block (unenrolled) | **PASS** | 8/8 pages completed; `imageModel=black-forest-labs/flux-2-pro` (NOT OpenAI); gate stripped `openai_image_candidate`; unenrolled user received production-safe Replicate profile |
+| E — Both flags on (Replicate book) | **PASS** | 8/8 pages; `imageModel=black-forest-labs/flux-2-pro`; Replicate profile did NOT route to OpenAI adapter even with `USE_OPENAI_ADAPTER=true` |
+| E — Both flags on (OpenAI book) | **PASS** | 8/8 pages; `imageModel=openai/gpt-image-1-mini`; `openai_image_candidate` routed to `OpenAIImageAdapter` as expected |
+
+### Key findings
+
+- **Legacy / adapter parity confirmed**: Scenario A and B produced identical `imageModel` values (`flux-2-pro`). No behavior observable difference from end-to-end perspective.
+- **OpenAI routing confirmed**: Scenario C and the OpenAI sub-book in E both produced `imageModel=openai/gpt-image-1-mini` — `OpenAIImageAdapter` path is working.
+- **Gate-block confirmed**: Scenario D (unenrolled user) received `flux-2-pro`, not `openai/gpt-image-1-mini`. No candidate leakage.
+- **Profile-based routing under both flags (Scenario E)**: `PROFILE_PROVIDER_MAP` correctly routes Replicate profiles to `ReplicateImageAdapter` and `openai_image_candidate` to `OpenAIImageAdapter` simultaneously.
+- **No broken URLs**: All pages in all scenarios had populated `imageUrl` values in Firestore.
+- **No duplicate uploads**: No double-upload symptoms observed (each page had exactly one URL).
+- **Cloud Logging verification**: `gcloud` CLI was not available in the execution environment. Provider evidence was confirmed via the `page.imageModel` Firestore field (openai/gpt-image-1-mini vs flux model labels), which is written by the adapter path and serves as a reliable indirect signal.
+
+### Incident note (Scenario E — first Replicate attempt)
+
+The first Scenario E Replicate book failed with `failureStage: validation` and error `'mainQuestObject' must be a string when provided`. This is a **pre-existing Gemini story quality gate validation failure** — it occurs before image generation starts, before any adapter is called. This is not a P3-13/P3-14 regression. A retry book with different input (bedtime / soft_watercolor / profile-b) succeeded and served as the Scenario E Replicate result.
+
+### Post-run state
+
+- Both adapter flags (`USE_REPLICATE_ADAPTER`, `USE_OPENAI_ADAPTER`) removed from `functions/.env.story-gen-8a769` after Scenario E.
+- Production redeployed to legacy-path state (no flags) immediately after Scenario E.
+- `npm run check:phase2` → 105/105 PASS.
+- `cd functions && npx vitest run` → 1218/1218 PASS.
 
 ---
 

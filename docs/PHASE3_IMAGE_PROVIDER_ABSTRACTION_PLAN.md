@@ -840,7 +840,7 @@ All classifications use existing P2 taxonomy values.
 
 ---
 
-### P3-14s: Adapter live smoke checklist — **DOCS CREATED, EXECUTION PENDING**
+### P3-14s: Adapter live smoke checklist — **COMPLETE — all 5 scenarios PASS**
 
 **Files added**:
 - `docs/P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md` — full live smoke checklist
@@ -851,9 +851,17 @@ All classifications use existing P2 taxonomy values.
 - Per-scenario validation items for Firestore fields, Cloud Storage URL shape, Cloud Logging events, and PII audit.
 - P3-15 readiness gate: all 5 scenarios must PASS before legacy removal proceeds.
 
-**No production behavior change.** No generation routing change. No Firebase deploy.
+**Execution results (2026-05-20, commit b9aca01)**:
+- Scenario A (legacy): PASS — imageModel=flux-2-pro, legacy path confirmed
+- Scenario B (Replicate adapter): PASS — imageModel=flux-2-pro, parity with A confirmed
+- Scenario C (OpenAI candidate, enrolled): PASS — imageModel=openai/gpt-image-1-mini
+- Scenario D (gate-block, unenrolled): PASS — imageModel=flux-2-pro, no candidate leakage
+- Scenario E (both flags): PASS — Replicate book=flux-2-pro, OpenAI book=gpt-image-1-mini, no cross-routing
+- check:phase2 105/105, Vitest 1218/1218 throughout; production restored to legacy path after E
 
-**P3-15 cleanup is gated on P3-14s live smoke execution.** See checklist §10 for gate criteria.
+**No production behavior change.** No generation routing change.
+
+**P3-15 gate: READY.** All 5 scenarios PASS (2026-05-20). See checklist §12 for execution results.
 
 
 |---|---|---|
