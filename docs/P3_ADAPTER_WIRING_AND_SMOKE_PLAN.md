@@ -231,13 +231,18 @@ Each slice is independently shippable, test-first, and behavior-equivalent until
 **No network / no Firestore / no Firebase deploy.**  
 **Tests**: `functions/test/image-adapter-factory.test.ts` (7 describe blocks, all profiles covered)
 
-### P3-11: Storage uploader abstraction
+### P3-11: Storage uploader abstraction — **COMPLETE**
 
-**Goal**: Extract the `deps.uploadImage` / `deps.uploadCoverImage` implementation into a shared function.  
-Define `makePageUploader(bookId, pageNumber, uploadFn)` closure factory.  
-**Scope**: New file `lib/storage-uploader.ts` or inline in generate-book.ts.  
-**Non-goal**: No behavior change — same URL, same bucket, same metadata.  
-**Tests**: Unit tests for URL shape and closure capture; no live Firebase.
+**Goal**: Bridge `deps.uploadImage(bookId, pageNumber, buffer)` to the adapter uploader `(buffer, profile) => URL` signature.  
+**Implementation**:
+- New file: `functions/src/lib/image-storage-uploader.ts`
+- Exports: `PageImageUploadFn`, `AdapterStorageUploader`, `makePageUploader(params)`
+- `profile` argument intentionally ignored — routing is caller's responsibility
+- `AdapterStorageUploader` is type-compatible with both `ReplicateStorageUploader` and `OpenAIStorageUploader`
+
+**Not wired to production**: `generate-book.ts` unchanged. `deps.uploadImage` still called directly.  
+**No network / no Firestore / no Firebase deploy.**  
+**Tests**: `functions/test/image-storage-uploader.test.ts` (9 describe blocks, 16 test cases)
 
 ### P3-12: Adapter-backed shadow tests
 

@@ -722,6 +722,30 @@ All classifications use existing P2 taxonomy values.
 
 ---
 
+### P3-11: Storage uploader abstraction — **COMPLETE**
+
+**Files added**:
+- `functions/src/lib/image-storage-uploader.ts` — `PageImageUploadFn`, `AdapterStorageUploader`, `makePageUploader()`
+- `functions/test/image-storage-uploader.test.ts` — 9 describe blocks, 16 test cases
+
+**Key design decisions**:
+- `makePageUploader({bookId, pageNumber, uploadImage})` binds bookId+pageNumber in closure; ignores adapter `profile` arg
+- `AdapterStorageUploader` is structurally compatible with `ReplicateStorageUploader` and `OpenAIStorageUploader` — no cast needed
+- `deps.uploadCoverImage` is out of scope (different signature; will be addressed in P3-14 if needed)
+
+**Invariants**:
+- `generate-book.ts` unchanged
+- `deps.uploadImage` still called directly in production
+- No production behavior change
+- No candidate gate change
+- No fallback order change
+- No network calls
+- No Firestore writes
+- No Firebase deploy
+- All tests pass: 1096+16 = 1112/1112
+
+---
+
 ## 8. Test Strategy
 
 ### 8.1 Tests required before implementation
