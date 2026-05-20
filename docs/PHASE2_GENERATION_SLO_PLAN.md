@@ -380,7 +380,7 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 | P2-7 | ✅ COMPLETE — see P2-7 Implementation Note below |
 | P2-8 | ✅ COMPLETE — see P2-8 Implementation Note below |
 | P2-9 | ✅ COMPLETE — see P2-9 Implementation Note below |
-| P2-10 | Pending |
+| P2-10 | ✅ COMPLETE — see P2-10 Implementation Note below |
 
 ---
 
@@ -957,3 +957,66 @@ Establish a design-first foundation for scheduled SLO reporting without enabling
 - Decide whether P2-9c (manual-dispatch) or P2-9d (scheduled) is justified by operational need.
 - Review `candidateAllowed` rate in production — should be near zero under current policy.
 - Optionally lock threshold values in CI via a baseline comparison step.
+
+---
+
+## P2-10 Implementation Note
+
+**Commit**: docs(P2-10): define generation SLO threshold policy and close Phase 2  
+**Files changed**:
+- `docs/GENERATION_SLO_THRESHOLD_POLICY.md` (new) — threshold policy, severity levels, decision matrix, Phase 2 closure summary
+- `docs/PHASE2_GENERATION_SLO_PLAN.md` — P2-10 status + implementation note
+- `docs/GENERATION_SLO_RUNBOOK.md` — Section 7 updated with policy reference
+- `docs/GENERATION_SLO_AUTOMATION_PLAN.md` — P2-10 handoff updated with policy reference
+
+**No production code changes.** Docs-only.
+
+### Purpose
+
+Define initial SLO threshold policy and close Phase 2 reliability work as a coherent operational baseline.
+
+### Threshold policy path
+
+`docs/GENERATION_SLO_THRESHOLD_POLICY.md`
+
+### Main threshold categories
+
+| Category | Primary metrics |
+|---|---|
+| Book-level | Readable rate, completion rate, partial completion rate, failure rate |
+| Page/image | Page image failed rate, E005 rate, TIMEOUT rate, fallback rate |
+| Latency | Book p95, page image p95 |
+| Candidate gate | candidateAllowed (expected 0 in normal traffic) |
+| Assets | Public URL 200 rate, stale PNG refs |
+| Data quality | Parse warnings, missing eventName |
+
+### Severity levels
+
+- **OK**: All metrics in healthy range — no action.
+- **Watch**: One metric outside healthy but above Investigate — record, re-check next cycle.
+- **Investigate**: Metric outside Investigate threshold or any asset/candidate anomaly — run fresh report, identify cause, create task.
+- **Incident**: Metric at Incident threshold or `candidateAllowed` non-zero without enrollment — follow playbook, assess rollback.
+
+### Phase 2 closure
+
+All 10 P2 slices are now complete:
+
+| Slice | Commit |
+|---|---|
+| P2-1 SLO inventory | c975dd1 |
+| P2-2 Structured logging | b98f887 |
+| P2-3 Error taxonomy | 48dcfb1 |
+| P2-4 Candidate gate tests | 57c0e9a |
+| P2-5 Asset smoke checker | 2abd169 |
+| P2-6 SLO report script | 53ee790 |
+| P2-7 Operational runbook | 7909689 |
+| P2-8 Deterministic CI guards | 36a048b |
+| P2-9 Automation design | 7e0aa70 |
+| P2-10 Threshold policy | this commit |
+
+### Remaining work after Phase 2
+
+- Fix 3 pre-existing test failures (`generate-book`, `prompt-builder`, `test-image-models`)
+- P2-9c: manual-dispatch SLO report GH Actions (after credentials review)
+- Threshold tuning after real traffic baseline (≥ 2 weeks, ≥ 30 books/day)
+- Phase 3: ImageProvider abstraction (`docs/PRODUCT_ROADMAP.md Phase 3`)

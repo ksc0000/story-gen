@@ -349,6 +349,8 @@ P2-10 should:
 
 4. **Lock thresholds in CI** — optionally add a threshold-check step to `ci-phase2.yml` that compares a saved baseline report against the self-test fixture.
 
+> **P2-10 is now complete.** Threshold policy, severity levels, decision matrix, sample size rules, weekly review process, release gate checklist, and Phase 2 closure summary are documented in `docs/GENERATION_SLO_THRESHOLD_POLICY.md`.
+
 ---
 
 ## Appendix: Key Files

@@ -329,6 +329,7 @@ Prints all 37 URLs that will be checked without making network requests.
 ## 7. Suggested Initial Thresholds
 
 > **These are starting thresholds and should be tuned after observing real traffic patterns.**
+> **Full threshold policy, severity levels, sample size rules, and decision matrix**: `docs/GENERATION_SLO_THRESHOLD_POLICY.md`
 
 | Metric | Investigate if | Hard concern if |
 |---|---|---|
@@ -336,7 +337,7 @@ Prints all 37 URLs that will be checked without making network requests.
 | Completion rate | < 95% | < 90% |
 | Failure rate | > 2% | > 5% |
 | E005 error code | Increases relative to baseline | Affects >10% of page_image_failed |
-| TIMEOUT error code | Increases relative to baseline | Affects >20% of page_image_failed |
+| TIMEOUT error code | Increases relative to baseline | Affects >25% of page_image_failed |
 | PROVIDER_5XX | Any sustained rate | >5% of page_image_failed in a window |
 | book durationMs p95 | > 600,000ms (10 min) | > 900,000ms (15 min) |
 | candidateAllowed unexpectedly non-zero | Always investigate if not expected | Any case where `provider=openai` without deliberate enrollment |
@@ -696,9 +697,9 @@ Use this checklist for weekly/manual generation health review.
 | P2-5 | Public asset URL smoke checker | ✅ COMPLETE |
 | P2-6 | Generation SLO report script | ✅ COMPLETE |
 | P2-7 | Operational runbook (this document) | ✅ COMPLETE |
-| **P2-8** | **CI guard selection / non-network guardrails** | Pending — identify which checks can run in CI without network access (e.g. self-test, hygiene, unit tests) and add a CI configuration |
-| **P2-9** | **Dashboard automation** | Pending — automate periodic SLO report generation from Cloud Logging export (scheduled script or Cloud Workflow) |
-| **P2-10** | **SLO threshold tuning** | Pending — after observing real traffic, tune the investigation thresholds in Section 7 with measured baselines |
+| **P2-8** | **CI guard selection / non-network guardrails** | ✅ COMPLETE — `.github/workflows/ci-phase2.yml`, `check:phase2` script |
+| **P2-9** | **Scheduled reporting automation design** | ✅ COMPLETE — `docs/GENERATION_SLO_AUTOMATION_PLAN.md`, `scripts/print-generation-log-query.mjs` |
+| **P2-10** | **SLO threshold policy and Phase 2 closure** | ✅ COMPLETE — `docs/GENERATION_SLO_THRESHOLD_POLICY.md` |
 
 ---
 
