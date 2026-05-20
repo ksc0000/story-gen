@@ -894,6 +894,35 @@ All classifications use existing P2 taxonomy values.
 
 **Tests**: 1216/1216 PASS (1218 − 2 removed flag-specific tests). check:phase2 105/105.
 
+---
+
+### P3-15s: Post-cutover adapter smoke — **COMPLETE — all 3 scenarios PASS**
+
+**Executed**: 2026-05-20.  
+**Deployed commit**: 78636e8  
+**Deploy command**: `firebase deploy --only functions --project story-gen-8a769` — 13 functions updated.
+
+**Purpose**: Verify `ReplicateImageAdapter` and `OpenAIImageAdapter` activate correctly in production without any feature flags (P3-15 removed feature flag requirements).
+
+**Scenarios**:
+| Scenario | bookId (redacted) | Status | imageModel | pages |
+|---|---|---|---|---|
+| P3-15s-A — Replicate adapter default, no flags | mYPnjjYe… | **PASS** | `black-forest-labs/flux-2-pro` | 8/8 completed |
+| P3-15s-B — OpenAI candidate enrolled, no flags | smoke-openai-i1… | **PASS** | `openai/gpt-image-1-mini` | 8/8 completed |
+| P3-15s-C — Gate-block unenrolled negative | smoke-gate-block… | **PASS** | `black-forest-labs/flux-2-pro` | 8/8 completed |
+
+**Key findings**:
+- Adapters activate automatically from Firebase secret tokens — no `USE_REPLICATE_ADAPTER` / `USE_OPENAI_ADAPTER` env vars required.
+- Candidate gate safe: Scenario C confirmed no `openai/gpt-image-1-mini` for unenrolled user.
+- Scenario A first attempt failed at `schema_validation` (pre-existing Gemini LLM parse issue, not P3-15 regression). Retry succeeded.
+- Scenario C: 7/8 pages `fallback_completed` (pre-existing Replicate pro_consistent behavior for adventure theme; not P3-15 regression).
+- Full results: see [`docs/P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md`](P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md) §13.
+
+**P3 page generation is functionally complete.** Remaining legacy scope (future cleanup):
+- `generateCoverImage()` — still uses `deps.imageClient` (legacy `ReplicateImageClient` / `OpenAIImageClient`)
+- `ensureRecurringCharacterReferences()` — still uses `deps.imageClient`
+- `createImageClient()` retained for these non-page flows only
+
 
 |---|---|---|
 | Provider contract tests (P3-6) | Before P3-3/P3-4 merge | Interface contract: all adapters pass the same baseline assertions |

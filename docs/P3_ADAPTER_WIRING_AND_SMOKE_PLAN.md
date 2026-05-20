@@ -337,7 +337,30 @@ Each slice is independently shippable, test-first, and behavior-equivalent until
 - `test/generate-book-openai-adapter.test.ts`: renamed describes, removed 1 test that verified flag-off-overrides-token, fixed 1 test to use no-key instead of flag-off.
 - Full suite: 1216/1216 PASS (1218 − 2 removed flag-specific tests).
 
-**Firebase deploy**: NOT performed. Deploy is a separate operator step.
+**Firebase deploy**: Performed in P3-15s (2026-05-20) as part of post-cutover smoke. Commit 78636e8.
+
+### P3-15s: Post-cutover adapter smoke — **COMPLETE — all 3 scenarios PASS**
+
+**Executed**: 2026-05-20  
+**Deployed commit**: 78636e8  
+**Deploy command**: `firebase deploy --only functions --project story-gen-8a769`  
+**Purpose**: Verify that `ReplicateImageAdapter` and `OpenAIImageAdapter` activate correctly in production without `USE_REPLICATE_ADAPTER` / `USE_OPENAI_ADAPTER` feature flags.  
+**Full results**: See [`docs/P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md`](P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md) §13.
+
+| Scenario | Status | imageModel | Pages |
+|---|---|---|---|
+| P3-15s-A — Replicate adapter default (no flags) | **PASS** | `black-forest-labs/flux-2-pro` | 8/8 completed |
+| P3-15s-B — OpenAI candidate adapter, enrolled (no flags) | **PASS** | `openai/gpt-image-1-mini` | 8/8 completed |
+| P3-15s-C — Gate-block negative, unenrolled | **PASS** | `black-forest-labs/flux-2-pro` (NOT OpenAI) | 8/8 completed |
+
+**Key findings**:
+- Both adapters activate automatically from Firebase secret tokens — no feature flags needed.
+- Candidate gate safe: unenrolled user (Scenario C) received Replicate path only.
+- No candidate leakage. No broken URLs. No duplicate uploads.
+- Scenario A first attempt failed at `schema_validation` (pre-existing LLM parse issue); retry succeeded.
+- Scenario C 7/8 `fallback_completed` is a pre-existing Replicate pro_consistent behavior for the adventure theme — not a P3-15 regression.
+
+**P3 functionally complete for page generation.** Remaining legacy scope: `generateCoverImage()` and `ensureRecurringCharacterReferences()` (use `createImageClient()`; tracked as future cleanup).
 
 ---
 

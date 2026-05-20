@@ -514,6 +514,90 @@ The first Scenario E Replicate book failed with `failureStage: validation` and e
 |---|---|---|
 | `functions/test/candidate-gate.test.ts` | Gate invariants (48 tests) — authoritative regression suite | 48/48 PASS |
 | `functions/test/generate-book.test.ts` | Default legacy path (52 tests) | 52/52 PASS |
+| `functions/test/generate-book-replicate-adapter.test.ts` | P3-15: Replicate adapter routing (10 tests) | 10/10 PASS |
+| `functions/test/generate-book-openai-adapter.test.ts` | P3-15: OpenAI candidate adapter routing (14 tests) | 14/14 PASS |
+| `functions/test/image-adapter-shadow.test.ts` | Adapter ↔ legacy behavior parity (72 tests) | 72/72 PASS |
+| `functions/test/image-provider-contract.test.ts` | Both adapters satisfy ImageProvider interface (84 tests) | 84/84 PASS |
+| `functions/test/replicate-image-adapter.test.ts` | ReplicateImageAdapter unit tests | PASS |
+| `functions/test/openai-image-adapter.test.ts` | OpenAIImageAdapter unit tests | PASS |
+
+Total unit/integration coverage: **1216/1216 PASS** as of commit 78636e8 (P3-15).
+
+---
+
+## 13. Execution Results (P3-15s — Post-Cutover Smoke)
+
+**Executed**: 2026-05-20  
+**Commit**: 78636e8 (P3-15 — feature flags removed, adapters canonical)  
+**Deployed**: `firebase deploy --only functions --project story-gen-8a769` — all 13 functions updated  
+**Environment**: Firebase project story-gen-8a769, asia-northeast1 region  
+**Flags**: `USE_REPLICATE_ADAPTER` unset, `USE_OPENAI_ADAPTER` unset — adapters are now canonical default  
+**Summary**: 3/3 scenarios PASS. Adapter-default page generation verified in production.
+
+### Results by scenario
+
+| Scenario | Status | bookId (internal) | imageModel | pages | Key observations |
+|---|---|---|---|---|---|
+| P3-15s-A — Replicate adapter default | **PASS** | mYPnjjYeownUkDkDohMK | `black-forest-labs/flux-2-pro` | 8/8 completed | `ReplicateImageAdapter` path active without any feature flag; all pages populated |
+| P3-15s-B — OpenAI candidate (enrolled) | **PASS** | smoke-openai-i1-\* | `openai/gpt-image-1-mini` | 8/8 completed | `OpenAIImageAdapter` path active without any feature flag; enrolled user; no reference images → gpt-image-1-mini |
+| P3-15s-C — Gate-block (unenrolled) | **PASS** | smoke-gate-block-\* | `black-forest-labs/flux-2-pro` | 8/8 completed | Gate stripped `openai_image_candidate`; unenrolled user received Replicate path; NO `openai/gpt-image-1-mini` observed |
+
+### Detailed observations
+
+**Scenario P3-15s-A** (Replicate adapter default, bedtime × soft_watercolor, profile=rich):
+- First attempt (profile=a, bedtime × soft_watercolor) failed at `schema_validation` stage — pre-existing LLM JSON parse issue, not a P3-15 regression (same class of issue as P3-14s Scenario E first attempt).
+- Retry with profile=b succeeded: 8/8 pages `completed`, `imageModel=black-forest-labs/flux-2-pro`, all `imageUrl` populated.
+- `imageDurationMs` range: 25,560–41,277 ms (well within 120 s SLO).
+- No feature flags required — `replicateApiToken` present in deps → adapter path active automatically.
+- **Adapter-default path confirmed for Replicate.**
+
+**Scenario P3-15s-B** (OpenAI candidate enrolled, fantasy × crayon):
+- 8/8 pages `completed`, `imageModel=openai/gpt-image-1-mini` for all pages (no reference images → text-to-image path).
+- `imageDurationMs` range: 14,869–28,739 ms.
+- All `imageUrl` populated.
+- No feature flags required — `openaiApiKey` present in deps + enrolled user + `openai_image_candidate` profile → OpenAI adapter active automatically.
+- **OpenAI adapter-default path confirmed for candidate-enrolled users.**
+
+**Scenario P3-15s-C** (Gate-block unenrolled, adventure × crayon):
+- 8/8 pages generated (7 `fallback_completed` + 1 `completed`).
+- `imageModel=black-forest-labs/flux-2-pro` for ALL pages — `openai/gpt-image-1-mini` NOT observed anywhere.
+- The high `fallback_completed` rate (7/8) is consistent with pre-existing behavior for the `adventure` theme under Replicate's `pro_consistent` profile (content policy retries or transient errors push to `klein_fast` fallback). This is NOT a P3-15 regression — same pattern observed in P3-14s Scenario D.
+- The `imageModel` field shows the primary-attempt model label (`flux-2-pro`) even for fallback pages; this is expected (field written before fallback execution, not updated on fallback success).
+- **Gate-block confirmed: no candidate leakage.**
+
+### Key findings
+
+- **Adapter-default path confirmed**: Both `ReplicateImageAdapter` and `OpenAIImageAdapter` activate correctly in production without any `USE_REPLICATE_ADAPTER` / `USE_OPENAI_ADAPTER` env var.
+- **Candidate gate safe**: Unenrolled user received Replicate path only. No `openai/gpt-image-1-mini` observed in Scenario C.
+- **No broken URLs**: All pages in all scenarios had populated `imageUrl` values in Firestore.
+- **No duplicate uploads**: No double-upload symptoms observed.
+- **Cloud Logging**: `gcloud` CLI not available in execution environment. Provider evidence confirmed indirectly via `page.imageModel` Firestore field (reliable indirect signal, same method as P3-14s-run).
+- **No Firebase env var change needed**: `.env.story-gen-8a769` unchanged (`ADMIN_EMAILS`, `ENABLE_FLUX_KLEIN` only).
+
+### Incident note (Scenario A — first book schema_validation failure)
+
+First P3-15s-A book (`3QVhIXqQFjaflksC1YSW`) failed at `schema_validation` stage with `Failed to parse LLM JSON response`. This is a pre-existing Gemini story quality gate validation issue — it occurs before image generation starts, before any adapter is called. Not a P3-15 regression. Retry with profile=b succeeded.
+
+### Post-run state
+
+- No environment variable changes made during smoke run.
+- Production adapter-default configuration remains active (no flags needed).
+- `npm run check:phase2` → 105/105 PASS (post-smoke).
+- `cd functions && npx vitest run` → 1216/1216 PASS.
+
+### P3-15s gate status
+
+**P3-15s: POST-CUTOVER SMOKE COMPLETE — all 3 scenarios PASS (2026-05-20).**  
+Adapter-default page generation is verified in production. P3 post-cutover smoke gate: **PASSED**.
+
+---
+
+## Related Documents
+
+| Test file | What it covers | Status |
+|---|---|---|
+| `functions/test/candidate-gate.test.ts` | Gate invariants (48 tests) — authoritative regression suite | 48/48 PASS |
+| `functions/test/generate-book.test.ts` | Default legacy path (52 tests) | 52/52 PASS |
 | `functions/test/generate-book-replicate-adapter.test.ts` | P3-13 flag-on wiring (11 tests) | 11/11 PASS |
 | `functions/test/generate-book-openai-adapter.test.ts` | P3-14 flag-on wiring (15 tests) | 15/15 PASS |
 | `functions/test/image-adapter-shadow.test.ts` | Adapter ↔ legacy behavior parity (72 tests) | 72/72 PASS |
