@@ -494,15 +494,31 @@ const STORY_RESPONSE_SCHEMA = {
 
 ---
 
-### P4-10: Schema Compatibility Tests Against Fixtures
+### P4-10: Schema Compatibility Tests Against Fixtures ✅ COMPLETE
 
-**Goal**: Validate that the schema constant is compatible with P4-3 fixtures and valid story samples.
+**Status**: ✅ COMPLETE (2026-05-21)  
+**File**: `functions/test/story-response-schema-compat.test.ts` (56 tests)  
+**Runtime change**: None — test-only addition  
 
-**Deliverables**:
-- Test: valid `GeneratedStory` samples pass Ajv (or manual) schema validation
-- Test: `field_type_mismatch` fixture samples fail schema validation
-- Test: `field_value_invalid` fixture samples (bad enum) fail schema validation
-- Test: schema `required` fields match `validateStory()` required fields
+**Goal**: Validate that the schema constant is compatible with valid story shapes and rejects known P4 failure modes, matching `validateStory()` behavior.
+
+**Deliverables** (all met):
+- ✅ Valid `GeneratedStory` fixtures pass lightweight schema check (minimal + full)
+- ✅ `field_type_mismatch` fixtures fail schema check (mainQuestObject array/object/number, forbiddenQuestObjects string/number)
+- ✅ `field_value_invalid` fixtures fail schema check (bad pageVisualRole enum)
+- ✅ Schema `required` fields match `validateStory()` required fields (bidirectional check)
+- ✅ Page text/imagePrompt type mismatch rejected (array, object, missing)
+- ✅ narrativeDevice shape validated (object accepted, array/string rejected)
+- ✅ P4-3 fixture relationship documented and verified
+- ✅ Import guard: gemini.ts and generate-book.ts do not import story-response-schema
+
+**Schema vs validateStory() gaps found**:
+1. **pageVisualRole enum**: Schema is stricter — rejects invalid enum values. `validateStory()` silently normalizes via `normalizePageVisualRole()`. Impact: LOW.
+2. **narrativeDevice as array**: Schema rejects. `validateStory()` may accept (`typeof [] === "object"`). Impact: NEGLIGIBLE.
+3. **cast role/characterKind enum**: Same pattern as pageVisualRole — schema enforces, validator normalizes. Impact: LOW.
+4. **Empty pages array**: `validateStory()` rejects `pages.length === 0`; schema has no `minItems` (deferred). Impact: LOW — quality gate catches downstream.
+
+All gaps are benign. Schema serves as first line of defense; `validateStory()` remains runtime source of truth.
 
 **Constraints**: No runtime change, no live Gemini calls.
 

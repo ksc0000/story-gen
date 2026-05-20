@@ -623,6 +623,21 @@ Candidate gate changed: No ✅
 
 ---
 
+### P4-10 — Schema Compatibility Tests ✅ COMPLETE
+
+**Status**: ✅ COMPLETE (2026-05-21)  
+**File**: `functions/test/story-response-schema-compat.test.ts` (56 tests)  
+**Runtime change**: None — test-only addition  
+
+**Summary**:  
+- 56 tests covering valid fixture compatibility, negative fixture rejection, P4-3 fixture relationship, required field alignment, gap documentation, import guard  
+- Schema vs `validateStory()` gaps documented: enum normalization (benign), `minItems` deferred (benign)  
+- `gemini.ts` and `generate-book.ts` confirmed not importing `story-response-schema`  
+
+**Next**: P4-11 — wire `responseSchema` behind `ENABLE_RESPONSE_SCHEMA` feature flag.
+
+---
+
 ## 7. Acceptance Criteria for P4 Hardening
 
 The following criteria must hold across all P4 slices:
