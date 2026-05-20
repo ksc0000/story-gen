@@ -1,8 +1,9 @@
 # EhonAI Phase 3: ImageProvider Abstraction Plan
 
 **Version**: P3-1 (2026-05-20)  
-**Status**: Design — no production code changes in P3-1  
-**Scope**: Inventory of image provider coupling and design of a safe ImageProvider abstraction
+**Status**: ✅ CLOSED — page generation migration complete (P3-15s PASS 2026-05-20)  
+**Scope**: Inventory of image provider coupling and design of a safe ImageProvider abstraction  
+**Closure document**: [PHASE3_IMAGE_PROVIDER_CLOSURE.md](PHASE3_IMAGE_PROVIDER_CLOSURE.md)
 
 ---
 

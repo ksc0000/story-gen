@@ -1,9 +1,10 @@
 # P3-9: Adapter Wiring and Gated Smoke Plan
 
-**Status**: Design complete — no production wiring performed.  
+**Status**: ✅ CLOSED — all slices through P3-15s complete (2026-05-20)  
 **Author**: P3-9 task (2026-05-20)  
 **Depends on**: P3-2 through P3-8 (all complete)  
-**Next slices**: P3-10 adapter factory → P3-11 uploader abstraction → P3-12 shadow tests → P3-13 Replicate switch → P3-14 OpenAI candidate switch → P3-15 cleanup
+**Completed slices**: P3-10 → P3-11 → P3-12 → P3-13 → P3-14 → P3-14s → P3-14s-run → P3-15 → P3-15s  
+**Closure document**: [PHASE3_IMAGE_PROVIDER_CLOSURE.md](PHASE3_IMAGE_PROVIDER_CLOSURE.md)
 
 ---
 

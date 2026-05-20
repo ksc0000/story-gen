@@ -59,7 +59,7 @@
 - ~~Rewrite / Regeneration Recommendation~~ → 実装済み
 - ~~Recommendation Action Buttons~~ → 実装済み（導線のみ、実行なし）
 - LLM auto review prototype
-- provider abstraction（ImageProvider インターフェース）— **P3-1 設計開始**: `docs/PHASE3_IMAGE_PROVIDER_ABSTRACTION_PLAN.md`
+- ~~provider abstraction（ImageProvider インターフェース）~~ → **P3-15s COMPLETE（ページ生成）**: `docs/PHASE3_IMAGE_PROVIDER_CLOSURE.md` | 残余スコープ: カバー画像・キャラ参照（P4 追跡）
 - provider 比較・A/B テスト
 - Stripe 決済
 - PDF 出力
@@ -358,6 +358,16 @@ T3-4j / T3-4k status update (2026-05-15):
 - Phase T2-C: テンプレート 9〜10 追加（learning + favorite-worlds）
 - [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - production smoke evidence 確認
+
+### P4 推奨（P3 Closure から）
+
+- **P4-2（最優先）**: Gemini `schema_validation` エラー対応 — structured output またはプロンプト改善で book hard-fail 率低減
+- P4-1: `generateCoverImage()` を `ImageProvider` adapter へ移行
+- P4-3: `ensureRecurringCharacterReferences()` を `ImageProvider` adapter へ移行（P4-1 完了後）
+- P4-4: Cloud Logging クエリ自動化（smoke 実行の可観測性向上）
+- P4-5: provider コスト比較ダッシュボード（`imageModel` フィールド活用）
+
+詳細: [PHASE3_IMAGE_PROVIDER_CLOSURE.md §10](./PHASE3_IMAGE_PROVIDER_CLOSURE.md)
 
 ---
 
