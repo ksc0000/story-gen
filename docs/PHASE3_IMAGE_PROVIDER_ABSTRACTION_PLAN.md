@@ -437,15 +437,36 @@ All types in this model must satisfy:
 
 **Test suite after P3-2**: 818/818 PASS (was 805, +13 new tests)
 
-### P3-3: Wrap Replicate path behind adapter
+### P3-3: Wrap Replicate path behind adapter — **COMPLETE**
 
-**Scope**: Refactor `ReplicateImageClient` to implement `ImageProvider` interface.
-- Rename/extend `ReplicateImageClient` → `ReplicateImageAdapter` (implements `ImageProvider`)
-- Move `buildReplicateInput()`, `resolveReplicateModel()`, Replicate model constants inside the adapter
-- `classifyError()` in adapter delegates to shared taxonomy
-- `resolveModelLabel()` replaces `resolveReplicateModel()` call in `generate-book.ts`
-- `generate-book.ts` calls `adapter.generateImage()` — same as before
-- **All behavior identical to current.** Only internal structure changes.
+**Scope**: Add `ReplicateImageAdapter` wrapping `ReplicateImageClient` behind `ImageProvider`. NOT yet wired into `generate-book.ts`.
+
+**Implementation**:
+- New file: `functions/src/lib/replicate-image-adapter.ts`
+- New test file: `functions/test/replicate-image-adapter.test.ts` (32 tests, all passing)
+
+**Adapter responsibilities**:
+| Method | Implementation |
+|---|---|
+| `providerId` | `"replicate"` (const) |
+| `capabilities` | supportsTextToImage=true, supportsImageToImage=false, supportsReferenceImages=true, supportsDetailedGuidance=true |
+| `generateImage(request)` | Delegates to `ReplicateImageClient.generateImageWithMetadata`; calls injected `ReplicateStorageUploader` to convert Buffer → URL. Default uploader throws until production wiring (P3-7). |
+| `classifyError(err, ctx)` | Delegates to `classifyError()` from `generation-event-logger.ts`; adds `retryable` flag and truncated `safeMessage` (≤120 chars). |
+| `resolveModelLabel(profile)` | Delegates to `resolveReplicateModel({ imageModelProfile: profile })`; throws for `openai_image_candidate`. |
+| `validateConfig()` | Throws if `apiToken` is empty. |
+
+**Exported types**: `ReplicateStorageUploader` (callback for Cloud Storage upload, injected for DI).
+
+**Non-goals confirmed**:
+- `createImageClient()` in `generate-book.ts` — **unchanged**
+- Candidate gate logic — **unchanged**
+- Fallback ordering (`resolveImageFallbackProfiles`) — **unchanged**
+- Firestore schema — **unchanged**
+- Generation routing — **unchanged**
+
+**Note on generateImage production wiring**: `generateImage` requires a `ReplicateStorageUploader` callback. Production upload wiring (Cloud Storage) happens in P3-7. Live provider smoke belongs to P3-9.
+
+**Test suite after P3-3**: 850/850 PASS (was 818, +32 new tests)
 
 ### P3-4: Wrap OpenAI image candidate path behind adapter
 
@@ -576,6 +597,24 @@ Unit tests for adapters must:
 - [x] Candidate gate unchanged (48 gate tests green)
 - [x] `npm run check:phase2`: PASS
 - [x] Full functions suite: 818/818 (was 805 + 13 new)
+- [x] `cd functions && npm run build`: PASS
+- [x] `node scripts/check-hygiene.mjs`: PASS
+
+### P3-3
+
+- [x] `functions/src/lib/replicate-image-adapter.ts` created implementing `ImageProvider`
+- [x] `ReplicateImageAdapter.providerId` = `"replicate"`
+- [x] `ReplicateImageAdapter.capabilities` matches current Replicate FLUX behavior
+- [x] `ReplicateImageAdapter.resolveModelLabel()` delegates to `resolveReplicateModel()`; throws for `openai_image_candidate`
+- [x] `ReplicateImageAdapter.classifyError()` delegates to `classifyError()` from `generation-event-logger.ts`; adds `retryable`, truncated `safeMessage`
+- [x] `ReplicateImageAdapter.generateImage()` delegates to `ReplicateImageClient.generateImageWithMetadata()`; storage upload via injected `ReplicateStorageUploader`
+- [x] Default `ReplicateStorageUploader` throws — production wiring deferred to P3-7
+- [x] `functions/test/replicate-image-adapter.test.ts` added: 32 tests, all passing
+- [x] `createImageClient()` in `generate-book.ts` unchanged
+- [x] Candidate gate unchanged (48 gate tests green)
+- [x] Fallback ordering unchanged
+- [x] `npm run check:phase2`: PASS
+- [x] Full functions suite: 850/850 (was 818 + 32 new)
 - [x] `cd functions && npm run build`: PASS
 - [x] `node scripts/check-hygiene.mjs`: PASS
 
