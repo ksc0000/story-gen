@@ -560,7 +560,7 @@ ENABLE_RESPONSE_SCHEMA=true
 
 ---
 
-### P4-12: Live Smoke with Feature Flag
+### P4-12: Live Smoke with Feature Flag — ✅ COMPLETE (FAIL — null handling gap)
 
 **Goal**: Deploy with `ENABLE_RESPONSE_SCHEMA=true` and run targeted smoke.
 
@@ -571,6 +571,50 @@ ENABLE_RESPONSE_SCHEMA=true
 - Compare with P4-7s baseline
 
 **Acceptance**: All books complete or fail for unrelated reasons. No new `schema_validation` or `field_type_mismatch` errors. No creativity regression (manual spot check of generated text).
+
+#### P4-12 Results (2026-05-21)
+
+**Flag ON deploy**: ≈02:33 JST, all 13 functions updated.
+**Rollback deploy**: ≈03:45 JST, `ENABLE_RESPONSE_SCHEMA` removed, all 13 functions updated.
+**Starting HEAD**: 8a6b167.
+
+| # | bookId | theme | style | profile | status | failure |
+|---|---|---|---|---|---|---|
+| 1 | `7MqcmeZFnODujCBvjsnQ` | bedtime | soft_watercolor | a | **FAILED** | `schema_validation`: `'titleSpreadText' must be a string when provided` (null from Gemini) |
+| 2 | `qj94wYvWgSo1sonJMFoe` | fantasy | crayon | a | **partial_completed** (stuck generating/100%) | Story gen passed; 8/8 pages with images (1 completed, 7 fallback_completed). Status transition did not complete. |
+| 3 | `nE7oNs7ly1zZirPa0vOH` | emotional-growth | soft_watercolor | a | **FAILED** | `schema_validation`: `Failed to parse LLM JSON response` |
+| 4 | `czAeQDjrejiOHG5J2IBt` | imagination | anime_storybook | a | **FAILED** | `schema_validation`: `Failed to parse LLM JSON response` |
+| 5 | `iepD86FyTevQ5gpPPHB8` | bedtime | crayon | b | **FAILED** | `schema_validation`: `Failed to parse LLM JSON response` |
+
+**Result**: 4/5 FAILED, 1/5 partial success (story gen passed but book stuck at generating). **Acceptance NOT met.**
+
+#### Root Cause Analysis
+
+**Failure Type A — null handling (Book 1)**:
+- Gemini `responseSchema` with `nullable: true` returns explicit `null` values for optional fields (e.g., `titleSpreadText: null`)
+- `validateStory()` checks `if (obj.titleSpreadText !== undefined && typeof obj.titleSpreadText !== "string")` — `null !== undefined` is true, `typeof null === "object"` fails the string check
+- **This was predicted as Risk R3** in §10 but the null coercion fix was deferred to "if needed"
+- **Fix needed**: Add `null`→`undefined` coercion in `validateStory()` before type checks
+
+**Failure Type B — JSON parse failure (Books 3, 4, 5)**:
+- `Failed to parse LLM JSON response` — Gemini returned something that `extractJsonFromLLMResponse()` could not parse
+- With `responseSchema` enabled, Gemini should return well-formed JSON, but the response may have been truncated or malformed
+- May indicate that `extractJSON()` / `extractJsonFromLLMResponse()` conflicts with `responseSchema` structured output format
+
+**Book 2 observation**: Story generation succeeded (all pages generated), indicating `responseSchema` CAN produce valid stories. The 7/8 fallback_completed pages are an image-generation issue (unrelated to schema). The book stuck at `generating/100%` may be a cover generation or status transition issue.
+
+#### Recommended Next Steps
+
+1. **P4-12a (prerequisite)**: Add `null`→`undefined` coercion in `validateStory()` for all nullable fields before type checks. This is a small, safe code change.
+2. **P4-12b**: Investigate `Failed to parse LLM JSON response` with `responseSchema` ON — may need to bypass `extractJSON()` when `responseSchema` is enabled (Gemini structured output returns clean JSON without markdown wrapping).
+3. **P4-12c**: Re-smoke after fixes.
+4. **P4-14**: Decide rollout/rollback based on re-smoke results.
+
+#### Retry Interaction Check (Scenario D)
+
+- `ENABLE_SCHEMA_REPAIR_RETRY` was absent/OFF during smoke — confirmed independent
+- Even if repair retry were ON, it would re-call Gemini with the same `responseSchema` → same null issue
+- Flags are confirmed independent as designed in P4-11
 
 ---
 
