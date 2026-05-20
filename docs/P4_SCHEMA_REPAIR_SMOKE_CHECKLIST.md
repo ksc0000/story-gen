@@ -349,14 +349,20 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 
 | Item | Value |
 |---|---|
-| Date/time | pending |
-| Commit deployed | pending |
-| Deploy command | `firebase deploy --only functions --project story-gen-8a769` |
-| Flag state | pending |
-| bookId(s) | pending |
-| schemaRepairRetryUsed | pending |
-| storyGenerationAttempts in Firestore | pending |
-| Status | ⏸ PENDING OPERATOR APPROVAL |
+| Date/time | 2026-05-20 |
+| Commit deployed | 38acc63 |
+| Deploy command | `firebase deploy --only functions --project story-gen-8a769` ✅ all 13 functions updated |
+| Flag state | ON (`ENABLE_SCHEMA_REPAIR_RETRY=true` in functions/.env.story-gen-8a769) |
+| bookId B-1 | p46-b-1 (HFJvsyh87zllD5uHtrUN) — bedtime/soft_watercolor |
+| bookId B-2 | p46-b-2 (JFfQrbGMusaWw9MXdYir) — fantasy/soft_watercolor |
+| B-1 book status | `completed` (8/8 pages, imageAttemptCount=1 all pages) ✅ |
+| B-2 book status | `completed` (8/8 imageUrl populated; pages 1–6 `fallback_completed` imageAttemptCount=3 — image adapter fallback, unrelated to schema repair) ✅ |
+| schemaRepairRetryUsed B-1 | absent ✅ (Gemini returned clean JSON, repair path not triggered) |
+| schemaRepairRetryUsed B-2 | absent ✅ (Gemini returned clean JSON, repair path not triggered) |
+| imageModel | `black-forest-labs/flux-2-pro` both books ✅ |
+| ImageProvider routing change | none ✅ |
+| candidate gate change | none ✅ |
+| Status | ✅ PASS |
 
 ### Scenario C — Repair Trigger
 
@@ -393,7 +399,7 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_outco
 |---|---|
 | A — Flag OFF baseline (local) | ✅ PASS |
 | A — Flag OFF baseline (live) | ✅ PASS |
-| B — Flag ON normal generation | ⏸ PENDING APPROVAL |
+| B — Flag ON normal generation | ✅ PASS |
 | C — Repair trigger observation | ⏸ PENDING |
 | D — Semantic repair negative | ✅ COVERED BY UNIT TESTS |
 | E — Rollback | ⏸ PENDING |
