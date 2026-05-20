@@ -767,3 +767,70 @@ The full `cd functions && npx vitest run` has 3 pre-existing failures unrelated 
 | `test/test-image-models.test.ts` | 1 | Pre-P2, tracked separately |
 
 These files are excluded from the `test:generation-guards` script. Do not add them to mandatory CI until the failures are resolved.
+
+---
+
+## 13. Scheduled SLO Reporting Automation (P2-9)
+
+This section describes the planned path to automated SLO reporting.  
+See full design: `docs/GENERATION_SLO_AUTOMATION_PLAN.md`
+
+### 13.1 Current capability (P2-9b)
+
+A local dry-run helper is available that prints example gcloud commands without executing them:
+
+```bash
+# Print default query for past 7 days (all events)
+npm run logs:generation-query
+
+# Print query scoped to a specific project and 24h window
+node scripts/print-generation-log-query.mjs --project story-gen-8a769 --hours 24
+
+# Print query for page image failures only
+node scripts/print-generation-log-query.mjs --event page_image_failed
+
+# Print query for book outcomes in NDJSON format
+node scripts/print-generation-log-query.mjs --event book_outcome --format ndjson
+```
+
+Copy the printed commands, authenticate with `gcloud auth login`, then run the export and pipe to the SLO report script.
+
+### 13.2 Manual end-to-end workflow (with gcloud)
+
+```bash
+# 1. Print the export command
+node scripts/print-generation-log-query.mjs --project story-gen-8a769 --hours 168
+
+# 2. Authenticate (browser opens)
+gcloud auth login
+gcloud config set project story-gen-8a769
+
+# 3. Create tmp dir (gitignored)
+mkdir -p tmp
+
+# 4. Run the printed gcloud export command, redirecting to tmp/
+#    (copy exact command from step 1 output)
+
+# 5. Run the SLO report
+node scripts/report-generation-slo.mjs --input tmp/generation-events.json
+
+# 6. Optional: save markdown report for review session (do NOT commit)
+node scripts/report-generation-slo.mjs --input tmp/generation-events.json --format markdown > tmp/slo-report-$(date +%Y%m%d).md
+```
+
+### 13.3 Staged automation plan summary
+
+| Stage | Status | Description |
+|---|---|---|
+| P2-9a | ✅ Complete | Manual export commands in §3 |
+| P2-9b | ✅ Complete | `scripts/print-generation-log-query.mjs` local helper |
+| P2-9c | Deferred | Manual-dispatch GitHub Actions (`workflow_dispatch`); needs credential provisioning |
+| P2-9d | Deferred | Scheduled GitHub Actions (weekly); requires P2-9c validated first |
+| P2-9e | Deferred | Dashboard / artifact retention; after P2-10 threshold tuning |
+
+### 13.4 Privacy reminder for automation
+
+- Raw NDJSON exports go in `tmp/` — gitignored. Never commit them.
+- Automated reports should output aggregated metrics only (no `bookId` lists).
+- Any Cloud Storage sink or BigQuery table must be private with lifecycle expiry ≤ 90 days.
+- See: `docs/GENERATION_SLO_AUTOMATION_PLAN.md §7`

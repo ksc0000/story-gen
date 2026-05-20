@@ -379,7 +379,7 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 | P2-6 | ✅ COMPLETE — see P2-6 Implementation Note below |
 | P2-7 | ✅ COMPLETE — see P2-7 Implementation Note below |
 | P2-8 | ✅ COMPLETE — see P2-8 Implementation Note below |
-| P2-9 | Pending |
+| P2-9 | ✅ COMPLETE — see P2-9 Implementation Note below |
 | P2-10 | Pending |
 
 ---
@@ -907,3 +907,53 @@ npm run check:public-assets
 
 - **P2-9**: Dashboard automation — automate periodic SLO report against Cloud Logging export, surface results in a dashboard or scheduled script.
 - **P2-10**: SLO threshold tuning — once real traffic data is available, calibrate thresholds in Section 7 of the runbook against observed production rates.
+
+---
+
+## P2-9 Implementation Note
+
+**Commit**: docs(P2-9): design scheduled generation SLO reporting  
+**Files changed**:
+- `docs/GENERATION_SLO_AUTOMATION_PLAN.md` (new) — staged automation design
+- `scripts/print-generation-log-query.mjs` (new) — local dry-run query helper (P2-9b)
+- `package.json` — added `logs:generation-query` script
+- `docs/PHASE2_GENERATION_SLO_PLAN.md` — P2-9 status + implementation note
+- `docs/GENERATION_SLO_RUNBOOK.md` — Section 13 automation plan reference
+
+**No production code changes.** Docs and helper scripts only.
+
+### Purpose
+
+Establish a design-first foundation for scheduled SLO reporting without enabling secret-dependent automation yet.
+
+### Deliverables
+
+| Deliverable | Path | Description |
+|---|---|---|
+| Automation plan | `docs/GENERATION_SLO_AUTOMATION_PLAN.md` | 10-section design doc covering data sources, staged path, query design, output policy, privacy, scheduling, failure modes |
+| Query helper | `scripts/print-generation-log-query.mjs` | Prints example gcloud commands and filters; no execution, no credentials |
+| Package script | `logs:generation-query` | `node scripts/print-generation-log-query.mjs` |
+
+### Staged path summary
+
+| Stage | Status | Description |
+|---|---|---|
+| P2-9a | ✅ (P2-7) | Manual export commands documented in runbook |
+| P2-9b | ✅ (this task) | Local dry-run query helper `print-generation-log-query.mjs` |
+| P2-9c | Deferred | Manual-dispatch GH Actions with `workflow_dispatch`; needs credential review |
+| P2-9d | Deferred | Scheduled GH Actions; requires P2-9c validated first |
+| P2-9e | Deferred | Dashboard / long-term artifact retention; after P2-10 threshold tuning |
+
+### Why scheduled automation remains opt-in
+
+- Scheduled SLO reporting requires gcloud CLI auth or a service account secret.
+- No Firebase/GCP credentials are currently available in CI (by design — P2-8 CI is keyless).
+- Enabling secret-dependent CI requires repo-owner credential review and explicit provisioning.
+- P2-9c workflow design is documented and ready to implement once credentials are approved.
+
+### What remains for P2-10
+
+- Tune SLO thresholds in `docs/GENERATION_SLO_RUNBOOK.md §7` after real traffic data is collected.
+- Decide whether P2-9c (manual-dispatch) or P2-9d (scheduled) is justified by operational need.
+- Review `candidateAllowed` rate in production — should be near zero under current policy.
+- Optionally lock threshold values in CI via a baseline comparison step.
