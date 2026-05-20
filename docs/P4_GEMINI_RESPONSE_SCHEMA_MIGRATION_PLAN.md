@@ -460,7 +460,9 @@ const STORY_RESPONSE_SCHEMA = {
 
 ## 7. Recommended Staged Plan
 
-### P4-9: Add TypeScript JSON Schema Constant (Not Wired)
+### P4-9: Add TypeScript JSON Schema Constant (Not Wired) ✅ COMPLETE
+
+**Status**: ✅ COMPLETE (2026-05-21)
 
 **Goal**: Define the `STORY_RESPONSE_SCHEMA` constant in a new file (`functions/src/lib/story-response-schema.ts`). Not imported by `gemini.ts`.
 
@@ -470,6 +472,25 @@ const STORY_RESPONSE_SCHEMA = {
 - Schema snapshot test to detect drift
 
 **Constraints**: No runtime import, no generation behavior change.
+
+**Implementation**:
+- Schema file: `functions/src/lib/story-response-schema.ts`
+- Test file: `functions/test/story-response-schema.test.ts` (35 tests)
+- Schema version: `1.0.0`
+- Exports: `STORY_RESPONSE_SCHEMA`, `STORY_RESPONSE_SCHEMA_VERSION`, `STORY_RESPONSE_SCHEMA_REQUIRED_FIELDS`, `STORY_PAGE_REQUIRED_FIELDS`
+- Covered fields (12 root, 8 page, 5 narrativeDevice, 15 cast character):
+  - Root required: `title`, `characterBible`, `styleBible`, `pages`
+  - Root optional (nullable): `storyGoal`, `mainQuestObject`, `forbiddenQuestObjects`, `titleSpreadText`, `openingNarration`, `coverImagePrompt`, `narrativeDevice`, `cast`
+  - Page required: `text`, `imagePrompt`
+  - Page optional (nullable): `compositionHint`, `visualMotifUsage`, `hiddenDetail`, `pageVisualRole` (enum), `appearingCharacterIds`, `focusCharacterId`
+  - Enums: `pageVisualRole` (8 values from `PAGE_VISUAL_ROLES`), `cast[].role` (8 values), `cast[].characterKind` (6 values)
+- Intentionally deferred fields:
+  - `storyModel`, `storyModelFallbackUsed`, `storyGenerationAttempts` (client-side metadata, not LLM output)
+  - `cast[].referenceImageUrl`, `cast[].approvedImageUrl`, `cast[].generatedReferenceImageUrl`, `cast[].referenceImageGeneratedAt`, `cast[].referenceImagePrompt`, `cast[].referenceImageStatus` (app-managed fields)
+  - `minItems`/`maxItems` for pages array (Gemini JSON Schema subset may not support; validated by app)
+- Not imported by `gemini.ts` or `generate-book.ts` ✅
+
+**Next**: P4-10 — schema compatibility tests against P4-3 fixtures.
 
 ---
 

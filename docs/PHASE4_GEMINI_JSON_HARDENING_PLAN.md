@@ -606,6 +606,23 @@ Candidate gate changed: No ✅
 
 ---
 
+### P4-9 — Story Response Schema Constant ✅ COMPLETE
+
+**Status**: ✅ COMPLETE (2026-05-21)  
+**Files**: `functions/src/lib/story-response-schema.ts`, `functions/test/story-response-schema.test.ts` (35 tests)  
+**Runtime change**: None — not imported by `gemini.ts` or `generate-book.ts`  
+
+**Summary**:  
+- Added `STORY_RESPONSE_SCHEMA` Gemini-compatible JSON Schema constant (v1.0.0)  
+- 12 root properties, 8 page properties, 5 narrativeDevice properties, 15 cast character properties  
+- Enums: `pageVisualRole` (8), `cast[].role` (8), `cast[].characterKind` (6)  
+- 35 tests covering shape, P4 failure prevention, enum alignment, required fields, serialization stability  
+- Deferred: client-side metadata fields, app-managed cast fields, `minItems`/`maxItems`  
+
+**Next**: P4-10 — schema compatibility tests against P4-3 fixtures.
+
+---
+
 ## 7. Acceptance Criteria for P4 Hardening
 
 The following criteria must hold across all P4 slices:
