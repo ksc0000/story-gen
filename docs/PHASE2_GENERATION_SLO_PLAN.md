@@ -378,7 +378,7 @@ P2-2 → P2-3 → P2-4 → P2-5 → P2-6 → P2-7 → P2-8 → P2-9 → P2-10
 | P2-5 | ✅ COMPLETE — see P2-5 Implementation Note below |
 | P2-6 | ✅ COMPLETE — see P2-6 Implementation Note below |
 | P2-7 | ✅ COMPLETE — see P2-7 Implementation Note below |
-| P2-8 | Pending |
+| P2-8 | ✅ COMPLETE — see P2-8 Implementation Note below |
 | P2-9 | Pending |
 | P2-10 | Pending |
 
@@ -824,3 +824,86 @@ Provides a single reference document for developers and operators to:
 - gcloud CLI export commands are examples — project ID and log filters should be confirmed before running.
 - Suggested thresholds in Section 7 are conservative starting values. Tune after observing real traffic patterns.
 - Story generation latency (Gemini) is not yet measurable from event logs (not stored per-book).
+
+---
+
+## P2-8 Implementation Note
+
+**Commit**: chore(P2-8): add deterministic Phase 2 guard scripts  
+**Files changed**:
+- `package.json` — new scripts: `guard:hygiene`, `report:generation-slo:self-test`, `test:generation-guards`, `check:phase2`
+- `.github/workflows/ci-phase2.yml` (new) — GitHub Actions workflow running always-on deterministic guards
+
+**No production code changes.** Scripts and CI config only.
+
+### Purpose
+
+Establish a minimal, deterministic local and CI guard set for Phase 2 reliability work.  
+Ensures hygiene, SLO report logic, candidate gate behavior, and event logger shapes are
+checked on every push / PR without requiring network access or Firebase credentials.
+
+### Package scripts added
+
+| Script | Command | Purpose |
+|---|---|---|
+| `guard:hygiene` | `node scripts/check-hygiene.mjs` | Forbidden paths, docs encoding, no staged secret-like patterns |
+| `report:generation-slo:self-test` | `node scripts/report-generation-slo.mjs --self-test` | 49 unit tests for SLO report parse/rate/percentile/privacy logic |
+| `test:generation-guards` | `cd functions && npx vitest run test/candidate-gate.test.ts test/generation-event-logger.test.ts` | 102 tests: 48 candidate gate regression + 54 event logger shape |
+| `check:phase2` | Runs the three above in sequence | Single local command for all deterministic Phase 2 guards |
+| `check:public-assets` | `node scripts/check-public-assets.mjs` | **Manual/release only** — HTTPS checks against Firebase Hosting |
+
+### Always-on CI checks (`.github/workflows/ci-phase2.yml`)
+
+Triggers on every push and PR to `main`. No Firebase credentials required.
+
+1. `guard:hygiene` — hygiene guard
+2. `report:generation-slo:self-test` — SLO report self-test (49 tests)
+3. `test:generation-guards` — candidate gate + event logger tests (102 tests)
+
+### Manual / release-only checks (not in CI)
+
+| Check | Reason excluded from CI |
+|---|---|
+| `npm run check:public-assets` | HTTPS requests to Firebase Hosting; flaky in corp proxy environments; requires live deployment |
+| Generation SLO report vs Cloud Logging export | Requires `gcloud auth` / service account; network-dependent |
+| Firebase Hosting live smoke | Requires `FIREBASE_TOKEN`; network-dependent |
+| Firestore `sampleImages` verification | Requires Firebase credentials |
+| Full `functions/` test suite | 3 pre-existing failures unrelated to P2 work (see below) |
+
+### Known pre-existing failures in full functions test suite
+
+The following 3 test failures predate Phase 2 and are **not introduced by P2 work**.
+They are excluded from the mandatory CI suite until separately fixed:
+
+| File | Failure count |
+|---|---|
+| `test/generate-book.test.ts` | 1 |
+| `test/prompt-builder.test.ts` | 1 |
+| `test/test-image-models.test.ts` | 1 |
+
+### Local usage
+
+```bash
+# Run all deterministic Phase 2 guards
+npm run check:phase2
+
+# Run individual guards
+npm run guard:hygiene
+npm run report:generation-slo:self-test
+npm run test:generation-guards
+
+# Manual/release-only (requires network)
+npm run check:public-assets
+```
+
+### Validation results (P2-8 baseline)
+
+- `guard:hygiene`: PASS
+- `report:generation-slo:self-test`: 49/49 PASS
+- `test:generation-guards`: 102/102 PASS (48 candidate-gate + 54 generation-event-logger)
+- `check:phase2` (composite): PASS
+
+### What remains for P2-9 / P2-10
+
+- **P2-9**: Dashboard automation — automate periodic SLO report against Cloud Logging export, surface results in a dashboard or scheduled script.
+- **P2-10**: SLO threshold tuning — once real traffic data is available, calibrate thresholds in Section 7 of the runbook against observed production rates.

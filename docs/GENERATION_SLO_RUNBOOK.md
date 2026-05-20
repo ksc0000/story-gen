@@ -717,3 +717,53 @@ Use this checklist for weekly/manual generation health review.
 | `docs/PHASE2_GENERATION_SLO_PLAN.md` | Full P2 design doc, SLO targets, risk inventory, implementation notes |
 | `docs/image-model-policy.md` | Provider selection rationale and policy |
 | `docs/security-roadmap.md` | Security considerations and App Check rollout |
+
+---
+
+## 12. CI / Local Guardrails (P2-8)
+
+### 12.1 Always-on deterministic checks
+
+These checks run on every push and PR via `.github/workflows/ci-phase2.yml`.
+They require no network access and no Firebase credentials.
+
+```bash
+# Run all deterministic Phase 2 guards in one command
+npm run check:phase2
+```
+
+This is equivalent to running the three checks below in sequence:
+
+| Check | Command | Tests |
+|---|---|---|
+| Hygiene guard | `npm run guard:hygiene` | Forbidden paths, encoding, no secrets |
+| SLO report self-test | `npm run report:generation-slo:self-test` | 49 unit tests |
+| Generation guard tests | `npm run test:generation-guards` | 102 tests (48 candidate-gate + 54 event-logger) |
+
+### 12.2 Manual / release-only checks
+
+Run these before deploying or when investigating production issues.
+They require network access or Firebase credentials and are **not** in mandatory CI.
+
+```bash
+# Public asset URL smoke check (requires live Firebase Hosting)
+npm run check:public-assets
+
+# SLO report against Cloud Logging export (requires gcloud auth)
+node scripts/report-generation-slo.mjs --input export.ndjson
+
+# SLO report self-test only (safe, deterministic)
+npm run report:generation-slo:self-test
+```
+
+### 12.3 Known pre-existing failures in full functions test suite
+
+The full `cd functions && npx vitest run` has 3 pre-existing failures unrelated to P2 work:
+
+| File | Failure count | Notes |
+|---|---|---|
+| `test/generate-book.test.ts` | 1 | Pre-P2, tracked separately |
+| `test/prompt-builder.test.ts` | 1 | Pre-P2, tracked separately |
+| `test/test-image-models.test.ts` | 1 | Pre-P2, tracked separately |
+
+These files are excluded from the `test:generation-guards` script. Do not add them to mandatory CI until the failures are resolved.

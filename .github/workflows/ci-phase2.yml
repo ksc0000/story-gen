@@ -1,0 +1,73 @@
+name: Phase 2 Generation Guards
+
+# Deterministic Phase 2 reliability checks.
+# Runs on every push and PR — no network access, no Firebase credentials required.
+#
+# Included checks (always-on, deterministic):
+#   1. guard:hygiene   — forbidden paths, docs encoding, no staged secrets
+#   2. SLO report self-test — 49 unit tests covering parse, rate, percentile, privacy
+#   3. test:generation-guards — 102 tests:
+#        candidate-gate.test.ts (48 tests)   — candidate profile gating regression
+#        generation-event-logger.test.ts (54 tests) — error taxonomy, event shapes
+#
+# Excluded from this workflow (manual/release-only, require network or credentials):
+#   - check:public-assets  — HTTPS requests to Firebase Hosting (requires proxy in corp env)
+#   - Generation SLO report against Cloud Logging export (requires gcloud auth)
+#   - Firebase Hosting live smoke (requires FIREBASE_TOKEN)
+#   - Full functions test suite — 3 pre-existing failures unrelated to P2 work:
+#       test/generate-book.test.ts  x1
+#       test/prompt-builder.test.ts x1
+#       test/test-image-models.test.ts x1
+#     These failures predate Phase 2 and are tracked separately.
+#
+# See: docs/GENERATION_SLO_RUNBOOK.md § CI/Local Guardrails
+# See: docs/PHASE2_GENERATION_SLO_PLAN.md § P2-8 Implementation Note
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: phase2-guards-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  phase2-guards:
+    name: Phase 2 Generation Guards
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install functions dependencies
+        run: cd functions && npm ci
+
+      - name: Run hygiene guard
+        run: npm run guard:hygiene
+
+      - name: Run SLO report self-test
+        run: npm run report:generation-slo:self-test
+
+      - name: Run generation guard tests
+        # Runs only the targeted P2 test files:
+        #   test/candidate-gate.test.ts         (48 tests)
+        #   test/generation-event-logger.test.ts (54 tests)
+        # Does NOT run the full functions test suite to avoid pre-existing failures.
+        run: npm run test:generation-guards
