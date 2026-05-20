@@ -838,9 +838,24 @@ All classifications use existing P2 taxonomy values.
 
 **All tests pass**: 1203+15 = 1218/1218
 
+---
+
+### P3-14s: Adapter live smoke checklist — **DOCS CREATED, EXECUTION PENDING**
+
+**Files added**:
+- `docs/P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md` — full live smoke checklist
+
+**Purpose**:
+- Validates feature-flagged adapter paths (P3-13, P3-14) via live generation before legacy cleanup.
+- Defines 5-scenario smoke matrix (A: legacy default, B: Replicate adapter, C: OpenAI candidate, D: gate-block, E: both flags).
+- Per-scenario validation items for Firestore fields, Cloud Storage URL shape, Cloud Logging events, and PII audit.
+- P3-15 readiness gate: all 5 scenarios must PASS before legacy removal proceeds.
+
+**No production behavior change.** No generation routing change. No Firebase deploy.
+
+**P3-15 cleanup is gated on P3-14s live smoke execution.** See checklist §10 for gate criteria.
 
 
-| Test | When needed | Description |
 |---|---|---|
 | Provider contract tests (P3-6) | Before P3-3/P3-4 merge | Interface contract: all adapters pass the same baseline assertions |
 | Replicate adapter golden tests (P3-6) | With P3-3 | Mock Replicate API; verify payload construction, response parsing, error classification |

@@ -307,10 +307,18 @@ Each slice is independently shippable, test-first, and behavior-equivalent until
 **Gate safety**: candidate-gate.test.ts (48 tests) and generate-book.test.ts (52 tests) remain green.  
 **No Firebase deploy.**
 
+### P3-14s: Adapter live smoke checklist — **DOCS CREATED, EXECUTION PENDING**
+
+**Goal**: Validate feature-flagged adapter paths via live smoke before removing legacy code.  
+**Output**: [`docs/P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md`](P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md) — full checklist with 5-scenario matrix, per-scenario validation items, rollback plan, and P3-15 readiness gate.  
+**Status**: Checklist document created. No live smoke has been executed yet.  
+**Blocking**: P3-15 is blocked until the P3-14s checklist execution is recorded (all 5 scenarios PASS).
+
 ### P3-15: Remove legacy `createImageClient()`
 
 **Goal**: Delete `createImageClient()`, `ReplicateImageClient` direct import, `OpenAIImageClient` direct import from `generate-book.ts`.  
-**Condition**: P3-13 and P3-14 both verified stable in production.  
+**Condition**: P3-13 and P3-14 both verified stable in production **AND** P3-14s live smoke checklist is fully executed and recorded.  
+**Blocked by**: P3-14s execution — see [`docs/P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md`](P3_ADAPTER_LIVE_SMOKE_CHECKLIST.md) §10.  
 **Tests**: Verify no test references the removed path.  
 **Risk**: Breaking rollback. Require one full release cycle of P3-14 before cutting over.
 
