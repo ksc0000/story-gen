@@ -1,13 +1,17 @@
 /**
- * P2-2/P2-3: Tests for generation-event-logger.ts
+ * P2-2/P2-3/P4-2: Tests for generation-event-logger.ts
  *
  * Coverage:
  * - categorizeError: E005, timeout, validation, quota, provider_error, unknown, empty, network
  * - classifyError: Error objects, strings, undefined, HTTP status codes, network errors
+ * - classifyStoryJsonFailure: malformed_json, field_type_mismatch, field_value_invalid,
+ *     schema_structural, unknown — all observed P3-15s failure messages covered
  * - resolveProviderFromProfile: replicate vs openai
  * - logGenerationEvent: emits structured JSON via logger.info (no raw prompts)
  * - Event shapes: generation_started, book_outcome, book_early_failed, page_image_failed
  * - CandidateDecision: pass / blocked / not_applicable
+ * - P4-2 optional fields: storyJsonFailureCategory, storyDurationMs on book_early_failed;
+ *     storyDurationMs on book_outcome
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -15,6 +19,7 @@ import * as logger from "firebase-functions/logger";
 import {
   categorizeError,
   classifyError,
+  classifyStoryJsonFailure,
   resolveProviderFromProfile,
   logGenerationEvent,
   type GenerationStartedEvent,
@@ -210,6 +215,71 @@ describe("classifyError", () => {
 });
 
 // ---------------------------------------------------------------------------
+// classifyStoryJsonFailure (P4-2)
+// ---------------------------------------------------------------------------
+describe("classifyStoryJsonFailure (P4-2)", () => {
+  it("classifies 'Failed to parse LLM JSON response' as malformed_json", () => {
+    expect(classifyStoryJsonFailure(new Error("Failed to parse LLM JSON response"))).toBe("malformed_json");
+  });
+
+  it("classifies 'LLM response' prefix as malformed_json", () => {
+    expect(classifyStoryJsonFailure(new Error("LLM response was not valid JSON"))).toBe("malformed_json");
+  });
+
+  it("classifies 'Unexpected token' as malformed_json (case-insensitive)", () => {
+    expect(classifyStoryJsonFailure(new Error("Unexpected token < in JSON at position 0"))).toBe("malformed_json");
+  });
+
+  it("classifies 'must be a string' as field_type_mismatch", () => {
+    expect(classifyStoryJsonFailure(new Error("'mainQuestObject' must be a string when provided"))).toBe("field_type_mismatch");
+  });
+
+  it("classifies 'must be an array' as field_type_mismatch", () => {
+    expect(classifyStoryJsonFailure(new Error("forbiddenQuestObjects must be an array"))).toBe("field_type_mismatch");
+  });
+
+  it("classifies 'pageVisualRole' message as field_value_invalid", () => {
+    expect(classifyStoryJsonFailure(new Error("pageVisualRole value is not valid"))).toBe("field_value_invalid");
+  });
+
+  it("classifies 'must be one of' as field_value_invalid", () => {
+    expect(classifyStoryJsonFailure(new Error("role must be one of [protagonist, antagonist]"))).toBe("field_value_invalid");
+  });
+
+  it("classifies 'Each page must' as schema_structural", () => {
+    expect(classifyStoryJsonFailure(new Error("Each page must have an imagePrompt"))).toBe("schema_structural");
+  });
+
+  it("classifies 'narrativeDevice' as schema_structural", () => {
+    expect(classifyStoryJsonFailure(new Error("narrativeDevice is missing required fields"))).toBe("schema_structural");
+  });
+
+  it("classifies 'missing required' as schema_structural (case-insensitive)", () => {
+    expect(classifyStoryJsonFailure(new Error("Missing required field: storyGoal"))).toBe("schema_structural");
+  });
+
+  it("returns unknown for unrecognized message", () => {
+    expect(classifyStoryJsonFailure(new Error("some completely different error"))).toBe("unknown");
+  });
+
+  it("returns unknown for non-Error string", () => {
+    expect(classifyStoryJsonFailure("string error")).toBe("unknown");
+  });
+
+  it("returns unknown for undefined", () => {
+    expect(classifyStoryJsonFailure(undefined)).toBe("unknown");
+  });
+
+  it("returns unknown for null", () => {
+    expect(classifyStoryJsonFailure(null)).toBe("unknown");
+  });
+
+  it("prioritizes malformed_json over field_type checks (first match wins)", () => {
+    expect(classifyStoryJsonFailure(new Error("Failed to parse LLM JSON response: must be a string"))).toBe("malformed_json");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // resolveProviderFromProfile (P2-3)
 // ---------------------------------------------------------------------------
 describe("resolveProviderFromProfile", () => {
@@ -400,6 +470,45 @@ describe("logGenerationEvent", () => {
     expect(emitted.failureStage).toBe("story_generation");
     expect(emitted).not.toHaveProperty("technicalErrorMessage");
     expect(emitted).not.toHaveProperty("userId");
+  });
+
+  it("P4-2: book_early_failed emits storyJsonFailureCategory + storyDurationMs for schema_validation", () => {
+    const event: BookEarlyFailedEvent = {
+      eventName: "book_early_failed",
+      bookId: "book-p42",
+      userPresent: false,
+      failureStage: "schema_validation",
+      failureProvider: "gemini",
+      errorCategory: "validation",
+      retryable: false,
+      storyJsonFailureCategory: "malformed_json",
+      storyDurationMs: 8200,
+    };
+    logGenerationEvent(event);
+    const [, emitted] = infoSpy.mock.calls[0] as [string, BookEarlyFailedEvent];
+    expect(emitted.storyJsonFailureCategory).toBe("malformed_json");
+    expect(emitted.storyDurationMs).toBe(8200);
+    expect(emitted.failureStage).toBe("schema_validation");
+  });
+
+  it("P4-2: book_outcome emits storyDurationMs", () => {
+    const event: BookOutcomeEvent = {
+      eventName: "book_outcome",
+      bookId: "book-p42b",
+      userPresent: true,
+      bookStatus: "completed",
+      totalPages: 8,
+      completedPages: 8,
+      failedPages: 0,
+      fallbackPages: 0,
+      timedOutPages: 0,
+      durationMs: 62000,
+      storyDurationMs: 11500,
+    };
+    logGenerationEvent(event);
+    const [, emitted] = infoSpy.mock.calls[0] as [string, BookOutcomeEvent];
+    expect(emitted.storyDurationMs).toBe(11500);
+    expect(emitted.durationMs).toBe(62000);
   });
 
   it("page_image_failed classifies E005 correctly (P2-3)", () => {

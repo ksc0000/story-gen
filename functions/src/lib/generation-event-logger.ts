@@ -1,5 +1,5 @@
 /**
- * P2-2/P2-3: Structured generation event logging and normalized error taxonomy.
+ * P2-2/P2-3/P4-2: Structured generation event logging and normalized error taxonomy.
  *
  * Provides typed event shapes and a thin emit helper for Firebase Functions logger.
  * Events appear as structured JSON in Cloud Logging and are intended for SLO measurement
@@ -15,6 +15,12 @@
  *  `categorizeError` is kept for backward compatibility (string-only, P2-2).
  *  When classification is ambiguous both functions return "unknown" / "UNKNOWN" — safe default.
  *  E005 is the Replicate content-sensitivity rejection code for flux-2-pro (imagination×crayon).
+ *
+ * Story JSON failure taxonomy (P4-2):
+ *  `classifyStoryJsonFailure` classifies story schema/parse errors into fine-grained categories.
+ *  Used to populate `storyJsonFailureCategory` on `book_early_failed` events so that
+ *  `malformed_json`, `field_type_mismatch`, and `schema_structural` failures are separately
+ *  countable in the SLO report — distinct from image generation failures.
  */
 
 import * as logger from "firebase-functions/logger";
@@ -76,6 +82,31 @@ export type ErrorCode =
   | "UNKNOWN";
 
 /**
+ * P4-2: Fine-grained story JSON / schema validation failure categories.
+ *
+ * Used to populate `storyJsonFailureCategory` on `book_early_failed` events so that
+ * pre-image story failures can be sub-classified in the SLO report.
+ *
+ * | Category          | Description |
+ * |-------------------|-------------|
+ * | malformed_json    | LLM output could not be parsed as JSON (markdown fencing, truncated, etc.) |
+ * | schema_structural | JSON parsed but required fields are absent or structurally wrong |
+ * | field_type_mismatch | Field present but wrong type (array where string expected, null, etc.) |
+ * | field_value_invalid | Type correct but value fails enum or allowed-set check |
+ * | provider_error    | Gemini API returned an error (non-retryable, classified separately from story_generation) |
+ * | timeout           | Story generation exceeded time budget (no explicit timeout today — reserved) |
+ * | unknown           | Classification not possible from available error signals |
+ */
+export type StoryJsonFailureCategory =
+  | "malformed_json"
+  | "schema_structural"
+  | "field_type_mismatch"
+  | "field_value_invalid"
+  | "provider_error"
+  | "timeout"
+  | "unknown";
+
+/**
  * Normalized error classification result returned by `classifyError`.
  */
 export interface NormalizedErrorInfo {
@@ -122,6 +153,10 @@ export interface GenerationStartedEvent {
  * Fired when a book reaches a terminal status after image generation completes (step 9).
  * Covers all three terminal statuses: completed, partial_completed, and failed (all-pages-failed).
  * Early-exit failures (Gemini, validation) emit BookEarlyFailedEvent instead.
+ *
+ * P4-2 addition:
+ *  - `storyDurationMs`: wall time spent in story generation in milliseconds.
+ *    Enables per-phase latency breakdown: story generation vs image generation.
  */
 export interface BookOutcomeEvent {
   eventName: "book_outcome";
@@ -137,11 +172,19 @@ export interface BookOutcomeEvent {
   fallbackPages: number;
   timedOutPages: number;
   durationMs: number;
+  /** P4-2: Story generation wall time in ms (from Gemini call start to completion). */
+  storyDurationMs?: number;
 }
 
 /**
  * Fired when a book fails before image generation begins (validation, story gen, quality gate).
  * Does NOT include raw error messages — use `failureStage` + `errorCategory` for classification.
+ *
+ * P4-2 additions:
+ *  - `storyJsonFailureCategory`: present when `failureStage = "schema_validation"`; classifies
+ *    the specific JSON parse / schema failure type for SLO sub-aggregation.
+ *  - `storyDurationMs`: wall time spent in story generation (including retries) before the
+ *    failure, in milliseconds. Enables story latency analysis separate from image latency.
  */
 export interface BookEarlyFailedEvent {
   eventName: "book_early_failed";
@@ -153,6 +196,10 @@ export interface BookEarlyFailedEvent {
   failureProvider: string;
   errorCategory: ErrorCategory;
   retryable: boolean;
+  /** P4-2: Fine-grained JSON failure category. Only present when failureStage = "schema_validation". */
+  storyJsonFailureCategory?: StoryJsonFailureCategory;
+  /** P4-2: Story generation wall time in ms (from Gemini call start to failure). */
+  storyDurationMs?: number;
 }
 
 /**
@@ -354,6 +401,88 @@ export function classifyError(err: unknown): NormalizedErrorInfo {
   }
 
   return { errorCategory: "unknown", errorCode: "UNKNOWN" };
+}
+
+/**
+ * P4-2: Classify a story JSON / schema validation error into a StoryJsonFailureCategory.
+ *
+ * Called only for errors that have already been confirmed to be story JSON failures
+ * (e.g. after isStorySchemaValidationError returned true in generate-book.ts).
+ *
+ * Classification is based on keyword matching against error messages produced by
+ * GeminiClient.generateStory() and the story schema validation layer.
+ * Returns "unknown" for unrecognized messages — never throws.
+ *
+ * Privacy rule: this function inspects error *messages* only (field names, type names,
+ * structural keywords). It must never receive or log raw LLM output, prompt text,
+ * child names, or story content.
+ *
+ * Priority order (first match wins):
+ *  1. malformed_json   — JSON.parse failure or LLM response wrapping
+ *  2. field_type_mismatch — field present but wrong type
+ *  3. field_value_invalid — type correct but value fails enum check
+ *  4. schema_structural   — required field absent or wrong structural shape
+ *  5. unknown             — catch-all
+ */
+export function classifyStoryJsonFailure(err: unknown): StoryJsonFailureCategory {
+  if (!(err instanceof Error)) return "unknown";
+  const message = err.message;
+  const lower = message.toLowerCase();
+
+  // 1. JSON.parse failure — Gemini output could not be parsed as JSON at all
+  if (
+    message.includes("Failed to parse LLM JSON response") ||
+    message.includes("LLM response") ||
+    lower.includes("json.parse") ||
+    lower.includes("unexpected token") ||
+    lower.includes("unexpected end of")
+  ) {
+    return "malformed_json";
+  }
+
+  // 2. Field type mismatch — field is present but has the wrong type
+  //    Observed: "'mainQuestObject' must be a string when provided"
+  if (
+    lower.includes("must be a string") ||
+    lower.includes("must be an array") ||
+    lower.includes("must be a number") ||
+    lower.includes("must be a boolean") ||
+    lower.includes("must be an object") ||
+    lower.includes("expected string") ||
+    lower.includes("expected number") ||
+    lower.includes("not a string") ||
+    lower.includes("not an array")
+  ) {
+    return "field_type_mismatch";
+  }
+
+  // 3. Field value invalid — type is correct but value does not match allowed set
+  //    Observed: "pageVisualRole" errors (enum check)
+  if (
+    message.includes("pageVisualRole") ||
+    lower.includes("must be one of") ||
+    lower.includes("invalid value") ||
+    lower.includes("invalid enum")
+  ) {
+    return "field_value_invalid";
+  }
+
+  // 4. Schema structural — required field missing or wrong structural shape
+  //    Observed: "Each page must ...", "narrativeDevice ..."
+  if (
+    message.includes("Each page must") ||
+    message.includes("narrativeDevice") ||
+    lower.includes("missing required") ||
+    lower.includes("is required") ||
+    lower.includes("is missing") ||
+    lower.includes("must be present") ||
+    lower.includes("must have property") ||
+    lower.includes("must have key")
+  ) {
+    return "schema_structural";
+  }
+
+  return "unknown";
 }
 
 /**

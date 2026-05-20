@@ -58,6 +58,7 @@ import {
   logGenerationEvent,
   categorizeError,
   classifyError,
+  classifyStoryJsonFailure,
   resolveProviderFromProfile,
   type CandidateDecision,
 } from "./lib/generation-event-logger";
@@ -947,6 +948,8 @@ export async function processBookGeneration(
     );
 
     // Step 5: Generate story JSON once with Gemini and validate it.
+    // P4-2: Track story generation start time for storyDurationMs SLO field.
+    const storyStartMs = Date.now();
     let storyResult: {
       story: GeneratedStory;
       qualityReport: StoryQualityReport;
@@ -973,6 +976,9 @@ export async function processBookGeneration(
               readingProfile,
             });
     } catch (err) {
+      // P4-2: Capture story duration for logging before each early-return path.
+      const storyDurationMs = Date.now() - storyStartMs;
+
       if (err instanceof GeminiServiceUnavailableError || isRetryableGeminiFailure(err)) {
         const technicalMessage =
           err instanceof GeminiServiceUnavailableError
@@ -1000,6 +1006,7 @@ export async function processBookGeneration(
           failureProvider: "gemini",
           errorCategory: "provider_error",
           retryable: true,
+          storyDurationMs,
         });
         return;
       }
@@ -1015,6 +1022,7 @@ export async function processBookGeneration(
           technicalErrorMessage: technicalMessage,
         }));
         await deps.updateBookStatus(bookId, "failed");
+        // P4-2: Include storyJsonFailureCategory for fine-grained SLO sub-classification.
         logGenerationEvent({
           eventName: "book_early_failed",
           bookId,
@@ -1025,12 +1033,16 @@ export async function processBookGeneration(
           failureProvider: "gemini",
           errorCategory: "validation",
           retryable: false,
+          storyJsonFailureCategory: classifyStoryJsonFailure(err),
+          storyDurationMs,
         });
         return;
       }
 
       throw err;
     }
+    // P4-2: Capture story generation wall time for SLO fields on success path.
+    const storyDurationMs = Date.now() - storyStartMs;
 
     // Step 6: Ensure recurring character references (premium + quality mode only)
     const enableRecurringRef = resolveEnableRecurringCharacterReference(generationMode);
@@ -1106,6 +1118,19 @@ export async function processBookGeneration(
         technicalErrorMessage: buildStoryQualityTechnicalMessage(qualityReport),
       }));
       await deps.updateBookStatus(bookId, "failed");
+      // P4-2: Log book_early_failed for quality_gate failures (was previously missing).
+      logGenerationEvent({
+        eventName: "book_early_failed",
+        bookId,
+        userPresent: !!bookData.userId,
+        templateId: resolvedTemplateId,
+        creationMode: resolvedCreationMode as import("./lib/types").CreationMode,
+        failureStage: "quality_gate",
+        failureProvider: "system",
+        errorCategory: "validation",
+        retryable: false,
+        storyDurationMs,
+      });
       return;
     }
 
@@ -1406,7 +1431,7 @@ export async function processBookGeneration(
 
     console.log(`Book ${bookId} generation ${bookStatus}: ${imageSuccessCount}/${totalPages} pages succeeded`);
 
-    // P2-2: Log book outcome for SLO measurement.
+    // P2-2/P4-2: Log book outcome for SLO measurement.
     logGenerationEvent({
       eventName: "book_outcome",
       bookId,
@@ -1421,6 +1446,7 @@ export async function processBookGeneration(
       fallbackPages: pageResults.filter((r) => r.fallbackUsed).length,
       timedOutPages: pageResults.filter((r) => r.timeoutCount > 0).length,
       durationMs: generationDurationMs,
+      storyDurationMs,
     });
   } catch (err) {
     console.error(`Book generation failed for ${bookId}:`, err);
