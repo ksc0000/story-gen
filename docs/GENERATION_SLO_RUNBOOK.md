@@ -628,7 +628,7 @@ node scripts/report-generation-slo.mjs --input tmp/events.json
 
 ### 8.11 Story JSON Validation Failure (`schema_validation` / `quality_gate`)
 
-> **P4-1 Note**: Story JSON validation failures are **pre-image failures**. They must be triaged separately from page image failures (`page_image_failed`). See `docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md` for the full hardening plan.
+> **P4-1/P4-2/P4-3 Note**: Story JSON validation failures are **pre-image failures**. They must be triaged separately from page image failures (`page_image_failed`). P4-2 added `storyJsonFailureCategory` + `storyDurationMs` to `book_early_failed` log events for sub-classification. P4-3 added deterministic unit fixtures covering all routed failure categories. See `docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md` for the full hardening plan.
 
 **Symptoms**:
 - Book reaches `status = "failed"` with `failureStage = "schema_validation"` or `failureStage = "quality_gate"` in Firestore.
@@ -647,7 +647,8 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_early
    - `quality_gate`: Story passed JSON parsing but failed content quality checks. Usually means Gemini returned an unusually thin story. Manual retry may succeed.
    - `story_generation`: Gemini returned 5xx / 503. Check Gemini API status.
 2. For `schema_validation` failures: this is **not** an image adapter regression. Do not touch `ReplicateImageAdapter`, `OpenAIImageAdapter`, or the candidate gate.
-3. Check `errorCategory` in the `book_early_failed` event — currently `"validation"` covers all story parse/type/quality failures (P4-2 will add sub-classification).
+3. Check `storyJsonFailureCategory` in the `book_early_failed` event (P4-2+) for fine-grained sub-classification: `malformed_json`, `schema_structural`, `field_value_invalid`, `field_type_mismatch`, or `unknown`. Note: `field_type_mismatch` errors currently fall to `failureStage: "unexpected"` (see P4-1 §5 routing gap); P4-5 will fix routing.
+4. Check `storyDurationMs` (P4-2+) to confirm the failure happened during story generation and not image generation.
 4. If the failure is persistent (> 3 consecutive books fail at `schema_validation`): check whether the Gemini model response format has changed. Run a smoke book and inspect `technicalErrorMessage` in Firestore.
 5. Manual retry via admin console or re-trigger is the current recovery path. P4-5 will add automatic retry.
 

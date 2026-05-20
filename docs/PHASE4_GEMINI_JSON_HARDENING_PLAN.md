@@ -406,25 +406,36 @@ This is not yet implemented — it is a target for P4-2.
 
 ---
 
-### P4-3 — Unit Fixtures for Malformed / Wrong-Type Gemini Responses
+### P4-3 — Unit Fixtures for Malformed / Wrong-Type Gemini Responses ✅ COMPLETE
 
-**Goal**: Add test cases that cover raw JSON parse failure, field type mismatch, and structural schema violation to `generate-book.test.ts`.
+**Goal**: Add test cases that cover raw JSON parse failure, field type mismatch, and structural schema violation.
 
-**Changes**:
-- Add mock `llmClient.generateStory()` that throws `Error("Failed to parse LLM JSON response")`
-- Add mock that throws with `mainQuestObject` type error message
-- Add mock that throws with `narrativeDevice` message
-- Verify: `failureStage: "schema_validation"`, `retryable: false`, no image generation called
-- Add fixture for `schema_validation` followed by retry success (preparation for P4-5)
+**Implemented (commit `test(P4-3)`)**:
 
-**Constraints**:
-- No live Gemini calls in tests
+**Fixture file**: `functions/test/fixtures/gemini-story-json-failures.ts`
+- `MALFORMED_JSON_ERRORS` — `"Failed to parse LLM JSON response"`, `"LLM response"` prefix → `malformed_json`
+- `SCHEMA_STRUCTURAL_ERRORS` — `"Each page must"`, `"narrativeDevice"` → `schema_structural`
+- `FIELD_VALUE_INVALID_ERRORS` — `"pageVisualRole"` enum error → `field_value_invalid`
+- `FIELD_TYPE_MISMATCH_ERRORS` — `"must be a string"`, `"must be an array"` → `field_type_mismatch` (outer-catch gap documented)
+- `ALL_JSON_FAILURE_FIXTURES` — typed aggregate with `passesSchemaValidationCheck` flag
+
+**Test file**: `functions/test/gemini-story-json-fixtures.test.ts` (25 new tests)
+1. `classifyStoryJsonFailure` fixture coverage — each fixture → expected category (parameterized)
+2. `processBookGeneration` schema_validation path — 6 integration tests (routing, log fields, no retry, no image gen)
+3. `processBookGeneration` outer-catch path — 3 tests documenting P4-1 §5 routing gap for type-mismatch errors
+4. `processBookGeneration` quality_gate `logGenerationEvent` — 3 tests verifying P4-2 fix (spy on `logger.info`)
+5. Fixture metadata self-checks — 3 tests (category coverage, PII-free messages)
+
+**Routing gap documented**: `field_type_mismatch` errors (`"must be a string"` etc.) do NOT pass `isStorySchemaValidationError()` → fall to outer catch → `failureStage: "unexpected"`. To be addressed in P4-5.
+
+**Constraints met**:
+- No live Gemini calls
 - No real child names or story content in fixtures
-- Fixtures use placeholder data only
-
-**Acceptance criteria**:
-- `npx vitest run` passes with new fixtures
-- All `StoryJsonFailureCategory` values have a corresponding test fixture
+- All 4 schema-validation-routed categories covered
+- `npx vitest run` passes: 1258/1258 ✅
+- `npm run build` clean ✅
+- `check-hygiene.mjs` PASS ✅
+- No production code change, no prompt change, no retry added
 
 ---
 
@@ -684,8 +695,8 @@ The remaining legacy scope from P3 (`generateCoverImage()` and `ensureRecurringC
 | Slice | Title | Type | Status |
 |---|---|---|---|
 | **P4-1** | Gemini JSON hardening inventory and design | Docs | ✅ COMPLETE (this doc) |
-| **P4-2** | Structured story validation error taxonomy / logging | Code (logging only) | Planned |
-| **P4-3** | Unit fixtures for malformed/wrong-type Gemini responses | Test | Planned |
+| **P4-2** | Structured story validation error taxonomy / logging | Code (logging only) | ✅ COMPLETE (bde7bb9) |
+| **P4-3** | Unit fixtures for malformed/wrong-type Gemini responses | Test | ✅ COMPLETE |
 | **P4-4** | Safe JSON extraction/repair helper, test-only | Code (new helper + tests) | Planned |
 | **P4-5** | One-shot validation repair retry behind flag | Code | Planned |
 | **P4-6** | Live smoke for repaired flow | Smoke | Planned |

@@ -295,8 +295,8 @@ Priorities are ordered by reliability impact on production users.
 | Task | Description | Priority | Rationale |
 |---|---|---|---|
 | **P4-1 ✅** | Gemini JSON hardening inventory and design | **COMPLETE** | P4-1 design doc: [`docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md`](PHASE4_GEMINI_JSON_HARDENING_PLAN.md) |
-| **P4-2** | Structured story validation error taxonomy / logging | **HIGH** | Adds `storyJsonFailureCategory` sub-classification to `book_early_failed` events; prerequisite for all further hardening |
-| **P4-3** | Unit fixtures for malformed/wrong-type Gemini responses | **HIGH** | Locks failure behavior in tests before any code change |
+| **P4-2 ✅** | Structured story validation error taxonomy / logging | **COMPLETE** | `storyJsonFailureCategory` + `storyDurationMs` added to log events; commit `bde7bb9` |
+| **P4-3 ✅** | Unit fixtures for malformed/wrong-type Gemini responses | **COMPLETE** | `functions/test/fixtures/gemini-story-json-failures.ts` + 25 new tests; 1258/1258 PASS |
 | **P4-4** | Safe JSON extraction/repair helper (test-only first) | Medium | Conservative repair for `malformed_json` (markdown fencing stripping only) |
 | **P4-5** | One-shot validation repair retry behind flag | Medium | Converts intermittent schema failures to successes; gated on P4-2/P4-3 |
 | **P4-6** | Live smoke for repaired flow | Medium | Validates P4-5 in production |
