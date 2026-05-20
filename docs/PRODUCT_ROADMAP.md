@@ -59,7 +59,7 @@
 - ~~Rewrite / Regeneration Recommendation~~ → 実装済み
 - ~~Recommendation Action Buttons~~ → 実装済み（導線のみ、実行なし）
 - LLM auto review prototype
-- provider abstraction（ImageProvider インターフェース）
+- provider abstraction（ImageProvider インターフェース）— **P3-1 設計開始**: `docs/PHASE3_IMAGE_PROVIDER_ABSTRACTION_PLAN.md`
 - provider 比較・A/B テスト
 - Stripe 決済
 - PDF 出力
