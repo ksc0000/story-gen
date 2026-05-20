@@ -61,9 +61,17 @@ import {
   resolveProviderFromProfile,
   type CandidateDecision,
 } from "./lib/generation-event-logger";
+import { ReplicateImageAdapter } from "./lib/replicate-image-adapter";
+import { makePageUploader, type PageImageUploadFn } from "./lib/image-storage-uploader";
+import { PROFILE_PROVIDER_MAP } from "./lib/image-provider";
 
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
 const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCURRENCY ?? "2")));
+
+/** P3-13: Feature flag for Replicate adapter path. Off by default — legacy path unchanged. */
+function useReplicateAdapter(): boolean {
+  return process.env.USE_REPLICATE_ADAPTER === "true";
+}
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
 const GEMINI_RETRYABLE_USER_MESSAGE =
   "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成してください。";
@@ -492,6 +500,8 @@ export interface GenerationDeps {
   llmClient: LLMClient;
   imageClient: ImageClient;
   uploadImage: (bookId: string, pageNumber: number, buffer: Buffer) => Promise<string>;
+  /** P3-13: API token for ReplicateImageAdapter. Unused by default (USE_REPLICATE_ADAPTER off). */
+  replicateApiToken?: string;
   uploadCoverImage?: (bookId: string, buffer: Buffer) => Promise<string>;
   updateBookTitle: (bookId: string, title: string) => Promise<void>;
   updateBookCoverImage: (bookId: string, imageUrl: string) => Promise<void>;
@@ -549,6 +559,10 @@ async function generatePageImageWithFallback(params: {
   bookId: string;
   pageIndex: number;
   skip: boolean;
+  /** P3-13: API token for ReplicateImageAdapter. Used only when useReplicateAdapter() is true. */
+  replicateApiToken?: string;
+  /** P3-13: Upload function from GenerationDeps. Used only when useReplicateAdapter() is true. */
+  uploadFn?: PageImageUploadFn;
 }): Promise<PageImageResult> {
   const { primaryProfile, pageIndex, skip } = params;
   const base: Omit<PageImageResult, "success" | "imageUrl" | "imageBuffer"> = {
@@ -577,6 +591,40 @@ async function generatePageImageWithFallback(params: {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       totalAttempts++;
       try {
+        // P3-13: Feature-flagged Replicate adapter path.
+        // Upload happens inside the adapter via makePageUploader; imageBuffer is not returned.
+        if (
+          useReplicateAdapter() &&
+          params.replicateApiToken != null &&
+          params.uploadFn != null &&
+          PROFILE_PROVIDER_MAP[profile] === "replicate"
+        ) {
+          const uploader = makePageUploader({
+            bookId: params.bookId,
+            pageNumber: params.pageIndex,
+            uploadImage: params.uploadFn,
+          });
+          const adapter = new ReplicateImageAdapter(params.replicateApiToken, uploader);
+          const adapterResult = await withImageTimeout(
+            adapter.generateImage({
+              prompt: params.prompt,
+              imageModelProfile: profile,
+              inputImageUrls: params.inputImageUrls,
+            }),
+            IMAGE_GENERATION_TIMEOUT_MS
+          );
+          return {
+            ...base,
+            success: true,
+            imageUrl: adapterResult.imageUrl,
+            usedProfile: profile,
+            fallbackUsed: profile !== primaryProfile,
+            attemptCount: totalAttempts,
+            timeoutCount,
+            durationMs: Date.now() - startMs,
+          };
+        }
+        // Default legacy path (unchanged)
         const buffer = await withImageTimeout(
           params.imageClient.generateImage(params.prompt, {
             purpose: params.imagePurpose,
@@ -1107,6 +1155,9 @@ export async function processBookGeneration(
         bookId,
         pageIndex: i,
         skip: isDev,
+        // P3-13: adapter-path params — used only when useReplicateAdapter() is true
+        replicateApiToken: deps.replicateApiToken,
+        uploadFn: deps.uploadImage,
       });
 
       let imageUrl = imageResult.imageUrl;
@@ -2286,6 +2337,7 @@ export const generateBook = onDocumentCreated(
 
       llmClient: new GeminiClient(geminiApiKey.value()),
       imageClient: createImageClient(gatedModelProfile),
+      replicateApiToken: useReplicateAdapter() ? replicateApiToken.value() : undefined,
 
       uploadImage: async (bookId: string, pageNumber: number, buffer: Buffer) => {
         const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");

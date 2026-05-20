@@ -777,7 +777,35 @@ All classifications use existing P2 taxonomy values.
 
 ---
 
-## 8. Test Strategy
+### P3-13: Feature-flagged Replicate adapter wiring — **COMPLETE**
+
+**Files modified**:
+- `functions/src/generate-book.ts` — feature flag + adapter path branch in `generatePageImageWithFallback()`
+
+**Files added**:
+- `functions/test/generate-book-replicate-adapter.test.ts` — 11 tests
+
+**Implementation**:
+- `useReplicateAdapter()` — reads `process.env.USE_REPLICATE_ADAPTER === "true"` (default false)
+- `GenerationDeps.replicateApiToken?: string` — optional field; populated from Firebase secret when flag on
+- `generatePageImageWithFallback()` extended with `replicateApiToken?` and `uploadFn?` params
+- Adapter branch condition: `useReplicateAdapter() && replicateApiToken != null && uploadFn != null && PROFILE_PROVIDER_MAP[profile] === "replicate"`
+- Adapter path: `makePageUploader(bookId, pageIndex, uploadFn)` → `new ReplicateImageAdapter(token, uploader)` → `withImageTimeout(adapter.generateImage(...))` → returns `imageUrl` (imageBuffer=undefined)
+- Caller upload block (`if imageResult.imageBuffer`) is skipped for adapter path — no double upload
+- `openai_image_candidate` profile maps to "openai" (not "replicate") → unaffected
+- `ensureRecurringCharacterReferences()` and `generateCoverImage()` remain on legacy path
+- `imageModel` label in Firestore unchanged (computed via `resolveReplicateModel()` before the call)
+
+**Key invariants**:
+- Default behavior (`USE_REPLICATE_ADAPTER` not set): identical to pre-P3-13
+- All 1192 pre-existing tests remain green
+- New tests: 11 tests covering flag-off, flag-on+Replicate, flag-on+OpenAI, upload path, error handling
+- Fallback loop structure unchanged; only the inner generation call is branched
+- Candidate gate runs before `generatePageImageWithFallback` is called — no interaction
+
+**All tests pass**: 1192+11 = 1203/1203
+
+
 
 ### 8.1 Tests required before implementation
 

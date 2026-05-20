@@ -261,13 +261,22 @@ Each slice is independently shippable, test-first, and behavior-equivalent until
 **Not wired to production**: `generate-book.ts` unchanged. `createImageClient()` unchanged.  
 **No network / no Firestore / no Firebase deploy.**
 
-### P3-13: Switch Replicate path to adapter (feature-flagged)
+### P3-13: Switch Replicate path to adapter (feature-flagged) — COMPLETE
 
-**Goal**: Replace `createImageClient()` Replicate branch with `ReplicateImageAdapter`.  
+**Goal**: Replace `createImageClient()` Replicate branch with `ReplicateImageAdapter` behind `USE_REPLICATE_ADAPTER=true`.  
 **Condition**: P3-12 shadow tests pass; no behavior change observable.  
-**Feature flag**: `process.env.USE_REPLICATE_ADAPTER === "true"` or direct switch if P3-12 proves parity.  
-**Tests**: All generate-book.test.ts (52 tests) must remain green.  
-**Gate safety**: candidate-gate.test.ts must remain green.
+**Feature flag**: `process.env.USE_REPLICATE_ADAPTER === "true"` — default false, legacy path unchanged.  
+**Implementation**:
+- Added `useReplicateAdapter()` helper in `generate-book.ts`.
+- `GenerationDeps.replicateApiToken?: string` — optional, passed from CF handler when flag is on.
+- `generatePageImageWithFallback()` branches on the flag: adapter path when `PROFILE_PROVIDER_MAP[profile] === "replicate"`, else legacy.
+- Adapter path: `makePageUploader → ReplicateImageAdapter → upload inside adapter → imageUrl returned, imageBuffer=undefined`.
+- Caller `if (imageResult.imageBuffer)` upload block is skipped for adapter path (imageBuffer is undefined).
+- `openai_image_candidate` profile is unaffected (`PROFILE_PROVIDER_MAP` maps it to "openai", not "replicate").
+- `ensureRecurringCharacterReferences()` and `generateCoverImage()` remain on legacy path.
+**Tests**: 11 new tests in `functions/test/generate-book-replicate-adapter.test.ts`. All 1203 tests (33 files) pass.  
+**Gate safety**: candidate-gate.test.ts (48 tests) and generate-book.test.ts (52 tests) remain green.  
+**No behavior change** when `USE_REPLICATE_ADAPTER` is not set.
 
 ### P3-14: Switch OpenAI candidate path to adapter
 
