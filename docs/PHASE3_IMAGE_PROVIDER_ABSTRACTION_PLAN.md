@@ -407,13 +407,35 @@ All types in this model must satisfy:
 
 ## 7. Migration Slices
 
-### P3-2: Provider-neutral type definitions
+### P3-2: Provider-neutral type definitions — **COMPLETE**
 
 **Scope**: Types only, no behavior change.
-- Add `ImageProvider` interface, `ImageGenerationRequest`, `ImageGenerationResult`, `ImageGenerationError`, `ImagePurpose`, `ImageQualityTier`, `PROFILE_PROVIDER_MAP` to a new file `functions/src/lib/image-provider.ts`
-- Add `ImageProviderId` union type
-- No runtime code using these types yet
-- All existing tests continue to pass
+
+**Implementation** (commit: see git log for `feat(P3-2)`):
+- New file: `functions/src/lib/image-provider.ts`
+- New test file: `functions/test/image-provider-types.test.ts` (13 tests, all passing)
+- Runtime behavior unchanged — no production module imports this file yet
+
+**Exported types**:
+| Export | Kind | Description |
+|---|---|---|
+| `ImageProviderId` | `type` | `"replicate" \| "openai"` |
+| `ImageProviderCapabilities` | `interface` | Static capability flags for text-to-image, image-to-image, reference images, detailed guidance |
+| `ImageGenerationMetadata` | `interface` | Non-PII context (bookId, pageIndex, templateId, generationMode, candidateRequested, candidateAllowed) |
+| `ImageGenerationRequest` | `interface` | Provider-neutral input (prompt, negativePrompt, aspectRatio, width, height, inputImageUrls, imageModelProfile, timeoutMs, metadata) |
+| `ImageGenerationResult` | `interface` | Successful output (imageUrl, providerId, modelLabel, profile, durationMs, fallbackUsed) |
+| `ImageGenerationFailure` | `interface` | Normalized failure (providerId, profile, errorCategory, errorCode, retryable, durationMs, safeMessage) |
+| `ImageProvider` | `interface` | Adapter contract (providerId, capabilities, generateImage, classifyError, resolveModelLabel, validateConfig?) |
+| `PROFILE_PROVIDER_MAP` | `const` | Maps each `ImageModelProfile` to its `ImageProviderId` — test use only in P3-2 |
+
+**Non-goals confirmed**:
+- `createImageClient()` in `generate-book.ts` — unchanged
+- Candidate gate logic — unchanged
+- Fallback ordering — unchanged
+- Firestore schema — unchanged
+- Generation routing — unchanged
+
+**Test suite after P3-2**: 818/818 PASS (was 805, +13 new tests)
 
 ### P3-3: Wrap Replicate path behind adapter
 
@@ -525,7 +547,9 @@ Unit tests for adapters must:
 
 ---
 
-## 10. Acceptance Criteria for P3-1
+## 10. Acceptance Criteria
+
+### P3-1
 
 - [x] Docs-only — no production code changed
 - [x] Coupling inventory complete (all major coupling points identified with line numbers)
@@ -539,6 +563,21 @@ Unit tests for adapters must:
   - `npm run check:phase2`: hygiene + SLO self-test 49/49 + guard tests 102/102
   - Full functions suite: 805/805
   - `cd functions && npm run build`: PASS
+
+### P3-2
+
+- [x] `functions/src/lib/image-provider.ts` created with all required type exports
+- [x] `PROFILE_PROVIDER_MAP` constant present and correct (openai_image_candidate → openai; all others → replicate)
+- [x] `ImageGenerationMetadata` excludes PII fields (userId, childName, storyText, userName, parentName)
+- [x] Mock `ImageProvider` implementation compiles and passes tests
+- [x] `functions/test/image-provider-types.test.ts` added: 13 tests, all passing
+- [x] No production module imports `image-provider.ts` yet
+- [x] `createImageClient()` in `generate-book.ts` unchanged
+- [x] Candidate gate unchanged (48 gate tests green)
+- [x] `npm run check:phase2`: PASS
+- [x] Full functions suite: 818/818 (was 805 + 13 new)
+- [x] `cd functions && npm run build`: PASS
+- [x] `node scripts/check-hygiene.mjs`: PASS
 
 ---
 
