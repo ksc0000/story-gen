@@ -805,9 +805,40 @@ All classifications use existing P2 taxonomy values.
 
 **All tests pass**: 1192+11 = 1203/1203
 
+---
+
+### P3-14: Feature-flagged OpenAI candidate adapter wiring — **COMPLETE**
+
+**Files modified**:
+- `functions/src/generate-book.ts` — feature flag + OpenAI adapter branch in `generatePageImageWithFallback()`
+
+**Files added**:
+- `functions/test/generate-book-openai-adapter.test.ts` — 15 tests
+
+**Implementation**:
+- `useOpenAIAdapter()` — reads `process.env.USE_OPENAI_ADAPTER === "true"` (default false)
+- `GenerationDeps.openaiApiKey?: string` — optional field; populated from Firebase secret when flag on
+- `generatePageImageWithFallback()` extended with `openaiApiKey?` param
+- Adapter branch condition: `useOpenAIAdapter() && openaiApiKey != null && uploadFn != null && PROFILE_PROVIDER_MAP[profile] === "openai"`
+- Adapter path: `makePageUploader(bookId, pageIndex, uploadFn)` → `new OpenAIImageAdapter(apiKey, uploader)` → `withImageTimeout(adapter.generateImage(...))` → returns `imageUrl` (imageBuffer=undefined)
+- Caller upload block (`if imageResult.imageBuffer`) is skipped — no double upload
+- Replicate profiles unaffected (`PROFILE_PROVIDER_MAP` maps them to "replicate" — OpenAI branch skipped)
+- `USE_REPLICATE_ADAPTER` and `USE_OPENAI_ADAPTER` are independent; both can be on simultaneously
+- Candidate gate (in CF handler) runs before deps creation — adapter never sees enrollment state
+- `ensureRecurringCharacterReferences()` and `generateCoverImage()` remain on legacy path
+- `imageModel` label unchanged: `resolveOpenAIModelLabel(inputImageUrls.length > 0)` computed by caller (same as legacy)
+- `openai_image_candidate` has no fallback profiles → if adapter fails, book fails (no Replicate fallback)
+- Rollback: unset `USE_OPENAI_ADAPTER` or revert commit
+
+**Key invariants**:
+- Default behavior (`USE_OPENAI_ADAPTER` not set): identical to pre-P3-14
+- All 1203 pre-existing tests remain green
+- New tests: 15 tests covering flag-off, flag-on+OpenAI, gate-block, Replicate unaffected, flag independence, error handling
+- Candidate gate unchanged; adapter is candidate-only; unenrolled users never reach OpenAI adapter
+
+**All tests pass**: 1203+15 = 1218/1218
 
 
-### 8.1 Tests required before implementation
 
 | Test | When needed | Description |
 |---|---|---|

@@ -62,6 +62,7 @@ import {
   type CandidateDecision,
 } from "./lib/generation-event-logger";
 import { ReplicateImageAdapter } from "./lib/replicate-image-adapter";
+import { OpenAIImageAdapter } from "./lib/openai-image-adapter";
 import { makePageUploader, type PageImageUploadFn } from "./lib/image-storage-uploader";
 import { PROFILE_PROVIDER_MAP } from "./lib/image-provider";
 
@@ -71,6 +72,11 @@ const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCU
 /** P3-13: Feature flag for Replicate adapter path. Off by default — legacy path unchanged. */
 function useReplicateAdapter(): boolean {
   return process.env.USE_REPLICATE_ADAPTER === "true";
+}
+
+/** P3-14: Feature flag for OpenAI candidate adapter path. Off by default — legacy path unchanged. */
+function useOpenAIAdapter(): boolean {
+  return process.env.USE_OPENAI_ADAPTER === "true";
 }
 const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
 const GEMINI_RETRYABLE_USER_MESSAGE =
@@ -502,6 +508,8 @@ export interface GenerationDeps {
   uploadImage: (bookId: string, pageNumber: number, buffer: Buffer) => Promise<string>;
   /** P3-13: API token for ReplicateImageAdapter. Unused by default (USE_REPLICATE_ADAPTER off). */
   replicateApiToken?: string;
+  /** P3-14: OpenAI API key for OpenAIImageAdapter. Unused by default (USE_OPENAI_ADAPTER off). */
+  openaiApiKey?: string;
   uploadCoverImage?: (bookId: string, buffer: Buffer) => Promise<string>;
   updateBookTitle: (bookId: string, title: string) => Promise<void>;
   updateBookCoverImage: (bookId: string, imageUrl: string) => Promise<void>;
@@ -563,6 +571,8 @@ async function generatePageImageWithFallback(params: {
   replicateApiToken?: string;
   /** P3-13: Upload function from GenerationDeps. Used only when useReplicateAdapter() is true. */
   uploadFn?: PageImageUploadFn;
+  /** P3-14: OpenAI API key for OpenAIImageAdapter. Used only when useOpenAIAdapter() is true. */
+  openaiApiKey?: string;
 }): Promise<PageImageResult> {
   const { primaryProfile, pageIndex, skip } = params;
   const base: Omit<PageImageResult, "success" | "imageUrl" | "imageBuffer"> = {
@@ -605,6 +615,39 @@ async function generatePageImageWithFallback(params: {
             uploadImage: params.uploadFn,
           });
           const adapter = new ReplicateImageAdapter(params.replicateApiToken, uploader);
+          const adapterResult = await withImageTimeout(
+            adapter.generateImage({
+              prompt: params.prompt,
+              imageModelProfile: profile,
+              inputImageUrls: params.inputImageUrls,
+            }),
+            IMAGE_GENERATION_TIMEOUT_MS
+          );
+          return {
+            ...base,
+            success: true,
+            imageUrl: adapterResult.imageUrl,
+            usedProfile: profile,
+            fallbackUsed: profile !== primaryProfile,
+            attemptCount: totalAttempts,
+            timeoutCount,
+            durationMs: Date.now() - startMs,
+          };
+        }
+        // P3-14: Feature-flagged OpenAI candidate adapter path.
+        // Upload happens inside the adapter via makePageUploader; imageBuffer is not returned.
+        if (
+          useOpenAIAdapter() &&
+          params.openaiApiKey != null &&
+          params.uploadFn != null &&
+          PROFILE_PROVIDER_MAP[profile] === "openai"
+        ) {
+          const uploader = makePageUploader({
+            bookId: params.bookId,
+            pageNumber: params.pageIndex,
+            uploadImage: params.uploadFn,
+          });
+          const adapter = new OpenAIImageAdapter(params.openaiApiKey, uploader);
           const adapterResult = await withImageTimeout(
             adapter.generateImage({
               prompt: params.prompt,
@@ -1158,6 +1201,8 @@ export async function processBookGeneration(
         // P3-13: adapter-path params — used only when useReplicateAdapter() is true
         replicateApiToken: deps.replicateApiToken,
         uploadFn: deps.uploadImage,
+        // P3-14: adapter-path params — used only when useOpenAIAdapter() is true
+        openaiApiKey: deps.openaiApiKey,
       });
 
       let imageUrl = imageResult.imageUrl;
@@ -2338,6 +2383,7 @@ export const generateBook = onDocumentCreated(
       llmClient: new GeminiClient(geminiApiKey.value()),
       imageClient: createImageClient(gatedModelProfile),
       replicateApiToken: useReplicateAdapter() ? replicateApiToken.value() : undefined,
+      openaiApiKey: useOpenAIAdapter() ? openaiApiKey.value() : undefined,
 
       uploadImage: async (bookId: string, pageNumber: number, buffer: Buffer) => {
         const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");

@@ -286,6 +286,27 @@ Each slice is independently shippable, test-first, and behavior-equivalent until
 **Tests**: Enrolled-user smoke test (manual dispatch or emulator).  
 **Gate safety**: candidate-gate.test.ts, allowCandidateProfile invariants unchanged.
 
+### P3-14: Switch OpenAI candidate path to adapter (feature-flagged) — COMPLETE
+
+**Feature flag**: `process.env.USE_OPENAI_ADAPTER === "true"` — default false, legacy path unchanged.  
+**Implementation**:
+- Added `useOpenAIAdapter()` helper in `generate-book.ts`.
+- `GenerationDeps.openaiApiKey?: string` — optional, passed from CF handler when `USE_OPENAI_ADAPTER=true`.
+- `generatePageImageWithFallback()` extended with `openaiApiKey?` param.
+- Adapter branch condition: `useOpenAIAdapter() && openaiApiKey != null && uploadFn != null && PROFILE_PROVIDER_MAP[profile] === "openai"`.
+- Adapter path: `makePageUploader → OpenAIImageAdapter → upload inside adapter → imageUrl returned, imageBuffer=undefined`.
+- Caller `if (imageResult.imageBuffer)` upload block skipped — no double upload.
+- Replicate profiles unaffected (`PROFILE_PROVIDER_MAP` maps them to "replicate", not "openai").
+- `USE_REPLICATE_ADAPTER` and `USE_OPENAI_ADAPTER` are independent flags — both can be on simultaneously.
+- Candidate gate unchanged: runs in CF handler before deps creation; adapter never sees enrollment state.
+- `ensureRecurringCharacterReferences()` and `generateCoverImage()` remain on legacy path.
+- `imageModel` label in Firestore unchanged: `resolveOpenAIModelLabel(inputImageUrls.length > 0)` — same as legacy.
+**Default behavior**: Unchanged when `USE_OPENAI_ADAPTER` is not set.  
+**Rollback**: Set `USE_OPENAI_ADAPTER` to `"false"` or unset, or revert commit.  
+**Tests**: 15 new tests in `functions/test/generate-book-openai-adapter.test.ts`. All 1218 tests (34 files) pass.  
+**Gate safety**: candidate-gate.test.ts (48 tests) and generate-book.test.ts (52 tests) remain green.  
+**No Firebase deploy.**
+
 ### P3-15: Remove legacy `createImageClient()`
 
 **Goal**: Delete `createImageClient()`, `ReplicateImageClient` direct import, `OpenAIImageClient` direct import from `generate-book.ts`.  
