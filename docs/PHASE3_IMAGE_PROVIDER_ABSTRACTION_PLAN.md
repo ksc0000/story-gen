@@ -664,14 +664,36 @@ All classifications use existing P2 taxonomy values.
 
 **Next step**: P3-9 — gated OpenAI adapter smoke test, or adapter wiring design (phase gate).
 
-### P3-9: OpenAI adapter live smoke, gated only
+### P3-9: Adapter wiring design and gated smoke plan — **COMPLETE (docs)**
 
-**Scope**: Manual-dispatch smoke test for OpenAI adapter in candidate mode.
-- Run against enrolled account only
-- Verify adapter produces valid image buffer
-- Verify `imageFallbackUsed`, `imageModel`, `imageDurationMs` stored correctly in Firestore
-- Verify no PII in logs
-- Confirm candidate gate blocks non-enrolled users
+**Scope**: Design the safe wiring path for ImageProvider adapters and define a gated smoke plan.
+
+**Output**: [`docs/P3_ADAPTER_WIRING_AND_SMOKE_PLAN.md`](P3_ADAPTER_WIRING_AND_SMOKE_PLAN.md)
+
+**Key decisions documented**:
+- Existing production flow inventory: profile resolution → gate → `createImageClient()` → fallback loop → Buffer → upload → Firestore
+- Two-phase image flow reconciliation: `makePageUploader()` closure bridges `deps.uploadImage(bookId, pageNum, buffer)` to adapter uploader `(buffer, profile) → URL`
+- `withImageTimeout()` stays in orchestration layer (wraps `adapter.generateImage()` call)
+- Candidate gate invariants: gate runs before adapter selection; adapters never see enrollment state
+- Migration slices P3-10 through P3-15 defined with explicit acceptance criteria
+
+**Migration slices**:
+| Slice | Description |
+|---|---|
+| P3-10 | Adapter factory function (not wired to production) |
+| P3-11 | Storage uploader abstraction (`makePageUploader` closure) |
+| P3-12 | Adapter-backed shadow tests (side-by-side parity assertion) |
+| P3-13 | Switch Replicate path to adapter (feature-flagged) |
+| P3-14 | Switch OpenAI candidate path to adapter (enrolled users only) |
+| P3-15 | Remove legacy `createImageClient()` after parity proven |
+
+**Acceptance criteria**:
+- [x] Docs-only output
+- [x] No production routing change
+- [x] No `createImageClient()` change
+- [x] No candidate gate change
+- [x] No Firebase deploy
+- [x] All baseline tests pass: 1074/1074
 
 ---
 
