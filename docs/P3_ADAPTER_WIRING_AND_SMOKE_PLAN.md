@@ -217,12 +217,19 @@ If `klein_fast` or another profile reaches `ReplicateImageAdapter`, the gate has
 
 Each slice is independently shippable, test-first, and behavior-equivalent until P3-13.
 
-### P3-10: Adapter factory function (not wired to production)
+### P3-10: Adapter factory function — **COMPLETE**
 
-**Goal**: Introduce `createImageAdapter(profile, apiToken, apiKey, uploader)` returning `ImageProvider`.  
-**Scope**: New function in `generate-book.ts` or `lib/adapter-factory.ts`.  
-**Non-goal**: Not called from production path yet.  
-**Tests**: Unit test covers Replicate and OpenAI profile routing; asserts factory is not wired.
+**Goal**: Introduce `createImageAdapter(params)` returning `ImageProvider`.  
+**Implementation**:
+- New file: `functions/src/lib/image-adapter-factory.ts`
+- Exports: `createImageAdapter(params)`, `resolveImageProviderId(profile)`, `ImageAdapterFactoryParams`
+- Uses `PROFILE_PROVIDER_MAP` from `image-provider.ts` as single source of truth
+- `validateConfig()` NOT called at construction — testable with dummy credentials
+- `allowCandidateProfile` NOT part of factory params — candidate gating is caller responsibility
+
+**Not wired to production**: `generate-book.ts` unchanged. `createImageClient()` unchanged.  
+**No network / no Firestore / no Firebase deploy.**  
+**Tests**: `functions/test/image-adapter-factory.test.ts` (7 describe blocks, all profiles covered)
 
 ### P3-11: Storage uploader abstraction
 

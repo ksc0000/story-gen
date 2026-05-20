@@ -697,6 +697,31 @@ All classifications use existing P2 taxonomy values.
 
 ---
 
+### P3-10: Adapter factory function — **COMPLETE**
+
+**Files added**:
+- `functions/src/lib/image-adapter-factory.ts` — `createImageAdapter()` + `resolveImageProviderId()` + `ImageAdapterFactoryParams`
+- `functions/test/image-adapter-factory.test.ts` — 7 describe blocks, 22 test cases
+
+**Key design decisions**:
+- Delegates to `PROFILE_PROVIDER_MAP` for all routing (single source of truth)
+- `ImageAdapterFactoryParams` has no `allowCandidateProfile` — gating is caller responsibility
+- `validateConfig()` not called at construction — testable with dummy credentials
+- `openai_image_candidate` returns `OpenAIImageAdapter` unconditionally; caller gates before calling factory
+
+**Invariants**:
+- `generate-book.ts` unchanged
+- `createImageClient()` unchanged
+- No production behavior change
+- No candidate gate change
+- No fallback order change
+- No network calls
+- No Firestore writes
+- No Firebase deploy
+- All tests pass: 1074+22 = 1096/1096
+
+---
+
 ## 8. Test Strategy
 
 ### 8.1 Tests required before implementation
