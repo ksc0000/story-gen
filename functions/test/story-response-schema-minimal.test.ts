@@ -353,22 +353,21 @@ describe("P4-12f: schema size comparison", () => {
 // ---------------------------------------------------------------------------
 
 describe("P4-12f: runtime wiring guard", () => {
-  it("gemini.ts does NOT import STORY_RESPONSE_SCHEMA_MINIMAL", () => {
+  it("gemini.ts imports STORY_RESPONSE_SCHEMA_MINIMAL for P4-12g mode selection", () => {
     const geminiSrc = fs.readFileSync(
       path.resolve(__dirname, "../src/lib/gemini.ts"),
       "utf-8",
     );
-    expect(geminiSrc).not.toContain("STORY_RESPONSE_SCHEMA_MINIMAL");
+    // P4-12g wired the minimal schema into the mode selector
+    expect(geminiSrc).toContain("STORY_RESPONSE_SCHEMA_MINIMAL");
   });
 
-  it("gemini.ts does NOT reference STORY_RESPONSE_SCHEMA_MINIMAL in any form", () => {
+  it("gemini.ts uses getResponseSchemaMode() to select schema variant", () => {
     const geminiSrc = fs.readFileSync(
       path.resolve(__dirname, "../src/lib/gemini.ts"),
       "utf-8",
     );
-    expect(geminiSrc).not.toContain("SCHEMA_MINIMAL");
-    expect(geminiSrc).not.toContain("schema_minimal");
-    expect(geminiSrc).not.toContain("schemaMinimal");
+    expect(geminiSrc).toContain("getResponseSchemaMode()");
   });
 });
 

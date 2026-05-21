@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import type { ResponseSchema } from "@google/generative-ai";
 import { extractJsonFromLLMResponse } from "./llm-json-repair";
-import { STORY_RESPONSE_SCHEMA } from "./story-response-schema";
+import { STORY_RESPONSE_SCHEMA, STORY_RESPONSE_SCHEMA_MINIMAL } from "./story-response-schema";
 import type {
   GeneratedStory,
   LLMClient,
@@ -81,6 +81,18 @@ function isSchemaRepairEnabled(): boolean {
  */
 export function isResponseSchemaEnabled(): boolean {
   return process.env.ENABLE_RESPONSE_SCHEMA === "true";
+}
+
+/** P4-12g: Schema mode — "full" uses STORY_RESPONSE_SCHEMA, "minimal" uses STORY_RESPONSE_SCHEMA_MINIMAL. */
+export type ResponseSchemaMode = "full" | "minimal";
+
+/**
+ * P4-12g: Determine which schema variant to use when responseSchema is enabled.
+ * Default is "full" to preserve P4-11 behavior.
+ * Set RESPONSE_SCHEMA_MODE=minimal to use the smaller schema.
+ */
+export function getResponseSchemaMode(): ResponseSchemaMode {
+  return process.env.RESPONSE_SCHEMA_MODE === "minimal" ? "minimal" : "full";
 }
 
 // -------------------------------------------------------------------------
@@ -996,7 +1008,9 @@ export class GeminiClient implements LLMClient {
       generationConfig: isResponseSchemaEnabled()
         ? {
             responseMimeType: "application/json" as const,
-            responseSchema: STORY_RESPONSE_SCHEMA as unknown as ResponseSchema,
+            responseSchema: (getResponseSchemaMode() === "minimal"
+              ? STORY_RESPONSE_SCHEMA_MINIMAL
+              : STORY_RESPONSE_SCHEMA) as unknown as ResponseSchema,
           }
         : { responseMimeType: "application/json" as const },
     };

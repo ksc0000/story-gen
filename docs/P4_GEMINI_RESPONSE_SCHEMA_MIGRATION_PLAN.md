@@ -1042,3 +1042,26 @@ The minimal schema is **78.5% smaller** than the full schema.
 | **P4-14** | Abandon `responseSchema` rollout entirely; continue with prompt hardening (P4-7s) + `validateStory()` + repair retry as the permanent safety net |
 
 **Recommendation**: The 78.5% size reduction is significant. A small P4-12g live smoke (2–3 books) is worth attempting before deciding to abandon `responseSchema`.
+
+---
+
+## 16. P4-12g Minimal Schema Mode Implementation
+
+**Date**: 2026-06-20
+
+### Schema Mode Selector
+
+`getResponseSchemaMode()` added to `gemini.ts`:
+- `RESPONSE_SCHEMA_MODE=minimal` → uses `STORY_RESPONSE_SCHEMA_MINIMAL` (714 chars)
+- Default / `RESPONSE_SCHEMA_MODE=full` / absent → uses `STORY_RESPONSE_SCHEMA` (3,322 chars)
+- Only takes effect when `ENABLE_RESPONSE_SCHEMA=true`
+- `validateStory()` remains the runtime validator in all modes
+- Parse diagnostics (`buildSafeJsonParseDiagnostics`) unchanged
+
+### Test Coverage
+
+- `functions/test/gemini-response-schema-mode.test.ts` — 21 tests:
+  - `getResponseSchemaMode()` default/full/minimal/unknown values
+  - Config construction with flag OFF/ON × mode full/minimal
+  - Schema identity checks
+  - Source-level guards
