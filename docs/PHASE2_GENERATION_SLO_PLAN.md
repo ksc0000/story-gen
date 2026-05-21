@@ -1047,7 +1047,7 @@ These new signals enable Cloud Monitoring log-based metric alerting that was not
 | **P2-8** | Saved Cloud Logging query definitions | ✅ COMPLETE (docs, 2026-05-21) — `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md`; 15 queries defined; import to Cloud Console is manual |
 | **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`; 15 metrics defined; live creation commands included |
 | **P2-10** | Alert policies (CG-1 live, enabled) | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`; metric + policy live; `enabled: true` |
-| **P2-11** | Dashboard panel additions | ⬜ NOT STARTED |
+| **P2-11** | Dashboard panel additions | ✅ COMPLETE (docs/config, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; 8 required + 2 optional panels; live Cloud Monitoring dashboard creation pending |
 | **P2-12** | Notification routing + CG-1 policy enable | ✅ COMPLETE (live, 2026-05-21) — Email channel `notificationChannels/202814648286910376` (kikushun0529@gmail.com) 接続済み; CG-1 `enabled: true` |
 
 > **Note on P2-7 naming**: The original P2-7 in this plan was "Add generation SLO report script" (now complete; `scripts/report-generation-slo.mjs`). The new P2-7 "SLO Alert Automation Plan" is a distinct task added post-P4 that builds on the report script. Both tasks share the P2-7 label; context distinguishes them — "original P2-7" = SLO report script, "alert automation P2-7" = this section.

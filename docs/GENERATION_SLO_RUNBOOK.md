@@ -943,7 +943,7 @@ The alert automation plan (`P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`) and met
 | **P2-8** | Saved Cloud Logging query definitions | ✅ COMPLETE (docs, 2026-05-21) — `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md`; 15 queries (CG/SJ/IM/LAT/OUT/DQ) |
 | **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md` |
 | **P2-10** | CG-1 alert policy definition + live creation | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`; `enabled: true` |
-| **P2-11** | Dashboard panel additions | MEDIUM |
+| **P2-11** | Dashboard panel additions | ✅ COMPLETE (docs/config, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; live dashboard not created |
 | **P2-12** | Notification routing + CG-1 enable | ✅ COMPLETE (live, 2026-05-21) — Email `notificationChannels/202814648286910376` (kikushun0529@gmail.com); CG-1 `enabled: true` |
 
 CG-1 アラートポリシーは現在 **live かつ enabled**。`candidateAllowed=true` イベントが発生すると 60 秒以内に `kikushun0529@gmail.com` へ CRITICAL メールが送信される。
@@ -953,6 +953,11 @@ CG-1 アラートポリシーは現在 **live かつ enabled**。`candidateAllow
 - schema_validation/malformed_json/field_type_mismatch: `SJ-1` / `SJ-2` / `SJ-3` クエリを確認
 - ページ画像障害: `IM-1 page image failures` → `IM-2`/`IM-3`/`IM-4` でエラーコード別に絞り込み
 - 手動 fallback: `node scripts/report-generation-slo.mjs --input tmp/events.json --format console`
+
+**ダッシュボード使用ガイド** (`docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md §6`参照):
+- **通常レビュー（週次）**: ダッシュボードを最初に開き、Panel 1 (CG-1) が 0、Panel 2 (OUT) の readable rate ≥ 98% を確認
+- **インシデント発生時**: ダッシュボードで赤いパネル（シグナル）を特定 → 該当パネルの "linked saved query" をクリックして raw ログを調査 → リンクされた runbook セクション (§8.x) に従う
+- **ダッシュボード未利用時**: 手動 fallback の `scripts/report-generation-slo.mjs` を使用
 
 ### 14.3 Current operational procedure (manual fallback)
 
