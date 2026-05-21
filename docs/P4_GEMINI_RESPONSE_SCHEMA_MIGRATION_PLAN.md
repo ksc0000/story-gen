@@ -928,3 +928,52 @@ When the flag is OFF, the generation path is identical to P4-7s production behav
 5. Does the `cast` sub-schema (15+ optional properties per item, in an array) cause performance issues or model confusion?
 
 These will be answered empirically in P4-9/P4-10 through SDK inspection and local testing.
+
+---
+
+## 14. P4-12e Diagnostic Live Smoke Results
+
+**Date**: 2026-06-20  
+**Commit deployed**: `040b9d6` (P4-12d)  
+**Flag**: `ENABLE_RESPONSE_SCHEMA=true` deployed ~12:09 JST, rolled back ~12:27 JST  
+**Smoke timestamp**: `1779333196430`
+
+### Results
+
+| # | bookId | theme | style | status | failure |
+|---|---|---|---|---|---|
+| 1 | `smoke-rschema-12c-1-1779333196430` | bedtime | soft_watercolor | **completed** | — (8/8 pages, storyDurationMs: 59,150) |
+| 2 | `smoke-rschema-12c-2-1779333196430` | fantasy | crayon | **failed** | schema_validation: malformed_json |
+| 3 | `smoke-rschema-12c-3-1779333196430` | emotional-growth | soft_watercolor | **failed** | schema_validation: malformed_json |
+| 4 | `smoke-rschema-12c-4-1779333196430` | imagination | anime_storybook | **failed** | validation: rewrite page count mismatch (unrelated) |
+| 5 | `smoke-rschema-12c-5-1779333196430` | bedtime | crayon | **failed** | schema_validation: malformed_json |
+
+### Diagnostics (from Cloud Logging `storyJsonParseDiagnostics`)
+
+| Book | lengthChars | storyDurationMs | braceBalance | parseFailureKind |
+|------|-------------|-----------------|--------------|-----------------|
+| 2 | 334,900 | 244,821 | +2 | likely_truncated_object |
+| 3 | 311,173 | 262,274 | +1 | likely_truncated_object |
+| 5 | 345,677 | 267,616 | +2 | likely_truncated_object |
+
+### Root Cause
+
+**Output token limit truncation.** When `responseSchema` is enabled, Gemini produces enormously inflated JSON responses (300–346K chars vs. normal ~1–5K). These exceed the model's output token limit and are truncated mid-object, yielding unparseable JSON with unclosed braces.
+
+Evidence:
+- All 3 schema_validation failures have `parseFailureKind: "likely_truncated_object"`
+- Response sizes 60–70× larger than successful responses
+- `storyDurationMs` 245–268s (failures) vs. 59s (success) — model spent max time generating before truncation
+- Positive `braceBalance` confirms responses cut off before closing
+
+### Conclusion
+
+`STORY_RESPONSE_SCHEMA` in its current form is **not viable** for production. The schema's complexity (cast sub-schema with 15+ optional properties per array item, deeply nested page objects) causes Gemini to generate verbose structured output that exceeds token limits.
+
+**Recommended next step**: P4-12f — simplify `STORY_RESPONSE_SCHEMA` (flatten cast, reduce optional fields, split into multi-turn) or abandon `responseSchema` in favor of prompt-only hardening (P4-7s) + `validateStory()`.
+
+### Rollback Confirmation
+
+- `ENABLE_RESPONSE_SCHEMA` removed from `functions/.env.story-gen-8a769`
+- Functions redeployed ~12:27 JST — all functions updated successfully
+- Production is back to prompt-hardening-only mode (P4-7s)
