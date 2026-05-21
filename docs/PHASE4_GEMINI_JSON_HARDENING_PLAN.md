@@ -844,6 +844,7 @@ The remaining legacy scope from P3 (`generateCoverImage()` and `ensureRecurringC
 | **P4-12f** | Minimal response schema spike | Code + Tests + Docs | ✅ COMPLETE (714 chars = 21.5% of full 3,322 chars; 41 tests; no runtime wiring) |
 | **P4-12g** | Minimal schema mode + live smoke | Code + Tests + Smoke + Docs | ✅ COMPLETE (FAIL — 3/3 likely_truncated_object, 289K–331K chars; minimal schema had zero effect; responseSchema abandoned) |
 | **P4-14** | Abandon responseSchema rollout — decision record | Docs + Guards | ✅ COMPLETE — responseSchema rollout formally abandoned |
+| **P4-15** | Permanent story JSON SLO monitoring plan + repair retry decision framework | Docs | ✅ COMPLETE — [P4_PERMANENT_STORY_JSON_SLO_PLAN.md](P4_PERMANENT_STORY_JSON_SLO_PLAN.md) |
 
 ---
 
@@ -883,7 +884,26 @@ All responseSchema-related code is preserved as dormant/experimental:
 
 ---
 
-## 13. References
+## 13. P4-15: Permanent Story JSON SLO Monitoring
+
+**Status**: ✅ COMPLETE (2026-05-21)
+**Document**: [P4_PERMANENT_STORY_JSON_SLO_PLAN.md](P4_PERMANENT_STORY_JSON_SLO_PLAN.md)
+
+### Summary
+
+P4-15 defines:
+- Target SLOs for story generation under the permanent prompt+validator path.
+- Alert thresholds for `schema_validation` failure rate, `storyDurationMs`, and sub-categories.
+- An evidence-based decision framework for `ENABLE_SCHEMA_REPAIR_RETRY`.
+- A triage flow for story JSON failures.
+
+The next operational step is to collect a 7-day baseline of `storyJsonFailureCategory` events from Cloud Logging and compare against SLO targets.
+
+**P4 closure**: With P4-15, Phase 4 Gemini JSON hardening is operationally complete. The permanent safety stack is defined, monitored, and documented. Future work is operational (running the baseline measurement, deciding on repair retry based on data) rather than architectural.
+
+---
+
+## 14. References
 
 | Document | Relevance |
 |---|---|
@@ -891,6 +911,8 @@ All responseSchema-related code is preserved as dormant/experimental:
 | [PHASE2_GENERATION_SLO_PLAN.md](PHASE2_GENERATION_SLO_PLAN.md) | Story generation risk inventory (§2.3) |
 | [GENERATION_SLO_RUNBOOK.md](GENERATION_SLO_RUNBOOK.md) | `book_early_failed` event structure, error codes, Cloud Logging filters |
 | [GENERATION_SLO_THRESHOLD_POLICY.md](GENERATION_SLO_THRESHOLD_POLICY.md) | Early failure rate threshold (≤ 2% healthy, > 10% incident) |
+| [P4_RESPONSE_SCHEMA_DECISION.md](P4_RESPONSE_SCHEMA_DECISION.md) | P4-14 responseSchema abandon decision record |
+| [P4_PERMANENT_STORY_JSON_SLO_PLAN.md](P4_PERMANENT_STORY_JSON_SLO_PLAN.md) | P4-15 SLO targets, alert thresholds, repair retry framework |
 | `functions/src/generate-book.ts` | `processBookGeneration()`, `generateStoryWithQualityGate()`, `isStorySchemaValidationError()` |
 | `functions/src/lib/prompt-builder.ts` | `buildSystemPrompt()`, `appendQualityRetryInstruction()` |
 | `functions/src/lib/generation-event-logger.ts` | `book_early_failed` event type, `ErrorCategory` |

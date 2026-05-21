@@ -667,10 +667,17 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_early
 
 **Safe first response**:
 1. Do NOT modify provider routing or adapters — this failure happens before image generation.
-2. Do NOT change `ENABLE_SCHEMA_REPAIR_RETRY` flag (if present in a future deploy) unless explicitly approved.
-3. If isolated to a specific book/user: manual retry via admin console.
-4. If widespread: check whether a recent Gemini model version change is causing consistent schema drift. Escalate to team.
+2. Do NOT enable `ENABLE_RESPONSE_SCHEMA` — it was tested and abandoned (P4-14, ~94% failure rate). See [P4_RESPONSE_SCHEMA_DECISION.md](P4_RESPONSE_SCHEMA_DECISION.md).
+3. Check `storyJsonFailureCategory` to identify the failure pattern before taking action:
+   - `malformed_json` (transient): monitor; consider `ENABLE_SCHEMA_REPAIR_RETRY` if rate > 2% over 7d (see §5.3 in [P4_PERMANENT_STORY_JSON_SLO_PLAN.md](P4_PERMANENT_STORY_JSON_SLO_PLAN.md))
+   - `field_type_mismatch` (systematic): add field-specific entry to `STORY_JSON_FIELD_TYPE_CONTRACT` in `buildSystemPrompt()`; do NOT use repair retry
+   - `schema_structural`: missing required field — fix `validateStory()` default handling or prompt
+   - `field_value_invalid`: add alias to `normalizePageVisualRole()` or `normalizeStoryCharacterRole()`
+4. Do NOT change `ENABLE_SCHEMA_REPAIR_RETRY` without following the decision process in [P4_PERMANENT_STORY_JSON_SLO_PLAN.md §5](P4_PERMANENT_STORY_JSON_SLO_PLAN.md).
+5. If isolated to a specific book/user: manual retry via admin console.
+6. If widespread: check whether a recent Gemini model version change is causing consistent schema drift. Escalate to team.
 
+**P4-15 SLO monitoring plan**: `docs/P4_PERMANENT_STORY_JSON_SLO_PLAN.md`
 **Phase 4 tracking**: `docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md`
 
 ---
