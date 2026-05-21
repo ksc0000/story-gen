@@ -1044,7 +1044,7 @@ These new signals enable Cloud Monitoring log-based metric alerting that was not
 | Slice | Title | Status |
 |---|---|---|
 | **P2-7 (alert automation)** | Generation SLO Alert Automation Plan | ✅ COMPLETE — `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` |
-| **P2-8** | Saved Cloud Logging query definitions | ⬜ NOT STARTED |
+| **P2-8** | Saved Cloud Logging query definitions | ✅ COMPLETE (docs, 2026-05-21) — `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md`; 15 queries defined; import to Cloud Console is manual |
 | **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`; 15 metrics defined; live creation commands included |
 | **P2-10** | Alert policies (CG-1 live, enabled) | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`; metric + policy live; `enabled: true` |
 | **P2-11** | Dashboard panel additions | ⬜ NOT STARTED |
