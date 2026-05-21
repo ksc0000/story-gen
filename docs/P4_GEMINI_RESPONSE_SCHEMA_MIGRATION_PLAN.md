@@ -684,6 +684,39 @@ ENABLE_RESPONSE_SCHEMA=true
 
 ---
 
+#### P4-12d: Safe Response Schema Parse Diagnostics (2026-05-21)
+
+**Goal**: Add privacy-safe structural diagnostics when `parseGeminiStoryJsonResponse()` fails under `ENABLE_RESPONSE_SCHEMA=true`, so the next diagnostic smoke can determine whether Gemini structured output is empty, truncated, prose/refusal, fenced, or otherwise malformed.
+
+**Implementation**:
+- `buildSafeJsonParseDiagnostics(rawText, context)` — pure function, returns only structural metadata:
+  - `lengthChars`, `trimmedLengthChars`, `isEmpty`
+  - `startsWithBrace`, `startsWithBracket`, `endsWithBrace`, `endsWithBracket`
+  - `startsWithFence`, `containsFence`
+  - `likelyTruncatedObject`, `likelyTruncatedArray`
+  - `braceBalanceApprox`, `bracketBalanceApprox`, `quoteCountApprox`, `newlineCount`
+  - `parseFailureKind`: `empty` | `likely_truncated_object` | `likely_truncated_array` | `fenced_json_unparsed` | `prose_or_refusal` | `malformed_json` | `unknown`
+  - `responseSchemaEnabled`, `schemaRepairEnabled`, `directParseFailed`, `fallbackExtractionStatus`
+- `getParseErrorDiagnostics(err)` — extracts diagnostics from thrown errors
+- Diagnostics attached to Error objects thrown from `parseGeminiStoryJsonResponse()` when flag ON
+- `console.warn` emitted in `GeminiClient.generateStory()` with safe diagnostics object
+- `storyJsonParseDiagnostics` optional field added to `BookEarlyFailedEvent` in `generation-event-logger.ts`
+- Wired into `generate-book.ts` at both schema_validation `book_early_failed` event emission points
+
+**Raw LLM content**: NOT logged. Only numeric/boolean structural metadata.
+
+**Tests**: 31 new tests in `response-schema-parse-diagnostics.test.ts` covering all classification kinds, privacy safety, integration with parse function, flag ON/OFF behavior, and diagnostic extraction.
+
+**Flag state**: `ENABLE_RESPONSE_SCHEMA` remains OFF/absent in production.
+**Firebase deploy**: No.
+**Prompt behavior**: No change.
+**Retry behavior**: No change.
+**ImageProvider routing**: No change.
+
+**Intended next step**: P4-12e — run diagnostic live smoke with `ENABLE_RESPONSE_SCHEMA=true`, inspect safe diagnostics in Cloud Logging, rollback, then decide whether to simplify `STORY_RESPONSE_SCHEMA` or abandon responseSchema rollout.
+
+---
+
 ### P4-13: Compare `schema_validation` Rate Before/After
 
 **Goal**: Run SLO report or analyze production logs to compare `schema_validation` failure rate before and after `response_schema` enablement.

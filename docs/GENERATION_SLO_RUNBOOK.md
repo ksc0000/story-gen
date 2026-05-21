@@ -648,6 +648,7 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_early
    - `story_generation`: Gemini returned 5xx / 503. Check Gemini API status.
 2. For `schema_validation` failures: this is **not** an image adapter regression. Do not touch `ReplicateImageAdapter`, `OpenAIImageAdapter`, or the candidate gate.
 3. Check `storyJsonFailureCategory` in the `book_early_failed` event (P4-2+) for fine-grained sub-classification: `malformed_json`, `schema_structural`, `field_value_invalid`, `field_type_mismatch`, or `unknown`. Note: `field_type_mismatch` errors currently fall to `failureStage: "unexpected"` (see P4-1 §5 routing gap); P4-5 will fix routing.
+3b. (P4-12d) When `ENABLE_RESPONSE_SCHEMA=true`, check `storyJsonParseDiagnostics` on the same event for structural metadata: `parseFailureKind` (`empty`, `likely_truncated_object`, `likely_truncated_array`, `fenced_json_unparsed`, `prose_or_refusal`, `malformed_json`), `lengthChars`, `braceBalanceApprox`, `directParseFailed`, and `fallbackExtractionStatus`. This field contains NO raw LLM content.
 4. Check `storyDurationMs` (P4-2+) to confirm the failure happened during story generation and not image generation.
 4. If the failure is persistent (> 3 consecutive books fail at `schema_validation`): check whether the Gemini model response format has changed. Run a smoke book and inspect `technicalErrorMessage` in Firestore.
 5. Manual retry via admin console or re-trigger is the current recovery path. P4-5 will add automatic retry.

@@ -26,7 +26,7 @@ import type {
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
-import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates } from "./lib/gemini";
+import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates, getParseErrorDiagnostics } from "./lib/gemini";
 import {
   ReplicateImageClient,
   resolveImageModelProfile,
@@ -1071,6 +1071,7 @@ export async function processBookGeneration(
               storyJsonFailureCategory: classifyStoryJsonFailure(retryErr),
               storyDurationMs: retryStoryDurationMs,
               storyGenerationAttempts: 2,
+              storyJsonParseDiagnostics: getParseErrorDiagnostics(retryErr) as Record<string, unknown> | undefined,
             });
             return;
           }
@@ -1099,6 +1100,7 @@ export async function processBookGeneration(
             retryable: false,
             storyJsonFailureCategory: classifyStoryJsonFailure(err),
             storyDurationMs,
+            storyJsonParseDiagnostics: getParseErrorDiagnostics(err) as Record<string, unknown> | undefined,
           });
           return;
         }

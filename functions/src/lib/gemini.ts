@@ -83,6 +83,162 @@ export function isResponseSchemaEnabled(): boolean {
   return process.env.ENABLE_RESPONSE_SCHEMA === "true";
 }
 
+// -------------------------------------------------------------------------
+// P4-12d: Safe parse diagnostics
+// -------------------------------------------------------------------------
+
+/**
+ * Classification of why a raw LLM response could not be parsed as JSON.
+ * Used for structured observability — never contains raw response content.
+ */
+export type ParseFailureKind =
+  | "empty"
+  | "likely_truncated_object"
+  | "likely_truncated_array"
+  | "fenced_json_unparsed"
+  | "prose_or_refusal"
+  | "malformed_json"
+  | "unknown";
+
+/**
+ * P4-12d: Privacy-safe structural metadata about a failed LLM JSON response.
+ *
+ * Contains ONLY numeric/boolean metrics and a classification label.
+ * NEVER contains raw text, substrings, child names, prompts, or story content.
+ */
+export interface SafeJsonParseDiagnostics {
+  lengthChars: number;
+  trimmedLengthChars: number;
+  isEmpty: boolean;
+  startsWithBrace: boolean;
+  startsWithBracket: boolean;
+  endsWithBrace: boolean;
+  endsWithBracket: boolean;
+  startsWithFence: boolean;
+  containsFence: boolean;
+  likelyTruncatedObject: boolean;
+  likelyTruncatedArray: boolean;
+  braceBalanceApprox: number;
+  bracketBalanceApprox: number;
+  quoteCountApprox: number;
+  newlineCount: number;
+  parseFailureKind: ParseFailureKind;
+  responseSchemaEnabled: boolean;
+  schemaRepairEnabled: boolean;
+  directParseFailed?: boolean;
+  fallbackExtractionStatus?: "valid_original" | "extracted" | "unrepairable";
+}
+
+/**
+ * P4-12d: Build privacy-safe diagnostics for a failed LLM JSON parse attempt.
+ *
+ * Returns only structural metadata (lengths, delimiters, balance counts, classification).
+ * NEVER includes raw text, substrings, prefixes, suffixes, or any content from the response.
+ *
+ * @internal Exported for testing.
+ */
+export function buildSafeJsonParseDiagnostics(
+  rawText: string,
+  context: {
+    responseSchemaEnabled: boolean;
+    schemaRepairEnabled: boolean;
+    directParseFailed?: boolean;
+    fallbackExtractionStatus?: "valid_original" | "extracted" | "unrepairable";
+  },
+): SafeJsonParseDiagnostics {
+  const trimmed = rawText.trim();
+  const lengthChars = rawText.length;
+  const trimmedLengthChars = trimmed.length;
+  const isEmpty = trimmedLengthChars === 0;
+
+  const startsWithBrace = trimmed.startsWith("{");
+  const startsWithBracket = trimmed.startsWith("[");
+  const endsWithBrace = trimmed.endsWith("}");
+  const endsWithBracket = trimmed.endsWith("]");
+  const startsWithFence = trimmed.startsWith("```");
+  const containsFence = trimmed.includes("```");
+
+  const likelyTruncatedObject = startsWithBrace && !endsWithBrace;
+  const likelyTruncatedArray = startsWithBracket && !endsWithBracket;
+
+  let braceOpen = 0;
+  let braceClose = 0;
+  let bracketOpen = 0;
+  let bracketClose = 0;
+  let quoteCount = 0;
+  let newlineCount = 0;
+  for (const ch of trimmed) {
+    if (ch === "{") braceOpen++;
+    else if (ch === "}") braceClose++;
+    else if (ch === "[") bracketOpen++;
+    else if (ch === "]") bracketClose++;
+    else if (ch === '"') quoteCount++;
+    else if (ch === "\n") newlineCount++;
+  }
+
+  const braceBalanceApprox = braceOpen - braceClose;
+  const bracketBalanceApprox = bracketOpen - bracketClose;
+
+  // Classify failure kind
+  let parseFailureKind: ParseFailureKind;
+  if (isEmpty) {
+    parseFailureKind = "empty";
+  } else if (likelyTruncatedObject) {
+    parseFailureKind = "likely_truncated_object";
+  } else if (likelyTruncatedArray) {
+    parseFailureKind = "likely_truncated_array";
+  } else if (containsFence) {
+    parseFailureKind = "fenced_json_unparsed";
+  } else if (!startsWithBrace && !startsWithBracket) {
+    parseFailureKind = "prose_or_refusal";
+  } else if (startsWithBrace && endsWithBrace || startsWithBracket && endsWithBracket) {
+    // Delimiters balanced at start/end but still failed to parse
+    parseFailureKind = "malformed_json";
+  } else {
+    parseFailureKind = "unknown";
+  }
+
+  return {
+    lengthChars,
+    trimmedLengthChars,
+    isEmpty,
+    startsWithBrace,
+    startsWithBracket,
+    endsWithBrace,
+    endsWithBracket,
+    startsWithFence,
+    containsFence,
+    likelyTruncatedObject,
+    likelyTruncatedArray,
+    braceBalanceApprox,
+    bracketBalanceApprox,
+    quoteCountApprox: quoteCount,
+    newlineCount,
+    parseFailureKind,
+    responseSchemaEnabled: context.responseSchemaEnabled,
+    schemaRepairEnabled: context.schemaRepairEnabled,
+    directParseFailed: context.directParseFailed,
+    fallbackExtractionStatus: context.fallbackExtractionStatus,
+  };
+}
+
+/**
+ * P4-12d: Extract safe diagnostics from an Error thrown by parseGeminiStoryJsonResponse().
+ * Returns undefined if the error does not carry diagnostics.
+ *
+ * @internal Exported for use in generate-book.ts event logging.
+ */
+export function getParseErrorDiagnostics(err: unknown): SafeJsonParseDiagnostics | undefined {
+  if (
+    err instanceof Error &&
+    "diagnostics" in err &&
+    typeof (err as Error & { diagnostics?: unknown }).diagnostics === "object"
+  ) {
+    return (err as Error & { diagnostics: SafeJsonParseDiagnostics }).diagnostics;
+  }
+  return undefined;
+}
+
 /**
  * P4-12b: Parse Gemini story JSON response with awareness of responseSchema mode.
  *
@@ -105,11 +261,13 @@ export function parseGeminiStoryJsonResponse(
   if (options.responseSchemaEnabled) {
     // P4-12b: Gemini structured output should return clean JSON.
     // Try direct JSON.parse first.
+    let directParseFailed = false;
     try {
       const parsed = JSON.parse(rawText.trim());
       return { parsed, parsePath: "direct_structured_json" };
     } catch {
       // Direct parse failed — fall through to extraction fallback.
+      directParseFailed = true;
     }
 
     // Defense-in-depth: fall back to extractJsonFromLLMResponse
@@ -118,7 +276,16 @@ export function parseGeminiStoryJsonResponse(
       return { parsed: repairResult.parsed, parsePath: `fallback_${repairResult.status}` };
     }
 
-    throw new Error("Failed to parse LLM JSON response");
+    // P4-12d: Attach safe diagnostics to the error for structured observability.
+    const diagnostics = buildSafeJsonParseDiagnostics(rawText, {
+      responseSchemaEnabled: true,
+      schemaRepairEnabled: options.schemaRepairEnabled,
+      directParseFailed,
+      fallbackExtractionStatus: repairResult.status as "valid_original" | "extracted" | "unrepairable",
+    });
+    const error = new Error("Failed to parse LLM JSON response");
+    (error as Error & { diagnostics: SafeJsonParseDiagnostics }).diagnostics = diagnostics;
+    throw error;
   }
 
   // responseSchema OFF — preserve existing behavior
@@ -857,10 +1024,19 @@ export class GeminiClient implements LLMClient {
         schemaRepairEnabled: isSchemaRepairEnabled(),
       });
       parsed = parseResult.parsed;
-    } catch {
+    } catch (parseErr) {
       if (isResponseSchemaEnabled()) {
+        // P4-12d: Log safe diagnostics for responseSchema parse failures.
+        const diagnostics = getParseErrorDiagnostics(parseErr);
+        if (diagnostics) {
+          console.warn("P4-12d: responseSchema parse failure diagnostics", diagnostics);
+        }
         // P4-12b: safe error — do not include raw LLM content
-        throw new Error("Failed to parse LLM JSON response");
+        const error = new Error("Failed to parse LLM JSON response");
+        if (diagnostics) {
+          (error as Error & { diagnostics: SafeJsonParseDiagnostics }).diagnostics = diagnostics;
+        }
+        throw error;
       }
       // Flag OFF: preserve existing error format with truncated raw text
       throw new Error(`Failed to parse LLM JSON response: ${result.text.slice(0, 200)}`);

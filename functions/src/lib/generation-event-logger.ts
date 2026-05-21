@@ -206,6 +206,12 @@ export interface BookEarlyFailedEvent {
    * and all attempts failed. Value 2 means both the initial attempt and the retry failed.
    */
   storyGenerationAttempts?: number;
+  /**
+   * P4-12d: Privacy-safe structural diagnostics for responseSchema JSON parse failures.
+   * Present only when ENABLE_RESPONSE_SCHEMA=true and story JSON parsing failed.
+   * Contains only numeric/boolean metadata — NEVER raw text, substrings, or PII.
+   */
+  storyJsonParseDiagnostics?: Record<string, unknown>;
 }
 
 /**

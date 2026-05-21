@@ -839,6 +839,7 @@ The remaining legacy scope from P3 (`generateCoverImage()` and `ensureRecurringC
 | **P4-12a** | null→undefined coercion in validateStory() | Code + Tests | ✅ COMPLETE (46 tests, fixes P4-12 Book 1 failure) |
 | **P4-12b** | Harden responseSchema ON JSON parse path | Code + Tests | ✅ COMPLETE (39 tests, direct JSON.parse + fallback extraction) |
 | **P4-12c** | Live re-smoke with responseSchema after P4-12a/b | Smoke + Docs | ✅ COMPLETE (FAIL — 4/5 malformed_json; P4-12a/b fixes validated but Gemini structured output unreliable) |
+| **P4-12d** | Safe response schema parse diagnostics | Code + Tests + Docs | ✅ COMPLETE (31 tests; privacy-safe structural metadata on parse failures; no deploy) |
 
 ---
 
