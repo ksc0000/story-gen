@@ -1,6 +1,6 @@
 # P2-11: Generation SLO Dashboard Panels
 
-**Status**: ✅ COMPLETE (docs/config, 2026-05-21)  
+**Status**: ✅ LIVE (2026-05-21)  
 **Task**: P2-11 (Dashboard panel additions)  
 **Preceding work**: P2-8 (saved queries), P2-9 (metric definitions), P2-10 (CG-1 live alert), P2-12 (notification routing live)  
 **References**:
@@ -36,7 +36,7 @@ Define a Cloud Monitoring dashboard layout that summarizes all generation SLO si
 | Other 14 log-based metrics | ⬜ Defined only — live creation pending (gcloud commands in `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md §4`) |
 | Saved queries (15) | ✅ Defined — `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md`; import to Cloud Console is manual |
 | Dashboard panels (this doc) | ✅ Defined |
-| Live Cloud Monitoring dashboard | ⬜ NOT CREATED — manual creation required |
+| Live Cloud Monitoring dashboard | ✅ LIVE (2026-05-21) — `projects/story-gen-8a769/dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b` |
 | SJ/IM alert policies | ⬜ NOT YET — pending P2-10b |
 
 ### Panel implementation options
@@ -263,22 +263,19 @@ node scripts/report-generation-slo.mjs --input tmp/events.json --format console
 
 ---
 
-## 7. Live Creation Procedure (when approved)
+## 7. Live Creation (COMPLETE — 2026-05-21)
 
-Steps to create the live Cloud Monitoring dashboard from this spec:
+**Dashboard resource**: `projects/story-gen-8a769/dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b`  
+**Cloud Console URL**: https://console.cloud.google.com/monitoring/dashboards/builder/39c916aa-ea17-4487-80e1-9c81e47cee3b?project=story-gen-8a769
 
-1. **Verify metrics exist**: All 8–15 log-based metrics referenced above must be live in Cloud Monitoring. Currently only `generation/candidate_allowed` is live. Create the rest using commands in `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md §4`.
-2. **Required IAM**: Operator needs `roles/monitoring.dashboardEditor`.
-3. **Cloud Console UI**: https://console.cloud.google.com/monitoring/dashboards?project=story-gen-8a769 → **Create dashboard**
-4. **Add widgets** for each panel in order (§4 layout)
-5. **Save** with name `EhonAI Generation SLO`
-6. **Verify** by opening the dashboard and confirming the CG-1 panel reads 0
-
-REST API alternative:
+Created via:
 ```
-POST https://monitoring.googleapis.com/v1/projects/story-gen-8a769/dashboards
+gcloud monitoring dashboards create --config-from-file=tmp/dashboard.json --project=story-gen-8a769
 ```
-Body: dashboard JSON per Cloud Monitoring Dashboard schema.
+
+Dashboard JSON contains Panels 1–8. Panel 7 (LAT-1) is a text placeholder until `generation/story_duration_ms` distribution metric is created.
+
+**LAT-1 next steps** (when ready): Create `story_duration_ms` distribution metric, then replace the text widget in this dashboard with a line chart showing `ALIGN_PERCENTILE_95` and `ALIGN_PERCENTILE_99` over 1h.
 
 ---
 
@@ -288,7 +285,7 @@ Body: dashboard JSON per Cloud Monitoring Dashboard schema.
 |---|---|---|
 | Panel definitions (8 required + 2 optional) | ✅ COMPLETE (docs, 2026-05-21) | This document §5 |
 | Dashboard usage guide | ✅ COMPLETE | §6 |
-| Live Cloud Monitoring dashboard | ⬜ NOT CREATED | Manual creation per §7 when approved |
+| Live Cloud Monitoring dashboard | ✅ LIVE (2026-05-21) | `projects/story-gen-8a769/dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b`; LAT-1 is text placeholder (story_duration_ms pending) |
 | Required log-based metrics | ⬜ 1 of 15 live | Only `candidate_allowed`; remaining 14 pending |
 | SJ/IM alert policies | ⬜ NOT YET | Pending P2-10b |
 

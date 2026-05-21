@@ -943,7 +943,7 @@ The alert automation plan (`P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`) and met
 | **P2-8** | Saved Cloud Logging query definitions | ✅ COMPLETE (docs, 2026-05-21) — `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md`; 15 queries (CG/SJ/IM/LAT/OUT/DQ) |
 | **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md` |
 | **P2-10** | CG-1 alert policy definition + live creation | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`; `enabled: true` |
-| **P2-11** | Dashboard panel additions | ✅ COMPLETE (docs/config, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; live dashboard not created |
+| **P2-11** | Dashboard panel additions | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; live dashboard `projects/story-gen-8a769/dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b` |
 | **P2-12** | Notification routing + CG-1 enable | ✅ COMPLETE (live, 2026-05-21) — Email `notificationChannels/202814648286910376` (kikushun0529@gmail.com); CG-1 `enabled: true` |
 | **P2-10b** | SJ/IM alert policy definitions + live creation | ✅ COMPLETE (live disabled, 2026-05-21) — `docs/P2_SJ_IM_ALERT_POLICIES.md`; 9 metrics live; 13 policies `enabled: false`; enable after prod-baseline |
 
