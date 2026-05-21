@@ -1,9 +1,14 @@
 # Phase 4 — Gemini Story JSON Hardening Plan
 
 **Created**: 2026-05-20
-**Status**: P4-1 inventory and design COMPLETE (docs-only)
+**Status**: ✅ CLOSED (2026-05-21, P4-17)
+**Closure record**: [PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md](PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md)
 **Author**: P4-1 task
 **Depends on**: [PHASE3_IMAGE_PROVIDER_CLOSURE.md](PHASE3_IMAGE_PROVIDER_CLOSURE.md), [PHASE2_GENERATION_SLO_PLAN.md](PHASE2_GENERATION_SLO_PLAN.md), [GENERATION_SLO_RUNBOOK.md](GENERATION_SLO_RUNBOOK.md), [GENERATION_SLO_THRESHOLD_POLICY.md](GENERATION_SLO_THRESHOLD_POLICY.md)
+
+> **Phase 4 is operationally closed.** The permanent safety stack is defined, monitored, and documented.
+> No further P4 code work is planned unless the production baseline reveals a new systematic issue.
+> See [PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md](PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md) for the closure summary, final decisions, and remaining follow-ups.
 
 ---
 
@@ -900,7 +905,7 @@ P4-15 defines:
 
 The next operational step is to collect a 7-day baseline of `storyJsonFailureCategory` events from Cloud Logging and compare against SLO targets.
 
-**P4 closure**: With P4-15, Phase 4 Gemini JSON hardening is operationally complete. The permanent safety stack is defined, monitored, and documented. Future work is operational (running the baseline measurement, deciding on repair retry based on data) rather than architectural.
+**P4 closure (P4-17)**: With P4-17, Phase 4 Gemini JSON hardening is formally closed. All architectural and operational work is complete. The permanent safety stack is defined, monitored, and documented. Future work is operational only (production baseline measurement, optional repair retry decision). See [PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md](PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md).
 
 ---
 
@@ -908,6 +913,7 @@ The next operational step is to collect a 7-day baseline of `storyJsonFailureCat
 
 | Document | Relevance |
 |---|---|
+| [PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md](PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md) | P4-17 closure record: final decisions, dev/test baseline limitations, follow-ups |
 | [PHASE3_IMAGE_PROVIDER_CLOSURE.md](PHASE3_IMAGE_PROVIDER_CLOSURE.md) | P3 complete; schema_validation failure classified as pre-existing (§9.1) |
 | [PHASE2_GENERATION_SLO_PLAN.md](PHASE2_GENERATION_SLO_PLAN.md) | Story generation risk inventory (§2.3) |
 | [GENERATION_SLO_RUNBOOK.md](GENERATION_SLO_RUNBOOK.md) | `book_early_failed` event structure, error codes, Cloud Logging filters |

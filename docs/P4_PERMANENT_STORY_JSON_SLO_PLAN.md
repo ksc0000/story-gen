@@ -1,11 +1,15 @@
 # P4-15: Permanent Story JSON SLO Monitoring Plan
 
 **Created**: 2026-05-21
-**Updated**: 2026-05-21 (P4-16: SLO report enhancements completed)
+**Updated**: 2026-05-21 (P4-16: SLO report enhancements completed; P4-17: Phase 4 formally closed)
 **Task**: P4-15 — Permanent story JSON SLO monitoring and repair retry decision framework
 **Status**: ACTIVE
+**Phase 4 closure**: [PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md](PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md)
 **Branch**: main
 **Depends on**: P4-14 (responseSchema rollout abandoned — [P4_RESPONSE_SCHEMA_DECISION.md](P4_RESPONSE_SCHEMA_DECISION.md))
+
+> **P4-17 note**: Phase 4 is formally closed. This document remains ACTIVE because the SLO monitoring it defines is a permanent operational responsibility, not a time-bounded task.
+> The next baseline should use **production user data** (not dev/test). Do not change `ENABLE_SCHEMA_REPAIR_RETRY` before the production baseline is established.
 
 ---
 
