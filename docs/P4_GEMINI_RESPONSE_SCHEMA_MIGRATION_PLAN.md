@@ -1065,3 +1065,50 @@ The minimal schema is **78.5% smaller** than the full schema.
   - Config construction with flag OFF/ON × mode full/minimal
   - Schema identity checks
   - Source-level guards
+
+### P4-12g Live Smoke Results
+
+**Date**: 2026-06-20
+**Implementation commit**: `5f35f0d`
+**Deployed commit**: `5f35f0d`
+**Schema mode**: `minimal` (STORY_RESPONSE_SCHEMA_MINIMAL, 714 chars)
+**Flag ON deploy**: ~13:05 JST
+**Rollback deploy**: ~13:20 JST
+**Smoke timestamp**: `1779336476308`
+
+#### Results
+
+| # | bookId | theme | style | status | parseFailureKind | lengthChars | storyDurationMs |
+|---|--------|-------|-------|--------|-----------------|------------|----------------|
+| 1 | `smoke-rschema-12g-1-1779336476308` | bedtime | soft_watercolor | **failed** | likely_truncated_object | 318,571 | 263,662 |
+| 2 | `smoke-rschema-12g-2-1779336476308` | fantasy | crayon | **failed** | likely_truncated_object | 330,625 | 435,474 |
+| 3 | `smoke-rschema-12g-3-1779336476308` | emotional-growth | soft_watercolor | **failed** | likely_truncated_object | 331,425 | 343,148 |
+| 3 (retry) | (same) | emotional-growth | soft_watercolor | **failed** | likely_truncated_object | 288,901 | 307,602 |
+
+All failures: `schema_validation` / `malformed_json` / `likely_truncated_object`.
+
+#### Conclusion: **FAIL**
+
+The minimal schema (714 chars, 21.5% of full) had **zero effect** on output truncation:
+- Response sizes: 289K–331K chars (vs. P4-12e full schema: 311K–346K chars)
+- storyDurationMs: 264–435s (all exceeded normal ~60s)
+- parseFailureKind: 4/4 `likely_truncated_object` (including retry)
+
+**Root cause is NOT schema size.** The truncation is caused by `responseSchema` changing Gemini's output mode fundamentally, regardless of schema complexity. When structured output is enabled, Gemini generates an enormously inflated internal representation that exceeds the output token limit.
+
+#### Recommendation: P4-14
+
+Abandon `responseSchema` rollout. Continue with the proven stack:
+- Prompt hardening (P4-7s `STORY_JSON_FIELD_TYPE_CONTRACT`)
+- `validateStory()` runtime validator
+- Schema repair retry (P4-5)
+- Parse diagnostics (P4-12d)
+
+This is the permanent safety net. `responseSchema` is not viable for this use case.
+
+#### Rollback Confirmation
+
+- `ENABLE_RESPONSE_SCHEMA` removed from `functions/.env.story-gen-8a769`
+- `RESPONSE_SCHEMA_MODE` removed from `functions/.env.story-gen-8a769`
+- Functions redeployed ~13:20 JST — all functions updated successfully
+- Production is back to prompt-hardening-only mode (P4-7s)
