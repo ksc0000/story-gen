@@ -1,6 +1,6 @@
 # P2 Generation SLO Alert Automation Plan
 
-**Status**: 📋 PLAN COMPLETE — implementation slices P2-8 through P2-12 pending  
+**Status**: 📋 PLAN COMPLETE — P2-9 metric definitions complete; P2-10 alert policies pending  
 **Created**: 2026-05-21  
 **Task**: P2-7 (SLO Alert Automation, post-P4 closure)  
 **Preceding work**: P4-17 (Phase 4 Gemini JSON hardening closure), P2-6 (report-generation-slo.mjs)  
@@ -9,6 +9,7 @@
 - `docs/PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md` — P4 closure, story JSON SLO baselines
 - `docs/P4_PERMANENT_STORY_JSON_SLO_PLAN.md` — story JSON SLO definitions and §7.2 baseline
 - `docs/GENERATION_SLO_RUNBOOK.md` — operational response procedures
+- `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md` — P2-9 metric definitions (YAML configs, gcloud commands)
 - `scripts/report-generation-slo.mjs` — manual SLO report tool (current operational baseline)
 - `scripts/_export-cloud-logging.mjs` — manual Cloud Logging export helper
 
@@ -389,7 +390,7 @@ Wait for production data ≥ 30 `book_outcome` events; then evaluate against P4-
 | Slice | Title | Scope | Priority |
 |---|---|---|---|
 | **P2-8** | Saved Cloud Logging query definitions | Add saved queries in Cloud Console for each alert candidate in §4; docs reference | MEDIUM |
-| **P2-9** | Cloud Monitoring log-based metrics | Create log-based metrics per §5; validate metric streams in Cloud Console | HIGH |
+| **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`; 15 metrics defined (14 required + 1 optional); live creation commands in §4 of that doc | HIGH |
 | **P2-10** | Alert policies | Create alert policies per §6 for at least CG-1 (CRITICAL candidate gate) and SJ-1/SJ-2 (schema_validation) | HIGH |
 | **P2-11** | Dashboard panel additions | Add panels per §7 to Admin SLO Dashboard | MEDIUM |
 | **P2-12** | Notification routing + incident runbook integration | Configure notification channels; link alert firing → RUNBOOK §8 escalation path | HIGH |
@@ -397,8 +398,8 @@ Wait for production data ≥ 30 `book_outcome` events; then evaluate against P4-
 ### Recommended ordering
 
 ```
-P2-9 → P2-10 (CG-1 first) → P2-12 → P2-8 → P2-11
-  ↑ get the CRITICAL candidate-gate alert live first
+P2-10 (CG-1 first) → P2-12 → P2-8 → P2-11
+  ↑ P2-9 metric definitions are complete; get CG-1 alert policy live next
 ```
 
 **P2-10 priority**: The candidate gate alert (CG-1) is the highest-priority single alert. It guards against unauthorized OpenAI candidate traffic and should be live before any other alert.
@@ -413,6 +414,7 @@ P2-9 → P2-10 (CG-1 first) → P2-12 → P2-8 → P2-11
 | `docs/GENERATION_SLO_RUNBOOK.md` | Operational response procedures (§8 incident playbooks) |
 | `docs/P4_PERMANENT_STORY_JSON_SLO_PLAN.md` | Story JSON SLO definitions; §7.2 dev/test baseline |
 | `docs/PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md` | P4 closure; remaining follow-ups list |
+| `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md` | P2-9 metric definitions — YAML configs, gcloud commands, label specs |
 | `docs/GENERATION_SLO_AUTOMATION_PLAN.md` | Earlier scheduled reporting design (P2-9 predecessor) |
 | `scripts/report-generation-slo.mjs` | Manual SLO computation tool (93 self-test assertions) |
 | `scripts/_export-cloud-logging.mjs` | Manual Cloud Logging export (proxy-aware, SA JWT auth) |

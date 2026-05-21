@@ -1045,7 +1045,7 @@ These new signals enable Cloud Monitoring log-based metric alerting that was not
 |---|---|---|
 | **P2-7 (alert automation)** | Generation SLO Alert Automation Plan | ✅ COMPLETE — `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` |
 | **P2-8** | Saved Cloud Logging query definitions | ⬜ NOT STARTED |
-| **P2-9** | Cloud Monitoring log-based metrics | ⬜ NOT STARTED |
+| **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`; 15 metrics defined; live creation commands included |
 | **P2-10** | Alert policies | ⬜ NOT STARTED |
 | **P2-11** | Dashboard panel additions | ⬜ NOT STARTED |
 | **P2-12** | Notification routing + incident runbook | ⬜ NOT STARTED |
@@ -1071,4 +1071,40 @@ These new signals enable Cloud Monitoring log-based metric alerting that was not
 | CG-1 (candidate gate) is highest priority | Protects against unauthorized OpenAI candidate traffic; fire-on-first-event |
 | `ENABLE_SCHEMA_REPAIR_RETRY` remains OFF | Dev/test baseline (P4-15 §7.2) not representative; production data required |
 | Rate alerts require ≥ 10 `book_outcome` events | Per `GENERATION_SLO_THRESHOLD_POLICY.md §5.1` small-sample rules |
-| Manual fallback via `_export-cloud-logging.mjs` | Current operational baseline until P2-9/P2-10 live |
+| Manual fallback via `_export-cloud-logging.mjs` | Current operational baseline until P2-10 alert policies live |
+
+---
+
+### P2-9 (Log-Based Metric Definitions) Implementation Note
+
+**Commit**: `docs(P2-9): define generation SLO log-based metrics`  
+**Files changed**:
+- `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md` (new) — 15 metrics (14 required + 1 optional)
+- `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` — P2-9 marked COMPLETE in §10 slice table
+- `docs/GENERATION_SLO_RUNBOOK.md` — §14 updated with P2-9 status and metric definitions link
+- `docs/PHASE2_GENERATION_SLO_PLAN.md` — this note
+- `docs/PRODUCT_ROADMAP.md` — P2-9 marked COMPLETE
+
+**No production code changes.** Docs-only. No live Cloud Monitoring metrics created.
+
+### Metrics defined
+
+| Group | Metrics | Count |
+|---|---|---|
+| Candidate gate (CG-1) | `generation/candidate_allowed` | 1 |
+| Story JSON failures | `schema_validation_failures`, `malformed_json_failures`, `field_type_mismatch_failures`, `schema_structural_failures`, `story_json_unknown_failures` | 5 |
+| Book outcomes | `book_outcomes_total`, `book_outcome_failed`, `book_outcome_completed`, `book_outcome_partial_completed` | 4 |
+| Page image failures | `page_failures_total`, `page_e005_failures`, `page_timeout_failures`, `page_provider5xx_failures` | 4 |
+| Story duration | `story_duration_ms` (distribution) | 1 |
+| Optional | `story_generation_attempts` (repair retry) | 1 |
+| **Total** | | **16** |
+
+### Key decisions
+
+| Decision | Rationale |
+|---|---|
+| All 15 required metrics defined before any are created live | P2-10 alert policies need stable metric names |
+| `generation/candidate_allowed` created first | CG-1 is CRITICAL; fire-on-first-event; no delay acceptable |
+| `generation/story_duration_ms` is Distribution type | Enables p95/p99 percentile alerting in Cloud Monitoring MQL |
+| `generation/story_generation_attempts` is optional | Zero while ENABLE_SCHEMA_REPAIR_RETRY is OFF; create now for future readiness |
+| gcloud commands provided without label extractors | Full label config requires Cloud Console or REST API; gcloud has flag limitations |

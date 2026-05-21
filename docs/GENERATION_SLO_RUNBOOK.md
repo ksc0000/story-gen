@@ -919,12 +919,13 @@ node scripts/report-generation-slo.mjs --input tmp/generation-events.json --form
 
 ## 14. Alert Automation Plan (P2-7 / P2-8 through P2-12)
 
-**Status**: 📋 PLAN COMPLETE — Cloud Monitoring alert policies not yet live.  
-**Full plan**: `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`
+**Status**: P2-9 metric definitions complete. Cloud Monitoring alert policies not yet live.  
+**Plans**: `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` | `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`
 
 ### 14.1 What the plan defines
 
-The alert automation plan (`P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`) documents:
+The alert automation plan (`P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`) and metric definitions
+(`P2_GENERATION_SLO_LOG_BASED_METRICS.md`) document:
 
 - **Alert candidates** with Cloud Logging filters, thresholds, severity, and first-response guidance
 - **Story JSON quality alerts** (SJ-1 through SJ-6): schema_validation, malformed_json, field_type_mismatch, storyDurationMs latency
@@ -938,18 +939,18 @@ The alert automation plan (`P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`) documen
 ### 14.2 Implementation slices
 
 | Slice | Title | Priority |
-|---|---|---|
+|---|---|
 | **P2-8** | Saved Cloud Logging query definitions | MEDIUM |
-| **P2-9** | Cloud Monitoring log-based metrics | HIGH |
+| **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md` |
 | **P2-10** | Alert policies (CG-1 first) | HIGH |
 | **P2-11** | Dashboard panel additions | MEDIUM |
 | **P2-12** | Notification routing + incident runbook | HIGH |
 
-Recommended order: `P2-9 → P2-10 (CG-1 first) → P2-12 → P2-8 → P2-11`
+Recommended order: `P2-10 (CG-1 first) → P2-12 → P2-8 → P2-11`
 
 ### 14.3 Current operational procedure (manual fallback)
 
-Until P2-9/P2-10 are live, use the weekly manual review:
+Until P2-10 alert policies are live, use the weekly manual review:
 
 ```bash
 # Export 7 days of generation events (no gcloud required)
