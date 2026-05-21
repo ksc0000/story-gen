@@ -332,6 +332,8 @@ If any Cohort B/C users are enrolled as candidates (`generationOverride.allowCan
 
 | Document | Purpose |
 |---|---|
+| `docs/P5_COHORT_A_EXECUTION_CHECKLIST.md` | **Cohort A execution checklist (P5-3)** — step-by-step guide for sending invitations manually, first-hour monitoring, incident response, and Cohort B gate |
+| `docs/P5_SOFT_LAUNCH_INVITE_KIT.md` | Invitation templates (Japanese), tester instructions, feedback form, incident template |
 | `docs/P2_PRODUCTION_MONITORING_READINESS.md` | Monitoring stack, live resources, first-traffic checklist |
 | `docs/P4_PERMANENT_STORY_JSON_SLO_PLAN.md` | §5 repair retry criteria, §7 baseline history |
 | `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` | Alert policy definitions, recommended ordering |
@@ -342,4 +344,4 @@ If any Cohort B/C users are enrolled as candidates (`generationOverride.allowCan
 
 ---
 
-*Last updated: 2026-05-21 (P5-1)*
+*Last updated: 2026-05-21 (P5-1, P5-3 ref added)*
