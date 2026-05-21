@@ -635,6 +635,47 @@ ENABLE_RESPONSE_SCHEMA=true
 - **Firebase deploy**: No.
 - **ENABLE_RESPONSE_SCHEMA**: Remains OFF/absent in production.
 
+#### P4-12c Results (2026-05-21) — FAIL
+
+**Starting HEAD**: `cf60c44`.
+**Flag ON deploy**: ≈11:30 JST, all 13 functions updated, `ENABLE_RESPONSE_SCHEMA=true`.
+**Rollback deploy**: ≈11:39 JST, `ENABLE_RESPONSE_SCHEMA` removed, all 13 functions updated.
+**Final production state**: `ENABLE_RESPONSE_SCHEMA` absent/OFF.
+**Hosting deployed**: No.
+
+| # | bookId | theme | style | profile | status | failure |
+|---|---|---|---|---|---|---|
+| 1 | `smoke-rschema-12c-1-1779330765965` | bedtime | soft_watercolor | a | **FAILED** | `schema_validation`: `Failed to parse LLM JSON response` (malformed_json) |
+| 2 | `smoke-rschema-12c-2-1779330765965` | fantasy | crayon | a | **completed** | — (8/8 pages: 1 completed, 7 fallback_completed; storyDurationMs: 59625) |
+| 3 | `smoke-rschema-12c-3-1779330765965` | emotional-growth | soft_watercolor | a | **FAILED** | `schema_validation`: `Failed to parse LLM JSON response` (malformed_json) |
+| 4 | `smoke-rschema-12c-4-1779330765965` | imagination | anime_storybook | a | **FAILED** | `schema_validation`: `Failed to parse LLM JSON response` (malformed_json) |
+| 5 | `smoke-rschema-12c-5-1779330765965` | bedtime | crayon | b | **FAILED** | `schema_validation`: `Failed to parse LLM JSON response` (malformed_json) |
+
+**Aggregate**: 1/5 completed, 4/5 failed.
+
+| Metric | Count |
+|---|---|
+| schema_validation failures | 4 |
+| malformed_json failures | 4 |
+| field_type_mismatch failures | 0 |
+| null handling recurrence (P4-12a) | 0 |
+| parse failure recurrence (P4-12b) | 4 (genuinely unparseable content, not parse-path bug) |
+| responseSchema-specific API errors | 0 |
+| quality_gate failures | 0 |
+| schemaRepairRetryUsed | not observed (flag OFF) |
+
+**P4-12a verification**: ✅ No null handling errors recurred. `titleSpreadText: null` fix confirmed.
+**P4-12b verification**: ✅ Safe error messages confirmed (no raw LLM content in error). Parse path works correctly for successful responses (Book 2 parsed via direct `JSON.parse`).
+**P4-12b limitation**: Direct parse + extraction fallback cannot recover genuinely malformed/truncated Gemini responses. The failed books had `storyDurationMs` of 244–250 seconds (vs 60s for success), suggesting response truncation or token-limit issues with structured output.
+
+**Conclusion**: **FAIL** — `malformed_json` recurrence in 4/5 books. P4-12a/P4-12b fixes are validated at the layer they target, but the root cause is upstream: Gemini structured output with the current `STORY_RESPONSE_SCHEMA` produces genuinely unparseable content for most themes. The long `storyDurationMs` values suggest the model is struggling with the schema constraint.
+
+**Recommended next steps**:
+1. **P4-12d**: Investigate whether Gemini structured output is truncated (token limit), empty, or semantically corrupted. Add safe diagnostic logging (response length, first/last chars, status code) without raw content.
+2. Consider simplifying `STORY_RESPONSE_SCHEMA` (fewer required/nullable fields, smaller enum sets) to reduce model strain.
+3. Alternatively, abandon `responseSchema` approach if Gemini structured output proves unreliable and continue with prompt-based JSON + validator.
+4. **P4-14**: Decide rollout or rollback based on P4-12d findings.
+
 #### Retry Interaction Check (Scenario D)
 
 - `ENABLE_SCHEMA_REPAIR_RETRY` was absent/OFF during smoke — confirmed independent
