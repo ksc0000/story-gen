@@ -397,11 +397,39 @@ Rationale:
 **Next baseline run**: after first production users generate books. Commands:
 
 ```sh
-node scripts/_export-cloud-logging.mjs --out tmp/p4-16-prod-baseline-events.json
-node scripts/report-generation-slo.mjs --input tmp/p4-16-prod-baseline-events.json --format markdown
+node scripts/_export-cloud-logging.mjs --out tmp/prod-baseline-events.json --days 7
+node scripts/report-generation-slo.mjs --input tmp/prod-baseline-events.json --format markdown
 ```
 
 > Use this table to detect regressions. Re-measure when: (a) first production traffic accumulates, (b) Gemini model version changes, (c) prompt changes are deployed.
+
+### 7.3 prod-baseline Attempt (2026-05-21)
+
+**Measurement window**: 2026-05-14 – 2026-05-21 (7 days)  
+**Command**: `node scripts/_export-cloud-logging.mjs --out tmp/prod-baseline-events.json --days 7`  
+**Total entries**: 80 (40 `generation_started`, 19 `book_outcome`, 21 `book_early_failed`)  
+**book_outcome count**: **19** — below the ≥ 30-event threshold for a production baseline
+
+**Outcome: INSUFFICIENT DATA — same dataset as P4-16-baseline (dev/test only)**
+
+The exported data is identical to the P4-16-baseline (§7.2): no new production users have generated books since that measurement. The 80 events are from dev/test activity only.
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Total generation_started | 40 | dev/test only |
+| Total book_outcome | 19 | dev/test only — below 30-event threshold |
+| schema_validation rate | 18/40 = 45.0% | ⚠️ DEV/TEST ONLY — unrepresentative |
+| malformed_json count/rate | 14/40 = 35.0% | ⚠️ DEV/TEST ONLY |
+| field_type_mismatch count/rate | 3/40 = 7.5% | ⚠️ DEV/TEST ONLY |
+| storyDurationMs p50 (outcome only) | 59,150ms (~59s) | ✅ Within 120s SLO |
+| storyDurationMs p95 (outcome only) | 89,316ms (~89s) | ✅ Within 120s SLO |
+| storyDurationMs p99 (outcome only) | 90,856ms (~91s) | ✅ Within 200s SLO |
+| Readable rate (book_outcome) | 19/19 = 100% | ✅ Within SLO |
+
+**Decisions (2026-05-21)**:
+- `ENABLE_SCHEMA_REPAIR_RETRY`: **remain OFF** — production data insufficient; cannot evaluate §5.3 criteria.
+- SJ/IM alert policies: **remain `enabled: false`** — no production baseline to calibrate thresholds.
+- Re-run this measurement after real production users generate ≥ 30 books.
 
 ---
 

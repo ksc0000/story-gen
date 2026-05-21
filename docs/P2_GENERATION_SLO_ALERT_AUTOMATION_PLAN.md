@@ -91,7 +91,7 @@ This is a **complementary signal** — Cloud Logging alerts provide faster detec
 
 ### 3.2 Story JSON quality alerts (from P4-15 SLOs)
 
-> Baseline: dev/test only (P4-15 §7.2). Production baseline pending.
+> Baseline: dev/test only (P4-15 §7.2 + §7.3). prod-baseline attempted 2026-05-21 — found 19 book_outcomes (same dev/test data, < 30 threshold). Production baseline pending first real user traffic.
 
 | Alert ID | Condition | Window | Severity | Cloud Logging Filter |
 |---|---|---|---|---|
@@ -400,6 +400,7 @@ Wait for production data ≥ 30 `book_outcome` events; then evaluate against P4-
 
 ```
 prod-baseline (collect ≥ 30 book_outcomes) → P2-10b-enable (tune thresholds + enable SJ/IM policies)
+  ↑ prod-baseline attempted 2026-05-21: 19 book_outcomes (dev/test only) — insufficient; retry after production traffic
   ↑ P2-10b-live complete (2026-05-21) — metrics live, policies disabled
   ↑ P2-dashboard-live complete (2026-05-21) — live dashboard `dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b`
 ```
