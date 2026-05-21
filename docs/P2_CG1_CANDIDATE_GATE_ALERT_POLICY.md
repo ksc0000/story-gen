@@ -420,11 +420,11 @@ The alert policy `notificationChannels` array is empty. Replace with actual chan
 | Action | Status | Notes |
 |---|---|---|
 | `generation/candidate_allowed` metric definition | ✅ COMPLETE | `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md §3.1` |
-| `generation/candidate_allowed` metric **created live** | ⬜ NOT DONE | Requires gcloud + `roles/logging.admin`; SA currently has read-only |
+| `generation/candidate_allowed` metric **created live** | ✅ LIVE (2026-05-21) | `projects/story-gen-8a769/metrics/generation%2Fcandidate_allowed`; operator: `kikushun0529@gmail.com` |
 | CG-1 alert policy definition | ✅ COMPLETE | This document §3 |
-| CG-1 alert policy **created live** | ⬜ NOT DONE | Requires live metric + gcloud + `roles/monitoring.alertPolicyEditor` |
+| CG-1 alert policy **created live** | ✅ LIVE (2026-05-21) — **disabled** | `projects/story-gen-8a769/alertPolicies/16928978327782001994`; operator: `kikushun0529@gmail.com` |
 | Notification channel configured | ⬜ NOT DONE | P2-12 |
-| Policy enabled | ⬜ NOT DONE | Requires notification channel first |
+| Policy enabled | ⬜ NOT DONE | Enable after P2-12 notification channel is configured |
 
 ### Required SA roles before live creation
 
