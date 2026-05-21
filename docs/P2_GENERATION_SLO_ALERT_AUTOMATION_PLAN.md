@@ -392,7 +392,7 @@ Wait for production data ≥ 30 `book_outcome` events; then evaluate against P4-
 | **P2-8** | Saved Cloud Logging query definitions | ✅ COMPLETE (docs, 2026-05-21) — `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md`; 15 queries (CG/SJ/IM/LAT/OUT/DQ); import to Cloud Console is manual | MEDIUM |
 | **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`; 15 metrics defined (14 required + 1 optional); live creation commands in §4 of that doc | HIGH |
 | **P2-10** | Alert policies | ✅ COMPLETE (live, 2026-05-21) — CG-1 policy live + enabled in `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md` | HIGH |
-| **P2-11** | Dashboard panel additions | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; 8 required + 2 optional panels; live dashboard `projects/story-gen-8a769/dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b`; LAT-1 is text placeholder | MEDIUM |
+| **P2-11** | Dashboard panel additions | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; 8 required + 2 optional panels; live dashboard `projects/story-gen-8a769/dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b`; LAT-1 p95/p99 live (P2-latency-metric) | MEDIUM |
 | **P2-12** | Notification routing + incident runbook integration | ✅ COMPLETE (live, 2026-05-21) — Email channel `notificationChannels/202814648286910376` (kikushun0529@gmail.com) 接続済み; CG-1 `enabled: true` | HIGH |
 | **P2-10b** | SJ/IM alert policy definitions + live creation (disabled) | ✅ COMPLETE (live disabled, 2026-05-21) — `docs/P2_SJ_IM_ALERT_POLICIES.md`; 9 metrics live; 13 policies live `enabled: false`; enable after production baseline | HIGH |
 

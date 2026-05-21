@@ -182,8 +182,7 @@ CG-1 is placed first because any positive value is a CRITICAL incident.
 |---|---|
 | **Group** | LAT |
 | **Metric** | `logging.googleapis.com/user/generation/story_duration_ms` (Distribution type) |
-| **Live** | ⬜ Defined only |
-| **Chart type** | Line chart with p95 and p99 series |
+| **Live** | ✅ LIVE (2026-05-21) |
 | **Aggregation** | `ALIGN_PERCENTILE_95` and `ALIGN_PERCENTILE_99` over 1h |
 | **Threshold** | p95 > 120s = WARNING; p95 > 180s = CRITICAL; p99 > 200s = CRITICAL |
 | **Linked saved query** | `LAT-1 story duration over 120s`, `LAT-2 story duration over 180s` |
@@ -273,9 +272,9 @@ Created via:
 gcloud monitoring dashboards create --config-from-file=tmp/dashboard.json --project=story-gen-8a769
 ```
 
-Dashboard JSON contains Panels 1–8. Panel 7 (LAT-1) is a text placeholder until `generation/story_duration_ms` distribution metric is created.
+Dashboard JSON contains Panels 1–8. All panels including LAT-1 are live.
 
-**LAT-1 next steps** (when ready): Create `story_duration_ms` distribution metric, then replace the text widget in this dashboard with a line chart showing `ALIGN_PERCENTILE_95` and `ALIGN_PERCENTILE_99` over 1h.
+**LAT-1 implementation (P2-latency-metric, 2026-05-21)**: Created `generation/story_duration_ms` distribution metric, updated dashboard Panel 7 to XY chart showing `ALIGN_PERCENTILE_95` and `ALIGN_PERCENTILE_99` over 1h with threshold lines at 120 000 ms and 180 000 ms.
 
 ---
 
@@ -285,8 +284,8 @@ Dashboard JSON contains Panels 1–8. Panel 7 (LAT-1) is a text placeholder unti
 |---|---|---|
 | Panel definitions (8 required + 2 optional) | ✅ COMPLETE (docs, 2026-05-21) | This document §5 |
 | Dashboard usage guide | ✅ COMPLETE | §6 |
-| Live Cloud Monitoring dashboard | ✅ LIVE (2026-05-21) | `projects/story-gen-8a769/dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b`; LAT-1 is text placeholder (story_duration_ms pending) |
-| Required log-based metrics | ⬜ 1 of 15 live | Only `candidate_allowed`; remaining 14 pending |
+| Live Cloud Monitoring dashboard | ✅ LIVE (2026-05-21) | `projects/story-gen-8a769/dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b`; LAT-1 p95/p99 XY chart live (P2-latency-metric 2026-05-21) |
+| Required log-based metrics | ✅ 11 of 15 live | `candidate_allowed` + 9 SJ/IM + `story_duration_ms`; book-outcome sub-metrics pending |
 | SJ/IM alert policies | ⬜ NOT YET | Pending P2-10b |
 
 ---

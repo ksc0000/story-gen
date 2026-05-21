@@ -1,6 +1,6 @@
 # P2 Generation SLO Log-Based Metrics
 
-**Status**: ✅ LIVE (partially, 2026-05-21) — CG-1 metric live since P2-10; 9 SJ/IM metrics created in P2-10b-live; distribution metric (`story_duration_ms`) and book-outcome sub-metrics pending  
+**Status**: ✅ LIVE (partially, 2026-05-21) — CG-1 metric live since P2-10; 9 SJ/IM metrics created in P2-10b-live; `story_duration_ms` distribution metric created in P2-latency-metric; book-outcome sub-metrics pending  
 **Created**: 2026-05-21  
 **Task**: P2-9 (Log-based metric definitions)  
 **Depends on**: P2-7 (`docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md §5`)  
