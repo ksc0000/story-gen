@@ -605,10 +605,21 @@ ENABLE_RESPONSE_SCHEMA=true
 
 #### Recommended Next Steps
 
-1. **P4-12a (prerequisite)**: Add `null`→`undefined` coercion in `validateStory()` for all nullable fields before type checks. This is a small, safe code change.
+1. ~~**P4-12a (prerequisite)**: Add `null`→`undefined` coercion in `validateStory()` for all nullable fields before type checks.~~ ✅ COMPLETE
 2. **P4-12b**: Investigate `Failed to parse LLM JSON response` with `responseSchema` ON — may need to bypass `extractJSON()` when `responseSchema` is enabled (Gemini structured output returns clean JSON without markdown wrapping).
-3. **P4-12c**: Re-smoke after fixes.
+3. **P4-12c**: Re-smoke after P4-12a + P4-12b fixes.
 4. **P4-14**: Decide rollout/rollback based on re-smoke results.
+
+#### P4-12a Results
+
+- **Change**: Added `nullToUndefined()` helper in `gemini.ts`; applied to all optional nullable fields in `validateStory()`, `validateStoryCast()`, `validateStringArray()`, and narrative device validation.
+- **Scope**: Optional nullable fields now accept `null` (coerced to `undefined`). Required fields (`title`, `characterBible`, `styleBible`, `pages`, `pages[].text`, `pages[].imagePrompt`, `cast[].characterId`, `cast[].displayName`, `cast[].visualBible`) still reject `null`.
+- **Tests**: 46 new tests in `story-null-coercion.test.ts` covering null acceptance, required rejection, and P4-12 Book 1 regression.
+- **Export**: `validateStory()` exported with `@internal` annotation for direct testing.
+- **P4-12 Book 1 fix**: `titleSpreadText: null` now accepted (was the root cause).
+- **JSON parse failures**: NOT addressed — remain open as P4-12b.
+- **Firebase deploy**: No.
+- **ENABLE_RESPONSE_SCHEMA**: Remains OFF/absent in production.
 
 #### Retry Interaction Check (Scenario D)
 

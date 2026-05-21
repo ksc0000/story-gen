@@ -836,6 +836,7 @@ The remaining legacy scope from P3 (`generateCoverImage()` and `ensureRecurringC
 | **P4-6** | Live smoke for repaired flow | Smoke | ✅ COMPLETE (PASS with limitation; see P4_SCHEMA_REPAIR_SMOKE_CHECKLIST.md) |
 | **P4-7** | Tune prompt instructions after metrics | Code (prompt + tests) | ✅ COMPLETE |
 | **P4-12** | Live smoke with `ENABLE_RESPONSE_SCHEMA=true` | Smoke + Docs | ✅ COMPLETE (FAIL — null handling gap; see P4_GEMINI_RESPONSE_SCHEMA_MIGRATION_PLAN.md §P4-12 Results) |
+| **P4-12a** | null→undefined coercion in validateStory() | Code + Tests | ✅ COMPLETE (46 tests, fixes P4-12 Book 1 failure) |
 
 ---
 

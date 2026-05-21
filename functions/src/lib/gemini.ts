@@ -290,11 +290,19 @@ function normalizeStoryCharacterKind(
   return undefined;
 }
 
+/**
+ * P4-12a: Coerce explicit null (from Gemini responseSchema structured output)
+ * to undefined so optional nullable fields pass existing type checks.
+ */
+function nullToUndefined<T>(value: T | null | undefined): T | undefined {
+  return value === null ? undefined : value;
+}
+
 function validateStringArray(
   value: unknown,
   errorLabel: string
 ): string[] | undefined {
-  if (value === undefined) {
+  if (value === undefined || value === null) {
     return undefined;
   }
   if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
@@ -379,7 +387,7 @@ export function normalizeFocusCharacterId(params: {
 }
 
 function validateStoryCast(data: unknown): StoryCharacter[] | undefined {
-  if (data === undefined) {
+  if (data === undefined || data === null) {
     return undefined;
   }
 
@@ -430,7 +438,8 @@ function validateStoryCast(data: unknown): StoryCharacter[] | undefined {
   });
 }
 
-function validateStory(data: unknown): GeneratedStory {
+/** @internal Exported for testing (P4-12a null coercion). */
+export function validateStory(data: unknown): GeneratedStory {
   if (typeof data !== "object" || data === null) throw new Error("LLM response is not an object");
   const obj = data as Record<string, unknown>;
   if (typeof obj.title !== "string") throw new Error("LLM response missing 'title' string");
@@ -450,25 +459,33 @@ function validateStory(data: unknown): GeneratedStory {
     if (typeof pageObj.text !== "string" || typeof pageObj.imagePrompt !== "string") {
       throw new Error("Each page must have 'text' and 'imagePrompt' strings");
     }
-    if (pageObj.compositionHint !== undefined && typeof pageObj.compositionHint !== "string") {
+    // P4-12a: Coerce null → undefined for optional nullable page fields
+    const compositionHint = nullToUndefined(pageObj.compositionHint);
+    const visualMotifUsage = nullToUndefined(pageObj.visualMotifUsage);
+    const hiddenDetail = nullToUndefined(pageObj.hiddenDetail);
+    const rawPageVisualRole = nullToUndefined(pageObj.pageVisualRole);
+    const rawAppearingCharacterIds = nullToUndefined(pageObj.appearingCharacterIds);
+    const rawFocusCharacterId = nullToUndefined(pageObj.focusCharacterId);
+
+    if (compositionHint !== undefined && typeof compositionHint !== "string") {
       throw new Error("Page 'compositionHint' must be a string when provided");
     }
-    if (pageObj.visualMotifUsage !== undefined && typeof pageObj.visualMotifUsage !== "string") {
+    if (visualMotifUsage !== undefined && typeof visualMotifUsage !== "string") {
       throw new Error("Page 'visualMotifUsage' must be a string when provided");
     }
-    if (pageObj.hiddenDetail !== undefined && typeof pageObj.hiddenDetail !== "string") {
+    if (hiddenDetail !== undefined && typeof hiddenDetail !== "string") {
       throw new Error("Page 'hiddenDetail' must be a string when provided");
     }
-    if (pageObj.pageVisualRole !== undefined && typeof pageObj.pageVisualRole !== "string") {
+    if (rawPageVisualRole !== undefined && typeof rawPageVisualRole !== "string") {
       throw new Error("Page 'pageVisualRole' must be a string when provided");
     }
     const appearingCharacterIds = normalizeAppearingCharacterIds(
-      pageObj.appearingCharacterIds,
+      rawAppearingCharacterIds,
       castIds,
       index
     );
     const focusCharacterId = normalizeFocusCharacterId({
-      value: pageObj.focusCharacterId,
+      value: rawFocusCharacterId,
       appearingCharacterIds,
       castIds,
       pageIndex: index,
@@ -477,62 +494,85 @@ function validateStory(data: unknown): GeneratedStory {
     return {
       text: pageObj.text,
       imagePrompt: pageObj.imagePrompt,
-      compositionHint: pageObj.compositionHint,
-      visualMotifUsage: pageObj.visualMotifUsage,
-      hiddenDetail: pageObj.hiddenDetail,
-      pageVisualRole: normalizePageVisualRole(pageObj.pageVisualRole, index, pages.length),
+      compositionHint,
+      visualMotifUsage,
+      hiddenDetail,
+      pageVisualRole: normalizePageVisualRole(rawPageVisualRole, index, pages.length),
       appearingCharacterIds,
       focusCharacterId,
     };
   });
 
+  // P4-12a: Coerce null → undefined for narrativeDevice (nullable object)
+  const rawNarrativeDevice = nullToUndefined(obj.narrativeDevice);
   let narrativeDevice = undefined;
-  if (obj.narrativeDevice !== undefined) {
-    if (typeof obj.narrativeDevice !== "object" || obj.narrativeDevice === null) {
+  if (rawNarrativeDevice !== undefined) {
+    if (typeof rawNarrativeDevice !== "object") {
       throw new Error("'narrativeDevice' must be an object when provided");
     }
-    const device = obj.narrativeDevice as Record<string, unknown>;
-    if (device.repeatedPhrase !== undefined && typeof device.repeatedPhrase !== "string") {
+    const device = rawNarrativeDevice as Record<string, unknown>;
+    // P4-12a: Coerce null → undefined for narrativeDevice subfields
+    const repeatedPhrase = nullToUndefined(device.repeatedPhrase);
+    const visualMotif = nullToUndefined(device.visualMotif);
+    const setup = nullToUndefined(device.setup);
+    const payoff = nullToUndefined(device.payoff);
+    const hiddenDetails = nullToUndefined(device.hiddenDetails);
+    if (repeatedPhrase !== undefined && typeof repeatedPhrase !== "string") {
       throw new Error("'narrativeDevice.repeatedPhrase' must be a string when provided");
     }
-    if (device.visualMotif !== undefined && typeof device.visualMotif !== "string") {
+    if (visualMotif !== undefined && typeof visualMotif !== "string") {
       throw new Error("'narrativeDevice.visualMotif' must be a string when provided");
     }
-    if (device.setup !== undefined && typeof device.setup !== "string") {
+    if (setup !== undefined && typeof setup !== "string") {
       throw new Error("'narrativeDevice.setup' must be a string when provided");
     }
-    if (device.payoff !== undefined && typeof device.payoff !== "string") {
+    if (payoff !== undefined && typeof payoff !== "string") {
       throw new Error("'narrativeDevice.payoff' must be a string when provided");
     }
     if (
-      device.hiddenDetails !== undefined &&
-      (!Array.isArray(device.hiddenDetails) || !device.hiddenDetails.every((item) => typeof item === "string"))
+      hiddenDetails !== undefined &&
+      (!Array.isArray(hiddenDetails) || !hiddenDetails.every((item) => typeof item === "string"))
     ) {
       throw new Error("'narrativeDevice.hiddenDetails' must be a string array when provided");
     }
-    narrativeDevice = device;
+    narrativeDevice = {
+      ...device,
+      repeatedPhrase,
+      visualMotif,
+      setup,
+      payoff,
+      hiddenDetails,
+    };
   }
 
-  if (obj.storyGoal !== undefined && typeof obj.storyGoal !== "string") {
+  // P4-12a: Coerce null → undefined for optional nullable root fields
+  const storyGoal = nullToUndefined(obj.storyGoal);
+  const mainQuestObject = nullToUndefined(obj.mainQuestObject);
+  const forbiddenQuestObjects = nullToUndefined(obj.forbiddenQuestObjects);
+  const titleSpreadText = nullToUndefined(obj.titleSpreadText);
+  const openingNarration = nullToUndefined(obj.openingNarration);
+  const coverImagePrompt = nullToUndefined(obj.coverImagePrompt);
+
+  if (storyGoal !== undefined && typeof storyGoal !== "string") {
     throw new Error("'storyGoal' must be a string when provided");
   }
-  if (obj.mainQuestObject !== undefined && typeof obj.mainQuestObject !== "string") {
+  if (mainQuestObject !== undefined && typeof mainQuestObject !== "string") {
     throw new Error("'mainQuestObject' must be a string when provided");
   }
   if (
-    obj.forbiddenQuestObjects !== undefined &&
-    (!Array.isArray(obj.forbiddenQuestObjects) ||
-      !obj.forbiddenQuestObjects.every((item) => typeof item === "string"))
+    forbiddenQuestObjects !== undefined &&
+    (!Array.isArray(forbiddenQuestObjects) ||
+      !forbiddenQuestObjects.every((item) => typeof item === "string"))
   ) {
     throw new Error("'forbiddenQuestObjects' must be a string array when provided");
   }
-  if (obj.titleSpreadText !== undefined && typeof obj.titleSpreadText !== "string") {
+  if (titleSpreadText !== undefined && typeof titleSpreadText !== "string") {
     throw new Error("'titleSpreadText' must be a string when provided");
   }
-  if (obj.openingNarration !== undefined && typeof obj.openingNarration !== "string") {
+  if (openingNarration !== undefined && typeof openingNarration !== "string") {
     throw new Error("'openingNarration' must be a string when provided");
   }
-  if (obj.coverImagePrompt !== undefined && typeof obj.coverImagePrompt !== "string") {
+  if (coverImagePrompt !== undefined && typeof coverImagePrompt !== "string") {
     throw new Error("'coverImagePrompt' must be a string when provided");
   }
 
@@ -540,12 +580,12 @@ function validateStory(data: unknown): GeneratedStory {
     title: obj.title,
     characterBible: obj.characterBible,
     styleBible: obj.styleBible,
-    storyGoal: typeof obj.storyGoal === "string" ? obj.storyGoal : undefined,
-    mainQuestObject: typeof obj.mainQuestObject === "string" ? obj.mainQuestObject : undefined,
-    forbiddenQuestObjects: obj.forbiddenQuestObjects as string[] | undefined,
-    titleSpreadText: typeof obj.titleSpreadText === "string" ? obj.titleSpreadText : undefined,
-    openingNarration: typeof obj.openingNarration === "string" ? obj.openingNarration : undefined,
-    coverImagePrompt: typeof obj.coverImagePrompt === "string" ? obj.coverImagePrompt : undefined,
+    storyGoal: typeof storyGoal === "string" ? storyGoal : undefined,
+    mainQuestObject: typeof mainQuestObject === "string" ? mainQuestObject : undefined,
+    forbiddenQuestObjects: forbiddenQuestObjects as string[] | undefined,
+    titleSpreadText: typeof titleSpreadText === "string" ? titleSpreadText : undefined,
+    openingNarration: typeof openingNarration === "string" ? openingNarration : undefined,
+    coverImagePrompt: typeof coverImagePrompt === "string" ? coverImagePrompt : undefined,
     cast,
     narrativeDevice: narrativeDevice as GeneratedStory["narrativeDevice"],
     storyModel: typeof obj.storyModel === "string" ? obj.storyModel : undefined,
