@@ -356,19 +356,48 @@ Before the first P4-15 monitoring period, establish a baseline:
 
 3. For spot-checking or edge-case investigation, use the Cloud Logging filters in §6.1.
 
-### 7.2 Baseline Record (to be filled)
+### 7.2 Baseline Record (P4-16-baseline — 2026-05-21)
+
+**Measurement window**: 2026-05-14 – 2026-05-21 (7 days)
+**Data source**: dev/test environment only — no production users in this window
+**Total events**: 80 (40 `generation_started`, 19 `book_outcome`, 21 `book_early_failed`)
+**Report command**: `node scripts/report-generation-slo.mjs --input tmp/p4-16-baseline-events.json --format json`
 
 | Metric | Baseline Value | Measured Date | Notes |
 |--------|---------------|---------------|-------|
-| schema_validation rate | — | — | |
-| malformed_json count/rate | — | — | |
-| field_type_mismatch count/rate | — | — | |
-| storyDurationMs p50 | — | — | |
-| storyDurationMs p95 | — | — | |
-| Total book_early_failed | — | — | |
-| Total book_outcome | — | — | |
+| schema_validation rate | 18/40 = **45.0%** | 2026-05-21 | ⚠️ DEV/TEST ONLY — not representative of production. Expected far lower with real traffic. |
+| malformed_json count/rate | 14/40 = **35.0%** (77.8% of schema_validation) | 2026-05-21 | Dominant category. DEV/TEST only. |
+| field_type_mismatch count/rate | 3/40 = **7.5%** (16.7% of schema_validation) | 2026-05-21 | DEV/TEST only. |
+| storyDurationMs p50 (outcome only) | **59,150ms (~59s)** | 2026-05-21 | ✅ Within 120s SLO target |
+| storyDurationMs p95 (outcome only) | **89,316ms (~89s)** | 2026-05-21 | ✅ Within 120s SLO target (target ≤ 120s) |
+| storyDurationMs p99 (outcome only) | **90,856ms (~91s)** | 2026-05-21 | ✅ Within 200s SLO target |
+| storyDurationMs p50 (all events) | **244,154ms (~4m)** | 2026-05-21 | Elevated by quality-retry loops in early-failed books |
+| storyDurationMs p95 (all events) | **332,484ms (~5.5m)** | 2026-05-21 | Driven by failed book paths with multiple story generation attempts |
+| Total book_early_failed | **21** of 40 started | 2026-05-21 | DEV/TEST data only |
+| Total book_outcome | **19** (completed=19, partial=0, failed=0) | 2026-05-21 | 100% readable rate |
 
-> Fill this table after running the baseline measurement. Use it to detect regressions.
+**Repair retry signals**: `multipleAttemptsCount = 0` — no repair retries triggered (`ENABLE_SCHEMA_REPAIR_RETRY=OFF`).
+
+#### ENABLE_SCHEMA_REPAIR_RETRY Decision (2026-05-21)
+
+**Decision: remain OFF.**
+
+Rationale:
+
+- Current data is **dev/test only** (40 `generation_started`, no production users). The 45% `schema_validation` rate is not representative of production.
+- Criteria for enabling (§5.3) require a **production baseline** showing persistent `schema_validation` rate > 2%.
+- The `malformed_json`-dominant pattern (78% of failures) is consistent with dev testing edge cases, not a systematic prompt regression.
+- `storyDurationMs p95` for successful books (89s) is within the 120s SLO. No latency headroom pressure that would justify the additional retry latency.
+- **Re-run this baseline** after the first 7+ days of production traffic and apply §5.2/§5.3 criteria.
+
+**Next baseline run**: after first production users generate books. Commands:
+
+```sh
+node scripts/_export-cloud-logging.mjs --out tmp/p4-16-prod-baseline-events.json
+node scripts/report-generation-slo.mjs --input tmp/p4-16-prod-baseline-events.json --format markdown
+```
+
+> Use this table to detect regressions. Re-measure when: (a) first production traffic accumulates, (b) Gemini model version changes, (c) prompt changes are deployed.
 
 ---
 
