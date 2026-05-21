@@ -914,3 +914,62 @@ node scripts/report-generation-slo.mjs --input tmp/generation-events.json --form
 - Automated reports should output aggregated metrics only (no `bookId` lists).
 - Any Cloud Storage sink or BigQuery table must be private with lifecycle expiry ≤ 90 days.
 - See: `docs/GENERATION_SLO_AUTOMATION_PLAN.md §7`
+
+---
+
+## 14. Alert Automation Plan (P2-7 / P2-8 through P2-12)
+
+**Status**: 📋 PLAN COMPLETE — Cloud Monitoring alert policies not yet live.  
+**Full plan**: `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`
+
+### 14.1 What the plan defines
+
+The alert automation plan (`P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`) documents:
+
+- **Alert candidates** with Cloud Logging filters, thresholds, severity, and first-response guidance
+- **Story JSON quality alerts** (SJ-1 through SJ-6): schema_validation, malformed_json, field_type_mismatch, storyDurationMs latency
+- **Image generation alerts** (IM-1 through IM-9): book readable rate, E005, TIMEOUT, PROVIDER_5XX
+- **Candidate gate alert** (CG-1): `candidateAllowed=true` without enrollment — always CRITICAL
+- **SLO data quality alerts** (DQ-1, DQ-2): missing events, schema drift
+- **Cloud Monitoring log-based metric definitions** (P2-9) and alert policy configuration (P2-10)
+- **Dashboard panel additions** (P2-11)
+- **Notification routing + incident runbook integration** (P2-12)
+
+### 14.2 Implementation slices
+
+| Slice | Title | Priority |
+|---|---|---|
+| **P2-8** | Saved Cloud Logging query definitions | MEDIUM |
+| **P2-9** | Cloud Monitoring log-based metrics | HIGH |
+| **P2-10** | Alert policies (CG-1 first) | HIGH |
+| **P2-11** | Dashboard panel additions | MEDIUM |
+| **P2-12** | Notification routing + incident runbook | HIGH |
+
+Recommended order: `P2-9 → P2-10 (CG-1 first) → P2-12 → P2-8 → P2-11`
+
+### 14.3 Current operational procedure (manual fallback)
+
+Until P2-9/P2-10 are live, use the weekly manual review:
+
+```bash
+# Export 7 days of generation events (no gcloud required)
+node scripts/_export-cloud-logging.mjs --out tmp/events.json --days 7 --project story-gen-8a769
+
+# Run SLO report
+node scripts/report-generation-slo.mjs --input tmp/events.json --format console
+```
+
+Compare output against P4-15 SLO thresholds:
+- `schema_validation` ≤ 2% of `book_early_failed`
+- `malformed_json` ≤ 1%, `field_type_mismatch` ≤ 0.5%
+- `storyDurationMs` p95 ≤ 120s, p99 ≤ 200s
+- Book readable rate ≥ 98%
+
+If thresholds exceeded: follow §3.3 (Investigate) or §3.4 (Incident).
+
+### 14.4 Do-not-do rules (alert automation)
+
+- Do NOT enable `ENABLE_SCHEMA_REPAIR_RETRY` based on dev/test data — production data required
+- Do NOT enable `ENABLE_RESPONSE_SCHEMA` without meeting P4-15 §5 criteria
+- Do NOT trigger routing changes based on `schema_validation` alert signals — schema issues are Gemini-side, not image-provider-side
+- Do NOT escalate below 10 `book_outcome` events — per `GENERATION_SLO_THRESHOLD_POLICY.md §5.1`

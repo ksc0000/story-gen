@@ -1020,3 +1020,55 @@ All 10 P2 slices are now complete:
 - P2-9c: manual-dispatch SLO report GH Actions (after credentials review)
 - Threshold tuning after real traffic baseline (≥ 2 weeks, ≥ 30 books/day)
 - Phase 3: ImageProvider abstraction (`docs/PRODUCT_ROADMAP.md Phase 3`)
+
+---
+
+## Post-P4 Additions: SLO Alert Automation (P2-7 / P2-8 through P2-12)
+
+> Added after Phase 4 Gemini JSON hardening closure (P4-17, 2026-05-21).  
+> The original P2-1 through P2-10 above are all complete. The slices below extend Phase 2 with Cloud Monitoring alert automation for the new generation SLO observability signals added in P4-16.
+
+### Background
+
+Phase 4 added:
+- `storyJsonFailureCategory` field to `book_early_failed` events (P4-2 through P4-8)
+- `storyDurationMs` latency field to `book_early_failed` / `book_outcome` events (P4-16-a/b)
+- `scripts/report-generation-slo.mjs` enhanced with story JSON failure breakdowns, latency percentiles, repair retry signals (P4-16-a/b)
+- `scripts/_export-cloud-logging.mjs` manual export helper (P4-16-baseline)
+- Dev/test baseline recorded in `docs/P4_PERMANENT_STORY_JSON_SLO_PLAN.md §7.2`
+
+These new signals enable Cloud Monitoring log-based metric alerting that was not possible before P4.
+
+### Post-P4 P2 slice map
+
+| Slice | Title | Status |
+|---|---|---|
+| **P2-7 (alert automation)** | Generation SLO Alert Automation Plan | ✅ COMPLETE — `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` |
+| **P2-8** | Saved Cloud Logging query definitions | ⬜ NOT STARTED |
+| **P2-9** | Cloud Monitoring log-based metrics | ⬜ NOT STARTED |
+| **P2-10** | Alert policies | ⬜ NOT STARTED |
+| **P2-11** | Dashboard panel additions | ⬜ NOT STARTED |
+| **P2-12** | Notification routing + incident runbook | ⬜ NOT STARTED |
+
+> **Note on P2-7 naming**: The original P2-7 in this plan was "Add generation SLO report script" (now complete; `scripts/report-generation-slo.mjs`). The new P2-7 "SLO Alert Automation Plan" is a distinct task added post-P4 that builds on the report script. Both tasks share the P2-7 label; context distinguishes them — "original P2-7" = SLO report script, "alert automation P2-7" = this section.
+
+### P2-7 (Alert Automation) Implementation Note
+
+**Commit**: `docs(P2-7): add generation SLO alert automation plan`  
+**Files changed**:
+- `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` (new)
+- `docs/GENERATION_SLO_RUNBOOK.md` — §14 alert automation status added
+- `docs/PHASE2_GENERATION_SLO_PLAN.md` — this section
+- `docs/PRODUCT_ROADMAP.md` — alert automation slices added
+
+**No production code changes.** Docs-only.
+
+### Key decisions
+
+| Decision | Rationale |
+|---|---|
+| Alert automation is docs-only (P2-7) | No Cloud Monitoring resources created until P2-9 |
+| CG-1 (candidate gate) is highest priority | Protects against unauthorized OpenAI candidate traffic; fire-on-first-event |
+| `ENABLE_SCHEMA_REPAIR_RETRY` remains OFF | Dev/test baseline (P4-15 §7.2) not representative; production data required |
+| Rate alerts require ≥ 10 `book_outcome` events | Per `GENERATION_SLO_THRESHOLD_POLICY.md §5.1` small-sample rules |
+| Manual fallback via `_export-cloud-logging.mjs` | Current operational baseline until P2-9/P2-10 live |
