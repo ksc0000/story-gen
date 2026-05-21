@@ -841,6 +841,7 @@ The remaining legacy scope from P3 (`generateCoverImage()` and `ensureRecurringC
 | **P4-12c** | Live re-smoke with responseSchema after P4-12a/b | Smoke + Docs | ✅ COMPLETE (FAIL — 4/5 malformed_json; P4-12a/b fixes validated but Gemini structured output unreliable) |
 | **P4-12d** | Safe response schema parse diagnostics | Code + Tests + Docs | ✅ COMPLETE (31 tests; privacy-safe structural metadata on parse failures; no deploy) |
 | **P4-12e** | Diagnostic live smoke with parse diagnostics | Smoke + Docs | ✅ COMPLETE (ROOT CAUSE: output token truncation; 3/3 failures = `likely_truncated_object`, 300-346K chars) |
+| **P4-12f** | Minimal response schema spike | Code + Tests + Docs | ✅ COMPLETE (714 chars = 21.5% of full 3,322 chars; 41 tests; no runtime wiring) |
 
 ---
 

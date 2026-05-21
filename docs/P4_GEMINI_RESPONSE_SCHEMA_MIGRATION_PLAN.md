@@ -977,3 +977,68 @@ Evidence:
 - `ENABLE_RESPONSE_SCHEMA` removed from `functions/.env.story-gen-8a769`
 - Functions redeployed ~12:27 JST — all functions updated successfully
 - Production is back to prompt-hardening-only mode (P4-7s)
+
+---
+
+## 15. P4-12f Minimal Schema Spike
+
+**Date**: 2026-06-20
+**Status**: SPIKE COMPLETE (code + tests, no runtime wiring, no deploy)
+
+### Motivation
+
+P4-12e proved that the full `STORY_RESPONSE_SCHEMA` (3,322 chars) causes Gemini to generate 300–346K char responses that exceed the model's output token limit. This spike evaluates whether a drastically reduced schema might avoid the truncation problem.
+
+### Design
+
+`STORY_RESPONSE_SCHEMA_MINIMAL` keeps only the must-have envelope fields:
+
+| Level | Retained Fields |
+|-------|----------------|
+| Root | `title`, `characterBible`, `styleBible`, `pages` |
+| Page | `text`, `imagePrompt` |
+
+All optional/semantic fields are intentionally excluded:
+- Root: `cast`, `narrativeDevice`, `storyGoal`, `mainQuestObject`, `forbiddenQuestObjects`, `titleSpreadText`, `openingNarration`, `coverImagePrompt`
+- Page: `pageVisualRole`, `compositionHint`, `visualMotifUsage`, `hiddenDetail`, `appearingCharacterIds`, `focusCharacterId`
+
+### Rationale
+
+- `validateStory()` remains the runtime validator and will accept/normalize any extra fields Gemini emits via prompt instructions.
+- Minimal schema only constrains the JSON envelope, reducing structured output pressure.
+- Prompt instructions still guide optional field semantics — no prompt change needed.
+
+### Size Comparison
+
+| Schema | JSON.stringify size | Ratio |
+|--------|-------------------|-------|
+| `STORY_RESPONSE_SCHEMA` (full) | 3,322 chars | 100% |
+| `STORY_RESPONSE_SCHEMA_MINIMAL` | 714 chars | 21.5% |
+
+The minimal schema is **78.5% smaller** than the full schema.
+
+### Runtime Wiring
+
+**None.** `STORY_RESPONSE_SCHEMA_MINIMAL` is not imported by `gemini.ts`. The `ENABLE_RESPONSE_SCHEMA` flag still controls the existing full schema. This is a spike artifact only.
+
+### Test Coverage
+
+`functions/test/story-response-schema-minimal.test.ts` — 41 tests:
+- Export existence
+- Required field exactness (root + page)
+- Heavy optional field exclusion (root: 8 fields, page: 6 fields)
+- Valid fixture acceptance
+- Missing required field rejection
+- Wrong type rejection
+- Schema size comparison assertion (<35% of full)
+- Runtime wiring guard (gemini.ts does not reference minimal schema)
+- Full schema unchanged verification
+
+### Next Steps
+
+| Option | Description |
+|--------|------------|
+| **P4-12g** | Wire `STORY_RESPONSE_SCHEMA_MINIMAL` behind a separate flag/mode and run a tiny live smoke to test whether 714-char schema avoids truncation |
+| **P4-14** | Abandon `responseSchema` rollout entirely; continue with prompt hardening (P4-7s) + `validateStory()` + repair retry as the permanent safety net |
+
+**Recommendation**: The 78.5% size reduction is significant. A small P4-12g live smoke (2–3 books) is worth attempting before deciding to abandon `responseSchema`.

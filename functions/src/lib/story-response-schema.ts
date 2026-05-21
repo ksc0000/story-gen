@@ -238,3 +238,77 @@ export const STORY_RESPONSE_SCHEMA_REQUIRED_FIELDS = STORY_RESPONSE_SCHEMA.requi
 
 /** Page-level required fields (must match validateStory() per-page requirements). */
 export const STORY_PAGE_REQUIRED_FIELDS = PAGE_SCHEMA.required;
+
+// ---------------------------------------------------------------------------
+// Minimal schema variant (P4-12f spike)
+// ---------------------------------------------------------------------------
+//
+// P4-12e showed that the full STORY_RESPONSE_SCHEMA inflates Gemini structured
+// output to 300–346K chars, exceeding the model's output token limit.
+//
+// This minimal schema keeps only the envelope fields needed to produce a
+// parseable story JSON. All optional/semantic fields are intentionally excluded
+// to reduce structured output pressure. validateStory() remains the runtime
+// validator and will accept/normalize any extra fields Gemini emits via prompt
+// instructions.
+//
+// NOT WIRED TO RUNTIME. This is a spike artifact for size comparison and
+// potential future P4-12g live smoke.
+
+/** Semantic version for the minimal schema variant. */
+export const STORY_RESPONSE_SCHEMA_MINIMAL_VERSION = "0.1.0";
+
+const MINIMAL_PAGE_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    text: { type: "string" as const, description: "Story text for this page (read-aloud)" },
+    imagePrompt: { type: "string" as const, description: "Image generation prompt for this page" },
+  },
+  required: ["text", "imagePrompt"] as const,
+};
+
+/**
+ * Minimal Gemini-compatible JSON Schema for the story generation response.
+ *
+ * Keeps only the must-have envelope fields:
+ *   root: title, characterBible, styleBible, pages
+ *   page: text, imagePrompt
+ *
+ * All optional fields (cast, narrativeDevice, storyGoal, mainQuestObject,
+ * forbiddenQuestObjects, titleSpreadText, openingNarration, coverImagePrompt,
+ * pageVisualRole, compositionHint, visualMotifUsage, hiddenDetail,
+ * appearingCharacterIds, focusCharacterId) are intentionally excluded.
+ *
+ * NOT WIRED TO RUNTIME GENERATION. Spike only (P4-12f).
+ */
+export const STORY_RESPONSE_SCHEMA_MINIMAL = {
+  type: "object" as const,
+  properties: {
+    title: {
+      type: "string" as const,
+      description: "Book title in Japanese",
+    },
+    characterBible: {
+      type: "string" as const,
+      description: "Detailed visual description of the child protagonist for consistent illustration",
+    },
+    styleBible: {
+      type: "string" as const,
+      description: "Illustration style description for consistent page images",
+    },
+    pages: {
+      type: "array" as const,
+      items: MINIMAL_PAGE_SCHEMA,
+      description: "Story pages with text and image prompts",
+    },
+  },
+  required: ["title", "characterBible", "styleBible", "pages"] as const,
+};
+
+/** Root-level required fields for minimal schema. */
+export const STORY_RESPONSE_SCHEMA_MINIMAL_REQUIRED_FIELDS =
+  STORY_RESPONSE_SCHEMA_MINIMAL.required;
+
+/** Page-level required fields for minimal schema. */
+export const STORY_RESPONSE_SCHEMA_MINIMAL_PAGE_REQUIRED_FIELDS =
+  MINIMAL_PAGE_SCHEMA.required;
