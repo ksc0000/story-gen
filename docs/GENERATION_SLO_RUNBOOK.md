@@ -945,6 +945,7 @@ The alert automation plan (`P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`) and met
 | **P2-10** | CG-1 alert policy definition + live creation | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`; `enabled: true` |
 | **P2-11** | Dashboard panel additions | ✅ COMPLETE (docs/config, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; live dashboard not created |
 | **P2-12** | Notification routing + CG-1 enable | ✅ COMPLETE (live, 2026-05-21) — Email `notificationChannels/202814648286910376` (kikushun0529@gmail.com); CG-1 `enabled: true` |
+| **P2-10b** | SJ/IM alert policy definitions | ✅ COMPLETE (docs/config, 2026-05-21) — `docs/P2_SJ_IM_ALERT_POLICIES.md`; 13 policies (SJ-1..SJ-4, IM-1..IM-9); all `enabled: false`; live creation pending |
 
 CG-1 アラートポリシーは現在 **live かつ enabled**。`candidateAllowed=true` イベントが発生すると 60 秒以内に `kikushun0529@gmail.com` へ CRITICAL メールが送信される。
 
@@ -959,9 +960,15 @@ CG-1 アラートポリシーは現在 **live かつ enabled**。`candidateAllow
 - **インシデント発生時**: ダッシュボードで赤いパネル（シグナル）を特定 → 該当パネルの "linked saved query" をクリックして raw ログを調査 → リンクされた runbook セクション (§8.x) に従う
 - **ダッシュボード未利用時**: 手動 fallback の `scripts/report-generation-slo.mjs` を使用
 
+**SJ/IM アラート応答ポインター** (`docs/P2_SJ_IM_ALERT_POLICIES.md §6`参照 — docs/config 定義済み、live 未作成):
+- **SJ アラート受信時**: ダッシュボード SJ パネル確認 → SJ-1/SJ-2/SJ-3 saved query で raw ログを調査 → `GENERATION_SLO_RUNBOOK.md §8.1/§8.2/§8.3`
+- **IM アラート受信時**: IM-1 saved query でエラーコード別に分解 → dominant error code の saved query (IM-2/IM-3/IM-4) に進む → `GENERATION_SLO_RUNBOOK.md §8.4/§8.5/§8.6/§8.7`
+- **いずれの場合もダッシュボードを先に確認**してからsaved query に進む
+- **CG-1 は現在唯一の live enabled アラート** — SJ/IM アラートポリシーは docs/config 定義済み (P2-10b) だが live 未作成。メール通知は CG-1 のみ。
+
 ### 14.3 Current operational procedure (manual fallback)
 
-Until P2-10 alert policies are live, use the weekly manual review:
+Until SJ/IM alert policies are live (P2-10b-live), use the weekly manual review:
 
 ```bash
 # Export 7 days of generation events (no gcloud required)

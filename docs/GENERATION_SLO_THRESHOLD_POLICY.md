@@ -361,6 +361,11 @@ Phase 2 reliability work is now complete. The following 10 slices were delivered
 | Dashboard automation | Low | Automate periodic SLO report via scheduled GitHub Actions + GCS sink, after P2-9c/d is validated |
 | Alerting policy | Low | Define Cloud Monitoring alerting on the SLO thresholds in Section 4, after threshold validation |
 
+> **Update (2026-05-21)**: SJ/IM alert policy definitions are now complete (P2-10b) — `docs/P2_SJ_IM_ALERT_POLICIES.md`.
+> 13 policies (SJ-1..SJ-4, IM-1..IM-9) defined with YAML specs and gcloud live creation commands.
+> All policies `enabled: false` pending P2-9 metric live creation and production baseline validation.
+> Threshold values in §6 of `docs/P2_SJ_IM_ALERT_POLICIES.md` correspond to the Investigate/Incident levels in §4 of this document.
+
 ### Decision needed before Phase 3
 
 Before starting the ImageProvider abstraction:
@@ -375,6 +380,8 @@ Before starting the ImageProvider abstraction:
 | Document | Purpose |
 |---|---|
 | `docs/GENERATION_SLO_RUNBOOK.md` | Operational runbook: how to collect, report, and respond |
+| `docs/P2_SJ_IM_ALERT_POLICIES.md` | P2-10b SJ/IM alert policy definitions (YAML specs + gcloud commands) |
+| `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md` | CG-1 candidate gate alert policy (live + enabled) |
 | `docs/GENERATION_SLO_AUTOMATION_PLAN.md` | Staged automation design (P2-9) |
 | `docs/PHASE2_GENERATION_SLO_PLAN.md` | Full Phase 2 design doc with all implementation notes |
 | `docs/PRODUCT_ROADMAP.md` | Commercialization roadmap; SLO targets; Phase 3 plan |

@@ -394,15 +394,16 @@ Wait for production data ≥ 30 `book_outcome` events; then evaluate against P4-
 | **P2-10** | Alert policies | ✅ COMPLETE (live, 2026-05-21) — CG-1 policy live + enabled in `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md` | HIGH |
 | **P2-11** | Dashboard panel additions | ✅ COMPLETE (docs/config, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; 8 required + 2 optional panels; live Cloud Monitoring dashboard not created (manual creation pending) | MEDIUM |
 | **P2-12** | Notification routing + incident runbook integration | ✅ COMPLETE (live, 2026-05-21) — Email channel `notificationChannels/202814648286910376` (kikushun0529@gmail.com) 接続済み; CG-1 `enabled: true` | HIGH |
+| **P2-10b** | SJ/IM alert policy definitions (SJ-1..SJ-4, IM-1..IM-9) | ✅ COMPLETE (docs/config, 2026-05-21) — `docs/P2_SJ_IM_ALERT_POLICIES.md`; 13 policies (4 SJ + 9 IM); all `enabled: false`; live creation pending | HIGH |
 
 ### Recommended ordering
 
 ```
-P2-10b (SJ/IM alert policies) → dashboard-live (if approved) → prod-baseline
-  ↑ All P2-8 → P2-12 sub-slices complete (docs/config + CG-1 live)
+P2-10b-live (create SJ/IM policies disabled) → dashboard-live (if approved) → prod-baseline
+  ↑ P2-10b docs/config complete (2026-05-21)
 ```
 
-**P2-10 status**: CG-1 alert policy is fully defined and ready to apply (see `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`). Live creation requires gcloud CLI and `roles/monitoring.alertPolicyEditor` on the operator account.
+**P2-10 status**: CG-1 alert policy live + enabled. SJ/IM policies defined in `docs/P2_SJ_IM_ALERT_POLICIES.md`; live creation requires P2-9 metrics to be verified in Cloud Monitoring first.
 
 ---
 
@@ -416,6 +417,7 @@ P2-10b (SJ/IM alert policies) → dashboard-live (if approved) → prod-baseline
 | `docs/PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md` | P4 closure; remaining follow-ups list |
 | `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md` | P2-10 CG-1 alert policy — YAML spec, gcloud commands, first-response runbook, verification steps |
 | `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md` | P2-9 metric definitions — YAML configs, gcloud commands, label specs |
+| `docs/P2_SJ_IM_ALERT_POLICIES.md` | P2-10b SJ/IM alert policy specs — YAML, gcloud commands, first-response, threshold tuning |
 | `docs/GENERATION_SLO_AUTOMATION_PLAN.md` | Earlier scheduled reporting design (P2-9 predecessor) |
 | `scripts/report-generation-slo.mjs` | Manual SLO computation tool (93 self-test assertions) |
 | `scripts/_export-cloud-logging.mjs` | Manual Cloud Logging export (proxy-aware, SA JWT auth) |
