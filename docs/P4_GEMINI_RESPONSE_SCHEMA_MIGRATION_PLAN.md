@@ -621,6 +621,20 @@ ENABLE_RESPONSE_SCHEMA=true
 - **Firebase deploy**: No.
 - **ENABLE_RESPONSE_SCHEMA**: Remains OFF/absent in production.
 
+#### P4-12b Results
+
+- **Change**: Added `parseGeminiStoryJsonResponse()` helper in `gemini.ts`. When `ENABLE_RESPONSE_SCHEMA=true`, prefers direct `JSON.parse(rawText.trim())` for Gemini structured output. Falls back to `extractJsonFromLLMResponse()` for defense-in-depth.
+- **Flag OFF behavior**: Unchanged. Legacy `extractJSON()` path and P4-5 `extractJsonFromLLMResponse()` path preserved exactly.
+- **Flag ON direct path**: Clean JSON from structured output parses via direct `JSON.parse` without extraction overhead.
+- **Flag ON fallback**: If direct parse fails (e.g. unexpected markdown fences), `extractJsonFromLLMResponse()` is attempted as fallback.
+- **Error safety**: When flag ON, parse errors do not include raw LLM content in error messages (prevents PII leakage).
+- **validateStory() unchanged**: Remains final validator after JSON parsing.
+- **Tests**: 39 new tests in `response-schema-json-parse.test.ts` covering all parse paths, flag combinations, malformed input, error privacy, and P4-12 regression.
+- **P4-12 Books 3/4/5 fix**: JSON parse failures addressed at unit level — structured output now parses via direct path.
+- **Live re-smoke**: Required in P4-12c to confirm end-to-end fix.
+- **Firebase deploy**: No.
+- **ENABLE_RESPONSE_SCHEMA**: Remains OFF/absent in production.
+
 #### Retry Interaction Check (Scenario D)
 
 - `ENABLE_SCHEMA_REPAIR_RETRY` was absent/OFF during smoke — confirmed independent

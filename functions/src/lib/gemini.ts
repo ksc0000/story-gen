@@ -83,6 +83,59 @@ export function isResponseSchemaEnabled(): boolean {
   return process.env.ENABLE_RESPONSE_SCHEMA === "true";
 }
 
+/**
+ * P4-12b: Parse Gemini story JSON response with awareness of responseSchema mode.
+ *
+ * When `responseSchemaEnabled` is true, prefers direct JSON.parse (structured output
+ * should return clean JSON). Falls back to extractJsonFromLLMResponse for
+ * defense-in-depth.
+ *
+ * When `responseSchemaEnabled` is false, delegates to existing extraction logic
+ * (P4-5 enhanced or legacy markdown-fence strip) with no behavior change.
+ *
+ * Does NOT validate story schema — that remains the caller's responsibility
+ * via validateStory().
+ *
+ * @internal Exported for testing (P4-12b response schema parse path).
+ */
+export function parseGeminiStoryJsonResponse(
+  rawText: string,
+  options: { responseSchemaEnabled: boolean; schemaRepairEnabled: boolean },
+): { parsed: unknown; parsePath: string } {
+  if (options.responseSchemaEnabled) {
+    // P4-12b: Gemini structured output should return clean JSON.
+    // Try direct JSON.parse first.
+    try {
+      const parsed = JSON.parse(rawText.trim());
+      return { parsed, parsePath: "direct_structured_json" };
+    } catch {
+      // Direct parse failed — fall through to extraction fallback.
+    }
+
+    // Defense-in-depth: fall back to extractJsonFromLLMResponse
+    const repairResult = extractJsonFromLLMResponse(rawText);
+    if (repairResult.status !== "unrepairable" && repairResult.parsed !== undefined) {
+      return { parsed: repairResult.parsed, parsePath: `fallback_${repairResult.status}` };
+    }
+
+    throw new Error("Failed to parse LLM JSON response");
+  }
+
+  // responseSchema OFF — preserve existing behavior
+  if (options.schemaRepairEnabled) {
+    // P4-5: Enhanced extraction path
+    const repairResult = extractJsonFromLLMResponse(rawText);
+    if (repairResult.status !== "unrepairable" && repairResult.parsed !== undefined) {
+      return { parsed: repairResult.parsed, parsePath: repairResult.status };
+    }
+    throw new Error("LLM response could not be extracted");
+  }
+
+  // Legacy path: simple markdown fence strip + JSON.parse
+  const parsed = JSON.parse(extractJSON(rawText));
+  return { parsed, parsePath: "legacy_extract_json" };
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -799,18 +852,17 @@ export class GeminiClient implements LLMClient {
 
     let parsed: unknown;
     try {
-      if (isSchemaRepairEnabled()) {
-        // P4-5: Use enhanced extractor that handles markdown fences and outer delimiters.
-        const repairResult = extractJsonFromLLMResponse(result.text);
-        if (repairResult.status !== "unrepairable" && repairResult.parsed !== undefined) {
-          parsed = repairResult.parsed;
-        } else {
-          throw new Error("LLM response could not be extracted");
-        }
-      } else {
-        parsed = JSON.parse(extractJSON(result.text));
-      }
+      const parseResult = parseGeminiStoryJsonResponse(result.text, {
+        responseSchemaEnabled: isResponseSchemaEnabled(),
+        schemaRepairEnabled: isSchemaRepairEnabled(),
+      });
+      parsed = parseResult.parsed;
     } catch {
+      if (isResponseSchemaEnabled()) {
+        // P4-12b: safe error — do not include raw LLM content
+        throw new Error("Failed to parse LLM JSON response");
+      }
+      // Flag OFF: preserve existing error format with truncated raw text
       throw new Error(`Failed to parse LLM JSON response: ${result.text.slice(0, 200)}`);
     }
 
