@@ -78,6 +78,12 @@ function isSchemaRepairEnabled(): boolean {
  * When enabled, Gemini's structured output API enforces the JSON schema at the
  * model output layer. validateStory() remains the runtime source of truth.
  * Default: off. Enable via ENABLE_RESPONSE_SCHEMA=true env var.
+ *
+ * ⚠️ P4-14 DECISION: responseSchema is NOT for production use.
+ * Tested in P4-12 through P4-12g (17 books, ~94% failure rate).
+ * Root cause: Gemini structured output causes output token truncation
+ * regardless of schema size (full 3,322 chars or minimal 714 chars).
+ * Do NOT enable without a new decision record. See docs/P4_RESPONSE_SCHEMA_DECISION.md.
  */
 export function isResponseSchemaEnabled(): boolean {
   return process.env.ENABLE_RESPONSE_SCHEMA === "true";

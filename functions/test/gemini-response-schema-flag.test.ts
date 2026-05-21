@@ -256,3 +256,51 @@ describe("P4-11: source-level feature flag guard", () => {
     expect(source).not.toContain("story-response-schema");
   });
 });
+
+// ---------------------------------------------------------------------------
+// 5. P4-14 decision guards
+// ---------------------------------------------------------------------------
+
+describe("P4-14: responseSchema rollout abandoned — guards", () => {
+  afterEach(() => {
+    delete process.env.ENABLE_RESPONSE_SCHEMA;
+    delete process.env.RESPONSE_SCHEMA_MODE;
+  });
+
+  it("ENABLE_RESPONSE_SCHEMA defaults to OFF (not production)", () => {
+    delete process.env.ENABLE_RESPONSE_SCHEMA;
+    expect(isResponseSchemaEnabled()).toBe(false);
+  });
+
+  it("no production env file sets ENABLE_RESPONSE_SCHEMA", () => {
+    const envContent = fs.readFileSync(
+      path.resolve(__dirname, "../.env.story-gen-8a769"),
+      "utf-8"
+    );
+    expect(envContent).not.toContain("ENABLE_RESPONSE_SCHEMA");
+  });
+
+  it("no production env file sets RESPONSE_SCHEMA_MODE", () => {
+    const envContent = fs.readFileSync(
+      path.resolve(__dirname, "../.env.story-gen-8a769"),
+      "utf-8"
+    );
+    expect(envContent).not.toContain("RESPONSE_SCHEMA_MODE");
+  });
+
+  it("gemini.ts contains P4-14 do-not-enable warning comment", () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, "../src/lib/gemini.ts"),
+      "utf-8"
+    );
+    expect(source).toContain("P4-14 DECISION");
+    expect(source).toContain("NOT for production use");
+  });
+
+  it("P4_RESPONSE_SCHEMA_DECISION.md exists", () => {
+    const exists = fs.existsSync(
+      path.resolve(__dirname, "../../docs/P4_RESPONSE_SCHEMA_DECISION.md")
+    );
+    expect(exists).toBe(true);
+  });
+});

@@ -1112,3 +1112,70 @@ This is the permanent safety net. `responseSchema` is not viable for this use ca
 - `RESPONSE_SCHEMA_MODE` removed from `functions/.env.story-gen-8a769`
 - Functions redeployed ~13:20 JST — all functions updated successfully
 - Production is back to prompt-hardening-only mode (P4-7s)
+
+---
+
+## 17. P4-14: Final Decision — Abandon responseSchema Rollout
+
+**Date**: 2026-05-21
+**Status**: CLOSED — Not viable for production
+**Decision record**: [P4_RESPONSE_SCHEMA_DECISION.md](P4_RESPONSE_SCHEMA_DECISION.md)
+
+### Summary of All Smoke Rounds
+
+| Round | Task | Schema | Size | Books | Pass | Fail | Key Failure |
+|-------|------|--------|------|-------|------|------|-------------|
+| 1 | P4-12 | full | 3,322 | 5 | 0 | 4 | null handling + malformed_json |
+| 2 | P4-12c | full | 3,322 | 5 | 1 | 4 | malformed_json (truncation suspected) |
+| 3 | P4-12e | full | 3,322 | 3 | 0 | 3 | likely_truncated_object (311K–346K) |
+| 4 | P4-12g | minimal | 714 | 3+1 | 0 | 4 | likely_truncated_object (289K–331K) |
+| **Total** | — | — | — | **16+1** | **1** | **15** | **~94% failure rate** |
+
+### Final Decision
+
+**Do NOT roll out `responseSchema` for story generation.**
+
+- responseSchema causes Gemini to produce 289K–346K char structured output regardless of schema size.
+- This exceeds the model's output token limit, causing truncation in ~94% of attempts.
+- Schema size reduction (78.5%) had zero measurable effect on failure rate.
+- The root cause is intrinsic to Gemini's structured output mode for this use case.
+
+### Production Flag State (Final)
+
+| Flag | Value |
+|------|-------|
+| `ENABLE_RESPONSE_SCHEMA` | absent / OFF |
+| `RESPONSE_SCHEMA_MODE` | absent |
+| `ENABLE_SCHEMA_REPAIR_RETRY` | absent / OFF |
+
+### Permanent Safety Stack
+
+| Layer | Mechanism | Status |
+|-------|-----------|--------|
+| Prompt hardening | `STORY_JSON_FIELD_TYPE_CONTRACT` (P4-7) | ✅ Active |
+| JSON mime type | `responseMimeType: "application/json"` | ✅ Active |
+| JSON extraction | `extractJSON()` / `extractJsonFromLLMResponse()` (P4-4) | ✅ Active |
+| Runtime validator | `validateStory()` + `nullToUndefined()` (P4-12a) | ✅ Active |
+| Error taxonomy | `classifyStoryJsonFailure()` (P4-2) | ✅ Active |
+| Safe diagnostics | `storyJsonParseDiagnostics` (P4-12d) | ✅ Active |
+| Repair retry | `ENABLE_SCHEMA_REPAIR_RETRY` (P4-5) | Available (flag OFF) |
+| SLO monitoring | Generation event logging + SLO report | ✅ Active |
+
+### Do-Not-Enable Warning
+
+⚠️ **Do NOT enable `ENABLE_RESPONSE_SCHEMA` in production.** It was conclusively tested across 4 smoke rounds (17 books) and causes ~94% generation failure due to output token truncation. If Gemini releases improved structured output support for large schemas, create a new decision task to reassess with fresh evidence.
+
+### Code Disposition
+
+All responseSchema-related code is preserved as dormant/experimental for auditability:
+- `story-response-schema.ts`: Schema definitions (not wired to production path)
+- `gemini.ts`: Flag helpers and schema mode selector (default OFF)
+- All 287 associated tests: Continue passing and guard against accidental re-enablement
+
+### Lessons Learned
+
+1. Schema size is not the root cause of Gemini structured output truncation for this use case.
+2. Feature flags enabled safe experimentation with 4 smoke rounds and zero user impact.
+3. Safe diagnostics (P4-12d) were essential for root cause identification.
+4. Prompt hardening + runtime validation is a proven, durable strategy.
+5. Structured output may work for simpler schemas — the 1/17 success suggests it is not fundamentally broken, but the failure rate is unacceptable.

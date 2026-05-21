@@ -843,10 +843,47 @@ The remaining legacy scope from P3 (`generateCoverImage()` and `ensureRecurringC
 | **P4-12e** | Diagnostic live smoke with parse diagnostics | Smoke + Docs | ✅ COMPLETE (ROOT CAUSE: output token truncation; 3/3 failures = `likely_truncated_object`, 300-346K chars) |
 | **P4-12f** | Minimal response schema spike | Code + Tests + Docs | ✅ COMPLETE (714 chars = 21.5% of full 3,322 chars; 41 tests; no runtime wiring) |
 | **P4-12g** | Minimal schema mode + live smoke | Code + Tests + Smoke + Docs | ✅ COMPLETE (FAIL — 3/3 likely_truncated_object, 289K–331K chars; minimal schema had zero effect; responseSchema abandoned) |
+| **P4-14** | Abandon responseSchema rollout — decision record | Docs + Guards | ✅ COMPLETE — responseSchema rollout formally abandoned |
 
 ---
 
-## 12. References
+## 12. P4-14: responseSchema Rollout Decision
+
+**Status**: ✅ COMPLETE (2026-05-21)
+**Decision**: Abandon `responseSchema` rollout for story generation.
+**Decision record**: [P4_RESPONSE_SCHEMA_DECISION.md](P4_RESPONSE_SCHEMA_DECISION.md)
+
+### Summary
+
+P4 successfully hardened Gemini story JSON generation through prompt hardening (P4-7), runtime validation improvements (P4-12a), structured error taxonomy (P4-2), and safe diagnostics (P4-12d). The `responseSchema` structured output experiment (P4-8 through P4-12g) was thoroughly tested and abandoned due to inherent output token truncation.
+
+**P4 remains successful** — the permanent safety strategy (prompt hardening + `validateStory()` + parse diagnostics) was the outcome of P4, and it is effective.
+
+### Production Flag State (Final)
+
+| Flag | Value | Status |
+|------|-------|--------|
+| `ENABLE_RESPONSE_SCHEMA` | absent / OFF | ⚠️ Do NOT enable — causes ~94% generation failure |
+| `RESPONSE_SCHEMA_MODE` | absent | No effect unless ENABLE_RESPONSE_SCHEMA=true |
+| `ENABLE_SCHEMA_REPAIR_RETRY` | absent / OFF | Available for future enablement if needed |
+
+### responseSchema Code Disposition
+
+All responseSchema-related code is preserved as dormant/experimental:
+- Schema constants, flag helpers, parse diagnostics — kept for auditability
+- 287 associated tests — continue to pass and guard against accidental re-enablement
+- No runtime path uses responseSchema unless `ENABLE_RESPONSE_SCHEMA=true` is explicitly set
+
+### Recommended Next Steps
+
+1. **P4-15 / P2 follow-up**: Measure `schema_validation` failure rate under the permanent prompt+validator path.
+2. Decide whether `ENABLE_SCHEMA_REPAIR_RETRY` should be selectively enabled for production.
+3. Continue targeted prompt hardening if new `field_type_mismatch` patterns emerge.
+4. Monitor Gemini model updates — reassess `responseSchema` viability only if Gemini announces improved structured output.
+
+---
+
+## 13. References
 
 | Document | Relevance |
 |---|---|
