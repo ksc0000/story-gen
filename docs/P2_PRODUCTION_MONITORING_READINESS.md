@@ -169,6 +169,8 @@ CG-1 fires immediately and sends email to kikushun0529@gmail.com. Investigate an
 
 When the first real production users generate books, follow this checklist in order.
 
+> **Invite kit**: Invitation templates, tester instructions, feedback form spec, and operator pre-send checklist are in `docs/P5_SOFT_LAUNCH_INVITE_KIT.md`. Soft launch cohort plan is in `docs/P5_FIRST_PRODUCTION_TRAFFIC_PLAN.md`.
+
 ### 6.1 Immediate checks (within 1 hour of first books)
 
 - [ ] Open Generation SLO Dashboard:  

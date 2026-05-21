@@ -17,6 +17,8 @@
 
 This task does NOT send invitations, create users, or deploy Firebase. Those steps are out-of-scope until explicitly approved.
 
+**Related**: Invitation templates, tester instructions, feedback form spec, and operator pre-send checklist are defined in `docs/P5_SOFT_LAUNCH_INVITE_KIT.md` (P5-2). That document also contains templates in Japanese. No invitations are sent by P5-2 either — sending is a separate manual step.
+
 ---
 
 ## 2. Current Readiness State
