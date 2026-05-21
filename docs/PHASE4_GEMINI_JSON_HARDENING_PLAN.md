@@ -845,6 +845,7 @@ The remaining legacy scope from P3 (`generateCoverImage()` and `ensureRecurringC
 | **P4-12g** | Minimal schema mode + live smoke | Code + Tests + Smoke + Docs | ✅ COMPLETE (FAIL — 3/3 likely_truncated_object, 289K–331K chars; minimal schema had zero effect; responseSchema abandoned) |
 | **P4-14** | Abandon responseSchema rollout — decision record | Docs + Guards | ✅ COMPLETE — responseSchema rollout formally abandoned |
 | **P4-15** | Permanent story JSON SLO monitoring plan + repair retry decision framework | Docs | ✅ COMPLETE — [P4_PERMANENT_STORY_JSON_SLO_PLAN.md](P4_PERMANENT_STORY_JSON_SLO_PLAN.md) |
+| **P4-16-a/b** | SLO report: `storyJsonFailureCategory` breakdown + `storyDurationMs` percentiles | Script + Tests | ✅ COMPLETE — `scripts/report-generation-slo.mjs`, `scripts/report-generation-slo.test.mjs` |
 
 ---
 
@@ -913,6 +914,8 @@ The next operational step is to collect a 7-day baseline of `storyJsonFailureCat
 | [GENERATION_SLO_THRESHOLD_POLICY.md](GENERATION_SLO_THRESHOLD_POLICY.md) | Early failure rate threshold (≤ 2% healthy, > 10% incident) |
 | [P4_RESPONSE_SCHEMA_DECISION.md](P4_RESPONSE_SCHEMA_DECISION.md) | P4-14 responseSchema abandon decision record |
 | [P4_PERMANENT_STORY_JSON_SLO_PLAN.md](P4_PERMANENT_STORY_JSON_SLO_PLAN.md) | P4-15 SLO targets, alert thresholds, repair retry framework |
+| `scripts/report-generation-slo.mjs` | P4-16-a/b enhanced SLO report script (storyJsonFailureCategory, storyDurationMs, repairRetrySignals) |
+| `scripts/report-generation-slo.test.mjs` | P4-16 vitest test file (55 tests) |
 | `functions/src/generate-book.ts` | `processBookGeneration()`, `generateStoryWithQualityGate()`, `isStorySchemaValidationError()` |
 | `functions/src/lib/prompt-builder.ts` | `buildSystemPrompt()`, `appendQualityRetryInstruction()` |
 | `functions/src/lib/generation-event-logger.ts` | `book_early_failed` event type, `ErrorCategory` |

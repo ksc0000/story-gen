@@ -1,6 +1,7 @@
 # P4-15: Permanent Story JSON SLO Monitoring Plan
 
 **Created**: 2026-05-21
+**Updated**: 2026-05-21 (P4-16: SLO report enhancements completed)
 **Task**: P4-15 — Permanent story JSON SLO monitoring and repair retry decision framework
 **Status**: ACTIVE
 **Branch**: main
@@ -155,7 +156,13 @@ gcloud logging read \
 node scripts/report-generation-slo.mjs --input tmp/generation-events.json
 ```
 
-> The SLO report script (`report-generation-slo.mjs`) aggregates `book_early_failed` events by `errorCategory`. The `storyJsonFailureCategory` sub-classification is logged in Cloud Logging but is not yet broken down in the report output. To get per-category counts, use the Cloud Logging filter for `storyJsonFailureCategory` directly, or implement the enhancement in P4-16 (see §8).
+> The SLO report script (`report-generation-slo.mjs`) aggregates `book_early_failed` events by `errorCategory`. Starting with **P4-16** (2026-05-21), the script also:
+> - Outputs `storyJsonFailures.byStoryJsonFailureCategory` (count, composition share, rate among all books).
+> - Outputs `latency.storyDurationMs` with p50/p95/p99 for all events, `book_outcome` only, and `book_early_failed` only.
+> - Outputs `repairRetrySignals.multipleAttemptsCount` and `storyGenerationAttemptsDistribution`.
+>
+> Use `--format json` or `--format markdown` to get the enhanced output.
+> If exporting raw Cloud Logging data, use the filters in §6.1 for spot-checking per-category counts.
 
 ---
 
@@ -343,13 +350,11 @@ Before the first P4-15 monitoring period, establish a baseline:
    node scripts/report-generation-slo.mjs --input tmp/p4-15-baseline-events.json --format markdown > tmp/p4-15-baseline-report.md
    ```
 
-3. Supplement with Cloud Logging for `storyJsonFailureCategory` breakdown:
-   - Use the filters in §6.1 to count failures per category.
-   - Record: total story starts, schema_validation count, per-category count, `storyDurationMs` distribution.
+   The report now automatically produces `storyJsonFailures.byStoryJsonFailureCategory` (P4-16),
+   `latency.storyDurationMs` percentiles, and `repairRetrySignals`. No separate Cloud Logging
+   queries are needed for the standard metrics.
 
-4. Record the baseline in `docs/P4_PERMANENT_STORY_JSON_SLO_PLAN.md §7.2` (or a separate doc).
-
-5. Compare against the SLO targets in §4.1. If any metric exceeds the alert threshold, follow the triage flow in §6.
+3. For spot-checking or edge-case investigation, use the Cloud Logging filters in §6.1.
 
 ### 7.2 Baseline Record (to be filled)
 
@@ -369,16 +374,14 @@ Before the first P4-15 monitoring period, establish a baseline:
 
 ## 8. Enhancement Backlog (P4-16 / P2 follow-up)
 
-The following improvements are deferred to a later task:
-
-| ID | Enhancement | Value | Effort |
-|----|-------------|-------|--------|
-| **P4-16-a** | Add `storyJsonFailureCategory` breakdown to `report-generation-slo.mjs` output | High — enables rate measurement without raw Cloud Logging queries | Low |
-| **P4-16-b** | Add `storyDurationMs` histogram to SLO report (p50/p95/p99) | High — story latency not yet in the report | Medium |
-| **P4-16-c** | Add `schemaRepairRetryUsed` rate to SLO report | Medium — needed if repair retry is enabled | Low |
-| **P4-16-d** | Cloud Logging saved queries for story JSON triage | Medium — operational convenience | Low |
-| **P4-16-e** | Admin Dashboard panel: schema_validation sub-category trend | Medium — makes triage visible without gcloud | High |
-| **P4-16-f** | Automated alert: 3 consecutive schema_validation → webhook/notification | Low-Medium — proactive alerting | Medium |
+| ID | Enhancement | Value | Effort | Status |
+|----|-------------|-------|--------|--------|
+| **P4-16-a** | Add `storyJsonFailureCategory` breakdown to `report-generation-slo.mjs` output | High | Low | ✅ COMPLETE (2026-05-21) |
+| **P4-16-b** | Add `storyDurationMs` histogram to SLO report (p50/p95/p99) | High | Medium | ✅ COMPLETE (2026-05-21) |
+| **P4-16-c** | Add `schemaRepairRetryUsed` rate to SLO report | Medium | Low | Not started |
+| **P4-16-d** | Cloud Logging saved queries for story JSON triage | Medium | Low | Not started |
+| **P4-16-e** | Admin Dashboard panel: schema_validation sub-category trend | Medium | High | Not started |
+| **P4-16-f** | Automated alert: 3 consecutive schema_validation → webhook/notification | Low-Medium | Medium | Not started |
 
 ---
 

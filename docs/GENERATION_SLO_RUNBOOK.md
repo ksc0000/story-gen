@@ -195,7 +195,29 @@ node scripts/report-generation-slo.mjs --input tmp/last-24h-events.ndjson
 npm run report:generation-slo -- --self-test
 ```
 
-Expected: `Results: 49 passed, 0 failed`
+Expected: `Results: 93 passed, 0 failed`
+
+### 4.6 P4-16 enhanced output sections
+
+As of P4-16, the report includes three additional sections:
+
+- **Story JSON Failure Categories** — `storyJsonFailureCategory` breakdown among `schema_validation` early failures, with per-category share % and all-books rate %.
+- **Story Duration Percentiles** — `storyDurationMs` p50/p95/p99 for all events, book outcomes only, and early-failed only.
+- **Repair Retry Signals** — `storyGenerationAttempts > 1` count and attempts distribution.
+
+Example (7-day baseline run):
+
+```sh
+node scripts/report-generation-slo.mjs --input tmp/p4-15-baseline-events.json --format markdown > tmp/slo-report-p4-16.md
+```
+
+For machine-readable output (CI / scripted alerting):
+
+```sh
+node scripts/report-generation-slo.mjs --input tmp/p4-15-baseline-events.json --format json > tmp/slo-report.json
+```
+
+New JSON fields: `storyJsonFailures`, `repairRetrySignals`, `latency.storyDurationMs`, and `p99` in all latency sections.
 
 ### 4.6 Corporate proxy note
 
@@ -678,6 +700,7 @@ jsonPayload.message = "generation_event" AND jsonPayload.eventName = "book_early
 6. If widespread: check whether a recent Gemini model version change is causing consistent schema drift. Escalate to team.
 
 **P4-15 SLO monitoring plan**: `docs/P4_PERMANENT_STORY_JSON_SLO_PLAN.md`
+**P4-16 enhanced report**: see §4.6 above — `storyJsonFailureCategory` breakdown and `storyDurationMs` percentiles are now output automatically.
 **Phase 4 tracking**: `docs/PHASE4_GEMINI_JSON_HARDENING_PLAN.md`
 
 ---

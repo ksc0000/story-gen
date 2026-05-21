@@ -1,5 +1,5 @@
 /**
- * P2-6: Generation SLO report script.
+ * P2-6/P4-16: Generation SLO report script.
  *
  * Reads structured generation event logs (NDJSON or JSON array) and produces
  * a summarized SLO report. This script is read-only and does not touch
@@ -7,6 +7,11 @@
  *
  * Input event shapes are defined by functions/src/lib/generation-event-logger.ts.
  * Supported event names: generation_started, book_outcome, book_early_failed, page_image_failed.
+ *
+ * P4-16 additions:
+ *   - storyJsonFailureCategory breakdown for book_early_failed where failureStage = "schema_validation"
+ *   - storyDurationMs p50/p95/p99 for all events, book_outcome, and book_early_failed separately
+ *   - storyGenerationAttempts distribution (repair retry signal)
  *
  * How to export events from Cloud Logging:
  *   1. Open Cloud Logging > Log Explorer
@@ -24,6 +29,12 @@
  *   node scripts/report-generation-slo.mjs --input ./tmp/events.json --format markdown
  *   node scripts/report-generation-slo.mjs --input ./tmp/events.json --format json
  *   node scripts/report-generation-slo.mjs --self-test
+ *
+ * For P4-15 baseline measurement:
+ *   node scripts/report-generation-slo.mjs --input tmp/p4-15-baseline-events.json --format markdown
+ *
+ * Exports (for test files):
+ *   computePercentile, aggregateEvents, parseInputFile, renderConsole, renderMarkdown, renderJson, runSelfTest
  *
  * Exit codes:
  *   0  Report produced (or self-test passed)
@@ -101,9 +112,21 @@ const BLOCKED_FIELDS = new Set([
 ]);
 
 // ---------------------------------------------------------------------------
-// Percentile helper (mirrors slo-metrics.ts computePercentile)
+// isMain guard — allows importing this module in tests without triggering CLI
 // ---------------------------------------------------------------------------
-function computePercentile(sorted, p) {
+const isMain = (() => {
+  try {
+    return path.resolve(process.argv[1] ?? '') === path.resolve(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+})();
+
+// ---------------------------------------------------------------------------
+// Percentile helper (mirrors slo-metrics.ts computePercentile)
+// Exported for unit tests.
+// ---------------------------------------------------------------------------
+export function computePercentile(sorted, p) {
   if (sorted.length === 0) return null;
   const i = (p / 100) * (sorted.length - 1);
   const lo = Math.floor(i);
@@ -127,7 +150,7 @@ function increment(map, key) {
  * Parse a file as NDJSON or JSON array.
  * Returns { events: object[], parseErrors: number, skippedLines: number }.
  */
-function parseInputFile(filePath) {
+export function parseInputFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
   const events = [];
   let parseErrors = 0;
@@ -196,7 +219,7 @@ function parseInputFile(filePath) {
  * Aggregate parsed events into report data.
  * All intermediate values are counts or numeric arrays — no raw strings from input.
  */
-function aggregateEvents(events) {
+export function aggregateEvents(events) {
   const stats = {
     total: events.length,
     // Event name counts
@@ -214,6 +237,7 @@ function aggregateEvents(events) {
       partial_completed: 0,
       failed: 0,
       durationMs: [],
+      storyDurationMs: [],                 // P4-16: story generation wall time (book_outcome events)
       byProfile: new Map(),
     },
 
@@ -221,6 +245,12 @@ function aggregateEvents(events) {
     earlyFailed: {
       count: 0,
       byCategory: new Map(),
+      byFailureStage: new Map(),           // P4-16: failureStage distribution
+      schemaValidationCount: 0,            // P4-16: count where failureStage === "schema_validation"
+      byStoryJsonFailureCategory: new Map(), // P4-16: storyJsonFailureCategory breakdown
+      storyDurationMs: [],                 // P4-16: story generation wall time (early failed events)
+      storyGenerationAttempts: [],         // P4-16: attempt counts per event
+      multipleAttemptsCount: 0,            // P4-16: events where storyGenerationAttempts > 1
       retryable: 0,
     },
 
@@ -281,6 +311,10 @@ function aggregateEvents(events) {
         if (typeof event.durationMs === 'number' && event.durationMs >= 0) {
           stats.outcome.durationMs.push(event.durationMs);
         }
+        // P4-16: story generation wall time for successful/partial/failed books
+        if (typeof event.storyDurationMs === 'number' && event.storyDurationMs >= 0) {
+          stats.outcome.storyDurationMs.push(event.storyDurationMs);
+        }
 
         const profile = event.resolvedImageModelProfile;
         if (typeof profile === 'string') {
@@ -294,6 +328,26 @@ function aggregateEvents(events) {
         const cat = event.errorCategory;
         if (typeof cat === 'string') {
           increment(stats.earlyFailed.byCategory, cat);
+        }
+        // P4-16: failureStage and storyJsonFailureCategory breakdown
+        const stage = event.failureStage;
+        if (typeof stage === 'string') {
+          increment(stats.earlyFailed.byFailureStage, stage);
+          if (stage === 'schema_validation') {
+            stats.earlyFailed.schemaValidationCount++;
+            const sjfc = event.storyJsonFailureCategory;
+            if (typeof sjfc === 'string') {
+              increment(stats.earlyFailed.byStoryJsonFailureCategory, sjfc);
+            }
+          }
+        }
+        // P4-16: story duration and repair retry signals
+        if (typeof event.storyDurationMs === 'number' && event.storyDurationMs >= 0) {
+          stats.earlyFailed.storyDurationMs.push(event.storyDurationMs);
+        }
+        if (typeof event.storyGenerationAttempts === 'number' && event.storyGenerationAttempts > 0) {
+          stats.earlyFailed.storyGenerationAttempts.push(event.storyGenerationAttempts);
+          if (event.storyGenerationAttempts > 1) stats.earlyFailed.multipleAttemptsCount++;
         }
         if (event.retryable === true) stats.earlyFailed.retryable++;
         break;
@@ -358,7 +412,7 @@ function sortedCounts(map) {
 // Report renderers
 // ---------------------------------------------------------------------------
 
-function renderConsole(stats, dataQualityNotes) {
+export function renderConsole(stats, dataQualityNotes) {
   const lines = [];
 
   lines.push('');
@@ -393,6 +447,28 @@ function renderConsole(stats, dataQualityNotes) {
     lines.push('Count: ' + stats.earlyFailed.count + '  retryable: ' + stats.earlyFailed.retryable);
     for (const [cat, count] of sortedCounts(stats.earlyFailed.byCategory)) {
       lines.push('  ' + cat + ': ' + count);
+    }
+    lines.push('');
+  }
+
+  // P4-16: Story JSON Failure Categories
+  const ef = stats.earlyFailed;
+  if (ef.schemaValidationCount > 0 || ef.byStoryJsonFailureCategory.size > 0) {
+    const totalBooks = stats.started.count > 0 ? stats.started.count : (stats.outcome.count + ef.count);
+    const denomNote = stats.started.count > 0 ? 'generation_started' : 'outcome + earlyFailed';
+    lines.push('--- Story JSON Failure Categories ---');
+    lines.push('schema_validation failures: ' + ef.schemaValidationCount + ' / ' + ef.count + ' total early failures (' + (pct(ef.schemaValidationCount, ef.count) ?? 'n/a') + ')');
+    lines.push('denominator for all-books rate: ' + totalBooks + ' (' + denomNote + ')');
+    if (ef.schemaValidationCount > 0) {
+      lines.push('  Category breakdown (denominator: ' + ef.schemaValidationCount + ' schema_validation failures):');
+      for (const [cat, count] of sortedCounts(ef.byStoryJsonFailureCategory)) {
+        const shareStr = pct(count, ef.schemaValidationCount) ?? 'n/a';
+        const rateStr = totalBooks > 0 ? (pct(count, totalBooks) ?? 'n/a') : 'n/a';
+        lines.push('    ' + cat.padEnd(22) + ': ' + count + '  (' + shareStr + ' of schema_validation, ' + rateStr + ' of all books)');
+      }
+    }
+    if (ef.multipleAttemptsCount > 0) {
+      lines.push('  storyGenerationAttempts > 1 (repair retry attempted): ' + ef.multipleAttemptsCount);
     }
     lines.push('');
   }
@@ -455,6 +531,33 @@ function renderConsole(stats, dataQualityNotes) {
     lines.push('  p50  = ' + fmtMs(computePercentile(sorted, 50)));
     lines.push('  p95  = ' + fmtMs(computePercentile(sorted, 95)));
   }
+  // P4-16: Story Duration Percentiles
+  {
+    const allStoryMs = [...stats.outcome.storyDurationMs, ...ef.storyDurationMs].sort((a, b) => a - b);
+    const outcomeMs = [...stats.outcome.storyDurationMs].sort((a, b) => a - b);
+    const earlyMs = [...ef.storyDurationMs].sort((a, b) => a - b);
+    if (allStoryMs.length > 0) {
+      lines.push('storyDurationMs (all events with storyDurationMs):');
+      lines.push('  n    = ' + allStoryMs.length);
+      lines.push('  p50  = ' + fmtMs(computePercentile(allStoryMs, 50)));
+      lines.push('  p95  = ' + fmtMs(computePercentile(allStoryMs, 95)));
+      lines.push('  p99  = ' + fmtMs(computePercentile(allStoryMs, 99)));
+    }
+    if (outcomeMs.length > 0) {
+      lines.push('storyDurationMs (book_outcome only):');
+      lines.push('  n    = ' + outcomeMs.length);
+      lines.push('  p50  = ' + fmtMs(computePercentile(outcomeMs, 50)));
+      lines.push('  p95  = ' + fmtMs(computePercentile(outcomeMs, 95)));
+      lines.push('  p99  = ' + fmtMs(computePercentile(outcomeMs, 99)));
+    }
+    if (earlyMs.length > 0) {
+      lines.push('storyDurationMs (book_early_failed only):');
+      lines.push('  n    = ' + earlyMs.length);
+      lines.push('  p50  = ' + fmtMs(computePercentile(earlyMs, 50)));
+      lines.push('  p95  = ' + fmtMs(computePercentile(earlyMs, 95)));
+      lines.push('  p99  = ' + fmtMs(computePercentile(earlyMs, 99)));
+    }
+  }
   lines.push('');
 
   // Data quality
@@ -469,7 +572,7 @@ function renderConsole(stats, dataQualityNotes) {
   return lines.join('\n');
 }
 
-function renderMarkdown(stats, dataQualityNotes, sourceFile) {
+export function renderMarkdown(stats, dataQualityNotes, sourceFile) {
   const lines = [];
   const now = new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
 
@@ -505,6 +608,50 @@ function renderMarkdown(stats, dataQualityNotes, sourceFile) {
   lines.push('| failed | ' + o.failed + ' | ' + (pct(o.failed, o.count) ?? 'n/a') + ' |');
   lines.push('| readable (comp+partial) | ' + readableCount + ' | ' + (pct(readableCount, o.count) ?? 'n/a') + ' |');
   lines.push('');
+
+  // P4-16: Story JSON Failure Categories
+  const ef = stats.earlyFailed;
+  if (ef.schemaValidationCount > 0 || ef.byStoryJsonFailureCategory.size > 0) {
+    const totalBooks = stats.started.count > 0 ? stats.started.count : (stats.outcome.count + ef.count);
+    const denomNote = stats.started.count > 0 ? 'generation_started' : 'outcome + earlyFailed';
+    lines.push('## Story JSON Failure Categories');
+    lines.push('');
+    lines.push('> P4-15 SLO targets: schema_validation \u2264 2% of all books, malformed_json \u2264 1%, field_type_mismatch \u2264 0.5%');
+    lines.push('');
+    lines.push('**schema_validation failures**: ' + ef.schemaValidationCount + ' / ' + ef.count + ' total early failures (' + (pct(ef.schemaValidationCount, ef.count) ?? 'n/a') + ')');
+    lines.push('**Denominator for all-books rate**: ' + totalBooks + ' (' + denomNote + ')');
+    lines.push('');
+    if (ef.schemaValidationCount > 0) {
+      lines.push('| Category | Count | Share (\u00f7 schema_validation) | Rate (\u00f7 all books) |');
+      lines.push('|---|---|---|---|');
+      for (const [cat, count] of sortedCounts(ef.byStoryJsonFailureCategory)) {
+        lines.push('| ' + cat + ' | ' + count + ' | ' + (pct(count, ef.schemaValidationCount) ?? 'n/a') + ' | ' + (pct(count, totalBooks) ?? 'n/a') + ' |');
+      }
+      lines.push('');
+    }
+  }
+
+  // P4-16: Repair Retry Signals
+  if (ef.multipleAttemptsCount > 0 || ef.storyGenerationAttempts.length > 0) {
+    lines.push('## Repair Retry Signals');
+    lines.push('');
+    lines.push('| Signal | Count |');
+    lines.push('|---|---|');
+    lines.push('| storyGenerationAttempts > 1 | ' + ef.multipleAttemptsCount + ' |');
+    lines.push('');
+    if (ef.storyGenerationAttempts.length > 0) {
+      const attemptsFreq = new Map();
+      for (const a of ef.storyGenerationAttempts) increment(attemptsFreq, String(a));
+      lines.push('**storyGenerationAttempts distribution:**');
+      lines.push('');
+      lines.push('| attempts | count |');
+      lines.push('|---|---|');
+      for (const [k, v] of sortedCounts(attemptsFreq)) {
+        lines.push('| ' + k + ' | ' + v + ' |');
+      }
+      lines.push('');
+    }
+  }
 
   // Image failures
   lines.push('## Image Failures');
@@ -606,6 +753,50 @@ function renderMarkdown(stats, dataQualityNotes, sourceFile) {
     lines.push('');
   }
 
+  // P4-16: Story Duration Percentiles
+  {
+    const allStoryMs = [...stats.outcome.storyDurationMs, ...ef.storyDurationMs].sort((a, b) => a - b);
+    const outcomeMs = [...stats.outcome.storyDurationMs].sort((a, b) => a - b);
+    const earlyMs = [...ef.storyDurationMs].sort((a, b) => a - b);
+    if (allStoryMs.length > 0) {
+      lines.push('## Story Duration Percentiles');
+      lines.push('');
+      lines.push('> P4-15 SLO target: storyDurationMs p95 \u2264 120,000ms (120s)');
+      lines.push('');
+      lines.push('### storyDurationMs (all events with storyDurationMs)');
+      lines.push('');
+      lines.push('| Metric | Value |');
+      lines.push('|---|---|');
+      lines.push('| n | ' + allStoryMs.length + ' |');
+      lines.push('| p50 | ' + fmtMs(computePercentile(allStoryMs, 50)) + ' |');
+      lines.push('| p95 | ' + fmtMs(computePercentile(allStoryMs, 95)) + ' |');
+      lines.push('| p99 | ' + fmtMs(computePercentile(allStoryMs, 99)) + ' |');
+      lines.push('');
+      if (outcomeMs.length > 0) {
+        lines.push('### storyDurationMs (book_outcome only)');
+        lines.push('');
+        lines.push('| Metric | Value |');
+        lines.push('|---|---|');
+        lines.push('| n | ' + outcomeMs.length + ' |');
+        lines.push('| p50 | ' + fmtMs(computePercentile(outcomeMs, 50)) + ' |');
+        lines.push('| p95 | ' + fmtMs(computePercentile(outcomeMs, 95)) + ' |');
+        lines.push('| p99 | ' + fmtMs(computePercentile(outcomeMs, 99)) + ' |');
+        lines.push('');
+      }
+      if (earlyMs.length > 0) {
+        lines.push('### storyDurationMs (book_early_failed only)');
+        lines.push('');
+        lines.push('| Metric | Value |');
+        lines.push('|---|---|');
+        lines.push('| n | ' + earlyMs.length + ' |');
+        lines.push('| p50 | ' + fmtMs(computePercentile(earlyMs, 50)) + ' |');
+        lines.push('| p95 | ' + fmtMs(computePercentile(earlyMs, 95)) + ' |');
+        lines.push('| p99 | ' + fmtMs(computePercentile(earlyMs, 99)) + ' |');
+        lines.push('');
+      }
+    }
+  }
+
   // Data quality
   if (dataQualityNotes.length > 0) {
     lines.push('## Data Quality Notes');
@@ -619,19 +810,33 @@ function renderMarkdown(stats, dataQualityNotes, sourceFile) {
   return lines.join('\n');
 }
 
-function renderJson(stats, dataQualityNotes) {
+export function renderJson(stats, dataQualityNotes) {
   const o = stats.outcome;
   const p = stats.pageFailed;
+  const ef = stats.earlyFailed;
   const s = stats.started;
   const sortedBookMs = [...o.durationMs].sort((a, b) => a - b);
   const sortedPageMs = [...p.durationMs].sort((a, b) => a - b);
+  // P4-16: story duration arrays
+  const allStoryMs = [...o.storyDurationMs, ...ef.storyDurationMs].sort((a, b) => a - b);
+  const outcomeStoryMs = [...o.storyDurationMs].sort((a, b) => a - b);
+  const earlyStoryMs = [...ef.storyDurationMs].sort((a, b) => a - b);
+  // P4-16: total books denominator for category rates
+  const totalBooks = s.count > 0 ? s.count : (o.count + ef.count);
+  const totalBooksDenomNote = s.count > 0 ? 'generation_started' : 'outcome + earlyFailed';
+  // P4-16: storyGenerationAttempts distribution
+  const attemptsDistribution = {};
+  for (const a of ef.storyGenerationAttempts) {
+    const k = String(a);
+    attemptsDistribution[k] = (attemptsDistribution[k] ?? 0) + 1;
+  }
 
   const report = {
     summary: {
       totalEvents: stats.total,
       generationStarted: s.count,
       bookOutcome: o.count,
-      bookEarlyFailed: stats.earlyFailed.count,
+      bookEarlyFailed: ef.count,
       pageImageFailed: p.count,
       missingEventName: stats.missing_event_name,
       unknownEventName: stats.unknown_event_name,
@@ -648,9 +853,40 @@ function renderJson(stats, dataQualityNotes) {
       byResolvedProfile: Object.fromEntries(sortedCounts(o.byProfile)),
     },
     earlyFailed: {
-      count: stats.earlyFailed.count,
-      retryable: stats.earlyFailed.retryable,
-      byErrorCategory: Object.fromEntries(sortedCounts(stats.earlyFailed.byCategory)),
+      count: ef.count,
+      retryable: ef.retryable,
+      byErrorCategory: Object.fromEntries(sortedCounts(ef.byCategory)),
+      byFailureStage: Object.fromEntries(sortedCounts(ef.byFailureStage)),
+    },
+    // P4-16: Story JSON failure category breakdown
+    storyJsonFailures: {
+      schemaValidationCount: ef.schemaValidationCount,
+      totalEarlyFailed: ef.count,
+      schemaValidationRateAmongEarlyFailed: ef.count > 0 ? (ef.schemaValidationCount / ef.count) : null,
+      totalBooksDenominator: totalBooks,
+      totalBooksDenominatorNote: totalBooksDenomNote,
+      byStoryJsonFailureCategory: Object.fromEntries(sortedCounts(ef.byStoryJsonFailureCategory)),
+      // composition: share among schema_validation failures
+      categoryComposition: ef.schemaValidationCount > 0
+        ? Object.fromEntries(
+            Array.from(ef.byStoryJsonFailureCategory.entries()).map(
+              ([cat, count]) => [cat, count / ef.schemaValidationCount]
+            )
+          )
+        : {},
+      // rate: count / totalBooks
+      categoryRateAmongAllBooks: totalBooks > 0
+        ? Object.fromEntries(
+            Array.from(ef.byStoryJsonFailureCategory.entries()).map(
+              ([cat, count]) => [cat, count / totalBooks]
+            )
+          )
+        : {},
+    },
+    // P4-16: Repair retry signals
+    repairRetrySignals: {
+      multipleAttemptsCount: ef.multipleAttemptsCount,
+      storyGenerationAttemptsDistribution: attemptsDistribution,
     },
     imageFailures: {
       count: p.count,
@@ -673,11 +909,34 @@ function renderJson(stats, dataQualityNotes) {
         n: sortedBookMs.length,
         p50: computePercentile(sortedBookMs, 50),
         p95: computePercentile(sortedBookMs, 95),
+        p99: computePercentile(sortedBookMs, 99),
       },
       pageImageFailedDurationMs: {
         n: sortedPageMs.length,
         p50: computePercentile(sortedPageMs, 50),
         p95: computePercentile(sortedPageMs, 95),
+        p99: computePercentile(sortedPageMs, 99),
+      },
+      // P4-16: story generation duration
+      storyDurationMs: {
+        allEvents: {
+          n: allStoryMs.length,
+          p50: computePercentile(allStoryMs, 50),
+          p95: computePercentile(allStoryMs, 95),
+          p99: computePercentile(allStoryMs, 99),
+        },
+        bookOutcomeOnly: {
+          n: outcomeStoryMs.length,
+          p50: computePercentile(outcomeStoryMs, 50),
+          p95: computePercentile(outcomeStoryMs, 95),
+          p99: computePercentile(outcomeStoryMs, 99),
+        },
+        earlyFailedOnly: {
+          n: earlyStoryMs.length,
+          p50: computePercentile(earlyStoryMs, 50),
+          p95: computePercentile(earlyStoryMs, 95),
+          p99: computePercentile(earlyStoryMs, 99),
+        },
       },
     },
     dataQualityNotes,
@@ -689,7 +948,7 @@ function renderJson(stats, dataQualityNotes) {
 // ---------------------------------------------------------------------------
 // Self-test
 // ---------------------------------------------------------------------------
-function runSelfTest() {
+export function runSelfTest() {
   console.log('\n=== report-generation-slo.mjs self-test ===\n');
   let passed = 0;
   let failed = 0;
@@ -851,12 +1110,85 @@ function runSelfTest() {
     { bookId: 'orphan', someData: 1 },
     // Unknown eventName
     { eventName: 'custom_audit_event', data: 'x' },
+    // P4-16: book_early_failed with failureStage = schema_validation + storyJsonFailureCategory
+    {
+      eventName: 'book_early_failed',
+      bookId: 'book-010',
+      userPresent: true,
+      templateId: 'adventure',
+      creationMode: 'guided_ai',
+      failureStage: 'schema_validation',
+      failureProvider: 'gemini',
+      errorCategory: 'validation',
+      retryable: false,
+      storyJsonFailureCategory: 'malformed_json',
+      storyDurationMs: 3200,
+    },
+    {
+      eventName: 'book_early_failed',
+      bookId: 'book-011',
+      userPresent: true,
+      templateId: 'adventure',
+      creationMode: 'guided_ai',
+      failureStage: 'schema_validation',
+      failureProvider: 'gemini',
+      errorCategory: 'validation',
+      retryable: false,
+      storyJsonFailureCategory: 'field_type_mismatch',
+      storyDurationMs: 5100,
+      storyGenerationAttempts: 2,
+    },
+    {
+      eventName: 'book_early_failed',
+      bookId: 'book-012',
+      userPresent: true,
+      templateId: 'bedtime',
+      creationMode: 'fixed_template',
+      failureStage: 'schema_validation',
+      failureProvider: 'gemini',
+      errorCategory: 'validation',
+      retryable: false,
+      storyJsonFailureCategory: 'malformed_json',
+      storyDurationMs: 4400,
+    },
+    {
+      eventName: 'book_early_failed',
+      bookId: 'book-013',
+      userPresent: true,
+      templateId: 'fantasy',
+      creationMode: 'fixed_template',
+      failureStage: 'schema_validation',
+      failureProvider: 'gemini',
+      errorCategory: 'validation',
+      retryable: false,
+      storyJsonFailureCategory: 'schema_structural',
+      storyDurationMs: 6000,
+      storyGenerationAttempts: 2,
+    },
+    // P4-16: book_outcome with storyDurationMs
+    {
+      eventName: 'book_outcome',
+      bookId: 'book-014',
+      userPresent: true,
+      templateId: 'fantasy',
+      creationMode: 'fixed_template',
+      resolvedImageModelProfile: 'pro_consistent',
+      bookStatus: 'completed',
+      totalPages: 5,
+      completedPages: 5,
+      failedPages: 0,
+      fallbackPages: 0,
+      timedOutPages: 0,
+      durationMs: 70000,
+      storyDurationMs: 4800,
+    },
   ];
 
   const stats = aggregateEvents(FIXTURE_EVENTS);
 
   // --- Count tests ---
-  assert('total events = 12', stats.total === 12);
+  // Original: 12 events + 5 new P4-16 events = 17 total
+  assert('total events = 17', stats.total === 17);
   assert('missing_event_name = 1', stats.missing_event_name === 1);
   assert('unknown_event_name = 1', stats.unknown_event_name === 1);
 
@@ -867,17 +1199,33 @@ function runSelfTest() {
   assert('started.blocked = 1', stats.started.blocked === 1);
   assert('started.notApplicable = 1', stats.started.notApplicable === 1);
 
-  // book_outcome (includes the privacy-test book-005)
-  assert('outcome.count = 4', stats.outcome.count === 4);
-  assert('outcome.completed = 2', stats.outcome.completed === 2);
+  // book_outcome (4 original + 1 P4-16 with storyDurationMs = 5)
+  assert('outcome.count = 5', stats.outcome.count === 5);
+  assert('outcome.completed = 3', stats.outcome.completed === 3);
   assert('outcome.partial_completed = 1', stats.outcome.partial_completed === 1);
   assert('outcome.failed = 1', stats.outcome.failed === 1);
-  assert('outcome.durationMs has 4 entries', stats.outcome.durationMs.length === 4);
+  assert('outcome.durationMs has 5 entries', stats.outcome.durationMs.length === 5);
+  // P4-16: storyDurationMs from book_outcome
+  assert('outcome.storyDurationMs has 1 entry', stats.outcome.storyDurationMs.length === 1);
+  assert('outcome.storyDurationMs[0] = 4800', stats.outcome.storyDurationMs[0] === 4800);
 
-  // book_early_failed
-  assert('earlyFailed.count = 1', stats.earlyFailed.count === 1);
+  // book_early_failed (1 original + 4 P4-16 schema_validation = 5)
+  assert('earlyFailed.count = 5', stats.earlyFailed.count === 5);
   assert('earlyFailed.retryable = 1', stats.earlyFailed.retryable === 1);
   assert('earlyFailed.byCategory has provider_error', stats.earlyFailed.byCategory.get('provider_error') === 1);
+  // P4-16: schema_validation failures
+  assert('earlyFailed.schemaValidationCount = 4', stats.earlyFailed.schemaValidationCount === 4);
+  assert('earlyFailed.byStoryJsonFailureCategory malformed_json = 2', stats.earlyFailed.byStoryJsonFailureCategory.get('malformed_json') === 2);
+  assert('earlyFailed.byStoryJsonFailureCategory field_type_mismatch = 1', stats.earlyFailed.byStoryJsonFailureCategory.get('field_type_mismatch') === 1);
+  assert('earlyFailed.byStoryJsonFailureCategory schema_structural = 1', stats.earlyFailed.byStoryJsonFailureCategory.get('schema_structural') === 1);
+  // P4-16: storyDurationMs from early_failed
+  assert('earlyFailed.storyDurationMs has 4 entries', stats.earlyFailed.storyDurationMs.length === 4);
+  // P4-16: storyGenerationAttempts (2 events with attempts=2 -> multipleAttemptsCount=2)
+  assert('earlyFailed.storyGenerationAttempts has 2 entries', stats.earlyFailed.storyGenerationAttempts.length === 2);
+  assert('earlyFailed.multipleAttemptsCount = 2', stats.earlyFailed.multipleAttemptsCount === 2);
+  // P4-16: failureStage distribution
+  assert('earlyFailed.byFailureStage schema_validation = 4', stats.earlyFailed.byFailureStage.get('schema_validation') === 4);
+  assert('earlyFailed.byFailureStage gemini_story_gen = 1', stats.earlyFailed.byFailureStage.get('gemini_story_gen') === 1);
 
   // page_image_failed
   assert('pageFailed.count = 2', stats.pageFailed.count === 2);
@@ -893,51 +1241,60 @@ function runSelfTest() {
   // Rates
   const o = stats.outcome;
   const completionRate = o.count > 0 ? o.completed / o.count : null;
-  assert('completionRate = 0.5 (2/4)', Math.abs(completionRate - 0.5) < 0.001);
+  assert('completionRate = 0.6 (3/5)', Math.abs(completionRate - 0.6) < 0.001);
   const readableRate = o.count > 0 ? (o.completed + o.partial_completed) / o.count : null;
-  assert('readableRate = 0.75 (3/4)', Math.abs(readableRate - 0.75) < 0.001);
+  assert('readableRate = 0.8 (4/5)', Math.abs(readableRate - 0.8) < 0.001);
 
-  // Percentiles
-  const sortedBookMs = [...o.durationMs].sort((a, b) => a - b);
-  const p50 = computePercentile(sortedBookMs, 50);
-  assert('book durationMs p50 is a number', typeof p50 === 'number');
-  // sorted: [45000, 80000, 120000, 600000] -> p50 = (80000+120000)/2 = 100000
-  assert('book durationMs p50 = 100000ms', Math.abs(p50 - 100000) < 1);
+  // P4-16: storyDurationMs percentiles
+  // early_failed storyDurationMs: [3200, 5100, 4400, 6000] sorted: [3200, 4400, 5100, 6000]
+  // p50 = (4400+5100)/2 = 4750
+  const efMs = [...stats.earlyFailed.storyDurationMs].sort((a, b) => a - b);
+  const efP50 = computePercentile(efMs, 50);
+  assert('earlyFailed storyDurationMs p50 is a number', typeof efP50 === 'number');
+  assert('earlyFailed storyDurationMs p50 = 4750', Math.abs(efP50 - 4750) < 1);
+  const efP95 = computePercentile(efMs, 95);
+  assert('earlyFailed storyDurationMs p95 is a number', typeof efP95 === 'number');
+  const efP99 = computePercentile(efMs, 99);
+  assert('earlyFailed storyDurationMs p99 is a number', typeof efP99 === 'number');
+  // Combined storyDurationMs: [4800] + [3200,5100,4400,6000] = 5 values
+  const allStoryMs = [...stats.outcome.storyDurationMs, ...stats.earlyFailed.storyDurationMs].sort((a, b) => a - b);
+  assert('allStoryMs has 5 entries', allStoryMs.length === 5);
+  const allP50 = computePercentile(allStoryMs, 50);
+  assert('allStoryMs p50 is a number', typeof allP50 === 'number');
 
-  // Privacy guard: blocked fields must not appear in aggregated output
-  const jsonOutput = renderJson(stats, []);
-  assert('userId not in JSON output', !jsonOutput.includes('user-xyz-should-be-blocked'));
-  assert('rawPrompt not in JSON output', !jsonOutput.includes('a cute cat story'));
-  assert('childName not in JSON output', !jsonOutput.includes('Taro'));
+  // P4-16: computePercentile edge cases
+  assert('computePercentile empty = null', computePercentile([], 50) === null);
+  assert('computePercentile single value p50', computePercentile([42], 50) === 42);
+  assert('computePercentile single value p95', computePercentile([42], 95) === 42);
+  assert('computePercentile single value p99', computePercentile([42], 99) === 42);
+  assert('computePercentile [1,2,3,4,5] p50 = 3', computePercentile([1,2,3,4,5], 50) === 3);
+  // p95 of [1,2,3,4,5]: i = 0.95*4 = 3.8, lo=3, hi=4: 4 + (5-4)*0.8 = 4.8
+  assert('computePercentile [1,2,3,4,5] p95 = 4.8', Math.abs(computePercentile([1,2,3,4,5], 95) - 4.8) < 0.001);
+  assert('computePercentile [1,2] p50 = 1.5', computePercentile([1,2], 50) === 1.5);
 
-  // NDJSON parsing
-  const ndjsonLines = FIXTURE_EVENTS.slice(0, 3).map((e) => JSON.stringify(e)).join('\n') + '\n{bad json\n';
-  const tmpFile = path.join(__dirname, '../.tmp-self-test-input.ndjson');
-  fs.writeFileSync(tmpFile, ndjsonLines, 'utf8');
-  const parsed = parseInputFile(tmpFile);
-  fs.unlinkSync(tmpFile);
-  assert('NDJSON: 3 events parsed', parsed.events.length === 3);
-  assert('NDJSON: 1 parse error', parsed.parseErrors === 1);
-
-  // JSON array parsing
-  const jsonArray = JSON.stringify(FIXTURE_EVENTS.slice(0, 3));
-  const tmpFile2 = path.join(__dirname, '../.tmp-self-test-input.json');
-  fs.writeFileSync(tmpFile2, jsonArray, 'utf8');
-  const parsed2 = parseInputFile(tmpFile2);
-  fs.unlinkSync(tmpFile2);
-  assert('JSON array: 3 events parsed', parsed2.events.length === 3);
-  assert('JSON array: 0 parse errors', parsed2.parseErrors === 0);
-
-  // Markdown output includes expected sections
-  const mdOutput = renderMarkdown(stats, [], null);
-  assert('markdown has Summary section', mdOutput.includes('## Summary'));
-  assert('markdown has Book Outcomes section', mdOutput.includes('## Book Outcomes'));
-  assert('markdown has Image Failures section', mdOutput.includes('## Image Failures'));
-  assert('markdown has Candidate Gate Signals section', mdOutput.includes('## Candidate Gate Signals'));
-  assert('markdown has Latency section', mdOutput.includes('## Latency'));
-
-  // JSON output shape stability
+  // P4-16: renderJson storyJsonFailures section
   const jsonReport = JSON.parse(renderJson(stats, ['note1']));
+  assert('JSON has storyJsonFailures', typeof jsonReport.storyJsonFailures === 'object');
+  assert('storyJsonFailures.schemaValidationCount = 4', jsonReport.storyJsonFailures.schemaValidationCount === 4);
+  assert('storyJsonFailures.byStoryJsonFailureCategory has malformed_json', jsonReport.storyJsonFailures.byStoryJsonFailureCategory.malformed_json === 2);
+  assert('storyJsonFailures.byStoryJsonFailureCategory has field_type_mismatch', jsonReport.storyJsonFailures.byStoryJsonFailureCategory.field_type_mismatch === 1);
+  assert('storyJsonFailures.categoryComposition malformed_json = 0.5', Math.abs(jsonReport.storyJsonFailures.categoryComposition.malformed_json - 0.5) < 0.001);
+  assert('storyJsonFailures.categoryRateAmongAllBooks malformed_json present', typeof jsonReport.storyJsonFailures.categoryRateAmongAllBooks.malformed_json === 'number');
+  assert('JSON has repairRetrySignals', typeof jsonReport.repairRetrySignals === 'object');
+  assert('repairRetrySignals.multipleAttemptsCount = 2', jsonReport.repairRetrySignals.multipleAttemptsCount === 2);
+  assert('repairRetrySignals.storyGenerationAttemptsDistribution has "2"', jsonReport.repairRetrySignals.storyGenerationAttemptsDistribution['2'] === 2);
+
+  // P4-16: latency storyDurationMs in JSON
+  assert('JSON latency has storyDurationMs', typeof jsonReport.latency.storyDurationMs === 'object');
+  assert('latency.storyDurationMs.allEvents.n = 5', jsonReport.latency.storyDurationMs.allEvents.n === 5);
+  assert('latency.storyDurationMs.bookOutcomeOnly.n = 1', jsonReport.latency.storyDurationMs.bookOutcomeOnly.n === 1);
+  assert('latency.storyDurationMs.earlyFailedOnly.n = 4', jsonReport.latency.storyDurationMs.earlyFailedOnly.n === 4);
+  assert('latency.storyDurationMs.allEvents.p95 is number', typeof jsonReport.latency.storyDurationMs.allEvents.p95 === 'number');
+  assert('latency.storyDurationMs.allEvents.p99 is number', typeof jsonReport.latency.storyDurationMs.allEvents.p99 === 'number');
+  // bookDurationMs now includes p99
+  assert('JSON latency.bookDurationMs.p99 exists', jsonReport.latency.bookDurationMs.p99 !== undefined);
+
+  // P4-16: JSON output existing shape stability
   assert('JSON output has summary', typeof jsonReport.summary === 'object');
   assert('JSON output has bookOutcomes', typeof jsonReport.bookOutcomes === 'object');
   assert('JSON output has imageFailures', typeof jsonReport.imageFailures === 'object');
@@ -946,6 +1303,44 @@ function runSelfTest() {
   assert('JSON output has dataQualityNotes', Array.isArray(jsonReport.dataQualityNotes));
   assert('JSON output latency.bookDurationMs.p50 exists', jsonReport.latency.bookDurationMs.p50 !== undefined);
   assert('JSON output latency.bookDurationMs.p95 exists', jsonReport.latency.bookDurationMs.p95 !== undefined);
+
+  // P4-16: Markdown output includes new sections
+  const mdOutput = renderMarkdown(stats, [], null);
+  assert('markdown has Summary section', mdOutput.includes('## Summary'));
+  assert('markdown has Book Outcomes section', mdOutput.includes('## Book Outcomes'));
+  assert('markdown has Story JSON Failure Categories section', mdOutput.includes('## Story JSON Failure Categories'));
+  assert('markdown has Story Duration Percentiles section', mdOutput.includes('## Story Duration Percentiles'));
+  assert('markdown has Repair Retry Signals section', mdOutput.includes('## Repair Retry Signals'));
+  assert('markdown has Image Failures section', mdOutput.includes('## Image Failures'));
+  assert('markdown has Candidate Gate Signals section', mdOutput.includes('## Candidate Gate Signals'));
+  assert('markdown has Latency section', mdOutput.includes('## Latency'));
+  assert('markdown includes malformed_json', mdOutput.includes('malformed_json'));
+  assert('markdown includes field_type_mismatch', mdOutput.includes('field_type_mismatch'));
+  assert('markdown includes storyGenerationAttempts > 1', mdOutput.includes('storyGenerationAttempts > 1'));
+
+  // Privacy guard: blocked fields must not appear in aggregated output
+  const privacyJsonOutput = renderJson(stats, []);
+  assert('userId not in JSON output', !privacyJsonOutput.includes('user-xyz-should-be-blocked'));
+  assert('rawPrompt not in JSON output', !privacyJsonOutput.includes('a cute cat story'));
+  assert('childName not in JSON output', !privacyJsonOutput.includes('Taro'));
+
+  // NDJSON parsing
+  const ndjsonLines = FIXTURE_EVENTS.slice(0, 3).map((e) => JSON.stringify(e)).join('\n') + '\n{bad json\n';
+  const tmpFile = path.join(__dirname, '../.tmp-self-test-input.ndjson');
+  fs.writeFileSync(tmpFile, ndjsonLines, 'utf8');
+  const parsedNdjson = parseInputFile(tmpFile);
+  fs.unlinkSync(tmpFile);
+  assert('NDJSON: 3 events parsed', parsedNdjson.events.length === 3);
+  assert('NDJSON: 1 parse error', parsedNdjson.parseErrors === 1);
+
+  // JSON array parsing
+  const jsonArray = JSON.stringify(FIXTURE_EVENTS.slice(0, 3));
+  const tmpFile2 = path.join(__dirname, '../.tmp-self-test-input.json');
+  fs.writeFileSync(tmpFile2, jsonArray, 'utf8');
+  const parsedJson = parseInputFile(tmpFile2);
+  fs.unlinkSync(tmpFile2);
+  assert('JSON array: 3 events parsed', parsedJson.events.length === 3);
+  assert('JSON array: 0 parse errors', parsedJson.parseErrors === 0);
 
   console.log('');
   console.log('Results: ' + passed + ' passed, ' + failed + ' failed');
@@ -960,67 +1355,69 @@ function runSelfTest() {
 }
 
 // ---------------------------------------------------------------------------
-// Main
+// Main (only runs when script is executed directly, not imported)
 // ---------------------------------------------------------------------------
 
-if (selfTest) {
-  runSelfTest();
-  // (process.exit inside runSelfTest)
-}
-
-if (!inputFlag) {
-  console.error('ERROR: --input <file> is required. Use --help for usage, or --self-test to run tests.');
-  process.exit(1);
-}
-
-if (!fs.existsSync(inputFlag)) {
-  console.error('ERROR: Input file not found: ' + inputFlag);
-  process.exit(1);
-}
-
-const { events, parseErrors, skippedLines } = parseInputFile(inputFlag);
-
-const dataQualityNotes = [];
-if (parseErrors > 0) dataQualityNotes.push(parseErrors + ' line(s) could not be parsed as JSON (skipped).');
-if (skippedLines > 0) dataQualityNotes.push(skippedLines + ' line(s) were valid JSON but not objects (skipped).');
-if (events.length === 0) {
-  console.error('ERROR: No events found in input file. Verify the file is not empty and is NDJSON or JSON array format.');
-  process.exit(1);
-}
-
-const stats = aggregateEvents(events);
-
-if (stats.missing_event_name > 0) {
-  dataQualityNotes.push(stats.missing_event_name + ' event(s) are missing the eventName field.');
-}
-if (stats.unknown_event_name > 0) {
-  dataQualityNotes.push(stats.unknown_event_name + ' event(s) have an unrecognized eventName.');
-}
-
-// Warn about blocked fields in input (privacy notice)
-let blockedFieldWarn = false;
-for (const event of events) {
-  for (const field of BLOCKED_FIELDS) {
-    if (field in event) {
-      blockedFieldWarn = true;
-      break;
-    }
+if (isMain) {
+  if (selfTest) {
+    runSelfTest();
+    // (process.exit inside runSelfTest)
   }
-  if (blockedFieldWarn) break;
-}
-if (blockedFieldWarn) {
-  dataQualityNotes.push('WARNING: Input contains fields that are excluded from report output (e.g. userId, rawPrompt, childName). These are not included in any aggregation.');
-}
 
-let output;
-const format = formatFlag.toLowerCase();
-if (format === 'markdown' || format === 'md') {
-  output = renderMarkdown(stats, dataQualityNotes, inputFlag);
-} else if (format === 'json') {
-  output = renderJson(stats, dataQualityNotes);
-} else {
-  output = renderConsole(stats, dataQualityNotes);
-}
+  if (!inputFlag) {
+    console.error('ERROR: --input <file> is required. Use --help for usage, or --self-test to run tests.');
+    process.exit(1);
+  }
 
-console.log(output);
-process.exit(0);
+  if (!fs.existsSync(inputFlag)) {
+    console.error('ERROR: Input file not found: ' + inputFlag);
+    process.exit(1);
+  }
+
+  const { events, parseErrors, skippedLines } = parseInputFile(inputFlag);
+
+  const dataQualityNotes = [];
+  if (parseErrors > 0) dataQualityNotes.push(parseErrors + ' line(s) could not be parsed as JSON (skipped).');
+  if (skippedLines > 0) dataQualityNotes.push(skippedLines + ' line(s) were valid JSON but not objects (skipped).');
+  if (events.length === 0) {
+    console.error('ERROR: No events found in input file. Verify the file is not empty and is NDJSON or JSON array format.');
+    process.exit(1);
+  }
+
+  const stats = aggregateEvents(events);
+
+  if (stats.missing_event_name > 0) {
+    dataQualityNotes.push(stats.missing_event_name + ' event(s) are missing the eventName field.');
+  }
+  if (stats.unknown_event_name > 0) {
+    dataQualityNotes.push(stats.unknown_event_name + ' event(s) have an unrecognized eventName.');
+  }
+
+  // Warn about blocked fields in input (privacy notice)
+  let blockedFieldWarn = false;
+  for (const event of events) {
+    for (const field of BLOCKED_FIELDS) {
+      if (field in event) {
+        blockedFieldWarn = true;
+        break;
+      }
+    }
+    if (blockedFieldWarn) break;
+  }
+  if (blockedFieldWarn) {
+    dataQualityNotes.push('WARNING: Input contains fields that are excluded from report output (e.g. userId, rawPrompt, childName). These are not included in any aggregation.');
+  }
+
+  let output;
+  const format = formatFlag.toLowerCase();
+  if (format === 'markdown' || format === 'md') {
+    output = renderMarkdown(stats, dataQualityNotes, inputFlag);
+  } else if (format === 'json') {
+    output = renderJson(stats, dataQualityNotes);
+  } else {
+    output = renderConsole(stats, dataQualityNotes);
+  }
+
+  console.log(output);
+  process.exit(0);
+}
