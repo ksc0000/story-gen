@@ -1,11 +1,10 @@
 # P2-10b: Story JSON (SJ) and Image Failure (IM) Alert Policies
 
-**Status**: 📋 DEFINITIONS COMPLETE — live Cloud Monitoring alert policies not yet created  
+**Status**: ✅ LIVE (disabled, 2026-05-21) — 9 SJ/IM metrics created; 13 alert policies created with `enabled: false`  
 **Created**: 2026-05-21  
-**Task**: P2-10b (SJ/IM alert policy definitions)  
-**Scope**: SJ-1 through SJ-4, IM-1 through IM-4 only (rate-based thresholds). CG-1 is already live.  
+**Task**: P2-10b-live (SJ/IM metric + policy live creation)  
+**Scope**: SJ-1 through SJ-4, IM-1 through IM-9. CG-1 is already live + enabled.  
 **Depends on**: P2-9 (`docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`) — metric definitions  
-**Required by**: P2-10b-live (actual policy creation in Cloud Monitoring)  
 **Firebase project**: `story-gen-8a769`
 
 ---
@@ -64,13 +63,13 @@ Live creation commands are documented in §8 for future use after explicit appro
 | CG-1 metric (`generation/candidate_allowed`) | **LIVE** |
 | CG-1 alert policy (`alertPolicies/16928978327782001994`) | **LIVE, enabled: true** |
 | CG-1 notification channel (`notificationChannels/202814648286910376`) | **LIVE** (email: kikushun0529@gmail.com) |
-| SJ-1..SJ-6 metrics | P2-9 definitions complete; **not yet created in Cloud Monitoring** |
-| IM-1..IM-9 metrics | P2-9 definitions complete; **not yet created in Cloud Monitoring** |
-| SJ alert policies | **This document — docs/config only** |
-| IM alert policies | **This document — docs/config only** |
+| SJ metrics (3) | **LIVE** — `schema_validation_failures`, `malformed_json_failures`, `field_type_mismatch_failures` |
+| IM metrics (6) | **LIVE** — `book_outcomes_total`, `book_outcome_failed`, `page_failures_total`, `page_e005_failures`, `page_timeout_failures`, `page_provider5xx_failures` |
+| SJ alert policies (SJ-1..SJ-4) | **LIVE, enabled: false** — see §9 for policy IDs |
+| IM alert policies (IM-1..IM-9) | **LIVE, enabled: false** — see §9 for policy IDs |
 
-All 14 non-CG metrics from P2-9 (`docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md §3.2–§3.6`)
-must be created in Cloud Monitoring before these alert policies can be applied.
+All 9 SJ/IM metrics are live. All 13 SJ/IM alert policies are created with `enabled: false`.  
+Enable policies only after production baseline ≥ 30 `book_outcome` events is available and thresholds are tuned (§10).
 
 ---
 
@@ -1039,23 +1038,23 @@ gcloud monitoring policies describe POLICY_ID \
 
 ---
 
-## 9. Live Policy ID Registry (Populated After P2-10b-live)
+## 9. Live Policy ID Registry (Updated 2026-05-21)
 
 | Alert ID | Policy resource name | Enabled | Created |
 |---|---|---|---|
-| SJ-1 | — (not created) | false | — |
-| SJ-2 | — (not created) | false | — |
-| SJ-3 | — (not created) | false | — |
-| SJ-4 | — (not created) | false | — |
-| IM-1 | — (not created) | false | — |
-| IM-2 | — (not created) | false | — |
-| IM-3 | — (not created) | false | — |
-| IM-4 | — (not created) | false | — |
-| IM-5 | — (not created) | false | — |
-| IM-6 | — (not created) | false | — |
-| IM-7 | — (not created) | false | — |
-| IM-8 | — (not created) | false | — |
-| IM-9 | — (not created) | false | — |
+| SJ-1 | `projects/story-gen-8a769/alertPolicies/2513526464198067799` | false | 2026-05-21 |
+| SJ-2 | `projects/story-gen-8a769/alertPolicies/4893251868647628500` | false | 2026-05-21 |
+| SJ-3 | `projects/story-gen-8a769/alertPolicies/14364886655881563701` | false | 2026-05-21 |
+| SJ-4 | `projects/story-gen-8a769/alertPolicies/10504437645741432748` | false | 2026-05-21 |
+| IM-1 | `projects/story-gen-8a769/alertPolicies/6672566375930316929` | false | 2026-05-21 |
+| IM-2 | `projects/story-gen-8a769/alertPolicies/4601285944978493813` | false | 2026-05-21 |
+| IM-3 | `projects/story-gen-8a769/alertPolicies/10504437645741432726` | false | 2026-05-21 |
+| IM-4 | `projects/story-gen-8a769/alertPolicies/17509905302009062853` | false | 2026-05-21 |
+| IM-5 | `projects/story-gen-8a769/alertPolicies/17901603525203439569` | false | 2026-05-21 |
+| IM-6 | `projects/story-gen-8a769/alertPolicies/17901603525203439157` | false | 2026-05-21 |
+| IM-7 | `projects/story-gen-8a769/alertPolicies/10504437645741431479` | false | 2026-05-21 |
+| IM-8 | `projects/story-gen-8a769/alertPolicies/10504437645741432289` | false | 2026-05-21 |
+| IM-9 | `projects/story-gen-8a769/alertPolicies/17901603525203436195` | false | 2026-05-21 |
 | **CG-1** | `projects/story-gen-8a769/alertPolicies/16928978327782001994` | **true** | 2026-05-21 |
 
 ---

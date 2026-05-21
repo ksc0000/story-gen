@@ -394,16 +394,16 @@ Wait for production data ≥ 30 `book_outcome` events; then evaluate against P4-
 | **P2-10** | Alert policies | ✅ COMPLETE (live, 2026-05-21) — CG-1 policy live + enabled in `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md` | HIGH |
 | **P2-11** | Dashboard panel additions | ✅ COMPLETE (docs/config, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; 8 required + 2 optional panels; live Cloud Monitoring dashboard not created (manual creation pending) | MEDIUM |
 | **P2-12** | Notification routing + incident runbook integration | ✅ COMPLETE (live, 2026-05-21) — Email channel `notificationChannels/202814648286910376` (kikushun0529@gmail.com) 接続済み; CG-1 `enabled: true` | HIGH |
-| **P2-10b** | SJ/IM alert policy definitions (SJ-1..SJ-4, IM-1..IM-9) | ✅ COMPLETE (docs/config, 2026-05-21) — `docs/P2_SJ_IM_ALERT_POLICIES.md`; 13 policies (4 SJ + 9 IM); all `enabled: false`; live creation pending | HIGH |
+| **P2-10b** | SJ/IM alert policy definitions + live creation (disabled) | ✅ COMPLETE (live disabled, 2026-05-21) — `docs/P2_SJ_IM_ALERT_POLICIES.md`; 9 metrics live; 13 policies live `enabled: false`; enable after production baseline | HIGH |
 
 ### Recommended ordering
 
 ```
-P2-10b-live (create SJ/IM policies disabled) → dashboard-live (if approved) → prod-baseline
-  ↑ P2-10b docs/config complete (2026-05-21)
+prod-baseline (collect ≥ 30 book_outcomes) → P2-10b-enable (tune thresholds + enable SJ/IM policies) → dashboard-live (if approved)
+  ↑ P2-10b-live complete (2026-05-21) — metrics live, policies disabled
 ```
 
-**P2-10 status**: CG-1 alert policy live + enabled. SJ/IM policies defined in `docs/P2_SJ_IM_ALERT_POLICIES.md`; live creation requires P2-9 metrics to be verified in Cloud Monitoring first.
+**P2-10b status**: 9 SJ/IM metrics live, 13 alert policies created with `enabled: false`. Policy IDs in `docs/P2_SJ_IM_ALERT_POLICIES.md §9`. Enable after production baseline ≥ 30 book_outcome events and threshold tuning (§10 of that doc).
 
 ---
 
