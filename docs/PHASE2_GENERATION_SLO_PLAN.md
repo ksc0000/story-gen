@@ -1046,7 +1046,7 @@ These new signals enable Cloud Monitoring log-based metric alerting that was not
 | **P2-7 (alert automation)** | Generation SLO Alert Automation Plan | ✅ COMPLETE — `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` |
 | **P2-8** | Saved Cloud Logging query definitions | ⬜ NOT STARTED |
 | **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`; 15 metrics defined; live creation commands included |
-| **P2-10** | Alert policies | ⬜ NOT STARTED |
+| **P2-10** | Alert policies (CG-1 docs complete; live creation pending) | ✅ COMPLETE (docs, 2026-05-21) — `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`; SJ/IM/DQ policies pending |
 | **P2-11** | Dashboard panel additions | ⬜ NOT STARTED |
 | **P2-12** | Notification routing + incident runbook | ⬜ NOT STARTED |
 
@@ -1072,6 +1072,41 @@ These new signals enable Cloud Monitoring log-based metric alerting that was not
 | `ENABLE_SCHEMA_REPAIR_RETRY` remains OFF | Dev/test baseline (P4-15 §7.2) not representative; production data required |
 | Rate alerts require ≥ 10 `book_outcome` events | Per `GENERATION_SLO_THRESHOLD_POLICY.md §5.1` small-sample rules |
 | Manual fallback via `_export-cloud-logging.mjs` | Current operational baseline until P2-10 alert policies live |
+
+---
+
+### P2-10 (CG-1 Alert Policy Definition) Implementation Note
+
+**Commit**: `docs(P2-10): define CG-1 candidate gate alert policy`  
+**Files changed**:
+- `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md` (new) — CG-1 policy YAML spec, gcloud commands, first-response runbook
+- `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` — P2-10 marked COMPLETE (docs)
+- `docs/GENERATION_SLO_RUNBOOK.md` — §14 updated with P2-10 link
+- `docs/PHASE2_GENERATION_SLO_PLAN.md` — this note
+- `docs/PRODUCT_ROADMAP.md` — P2-10 marked COMPLETE (docs)
+
+**No production code changes.** Docs-only. No live Cloud Monitoring alert policies created.
+
+### CG-1 policy details
+
+| Property | Value |
+|---|---|
+| Alert ID | CG-1 |
+| Metric | `logging.googleapis.com/user/generation/candidate_allowed` |
+| Trigger | Any non-zero count in any 60s window |
+| Severity | CRITICAL |
+| Duration | 0s (fire immediately on first occurrence) |
+| Initial state | Disabled (enable after P2-12 notification channels) |
+| Policy YAML | `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md §3.2` |
+
+### Key decisions
+
+| Decision | Rationale |
+|---|---|
+| Policy created as disabled | No notification channels yet; enable after P2-12 |
+| CG-1 only in this task | SJ/IM/DQ alerts follow in subsequent P2-10 iterations |
+| gcloud not installed | Live creation requires operator to install gcloud + grant `roles/monitoring.alertPolicyEditor` |
+| Option A chosen | gcloud not installed; no SA roles for Cloud Monitoring write access |
 
 ---
 

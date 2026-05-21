@@ -919,8 +919,8 @@ node scripts/report-generation-slo.mjs --input tmp/generation-events.json --form
 
 ## 14. Alert Automation Plan (P2-7 / P2-8 through P2-12)
 
-**Status**: P2-9 metric definitions complete. Cloud Monitoring alert policies not yet live.  
-**Plans**: `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` | `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`
+**Status**: P2-9 metric definitions complete; P2-10 CG-1 policy definition complete; live creation pending.  
+**Plans**: `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` | `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md` | `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`
 
 ### 14.1 What the plan defines
 
@@ -942,11 +942,11 @@ The alert automation plan (`P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`) and met
 |---|---|
 | **P2-8** | Saved Cloud Logging query definitions | MEDIUM |
 | **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md` |
-| **P2-10** | Alert policies (CG-1 first) | HIGH |
+| **P2-10** | CG-1 alert policy definition | ✅ COMPLETE (docs, 2026-05-21) — `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`; live creation pending |
 | **P2-11** | Dashboard panel additions | MEDIUM |
 | **P2-12** | Notification routing + incident runbook | HIGH |
 
-Recommended order: `P2-10 (CG-1 first) → P2-12 → P2-8 → P2-11`
+Recommended next: configure notification channels (P2-12), then create live metric + policy (P2-10 §2, P2-10 §4)
 
 ### 14.3 Current operational procedure (manual fallback)
 
