@@ -391,9 +391,9 @@ Wait for production data ≥ 30 `book_outcome` events; then evaluate against P4-
 |---|---|---|---|
 | **P2-8** | Saved Cloud Logging query definitions | Add saved queries in Cloud Console for each alert candidate in §4; docs reference | MEDIUM |
 | **P2-9** | Cloud Monitoring log-based metric definitions | ✅ COMPLETE (2026-05-21) — `docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`; 15 metrics defined (14 required + 1 optional); live creation commands in §4 of that doc | HIGH |
-| **P2-10** | Alert policies | ✅ COMPLETE (docs, 2026-05-21) — CG-1 policy definition in `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`; live creation requires gcloud + `roles/monitoring.alertPolicyEditor` | HIGH |
+| **P2-10** | Alert policies | ✅ COMPLETE (live, 2026-05-21) — CG-1 policy live + enabled in `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md` | HIGH |
 | **P2-11** | Dashboard panel additions | Add panels per §7 to Admin SLO Dashboard | MEDIUM |
-| **P2-12** | Notification routing + incident runbook integration | Configure notification channels; link alert firing → RUNBOOK §8 escalation path | HIGH |
+| **P2-12** | Notification routing + incident runbook integration | ✅ COMPLETE (live, 2026-05-21) — Email channel `notificationChannels/202814648286910376` (kikushun0529@gmail.com) 接続済み; CG-1 `enabled: true` | HIGH |
 
 ### Recommended ordering
 
