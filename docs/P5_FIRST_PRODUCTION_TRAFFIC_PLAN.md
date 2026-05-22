@@ -69,6 +69,8 @@ The recommended rollout is three progressive cohorts. Move to the next cohort on
 
 ### Cohort B — Trusted Friendly Users (5–10 people)
 
+> **GO 決定 (2026-05-22)** — P5-3c-verify PASS を受けた PM GO 判断。3–5 テスターへの限定招待。SJ/IM は引き続き disabled。招待人数上限 5 名。詳細: [P5_COHORT_B_GO_NOGO_CHECKLIST.md](./P5_COHORT_B_GO_NOGO_CHECKLIST.md)
+
 **Who**: Personal contacts, family members, or known beta testers who understand this is a pre-launch product.  
 **Books expected**: 3–5 per person = 15–50 `book_outcome` events  
 **Purpose**:
@@ -345,4 +347,4 @@ If any Cohort B/C users are enrolled as candidates (`generationOverride.allowCan
 
 ---
 
-*Last updated: 2026-05-22 (P5-3c-verify PASS — Cohort B unblock candidate)*
+*Last updated: 2026-05-22 (Cohort B GO 決定 — 限定ロールアウト)*

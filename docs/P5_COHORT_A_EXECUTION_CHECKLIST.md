@@ -267,6 +267,8 @@ If any gate item fails: invite additional Cohort A testers, or investigate and f
 
 ### If Cohort A passes all gate conditions
 
+> **Cohort B: ✅ GO (2026-05-22)** — P5-3c-verify PASS による PM GO 判断確定。[P5_COHORT_B_GO_NOGO_CHECKLIST.md](./P5_COHORT_B_GO_NOGO_CHECKLIST.md) のチェックリストに従って招待を実施する。
+
 1. Update the private aggregate note with final Cohort A count.
 2. Optionally update `docs/P5_FIRST_PRODUCTION_TRAFFIC_PLAN.md` §3 Cohort A section with gate status.
 3. Prepare Cohort B invitation batch using `docs/P5_SOFT_LAUNCH_INVITE_KIT.md` templates.
