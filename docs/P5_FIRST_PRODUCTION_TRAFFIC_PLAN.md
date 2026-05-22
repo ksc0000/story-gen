@@ -65,6 +65,7 @@ The recommended rollout is three progressive cohorts. Move to the next cohort on
 - No CG-1 alert fired for unintended candidate enrollment.
 - Dashboard panels show expected data.
 - No launch-blocking errors in Cloud Logging.
+- **P5-3c-verify PASS** — 竹プラン画質 UX バグ（全ページ同一画像）解消確認済み ✅ (2026-05-22)
 
 ### Cohort B — Trusted Friendly Users (5–10 people)
 
@@ -344,4 +345,4 @@ If any Cohort B/C users are enrolled as candidates (`generationOverride.allowCan
 
 ---
 
-*Last updated: 2026-05-21 (P5-1, P5-3 ref added)*
+*Last updated: 2026-05-22 (P5-3c-verify PASS — Cohort B unblock candidate)*

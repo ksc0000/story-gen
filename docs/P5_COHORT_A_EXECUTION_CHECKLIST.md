@@ -257,6 +257,7 @@ Proceed to Cohort B invitations only if ALL of the following are true:
 - [ ] storyDurationMs p95 ≤ 180s during Cohort A session
 - [ ] No unresolved CRITICAL incident (login failure, CG-1 unexplained)
 - [ ] At least 2 Cohort A testers confirmed the basic flow is understandable via feedback
+- [x] **P5-3c-verify PASS** — 竹プラン「全ページ同じ絵」問題解消を目視確認済み (2026-05-22)
 
 If any gate item fails: invite additional Cohort A testers, or investigate and fix before proceeding.
 
