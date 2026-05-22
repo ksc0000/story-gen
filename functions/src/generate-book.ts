@@ -23,6 +23,7 @@ import type {
   StoryCharacterKind,
   ImageModelProfile,
   CoverStatus,
+  IllustrationStyle,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { buildSystemPrompt, buildImagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
@@ -541,6 +542,12 @@ export interface GenerationDeps {
   ) => Promise<void>;
   getUserMonthlyCount: (userId: string) => Promise<number>;
   incrementMonthlyCount: (userId: string) => Promise<void>;
+  /**
+   * P5-3c: Gated experiment mode for page image generation.
+   * "simplified_scene" = cover-style short prompt without character bible.
+   * Only set when the user's Firestore doc has generationOverride.p5PageExperiment === "simplified_scene".
+   */
+  p5PageExperiment?: "simplified_scene";
 }
 
 interface PageImageResult {
@@ -1218,6 +1225,19 @@ export async function processBookGeneration(
     // Step 7: Update book title
     await deps.updateBookTitle(bookId, story.title);
 
+    // P5-3c: Log cover/page generation profile comparison for diagnostic purposes (PII-safe).
+    // Captures the key structural difference between cover (legacy path, no ref images)
+    // and pages (adapter path, with ref images when shouldUseCharacterReferenceForPage).
+    logger.info("cover_vs_page_profile_diagnostic", {
+      bookId,
+      coverProfile: normalizedBookData.imageModelProfile ?? "plan_default",
+      pageDefaultProfile: normalizedBookData.imageModelProfile ?? "plan_default",
+      characterConsistencyMode: normalizedBookData.characterConsistencyMode ?? "cover_only",
+      creationMode: resolvedCreationMode,
+      p5PageExperiment: deps.p5PageExperiment ?? "none",
+      note: "cover=legacy path no ref images; pages=adapter path with ref images if shouldUseRef",
+    });
+
     // Step 8: Process pages concurrently with fallback and partial success
     const totalPages = story.pages.length;
     const isDev = process.env.NODE_ENV === "development";
@@ -1282,12 +1302,43 @@ export async function processBookGeneration(
         }
       );
 
+      // P5-fix: Log per-page imagePrompt prefix and scene hash for debugging "all pages same image".
+      // Privacy: only first 60 chars of the Gemini-generated scene description are logged (no child name / PII).
+      const sceneSnippet = storyPage.imagePrompt.slice(0, 60).replace(/\s+/g, " ");
+      logger.info("page_image_prompt_scene", {
+        bookId,
+        pageIndex: i,
+        style: normalizedBookData.style,
+        sceneSnippet,
+        sceneLength: storyPage.imagePrompt.length,
+      });
+
+      // P5-3c: Gated experiment — "simplified_scene" builds a cover-style short prompt
+      // without character bible or consistency rules, and sends no reference images.
+      // Only active when user has generationOverride.p5PageExperiment === "simplified_scene".
+      const p5ExperimentActive = deps.p5PageExperiment === "simplified_scene";
+      const finalImagePrompt = p5ExperimentActive
+        ? buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style)
+        : imagePrompt;
+      const finalInputImageUrls = p5ExperimentActive ? [] : inputImageUrls;
+      if (p5ExperimentActive) {
+        logger.info("p5_page_experiment_active", {
+          bookId,
+          pageIndex: i,
+          experiment: "simplified_scene",
+          originalPromptLength: imagePrompt.length,
+          simplifiedPromptLength: finalImagePrompt.length,
+          inputImageUrlsClearedCount: inputImageUrls.length,
+          resolvedProfile: imageModelProfile,
+        });
+      }
+
       const imageStartMs = Date.now();
 
       const imageResult = await generatePageImageWithFallback({
-        prompt: imagePrompt,
+        prompt: finalImagePrompt,
         primaryProfile: imageModelProfile,
-        inputImageUrls,
+        inputImageUrls: finalInputImageUrls,
         imageQualityTier,
         imagePurpose,
         imageClient: deps.imageClient,
@@ -1330,15 +1381,15 @@ export async function processBookGeneration(
         textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
         status: pageStatus as PageData["status"],
         imageModel: imageResult.usedProfile === "openai_image_candidate"
-          ? resolveOpenAIModelLabel(inputImageUrls.length > 0)
+          ? resolveOpenAIModelLabel(finalInputImageUrls.length > 0)
           : imageModel,
         imageQualityTier,
         imagePurpose,
         inputImageRoles,
         inputImageRefs,
-        inputImageUrlsCount: inputImageUrls.length,
-        inputReferenceCount: inputImageUrls.length,
-        usedCharacterReference: inputImageUrls.length > 0,
+        inputImageUrlsCount: finalInputImageUrls.length,
+        inputReferenceCount: finalInputImageUrls.length,
+        usedCharacterReference: finalInputImageUrls.length > 0,
         missingReferenceCharacters,
         characterConsistencyMode: normalizedBookData.characterConsistencyMode,
         imageModelProfile: imageResult.usedProfile,
@@ -1377,6 +1428,20 @@ export async function processBookGeneration(
     });
 
     const pageResults = await runWithConcurrencyLimit(pageTasks, concurrency);
+
+    // P5-fix: Regression guard — detect duplicate imageUrls across pages after generation.
+    // Identical URLs indicate a storage path collision or adapter re-use bug.
+    const successfulUrls = pageResults
+      .filter((r) => r.success && r.imageUrl)
+      .map((r) => r.imageUrl as string);
+    const urlSet = new Set(successfulUrls);
+    if (successfulUrls.length > 1 && urlSet.size < successfulUrls.length) {
+      logger.warn("duplicate_page_image_urls_detected", {
+        bookId,
+        successfulPageCount: successfulUrls.length,
+        distinctUrlCount: urlSet.size,
+      });
+    }
 
     // Step 8.5: Generate cover image (independent of page results)
     const coverImagePrompt = story.coverImagePrompt ?? normalizedBookData.coverImagePrompt;
@@ -2294,6 +2359,22 @@ function buildFinalCharacterBible(storyCharacterBible: string, bookData: BookDat
   ].filter(Boolean).join(" ");
 }
 
+/**
+ * P5-3c experiment: builds a cover-image-style short prompt for a story page.
+ * Includes only illustration style + the raw page scene — no character bible,
+ * no consistency rules, no style bible.  This mirrors the standalone cover
+ * image path (generateCoverImage) and tests whether removing the character-bible
+ * overhead produces varied, style-correct page images.
+ */
+function buildP5SimplifiedPagePrompt(scenePrompt: string, style: IllustrationStyle): string {
+  const styleProfile = getIllustrationStyleProfile(style);
+  return [
+    `Illustration style: ${styleProfile.styleBible}`,
+    `Scene: ${scenePrompt.replace(/\s+/g, " ").trim()}`,
+    "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, and unreadable text.",
+  ].join(" ");
+}
+
 function buildCharacterConsistencyRules(bookData: BookData): string {
   const visual = bookData.childProfileSnapshot?.visualProfile;
   const age = bookData.childProfileSnapshot?.age ?? bookData.input.childAge;
@@ -2582,6 +2663,13 @@ export const generateBook = onDocumentCreated(
         const countRef = db.collection("users").doc(userId).collection("usage").doc(yearMonth);
         await countRef.set({ count: admin.firestore.FieldValue.increment(1) }, { merge: true });
       },
+
+      // P5-3c: Gated experiment flag — only set when the user's Firestore doc has
+      // generationOverride.p5PageExperiment === "simplified_scene" (admin/QA testers only).
+      p5PageExperiment:
+        gateUserData?.generationOverride?.p5PageExperiment === "simplified_scene"
+          ? "simplified_scene"
+          : undefined,
     };
 
     await processBookGeneration(bookId, bookDataForProcessing, deps);

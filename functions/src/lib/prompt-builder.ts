@@ -674,15 +674,21 @@ export function buildImagePrompt(
           "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, unreadable text, and cluttered backgrounds.",
         ].join(" ");
 
+  // P5-fix: scene and style are placed first so the image model treats the per-page
+  // scene description and selected illustration style as primary guides.  Character
+  // consistency guidelines follow as secondary constraints.  This addresses 竹-plan
+  // reports of "all pages same image" and "style not reflected" where the original
+  // ordering buried the scene at position ~16 of ~20 prompt segments.
   return [
-    consistency,
-    castGuidance,
     `Illustration style: ${styleProfile.styleBible}`,
     styleBible ? `Story-specific style consistency: ${styleBible}` : "",
     styleProfile.negativeStyleRules?.length
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
+    `Scene: ${sanitizedBasePrompt}`,
     compositionGuidance,
+    consistency,
+    castGuidance,
     modelSpecificGuidance,
     emotionGuidance,
     "Global character count rule: there is exactly one human child protagonist: child_protagonist.",
@@ -694,7 +700,6 @@ export function buildImagePrompt(
       ? `Only draw these recurring characters when relevant: ${options.appearingCharacterIds.join(", ")}. Do not add other recurring characters.`
       : "",
     `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
-    `Scene: ${sanitizedBasePrompt}`,
     SAFETY_KEYWORDS,
     "Use purely visual storytelling through characters, objects, colors, actions, and scenery.",
     "wordless picture book illustration, no written text anywhere, no letters, no captions, no speech bubbles, no labels, no signage, no readable marks, no watermark. Use plain objects and unlabeled backgrounds.",

@@ -417,6 +417,37 @@ export function validateGeneratedStoryQuality(params: {
     }
   }
 
+  // P5-fix: Regression guard — detect duplicate imagePrompt values across pages.
+  // Identical imagePrompts cause the image model to generate near-identical images,
+  // leading to "all pages same image" reports in 竹-plan (guided_ai) books.
+  if (pageCount >= 2) {
+    const trimmedPrompts = story.pages.map((p) => p.imagePrompt.trim().toLowerCase());
+    const promptCounts = new Map<string, number>();
+    for (const p of trimmedPrompts) {
+      promptCounts.set(p, (promptCounts.get(p) ?? 0) + 1);
+    }
+    const maxDuplicateCount = Math.max(...promptCounts.values());
+    if (maxDuplicateCount === pageCount) {
+      // Every page has the same imagePrompt — definite error
+      issues.push({
+        severity: "error",
+        code: "image_prompt.all_identical",
+        message: "全ページの imagePrompt が同じです。ページ固有の場面描写を生成してください。",
+        actual: maxDuplicateCount,
+        expected: `all ${pageCount} pages distinct`,
+      });
+    } else if (maxDuplicateCount >= Math.ceil(pageCount / 2)) {
+      // Half or more pages share the same imagePrompt — warning to trigger rewrite
+      issues.push({
+        severity: "warning",
+        code: "image_prompt.low_diversity",
+        message: "半数以上のページで imagePrompt が重複しています。場面ごとの描写を多様にしてください。",
+        actual: maxDuplicateCount,
+        expected: `< ${Math.ceil(pageCount / 2)} duplicates`,
+      });
+    }
+  }
+
   addCastConsistencyIssues({
     story,
     issues,
