@@ -56,6 +56,7 @@ firebase-debug.log
 functions/lib/
 
 # local-only assistant / QA artifacts
+.claude/
 .claude/settings.local.json
 .tmp/
 tmp/
