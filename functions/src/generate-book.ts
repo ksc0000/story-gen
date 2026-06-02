@@ -1313,22 +1313,30 @@ export async function processBookGeneration(
         sceneLength: storyPage.imagePrompt.length,
       });
 
-      // P5-3c: Gated experiment — "simplified_scene" builds a cover-style short prompt
-      // without character bible or consistency rules, and sends no reference images.
-      // Only active when user has generationOverride.p5PageExperiment === "simplified_scene".
-      const p5ExperimentActive = deps.p5PageExperiment === "simplified_scene";
-      const finalImagePrompt = p5ExperimentActive
+      // P5-3d: Guarded conditional routing — simplified_scene applies only to photo-less books.
+      // Photo-backed books (childProfileSnapshot.visualProfile.referenceImageUrl present) must
+      // remain on the reference-aware path because simplified_scene clears finalInputImageUrls=[],
+      // which would discard the child's reference photo and break face likeness.
+      const hasReferenceImage = Boolean(
+        normalizedBookData.childProfileSnapshot?.visualProfile?.referenceImageUrl
+      );
+      const useSimplifiedScene =
+        deps.p5PageExperiment === "simplified_scene" && !hasReferenceImage;
+      const finalImagePrompt = useSimplifiedScene
         ? buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style)
         : imagePrompt;
-      const finalInputImageUrls = p5ExperimentActive ? [] : inputImageUrls;
-      if (p5ExperimentActive) {
+      const finalInputImageUrls = useSimplifiedScene ? [] : inputImageUrls;
+      if (deps.p5PageExperiment === "simplified_scene") {
         logger.info("p5_page_experiment_active", {
           bookId,
           pageIndex: i,
           experiment: "simplified_scene",
+          p5PageExperimentRequested: deps.p5PageExperiment,
+          hasReferenceImage,
+          useSimplifiedScene,
           originalPromptLength: imagePrompt.length,
           simplifiedPromptLength: finalImagePrompt.length,
-          inputImageUrlsClearedCount: inputImageUrls.length,
+          inputImageUrlsClearedCount: useSimplifiedScene ? inputImageUrls.length : 0,
           resolvedProfile: imageModelProfile,
         });
       }

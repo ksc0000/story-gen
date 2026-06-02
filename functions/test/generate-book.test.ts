@@ -1661,3 +1661,59 @@ describe("gateImageModelProfile (T6-59)", () => {
     expect(gateImageModelProfile("flux11_pro_candidate", true)).toBe("flux11_pro_candidate");
   });
 });
+
+describe("p5PageExperiment simplified_scene routing (P5-3d)", () => {
+  let deps: ReturnType<typeof createMockDeps>;
+  beforeEach(() => {
+    deps = createMockDeps();
+  });
+
+  it("activates simplified_scene prompt for photo-less books with override set", async () => {
+    const depsWithExperiment = { ...deps, p5PageExperiment: "simplified_scene" as const };
+    await processBookGeneration("book-no-photo", baseBookData, depsWithExperiment);
+
+    // simplified_scene omits the character-consistency block present in the full prompt
+    for (const [promptArg] of deps.imageClient.generateImage.mock.calls) {
+      expect(promptArg).not.toContain("Character consistency rules:");
+    }
+    for (const [, opts] of deps.imageClient.generateImage.mock.calls) {
+      expect(opts.inputImageUrls).toEqual([]);
+    }
+  });
+
+  it("suppresses simplified_scene for photo-backed books and keeps reference images active", async () => {
+    const photoBook: BookData = {
+      ...baseBookData,
+      characterConsistencyMode: "all_pages",
+      childProfileSnapshot: {
+        displayName: "テスト",
+        personality: {},
+        visualProfile: {
+          version: 1,
+          referenceImageUrl: "https://example.com/child-photo.png",
+        },
+      },
+    };
+    const depsWithExperiment = { ...deps, p5PageExperiment: "simplified_scene" as const };
+    await processBookGeneration("book-with-photo", photoBook, depsWithExperiment);
+
+    // reference-aware path: reference URL must appear in at least one page call
+    const anyPageWithRef = deps.imageClient.generateImage.mock.calls.some(
+      ([, opts]) => (opts.inputImageUrls ?? []).includes("https://example.com/child-photo.png")
+    );
+    expect(anyPageWithRef).toBe(true);
+
+    // full prompt path: prompt must contain the character-consistency block
+    for (const [promptArg] of deps.imageClient.generateImage.mock.calls) {
+      expect(promptArg).toContain("Character consistency rules:");
+    }
+  });
+
+  it("leaves the default prompt path unchanged when p5PageExperiment is absent", async () => {
+    await processBookGeneration("book-default", baseBookData, deps);
+
+    for (const [promptArg] of deps.imageClient.generateImage.mock.calls) {
+      expect(promptArg).toContain("Character consistency");
+    }
+  });
+});

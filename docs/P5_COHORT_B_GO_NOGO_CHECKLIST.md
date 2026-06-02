@@ -210,10 +210,27 @@ Notable incidents: [description or "none"]
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| 子ども写真登録済みユーザーでのキャラクター一貫性未検証 | MEDIUM | smoke ユーザーに写真なし。Cohort B に写真登録者がいる場合は別途チェックを追加 |
+| ~~子ども写真登録済みユーザーでのキャラクター一貫性未検証~~ | ~~MEDIUM~~ | **P5-3d で解消**。P5-3d-verify（2026-06-03）にて写真あり×2冊を検証し、`simplified_scene` が参照画像を全ページで消去することを確認。P5-3d ガードにより写真ありユーザーは従来パスへルーティング済み。 |
 | Fallback 比率が上昇する可能性 | LOW | Case 4 で 4/8 fallback 観測済み・品質は許容範囲。監視で確認 |
 | 梅プランへの回帰影響 | LOW | regression PASS 済み。監視で継続確認 |
+| 写真ありユーザーの `simplified_scene` 未適用 | LOW | P5-3d で意図的に除外。写真ありユーザーは参照画像パスを維持。将来的に写真あり対応の別実験が必要な場合は新タスクを立てる。 |
 
 ---
 
-*Last updated: 2026-05-22 (Cohort B GO decision — P5-3c-verify PASS)*
+## 10. P5-3d Update (2026-06-03)
+
+**Summary**: `simplified_scene` ガード付き条件分岐を実装。写真なしユーザーのみ有効。
+
+| Item | Value |
+|---|---|
+| **P5-3d commit** | (デプロイ承認待ち) |
+| **P5-3d-verify** | 写真なし×2冊 PASS、写真あり×2冊 PARTIAL（参照画像消去を確認） |
+| **PM 判断** | グローバル昇格非承認。写真なし限定候補パスとして承認 (2026-06-03) |
+| **本番デフォルト** | 変更なし |
+| **テスト** | 1746 件全通過（+3 件 P5-3d ルーティングテスト追加） |
+
+ログの `p5_page_experiment_active` に追加フィールド: `hasReferenceImage`, `useSimplifiedScene`, `p5PageExperimentRequested`, `inputImageUrlsClearedCount`（写真ありでは常に 0）。
+
+---
+
+*Last updated: 2026-06-03 (P5-3d guarded routing implementation)*
