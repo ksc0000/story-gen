@@ -64,3 +64,4 @@ _tmp*/
 _qa_tmp*/
 page-qa-*.png
 scripts/_*.js
+.envrc
