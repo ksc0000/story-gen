@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import * as logger from "firebase-functions/logger";
 import {
   processBookGeneration,
   shouldUseCharacterReferenceForPage,
@@ -1715,5 +1716,199 @@ describe("p5PageExperiment simplified_scene routing (P5-3d)", () => {
     for (const [promptArg] of deps.imageClient.generateImage.mock.calls) {
       expect(promptArg).toContain("Character consistency");
     }
+  });
+});
+
+describe("p5ModelUnification safer_retry (P5-3f)", () => {
+  const E005_ERROR = new Error("Prediction failed: The input or output was flagged as sensitive. Please try again with different inputs. (E005) (uIJ6l3ruRD)");
+
+  // Single-page story for tests that need precise call ordering.
+  // With concurrency=2 and 2 pages, mockRejectedValueOnce() rejections are shared across
+  // both page tasks, making call-index assertions non-deterministic. A single page
+  // eliminates all concurrency ambiguity.
+  const onePage: GeneratedStory = { ...mockStory, pages: [mockStory.pages[0]] };
+
+  let deps: ReturnType<typeof createMockDeps>;
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    deps = createMockDeps();
+    logSpy = vi.spyOn(logger, "info").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    logSpy.mockRestore();
+  });
+
+  it("default path unchanged when p5ModelUnification is absent", async () => {
+    await processBookGeneration("book-default-unification", baseBookData, deps);
+
+    // All calls use original prompt with reference URLs — no step-b intervention
+    for (const [, opts] of deps.imageClient.generateImage.mock.calls) {
+      expect((opts.inputImageUrls ?? []).length).toBeGreaterThan(0);
+    }
+    for (const [promptArg] of deps.imageClient.generateImage.mock.calls) {
+      expect(promptArg).toContain("Character consistency");
+    }
+    const stepBLogs = logSpy.mock.calls.filter(
+      ([, payload]) => (payload as Record<string, unknown>)?.["step"] === "b"
+    );
+    expect(stepBLogs).toHaveLength(0);
+  });
+
+  it("safer_retry + Step a success: original prompt and refs used, Step b not called", async () => {
+    deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
+    const saferDeps = { ...deps, p5ModelUnification: "safer_retry" as const };
+    await processBookGeneration("book-step-a-success", baseBookData, saferDeps);
+
+    // 1 page, 1 successful call — no step b needed
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(1);
+    const [, opts] = deps.imageClient.generateImage.mock.calls[0];
+    expect((opts.inputImageUrls ?? []).length).toBeGreaterThan(0);
+    const [promptArg] = deps.imageClient.generateImage.mock.calls[0];
+    expect(promptArg).toContain("Character consistency");
+    const stepBLogs = logSpy.mock.calls.filter(
+      ([, payload]) => (payload as Record<string, unknown>)?.["step"] === "b"
+    );
+    expect(stepBLogs).toHaveLength(0);
+  });
+
+  it("safer_retry + Step a failure + Step b success: simplified prompt and empty refs on second call", async () => {
+    deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
+    deps.imageClient.generateImage.mockRejectedValueOnce(E005_ERROR); // Step a
+    const saferDeps = { ...deps, p5ModelUnification: "safer_retry" as const };
+    await processBookGeneration("book-step-b-success", baseBookData, saferDeps);
+
+    // Step a (call 0) fails, Step b (call 1) succeeds
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
+
+    const [, stepAOpts] = deps.imageClient.generateImage.mock.calls[0];
+    const [stepBPrompt, stepBOpts] = deps.imageClient.generateImage.mock.calls[1];
+
+    // Step a: reference URLs present
+    expect((stepAOpts.inputImageUrls ?? []).length).toBeGreaterThan(0);
+    // Step b: reference images cleared
+    expect(stepBOpts.inputImageUrls ?? []).toEqual([]);
+    // Step b: simplified prompt — no character consistency block
+    expect(stepBPrompt).not.toContain("Character consistency rules:");
+    // Step b: same model (pro_consistent)
+    expect(stepBOpts.imageModelProfile).toBe("pro_consistent");
+
+    const page0Data = deps.writePage.mock.calls[0][1];
+    expect(page0Data.imageAttemptCount).toBe(2);
+    // imageFallbackUsed is stored as undefined (not false) when falsy — see removeUndefinedDeep
+    expect(page0Data.imageFallbackUsed ?? false).toBe(false);
+    expect(page0Data.imageModelProfile).toBe("pro_consistent");
+    // Step b success → "completed", not "fallback_completed"
+    expect(page0Data.status).toBe("completed");
+  });
+
+  it("safer_retry + Step a failure + Step b failure + Step c success: falls to klein_fast", async () => {
+    deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
+    deps.imageClient.generateImage
+      .mockRejectedValueOnce(E005_ERROR)  // Step a
+      .mockRejectedValueOnce(E005_ERROR); // Step b; Step c (klein_fast) succeeds via default mock
+    const saferDeps = { ...deps, p5ModelUnification: "safer_retry" as const };
+    await processBookGeneration("book-step-c", baseBookData, saferDeps);
+
+    // Step a, Step b, klein_fast attempt 0 = 3 calls
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(3);
+
+    const [, stepCOpts] = deps.imageClient.generateImage.mock.calls[2];
+    expect(stepCOpts.imageModelProfile).toBe("klein_fast");
+
+    const page0Data = deps.writePage.mock.calls[0][1];
+    expect(page0Data.imageAttemptCount).toBe(3);
+    expect(page0Data.imageFallbackUsed).toBe(true);
+    expect(page0Data.imageModelProfile).toBe("klein_fast");
+    expect(page0Data.status).toBe("fallback_completed");
+  });
+
+  it("photo-backed book: Step a uses reference URL, Step b clears it after Step a failure", async () => {
+    const photoBook: BookData = {
+      ...baseBookData,
+      characterConsistencyMode: "all_pages",
+      childProfileSnapshot: {
+        displayName: "テスト",
+        personality: {},
+        visualProfile: {
+          version: 1,
+          referenceImageUrl: "https://example.com/child-photo.png",
+        },
+      },
+    };
+    deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
+    deps.imageClient.generateImage.mockRejectedValueOnce(E005_ERROR);
+    const saferDeps = { ...deps, p5ModelUnification: "safer_retry" as const };
+    await processBookGeneration("book-photo-step-b", photoBook, saferDeps);
+
+    const [, stepAOpts] = deps.imageClient.generateImage.mock.calls[0];
+    const [, stepBOpts] = deps.imageClient.generateImage.mock.calls[1];
+
+    // Step a: child reference URL present (photo-backed book)
+    expect(stepAOpts.inputImageUrls ?? []).toContain("https://example.com/child-photo.png");
+    // Step b: all reference images cleared — applies to photo-backed books too
+    expect(stepBOpts.inputImageUrls ?? []).toEqual([]);
+  });
+
+  it("Step b fires only once — not on fallback profile (klein_fast)", async () => {
+    deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
+    // Step a, Step b, klein_fast attempt 0 all fail; klein_fast attempt 1 succeeds
+    deps.imageClient.generateImage
+      .mockRejectedValueOnce(E005_ERROR)  // Step a
+      .mockRejectedValueOnce(E005_ERROR)  // Step b
+      .mockRejectedValueOnce(E005_ERROR); // klein_fast attempt 0
+    const saferDeps = { ...deps, p5ModelUnification: "safer_retry" as const };
+    await processBookGeneration("book-no-double-step-b", baseBookData, saferDeps);
+
+    // 4 calls: pro_consistent step a, pro_consistent step b, klein_fast 0, klein_fast 1
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(4);
+    const calls = deps.imageClient.generateImage.mock.calls;
+    expect(calls[0][1].imageModelProfile).toBe("pro_consistent"); // step a
+    expect(calls[1][1].imageModelProfile).toBe("pro_consistent"); // step b
+    expect(calls[2][1].imageModelProfile).toBe("klein_fast");     // step c attempt 0
+    expect(calls[3][1].imageModelProfile).toBe("klein_fast");     // step c attempt 1
+
+    // klein_fast attempt 0 retains original inputImageUrls (step b logic does not apply)
+    expect((calls[2][1].inputImageUrls ?? []).length).toBeGreaterThan(0);
+
+    // Step-b diagnostic log fires exactly once
+    const stepBLogs = logSpy.mock.calls.filter(
+      ([msg, payload]) =>
+        msg === "p5_model_unification_retry_active" &&
+        (payload as Record<string, unknown>)?.["step"] === "b"
+    );
+    expect(stepBLogs).toHaveLength(1);
+  });
+
+  it("diagnostic log emitted with correct fields when Step b activates", async () => {
+    deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
+    deps.imageClient.generateImage.mockRejectedValueOnce(E005_ERROR);
+    const saferDeps = { ...deps, p5ModelUnification: "safer_retry" as const };
+    await processBookGeneration("book-diag-log", baseBookData, saferDeps);
+
+    const stepBLog = logSpy.mock.calls.find(
+      ([msg, payload]) =>
+        msg === "p5_model_unification_retry_active" &&
+        (payload as Record<string, unknown>)?.["step"] === "b"
+    );
+    expect(stepBLog).toBeDefined();
+    const payload = stepBLog![1] as Record<string, unknown>;
+    expect(payload["step"]).toBe("b");
+    expect(payload["originalProfile"]).toBe("pro_consistent");
+    expect(payload["retryProfile"]).toBe("pro_consistent");
+    expect(payload["retryInputReferenceCount"]).toBe(0);
+    expect(["safety_rejection", "timeout", "other"]).toContain(payload["fallbackReasonClass"]);
+  });
+
+  it("fallbackReasonClass is safety_rejection for E005 errors", async () => {
+    deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
+    deps.imageClient.generateImage.mockRejectedValueOnce(E005_ERROR);
+    const saferDeps = { ...deps, p5ModelUnification: "safer_retry" as const };
+    await processBookGeneration("book-e005-class", baseBookData, saferDeps);
+
+    const stepBLog = logSpy.mock.calls.find(([msg]) => msg === "p5_model_unification_retry_active");
+    const payload = stepBLog![1] as Record<string, unknown>;
+    expect(payload["fallbackReasonClass"]).toBe("safety_rejection");
   });
 });

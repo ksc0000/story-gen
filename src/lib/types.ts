@@ -196,6 +196,12 @@ export interface UserDoc {
   activeChildId?: string | null;
   createdAt: Timestamp;
   monthlyGenerationCount: number;
+  generationOverride?: {
+    allowCandidateProfile?: boolean;
+    bypassMonthlyLimit?: boolean;
+    p5PageExperiment?: "simplified_scene";
+    p5ModelUnification?: "safer_retry";
+  };
 }
 
 export interface BookInput {

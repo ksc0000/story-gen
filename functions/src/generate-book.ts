@@ -548,6 +548,13 @@ export interface GenerationDeps {
    * Only set when the user's Firestore doc has generationOverride.p5PageExperiment === "simplified_scene".
    */
   p5PageExperiment?: "simplified_scene";
+  /**
+   * P5-3f: Option C Safer High-Quality Retry gate.
+   * When "safer_retry": Step b (pro_consistent + simplified prompt + no reference images) is
+   * attempted before klein_fast when Step a fails.
+   * Only set when the user's Firestore doc has generationOverride.p5ModelUnification === "safer_retry".
+   */
+  p5ModelUnification?: "safer_retry";
 }
 
 interface PageImageResult {
@@ -577,6 +584,25 @@ interface CoverImageResult {
   failureReason?: string;
 }
 
+/**
+ * P5-3f: Classify why Step a failed so the diagnostic log can report the cause category.
+ * Returns one of "safety_rejection" (E005/flagged), "timeout", or "other".
+ * Never logs raw error text — only the classified string is emitted.
+ */
+function classifyFallbackReasonClass(
+  failureReason: string | undefined
+): "safety_rejection" | "timeout" | "other" {
+  if (!failureReason) return "other";
+  const lower = failureReason.toLowerCase();
+  if (lower.includes("e005") || lower.includes("flagged") || lower.includes("sensitive")) {
+    return "safety_rejection";
+  }
+  if (failureReason === "image_timeout" || lower.includes("timeout")) {
+    return "timeout";
+  }
+  return "other";
+}
+
 async function generatePageImageWithFallback(params: {
   prompt: string;
   primaryProfile: ImageModelProfile;
@@ -593,6 +619,17 @@ async function generatePageImageWithFallback(params: {
   uploadFn?: PageImageUploadFn;
   /** OpenAI API key for OpenAIImageAdapter. When present, adapter path is used for OpenAI profiles. */
   openaiApiKey?: string;
+  /**
+   * P5-3f: Option C Step b config.
+   * When provided and Step a fails on the primary profile, retry with this prompt and
+   * inputImageUrls=[] before falling back to klein_fast (Step c).
+   * Applies to both photo-backed and no-photo books — reference images are intentionally
+   * cleared to bypass safety rejections triggered by reference-aware input.
+   */
+  stepBConfig?: {
+    prompt: string;
+    inputImageUrls: string[];
+  };
 }): Promise<PageImageResult> {
   const { primaryProfile, pageIndex, skip } = params;
   const base: Omit<PageImageResult, "success" | "imageUrl" | "imageBuffer"> = {
@@ -620,6 +657,31 @@ async function generatePageImageWithFallback(params: {
     const maxRetries = 2;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       totalAttempts++;
+
+      // P5-3f: Option C Step b — on the primary profile's second attempt (attempt === 1),
+      // use the simplified prompt with no reference images to bypass safety rejections.
+      // Step b does NOT apply to fallback profiles (e.g. klein_fast).
+      const useStepBParams =
+        params.stepBConfig != null &&
+        profile === params.primaryProfile &&
+        attempt === 1;
+      // params.stepBConfig is non-null when useStepBParams is true (checked above in the condition).
+      const effectivePrompt = useStepBParams ? params.stepBConfig!.prompt : params.prompt;
+      const effectiveInputImageUrls = useStepBParams ? params.stepBConfig!.inputImageUrls : params.inputImageUrls;
+
+      if (useStepBParams) {
+        logger.info("p5_model_unification_retry_active", {
+          bookId: params.bookId,
+          pageIndex: params.pageIndex,
+          step: "b",
+          originalProfile: params.primaryProfile,
+          retryProfile: profile,
+          inputReferenceCount: params.inputImageUrls.length,
+          retryInputReferenceCount: 0,
+          fallbackReasonClass: classifyFallbackReasonClass(lastFailureReason),
+        });
+      }
+
       try {
         // P3-15: Adapter path for Replicate profiles.
         // useReplicateAdapter() flag removed — adapter is now the canonical page generation path.
@@ -639,9 +701,9 @@ async function generatePageImageWithFallback(params: {
           const adapter = new ReplicateImageAdapter(params.replicateApiToken, uploader);
           const adapterResult = await withImageTimeout(
             adapter.generateImage({
-              prompt: params.prompt,
+              prompt: effectivePrompt,
               imageModelProfile: profile,
-              inputImageUrls: params.inputImageUrls,
+              inputImageUrls: effectiveInputImageUrls,
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
@@ -672,9 +734,9 @@ async function generatePageImageWithFallback(params: {
           const adapter = new OpenAIImageAdapter(params.openaiApiKey, uploader);
           const adapterResult = await withImageTimeout(
             adapter.generateImage({
-              prompt: params.prompt,
+              prompt: effectivePrompt,
               imageModelProfile: profile,
-              inputImageUrls: params.inputImageUrls,
+              inputImageUrls: effectiveInputImageUrls,
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
@@ -693,11 +755,11 @@ async function generatePageImageWithFallback(params: {
         // (test environments that mock imageClient directly without providing adapter tokens).
         // In production, replicateApiToken and openaiApiKey are always present via Firebase secrets.
         const buffer = await withImageTimeout(
-          params.imageClient.generateImage(params.prompt, {
+          params.imageClient.generateImage(effectivePrompt, {
             purpose: params.imagePurpose,
             imageQualityTier: params.imageQualityTier,
             imageModelProfile: profile,
-            inputImageUrls: params.inputImageUrls,
+            inputImageUrls: effectiveInputImageUrls,
           }),
           IMAGE_GENERATION_TIMEOUT_MS
         );
@@ -1341,6 +1403,19 @@ export async function processBookGeneration(
         });
       }
 
+      // P5-3f: Option C Step b config — build simplified prompt for safer retry on Step a failure.
+      // Applies when the user has generationOverride.p5ModelUnification === "safer_retry".
+      // Step b intentionally clears reference images (inputImageUrls=[]) to bypass safety rejections.
+      const stepBConfig =
+        deps.p5ModelUnification === "safer_retry" &&
+        storyPage.imagePrompt &&
+        storyPage.imagePrompt.length >= 10
+          ? {
+              prompt: buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style),
+              inputImageUrls: [] as string[],
+            }
+          : undefined;
+
       const imageStartMs = Date.now();
 
       const imageResult = await generatePageImageWithFallback({
@@ -1357,6 +1432,7 @@ export async function processBookGeneration(
         replicateApiToken: deps.replicateApiToken,
         uploadFn: deps.uploadImage,
         openaiApiKey: deps.openaiApiKey,
+        stepBConfig,
       });
 
       let imageUrl = imageResult.imageUrl;
@@ -2677,6 +2753,13 @@ export const generateBook = onDocumentCreated(
       p5PageExperiment:
         gateUserData?.generationOverride?.p5PageExperiment === "simplified_scene"
           ? "simplified_scene"
+          : undefined,
+
+      // P5-3f: Option C Safer High-Quality Retry gate — only set when the user's Firestore doc has
+      // generationOverride.p5ModelUnification === "safer_retry" (admin/QA testers only).
+      p5ModelUnification:
+        gateUserData?.generationOverride?.p5ModelUnification === "safer_retry"
+          ? "safer_retry"
           : undefined,
     };
 
