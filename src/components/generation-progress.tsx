@@ -9,7 +9,7 @@ interface GenerationProgressProps { book: BookDoc; pages: PageDoc[]; }
 
 export function GenerationProgress({ book, pages }: GenerationProgressProps) {
   const total = book.pageCount;
-  const completed = pages.filter((p) => p.status === "completed").length;
+  const completed = pages.filter((p) => p.status === "completed" || p.status === "fallback_completed").length;
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
@@ -31,7 +31,7 @@ export function GenerationProgress({ book, pages }: GenerationProgressProps) {
               variants={page?.status === "generating" ? pulseVariants : undefined}
               animate={page?.status === "generating" ? "pulse" : undefined}
             >
-              {page?.status === "completed" && page.imageUrl ? (
+              {(page?.status === "completed" || page?.status === "fallback_completed") && page.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={page.imageUrl} alt={`ページ ${i + 1}`} className="h-full w-full object-cover" />
               ) : page?.status === "generating" ? (
