@@ -138,24 +138,29 @@ Cohort B フィードバック #2（8ページ書ページ、guided_ai、all_pag
 カバー:  pro_consistent（変更なし、参照画像なし）
 
 ページ（3 ステップ）:
-  Step a: pro_consistent + 通常プロンプト + 参照画像あり（attempt 1）
-            ↓ 安全性拒否の場合
+  Step a: pro_consistent + 通常プロンプト + 参照画像あり（利用可能な場合）（attempt 1）
+            ↓ 失敗（安全性拒否等）の場合
   Step b: pro_consistent + 簡略プロンプト（simplified_scene 相当）+ 参照画像なし（attempt 2）
+          ※ 参照画像ありユーザーも含む — 参照画像を意図的に除去してリトライ
             ↓ 失敗の場合のみ
   Step c: klein_fast（attempt 3 / 最終手段のみ）
 ```
 
-**Step b の役割:** 参照画像を除くことで安全性拒否トリガーを回避し、`pro_consistent` 品質のまま生成を継続する。`simplified_scene` 実験（P5-3c/d）で確立した `buildP5SimplifiedPagePrompt` を流用する。
+**Step b の役割（すべてのユーザーに適用）:** Step a が参照画像ありで失敗した場合、Step b では参照画像を意図的に除去（`inputImageUrls=[]`）して `pro_consistent` でリトライする。参照画像が安全性拒否のトリガーである場合、Step b は拒否をバイパスする。
+
+**写真ありユーザーでのトレードオフ:** Step b では子どもの似顔絵の再現性（likeness）・パーソナライゼーションが低下する。しかし Step c（`klein_fast`）への即時フォールバックや画像なしページ（Step b スキップ）と比べると、`pro_consistent` 品質を保てるため全体的な視覚品質は上回る。
+
+> **P5-3d との違い**: `simplified_scene`（P5-3c/d）は「誤って参照画像を除去しないため」写真ありユーザーに適用しないというガードを持つ。Option C Step b は逆に「参照画像を意図的に除去してリトライする」ため、P5-3d のガード（`!hasReferenceImage`）は引き継がない。
 
 | 項目 | 内容 |
 |---|---|
 | 狙い | 安全性拒否（参照画像トリガー）を Step b でバイパスし、`pro_consistent` 品質を維持する |
-| メリット | コンプリーション率を維持しながら `klein_fast` フォールバック発生率を減らす；`simplified_scene` 実験（P5-3c/d）の知見を活用できる；Step c（klein_fast）到達を例外的ケースに限定できる |
-| デメリット | 実装が複雑（リトライパスに別プロンプトビルダーが必要）；生成時間が若干増加（安全性拒否が発生したページで Step b の追加呼び出し）；Step b に pro_consistent コストが発生 |
-| Step b の制約 | 写真なしユーザーのみ適用（P5-3d のガードロジック `!hasReferenceImage` を流用）。写真ありユーザーは Step a 失敗時に Step b をスキップし直接 Step c（klein_fast）へ |
-| 実装ポイント | `generatePageImageWithFallback` にリトライパス追加；attempt 2 で `finalInputImageUrls=[]` + `buildP5SimplifiedPagePrompt` を呼ぶ |
+| メリット | 写真あり・なしを問わず `klein_fast` フォールバック発生率を減らす；Step c（klein_fast）到達を例外的ケースに限定できる；コンプリーション率を維持する |
+| デメリット | Step b では参照画像を除くため写真ありユーザーの似顔絵再現性が低下する；生成時間が若干増加（安全性拒否が発生したページで Step b の追加呼び出し分）；Step b に pro_consistent コストが発生 |
+| Step b の適用対象 | **写真あり・なしを問わずすべてのユーザー**。Step b は `inputImageUrls=[]` で参照画像を意図的に除去する。P5-3d の `!hasReferenceImage` ガードは引き継がない |
+| 実装ポイント | `generatePageImageWithFallback` にリトライパス追加；attempt 2 で `finalInputImageUrls=[]` + `buildP5SimplifiedPagePrompt` を呼ぶ；hasReferenceImage によるスキップなし |
 | ゲート | `generationOverride.p5ModelUnification: "safer_retry"` |
-| 実験リスク | 中（コンプリーション率は維持されやすいが生成コスト増の可能性）|
+| 実験リスク | 中（コンプリーション率は維持されやすいが生成コスト増の可能性；写真ありユーザーで Step b 到達時に似顔絵再現性が低下する）|
 
 ### Option D — Candidate Model Comparison（候補モデル比較）
 
@@ -301,7 +306,7 @@ Cohort B フィードバック #2（8ページ書ページ、guided_ai、all_pag
 | Option B をテスターに誤適用する | 高 | 低 | Option B は内部診断専用と明記（§4）；`p5ModelUnification: "strict"` フラグを Cohort B テスターに付与しない |
 | Option C Step b でも安全性拒否が継続する（参照画像 URL 自体が問題） | 中 | 低〜中 | Step b ではすでに参照画像を除外するため直接的な拒否は回避される見込み；万一継続する場合は参照画像再生成を検討 |
 | カバーのレガシーパス（参照画像なし）との構造差が Option C でも品質差を生む | 中 | 低 | カバーパスのアダプター移行（`P4-cover` タスク）を将来検討；Step b 生成（参照画像なし）はカバーと同等のシンプルパスになる |
-| Option C Step b（参照画像なし）でキャラクター一貫性が失われる | 中 | 中 | 写真なしユーザーのみ Step b 適用（P5-3d のガードロジック流用）；写真ありユーザーは Step b スキップ → Step c（klein_fast） |
+| Option C Step b（参照画像なし）で写真ありユーザーの似顔絵再現性が低下する | 中 | 中 | Step b は参照画像を除去して pro_consistent でリトライするため、子どもの似顔絵再現性は低下する。ただし Step c（klein_fast）への即時フォールバックより品質は上回る。テスターフィードバックの `childLikeness` 項目で実測する |
 | Step b 適用によるページ生成時間増加（安全性拒否ページで +1 呼び出し） | 低 | 中 | 書全体の `durationMs` をモニタリング；許容範囲: 現行 203s + 約 10–25s/拒否ページ |
 | Option D の OpenAI フォールバックなし設計でページ失敗率が上昇する | 中 | 中 | openai_image_candidate は失敗時に `image_failed`、book は `partial_completed`；受け入れ基準を事前合意 |
 | 候補ゲート外のユーザーへ実験設定が漏洩する | 高 | 低 | `generationOverride` は管理者のみが Firestore 直書き可能；deploy 前チェックリストで確認 |
@@ -341,9 +346,11 @@ const useStrictUnification =
 //   → 失敗（安全性拒否等）: Step b へ
 
 // Step b: attempt 2 = buildP5SimplifiedPagePrompt + 参照画像なし (inputImageUrls=[]) + pro_consistent
-//   ガード: !hasReferenceImage の場合のみ（P5-3d ロジック流用）
-//   写真ありユーザーは Step b をスキップして直接 Step c
-//   → 成功: pro_consistent 品質（参照画像なし）で完了
+//   対象: 写真あり・なしを問わずすべてのユーザー（P5-3d の !hasReferenceImage ガードは引き継がない）
+//   意図: 参照画像を除去することで安全性拒否トリガーをバイパスする
+//   トレードオフ: 写真ありユーザーは Step b で似顔絵再現性が低下するが、
+//                Step c（klein_fast）より pro_consistent 品質を維持できる
+//   → 成功: pro_consistent 品質（参照画像なし）で完了（fallback_completed ではなく completed 扱い）
 //   → 失敗: Step c へ
 
 // Step c: attempt 3 = klein_fast（最終手段、現行フォールバック）
@@ -373,8 +380,8 @@ generationOverride?: {
 | 事項 | 優先度 | ステータス | 補足 |
 |---|---|---|---|
 | `pro_consistent` 失敗の `errorCode`（E005 / 4xx / 5xx） | ~~最高~~ | **✅ 解決済み** | 安全性拒否（E005 相当）と確定。全 14 失敗が同一クラス、タイムアウト・5xx・Quota ゼロ（§1.4）|
-| 参照画像が安全性拒否のトリガーかどうか（写真なし vs 写真あり） | 中 | 調査中 | 当該書はすべてのページが参照画像を使用。写真ありユーザーでの失敗パターンは未観測 |
-| Option C Step b（参照画像なし）での品質と一貫性の実測 | 中 | 実験前 | `simplified_scene` 実験（P5-3c）で間接的に PASS 済み。Step b 専用の品質評価は Option C 実験で取得 |
+| 参照画像が安全性拒否のトリガーかどうか（写真なし vs 写真あり） | 中 | 調査中 | 当該書はすべてのページが参照画像を使用。写真ありユーザーでの失敗パターンは未観測。**Option C Step b は写真あり・なしを問わず参照画像を除去してリトライするため、失敗パターンの差は Step b 有効性の判定には影響しない** |
+| Option C Step b（参照画像なし）での品質・一貫性・似顔絵再現性の実測 | 中 | 実験前 | `simplified_scene` 実験（P5-3c）で間接的に PASS 済み（写真なしケース）。写真ありユーザーの似顔絵再現性低下は Step b の既知トレードオフとして文書化済み（§4 Option C）。Step b 専用の品質評価は Option C 実験で取得 |
 | カバーのレガシーパス（参照画像なし）を pages と揃えるべきか（`P4-cover`） | 低 | 将来検討 | Option C Step b はカバーと同等のシンプルパス。大きな差は縮まる見込み |
 | Option B（Strict）を内部診断で実行する具体的な手順・タイミング | 低 | 将来 | Cohort B と無関係な内部テストアカウントで P5-3f-implement 後に実施 |
 
