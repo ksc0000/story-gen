@@ -1,7 +1,8 @@
 # P5-3f: カバー／ページ 画像モデル統一実験計画
 
-> **Status**: Planning — docs only. No code changes, no deploy, no production default changes.
+> **Status**: Planning (updated) — docs only. No code changes, no deploy, no production default changes.
 > **Created**: 2026-06-03
+> **Updated**: 2026-06-03 — per-page fallback root-cause investigation complete; Option C prioritized
 > **Phase**: P5 (ソフトローンチ・本番トラフィック)
 > **Trigger**: Cohort B フィードバック #2 調査（Issue #19 解消後の品質改善追跡）
 > **Related**: `docs/PRODUCT_ROADMAP.md` §P5 ソフトローンチ
@@ -21,7 +22,7 @@ Cohort B フィードバック #2（8ページ書ページ、guided_ai、all_pag
 | ページ 1–7 | `klein_fast`（fallback from `pro_consistent`） | あり（2 attempts 失敗 → klein_fast 成功） | あり（2枚） |
 
 - `pro_consistent` は 8 ページ中 7 ページで 2 回連続失敗（`timedOutPages=0` → タイムアウトではなく非タイムアウトエラー）
-- 失敗理由は現行ログエクスポートでは確認不可（`page_image_failed` イベント未取得）；E005 コンテンツポリシーまたは Replicate API エラーが有力候補
+- **失敗理由は確定（§1.4 参照）**: 全 14 回の失敗が同一の安全性拒否クラス（E005 相当）。タイムアウト・5xx・Quota 超過・一時的エラーはゼロ。参照画像を含む入力への拒否が原因と考えられる（全ページで同一の拒否参照 ID）
 - カバーは `pro_consistent` 品質・ページ 1–7 は `klein_fast` 品質 → ユーザーが知覚できる品質差が発生
 
 ### 1.2 現行フォールバック設計の制約
@@ -31,6 +32,36 @@ Cohort B フィードバック #2（8ページ書ページ、guided_ai、all_pag
 - `klein_fast` は最低コスト・最低品質モデルであり、`pro_consistent` とは画質が大きく異なる
 - フォールバック発生時のページは `fallback_completed` ステータスになるが、ユーザーには理由が伝わらない
 - 大量フォールバック（7/8 ページ等）が発生した場合、書全体として「低品質」と評価されるリスクがある
+
+### 1.4 根本原因調査結果（P5-3f 計画後に判明）
+
+> この調査は P5-3f 計画書公開後に実施した。結果を受けて §5 推奨実験順序を更新した。
+
+**調査対象**: Cohort B feedback #2 の当該書（8 ページ、guided_ai、all_pages 一貫性モード）
+
+**ログ取得結果（PII-safe）:**
+
+| 項目 | 値 |
+|---|---|
+| `pro_consistent` 失敗イベント総数 | 14 件（ページ 1–7 × 2 attempt） |
+| 確認された失敗クラス | 安全性拒否（E005 相当）— 14/14 |
+| タイムアウト / 5xx / 4xx / Quota | **0 件** |
+| 一時的エラー（transient） | **0 件** |
+| 拒否参照 ID の種類 | **1 種類** — 全 14 失敗で同一 |
+| 拒否レイテンシ（シーン記録から失敗まで） | 7–23 秒（完全生成サイクルより短い） |
+| ページ 0 の失敗イベント | **0 件**（pro_consistent で 24.8 秒成功） |
+| ページ 0 の参照画像数 | 2 枚（ページ 1–7 と同じ） |
+
+**重要な観察:**
+- ページ 0 とページ 1 は **同一バッチ・同時実行**（concurrency=2）。参照画像も同一（2 枚）。にもかかわらずページ 0 は成功、ページ 1 以降は全失敗。
+- 失敗した全ページが **同一の拒否参照 ID** を返している。異なるシーン内容（長さ 358–535 文字）を持つにもかかわらず統一されている。
+- 仮説: ページ 0 の生成リクエストが先に処理されて成功し、その後 Replicate の安全フィルターが参照画像入力を評価・フラグ付けした結果、以降の全リクエストが同一の参照 ID で拒否された。
+
+**実験設計への影響:**
+- 失敗原因は「一時的エラー」ではなく「参照画像を含む入力に対する安全性拒否」が確定的
+- 同一参照画像で再試行しても拒否が繰り返される（2 attempt とも拒否）
+- **参照画像を除いたリトライ**（Option C の attempt 2）が拒否をバイパスする最も直接的な対策
+- Option B（フォールバックなし）は失敗時に画像なしページが残るため、参照画像が原因の拒否が継続する場合にユーザー UX が著しく悪化する
 
 ### 1.3 目的
 
@@ -76,7 +107,9 @@ Cohort B フィードバック #2（8ページ書ページ、guided_ai、all_pag
 
 ## 4. 実験マトリクス
 
-### Option B — Strict Profile Unification（厳格統一）
+### Option B — Strict Profile Unification（厳格統一）⚠️ 内部診断専用
+
+> **PM 判断（2026-06-03）**: 根本原因調査の結果、参照画像を含む入力への安全性拒否が原因と特定された。Option B をコホートテスターに適用すると画像なしページが多発しユーザー UX が著しく悪化するため、**Cohort B 向けの実験対象から除外**。内部テストアカウントでの診断実験としてのみ使用可。
 
 ```
 カバー:  pro_consistent（変更なし）
@@ -91,26 +124,35 @@ Cohort B フィードバック #2（8ページ書ページ、guided_ai、all_pag
 |---|---|
 | 狙い | klein_fast フォールバックを廃止し、品質差をなくす |
 | メリット | カバー/ページ品質が完全統一される；`pro_consistent` 実失敗率が直接観測可能になる |
-| デメリット | `partial_completed` 率が上昇する可能性；画像なしページが残る |
+| デメリット | 参照画像が安全性拒否トリガーである場合、7/8 ページが `image_failed` → `partial_completed` 書になる；実ユーザーには不適切 |
+| 適用範囲 | **内部テストアカウントのみ**（Cohort B テスター不可）|
 | 実装ポイント | `resolveImageFallbackProfiles("pro_consistent")` の書き換え、またはゲート付き条件分岐で fallback chain を空にする |
 | ゲート | `generationOverride.allowCandidateProfile === true` + 新フラグ `p5ModelUnification: "strict"` |
-| 実験リスク | 高（コンプリーション率低下の可能性）|
+| 実験リスク | 高（コンプリーション率低下の可能性）— Cohort B 適用禁止 |
 
-### Option C — Safer High-Quality Retry（安全優先 pro_consistent リトライ）
+### Option C — Safer High-Quality Retry（安全優先 pro_consistent リトライ）★ 推奨 First Experiment
+
+> **PM 判断（2026-06-03）**: 根本原因調査により「参照画像を含む入力への安全性拒否」が確定。参照画像を除いたリトライが拒否をバイパスする直接的な対策であるため、Option C を最初の本番向け実験として優先する。
 
 ```
-カバー:  pro_consistent（変更なし）
+カバー:  pro_consistent（変更なし、参照画像なし）
 
-ページ:  pro_consistent + 通常プロンプト + 参照画像（attempt 1）
-          → 失敗時: pro_consistent + 簡略プロンプト（simplified_scene 相当）+ 参照画像なし（attempt 2）
-          → 失敗時: klein_fast（attempt 3 / 従来フォールバック、最終手段）
+ページ（3 ステップ）:
+  Step a: pro_consistent + 通常プロンプト + 参照画像あり（attempt 1）
+            ↓ 安全性拒否の場合
+  Step b: pro_consistent + 簡略プロンプト（simplified_scene 相当）+ 参照画像なし（attempt 2）
+            ↓ 失敗の場合のみ
+  Step c: klein_fast（attempt 3 / 最終手段のみ）
 ```
+
+**Step b の役割:** 参照画像を除くことで安全性拒否トリガーを回避し、`pro_consistent` 品質のまま生成を継続する。`simplified_scene` 実験（P5-3c/d）で確立した `buildP5SimplifiedPagePrompt` を流用する。
 
 | 項目 | 内容 |
 |---|---|
-| 狙い | E005 等コンテンツポリシー失敗を簡略プロンプトで回避し、`pro_consistent` 品質を維持する |
-| メリット | コンプリーション率を維持しながら `klein_fast` フォールバック発生率を減らす；`simplified_scene` 実験（P5-3c/d）の知見を活用できる |
-| デメリット | 実装が複雑（リトライパスに別プロンプトビルダーが必要）；生成時間が若干増加；attempt 2 に pro_consistent コストが発生 |
+| 狙い | 安全性拒否（参照画像トリガー）を Step b でバイパスし、`pro_consistent` 品質を維持する |
+| メリット | コンプリーション率を維持しながら `klein_fast` フォールバック発生率を減らす；`simplified_scene` 実験（P5-3c/d）の知見を活用できる；Step c（klein_fast）到達を例外的ケースに限定できる |
+| デメリット | 実装が複雑（リトライパスに別プロンプトビルダーが必要）；生成時間が若干増加（安全性拒否が発生したページで Step b の追加呼び出し）；Step b に pro_consistent コストが発生 |
+| Step b の制約 | 写真なしユーザーのみ適用（P5-3d のガードロジック `!hasReferenceImage` を流用）。写真ありユーザーは Step a 失敗時に Step b をスキップし直接 Step c（klein_fast）へ |
 | 実装ポイント | `generatePageImageWithFallback` にリトライパス追加；attempt 2 で `finalInputImageUrls=[]` + `buildP5SimplifiedPagePrompt` を呼ぶ |
 | ゲート | `generationOverride.p5ModelUnification: "safer_retry"` |
 | 実験リスク | 中（コンプリーション率は維持されやすいが生成コスト増の可能性）|
@@ -136,19 +178,25 @@ Cohort B フィードバック #2（8ページ書ページ、guided_ai、all_pag
 
 ## 5. 推奨実験順序
 
-### Phase 1（推奨 First Experiment）: Option B — Strict Unification
+> **2026-06-03 更新**: per-page fallback 根本原因調査（§1.4）の結果を受けて推奨順序を変更した。
 
-**理由:**
-- フォールバックを廃止することで、`pro_consistent` の**実失敗率**が直接観測できる
-- 現状では `fallbackPages` だけが証拠だが、失敗の原因（E005 / 4xx / 5xx）は `page_image_failed` ログなしでは不明
-- Option C の「安全なリトライパス」を設計するには、まず「何が失敗しているか」のデータが必要
-- 候補ゲート（小規模コホート）で実行するため、コンプリーション率の低下リスクは限定的
-- 実装範囲が最小（フォールバックチェーンを空にする条件分岐を追加するだけ）
+### Phase 1（推奨 First Experiment）: Option C — Safer High-Quality Retry ★
 
-**Phase 2（Option B の結果次第）:**
-- **`fallbackRate < 10%` かつ `page_image_failed_rate < 5%`**: Option B を基本パスとして採用検討
-- **`page_image_failed_rate >= 10%`**: Option C（Safer Retry）を実装し、E005 回避と品質維持を両立する経路を模索
-- **原因が E005 content policy に集中**: Option D（OpenAI 候補）の比較実験に進む
+**理由（根本原因調査を踏まえた判断）:**
+- 失敗原因が「参照画像を含む入力への安全性拒否」として確定した。同一の参照画像で再試行しても拒否が繰り返される（観測済み）
+- Option C の Step b（参照画像なし + 簡略プロンプト + `pro_consistent`）は拒否トリガーを直接バイパスする
+- Option C はコンプリーション率を維持しながら `klein_fast` 品質への劣化を防ぐ
+- `simplified_scene` 実験（P5-3c/d）で同様のアプローチが PASS 済みであり、実装リスクが低い
+- Cohort B テスターへの安全な適用が可能
+
+**Option B の位置づけ（内部診断のみ）:**
+- 参照画像が安全性拒否トリガーの場合、Option B はページ 1–7 が `image_failed` になり、テスターへの UX が著しく悪化する
+- 内部テストアカウントで「安全性拒否率」を計測するためには有効だが、Cohort B には適用しない
+
+**Phase 2（Option C の結果次第）:**
+- **`fallbackPages / pageCount ≤ 10%`（Step c に到達するページが少ない）**: Option C を標準パスとして採用検討
+- **`fallbackPages / pageCount` が依然高い**: Step b の簡略プロンプト設計を改善するか、Option D（OpenAI 候補）の比較実験へ
+- **Step b でも安全性拒否が発生**: 参照画像 URL 自体が問題の可能性→参照画像の再生成や別ストレージパスを検討
 
 ---
 
@@ -158,17 +206,19 @@ Cohort B フィードバック #2（8ページ書ページ、guided_ai、all_pag
 
 | 指標 | 取得元 | 目標方向 |
 |---|---|---|
-| `fallbackPages / pageCount` | `book_outcome` ログ | 減少 |
-| `page_image_failed` count | `page_image_failed` イベント | 減少または同等 |
-| `partial_completed` rate | `book_outcome.bookStatus` | Option B では一時増加を許容 |
-| `completed` rate (8/8 pages) | `book_outcome.completedPages == totalPages` | 維持 |
-| `imageDurationMs` p50 / p95 per page | PageDoc フィールド | Option C では若干増加を許容 |
-| `imageAttemptCount` per page | PageDoc フィールド | 把握（比較基準） |
+| `fallbackPages / pageCount` | `book_outcome` ログ | **減少**（Option C 優先指標）|
+| **高品質試行の安全性拒否件数**（per page） | `Image generation attempt failed` ログ（attempt 0/1 失敗数） | 減少（Step a での拒否が減るほど良い）|
+| **同一拒否参照 ID を持つ失敗の連続数**（同一書内） | `Image generation attempt failed.error` の参照 ID 重複計数 | 1 冊あたり 0 が理想；≥ 3 ページで同一 ID → 参照画像フラグの可能性 |
+| **参照画像ありページの `fallback_completed` 率** | PageDoc `imageFallbackUsed === true AND inputImageUrlsCount > 0` | 減少（参照画像起因フォールバックの根本指標）|
+| `page_image_failed` count（Step c 到達） | `page_image_failed` イベント（Option C では Step c 失敗のみ） | 減少または同等 |
+| `partial_completed` rate | `book_outcome.bookStatus` | 維持（Option C では上昇しないことが目標）|
+| `completed` rate (全ページ成功) | `book_outcome.completedPages == totalPages` | 維持 |
+| `imageDurationMs` p50 / p95 per page | PageDoc フィールド | Option C では若干増加を許容（Step b 呼び出し分）|
+| `imageAttemptCount` per page | PageDoc フィールド | 把握（Step b 到達率の確認）|
 | `storyDurationMs` | `book_outcome` ログ | 変化なし（story は影響を受けない）|
 | `durationMs` (book total) | `book_outcome` ログ | Option C では若干増加を許容 |
 | `coverImageFallbackUsed` | BookDoc フィールド | 変化なし（カバーは変更なし） |
 | `duplicate_page_image_urls_detected` | ログイベント | ゼロ維持 |
-| E005 errorCode 比率 | `page_image_failed.errorCode` | 把握（原因特定のため）|
 
 ### 6.2 定性指標（テスター評価）
 
@@ -185,22 +235,24 @@ Cohort B フィードバック #2（8ページ書ページ、guided_ai、all_pag
 
 ## 7. 成功・失敗・停止基準
 
-### 7.1 成功基準（Option B で達成を目指す状態）
+### 7.1 成功基準（Option C で達成を目指す状態）
 
 | 条件 | 基準 |
 |---|---|
-| `fallbackPages / pageCount` | ≤ 10%（現行 Cohort B ベースラインの ~87.5% からの改善）|
-| `completed` rate（全ページ成功） | ≥ 80%（Option B 試験期間中の暫定許容ライン）|
+| `fallbackPages / pageCount`（Step c 到達） | ≤ 10%（現行 Cohort B ベースライン ~87.5% からの大幅改善）|
+| `completed` rate（全ページ成功） | ≥ 90%（Option C ではコンプリーション率の低下を許容しない）|
+| `partial_completed` rate | ≤ 5%（ベースラインと同等以下）|
 | テスター品質ギャップ評価 | 「ページとカバーの品質差が気になった」割合 < 30% |
 | `duplicate_page_image_urls_detected` | ゼロ |
+| Step b 到達ページ（参照画像なし pro_consistent）での成功率 | ≥ 80%（Step b が有効に機能していることの確認）|
 
 ### 7.2 失敗基準（実験失敗 → 次オプションへ）
 
 | 条件 | 判断 |
 |---|---|
-| `partial_completed` rate（全コホート平均） > 20% | Option B 廃止 → Option C |
-| `page_image_failed_rate` > 25% | Option B 廃止 → 根本原因調査（E005 詳細分析）|
-| テスター「また作りたい」スコア低下（ベースライン比 -1.0 以上） | Option B 廃止 → 再設計 |
+| `fallbackPages / pageCount`（Step c 到達）が改善しない（≥ 50% のまま） | Option C Step b の実装を見直す→簡略プロンプトでも拒否が継続している可能性 |
+| Step b でも安全性拒否が発生（参照 ID が Step a と同一） | 参照画像 URL 自体が問題の可能性→参照画像再生成フローを検討 |
+| テスター「また作りたい」スコア低下（ベースライン比 -1.0 以上） | Option C 廃止 → 設計再検討 |
 
 ### 7.3 停止基準（実験即時中断）
 
@@ -246,10 +298,11 @@ Cohort B フィードバック #2（8ページ書ページ、guided_ai、all_pag
 
 | リスク | 深刻度 | 可能性 | 軽減策 |
 |---|---|---|---|
-| Option B でコンプリーション率が著しく低下する | 高 | 中 | 候補ゲートによる小規模実験、停止基準 §7.3 の即時適用 |
-| E005 原因が特定できず Option C も失敗する | 中 | 中 | `page_image_failed` イベントを毎冊後に手動確認、errorCode 集計 |
-| カバーのレガシーパス（参照画像なし）との構造差が Option C でも品質差を生む | 中 | 低 | カバーパスのアダプター移行（`P4-cover` タスク）を前提条件に追加することを将来検討 |
-| `simplified_scene` リトライ（Option C attempt 2）がキャラクター一貫性を破壊する | 中 | 中 | 写真なしユーザー限定適用（P5-3d のガードロジック流用）|
+| Option B をテスターに誤適用する | 高 | 低 | Option B は内部診断専用と明記（§4）；`p5ModelUnification: "strict"` フラグを Cohort B テスターに付与しない |
+| Option C Step b でも安全性拒否が継続する（参照画像 URL 自体が問題） | 中 | 低〜中 | Step b ではすでに参照画像を除外するため直接的な拒否は回避される見込み；万一継続する場合は参照画像再生成を検討 |
+| カバーのレガシーパス（参照画像なし）との構造差が Option C でも品質差を生む | 中 | 低 | カバーパスのアダプター移行（`P4-cover` タスク）を将来検討；Step b 生成（参照画像なし）はカバーと同等のシンプルパスになる |
+| Option C Step b（参照画像なし）でキャラクター一貫性が失われる | 中 | 中 | 写真なしユーザーのみ Step b 適用（P5-3d のガードロジック流用）；写真ありユーザーは Step b スキップ → Step c（klein_fast） |
+| Step b 適用によるページ生成時間増加（安全性拒否ページで +1 呼び出し） | 低 | 中 | 書全体の `durationMs` をモニタリング；許容範囲: 現行 203s + 約 10–25s/拒否ページ |
 | Option D の OpenAI フォールバックなし設計でページ失敗率が上昇する | 中 | 中 | openai_image_candidate は失敗時に `image_failed`、book は `partial_completed`；受け入れ基準を事前合意 |
 | 候補ゲート外のユーザーへ実験設定が漏洩する | 高 | 低 | `generationOverride` は管理者のみが Firestore 直書き可能；deploy 前チェックリストで確認 |
 | P5-3f 実験と `simplified_scene`（P5-3c/d）実験が同時に有効になる | 低 | 低 | 2 つの `generationOverride` フラグを同一ユーザーに設定しない運用ルールを規定する |
@@ -281,12 +334,25 @@ const useStrictUnification =
 ### Option C 実装ポイント
 
 ```typescript
-// attempt 2 を "simplified_scene + 参照画像なし" で pro_consistent にリトライ
-// P5-3d の hasReferenceImage ガードを流用し、写真なしユーザーのみ適用
+// Option C: 3 ステップ リトライ（参照画像起因の安全性拒否をバイパス）
 
-// Step 1: attempt 1 = 通常プロンプト + 参照画像 + pro_consistent
-// Step 2: 失敗時 attempt 2 = buildP5SimplifiedPagePrompt + 参照画像なし + pro_consistent
-// Step 3: 失敗時 attempt 3 = klein_fast（従来フォールバック）
+// Step a: attempt 1 = 通常プロンプト + 参照画像あり + pro_consistent
+//   → 成功: そのまま完了（現行と同品質）
+//   → 失敗（安全性拒否等）: Step b へ
+
+// Step b: attempt 2 = buildP5SimplifiedPagePrompt + 参照画像なし (inputImageUrls=[]) + pro_consistent
+//   ガード: !hasReferenceImage の場合のみ（P5-3d ロジック流用）
+//   写真ありユーザーは Step b をスキップして直接 Step c
+//   → 成功: pro_consistent 品質（参照画像なし）で完了
+//   → 失敗: Step c へ
+
+// Step c: attempt 3 = klein_fast（最終手段、現行フォールバック）
+//   → 成功: fallback_completed（現行と同等の最終保険）
+
+// 実装箇所: generatePageImageWithFallback（generate-book.ts）
+// 追加ロジック: attempt 失敗後に pro_consistent の再試行パスを挿入
+// 既存: resolveImageFallbackProfiles("pro_consistent") = ["pro_consistent", "klein_fast"]
+// 変更案: ["pro_consistent", "pro_consistent_simplified", "klein_fast"] に相当する分岐を追加
 ```
 
 ### Firestore `generationOverride` 拡張案
@@ -304,35 +370,44 @@ generationOverride?: {
 
 ## 11. 未解決事項
 
-| 事項 | 優先度 | 補足 |
-|---|---|---|
-| `pro_consistent` が pages 1–7 で失敗した実際の `errorCode`（E005 / 4xx / 5xx） | 最高 | 実験設計の前提。次回生成時に `page_image_failed` イベントを必ず取得すること |
-| カバーのレガシーパス（参照画像なし）を pages と揃えるべきか（`P4-cover`） | 中 | Option C/D の品質評価精度に影響する |
-| `all_pages` + 写真なし vs 写真あり で失敗パターンが異なるか | 中 | Option C の attempt 2 設計に影響する |
-| Option B でページが `image_failed` になった場合のユーザー向け再生成導線が十分か | 中 | Phase 6 「失敗ページ再生成導線（ユーザー向け）」との関係整理が必要 |
+| 事項 | 優先度 | ステータス | 補足 |
+|---|---|---|---|
+| `pro_consistent` 失敗の `errorCode`（E005 / 4xx / 5xx） | ~~最高~~ | **✅ 解決済み** | 安全性拒否（E005 相当）と確定。全 14 失敗が同一クラス、タイムアウト・5xx・Quota ゼロ（§1.4）|
+| 参照画像が安全性拒否のトリガーかどうか（写真なし vs 写真あり） | 中 | 調査中 | 当該書はすべてのページが参照画像を使用。写真ありユーザーでの失敗パターンは未観測 |
+| Option C Step b（参照画像なし）での品質と一貫性の実測 | 中 | 実験前 | `simplified_scene` 実験（P5-3c）で間接的に PASS 済み。Step b 専用の品質評価は Option C 実験で取得 |
+| カバーのレガシーパス（参照画像なし）を pages と揃えるべきか（`P4-cover`） | 低 | 将来検討 | Option C Step b はカバーと同等のシンプルパス。大きな差は縮まる見込み |
+| Option B（Strict）を内部診断で実行する具体的な手順・タイミング | 低 | 将来 | Cohort B と無関係な内部テストアカウントで P5-3f-implement 後に実施 |
 
 ---
 
 ## 12. 次アクション
 
-実験開始前の前提条件:
+### 前提条件ステータス
 
-1. **必須**: 次回 pro_consistent 失敗発生時に `page_image_failed` イベントを含む Cloud Logging エクスポートを取得し、`errorCode` を確認する
-2. **必須**: PM が実験対象コホート・上限冊数・停止基準を承認する
-3. **推奨**: `P4-cover`（カバーのアダプター移行）の実施スケジュールを確認し、Option C/D の前提にするか判断する
-4. **推奨**: Cohort B フィードバック #2 の `page_image_failed` ログを `gcloud logging read` で直接取得し、エラーコードを特定する
+| 前提条件 | ステータス |
+|---|---|
+| per-page 失敗 `errorCode` の確認 | **✅ 完了**（安全性拒否・E005 相当、参照画像トリガーと判断）|
+| 根本原因に基づく推奨実験オプション決定 | **✅ 完了**（Option C に変更、§5 更新済み）|
+| Cohort B 継続可否の判断 | **✅ 完了**（継続可、安全性拒否は当該書固有）|
+| PM による Option C 優先の承認 | **✅ 完了**（2026-06-03）|
 
-PM 承認後、別タスク（P5-3f-implement）として実装を開始する。
+### 実装タスク（PM 承認後、別タスク P5-3f-implement として実施）
+
+1. **必須**: `generatePageImageWithFallback` に Option C の 3 ステップリトライを実装する
+2. **必須**: `generationOverride.p5ModelUnification: "safer_retry"` フラグを `src/lib/types.ts` に追加する
+3. **必須**: 参照画像なし pro_consistent リトライの単体テストを追加する（P5-3d のテストパターンを踏襲）
+4. **推奨**: 安全性拒否カスケード（同一拒否参照 ID の連続）を検出するログイベントを追加する
+5. **推奨**: 新モニタリング指標（§6.1 追加行）を Cloud Logging クエリに反映する
 
 ---
 
 ## Appendix A: 実験対応表
 
-| 実験 ID | Option | フォールバック | ゲートフラグ | 主目的 |
-|---|---|---|---|---|
-| P5-3f-B | B — Strict | なし | `p5ModelUnification: "strict"` | 実失敗率計測 |
-| P5-3f-C | C — Safer Retry | pro × 2 → klein_fast | `p5ModelUnification: "safer_retry"` | E005 回避 + 品質維持 |
-| P5-3f-D-oai | D — OpenAI Candidate | なし（OpenAI only） | `allowCandidateProfile: true` + `imageModelProfile: "openai_image_candidate"` | 別モデルとのベンチマーク |
+| 実験 ID | Option | フォールバック | ゲートフラグ | 主目的 | 対象 |
+|---|---|---|---|---|---|
+| P5-3f-C | C — Safer Retry ★ | pro(通常) → pro(簡略) → klein_fast | `p5ModelUnification: "safer_retry"` | 安全性拒否バイパス + 品質維持 | **Cohort B（推奨 First）** |
+| P5-3f-B | B — Strict ⚠️ | なし | `p5ModelUnification: "strict"` | 実失敗率・安全性拒否率の診断計測 | **内部テストのみ** |
+| P5-3f-D-oai | D — OpenAI Candidate | なし（OpenAI only） | `allowCandidateProfile: true` + `imageModelProfile: "openai_image_candidate"` | 別モデルとのベンチマーク | 候補ゲート限定 |
 
 ## Appendix B: ベースラインログクエリ（参考）
 
