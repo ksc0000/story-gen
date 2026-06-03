@@ -387,9 +387,9 @@ generationOverride?: {
 
 ---
 
-## 12. 次アクション
+## 12. 実装・デプロイ・スモーク記録
 
-### 前提条件ステータス
+### 12.1 実装ステータス
 
 | 前提条件 | ステータス |
 |---|---|
@@ -397,14 +397,58 @@ generationOverride?: {
 | 根本原因に基づく推奨実験オプション決定 | **✅ 完了**（Option C に変更、§5 更新済み）|
 | Cohort B 継続可否の判断 | **✅ 完了**（継続可、安全性拒否は当該書固有）|
 | PM による Option C 優先の承認 | **✅ 完了**（2026-06-03）|
+| `generatePageImageWithFallback` 3 ステップリトライ実装 | **✅ 完了**（commit `e75fc73`）|
+| `generationOverride.p5ModelUnification: "safer_retry"` 型定義追加 | **✅ 完了**（commit `e75fc73`）|
+| 単体テスト 8 件追加（1764/1764 PASS） | **✅ 完了**（commit `e75fc73`）|
+| `p5_model_unification_retry_active` 診断ログ追加 | **✅ 完了**（commit `e75fc73`）|
+| Firebase Functions デプロイ（predeploy ビルド修正後） | **✅ 完了**（2026-06-03）|
+| 内部スモーク PASS | **✅ 完了**（2026-06-03、§12.2 参照）|
+| firebase.json predeploy ビルドフック追加 | **✅ 完了**（commit `bb1a6c2`）|
 
-### 実装タスク（PM 承認後、別タスク P5-3f-implement として実施）
+### 12.2 内部スモーク結果（2026-06-03）
 
-1. **必須**: `generatePageImageWithFallback` に Option C の 3 ステップリトライを実装する
-2. **必須**: `generationOverride.p5ModelUnification: "safer_retry"` フラグを `src/lib/types.ts` に追加する
-3. **必須**: 参照画像なし pro_consistent リトライの単体テストを追加する（P5-3d のテストパターンを踏襲）
-4. **推奨**: 安全性拒否カスケード（同一拒否参照 ID の連続）を検出するログイベントを追加する
-5. **推奨**: 新モニタリング指標（§6.1 追加行）を Cloud Logging クエリに反映する
+内部テストアカウント（anonymized）、8 ページ、guided_ai、`all_pages` 一貫性モード、参照画像あり（公開スモーク画像）を使用。
+
+| 指標 | 値 | 判定 |
+|---|---|---|
+| `bookStatus` | `completed` | ✅ |
+| `completedPages / totalPages` | 8 / 8 | ✅ |
+| Step a 成功ページ数 | 3 | ✅ |
+| Step b 発火・成功ページ数 | 5 | ✅ |
+| Step c（klein_fast）到達ページ数 | **0** | ✅ |
+| `fallbackPages` | **0**（ベースライン Cohort B #2: 8/8 から改善）| ✅ |
+| `p5_model_unification_retry_active` イベント数 | 5（Step b と一致）| ✅ |
+| `retryInputReferenceCount` | 0（全 5 イベント）| ✅ |
+| `fallbackReasonClass` 分布 | `safety_rejection: 5` | ✅ |
+| PII / signed URL / raw error ログ漏洩 | なし | ✅ |
+| `book_early_failed` | 0 | ✅ |
+| `duplicate_page_image_urls_detected` | 0 | ✅ |
+| `image_prompt.all_identical` | 0 | ✅ |
+| teardown（override 削除）| 完了 | ✅ |
+| 残存 `p5ModelUnification` override | 0 | ✅ |
+
+**スモーク判定: PASS ✅**
+
+### 12.3 stale デプロイ インシデントと対処
+
+**発生**: 内部スモーク第 1 回目が P5-3f 実装前の旧コードに対して実行された。
+
+**根本原因**: `firebase.json` に `functions` の `predeploy` ビルドフックが存在しなかった。`firebase deploy --only functions` は TypeScript をコンパイルせず、`functions/lib/` に残っていた stale な JavaScript（P5-3f 実装前）をそのまま本番にデプロイした。
+
+**対処**: 
+- `npm run build` を手動実行してから `firebase deploy --only functions` を再実行し、P5-3f コードを正常にデプロイ
+- `firebase.json` に `predeploy: "npm --prefix functions run build"` を追加（commit `bb1a6c2`）
+- 以降の `firebase deploy --only functions` は必ず TypeScript ビルドを実行してからデプロイする
+
+**第 1 回スモーク書の扱い**: P5-3f 以前のベースライン動作（fallbackPages=8/8、Step b 未発火）として記録。P5-3f 有効性の検証には使用しない。
+
+### 12.4 次ゲート
+
+| ゲート | 現状 |
+|---|---|
+| Cohort B テスターへの `p5ModelUnification: "safer_retry"` 適用 | **⏳ PM 承認待ち** |
+| 本番 default への昇格 | 未予定（Cohort B フィードバック確認後に判断）|
+| Option B（Strict、内部診断）の実施 | 将来（Cohort B と別枠） |
 
 ---
 
