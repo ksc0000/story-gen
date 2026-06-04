@@ -1360,6 +1360,7 @@ export async function processBookGeneration(
           childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
           scenePolicy: normalizedBookData.scenePolicy,
           categoryGroupId: template.categoryGroupId,
+          hasAnimalCharacters: normalizedBookData.theme === "animals",
         }
       );
 
@@ -1384,7 +1385,7 @@ export async function processBookGeneration(
       const useSimplifiedScene =
         deps.p5PageExperiment === "simplified_scene" && !hasReferenceImage;
       const finalImagePrompt = useSimplifiedScene
-        ? buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style, { hasAnimalCharacters: template.categoryGroupId === "animals" })
+        ? buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style, { hasAnimalCharacters: normalizedBookData.theme === "animals" })
         : imagePrompt;
       const finalInputImageUrls = useSimplifiedScene ? [] : inputImageUrls;
       if (deps.p5PageExperiment === "simplified_scene") {
@@ -1410,7 +1411,7 @@ export async function processBookGeneration(
         storyPage.imagePrompt &&
         storyPage.imagePrompt.length >= 10
           ? {
-              prompt: buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style, { hasAnimalCharacters: template.categoryGroupId === "animals" }),
+              prompt: buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style, { hasAnimalCharacters: normalizedBookData.theme === "animals" }),
               inputImageUrls: [] as string[],
             }
           : undefined;
