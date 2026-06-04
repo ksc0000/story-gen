@@ -281,6 +281,91 @@ P5-3k smoke execution is a separate task (pending Hosting deploy).
 
 ---
 
+## Appendix: P5-3k Option C Reference-ON Smoke PASS
+
+**Date:** 2026-06-04  
+**Status:** PASS
+
+### Setup
+
+| Field | Value |
+|---|---|
+| Reference source | Synthetic child portrait (`smoke_reference_child_portrait`) |
+| animals.png used | No |
+| Real user photo used | No |
+| URL disclosed in logs | No |
+| Script | `scripts/create-p5-photo-verify-books.js --write --cases=1` |
+| bookId | `dGqrQtg4IpWYglnCz34u` |
+| runId | `p53c-photo-verify-20260604134513` |
+| Theme / style | animals / soft_watercolor |
+| Character consistency mode | all_pages |
+| Primary image model profile | pro_consistent |
+
+### Results
+
+| Metric | Value |
+|---|---|
+| Expected pages | 8 |
+| Completed pages | 8 |
+| Failed pages | 0 |
+| fallbackPages | **0** |
+| Duration | 200,537 ms |
+
+### P5-3k Option C Behavior
+
+| Event | Count | Detail |
+|---|---|---|
+| `pro_consistent + reference` attempt 0 failure | 7 (pages 1–7) | `reasonClass=safety_rejection` |
+| Step b retry activated (`p5_model_unification_retry_active`) | 7 | `step=b`, `retryInputReferenceCount=0` |
+| Recovered by `pro_consistent + no reference` | 7 | `status=completed`, `profile=pro_consistent` |
+| `klein_fast` fallback | 0 | — |
+| `pro_consistent` attempt 0 success (with reference) | 1 (page 0) | — |
+| OpenAI candidate pages | 0 | — |
+
+All failures were classified as `safety_rejection` — consistent with Replicate image-to-image
+safety filter rejecting the reference image + pro_consistent path.
+
+Previous baseline (P5-3j smoke, `animals.png`): `fallbackPages=7/8`.  
+This smoke (P5-3k Option C, synthetic portrait): `fallbackPages=0/8`.
+
+### Visual QA
+
+| Check | Result |
+|---|---|
+| Child fully human | Pass |
+| Animal companion separate | Pass |
+| Star independent | N/A (not in this theme) |
+| Dinosaur remains itself | N/A (not in this theme) |
+| No star/dino merge | N/A |
+| No unexplained artifacts | Pass |
+| No duplicate animal cast | Pass |
+| Style consistency across pages | Pass — all pages on pro_consistent, same watercolor style |
+
+**Note:** Page 0 used the reference image (attempt 0 succeeded). Pages 1–7 were generated via
+Step b (no reference image). Minor child appearance variation across pages is expected and
+acceptable because Step b drops the reference image to bypass the safety filter. The key
+improvement is that all pages remain on `pro_consistent` (no model-level style break).
+
+### Conclusion
+
+- **Smoke result: PASS**
+- P5-3k Option C validated in smoke: `fallbackPages` reduced from 7 to 0
+- `klein_fast` fallback eliminated for this smoke
+- Safe reference image pipeline confirmed: synthetic portrait → HTTP 200 → reference-aware path
+
+**Cohort B remains HOLD.** Smoke pass is a necessary condition but not sufficient.
+Readiness gate still requires production traffic:
+- production books analyzed ≥ 10 (post-P5-3k deploy)
+- avg fallbackPages < 2.0
+- 7+ fallback rate < 15%
+- no recurring style-consistency regression
+
+**Caveat:** Step b intentionally drops the reference image to bypass safety rejections.
+Pages generated via Step b may have lower child likeness than pages where attempt 0 succeeds
+with the reference. Monitor production books for user-visible child likeness impact.
+
+---
+
 ## Non-Goals / Things Not Changed
 
 - No model routing changes
