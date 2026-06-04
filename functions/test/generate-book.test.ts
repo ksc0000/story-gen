@@ -1740,10 +1740,10 @@ describe("p5ModelUnification safer_retry (P5-3f)", () => {
     logSpy.mockRestore();
   });
 
-  it("default path unchanged when p5ModelUnification is absent", async () => {
+  it("Step b does not activate when Step a succeeds (all attempts succeed on first try)", async () => {
     await processBookGeneration("book-default-unification", baseBookData, deps);
 
-    // All calls use original prompt with reference URLs — no step-b intervention
+    // All calls use original prompt with reference URLs — Step b never reached because no failures
     for (const [, opts] of deps.imageClient.generateImage.mock.calls) {
       expect((opts.inputImageUrls ?? []).length).toBeGreaterThan(0);
     }
@@ -1910,5 +1910,118 @@ describe("p5ModelUnification safer_retry (P5-3f)", () => {
     const stepBLog = logSpy.mock.calls.find(([msg]) => msg === "p5_model_unification_retry_active");
     const payload = stepBLog![1] as Record<string, unknown>;
     expect(payload["fallbackReasonClass"]).toBe("safety_rejection");
+  });
+});
+
+describe("P5-3k Option C: reference-aware retry (always-on)", () => {
+  const E005_ERROR = new Error("Prediction failed: The input or output was flagged as sensitive. Please try again with different inputs. (E005) (uIJ6l3ruRD)");
+
+  const onePage: GeneratedStory = { ...mockStory, pages: [mockStory.pages[0]] };
+
+  let deps: ReturnType<typeof createMockDeps>;
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    deps = createMockDeps();
+    logSpy = vi.spyOn(logger, "info").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    logSpy.mockRestore();
+  });
+
+  it("activates Step b for pro_consistent + reference-aware book without p5ModelUnification override", async () => {
+    // baseBookData uses mockStory with magic_friend_01.approvedImageUrl — refs present
+    deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
+    deps.imageClient.generateImage.mockRejectedValueOnce(E005_ERROR); // Step a fails
+
+    // No p5ModelUnification override — shouldEnableReferenceAwareRetry path alone triggers Step b
+    await processBookGeneration("book-p53k-always-on", baseBookData, deps);
+
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
+    const [, stepAOpts] = deps.imageClient.generateImage.mock.calls[0];
+    const [stepBPrompt, stepBOpts] = deps.imageClient.generateImage.mock.calls[1];
+
+    // Step a: reference images present
+    expect((stepAOpts.inputImageUrls ?? []).length).toBeGreaterThan(0);
+    // Step b: reference images cleared
+    expect(stepBOpts.inputImageUrls ?? []).toEqual([]);
+    // Step b: simplified prompt (no character consistency block)
+    expect(stepBPrompt).not.toContain("Character consistency rules:");
+    // Step b: still pro_consistent (no model downgrade)
+    expect(stepBOpts.imageModelProfile).toBe("pro_consistent");
+
+    const page0Data = deps.writePage.mock.calls[0][1];
+    expect(page0Data.status).toBe("completed");
+    expect(page0Data.imageFallbackUsed ?? false).toBe(false);
+    expect(page0Data.imageModelProfile).toBe("pro_consistent");
+    expect(page0Data.imageAttemptCount).toBe(2);
+
+    // Diagnostic log emitted
+    const stepBLog = logSpy.mock.calls.find(
+      ([msg, payload]) =>
+        msg === "p5_model_unification_retry_active" &&
+        (payload as Record<string, unknown>)?.["step"] === "b"
+    );
+    expect(stepBLog).toBeDefined();
+  });
+
+  it("does NOT activate Step b when pro_consistent book has no reference images", async () => {
+    // Story without any cast reference images, no childProfileSnapshot
+    const noRefStory: GeneratedStory = {
+      ...onePage,
+      cast: [{ ...mockStory.cast[0], approvedImageUrl: undefined, referenceImageUrl: undefined, generatedReferenceImageUrl: undefined }],
+    };
+    deps.llmClient.generateStory.mockResolvedValueOnce(noRefStory);
+    // Both pro_consistent attempts fail (no Step b because refs are empty) → klein_fast succeeds
+    deps.imageClient.generateImage
+      .mockRejectedValueOnce(E005_ERROR)  // pro_consistent attempt 0
+      .mockRejectedValueOnce(E005_ERROR); // pro_consistent attempt 1 (plain retry, no Step b)
+
+    await processBookGeneration("book-p53k-no-ref", baseBookData, deps);
+
+    // 3 calls: pro_consistent a0 (fail), pro_consistent a1 (fail), klein_fast a0 (succeed)
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(3);
+    const [, call0Opts] = deps.imageClient.generateImage.mock.calls[0];
+    const [, call1Opts] = deps.imageClient.generateImage.mock.calls[1];
+    const [, call2Opts] = deps.imageClient.generateImage.mock.calls[2];
+
+    expect(call0Opts.imageModelProfile).toBe("pro_consistent");
+    // attempt 1 is a plain retry (no Step b): inputImageUrls is empty (no refs), not cleared by Step b
+    expect(call1Opts.imageModelProfile).toBe("pro_consistent");
+    expect(call2Opts.imageModelProfile).toBe("klein_fast"); // klein_fast fallback after both pro fail
+
+    const page0Data = deps.writePage.mock.calls[0][1];
+    expect(page0Data.imageFallbackUsed).toBe(true);
+    expect(page0Data.imageModelProfile).toBe("klein_fast");
+
+    // No Step b diagnostic log
+    const stepBLogs = logSpy.mock.calls.filter(
+      ([msg, payload]) =>
+        msg === "p5_model_unification_retry_active" &&
+        (payload as Record<string, unknown>)?.["step"] === "b"
+    );
+    expect(stepBLogs).toHaveLength(0);
+  });
+
+  it("does NOT activate Step b when primary profile is klein_fast (not pro_consistent)", async () => {
+    const kleinBook: BookData = { ...baseBookData, imageModelProfile: "klein_fast" };
+    deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
+    deps.imageClient.generateImage.mockRejectedValueOnce(E005_ERROR); // klein_fast attempt 0 fails
+
+    await processBookGeneration("book-p53k-klein-primary", kleinBook, deps);
+
+    // klein_fast attempt 0 fails → klein_fast attempt 1 succeeds (no Step b, no fallback profile)
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
+    const [, call0Opts] = deps.imageClient.generateImage.mock.calls[0];
+    const [, call1Opts] = deps.imageClient.generateImage.mock.calls[1];
+    expect(call0Opts.imageModelProfile).toBe("klein_fast");
+    expect(call1Opts.imageModelProfile).toBe("klein_fast");
+
+    // No Step b log
+    const stepBLogs = logSpy.mock.calls.filter(
+      ([msg]) => msg === "p5_model_unification_retry_active"
+    );
+    expect(stepBLogs).toHaveLength(0);
   });
 });
