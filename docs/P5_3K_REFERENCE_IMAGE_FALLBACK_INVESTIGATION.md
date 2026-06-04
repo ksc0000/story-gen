@@ -249,14 +249,44 @@ This is similar to P5-3f Step b but activated on attempt count alone.
 
 ---
 
+## P5-3k Option C Implementation Status
+
+- PR #23 merged and deployed to Firebase Functions (`story-gen-8a769`)
+- `pro_consistent + reference image` attempt 0 failure now triggers Step b retry:
+  - attempt 1: `pro_consistent + no reference image` (simplified prompt)
+  - klein_fast fallback only if Step b also fails
+- P5-3f `safer_retry` override preserved as additional activation path
+
+### Reference Image for P5-3k Smoke
+
+The original P5-3k smoke used `animals.png` as the reference image stand-in.
+`animals.png` is a static scene illustration and is **not representative** of a real child
+photo. Do not use it for P5-3k validation smokes.
+
+The designated smoke reference image is a **synthetic child portrait**:
+
+- File: `public/smoke/reference-child-portrait.png`
+- Format: 512×512 PNG flat illustration
+- Non-photorealistic; no real person likeness; no trademark; smoke/test only
+- Requires Hosting deploy before use: `firebase deploy --only hosting`
+- Script default: `https://story-gen-8a769.web.app/smoke/reference-child-portrait.png`
+- Override: set `SMOKE_REFERENCE_IMAGE_URL` env var
+
+Reference type logging (not URLs):
+- `smoke_reference_child_portrait` — default portrait asset
+- `custom_env_reference` — explicit env override
+- `legacy_animals_reference` — animals.png (do not use for P5-3k smoke)
+
+P5-3k smoke execution is a separate task (pending Hosting deploy).
+
+---
+
 ## Non-Goals / Things Not Changed
 
 - No model routing changes
 - No production defaults changed
 - No P5-3f safer_retry changes
-- No code changes (investigation only)
 - No Cohort B invitations sent
-- No generation performed (analysis only; comparison smokes were already done in P5-3k investigation)
 
 ---
 

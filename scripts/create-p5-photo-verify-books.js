@@ -37,10 +37,33 @@ const { FieldValue, getFirestore } = functionsRequire("firebase-admin/firestore"
 const TARGET_PROJECT_ID = "story-gen-8a769";
 const PHOTO_USER_ID = "smoke-p53c-photo";
 
-// Public image used as a stand-in for a child reference photo in smoke tests.
-// Real users would have a signed Storage URL here.
-const SMOKE_REFERENCE_IMAGE_URL =
-  "https://story-gen-8a769.web.app/images/templates/animals.png";
+// Smoke reference image URL — resolved in priority order:
+//   1. SMOKE_REFERENCE_IMAGE_URL env var (any URL, explicit opt-in)
+//   2. Default: synthetic child portrait at /smoke/reference-child-portrait.png
+//      (non-photorealistic flat illustration; no real person; Hosting deploy required first)
+//   3. Legacy animals.png is NOT the default. Set SMOKE_REFERENCE_IMAGE_URL explicitly to use it,
+//      a warning will be printed.
+function resolveSmokeReferenceImageUrl() {
+  const envUrl = process.env.SMOKE_REFERENCE_IMAGE_URL;
+  if (envUrl) {
+    const isLegacyAnimals = envUrl.includes("animals.png");
+    if (isLegacyAnimals) {
+      console.warn("[warn] SMOKE_REFERENCE_IMAGE_URL points to animals.png.");
+      console.warn("[warn] animals.png is NOT representative of a child photo.");
+      console.warn("[warn] Reference type: legacy_animals_reference");
+    } else {
+      console.log("[info] Reference type: custom_env_reference");
+    }
+    return { url: envUrl, sourceType: isLegacyAnimals ? "legacy_animals_reference" : "custom_env_reference" };
+  }
+  const defaultUrl = "https://story-gen-8a769.web.app/smoke/reference-child-portrait.png";
+  console.log("[info] Reference type: smoke_reference_child_portrait");
+  console.log("[info] Ensure Hosting is deployed before running smoke with this URL.");
+  return { url: defaultUrl, sourceType: "smoke_reference_child_portrait" };
+}
+
+const { url: SMOKE_REFERENCE_IMAGE_URL, sourceType: SMOKE_REFERENCE_SOURCE_TYPE } =
+  resolveSmokeReferenceImageUrl();
 
 const STYLE_PROFILES = {
   soft_watercolor: {
@@ -178,9 +201,7 @@ async function main() {
   console.log(`  runId:       ${runId}`);
   console.log(`  cases:       ${activeCases.map((c) => c.caseNum).join(", ")}`);
   console.log(`  photoUser:   ${PHOTO_USER_ID} (p5PageExperiment must be set)`);
-  console.log(
-    `  refImage:    ${SMOKE_REFERENCE_IMAGE_URL.substring(0, 60)}... (smoke stand-in)`
-  );
+  console.log(`  refImage:    [${SMOKE_REFERENCE_SOURCE_TYPE}] (URL not disclosed in logs)`);
   console.log("");
 
   for (const c of activeCases) {
@@ -230,6 +251,7 @@ async function main() {
         styleId: c.style,
         experiment: "simplified_scene_with_photo",
         hasReferenceImageUrl: true,
+        referenceSourceType: SMOKE_REFERENCE_SOURCE_TYPE,
         createdAtIso: new Date(nowMs).toISOString(),
       },
     };
@@ -240,9 +262,7 @@ async function main() {
       console.log(`    style:        ${c.style}`);
       console.log(`    userId:       ${PHOTO_USER_ID}`);
       console.log(`    pageCount:    ${c.pageCount}`);
-      console.log(
-        `    refImageUrl:  ${SMOKE_REFERENCE_IMAGE_URL.substring(0, 60)}...`
-      );
+      console.log(`    refImageUrl:  [${SMOKE_REFERENCE_SOURCE_TYPE}] (URL not disclosed in logs)`);
       console.log(
         `    characterBible set: ${Boolean(childProfileSnapshot.visualProfile.characterBible)}`
       );

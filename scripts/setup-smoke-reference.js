@@ -112,24 +112,30 @@ async function findOrCreateReferenceImageUrl() {
     }
   }
 
-  // Fallback: Use a public test image URL
+  // Fallback: synthetic child portrait (non-photorealistic flat illustration).
+  // animals.png is NOT used as default — it is not representative of a child photo.
+  // Requires Hosting to be deployed (public/smoke/reference-child-portrait.png).
   console.log(`[info] No existing profile images found.`);
-  console.log(`[info] Using public test image...`);
-  
-  // Use a reliable public image URL from deployed hosting
-  const fallbackUrl = "https://story-gen-8a769.web.app/images/templates/animals.png";
-  
+  console.log(`[info] Using synthetic child portrait (smoke_reference_child_portrait)...`);
+
+  const fallbackUrl = "https://story-gen-8a769.web.app/smoke/reference-child-portrait.png";
+
   console.log(`[check] Verifying fallback URL reachability...`);
   let isReachable = await checkUrlReachability(fallbackUrl);
   if (!isReachable && process.platform === "win32") {
     isReachable = checkUrlReachabilityWithPowerShell(fallbackUrl);
   }
-  
+
   if (!isReachable) {
-    throw new Error("Fallback image URL is not reachable. Please provide --reference-image-url explicitly.");
+    throw new Error(
+      "Smoke reference portrait URL is not reachable.\n" +
+      "  Ensure Hosting is deployed: firebase deploy --only hosting\n" +
+      "  Or set SMOKE_REFERENCE_IMAGE_URL to an accessible reference URL.\n" +
+      "  Do NOT fall back to animals.png — it is not representative of a child photo."
+    );
   }
 
-  console.log(`[check] ✓ Fallback URL is reachable`);
+  console.log(`[check] ✓ Fallback URL is reachable (smoke_reference_child_portrait)`);
   return fallbackUrl;
 }
 
