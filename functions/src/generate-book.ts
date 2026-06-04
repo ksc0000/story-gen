@@ -1403,11 +1403,16 @@ export async function processBookGeneration(
         });
       }
 
-      // P5-3f: Option C Step b config — build simplified prompt for safer retry on Step a failure.
-      // Applies when the user has generationOverride.p5ModelUnification === "safer_retry".
-      // Step b intentionally clears reference images (inputImageUrls=[]) to bypass safety rejections.
+      // P5-3k Option C: drop reference images on retry when pro_consistent is used with
+      // reference images — the combination most likely to trigger Replicate safety rejections.
+      // Activates automatically (no per-user override needed) for reference-aware pro_consistent
+      // books. P5-3f safer_retry override preserved as an additional path for other cases.
+      const shouldEnableReferenceAwareRetry =
+        finalInputImageUrls.length > 0 &&
+        imageModelProfile === "pro_consistent";
+
       const stepBConfig =
-        deps.p5ModelUnification === "safer_retry" &&
+        (shouldEnableReferenceAwareRetry || deps.p5ModelUnification === "safer_retry") &&
         storyPage.imagePrompt &&
         storyPage.imagePrompt.length >= 10
           ? {
