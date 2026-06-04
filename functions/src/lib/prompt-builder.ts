@@ -725,13 +725,13 @@ export function buildVisualContinuityGuard({
     "Style consistency: Use the exact same illustration style across every page. Keep the same line weight, color palette, brush texture, lighting, shading, and level of detail. Every page must look like it was illustrated by the same artist for the same picture book. Do not shift style between pages.",
   ];
   if (hasAnimalCharacters) {
-    // B. Secondary animal character consistency
+    // B. Secondary animal character consistency + cast-count guard
     parts.push(
-      "Secondary animal character consistency: Recurring animal characters must keep the same appearance across all pages. If a fox, bear, bunny, or other animal appears more than once, it must remain the same character with the same body size, fur color, markings, ears, face shape, and expression. Do not redesign recurring animals from page to page."
+      "Secondary animal character consistency: Recurring animal characters must keep the same appearance across all pages. If a fox, bear, bunny, or other animal appears more than once, it must remain the same character with the same body size, fur color, markings, ears, face shape, and expression. Do not redesign recurring animals from page to page. Do not duplicate recurring animal companions. Each recurring animal character should appear exactly once in a scene unless the current page explicitly requires multiple instances. Do not introduce extra foxes, bears, bunnies, birds, or other animal companions beyond what the story page describes."
     );
-    // C. Child-animal boundary
+    // C. Child-animal boundary (strengthened)
     parts.push(
-      "Child-animal boundary: The child protagonist must remain fully human. Do not merge the child's body with any animal character. Animal fur, ears, tails, paws, whiskers, snout, claws, or animal body parts must never appear on the child. If animals appear, they must be clearly separate companions beside or near the child."
+      "Child-animal boundary: The child protagonist must remain an ordinary fully human child on every single page. Do not dress the child as an animal. Do not give the child animal ears, an animal tail, an animal hood, an animal costume, an animal headband, paws, a snout, whiskers, claws, or fur. The child must not visually merge with any animal character. Animal features may appear only on actual animal characters. If animals appear, they must be clearly separate companions beside or near the child, never fused with or overlaid on the child's body."
     );
   }
   // D. Object grounding

@@ -442,7 +442,7 @@ describe("buildImagePrompt", () => {
   });
 });
 
-describe("buildVisualContinuityGuard (P5-3g)", () => {
+describe("buildVisualContinuityGuard (P5-3g/P5-3h)", () => {
   it("always includes style consistency guard", () => {
     const result = buildVisualContinuityGuard({ hasAnimalCharacters: false });
     expect(result).toContain("Style consistency:");
@@ -464,22 +464,36 @@ describe("buildVisualContinuityGuard (P5-3g)", () => {
     expect(result).toContain("fur color, markings, ears, face shape");
     expect(result).toContain("Do not redesign recurring animals from page to page");
   });
-  it("includes child-animal boundary guard when hasAnimalCharacters is true", () => {
+  // P5-3h: recurring cast-count guard
+  it("includes animal cast-count duplication guard when hasAnimalCharacters is true", () => {
+    const result = buildVisualContinuityGuard({ hasAnimalCharacters: true });
+    expect(result).toContain("Do not duplicate recurring animal companions");
+    expect(result).toContain("appear exactly once in a scene");
+    expect(result).toContain("Do not introduce extra foxes, bears, bunnies, birds");
+  });
+  // P5-3h: strengthened child-animal boundary
+  it("includes strengthened child-human-only guard when hasAnimalCharacters is true", () => {
     const result = buildVisualContinuityGuard({ hasAnimalCharacters: true });
     expect(result).toContain("Child-animal boundary:");
-    expect(result).toContain("fully human");
-    expect(result).toContain("Animal fur, ears, tails, paws, whiskers, snout, claws");
-    expect(result).toContain("clearly separate companions");
+    expect(result).toContain("ordinary fully human child on every single page");
+    expect(result).toContain("Do not dress the child as an animal");
+    expect(result).toContain("animal ears, an animal tail, an animal hood, an animal costume, an animal headband");
+    expect(result).toContain("paws, a snout, whiskers, claws, or fur");
+    expect(result).toContain("The child must not visually merge with any animal character");
+    expect(result).toContain("Animal features may appear only on actual animal characters");
+    expect(result).toContain("clearly separate companions beside or near the child");
   });
   it("does not include animal-specific text when hasAnimalCharacters is false", () => {
     const result = buildVisualContinuityGuard({ hasAnimalCharacters: false });
     expect(result).not.toContain("fox, bear, bunny");
     expect(result).not.toContain("Child-animal boundary:");
     expect(result).not.toContain("Secondary animal character consistency:");
+    expect(result).not.toContain("Do not dress the child as an animal");
+    expect(result).not.toContain("Do not duplicate recurring animal companions");
   });
 });
 
-describe("buildImagePrompt visual continuity guard injection (P5-3g)", () => {
+describe("buildImagePrompt visual continuity guard injection (P5-3g/P5-3h)", () => {
   it("injects style consistency guard into normal page prompt", () => {
     const result = buildImagePrompt("A child in a forest", "watercolor");
     expect(result).toContain("Style consistency:");
@@ -501,7 +515,6 @@ describe("buildImagePrompt visual continuity guard injection (P5-3g)", () => {
     expect(result).toContain("Secondary animal character consistency:");
     expect(result).toContain("Child-animal boundary:");
     expect(result).toContain("fox, bear, bunny");
-    expect(result).toContain("Animal fur, ears, tails, paws, whiskers");
   });
   it("injects animal guards when hasAnimalCharacters is explicitly true", () => {
     const result = buildImagePrompt(
@@ -514,6 +527,33 @@ describe("buildImagePrompt visual continuity guard injection (P5-3g)", () => {
     expect(result).toContain("Secondary animal character consistency:");
     expect(result).toContain("Child-animal boundary:");
   });
+  // P5-3h: costume / anatomy prohibition in normal prompt
+  it("injects animal costume and anatomy prohibition for animals theme", () => {
+    const result = buildImagePrompt(
+      "A child walks with a fox in a meadow",
+      "classic_picture_book",
+      undefined,
+      undefined,
+      { hasAnimalCharacters: true }
+    );
+    expect(result).toContain("Do not dress the child as an animal");
+    expect(result).toContain("animal ears, an animal tail, an animal hood, an animal costume");
+    expect(result).toContain("The child must not visually merge with any animal character");
+    expect(result).toContain("Animal features may appear only on actual animal characters");
+  });
+  // P5-3h: cast-count guard in normal prompt
+  it("injects recurring animal cast-count guard for animals theme", () => {
+    const result = buildImagePrompt(
+      "A child and a bear explore a forest",
+      "watercolor",
+      undefined,
+      undefined,
+      { hasAnimalCharacters: true }
+    );
+    expect(result).toContain("Do not duplicate recurring animal companions");
+    expect(result).toContain("appear exactly once in a scene");
+    expect(result).toContain("Do not introduce extra foxes, bears, bunnies, birds");
+  });
   it("does not inject animal-specific guards for non-animal themes", () => {
     const result = buildImagePrompt(
       "A child at a birthday party",
@@ -525,12 +565,14 @@ describe("buildImagePrompt visual continuity guard injection (P5-3g)", () => {
     expect(result).not.toContain("fox, bear, bunny");
     expect(result).not.toContain("Child-animal boundary:");
     expect(result).not.toContain("Secondary animal character consistency:");
+    expect(result).not.toContain("Do not dress the child as an animal");
+    expect(result).not.toContain("Do not duplicate recurring animal companions");
     expect(result).toContain("Style consistency:");
     expect(result).toContain("Object grounding:");
   });
 });
 
-describe("buildP5SimplifiedPagePrompt visual continuity guard (P5-3g)", () => {
+describe("buildP5SimplifiedPagePrompt visual continuity guard (P5-3g/P5-3h)", () => {
   it("includes style consistency guard in simplified prompt", () => {
     const result = buildP5SimplifiedPagePrompt("A child and a fox in a meadow", "watercolor");
     expect(result).toContain("Style consistency:");
@@ -551,10 +593,33 @@ describe("buildP5SimplifiedPagePrompt visual continuity guard (P5-3g)", () => {
     expect(result).toContain("Child-animal boundary:");
     expect(result).toContain("fox, bear, bunny");
   });
+  // P5-3h: costume prohibition in simplified prompt
+  it("includes animal costume prohibition in simplified prompt for animals theme", () => {
+    const result = buildP5SimplifiedPagePrompt(
+      "A child and a fox walk through a forest",
+      "classic_picture_book",
+      { hasAnimalCharacters: true }
+    );
+    expect(result).toContain("Do not dress the child as an animal");
+    expect(result).toContain("animal ears, an animal tail, an animal hood, an animal costume");
+    expect(result).toContain("Animal features may appear only on actual animal characters");
+  });
+  // P5-3h: cast-count guard in simplified prompt
+  it("includes recurring animal cast-count guard in simplified prompt for animals theme", () => {
+    const result = buildP5SimplifiedPagePrompt(
+      "A child and a bear explore a forest",
+      "watercolor",
+      { hasAnimalCharacters: true }
+    );
+    expect(result).toContain("Do not duplicate recurring animal companions");
+    expect(result).toContain("Do not introduce extra foxes, bears, bunnies, birds");
+  });
   it("does not include animal-specific guards in simplified prompt when hasAnimalCharacters is false", () => {
     const result = buildP5SimplifiedPagePrompt("A child at a birthday party", "flat");
     expect(result).not.toContain("fox, bear, bunny");
     expect(result).not.toContain("Child-animal boundary:");
+    expect(result).not.toContain("Do not dress the child as an animal");
+    expect(result).not.toContain("Do not duplicate recurring animal companions");
     expect(result).toContain("Style consistency:");
   });
 });
