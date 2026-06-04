@@ -442,67 +442,55 @@ describe("buildImagePrompt", () => {
   });
 });
 
-describe("buildVisualContinuityGuard (P5-3g/P5-3h)", () => {
+describe("buildVisualContinuityGuard (P5-3g/P5-3h/P5-3j)", () => {
   it("always includes style consistency guard", () => {
     const result = buildVisualContinuityGuard({ hasAnimalCharacters: false });
     expect(result).toContain("Style consistency:");
-    expect(result).toContain("same line weight, color palette, brush texture");
-    expect(result).toContain("illustrated by the same artist");
+    expect(result).toContain("color palette, line weight");
+    expect(result).toContain("consistent artist throughout");
     expect(result).toContain("Do not shift style between pages");
   });
   it("always includes object grounding guard", () => {
     const result = buildVisualContinuityGuard({ hasAnimalCharacters: false });
     expect(result).toContain("Object grounding:");
-    expect(result).toContain("mysterious glowing objects");
-    expect(result).toContain("shiny symbolic items");
-    expect(result).toContain("recognizable and relevant to the scene");
+    expect(result).toContain("unexplained glowing items");
+    expect(result).toContain("story names them");
   });
-  it("includes secondary animal character consistency when hasAnimalCharacters is true", () => {
+  it("includes animal character consistency when hasAnimalCharacters is true", () => {
     const result = buildVisualContinuityGuard({ hasAnimalCharacters: true });
-    expect(result).toContain("Secondary animal character consistency:");
-    expect(result).toContain("fox, bear, bunny");
-    expect(result).toContain("fur color, markings, ears, face shape");
-    expect(result).toContain("Do not redesign recurring animals from page to page");
+    expect(result).toContain("Animal character consistency:");
+    expect(result).toContain("same appearance, size, and expression across pages");
+    expect(result).toContain("Do not redesign, duplicate, or add extra animal companions");
+    expect(result).toContain("beyond what the scene requires");
   });
-  // P5-3h: recurring cast-count guard
-  it("includes animal cast-count duplication guard when hasAnimalCharacters is true", () => {
-    const result = buildVisualContinuityGuard({ hasAnimalCharacters: true });
-    expect(result).toContain("Do not duplicate recurring animal companions");
-    expect(result).toContain("appear exactly once in a scene");
-    expect(result).toContain("Do not introduce extra foxes, bears, bunnies, birds");
-  });
-  // P5-3h: strengthened child-animal boundary
-  it("includes strengthened child-human-only guard when hasAnimalCharacters is true", () => {
+  it("includes child-animal boundary guard when hasAnimalCharacters is true", () => {
     const result = buildVisualContinuityGuard({ hasAnimalCharacters: true });
     expect(result).toContain("Child-animal boundary:");
-    expect(result).toContain("ordinary fully human child on every single page");
-    expect(result).toContain("Do not dress the child as an animal");
-    expect(result).toContain("animal ears, an animal tail, an animal hood, an animal costume, an animal headband");
-    expect(result).toContain("paws, a snout, whiskers, claws, or fur");
-    expect(result).toContain("The child must not visually merge with any animal character");
-    expect(result).toContain("Animal features may appear only on actual animal characters");
-    expect(result).toContain("clearly separate companions beside or near the child");
+    expect(result).toContain("fully human child on every page");
+    expect(result).toContain("no animal features, costume, or body parts");
+    expect(result).toContain("separate companions beside the child");
+    expect(result).toContain("never merged with the child's body");
   });
   it("does not include animal-specific text when hasAnimalCharacters is false", () => {
     const result = buildVisualContinuityGuard({ hasAnimalCharacters: false });
-    expect(result).not.toContain("fox, bear, bunny");
     expect(result).not.toContain("Child-animal boundary:");
-    expect(result).not.toContain("Secondary animal character consistency:");
-    expect(result).not.toContain("Do not dress the child as an animal");
-    expect(result).not.toContain("Do not duplicate recurring animal companions");
+    expect(result).not.toContain("Animal character consistency:");
+    expect(result).not.toContain("no animal features, costume, or body parts");
+    expect(result).not.toContain("add extra animal companions");
   });
 });
 
-describe("buildImagePrompt visual continuity guard injection (P5-3g/P5-3h)", () => {
+describe("buildImagePrompt visual continuity guard injection (P5-3g/P5-3h/P5-3j)", () => {
   it("injects style consistency guard into normal page prompt", () => {
     const result = buildImagePrompt("A child in a forest", "watercolor");
     expect(result).toContain("Style consistency:");
-    expect(result).toContain("same line weight, color palette, brush texture");
+    expect(result).toContain("color palette, line weight");
+    expect(result).toContain("consistent artist throughout");
   });
   it("injects object grounding guard into normal page prompt", () => {
     const result = buildImagePrompt("A child in a forest", "watercolor");
     expect(result).toContain("Object grounding:");
-    expect(result).toContain("mysterious glowing objects");
+    expect(result).toContain("unexplained glowing items");
   });
   it("injects animal guards when categoryGroupId is animals", () => {
     const result = buildImagePrompt(
@@ -512,9 +500,9 @@ describe("buildImagePrompt visual continuity guard injection (P5-3g/P5-3h)", () 
       undefined,
       { categoryGroupId: "animals" }
     );
-    expect(result).toContain("Secondary animal character consistency:");
+    expect(result).toContain("Animal character consistency:");
     expect(result).toContain("Child-animal boundary:");
-    expect(result).toContain("fox, bear, bunny");
+    expect(result).toContain("add extra animal companions");
   });
   it("injects animal guards when hasAnimalCharacters is explicitly true", () => {
     const result = buildImagePrompt(
@@ -524,11 +512,10 @@ describe("buildImagePrompt visual continuity guard injection (P5-3g/P5-3h)", () 
       undefined,
       { hasAnimalCharacters: true }
     );
-    expect(result).toContain("Secondary animal character consistency:");
+    expect(result).toContain("Animal character consistency:");
     expect(result).toContain("Child-animal boundary:");
   });
-  // P5-3h: costume / anatomy prohibition in normal prompt
-  it("injects animal costume and anatomy prohibition for animals theme", () => {
+  it("injects child-human and no-animal-features rules for animals theme", () => {
     const result = buildImagePrompt(
       "A child walks with a fox in a meadow",
       "classic_picture_book",
@@ -536,13 +523,11 @@ describe("buildImagePrompt visual continuity guard injection (P5-3g/P5-3h)", () 
       undefined,
       { hasAnimalCharacters: true }
     );
-    expect(result).toContain("Do not dress the child as an animal");
-    expect(result).toContain("animal ears, an animal tail, an animal hood, an animal costume");
-    expect(result).toContain("The child must not visually merge with any animal character");
-    expect(result).toContain("Animal features may appear only on actual animal characters");
+    expect(result).toContain("fully human child on every page");
+    expect(result).toContain("no animal features, costume, or body parts");
+    expect(result).toContain("never merged with the child's body");
   });
-  // P5-3h: cast-count guard in normal prompt
-  it("injects recurring animal cast-count guard for animals theme", () => {
+  it("injects recurring animal consistency and no-extra-cast rule for animals theme", () => {
     const result = buildImagePrompt(
       "A child and a bear explore a forest",
       "watercolor",
@@ -550,9 +535,8 @@ describe("buildImagePrompt visual continuity guard injection (P5-3g/P5-3h)", () 
       undefined,
       { hasAnimalCharacters: true }
     );
-    expect(result).toContain("Do not duplicate recurring animal companions");
-    expect(result).toContain("appear exactly once in a scene");
-    expect(result).toContain("Do not introduce extra foxes, bears, bunnies, birds");
+    expect(result).toContain("Do not redesign, duplicate, or add extra animal companions");
+    expect(result).toContain("beyond what the scene requires");
   });
   it("does not inject animal-specific guards for non-animal themes", () => {
     const result = buildImagePrompt(
@@ -562,26 +546,25 @@ describe("buildImagePrompt visual continuity guard injection (P5-3g/P5-3h)", () 
       undefined,
       { categoryGroupId: "seasonal-events" }
     );
-    expect(result).not.toContain("fox, bear, bunny");
     expect(result).not.toContain("Child-animal boundary:");
-    expect(result).not.toContain("Secondary animal character consistency:");
-    expect(result).not.toContain("Do not dress the child as an animal");
-    expect(result).not.toContain("Do not duplicate recurring animal companions");
+    expect(result).not.toContain("Animal character consistency:");
+    expect(result).not.toContain("no animal features, costume, or body parts");
+    expect(result).not.toContain("add extra animal companions");
     expect(result).toContain("Style consistency:");
     expect(result).toContain("Object grounding:");
   });
 });
 
-describe("buildP5SimplifiedPagePrompt visual continuity guard (P5-3g/P5-3h)", () => {
+describe("buildP5SimplifiedPagePrompt visual continuity guard (P5-3g/P5-3h/P5-3j)", () => {
   it("includes style consistency guard in simplified prompt", () => {
     const result = buildP5SimplifiedPagePrompt("A child and a fox in a meadow", "watercolor");
     expect(result).toContain("Style consistency:");
-    expect(result).toContain("illustrated by the same artist");
+    expect(result).toContain("consistent artist throughout");
   });
   it("includes object grounding guard in simplified prompt", () => {
     const result = buildP5SimplifiedPagePrompt("A child and a fox in a meadow", "watercolor");
     expect(result).toContain("Object grounding:");
-    expect(result).toContain("mysterious glowing objects");
+    expect(result).toContain("unexplained glowing items");
   });
   it("includes animal guards in simplified prompt when hasAnimalCharacters is true", () => {
     const result = buildP5SimplifiedPagePrompt(
@@ -589,37 +572,34 @@ describe("buildP5SimplifiedPagePrompt visual continuity guard (P5-3g/P5-3h)", ()
       "watercolor",
       { hasAnimalCharacters: true }
     );
-    expect(result).toContain("Secondary animal character consistency:");
+    expect(result).toContain("Animal character consistency:");
     expect(result).toContain("Child-animal boundary:");
-    expect(result).toContain("fox, bear, bunny");
+    expect(result).toContain("add extra animal companions");
   });
-  // P5-3h: costume prohibition in simplified prompt
-  it("includes animal costume prohibition in simplified prompt for animals theme", () => {
+  it("includes child-human and no-animal-merge rules in simplified prompt for animals theme", () => {
     const result = buildP5SimplifiedPagePrompt(
       "A child and a fox walk through a forest",
       "classic_picture_book",
       { hasAnimalCharacters: true }
     );
-    expect(result).toContain("Do not dress the child as an animal");
-    expect(result).toContain("animal ears, an animal tail, an animal hood, an animal costume");
-    expect(result).toContain("Animal features may appear only on actual animal characters");
+    expect(result).toContain("fully human child on every page");
+    expect(result).toContain("no animal features, costume, or body parts");
+    expect(result).toContain("separate companions beside the child");
   });
-  // P5-3h: cast-count guard in simplified prompt
-  it("includes recurring animal cast-count guard in simplified prompt for animals theme", () => {
+  it("includes animal no-extra-cast rule in simplified prompt for animals theme", () => {
     const result = buildP5SimplifiedPagePrompt(
       "A child and a bear explore a forest",
       "watercolor",
       { hasAnimalCharacters: true }
     );
-    expect(result).toContain("Do not duplicate recurring animal companions");
-    expect(result).toContain("Do not introduce extra foxes, bears, bunnies, birds");
+    expect(result).toContain("Do not redesign, duplicate, or add extra animal companions");
   });
   it("does not include animal-specific guards in simplified prompt when hasAnimalCharacters is false", () => {
     const result = buildP5SimplifiedPagePrompt("A child at a birthday party", "flat");
-    expect(result).not.toContain("fox, bear, bunny");
     expect(result).not.toContain("Child-animal boundary:");
-    expect(result).not.toContain("Do not dress the child as an animal");
-    expect(result).not.toContain("Do not duplicate recurring animal companions");
+    expect(result).not.toContain("Animal character consistency:");
+    expect(result).not.toContain("no animal features, costume, or body parts");
+    expect(result).not.toContain("add extra animal companions");
     expect(result).toContain("Style consistency:");
   });
 });
@@ -644,45 +624,33 @@ const starCharacterCast = [
   },
 ];
 
-describe("buildStarCharacterGuard (P5-3i)", () => {
+describe("buildStarCharacterGuard (P5-3i/P5-3j)", () => {
   it("returns a guard that defines the star character as an independent recurring character", () => {
     const result = buildStarCharacterGuard();
-    expect(result).toContain("Star character guard:");
-    expect(result).toContain("independent recurring character");
-    expect(result).toContain("its own face, eyes, expression, and body");
+    expect(result).toContain("Star character:");
+    expect(result).toContain("one independent recurring creature");
+    expect(result).toContain("its own face, body, and expression");
   });
-  it("prohibits replacing star character with decoration, pattern, background star, or accessory", () => {
+  it("prohibits star character from being a decoration, background star, or pattern", () => {
     const result = buildStarCharacterGuard();
-    expect(result).toContain("Do not replace the star character with a star decoration");
-    expect(result).toContain("background star");
-    expect(result).toContain("star-shaped accessory");
+    expect(result).toContain("not a decoration, background star, or pattern");
   });
-  it("prohibits transforming favorite things (dinosaur/animal/toy) into the star character", () => {
+  it("prohibits transforming favorite things (dinosaur) into the star character", () => {
     const result = buildStarCharacterGuard();
-    expect(result).toContain("Do not transform the child, any animal, toy, dinosaur");
-    expect(result).toContain("A favorite thing such as a dinosaur must remain itself");
-    expect(result).toContain("must not become the star character");
+    expect(result).toContain("Do not transform any other character or favorite object, including a dinosaur, into the star character");
+    expect(result).toContain("each must remain visually separate");
   });
-  it("prohibits star-shaped faces, heads, eyes, or body parts on other characters", () => {
+  it("enforces continuity of shape, color, and face across pages", () => {
     const result = buildStarCharacterGuard();
-    expect(result).toContain("Do not place star-shaped faces, star-shaped heads, star eyes, or star body parts onto another character");
+    expect(result).toContain("same shape, color, and face across all pages");
   });
-  it("requires two separate entities when both favorite thing and star character appear", () => {
-    const result = buildStarCharacterGuard();
-    expect(result).toContain("draw them as two clearly separate entities");
-    expect(result).toContain("no visual merging");
-  });
-  it("enforces continuity of shape, face, expression, and color palette across pages", () => {
-    const result = buildStarCharacterGuard();
-    expect(result).toContain("same shape, face, expression style, and color palette across all pages");
-  });
-  it("prohibits multiple different star characters unless the story requires it", () => {
+  it("prohibits multiple different star characters", () => {
     const result = buildStarCharacterGuard();
     expect(result).toContain("Do not create multiple different star characters");
   });
 });
 
-describe("buildImagePrompt star character guard injection (P5-3i)", () => {
+describe("buildImagePrompt star character guard injection (P5-3i/P5-3j)", () => {
   it("auto-detects star character from cast characterId and injects guard", () => {
     const result = buildImagePrompt(
       "A child plays with a star friend and a dinosaur toy in the garden",
@@ -691,8 +659,8 @@ describe("buildImagePrompt star character guard injection (P5-3i)", () => {
       undefined,
       { cast: starCharacterCast, appearingCharacterIds: ["star_01", "dino_toy_01"] }
     );
-    expect(result).toContain("Star character guard:");
-    expect(result).toContain("independent recurring character");
+    expect(result).toContain("Star character:");
+    expect(result).toContain("one independent recurring creature");
   });
   it("injects guard when hasStarCharacter is explicitly true", () => {
     const result = buildImagePrompt(
@@ -702,8 +670,8 @@ describe("buildImagePrompt star character guard injection (P5-3i)", () => {
       undefined,
       { hasStarCharacter: true }
     );
-    expect(result).toContain("Star character guard:");
-    expect(result).toContain("Do not replace the star character with a star decoration");
+    expect(result).toContain("Star character:");
+    expect(result).toContain("not a decoration, background star, or pattern");
   });
   it("includes anti-dinosaur-merge rule when star character is detected", () => {
     const result = buildImagePrompt(
@@ -713,19 +681,8 @@ describe("buildImagePrompt star character guard injection (P5-3i)", () => {
       undefined,
       { cast: starCharacterCast, hasStarCharacter: true }
     );
-    expect(result).toContain("A favorite thing such as a dinosaur must remain itself");
-    expect(result).toContain("must not become the star character");
-    expect(result).toContain("draw them as two clearly separate entities");
-  });
-  it("includes star-face-on-other-character prohibition when star character is detected", () => {
-    const result = buildImagePrompt(
-      "A child and a star friend explore a meadow",
-      "soft_watercolor",
-      undefined,
-      undefined,
-      { hasStarCharacter: true }
-    );
-    expect(result).toContain("Do not place star-shaped faces, star-shaped heads, star eyes, or star body parts onto another character");
+    expect(result).toContain("Do not transform any other character or favorite object, including a dinosaur, into the star character");
+    expect(result).toContain("each must remain visually separate");
   });
   it("does NOT inject star guard when cast contains no star character and option is not set", () => {
     const result = buildImagePrompt(
@@ -744,8 +701,8 @@ describe("buildImagePrompt star character guard injection (P5-3i)", () => {
         ],
       }
     );
-    expect(result).not.toContain("Star character guard:");
-    expect(result).not.toContain("star decoration");
+    expect(result).not.toContain("Star character:");
+    expect(result).not.toContain("independent recurring creature");
   });
   it("does NOT inject star guard when hasStarCharacter is explicitly false", () => {
     const result = buildImagePrompt(
@@ -755,9 +712,9 @@ describe("buildImagePrompt star character guard injection (P5-3i)", () => {
       undefined,
       { hasStarCharacter: false }
     );
-    expect(result).not.toContain("Star character guard:");
+    expect(result).not.toContain("Star character:");
   });
-  // Regression: P5-3g/P5-3h animal guards still fire independently
+  // Regression: animal guards and star guard coexist after P5-3j compression
   it("animal boundary guard and star character guard can coexist", () => {
     const result = buildImagePrompt(
       "A child, a fox, and a star friend walk through a forest",
@@ -767,28 +724,91 @@ describe("buildImagePrompt star character guard injection (P5-3i)", () => {
       { hasAnimalCharacters: true, hasStarCharacter: true }
     );
     expect(result).toContain("Child-animal boundary:");
-    expect(result).toContain("Star character guard:");
-    expect(result).toContain("Do not dress the child as an animal");
-    expect(result).toContain("A favorite thing such as a dinosaur must remain itself");
+    expect(result).toContain("Star character:");
+    expect(result).toContain("fully human child on every page");
+    expect(result).toContain("Do not transform any other character or favorite object, including a dinosaur");
   });
 });
 
-describe("buildP5SimplifiedPagePrompt star character guard (P5-3i)", () => {
+describe("buildP5SimplifiedPagePrompt star character guard (P5-3i/P5-3j)", () => {
   it("includes star guard in simplified prompt when hasStarCharacter is true", () => {
     const result = buildP5SimplifiedPagePrompt(
       "A child and a star friend play in a meadow",
       "classic_picture_book",
       { hasStarCharacter: true }
     );
-    expect(result).toContain("Star character guard:");
-    expect(result).toContain("independent recurring character");
-    expect(result).toContain("A favorite thing such as a dinosaur must remain itself");
+    expect(result).toContain("Star character:");
+    expect(result).toContain("one independent recurring creature");
+    expect(result).toContain("including a dinosaur, into the star character");
   });
   it("does not include star guard in simplified prompt when hasStarCharacter is not set", () => {
     const result = buildP5SimplifiedPagePrompt(
       "A child runs through a garden",
       "watercolor"
     );
-    expect(result).not.toContain("Star character guard:");
+    expect(result).not.toContain("Star character:");
+  });
+});
+
+// P5-3j: prompt length regression guard
+describe("prompt length regression (P5-3j)", () => {
+  const worstCaseCast = [
+    {
+      characterId: "star_01",
+      displayName: "ほしのこ",
+      role: "magical_friend" as const,
+      visualBible: "a small star-shaped glowing creature with a round face, bright eyes, and tiny arms",
+      characterKind: "magical_creature" as const,
+      nonHuman: true,
+      colorPalette: ["golden yellow", "soft white"],
+    },
+    {
+      characterId: "dino_toy_01",
+      displayName: "ダイナくん",
+      role: "object_character" as const,
+      visualBible: "a small green plush dinosaur toy with friendly eyes",
+      characterKind: "object_character" as const,
+    },
+    {
+      characterId: "fox_01",
+      displayName: "キツネ",
+      role: "animal" as const,
+      visualBible: "a small orange fox with a fluffy tail and bright eyes",
+      characterKind: "animal" as const,
+      nonHuman: true,
+    },
+  ];
+
+  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 7500 chars", () => {
+    const result = buildImagePrompt(
+      "A child walks with a fox and a glowing star friend through a sunlit meadow, carrying a dinosaur toy",
+      "classic_picture_book",
+      "Hikari: 4-year-old Japanese child, short black hair, yellow dress, bright eyes",
+      "Warm classic watercolor storybook atmosphere, muted earth tones, painterly linework",
+      {
+        pageNumber: 3,
+        hasAnimalCharacters: true,
+        hasStarCharacter: true,
+        cast: worstCaseCast,
+        appearingCharacterIds: ["star_01", "dino_toy_01", "fox_01"],
+        imageModelProfile: "pro_consistent",
+        ageBand: "preschool_3_4",
+        visualMotif: "golden star",
+        hiddenDetail: "small ladybug on a leaf",
+        compositionHint: "wide establishing shot from slightly above",
+      }
+    );
+    expect(result.length).toBeLessThan(7500);
+  });
+
+  it("non-animals non-star prompt (base case) stays under 6000 chars", () => {
+    const result = buildImagePrompt(
+      "A child plays in a sunny garden with flowers",
+      "watercolor",
+      "same child with short black hair and a red bow",
+      "soft watercolor picture book palette",
+      { imageModelProfile: "pro_consistent", ageBand: "preschool_3_4" }
+    );
+    expect(result.length).toBeLessThan(6000);
   });
 });

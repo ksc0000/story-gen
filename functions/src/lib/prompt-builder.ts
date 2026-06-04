@@ -732,16 +732,10 @@ function hasStarCharacterInCast(cast: StoryCharacter[]): boolean {
 
 export function buildStarCharacterGuard(): string {
   return [
-    "Star character guard:",
-    "If the story includes a star character, it must appear as one independent recurring character with its own face, eyes, expression, and body.",
-    "It is not a background star, decoration, star pattern, or accessory.",
-    "Do not replace the star character with a star decoration, background star, or star-shaped accessory.",
-    "Do not transform the child, any animal, toy, dinosaur, or other favorite object into the star character.",
-    "Do not place star-shaped faces, star-shaped heads, star eyes, or star body parts onto another character.",
-    "A favorite thing such as a dinosaur must remain itself and must not become the star character.",
-    "If both a favorite thing and a star character appear, draw them as two clearly separate entities with no visual merging.",
-    "The star character must keep the same shape, face, expression style, and color palette across all pages.",
-    "Do not create multiple different star characters unless the story explicitly requires multiple stars.",
+    "Star character: The star character is one independent recurring creature with its own face, body, and expression — not a decoration, background star, or pattern.",
+    "Do not transform any other character or favorite object, including a dinosaur, into the star character; each must remain visually separate.",
+    "The star character keeps the same shape, color, and face across all pages.",
+    "Do not create multiple different star characters.",
   ].join(" ");
 }
 
@@ -752,21 +746,21 @@ export function buildVisualContinuityGuard({
 }): string {
   const parts: string[] = [
     // A. Style consistency
-    "Style consistency: Use the exact same illustration style across every page. Keep the same line weight, color palette, brush texture, lighting, shading, and level of detail. Every page must look like it was illustrated by the same artist for the same picture book. Do not shift style between pages.",
+    "Style consistency: Keep the same illustration style, color palette, line weight, and lighting on every page — one consistent artist throughout. Do not shift style between pages.",
   ];
   if (hasAnimalCharacters) {
-    // B. Secondary animal character consistency + cast-count guard
+    // B. Animal character consistency + cast-count guard (compressed P5-3j)
     parts.push(
-      "Secondary animal character consistency: Recurring animal characters must keep the same appearance across all pages. If a fox, bear, bunny, or other animal appears more than once, it must remain the same character with the same body size, fur color, markings, ears, face shape, and expression. Do not redesign recurring animals from page to page. Do not duplicate recurring animal companions. Each recurring animal character should appear exactly once in a scene unless the current page explicitly requires multiple instances. Do not introduce extra foxes, bears, bunnies, birds, or other animal companions beyond what the story page describes."
+      "Animal character consistency: Each recurring animal keeps the same appearance, size, and expression across pages. Do not redesign, duplicate, or add extra animal companions beyond what the scene requires."
     );
-    // C. Child-animal boundary (strengthened)
+    // C. Child-animal boundary (compressed P5-3j)
     parts.push(
-      "Child-animal boundary: The child protagonist must remain an ordinary fully human child on every single page. Do not dress the child as an animal. Do not give the child animal ears, an animal tail, an animal hood, an animal costume, an animal headband, paws, a snout, whiskers, claws, or fur. The child must not visually merge with any animal character. Animal features may appear only on actual animal characters. If animals appear, they must be clearly separate companions beside or near the child, never fused with or overlaid on the child's body."
+      "Child-animal boundary: The child remains a fully human child on every page — no animal features, costume, or body parts. Animals appear only as separate companions beside the child, never merged with the child's body."
     );
   }
-  // D. Object grounding
+  // D. Object grounding (compressed P5-3j)
   parts.push(
-    "Object grounding: Only draw objects explicitly described in the current scene. Do not add mysterious glowing objects, jewels, artifacts, floating lights, magic devices, or shiny symbolic items unless they are named and clearly explained in the story. Every prominent object must be recognizable and relevant to the scene."
+    "Object grounding: Draw only objects named in the scene. No unexplained glowing items, artifacts, or decorative additions unless the story names them."
   );
   return parts.join(" ");
 }
