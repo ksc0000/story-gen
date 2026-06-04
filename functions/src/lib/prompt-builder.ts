@@ -551,6 +551,7 @@ export function buildImagePrompt(
     scenePolicy?: ScenePolicy;
     categoryGroupId?: string;
     hasAnimalCharacters?: boolean;
+    hasStarCharacter?: boolean;
   }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
@@ -677,6 +678,9 @@ export function buildImagePrompt(
 
   const hasAnimalCharacters = options?.hasAnimalCharacters ?? options?.categoryGroupId === "animals";
   const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters });
+  const starCharacter =
+    options?.hasStarCharacter ?? hasStarCharacterInCast(options?.cast ?? []);
+  const starGuard = starCharacter ? buildStarCharacterGuard() : "";
 
   // P5-fix: scene and style are placed first so the image model treats the per-page
   // scene description and selected illustration style as primary guides.  Character
@@ -705,6 +709,7 @@ export function buildImagePrompt(
       : "",
     `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
     visualContinuityGuard,
+    starGuard,
     SAFETY_KEYWORDS,
     "Use purely visual storytelling through characters, objects, colors, actions, and scenery.",
     "wordless picture book illustration, no written text anywhere, no letters, no captions, no speech bubbles, no labels, no signage, no readable marks, no watermark. Use plain objects and unlabeled backgrounds.",
@@ -713,6 +718,31 @@ export function buildImagePrompt(
 
 export function getStyleReferenceImagePath(style: IllustrationStyle): string | undefined {
   return getIllustrationStyleProfile(style).previewImageUrl;
+}
+
+function hasStarCharacterInCast(cast: StoryCharacter[]): boolean {
+  return cast.some(
+    (c) =>
+      c.characterId !== "child_protagonist" &&
+      (/\bstar\b/i.test(c.characterId) ||
+        /\bstar\b/i.test(c.displayName) ||
+        /\bstar\b/i.test(c.visualBible ?? ""))
+  );
+}
+
+export function buildStarCharacterGuard(): string {
+  return [
+    "Star character guard:",
+    "If the story includes a star character, it must appear as one independent recurring character with its own face, eyes, expression, and body.",
+    "It is not a background star, decoration, star pattern, or accessory.",
+    "Do not replace the star character with a star decoration, background star, or star-shaped accessory.",
+    "Do not transform the child, any animal, toy, dinosaur, or other favorite object into the star character.",
+    "Do not place star-shaped faces, star-shaped heads, star eyes, or star body parts onto another character.",
+    "A favorite thing such as a dinosaur must remain itself and must not become the star character.",
+    "If both a favorite thing and a star character appear, draw them as two clearly separate entities with no visual merging.",
+    "The star character must keep the same shape, face, expression style, and color palette across all pages.",
+    "Do not create multiple different star characters unless the story explicitly requires multiple stars.",
+  ].join(" ");
 }
 
 export function buildVisualContinuityGuard({
@@ -744,16 +774,18 @@ export function buildVisualContinuityGuard({
 export function buildP5SimplifiedPagePrompt(
   scenePrompt: string,
   style: IllustrationStyle,
-  options?: { hasAnimalCharacters?: boolean }
+  options?: { hasAnimalCharacters?: boolean; hasStarCharacter?: boolean }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
   const guard = buildVisualContinuityGuard({ hasAnimalCharacters: options?.hasAnimalCharacters ?? false });
+  const starGuard = options?.hasStarCharacter ? buildStarCharacterGuard() : "";
   return [
     `Illustration style: ${styleProfile.styleBible}`,
     `Scene: ${scenePrompt.replace(/\s+/g, " ").trim()}`,
     "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, and unreadable text.",
     guard,
-  ].join(" ");
+    starGuard,
+  ].filter(Boolean).join(" ");
 }
 
 export function appendQualityRetryInstruction(systemPrompt: string, report: StoryQualityReport): string {

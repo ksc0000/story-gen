@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
+import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
 import type { TemplateData } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
@@ -621,5 +621,174 @@ describe("buildP5SimplifiedPagePrompt visual continuity guard (P5-3g/P5-3h)", ()
     expect(result).not.toContain("Do not dress the child as an animal");
     expect(result).not.toContain("Do not duplicate recurring animal companions");
     expect(result).toContain("Style consistency:");
+  });
+});
+
+// Star character shared cast fixture for P5-3i tests
+const starCharacterCast = [
+  {
+    characterId: "star_01",
+    displayName: "ほしのこ",
+    role: "magical_friend" as const,
+    visualBible: "a small star-shaped glowing creature with a round face, bright eyes, and tiny arms",
+    characterKind: "magical_creature" as const,
+    nonHuman: true,
+    colorPalette: ["golden yellow", "soft white"],
+  },
+  {
+    characterId: "dino_toy_01",
+    displayName: "ダイナくん",
+    role: "object_character" as const,
+    visualBible: "a small green plush dinosaur toy with friendly eyes",
+    characterKind: "object_character" as const,
+  },
+];
+
+describe("buildStarCharacterGuard (P5-3i)", () => {
+  it("returns a guard that defines the star character as an independent recurring character", () => {
+    const result = buildStarCharacterGuard();
+    expect(result).toContain("Star character guard:");
+    expect(result).toContain("independent recurring character");
+    expect(result).toContain("its own face, eyes, expression, and body");
+  });
+  it("prohibits replacing star character with decoration, pattern, background star, or accessory", () => {
+    const result = buildStarCharacterGuard();
+    expect(result).toContain("Do not replace the star character with a star decoration");
+    expect(result).toContain("background star");
+    expect(result).toContain("star-shaped accessory");
+  });
+  it("prohibits transforming favorite things (dinosaur/animal/toy) into the star character", () => {
+    const result = buildStarCharacterGuard();
+    expect(result).toContain("Do not transform the child, any animal, toy, dinosaur");
+    expect(result).toContain("A favorite thing such as a dinosaur must remain itself");
+    expect(result).toContain("must not become the star character");
+  });
+  it("prohibits star-shaped faces, heads, eyes, or body parts on other characters", () => {
+    const result = buildStarCharacterGuard();
+    expect(result).toContain("Do not place star-shaped faces, star-shaped heads, star eyes, or star body parts onto another character");
+  });
+  it("requires two separate entities when both favorite thing and star character appear", () => {
+    const result = buildStarCharacterGuard();
+    expect(result).toContain("draw them as two clearly separate entities");
+    expect(result).toContain("no visual merging");
+  });
+  it("enforces continuity of shape, face, expression, and color palette across pages", () => {
+    const result = buildStarCharacterGuard();
+    expect(result).toContain("same shape, face, expression style, and color palette across all pages");
+  });
+  it("prohibits multiple different star characters unless the story requires it", () => {
+    const result = buildStarCharacterGuard();
+    expect(result).toContain("Do not create multiple different star characters");
+  });
+});
+
+describe("buildImagePrompt star character guard injection (P5-3i)", () => {
+  it("auto-detects star character from cast characterId and injects guard", () => {
+    const result = buildImagePrompt(
+      "A child plays with a star friend and a dinosaur toy in the garden",
+      "classic_picture_book",
+      undefined,
+      undefined,
+      { cast: starCharacterCast, appearingCharacterIds: ["star_01", "dino_toy_01"] }
+    );
+    expect(result).toContain("Star character guard:");
+    expect(result).toContain("independent recurring character");
+  });
+  it("injects guard when hasStarCharacter is explicitly true", () => {
+    const result = buildImagePrompt(
+      "A child plays with a glowing star friend",
+      "watercolor",
+      undefined,
+      undefined,
+      { hasStarCharacter: true }
+    );
+    expect(result).toContain("Star character guard:");
+    expect(result).toContain("Do not replace the star character with a star decoration");
+  });
+  it("includes anti-dinosaur-merge rule when star character is detected", () => {
+    const result = buildImagePrompt(
+      "A child, a dinosaur toy, and a star friend share a picnic",
+      "classic_picture_book",
+      undefined,
+      undefined,
+      { cast: starCharacterCast, hasStarCharacter: true }
+    );
+    expect(result).toContain("A favorite thing such as a dinosaur must remain itself");
+    expect(result).toContain("must not become the star character");
+    expect(result).toContain("draw them as two clearly separate entities");
+  });
+  it("includes star-face-on-other-character prohibition when star character is detected", () => {
+    const result = buildImagePrompt(
+      "A child and a star friend explore a meadow",
+      "soft_watercolor",
+      undefined,
+      undefined,
+      { hasStarCharacter: true }
+    );
+    expect(result).toContain("Do not place star-shaped faces, star-shaped heads, star eyes, or star body parts onto another character");
+  });
+  it("does NOT inject star guard when cast contains no star character and option is not set", () => {
+    const result = buildImagePrompt(
+      "A child plays with a bunny in a garden",
+      "watercolor",
+      undefined,
+      undefined,
+      {
+        cast: [
+          {
+            characterId: "bunny_01",
+            displayName: "うさぎ",
+            role: "animal" as const,
+            visualBible: "a small white bunny with pink ears",
+          },
+        ],
+      }
+    );
+    expect(result).not.toContain("Star character guard:");
+    expect(result).not.toContain("star decoration");
+  });
+  it("does NOT inject star guard when hasStarCharacter is explicitly false", () => {
+    const result = buildImagePrompt(
+      "A child at a birthday party",
+      "watercolor",
+      undefined,
+      undefined,
+      { hasStarCharacter: false }
+    );
+    expect(result).not.toContain("Star character guard:");
+  });
+  // Regression: P5-3g/P5-3h animal guards still fire independently
+  it("animal boundary guard and star character guard can coexist", () => {
+    const result = buildImagePrompt(
+      "A child, a fox, and a star friend walk through a forest",
+      "classic_picture_book",
+      undefined,
+      undefined,
+      { hasAnimalCharacters: true, hasStarCharacter: true }
+    );
+    expect(result).toContain("Child-animal boundary:");
+    expect(result).toContain("Star character guard:");
+    expect(result).toContain("Do not dress the child as an animal");
+    expect(result).toContain("A favorite thing such as a dinosaur must remain itself");
+  });
+});
+
+describe("buildP5SimplifiedPagePrompt star character guard (P5-3i)", () => {
+  it("includes star guard in simplified prompt when hasStarCharacter is true", () => {
+    const result = buildP5SimplifiedPagePrompt(
+      "A child and a star friend play in a meadow",
+      "classic_picture_book",
+      { hasStarCharacter: true }
+    );
+    expect(result).toContain("Star character guard:");
+    expect(result).toContain("independent recurring character");
+    expect(result).toContain("A favorite thing such as a dinosaur must remain itself");
+  });
+  it("does not include star guard in simplified prompt when hasStarCharacter is not set", () => {
+    const result = buildP5SimplifiedPagePrompt(
+      "A child runs through a garden",
+      "watercolor"
+    );
+    expect(result).not.toContain("Star character guard:");
   });
 });
