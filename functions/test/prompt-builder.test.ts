@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
+import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
 import type { TemplateData } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
@@ -439,5 +439,122 @@ describe("buildImagePrompt", () => {
       );
       expect(result).toContain("scroll");
     });
+  });
+});
+
+describe("buildVisualContinuityGuard (P5-3g)", () => {
+  it("always includes style consistency guard", () => {
+    const result = buildVisualContinuityGuard({ hasAnimalCharacters: false });
+    expect(result).toContain("Style consistency:");
+    expect(result).toContain("same line weight, color palette, brush texture");
+    expect(result).toContain("illustrated by the same artist");
+    expect(result).toContain("Do not shift style between pages");
+  });
+  it("always includes object grounding guard", () => {
+    const result = buildVisualContinuityGuard({ hasAnimalCharacters: false });
+    expect(result).toContain("Object grounding:");
+    expect(result).toContain("mysterious glowing objects");
+    expect(result).toContain("shiny symbolic items");
+    expect(result).toContain("recognizable and relevant to the scene");
+  });
+  it("includes secondary animal character consistency when hasAnimalCharacters is true", () => {
+    const result = buildVisualContinuityGuard({ hasAnimalCharacters: true });
+    expect(result).toContain("Secondary animal character consistency:");
+    expect(result).toContain("fox, bear, bunny");
+    expect(result).toContain("fur color, markings, ears, face shape");
+    expect(result).toContain("Do not redesign recurring animals from page to page");
+  });
+  it("includes child-animal boundary guard when hasAnimalCharacters is true", () => {
+    const result = buildVisualContinuityGuard({ hasAnimalCharacters: true });
+    expect(result).toContain("Child-animal boundary:");
+    expect(result).toContain("fully human");
+    expect(result).toContain("Animal fur, ears, tails, paws, whiskers, snout, claws");
+    expect(result).toContain("clearly separate companions");
+  });
+  it("does not include animal-specific text when hasAnimalCharacters is false", () => {
+    const result = buildVisualContinuityGuard({ hasAnimalCharacters: false });
+    expect(result).not.toContain("fox, bear, bunny");
+    expect(result).not.toContain("Child-animal boundary:");
+    expect(result).not.toContain("Secondary animal character consistency:");
+  });
+});
+
+describe("buildImagePrompt visual continuity guard injection (P5-3g)", () => {
+  it("injects style consistency guard into normal page prompt", () => {
+    const result = buildImagePrompt("A child in a forest", "watercolor");
+    expect(result).toContain("Style consistency:");
+    expect(result).toContain("same line weight, color palette, brush texture");
+  });
+  it("injects object grounding guard into normal page prompt", () => {
+    const result = buildImagePrompt("A child in a forest", "watercolor");
+    expect(result).toContain("Object grounding:");
+    expect(result).toContain("mysterious glowing objects");
+  });
+  it("injects animal guards when categoryGroupId is animals", () => {
+    const result = buildImagePrompt(
+      "A child with a fox in a forest",
+      "watercolor",
+      undefined,
+      undefined,
+      { categoryGroupId: "animals" }
+    );
+    expect(result).toContain("Secondary animal character consistency:");
+    expect(result).toContain("Child-animal boundary:");
+    expect(result).toContain("fox, bear, bunny");
+    expect(result).toContain("Animal fur, ears, tails, paws, whiskers");
+  });
+  it("injects animal guards when hasAnimalCharacters is explicitly true", () => {
+    const result = buildImagePrompt(
+      "A child with a bear companion",
+      "crayon",
+      undefined,
+      undefined,
+      { hasAnimalCharacters: true }
+    );
+    expect(result).toContain("Secondary animal character consistency:");
+    expect(result).toContain("Child-animal boundary:");
+  });
+  it("does not inject animal-specific guards for non-animal themes", () => {
+    const result = buildImagePrompt(
+      "A child at a birthday party",
+      "watercolor",
+      undefined,
+      undefined,
+      { categoryGroupId: "seasonal-events" }
+    );
+    expect(result).not.toContain("fox, bear, bunny");
+    expect(result).not.toContain("Child-animal boundary:");
+    expect(result).not.toContain("Secondary animal character consistency:");
+    expect(result).toContain("Style consistency:");
+    expect(result).toContain("Object grounding:");
+  });
+});
+
+describe("buildP5SimplifiedPagePrompt visual continuity guard (P5-3g)", () => {
+  it("includes style consistency guard in simplified prompt", () => {
+    const result = buildP5SimplifiedPagePrompt("A child and a fox in a meadow", "watercolor");
+    expect(result).toContain("Style consistency:");
+    expect(result).toContain("illustrated by the same artist");
+  });
+  it("includes object grounding guard in simplified prompt", () => {
+    const result = buildP5SimplifiedPagePrompt("A child and a fox in a meadow", "watercolor");
+    expect(result).toContain("Object grounding:");
+    expect(result).toContain("mysterious glowing objects");
+  });
+  it("includes animal guards in simplified prompt when hasAnimalCharacters is true", () => {
+    const result = buildP5SimplifiedPagePrompt(
+      "A child and a bear in the woods",
+      "watercolor",
+      { hasAnimalCharacters: true }
+    );
+    expect(result).toContain("Secondary animal character consistency:");
+    expect(result).toContain("Child-animal boundary:");
+    expect(result).toContain("fox, bear, bunny");
+  });
+  it("does not include animal-specific guards in simplified prompt when hasAnimalCharacters is false", () => {
+    const result = buildP5SimplifiedPagePrompt("A child at a birthday party", "flat");
+    expect(result).not.toContain("fox, bear, bunny");
+    expect(result).not.toContain("Child-animal boundary:");
+    expect(result).toContain("Style consistency:");
   });
 });

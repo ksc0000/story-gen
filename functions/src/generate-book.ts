@@ -23,10 +23,9 @@ import type {
   StoryCharacterKind,
   ImageModelProfile,
   CoverStatus,
-  IllustrationStyle,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
-import { buildSystemPrompt, buildImagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
+import { buildSystemPrompt, buildImagePrompt, buildP5SimplifiedPagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
 import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates, getParseErrorDiagnostics } from "./lib/gemini";
 import {
   ReplicateImageClient,
@@ -1385,7 +1384,7 @@ export async function processBookGeneration(
       const useSimplifiedScene =
         deps.p5PageExperiment === "simplified_scene" && !hasReferenceImage;
       const finalImagePrompt = useSimplifiedScene
-        ? buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style)
+        ? buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style, { hasAnimalCharacters: template.categoryGroupId === "animals" })
         : imagePrompt;
       const finalInputImageUrls = useSimplifiedScene ? [] : inputImageUrls;
       if (deps.p5PageExperiment === "simplified_scene") {
@@ -1411,7 +1410,7 @@ export async function processBookGeneration(
         storyPage.imagePrompt &&
         storyPage.imagePrompt.length >= 10
           ? {
-              prompt: buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style),
+              prompt: buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style, { hasAnimalCharacters: template.categoryGroupId === "animals" }),
               inputImageUrls: [] as string[],
             }
           : undefined;
@@ -2443,21 +2442,6 @@ function buildFinalCharacterBible(storyCharacterBible: string, bookData: BookDat
   ].filter(Boolean).join(" ");
 }
 
-/**
- * P5-3c experiment: builds a cover-image-style short prompt for a story page.
- * Includes only illustration style + the raw page scene — no character bible,
- * no consistency rules, no style bible.  This mirrors the standalone cover
- * image path (generateCoverImage) and tests whether removing the character-bible
- * overhead produces varied, style-correct page images.
- */
-function buildP5SimplifiedPagePrompt(scenePrompt: string, style: IllustrationStyle): string {
-  const styleProfile = getIllustrationStyleProfile(style);
-  return [
-    `Illustration style: ${styleProfile.styleBible}`,
-    `Scene: ${scenePrompt.replace(/\s+/g, " ").trim()}`,
-    "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, and unreadable text.",
-  ].join(" ");
-}
 
 function buildCharacterConsistencyRules(bookData: BookData): string {
   const visual = bookData.childProfileSnapshot?.visualProfile;

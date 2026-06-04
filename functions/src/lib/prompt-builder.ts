@@ -550,6 +550,7 @@ export function buildImagePrompt(
     childProfileBasePrompt?: string;
     scenePolicy?: ScenePolicy;
     categoryGroupId?: string;
+    hasAnimalCharacters?: boolean;
   }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
@@ -674,6 +675,9 @@ export function buildImagePrompt(
           "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, unreadable text, and cluttered backgrounds.",
         ].join(" ");
 
+  const hasAnimalCharacters = options?.hasAnimalCharacters ?? options?.categoryGroupId === "animals";
+  const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters });
+
   // P5-fix: scene and style are placed first so the image model treats the per-page
   // scene description and selected illustration style as primary guides.  Character
   // consistency guidelines follow as secondary constraints.  This addresses 竹-plan
@@ -700,6 +704,7 @@ export function buildImagePrompt(
       ? `Only draw these recurring characters when relevant: ${options.appearingCharacterIds.join(", ")}. Do not add other recurring characters.`
       : "",
     `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
+    visualContinuityGuard,
     SAFETY_KEYWORDS,
     "Use purely visual storytelling through characters, objects, colors, actions, and scenery.",
     "wordless picture book illustration, no written text anywhere, no letters, no captions, no speech bubbles, no labels, no signage, no readable marks, no watermark. Use plain objects and unlabeled backgrounds.",
@@ -708,6 +713,47 @@ export function buildImagePrompt(
 
 export function getStyleReferenceImagePath(style: IllustrationStyle): string | undefined {
   return getIllustrationStyleProfile(style).previewImageUrl;
+}
+
+export function buildVisualContinuityGuard({
+  hasAnimalCharacters,
+}: {
+  hasAnimalCharacters: boolean;
+}): string {
+  const parts: string[] = [
+    // A. Style consistency
+    "Style consistency: Use the exact same illustration style across every page. Keep the same line weight, color palette, brush texture, lighting, shading, and level of detail. Every page must look like it was illustrated by the same artist for the same picture book. Do not shift style between pages.",
+  ];
+  if (hasAnimalCharacters) {
+    // B. Secondary animal character consistency
+    parts.push(
+      "Secondary animal character consistency: Recurring animal characters must keep the same appearance across all pages. If a fox, bear, bunny, or other animal appears more than once, it must remain the same character with the same body size, fur color, markings, ears, face shape, and expression. Do not redesign recurring animals from page to page."
+    );
+    // C. Child-animal boundary
+    parts.push(
+      "Child-animal boundary: The child protagonist must remain fully human. Do not merge the child's body with any animal character. Animal fur, ears, tails, paws, whiskers, snout, claws, or animal body parts must never appear on the child. If animals appear, they must be clearly separate companions beside or near the child."
+    );
+  }
+  // D. Object grounding
+  parts.push(
+    "Object grounding: Only draw objects explicitly described in the current scene. Do not add mysterious glowing objects, jewels, artifacts, floating lights, magic devices, or shiny symbolic items unless they are named and clearly explained in the story. Every prominent object must be recognizable and relevant to the scene."
+  );
+  return parts.join(" ");
+}
+
+export function buildP5SimplifiedPagePrompt(
+  scenePrompt: string,
+  style: IllustrationStyle,
+  options?: { hasAnimalCharacters?: boolean }
+): string {
+  const styleProfile = getIllustrationStyleProfile(style);
+  const guard = buildVisualContinuityGuard({ hasAnimalCharacters: options?.hasAnimalCharacters ?? false });
+  return [
+    `Illustration style: ${styleProfile.styleBible}`,
+    `Scene: ${scenePrompt.replace(/\s+/g, " ").trim()}`,
+    "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, and unreadable text.",
+    guard,
+  ].join(" ");
 }
 
 export function appendQualityRetryInstruction(systemPrompt: string, report: StoryQualityReport): string {
