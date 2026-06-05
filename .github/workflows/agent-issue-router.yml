@@ -1,0 +1,185 @@
+name: Agent Issue Router
+
+on:
+  issues:
+    types:
+      - labeled
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to route"
+        required: true
+      route:
+        description: "agent-ready | claude-ready | codex-ready | jules-ready"
+        required: true
+        default: "agent-ready"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  route:
+    name: Route agent issue
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(fromJSON('["agent-ready","claude-ready","codex-ready","jules-ready","needs-ci-fix"]'), github.event.label.name)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Route issue and comment with next steps
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const manual = context.eventName === "workflow_dispatch";
+            const issue_number = manual
+              ? Number(core.getInput("issue_number"))
+              : context.payload.issue.number;
+            const route = manual
+              ? core.getInput("route")
+              : context.payload.label.name;
+
+            const { data: issue } = await github.rest.issues.get({
+              owner,
+              repo,
+              issue_number,
+            });
+
+            if (issue.pull_request) {
+              core.info("Skipping pull request item.");
+              return;
+            }
+
+            const existingLabels = new Set((issue.labels || []).map((label) => {
+              if (typeof label === "string") return label;
+              return label.name;
+            }));
+
+            const body = issue.body || "";
+            const requiredSections = ["Goal", "Scope", "Acceptance Criteria"];
+            const missingSections = requiredSections.filter((section) => {
+              const pattern = new RegExp(`(^|\\n)#{1,3}\\s*${section}\\b`, "i");
+              return !pattern.test(body);
+            });
+
+            const routeTitles = {
+              "agent-ready": "Agent-ready triage",
+              "claude-ready": "Claude Code route",
+              "codex-ready": "Codex route",
+              "jules-ready": "Jules route",
+              "needs-ci-fix": "CI-fix route",
+            };
+
+            const routeNotes = {
+              "agent-ready": [
+                "Choose one execution label next: `claude-ready`, `codex-ready`, or `jules-ready`.",
+                "Use this when the issue is scoped but the executor has not been chosen yet.",
+              ],
+              "claude-ready": [
+                "Recommended executor: Claude Code CLI on a local branch.",
+                "Create a branch, implement the issue, run focused checks, then open a PR.",
+              ],
+              "codex-ready": [
+                "Recommended executor: Codex for implementation review, CI diagnosis, or a focused patch.",
+                "Use `@codex review` on the PR after the first implementation pass.",
+              ],
+              "jules-ready": [
+                "Recommended executor: Google Jules for small, parallelizable tasks.",
+                "This workflow adds the `jules` label, which Jules can use to start a task when the integration is connected.",
+              ],
+              "needs-ci-fix": [
+                "Recommended executor: Claude Code or Codex with the failed CI log.",
+                "Fix only the CI failure unless the issue explicitly expands scope.",
+              ],
+            };
+
+            const branchSlug = issue.title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-+|-+$/g, "")
+              .slice(0, 48) || "agent-task";
+            const branchName = `agent/issue-${issue.number}-${branchSlug}`;
+
+            const prompt = [
+              `Repository: ${owner}/${repo}`,
+              `Issue: #${issue.number}`,
+              "",
+              "Please implement this issue in a focused branch and open a PR.",
+              "",
+              "Constraints:",
+              "- Do not push directly to main.",
+              "- Do not modify secrets, credentials, billing, deployment settings, or repo settings.",
+              "- Keep changes scoped to the issue.",
+              "- Follow existing project patterns.",
+              "- Add or update tests when there is an obvious local test pattern.",
+              "",
+              "Before finishing:",
+              "- Show changed files.",
+              "- Run the smallest relevant checks.",
+              "- Document any known main-branch CI failures separately from PR-caused failures.",
+            ].join("\n");
+
+            const sectionWarning = missingSections.length
+              ? `\n\nWarning: Missing recommended issue sections: ${missingSections.map((s) => `\`${s}\``).join(", ")}. Consider filling these before implementation.`
+              : "";
+
+            const comment = [
+              `## ${routeTitles[route] || "Agent route"}`,
+              "",
+              ...(routeNotes[route] || ["Issue routed for agent work."]),
+              "",
+              `Suggested branch: \`${branchName}\``,
+              "",
+              "Suggested prompt:",
+              "",
+              "```text",
+              prompt,
+              "```",
+              "",
+              "Suggested validation:",
+              "",
+              "```bash",
+              "npm run lint",
+              "npm test",
+              "npx tsc --noEmit",
+              "```",
+              sectionWarning,
+              "",
+              "<!-- agent-issue-router -->",
+            ].join("\n");
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const previous = comments.find((item) => item.body && item.body.includes("<!-- agent-issue-router -->"));
+            if (previous) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: previous.id,
+                body: comment,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: comment,
+              });
+            }
+
+            if (route === "jules-ready" && !existingLabels.has("jules")) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number,
+                labels: ["jules"],
+              });
+            }

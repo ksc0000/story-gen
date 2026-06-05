@@ -1,0 +1,80 @@
+name: Agent Task
+description: Scoped task for Claude Code, Codex, Jules, or future Copilot work
+title: "[Agent] "
+labels: ["agent-ready"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for tasks that should be small enough for an AI coding agent to implement in a focused PR.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should change for the user or system?
+      placeholder: "Describe the desired outcome."
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is currently wrong or missing?
+      placeholder: "Describe the current behavior and why it matters."
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Files, areas, or behavior that may be changed.
+      placeholder: |
+        - src/...
+        - functions/...
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Areas the agent must not change.
+      value: |
+        - Secrets, credentials, billing, deployment settings
+        - Unrelated refactors
+        - Direct pushes to main
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Concrete checks for completion.
+      value: |
+        - [ ]
+        - [ ] Existing behavior outside the issue scope is unchanged
+        - [ ] Relevant tests pass or known failures are documented
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation
+      description: Commands or manual checks the agent should run.
+      value: |
+        - npm run lint
+        - npm test
+        - npx tsc --noEmit
+    validations:
+      required: false
+  - type: textarea
+    id: agent_notes
+    attributes:
+      label: Agent notes
+      description: Extra constraints or context for Claude, Codex, Jules, or Copilot.
+      value: |
+        - Work on a branch and open a PR.
+        - Do not merge to main.
+        - Keep changes scoped to this issue.
+    validations:
+      required: false
+
