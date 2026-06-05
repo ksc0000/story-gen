@@ -1,0 +1,30 @@
+name: Assign Copilot on Label
+
+on:
+  issues:
+    types:
+      - labeled
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  assign-copilot:
+    name: Assign Copilot to ready issue
+    if: >
+      github.event.label.name == 'copilot-ready' &&
+      github.event.sender.type == 'User' &&
+      !contains(github.event.issue.assignees.*.login, 'copilot')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Assign issue to Copilot
+        env:
+          GH_TOKEN: ${{ secrets.GH_AW_AGENT_TOKEN }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue edit "$ISSUE_NUMBER" \
+            --repo "$REPO" \
+            --add-assignee "@copilot"
