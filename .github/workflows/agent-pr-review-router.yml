@@ -1,0 +1,154 @@
+name: Agent PR Review Router
+
+on:
+  pull_request_target:
+    types:
+      - labeled
+      - opened
+      - ready_for_review
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  annotate-agent-pr:
+    name: Annotate agent pull request
+    if: >
+      github.event.action == 'opened' ||
+      github.event.action == 'ready_for_review'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Add agent PR labels and guidance
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_AW_AGENT_TOKEN || github.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pr = context.payload.pull_request;
+            const labels = new Set((pr.labels || []).map((label) => label.name));
+            const author = pr.user?.login || "";
+            const lowerAuthor = author.toLowerCase();
+            const lowerHead = (pr.head?.ref || "").toLowerCase();
+
+            const isJules =
+              lowerAuthor.includes("jules") ||
+              lowerAuthor.includes("google-labs") ||
+              lowerHead.includes("jules");
+
+            const addLabels = [];
+            if (isJules && !labels.has("jules-pr")) addLabels.push("jules-pr");
+
+            if (addLabels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pr.number,
+                labels: addLabels,
+              });
+            }
+
+            const marker = "<!-- agent-pr-review-router-guidance -->";
+            const body = [
+              "## Agent PR next steps",
+              "",
+              isJules
+                ? "This PR appears to be from Jules. When the implementation is ready for review, add the `request-ai-review` label to trigger Claude and Codex review comments."
+                : "When this PR is ready for AI review, add the `request-ai-review` label to trigger Claude and Codex review comments.",
+              "",
+              "Expected review flow:",
+              "",
+              "```text",
+              "PR opened",
+              "  -> CI runs",
+              "  -> add request-ai-review label",
+              "  -> @claude review",
+              "  -> @codex review",
+              "  -> fix comments",
+              "  -> human merge",
+              "```",
+              "",
+              marker,
+            ].join("\n");
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: pr.number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (!existing) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body,
+              });
+            }
+
+  request-ai-review:
+    name: Request Claude and Codex reviews
+    if: >
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'request-ai-review'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Comment review requests
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_AW_AGENT_TOKEN || github.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pr = context.payload.pull_request;
+            const labels = new Set((pr.labels || []).map((label) => label.name));
+            const marker = "<!-- agent-pr-review-router-review-request -->";
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: pr.number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              core.info("AI review request comment already exists.");
+              return;
+            }
+
+            const body = [
+              "@claude review",
+              "",
+              "@codex review for correctness, regressions, missing tests, and accidental scope creep",
+              "",
+              "Review scope:",
+              "- Verify the PR satisfies the linked issue acceptance criteria.",
+              "- Prioritize correctness, user-visible regressions, security, data loss, and missing tests.",
+              "- Do not merge this PR.",
+              "",
+              marker,
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pr.number,
+              body,
+            });
+
+            if (!labels.has("ai-review-requested")) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pr.number,
+                labels: ["ai-review-requested"],
+              });
+            }
+
