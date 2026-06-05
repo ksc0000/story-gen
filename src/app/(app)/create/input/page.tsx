@@ -446,7 +446,9 @@ function InputPageContent() {
                   rows={3}
                   maxLength={200}
                 />
-                <p className="mt-1 text-xs text-violet-500">絵本の最後に入るメッセージです。ひらがな多めがおすすめです。</p>
+                <p className="mt-1.5 text-xs text-violet-500">
+                  絵本の最後に入るメッセージです。ひらがな多めがおすすめです。
+                </p>
               </div>
             </div>
           ) : (
@@ -611,7 +613,9 @@ function InputPageContent() {
                     rows={3}
                     maxLength={200}
                   />
-                  <p className="mt-1 text-xs text-violet-500">絵本の最後に入るメッセージです。ひらがな多めがおすすめです。</p>
+                  <p className="mt-1.5 text-xs text-violet-500">
+                    絵本の最後に入るメッセージです。ひらがな多めがおすすめです。
+                  </p>
                 </div>
               ) : null}
             </div>
