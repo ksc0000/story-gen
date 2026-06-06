@@ -38,12 +38,31 @@ function ThemeSelectionPageContent() {
   );
 
   const filteredTemplates = useMemo(() => {
-    return templates.filter((template) => {
+    const list = templates.filter((template) => {
       const templateMode = template.creationMode ?? "guided_ai";
       if (templateMode !== selectedMode) return false;
       if (selectedCategoryGroupId !== "all" && template.categoryGroupId !== selectedCategoryGroupId) return false;
       return true;
     });
+
+    if (selectedMode !== "fixed_template") return list;
+
+    // For fixed templates, de-duplicate by name to avoid showing multiple page-count variants.
+    const uniqueMap = new Map<string, (typeof templates)[0]>();
+    for (const t of list) {
+      if (!uniqueMap.has(t.name)) {
+        uniqueMap.set(t.name, t);
+      } else {
+        // If we have multiple, prefer one that might be considered a default (e.g. 8 pages)
+        const existing = uniqueMap.get(t.name)!;
+        const existingPages = existing.fixedStory?.pages?.length ?? 0;
+        const currentPages = t.fixedStory?.pages?.length ?? 0;
+        if (currentPages === 8 || (existingPages !== 8 && currentPages === 4)) {
+          uniqueMap.set(t.name, t);
+        }
+      }
+    }
+    return Array.from(uniqueMap.values()).sort((a, b) => a.order - b.order);
   }, [selectedCategoryGroupId, selectedMode, templates]);
 
   useEffect(() => {
@@ -90,14 +109,18 @@ function ThemeSelectionPageContent() {
   };
 
   return (
-    <PageTransition className="mx-auto max-w-6xl px-4 py-8">
+    <PageTransition className="mx-auto max-w-6xl px-4 py-4 md:py-8">
       <StepIndicator currentStep={1} />
-      <h1 className="mt-6 text-center text-xl font-bold text-purple-900">絵本の作り方を選んでね</h1>
-      <p className="mt-2 text-center text-sm text-violet-500">
-        まずは作り方、そのあと絵本の目的に合わせてテーマを選べます。
-      </p>
 
-      <div className="mt-6 grid gap-3 md:grid-cols-3">
+      <div className="mt-6 space-y-4">
+        <div className="text-center">
+          <h1 className="text-lg font-bold text-purple-900 md:text-xl">作り方・テーマを選ぶ</h1>
+          <p className="mt-1 text-xs text-violet-500 md:text-sm">
+            目的や手間、自由度に合わせて選べます。
+          </p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 md:gap-3">
         {MODE_OPTIONS.map((option) => {
           const active = selectedMode === option.mode;
           return (
@@ -105,24 +128,30 @@ function ThemeSelectionPageContent() {
               key={option.mode}
               type="button"
               onClick={() => updateQuery("mode", option.mode)}
-              className={`rounded-3xl border p-4 text-left transition ${
+              className={`rounded-2xl border px-2 py-3 text-center transition md:rounded-3xl md:p-4 md:text-left ${
                 active
                   ? "border-purple-400 bg-purple-50 shadow-sm"
                   : "border-[rgba(240,171,252,0.3)] bg-white hover:border-purple-300"
               }`}
             >
-              <div className="text-sm font-semibold text-purple-900">{option.label}</div>
-              <div className="mt-1 text-xs leading-relaxed text-violet-500">{option.description}</div>
+              <div className="text-xs font-bold text-purple-900 md:text-sm">{option.label}</div>
+              <div className="mt-1 hidden text-[10px] leading-tight text-violet-500 md:block md:text-xs md:leading-relaxed">
+                {option.description}
+              </div>
+              <div className="mt-0.5 block text-[9px] leading-tight text-violet-400 md:hidden">
+                {option.mode === "fixed_template" ? "早い・安定" : option.mode === "guided_ai" ? "質問に答える" : "自由に作る"}
+              </div>
             </button>
           );
         })}
+        </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-4 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
         <button
           type="button"
           onClick={() => updateQuery("category", "all")}
-          className={`rounded-full px-4 py-2 text-sm transition ${
+          className={`flex items-center justify-center rounded-xl px-2 py-2 text-xs transition sm:rounded-full sm:px-4 sm:py-2 sm:text-sm ${
             selectedCategoryGroupId === "all"
               ? "bg-purple-600 text-white"
               : "bg-violet-50 text-violet-600 hover:bg-violet-100"
@@ -135,13 +164,14 @@ function ThemeSelectionPageContent() {
             key={group.id}
             type="button"
             onClick={() => updateQuery("category", group.id)}
-            className={`rounded-full px-4 py-2 text-sm transition ${
+            className={`flex items-center justify-center rounded-xl px-2 py-2 text-xs transition sm:rounded-full sm:px-4 sm:py-2 sm:text-sm ${
               selectedCategoryGroupId === group.id
                 ? "bg-purple-600 text-white"
                 : "bg-violet-50 text-violet-600 hover:bg-violet-100"
             }`}
           >
-            {group.icon} {group.name}
+            <span className="mr-1 hidden sm:inline">{group.icon}</span>
+            <span className="truncate">{group.name}</span>
           </button>
         ))}
       </div>

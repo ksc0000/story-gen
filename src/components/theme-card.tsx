@@ -79,54 +79,53 @@ export function ThemeCard({ template, selected, onSelect, categoryName }: ThemeC
       <Card className={`h-full cursor-pointer overflow-hidden transition ${selected ? "ring-2 ring-purple-500 border-purple-400" : ""}`}>
         <CardContent className="flex h-full flex-col p-0 text-center">
           {template.sampleImageUrl ? (
-            <div className="relative aspect-[3/4] w-full overflow-hidden bg-violet-50">
-              <Image
-                src={template.sampleImageUrl}
-                alt={template.sampleImageAlt ?? template.name}
-                fill
-                sizes="(min-width: 640px) 180px, 45vw"
-                className="object-cover transition duration-300 hover:scale-105"
-              />
-              <div className="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-1 text-lg shadow-sm">{iconSrc || template.icon}</div>
+            <div className="relative aspect-[3/4] w-full overflow-hidden bg-violet-50 sm:aspect-[3/4]">
+              <div className="aspect-[16/9] w-full sm:aspect-[3/4]">
+                <Image
+                  src={template.sampleImageUrl}
+                  alt={template.sampleImageAlt ?? template.name}
+                  fill
+                  sizes="(min-width: 640px) 180px, 45vw"
+                  className="object-cover transition duration-300 hover:scale-105"
+                />
+              </div>
+              <div className="absolute left-2 top-2 rounded-full bg-white/85 px-1.5 py-0.5 text-base shadow-sm sm:px-2 sm:py-1 sm:text-lg">{iconSrc || template.icon}</div>
             </div>
           ) : (
-            <div className="flex aspect-[3/4] w-full items-center justify-center bg-violet-50 text-5xl">{iconSrc || template.icon}</div>
+            <div className="flex aspect-[16/9] w-full items-center justify-center bg-violet-50 text-3xl sm:aspect-[3/4] sm:text-5xl">{iconSrc || template.icon}</div>
           )}
-          <div className="flex flex-1 flex-col p-3">
-            <h3 className="text-sm font-semibold text-purple-900">{template.name}</h3>
-            <p className="mt-1 text-xs leading-relaxed text-violet-500">{template.description}</p>
-            <p className="mt-2 text-[11px] font-medium text-purple-700">{getModeSummary(template)}</p>
+          <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+            <h3 className="text-xs font-bold text-purple-900 sm:text-sm sm:font-semibold">{template.name}</h3>
+            <p className="mt-1 text-[10px] leading-tight text-violet-500 sm:text-xs sm:leading-relaxed">{template.description}</p>
+            <p className="mt-1.5 text-[10px] font-medium text-purple-700 sm:mt-2 sm:text-[11px]">{getModeSummary(template)}</p>
             {getModeSupportText(template) ? (
-              <p className="mt-1 text-[11px] leading-relaxed text-violet-400">{getModeSupportText(template)}</p>
+              <p className="mt-0.5 text-[10px] leading-tight text-violet-400 sm:mt-1 sm:text-[11px] sm:leading-relaxed">{getModeSupportText(template)}</p>
             ) : null}
             {template.parentIntent ? (
-              <p className="mt-2 text-[11px] leading-relaxed text-violet-400">{template.parentIntent}</p>
+              <p className="mt-1 text-[10px] leading-tight text-violet-400 sm:mt-2 sm:text-[11px] sm:leading-relaxed">{template.parentIntent}</p>
             ) : null}
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-violet-500">
+            <div className="mt-2.5 flex flex-wrap gap-1.5 text-[10px] text-violet-500 sm:mt-3 sm:gap-2 sm:text-[11px]">
               {categoryName ? (
-                <span className="rounded-full bg-slate-100 px-2 py-1 font-medium text-slate-700">{categoryName}</span>
+                <span className="rounded-full bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700 sm:px-2 sm:py-1">{categoryName}</span>
               ) : null}
-              <span className="rounded-full bg-indigo-100 px-2 py-1 font-medium text-indigo-700">{template.fixedStory?.pages?.length ?? 4}ページ</span>
+              <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 font-medium text-indigo-700 sm:px-2 sm:py-1">{template.fixedStory?.pages?.length ?? 4}ページ</span>
               {ageLabel ? (
-                <span className="rounded-full bg-amber-100 px-2 py-1 font-medium text-amber-700">{ageLabel}</span>
+                <span className="rounded-full bg-amber-100 px-1.5 py-0.5 font-medium text-amber-700 sm:px-2 sm:py-1">{ageLabel}</span>
               ) : null}
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-2">
               {template.priceTier ? (
-                <span className="rounded-full bg-violet-100 px-2 py-1 text-[11px] font-medium text-violet-700">
+                <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700 sm:px-2 sm:py-1 sm:text-[11px]">
                   {PRICE_TIER_LABELS[template.priceTier]}
                 </span>
               ) : null}
               {template.storyCostLevel ? (
-                <span className="rounded-full bg-pink-100 px-2 py-1 text-[11px] font-medium text-pink-700">
+                <span className="rounded-full bg-pink-100 px-1.5 py-0.5 text-[10px] font-medium text-pink-700 sm:px-2 sm:py-1 sm:text-[11px]">
                   {STORY_COST_LABELS[template.storyCostLevel]}
                 </span>
               ) : null}
               {template.creationMode === "fixed_template" ? (
-                <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-medium text-emerald-700">安定テンプレート</span>
-              ) : null}
-              {template.creationMode === "fixed_template" ? (
-                <span className="rounded-full bg-sky-100 px-2 py-1 text-[11px] font-medium text-sky-700">SMOKE済み</span>
+                <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 sm:px-2 sm:py-1 sm:text-[11px]">安定</span>
               ) : null}
             </div>
             <p className="mt-2 break-all text-[10px] text-violet-400">id: {template.id}</p>
