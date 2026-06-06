@@ -11,7 +11,7 @@
  *   # Execute (requires --dry-run=false):
  *   node scripts/set-p5-model-unification.js --uid <id> --value safer_retry --dry-run=false
  *
- *   # Supported values: "safer_retry", "strict", "null" (to remove the field)
+ *   # Supported values: "safer_retry", "null" (to remove the field)
  *
  * Prerequisites:
  *   $env:GOOGLE_APPLICATION_CREDENTIALS = "$env:USERPROFILE\secrets\service-account.json"
@@ -46,7 +46,7 @@ function ensureAdminApp() {
   try {
     const sa = loadServiceAccountFromEnvPath();
     if (sa.projectId !== TARGET_PROJECT_ID) {
-      console.warn(`[warn] Service account project_id (${sa.projectId}) does not match target (${TARGET_PROJECT_ID}).`);
+      throw new Error(`Service account project_id (${sa.projectId}) does not match target (${TARGET_PROJECT_ID}). Aborting to avoid writing to the wrong project.`);
     }
     return initializeApp({ credential: cert(sa), projectId: sa.projectId });
   } catch (e) {
@@ -81,16 +81,16 @@ function parseArgs(args) {
   }
 
   if (valueIdx === -1 || !args[valueIdx + 1]) {
-    throw new Error("Missing required argument: --value <safer_retry|strict|null>");
+    throw new Error("Missing required argument: --value <safer_retry|null>");
   }
   const valueRaw = args[valueIdx + 1];
   let value;
-  if (valueRaw === "safer_retry" || valueRaw === "strict") {
+  if (valueRaw === "safer_retry") {
     value = valueRaw;
   } else if (valueRaw === "null") {
     value = null;
   } else {
-    throw new Error(`Invalid value: ${valueRaw}. Must be safer_retry, strict, or null.`);
+    throw new Error(`Invalid value: ${valueRaw}. Must be safer_retry or null.`);
   }
 
   // Default dry-run is true unless --dry-run=false is explicitly passed
@@ -106,7 +106,7 @@ async function main() {
     ({ uids, value, isDryRun } = parseArgs(args));
   } catch (e) {
     console.error(`[error] ${e.message}`);
-    console.error("Usage: node scripts/set-p5-model-unification.js --uid <id>|--uids-file <path> --value safer_retry|strict|null [--dry-run=false]");
+    console.error("Usage: node scripts/set-p5-model-unification.js --uid <id>|--uids-file <path> --value safer_retry|null [--dry-run=false]");
     process.exit(1);
   }
 
