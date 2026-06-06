@@ -529,6 +529,112 @@ export function buildUserPrompt(input: BookInput, pageCount: PageCount): string 
   return lines.join("\n");
 }
 
+function buildCharacterConsistencyGuidance(characterBible?: string): string {
+  return [
+    characterBible ? `Character consistency: ${characterBible}` : "",
+    "Character consistency rules: same child character across all pages, same age impression, same hairstyle, same face shape, same body proportions, same outfit unless the outfit rule says otherwise, keep the signature item when appropriate.",
+    "If the child is seen from behind, in side view, or far away, preserve the same hairstyle, silhouette, outfit logic, and recognizable age impression.",
+    "Keep identity consistent, but change pose, camera angle, distance, action, background, and focal point according to this page.",
+    "Do not repeat the same pose or same framing from previous pages.",
+    "The child can appear from behind, side view, far away, or partially visible, as long as hairstyle, outfit, silhouette, and age impression remain recognizable.",
+  ].filter(Boolean).join(" ");
+}
+
+function buildCastGuidance(
+  cast: StoryCharacter[] | undefined,
+  appearingCharacterIds?: string[],
+  focusCharacterId?: string
+): string {
+  if (!appearingCharacterIds || appearingCharacterIds.length === 0) {
+    return "";
+  }
+
+  const charactersToDescribe = (cast ?? []).filter((character) =>
+    appearingCharacterIds.includes(character.characterId) &&
+    character.role !== "protagonist" &&
+    character.characterId !== "child_protagonist"
+  );
+
+  if (charactersToDescribe.length === 0) {
+    return "";
+  }
+
+  return [
+    focusCharacterId ? `Focus character: ${focusCharacterId}.` : "",
+    ...charactersToDescribe.map((character) =>
+      [
+        `Recurring character consistency: ${character.characterId} is the same character whenever it appears.`,
+        character.characterKind ? `Character kind: ${describeCharacterKind(character.characterKind)}.` : "",
+        character.nonHuman ? "This character must remain clearly non-human." : "",
+        character.noHumanFace ? "Do not give this character a human face." : "",
+        character.noHumanBody ? "Do not give this character a human body, human arms, or human legs." : "",
+        character.scaleHint ? `Scale hint: ${character.scaleHint}.` : "",
+        character.visualBible,
+        character.signatureItems?.length ? `Keep signature items: ${character.signatureItems.join(", ")}.` : "",
+        character.doNotChange?.length ? `Do not change: ${character.doNotChange.join("; ")}.` : "",
+        character.negativeCharacterRules?.length ? `Negative character rules: ${character.negativeCharacterRules.join("; ")}.` : "",
+        character.colorPalette?.length ? `Color palette: ${character.colorPalette.join(", ")}.` : "",
+        character.silhouette ? `Preserve silhouette: ${character.silhouette}.` : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+    ),
+    "Do not redesign recurring characters. Do not merge characters. Do not turn one character into another.",
+    "If a recurring character appears from behind, far away, or partially visible, preserve silhouette and signature items.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function buildCoverImagePrompt(
+  baseCoverPrompt: string,
+  style: IllustrationStyle,
+  characterBible: string | undefined,
+  styleBible: string | undefined,
+  options: {
+    cast?: StoryCharacter[];
+    childProfileBasePrompt?: string | undefined;
+    imageModelProfile?: ImageModelProfile;
+  }
+): string {
+  const styleProfile = getIllustrationStyleProfile(style);
+  const sanitizedBasePrompt = sanitizeSceneAgainstChildConstraints(
+    sanitizeImagePromptText(baseCoverPrompt),
+    options?.childProfileBasePrompt
+  );
+
+  const consistency = buildCharacterConsistencyGuidance(characterBible);
+  const castIds = options.cast?.map((c) => c.characterId);
+  const castGuidance = buildCastGuidance(options?.cast, castIds);
+
+  const starCharacter = hasStarCharacterInCast(options?.cast ?? []);
+  const starGuard = starCharacter ? buildStarCharacterGuard() : "";
+  const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters: false });
+
+  return [
+    `Illustration style: ${styleProfile.styleBible}`,
+    styleBible ? `Story-specific style consistency: ${styleBible}` : "",
+    styleProfile.negativeStyleRules?.length
+      ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
+      : "",
+    `Scene: ${sanitizedBasePrompt}`,
+    "Book cover: single striking scene, text-free, no letters, no logos, no watermarks",
+    consistency,
+    castGuidance,
+    "Global character count rule: there is exactly one human child protagonist: child_protagonist.",
+    "Do not create additional human children unless storyCast explicitly includes another human_child character.",
+    "Magical friends must not be drawn as human children unless characterKind is human_child.",
+    "If a non-human magical creature appears, preserve its non-human silhouette.",
+    "Do not clone the protagonist. Do not draw the protagonist twice in the same image.",
+    `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
+    visualContinuityGuard,
+    starGuard,
+    SAFETY_KEYWORDS,
+    "Use purely visual storytelling through characters, objects, colors, actions, and scenery.",
+    "wordless picture book illustration, no written text anywhere, no letters, no captions, no speech bubbles, no labels, no signage, no readable marks, no watermark. Use plain objects and unlabeled backgrounds.",
+  ].join(", ");
+}
+
 export function buildImagePrompt(
   basePrompt: string,
   style: IllustrationStyle,
@@ -570,19 +676,7 @@ export function buildImagePrompt(
     ,
     scenePolicy
   );
-  const appearingCharacters = (options?.cast ?? []).filter((character) =>
-    options?.appearingCharacterIds?.includes(character.characterId) &&
-    character.role !== "protagonist" &&
-    character.characterId !== "child_protagonist"
-  );
-  const consistency = [
-    characterBible ? `Character consistency: ${characterBible}` : "",
-    "Character consistency rules: same child character across all pages, same age impression, same hairstyle, same face shape, same body proportions, same outfit unless the outfit rule says otherwise, keep the signature item when appropriate.",
-    "If the child is seen from behind, in side view, or far away, preserve the same hairstyle, silhouette, outfit logic, and recognizable age impression.",
-    "Keep identity consistent, but change pose, camera angle, distance, action, background, and focal point according to this page.",
-    "Do not repeat the same pose or same framing from previous pages.",
-    "The child can appear from behind, side view, far away, or partially visible, as long as hairstyle, outfit, silhouette, and age impression remain recognizable.",
-  ].filter(Boolean).join(" ");
+  const consistency = buildCharacterConsistencyGuidance(characterBible);
 
   const compositionGuidance = [
     getPageVisualRoleGuidance(pageVisualRole),
@@ -610,55 +704,11 @@ export function buildImagePrompt(
     ? `Hidden detail: include this subtle background detail for children to notice: ${hiddenDetail}. Keep it purely visual and never written as text.`
     : "Hidden detail: include one small child-friendly background detail that rewards careful looking.";
   const emotionGuidance = `Age-appropriate emotional expression: ${getEmotionalExpressionGuidance(ageBand)}`;
-  const castGuidance = appearingCharacters.length
-    ? [
-        options?.focusCharacterId
-          ? `Focus character: ${options.focusCharacterId}.`
-          : "",
-        ...appearingCharacters.map((character) =>
-          [
-            `Recurring character consistency: ${character.characterId} is the same character whenever it appears.`,
-            character.characterKind
-              ? `Character kind: ${describeCharacterKind(character.characterKind)}.`
-              : "",
-            character.nonHuman
-              ? "This character must remain clearly non-human."
-              : "",
-            character.noHumanFace
-              ? "Do not give this character a human face."
-              : "",
-            character.noHumanBody
-              ? "Do not give this character a human body, human arms, or human legs."
-              : "",
-            character.scaleHint
-              ? `Scale hint: ${character.scaleHint}.`
-              : "",
-            character.visualBible,
-            character.signatureItems?.length
-              ? `Keep signature items: ${character.signatureItems.join(", ")}.`
-              : "",
-            character.doNotChange?.length
-              ? `Do not change: ${character.doNotChange.join("; ")}.`
-              : "",
-            character.negativeCharacterRules?.length
-              ? `Negative character rules: ${character.negativeCharacterRules.join("; ")}.`
-              : "",
-            character.colorPalette?.length
-              ? `Color palette: ${character.colorPalette.join(", ")}.`
-              : "",
-            character.silhouette
-              ? `Preserve silhouette: ${character.silhouette}.`
-              : "",
-          ]
-            .filter(Boolean)
-            .join(" ")
-        ),
-        "Do not redesign recurring characters. Do not merge characters. Do not turn one character into another.",
-        "If a recurring character appears from behind, far away, or partially visible, preserve silhouette and signature items.",
-      ]
-        .filter(Boolean)
-        .join(" ")
-    : "";
+  const castGuidance = buildCastGuidance(
+    options?.cast,
+    options?.appearingCharacterIds,
+    options?.focusCharacterId
+  );
   const modelSpecificGuidance =
     imageModelProfile === "pro_consistent" || imageModelProfile === "kontext_reference"
       ? [

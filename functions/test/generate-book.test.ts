@@ -1615,6 +1615,55 @@ describe("cover image generation", () => {
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-cover-fail", "completed");
   });
 
+  it("includes characterBible and cast visual descriptions in the cover prompt", async () => {
+    deps.uploadCoverImage = vi.fn().mockResolvedValue("https://storage.example.com/cover.png");
+    const bookWithCast: BookData = {
+      ...baseBookData,
+      coverImagePrompt: "A cheerful boy and his magic friend",
+    };
+    // Use a cast member with a visualBible that won't be overridden by buildNonHumanRecurringCharacter
+    const storyWithCustomCast = {
+      ...mockStory,
+      cast: [
+        {
+          ...mockStory.cast![0],
+          visualBible: "small glowing golden creature with a tiny purple top hat",
+        }
+      ]
+    };
+    deps.llmClient.generateStory.mockResolvedValueOnce(storyWithCustomCast);
+
+    await processBookGeneration("book-cover-consistency", bookWithCast, deps);
+
+    // Find the generateImage call for the cover (it's called with purpose: "book_cover" and NO inputImageUrls)
+    const coverCall = deps.imageClient.generateImage.mock.calls.find(
+      ([prompt, options]) => options.purpose === "book_cover" && options.inputImageUrls === undefined
+    );
+    expect(coverCall).toBeDefined();
+    const coverPrompt = coverCall![0];
+
+    // Verify characterBible presence
+    expect(coverPrompt).toContain("Character consistency: A consistent boy with short black hair and blue overalls");
+    // Verify cast visual description presence
+    expect(coverPrompt).toContain("small glowing golden creature with a tiny purple top hat");
+    // Verify cover specific guidance
+    expect(coverPrompt).toContain("Book cover: single striking scene, text-free, no letters, no logos, no watermarks");
+
+    // Also verify page 0 prompt for comparison
+    const page0Call = deps.imageClient.generateImage.mock.calls.find(
+      ([, options]) => options.purpose === "book_cover" || options.pageIndex === 0
+    );
+    // Note: page 0 can also have purpose "book_cover" if it's the first page
+    // In our deps.imageClient.generateImage mock in beforeEach, the first 2 calls are usually pages.
+    // Actually, Step 8 (pages) runs before Step 8.5 (cover).
+    const pagePrompts = deps.imageClient.generateImage.mock.calls
+      .filter(([, options]) => options.purpose === "book_page" || (options.purpose === "book_cover" && options.pageIndex !== undefined))
+      .map(([prompt]) => prompt);
+
+    expect(pagePrompts[0]).toContain("Character consistency: A consistent boy with short black hair and blue overalls");
+    expect(pagePrompts[0]).toContain("small glowing golden creature with a tiny purple top hat");
+  });
+
   it("keeps page-0 coverImageUrl when cover upload fails", async () => {
     deps.uploadCoverImage = vi.fn().mockRejectedValue(new Error("upload error"));
     await processBookGeneration("book-upload-fail", bookWithCoverPrompt, deps);
