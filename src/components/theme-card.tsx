@@ -79,16 +79,14 @@ export function ThemeCard({ template, selected, onSelect, categoryName }: ThemeC
       <Card className={`h-full cursor-pointer overflow-hidden transition ${selected ? "ring-2 ring-purple-500 border-purple-400" : ""}`}>
         <CardContent className="flex h-full flex-col p-0 text-center">
           {template.sampleImageUrl ? (
-            <div className="relative aspect-[3/4] w-full overflow-hidden bg-violet-50 sm:aspect-[3/4]">
-              <div className="aspect-[16/9] w-full sm:aspect-[3/4]">
-                <Image
-                  src={template.sampleImageUrl}
-                  alt={template.sampleImageAlt ?? template.name}
-                  fill
-                  sizes="(min-width: 640px) 180px, 45vw"
-                  className="object-cover transition duration-300 hover:scale-105"
-                />
-              </div>
+            <div className="relative aspect-[16/9] w-full overflow-hidden bg-violet-50 sm:aspect-[3/4]">
+              <Image
+                src={template.sampleImageUrl}
+                alt={template.sampleImageAlt ?? template.name}
+                fill
+                sizes="(min-width: 640px) 180px, 45vw"
+                className="object-cover transition duration-300 hover:scale-105"
+              />
               <div className="absolute left-2 top-2 rounded-full bg-white/85 px-1.5 py-0.5 text-base shadow-sm sm:px-2 sm:py-1 sm:text-lg">{iconSrc || template.icon}</div>
             </div>
           ) : (
