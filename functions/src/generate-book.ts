@@ -25,7 +25,7 @@ import type {
   CoverStatus,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
-import { buildSystemPrompt, buildImagePrompt, buildP5SimplifiedPagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
+import { buildSystemPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
 import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates, getParseErrorDiagnostics } from "./lib/gemini";
 import {
   ReplicateImageClient,
@@ -1533,7 +1533,21 @@ export async function processBookGeneration(
     }
 
     // Step 8.5: Generate cover image (independent of page results)
-    const coverImagePrompt = story.coverImagePrompt ?? normalizedBookData.coverImagePrompt;
+    const baseCoverPrompt = story.coverImagePrompt ?? normalizedBookData.coverImagePrompt;
+    const coverImagePrompt = baseCoverPrompt
+      ? buildCoverImagePrompt(
+          baseCoverPrompt,
+          normalizedBookData.style,
+          buildFinalCharacterBible(story.characterBible, normalizedBookData),
+          story.styleBible,
+          {
+            cast: story.cast,
+            childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
+            imageModelProfile: normalizedBookData.imageModelProfile,
+          }
+        )
+      : undefined;
+
     let coverMetadata: Record<string, unknown> | undefined;
     if (coverImagePrompt && deps.uploadCoverImage) {
       try {
