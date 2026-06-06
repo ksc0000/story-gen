@@ -75,11 +75,6 @@ jobs:
                 continue;
               }
 
-              if (pr.draft) {
-                core.info(`Skipping PR #${pr.number}: draft PR.`);
-                continue;
-              }
-
               const marker = `<!-- agent-ci-review-router:${headSha} -->`;
               const markerPrefix = "<!-- agent-ci-review-router:";
               const { data: comments } = await github.rest.issues.listComments({
