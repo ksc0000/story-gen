@@ -1,0 +1,132 @@
+name: Agent CI Review Router
+
+on:
+  workflow_run:
+    workflows:
+      - Phase 2 Generation Guards
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Pull request number to route for AI review"
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+jobs:
+  request-review-after-green-ci:
+    name: Request AI review after green CI
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.workflow_run.event == 'pull_request' &&
+        github.event.workflow_run.conclusion == 'success'
+      )
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Route PR to AI review
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_AW_AGENT_TOKEN || github.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const manual = context.eventName === "workflow_dispatch";
+
+            let prs = [];
+            let headSha = "";
+
+            if (manual) {
+              const prNumber = Number(core.getInput("pr_number"));
+              const { data: pr } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: prNumber,
+              });
+              prs = [pr];
+              headSha = pr.head.sha;
+            } else {
+              const run = context.payload.workflow_run;
+              headSha = run.head_sha;
+              const { data } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: headSha,
+              });
+              prs = data.filter((pr) => pr.state === "open");
+            }
+
+            for (const pr of prs) {
+              const labels = new Set((pr.labels || []).map((label) => label.name));
+              const body = pr.body || "";
+              const isAgentPr =
+                labels.has("request-ai-review") ||
+                labels.has("ai-review-requested") ||
+                labels.has("jules-pr") ||
+                body.includes("PR created automatically by Jules");
+
+              if (!isAgentPr) {
+                core.info(`Skipping PR #${pr.number}: not an agent PR.`);
+                continue;
+              }
+
+              if (pr.draft) {
+                core.info(`Skipping PR #${pr.number}: draft PR.`);
+                continue;
+              }
+
+              const marker = `<!-- agent-ci-review-router:${headSha} -->`;
+              const { data: comments } = await github.rest.issues.listComments({
+                owner,
+                repo,
+                issue_number: pr.number,
+                per_page: 100,
+              });
+
+              const alreadyRequested = comments.some((comment) => comment.body && comment.body.includes(marker));
+              if (alreadyRequested) {
+                core.info(`Skipping PR #${pr.number}: already requested review for ${headSha}.`);
+                continue;
+              }
+
+              const commentBody = [
+                "@claude review once",
+                "",
+                "@codex review for correctness, regressions, missing tests, and accidental scope creep",
+                "",
+                "CI is green for the latest agent commit. Please review the current head only.",
+                "",
+                `Head SHA: \`${headSha}\``,
+                "",
+                marker,
+              ].join("\n");
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body: commentBody,
+              });
+
+              const labelsToAdd = [];
+              if (!labels.has("request-ai-review")) labelsToAdd.push("request-ai-review");
+              if (!labels.has("ai-review-requested")) labelsToAdd.push("ai-review-requested");
+              if (body.includes("PR created automatically by Jules") && !labels.has("jules-pr")) {
+                labelsToAdd.push("jules-pr");
+              }
+
+              if (labelsToAdd.length > 0) {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: pr.number,
+                  labels: labelsToAdd,
+                });
+              }
+            }
+
