@@ -42,7 +42,7 @@ jobs:
             let headSha = "";
 
             if (manual) {
-              const prNumber = Number(core.getInput("pr_number"));
+              const prNumber = Number(context.payload.inputs.pr_number);
               const { data: pr } = await github.rest.pulls.get({
                 owner,
                 repo,
@@ -129,4 +129,3 @@ jobs:
                 });
               }
             }
-
