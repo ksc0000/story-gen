@@ -529,6 +529,95 @@ export function buildUserPrompt(input: BookInput, pageCount: PageCount): string 
   return lines.join("\n");
 }
 
+export function buildCoverImagePrompt(
+  baseCoverPrompt: string,
+  style: IllustrationStyle,
+  characterBible: string | undefined,
+  styleBible: string | undefined,
+  options?: {
+    cast?: StoryCharacter[];
+    childProfileBasePrompt?: string | undefined;
+    imageModelProfile?: ImageModelProfile;
+    categoryGroupId?: string;
+    hasAnimalCharacters?: boolean;
+    hasStarCharacter?: boolean;
+    scenePolicy?: ScenePolicy;
+  }
+): string {
+  const styleProfile = getIllustrationStyleProfile(style);
+  const sanitizedBasePrompt = sanitizeSceneAgainstChildConstraints(
+    sanitizeImagePromptText(baseCoverPrompt),
+    options?.childProfileBasePrompt,
+    options?.scenePolicy
+  );
+
+  const consistency = [
+    characterBible ? `Character consistency: ${characterBible}` : "",
+    "Character consistency rules: same child character across all pages, same age impression, same hairstyle, same face shape, same body proportions, same outfit unless the outfit rule says otherwise, keep the signature item when appropriate.",
+    "If the child is seen from behind, in side view, or far away, preserve the same hairstyle, silhouette, outfit logic, and recognizable age impression.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const castGuidance = (options?.cast ?? [])
+    .map((character) =>
+      [
+        `Recurring character consistency: ${character.characterId} is the same character whenever it appears.`,
+        character.characterKind
+          ? `Character kind: ${describeCharacterKind(character.characterKind)}.`
+          : "",
+        character.nonHuman ? "This character must remain clearly non-human." : "",
+        character.noHumanFace ? "Do not give this character a human face." : "",
+        character.noHumanBody
+          ? "Do not give this character a human body, human arms, or human legs."
+          : "",
+        character.scaleHint ? `Scale hint: ${character.scaleHint}.` : "",
+        character.visualBible,
+        character.signatureItems?.length
+          ? `Keep signature items: ${character.signatureItems.join(", ")}.`
+          : "",
+        character.doNotChange?.length
+          ? `Do not change: ${character.doNotChange.join("; ")}.`
+          : "",
+        character.negativeCharacterRules?.length
+          ? `Negative character rules: ${character.negativeCharacterRules.join("; ")}.`
+          : "",
+        character.colorPalette?.length
+          ? `Color palette: ${character.colorPalette.join(", ")}.`
+          : "",
+        character.silhouette ? `Preserve silhouette: ${character.silhouette}.` : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+    )
+    .join(" ");
+
+  const hasAnimalCharacters = options?.hasAnimalCharacters ?? options?.categoryGroupId === "animals";
+  const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters });
+  const starCharacter =
+    options?.hasStarCharacter ?? hasStarCharacterInCast(options?.cast ?? []);
+  const starGuard = starCharacter ? buildStarCharacterGuard() : "";
+
+  return [
+    `Illustration style: ${styleProfile.styleBible}`,
+    styleBible ? `Story-specific style consistency: ${styleBible}` : "",
+    `Scene: ${sanitizedBasePrompt}`,
+    consistency,
+    castGuidance.length ? castGuidance : "",
+    visualContinuityGuard,
+    starGuard,
+    options?.scenePolicy?.backgroundMode === "fixed"
+      ? buildFixedProfileConstraintGuidance(options?.childProfileBasePrompt)
+      : "",
+    "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, and unreadable text.",
+    SAFETY_KEYWORDS,
+    "Book cover: single striking scene, text-free, no letters, no logos, no watermarks",
+    "wordless picture book illustration, no written text anywhere, no letters, no captions, no speech bubbles, no labels, no signage, no readable marks, no watermark. Use plain objects and unlabeled backgrounds.",
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
 export function buildImagePrompt(
   basePrompt: string,
   style: IllustrationStyle,

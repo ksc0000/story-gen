@@ -1637,6 +1637,34 @@ describe("cover image generation", () => {
     );
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-upload-fail", "completed");
   });
+
+  it("enriches cover image prompt with characterBible and cast information", async () => {
+    deps.uploadCoverImage = vi.fn().mockResolvedValue("https://storage.example.com/cover.png");
+    const bookWithCast: BookData = {
+      ...baseBookData,
+      coverImagePrompt: "A child and a magical friend playing",
+      childProfileSnapshot: {
+        displayName: "ゆうた",
+        personality: {},
+        visualProfile: {
+          version: 1,
+          characterBible: "Short black hair, round face, blue t-shirt",
+        },
+      },
+    };
+
+    await processBookGeneration("book-cover-cast", bookWithCast, deps);
+
+    const generateImageCalls = deps.imageClient.generateImage.mock.calls;
+    // Cover image generation is the last call
+    const coverPrompt = generateImageCalls[generateImageCalls.length - 1][0];
+
+    expect(coverPrompt).toContain("Short black hair, round face, blue t-shirt");
+    expect(coverPrompt).toContain("magic_friend_01");
+    expect(coverPrompt).toContain("rounded five-point star silhouette");
+    expect(coverPrompt).toContain("Book cover: single striking scene");
+    expect(coverPrompt).toContain("Character consistency rules:");
+  });
 });
 
 describe("gateImageModelProfile (T6-59)", () => {

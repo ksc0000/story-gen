@@ -25,7 +25,7 @@ import type {
   CoverStatus,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
-import { buildSystemPrompt, buildImagePrompt, buildP5SimplifiedPagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
+import { buildSystemPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
 import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates, getParseErrorDiagnostics } from "./lib/gemini";
 import {
   ReplicateImageClient,
@@ -1533,13 +1533,27 @@ export async function processBookGeneration(
     }
 
     // Step 8.5: Generate cover image (independent of page results)
-    const coverImagePrompt = story.coverImagePrompt ?? normalizedBookData.coverImagePrompt;
+    const baseCoverImagePrompt = story.coverImagePrompt ?? normalizedBookData.coverImagePrompt;
     let coverMetadata: Record<string, unknown> | undefined;
-    if (coverImagePrompt && deps.uploadCoverImage) {
+    if (baseCoverImagePrompt && deps.uploadCoverImage) {
+      const enrichedCoverImagePrompt = buildCoverImagePrompt(
+        baseCoverImagePrompt,
+        normalizedBookData.style,
+        buildFinalCharacterBible(story.characterBible, normalizedBookData),
+        story.styleBible,
+        {
+          cast: story.cast,
+          childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
+          imageModelProfile: normalizedBookData.imageModelProfile,
+          categoryGroupId: template.categoryGroupId,
+          hasAnimalCharacters: normalizedBookData.theme === "animals",
+          scenePolicy: normalizedBookData.scenePolicy,
+        }
+      );
       try {
         await deps.updateBookStoryGenerationMetadata(bookId, { coverStatus: "generating" });
         const coverResult = await generateCoverImage({
-          coverImagePrompt,
+          coverImagePrompt: enrichedCoverImagePrompt,
           imageClient: deps.imageClient,
           bookId,
           imageQualityTier: normalizedBookData.imageQualityTier ?? "light",
@@ -1592,7 +1606,7 @@ export async function processBookGeneration(
         });
         coverMetadata = { coverStatus: "failed" as CoverStatus, coverFailureReason: "unexpected_error", hasCoverPage: false, readingStructureVersion: "v1_pages_only" as const };
       }
-    } else if (coverImagePrompt && !deps.uploadCoverImage) {
+    } else if (baseCoverImagePrompt && !deps.uploadCoverImage) {
       logger.warn("uploadCoverImage not configured, skipping cover generation", { bookId });
       coverMetadata = { coverStatus: "failed" as CoverStatus, coverFailureReason: "upload_not_configured", hasCoverPage: false, readingStructureVersion: "v1_pages_only" as const };
     }

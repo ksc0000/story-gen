@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
+import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
 import type { TemplateData } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
@@ -810,5 +810,52 @@ describe("prompt length regression (P5-3j)", () => {
       { imageModelProfile: "pro_consistent", ageBand: "preschool_3_4" }
     );
     expect(result.length).toBeLessThan(6000);
+  });
+});
+
+describe("buildCoverImagePrompt", () => {
+  it("includes character consistency and cast guidance", () => {
+    const result = buildCoverImagePrompt(
+      "A child playing",
+      "watercolor",
+      "same yellow hat",
+      "same paper texture",
+      {
+        cast: [
+          {
+            characterId: "magic_friend_01",
+            displayName: "ひかりのともだち",
+            role: "magical_friend",
+            visualBible: "small glowing golden spirit child",
+          },
+        ],
+      }
+    );
+
+    expect(result).toContain("Scene: A child playing");
+    expect(result).toContain("Character consistency: same yellow hat");
+    expect(result).toContain("same paper texture");
+    expect(result).toContain("Recurring character consistency: magic_friend_01");
+    expect(result).toContain("small glowing golden spirit child");
+    expect(result).toContain("Book cover: single striking scene");
+    expect(result).toContain("wordless picture book illustration");
+  });
+
+  it("respects child profile sandbox constraints", () => {
+    const result = buildCoverImagePrompt(
+      "A child near a red slide",
+      "watercolor",
+      undefined,
+      undefined,
+      {
+        childProfileBasePrompt: "Do not include playground equipment.",
+        scenePolicy: {
+          backgroundMode: "fixed",
+        },
+      }
+    );
+
+    expect(result).not.toContain("red slide");
+    expect(result).toContain("Respect the child profile background constraints");
   });
 });
