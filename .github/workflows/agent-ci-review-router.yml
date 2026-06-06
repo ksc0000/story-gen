@@ -81,6 +81,7 @@ jobs:
               }
 
               const marker = `<!-- agent-ci-review-router:${headSha} -->`;
+              const markerPrefix = "<!-- agent-ci-review-router:";
               const { data: comments } = await github.rest.issues.listComments({
                 owner,
                 repo,
@@ -92,6 +93,38 @@ jobs:
               if (alreadyRequested) {
                 core.info(`Skipping PR #${pr.number}: already requested review for ${headSha}.`);
                 continue;
+              }
+
+              const previousCiReviewRequests = comments
+                .filter((comment) => comment.body && comment.body.includes(markerPrefix))
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+              const latestCiReviewRequest = previousCiReviewRequests[0];
+              const trustedHumanAssociations = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
+              const latestHumanJulesRequest = comments
+                .filter((comment) => {
+                  const body = comment.body || "";
+                  const author = (comment.user?.login || "").toLowerCase();
+                  return (
+                    trustedHumanAssociations.has(comment.author_association) &&
+                    !author.includes("jules") &&
+                    body.includes("@jules")
+                  );
+                })
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+
+              if (!manual && labels.has("jules-pr") && latestCiReviewRequest) {
+                const latestCiReviewAt = new Date(latestCiReviewRequest.created_at);
+                const latestHumanJulesAt = latestHumanJulesRequest
+                  ? new Date(latestHumanJulesRequest.created_at)
+                  : null;
+
+                if (!latestHumanJulesAt || latestHumanJulesAt <= latestCiReviewAt) {
+                  core.info(
+                    `Skipping PR #${pr.number}: Jules PR already had CI review after the latest human @jules request.`
+                  );
+                  continue;
+                }
               }
 
               const commentBody = [
