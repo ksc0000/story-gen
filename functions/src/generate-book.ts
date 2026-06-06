@@ -1355,7 +1355,7 @@ export async function processBookGeneration(
           imageModelProfile: normalizedBookData.imageModelProfile,
           imageQualityTier: normalizedBookData.imageQualityTier,
           cast: story.cast,
-          appearingCharacterIds: storyPage.appearingCharacterIds,
+          appearingCharacterIds: storyPage.appearingCharacterIds ?? [],
           focusCharacterId: storyPage.focusCharacterId,
           childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
           scenePolicy: normalizedBookData.scenePolicy,

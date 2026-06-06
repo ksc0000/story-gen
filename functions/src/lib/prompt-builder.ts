@@ -545,16 +545,15 @@ function buildCastGuidance(
   appearingCharacterIds?: string[],
   focusCharacterId?: string
 ): string {
-  const charactersToDescribe = appearingCharacterIds
-    ? (cast ?? []).filter((character) =>
-        appearingCharacterIds.includes(character.characterId) &&
-        character.role !== "protagonist" &&
-        character.characterId !== "child_protagonist"
-      )
-    : (cast ?? []).filter((character) =>
-        character.role !== "protagonist" &&
-        character.characterId !== "child_protagonist"
-      );
+  if (!appearingCharacterIds || appearingCharacterIds.length === 0) {
+    return "";
+  }
+
+  const charactersToDescribe = (cast ?? []).filter((character) =>
+    appearingCharacterIds.includes(character.characterId) &&
+    character.role !== "protagonist" &&
+    character.characterId !== "child_protagonist"
+  );
 
   if (charactersToDescribe.length === 0) {
     return "";
@@ -605,7 +604,8 @@ export function buildCoverImagePrompt(
   );
 
   const consistency = buildCharacterConsistencyGuidance(characterBible);
-  const castGuidance = buildCastGuidance(options?.cast);
+  const castIds = options.cast?.map((c) => c.characterId);
+  const castGuidance = buildCastGuidance(options?.cast, castIds);
 
   const starCharacter = hasStarCharacterInCast(options?.cast ?? []);
   const starGuard = starCharacter ? buildStarCharacterGuard() : "";

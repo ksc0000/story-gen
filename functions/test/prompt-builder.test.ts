@@ -197,6 +197,28 @@ describe("buildImagePrompt", () => {
     expect(result).toContain("tiny purple top hat");
     expect(result).not.toContain("small blue bird");
   });
+  it("does NOT include cast descriptions when appearingCharacterIds is undefined (regression guard)", () => {
+    const result = buildImagePrompt(
+      "A scene with potential cast members",
+      "watercolor",
+      undefined,
+      undefined,
+      {
+        appearingCharacterIds: undefined,
+        cast: [
+          {
+            characterId: "magic_friend_01",
+            displayName: "ひかりのともだち",
+            role: "magical_friend",
+            visualBible: "small glowing golden spirit child",
+          },
+        ],
+      }
+    );
+    expect(result).not.toContain("Recurring character consistency");
+    expect(result).not.toContain("small glowing golden spirit child");
+    expect(result).not.toContain("Do not redesign recurring characters");
+  });
   it("respects child profile sandbox constraints and strips conflicting playground equipment from the scene", () => {
     const result = buildImagePrompt(
       "A child near a red slide in a sandbox park scene",
