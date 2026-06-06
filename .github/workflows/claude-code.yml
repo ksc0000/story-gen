@@ -44,3 +44,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           additional_permissions: |
             actions: read
+          custom_instructions: |
+            必ず日本語で回答してください。
+            コードのコメント・変数名・ファイル名は英語のままで構いません。
+            レビューコメント、説明文、提案文はすべて日本語で書いてください。
