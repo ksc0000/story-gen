@@ -27,7 +27,10 @@
         "name": "next"
       }
     ],
-    "target": "ES2017"
+    "target": "ES2017",
+    "types": [
+      "jest"
+    ]
   },
   "include": [
     "**/*.ts",
