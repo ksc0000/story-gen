@@ -46,7 +46,7 @@ const INPUT_LABELS: Record<string, string> = {
   childName: "お子さんの名前",
   place: "場所",
   familyMembers: "一緒に登場する人",
-  parentMessage: "伝えたい想い",
+  parentMessage: "伝えたいメッセージ",
   lessonToTeach: "教えたいこと",
   memoryToRecreate: "再現したい思い出",
   storyRequest: "作りたい内容",
@@ -436,7 +436,7 @@ function InputPageContent() {
                 </div>
               ) : null}
               <div>
-                <Label htmlFor="parentMessage-fixed" className="text-purple-800">伝えたい想い</Label>
+                <Label htmlFor="parentMessage-fixed" className="text-purple-800">伝えたいメッセージ</Label>
                 <textarea
                   id="parentMessage-fixed"
                   value={parentMessage}
@@ -603,7 +603,7 @@ function InputPageContent() {
 
               {creationMode !== "fixed_template" ? (
                 <div>
-                  <Label htmlFor="parentMessage" className="text-purple-800">伝えたい想い</Label>
+                  <Label htmlFor="parentMessage" className="text-purple-800">伝えたいメッセージ</Label>
                   <textarea
                     id="parentMessage"
                     value={parentMessage}
