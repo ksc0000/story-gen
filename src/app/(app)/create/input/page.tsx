@@ -170,6 +170,13 @@ function InputPageContent() {
   const child = children.find((item) => item.id === childId) ?? null;
   const template = templates.find((item) => item.id === theme);
   const creationMode = template?.creationMode ?? mode;
+
+  // Find all templates with the same name to allow page count selection for fixed templates
+  const relatedTemplates = useMemo(() => {
+    if (creationMode !== "fixed_template" || !template) return [];
+    return templates.filter((t) => t.name === template.name && t.creationMode === "fixed_template");
+  }, [creationMode, template, templates]);
+
   const fixedStoryPages = template?.fixedStory?.pages ?? [];
   const fixedTemplatePageCount = getFixedTemplatePageCount(template);
   const storyPlaceholder = STORY_REQUEST_PLACEHOLDERS[template?.categoryGroupId ?? ""] ?? "例：うちの子らしい冒険のおはなし";
@@ -188,6 +195,13 @@ function InputPageContent() {
   }, [compatiblePlans, creationMode]);
 
   const [pageCount, setPageCount] = useState<number>(8);
+
+  // Sync pageCount with template when theme changes
+  useEffect(() => {
+    if (template && creationMode === "fixed_template") {
+      setPageCount(getFixedTemplatePageCount(template));
+    }
+  }, [template, creationMode]);
   const [productPlan, setProductPlan] = useState<ProductPlan>(defaultProductPlan);
   const [storyRequest, setStoryRequest] = useState("");
   const [lessonToTeach, setLessonToTeach] = useState("");
@@ -230,7 +244,9 @@ function InputPageContent() {
 
   const handleNext = () => {
     const params = new URLSearchParams();
-    params.set("theme", theme);
+    // Use the specific template ID for the selected page count if it's a fixed template
+    const finalTemplate = relatedTemplates.find((t) => getFixedTemplatePageCount(t) === pageCount) || template;
+    params.set("theme", finalTemplate?.id ?? theme);
     params.set("mode", creationMode);
     params.set("childId", childId);
     params.set("productPlan", productPlan);
@@ -518,15 +534,29 @@ function InputPageContent() {
                 固定アイテムをできるだけ出す
               </label>
 
-              {creationMode === "fixed_template" ? (
-                <div className="rounded-2xl bg-violet-50 p-3 text-sm text-violet-600">
-                  このテンプレートは{fixedTemplatePageCount}ページ構成です
-                </div>
-              ) : (
-                <div>
-                  <Label className="text-purple-800">ページ数</Label>
-                  <div className="mt-1 flex gap-2">
-                    {planPageCountOptions.map((opt) => (
+              <div>
+                <Label className="text-purple-800">ページ数</Label>
+                <div className="mt-1 flex gap-2">
+                  {creationMode === "fixed_template" ? (
+                    relatedTemplates
+                      .map((t) => ({ value: getFixedTemplatePageCount(t), label: `${getFixedTemplatePageCount(t)}ページ` }))
+                      .sort((a, b) => a.value - b.value)
+                      .map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setPageCount(opt.value)}
+                          className={`flex-1 rounded-full border px-2 py-2 text-xs transition ${
+                            pageCount === opt.value
+                              ? "border-purple-400 bg-[rgba(167,139,250,0.1)] font-medium text-purple-700"
+                              : "border-[rgba(240,171,252,0.3)] text-violet-400 hover:border-purple-300"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))
+                  ) : (
+                    planPageCountOptions.map((opt) => (
                       <button
                         key={opt.value}
                         type="button"
@@ -539,10 +569,10 @@ function InputPageContent() {
                       >
                         {opt.label}
                       </button>
-                    ))}
-                  </div>
+                    ))
+                  )}
                 </div>
-              )}
+              </div>
 
               {creationMode !== "fixed_template" ? (
                 <div>
