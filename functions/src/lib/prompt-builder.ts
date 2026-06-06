@@ -56,6 +56,7 @@ const JAPANESE_STORY_TEXT_RULES = [
   "子どもの行動または感情を1文以上入れてください。",
   "日本語として自然な文にしてください。",
   "ひらがなを多めにしても、意味が曖昧になりすぎないようにしてください。",
+  "特に低年齢（0-5歳）向けでは、ひらがなを主体にし、難しい漢字は一切使用しないでください。",
   "説明文ではなく、絵本らしい語り口にしてください。",
 ].join(" ");
 
@@ -424,6 +425,7 @@ ${ageReadingGuidance}
 - ただし、どの年齢でも説教臭くせず、絵本として自然な文章にしてください。
 - 各ページの本文量は対象年齢の目安を大きく超えないでください。
 - Japanese story text rules: ${JAPANESE_STORY_TEXT_RULES}
+- 日本語の読みやすさ: 子どもが自分で読んだり、親が読み聞かせたりしやすいよう、ひらがな主体の読みやすい日本語を優先してください。
 - Story goal consistency rules: ${STORY_GOAL_CONSISTENCY_RULES}
 - pageVisualRole ごとの本文設計ルール: ${PAGE_TEXT_ROLE_RULES}
 - Character metadata rules: ${CHARACTER_METADATA_RULES}
