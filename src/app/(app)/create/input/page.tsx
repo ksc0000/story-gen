@@ -46,7 +46,7 @@ const INPUT_LABELS: Record<string, string> = {
   childName: "お子さんの名前",
   place: "場所",
   familyMembers: "一緒に登場する人",
-  parentMessage: "最後に伝えたい言葉",
+  parentMessage: "伝えたいメッセージ",
   lessonToTeach: "教えたいこと",
   memoryToRecreate: "再現したい思い出",
   storyRequest: "作りたい内容",
@@ -64,7 +64,7 @@ const TEMPLATE_PREVIEW_PLACEHOLDERS: Record<string, string> = {
   "{place}": "思い出の場所",
   "{familyMembers}": "家族",
   "{season}": "その季節",
-  "{parentMessage}": "親からのメッセージ",
+  "{parentMessage}": "伝えたいメッセージ",
 };
 
 const ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS = [4, 8, 12] as const;
@@ -118,7 +118,7 @@ function getFixedPageRoleLabel(page: FixedStoryPageTemplate, index: number, tota
 
   const textTemplate = page.textTemplate ?? "";
   if (textTemplate.includes("{parentMessage}") || index === total - 1) {
-    return "親からのメッセージ";
+    return "伝えたいメッセージ";
   }
   if (index === 0) {
     return "おはなしのはじまり";
@@ -436,7 +436,7 @@ function InputPageContent() {
                 </div>
               ) : null}
               <div>
-                <Label htmlFor="parentMessage-fixed" className="text-purple-800">最後に伝えたい言葉</Label>
+                <Label htmlFor="parentMessage-fixed" className="text-purple-800">伝えたいメッセージ</Label>
                 <textarea
                   id="parentMessage-fixed"
                   value={parentMessage}
@@ -446,6 +446,9 @@ function InputPageContent() {
                   rows={3}
                   maxLength={200}
                 />
+                <p className="mt-1.5 text-xs text-violet-500">
+                  絵本の最後に入るメッセージです。ひらがな多めがおすすめです。
+                </p>
               </div>
             </div>
           ) : (
@@ -600,7 +603,7 @@ function InputPageContent() {
 
               {creationMode !== "fixed_template" ? (
                 <div>
-                  <Label htmlFor="parentMessage" className="text-purple-800">最後に伝えたい言葉</Label>
+                  <Label htmlFor="parentMessage" className="text-purple-800">伝えたいメッセージ</Label>
                   <textarea
                     id="parentMessage"
                     value={parentMessage}
@@ -610,6 +613,9 @@ function InputPageContent() {
                     rows={3}
                     maxLength={200}
                   />
+                  <p className="mt-1.5 text-xs text-violet-500">
+                    絵本の最後に入るメッセージです。ひらがな多めがおすすめです。
+                  </p>
                 </div>
               ) : null}
             </div>

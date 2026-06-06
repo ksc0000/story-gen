@@ -94,7 +94,7 @@ function ThemeSelectionPageContent() {
       <StepIndicator currentStep={1} />
       <h1 className="mt-6 text-center text-xl font-bold text-purple-900">絵本の作り方を選んでね</h1>
       <p className="mt-2 text-center text-sm text-violet-500">
-        まずは作り方、そのあと親の目的に合わせてテーマを選べます。
+        まずは作り方、そのあと絵本の目的に合わせてテーマを選べます。
       </p>
 
       <div className="mt-6 grid gap-3 md:grid-cols-3">

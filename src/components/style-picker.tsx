@@ -18,7 +18,7 @@ const STYLE_CARD_COPY: Record<
   },
   crayon: {
     description: "子どもが描いたような温かい線",
-    examples: "生活習慣・学び・親子向けに",
+    examples: "生活習慣・学び・ご家族向けに",
   },
   flat_illustration: {
     description: "シンプル、影少なめ、現代的",
@@ -42,7 +42,7 @@ const STYLE_CARD_COPY: Record<
   },
   pencil_sketch: {
     description: "線画中心、淡い色づけ、素朴",
-    examples: "こころの成長・親子・静かな物語に",
+    examples: "こころの成長・ご家族・静かな物語に",
   },
   colorful_pop: {
     description: "鮮やか、元気な配色、楽しい絵本風",
