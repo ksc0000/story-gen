@@ -870,6 +870,7 @@ async function generateCoverImage(params: {
   bookId: string;
   imageQualityTier: import("./lib/types").ImageQualityTier;
   imageModelProfile?: ImageModelProfile;
+  inputImageUrls?: string[];
 }): Promise<CoverImageResult> {
   const primaryProfile = resolveImageModelProfile({
     purpose: "book_cover",
@@ -891,6 +892,7 @@ async function generateCoverImage(params: {
             purpose: "book_cover",
             imageQualityTier: params.imageQualityTier,
             imageModelProfile: profile,
+            inputImageUrls: params.inputImageUrls,
           }),
           IMAGE_GENERATION_TIMEOUT_MS
         );
@@ -1549,12 +1551,20 @@ export async function processBookGeneration(
     if (coverImagePrompt && deps.uploadCoverImage) {
       try {
         await deps.updateBookStoryGenerationMetadata(bookId, { coverStatus: "generating" });
+        const coverInputImageRefs = buildInputImageRefs(
+          normalizedBookData.childProfileSnapshot,
+          story.cast,
+          undefined // Cover includes all cast by default in prompt; refs follow logic
+        );
+        const coverInputImageUrls = coverInputImageRefs.map((ref) => ref.url);
+
         const coverResult = await generateCoverImage({
           coverImagePrompt,
           imageClient: deps.imageClient,
           bookId,
           imageQualityTier: normalizedBookData.imageQualityTier ?? "light",
           imageModelProfile: normalizedBookData.imageModelProfile,
+          inputImageUrls: coverInputImageUrls,
         });
 
         if (coverResult.success && coverResult.imageBuffer) {
@@ -2392,8 +2402,8 @@ function buildFixedStyleBible(bookData: BookData, template: TemplateData): strin
 }
 
 function getPageImagePurpose(pageIndex: number, theme: string): ImagePurpose {
-  if (pageIndex === 0) {
-    return theme === "memory" ? "memory_key_page" : "book_cover";
+  if (pageIndex === 0 && theme === "memory") {
+    return "memory_key_page";
   }
   return "book_page";
 }

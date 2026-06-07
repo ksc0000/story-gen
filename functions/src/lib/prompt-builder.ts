@@ -614,13 +614,13 @@ export function buildCoverImagePrompt(
   const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters: false });
 
   return [
+    "Book cover: single striking scene, text-free, no letters, no logos, no watermarks",
     `Illustration style: ${styleProfile.styleBible}`,
     styleBible ? `Story-specific style consistency: ${styleBible}` : "",
     styleProfile.negativeStyleRules?.length
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
     `Scene: ${sanitizedBasePrompt}`,
-    "Book cover: single striking scene, text-free, no letters, no logos, no watermarks",
     consistency,
     castGuidance,
     "Global character count rule: there is exactly one human child protagonist: child_protagonist.",
@@ -740,13 +740,13 @@ export function buildImagePrompt(
   // reports of "all pages same image" and "style not reflected" where the original
   // ordering buried the scene at position ~16 of ~20 prompt segments.
   return [
+    compositionGuidance,
     `Illustration style: ${styleProfile.styleBible}`,
     styleBible ? `Story-specific style consistency: ${styleBible}` : "",
     styleProfile.negativeStyleRules?.length
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
     `Scene: ${sanitizedBasePrompt}`,
-    compositionGuidance,
     consistency,
     castGuidance,
     modelSpecificGuidance,

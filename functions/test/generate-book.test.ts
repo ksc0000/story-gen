@@ -178,15 +178,13 @@ function createMockDeps() {
     incrementMonthlyCount: vi.fn().mockResolvedValue(undefined),
   };
 }
-
 const baseBookData: BookData = {
   userId: "user123", title: "", theme: "birthday", style: "watercolor",
   pageCount: 4, status: "generating", progress: 0, input: { childName: "ゆうた" },
   createdAt: {} as FirebaseFirestore.Timestamp, expiresAt: null,
 };
-
-describe("processBookGeneration", () => {
   let deps: ReturnType<typeof createMockDeps>;
+describe("processBookGeneration", () => {
   beforeEach(() => { deps = createMockDeps(); });
 
   it("generates a complete book successfully", async () => {
@@ -1048,7 +1046,7 @@ describe("processBookGeneration", () => {
         pageNumber: 0,
         imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "premium",
-        imagePurpose: "book_cover",
+        imagePurpose: "book_page",
         imageModelProfile: "pro_consistent",
       })
     );
@@ -1088,23 +1086,26 @@ describe("processBookGeneration", () => {
     };
     deps.getTemplate.mockResolvedValue(fixedTemplate);
 
+    coverOnlyBook.coverImagePrompt = "Cover";
     await processBookGeneration("book-cover-only", coverOnlyBook, deps);
 
-    expect(deps.imageClient.generateImage).toHaveBeenNthCalledWith(
-      1,
+    // Page 0 should NOT have references
+    expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
+        purpose: "book_page",
+        inputImageUrls: [],
+      })
+    );
+    // Cover should HAVE reference images
+    expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        purpose: "book_cover",
         inputImageUrls: expect.arrayContaining([
           "https://example.com/reference.png",
           "https://example.com/approved.png",
         ]),
-      })
-    );
-    expect(deps.imageClient.generateImage).toHaveBeenNthCalledWith(
-      2,
-      expect.any(String),
-      expect.objectContaining({
-        inputImageUrls: [],
       })
     );
   });
@@ -1570,7 +1571,8 @@ describe("cover image generation", () => {
 
   it("skips cover generation when coverImagePrompt is absent", async () => {
     deps.uploadCoverImage = vi.fn();
-    await processBookGeneration("book-no-prompt", baseBookData, deps);
+    const noCoverBook = { ...baseBookData, coverImagePrompt: undefined };
+    await processBookGeneration("book-no-prompt", noCoverBook, deps);
 
     expect(deps.uploadCoverImage).not.toHaveBeenCalled();
   });
@@ -1635,9 +1637,9 @@ describe("cover image generation", () => {
 
     await processBookGeneration("book-cover-consistency", bookWithCast, deps);
 
-    // Find the generateImage call for the cover (it's called with purpose: "book_cover" and NO inputImageUrls)
+    // Find the generateImage call for the cover (it's called with purpose: "book_cover" and HAS inputImageUrls now)
     const coverCall = deps.imageClient.generateImage.mock.calls.find(
-      ([prompt, options]) => options.purpose === "book_cover" && options.inputImageUrls === undefined
+      ([prompt, options]) => options.purpose === "book_cover" && options.inputImageUrls.length > 0
     );
     expect(coverCall).toBeDefined();
     const coverPrompt = coverCall![0];
@@ -2067,5 +2069,59 @@ describe("P5-4a: Promoted safer_retry to production default", () => {
       ([msg]) => msg === "p5_model_unification_retry_active"
     );
     expect(stepBLogs).toHaveLength(0);
+  });
+});
+
+describe("Page 0 purpose and reference logic (E2E-QA fix)", () => {
+  let deps: ReturnType<typeof createMockDeps>;
+  beforeEach(() => {
+    deps = createMockDeps();
+    deps.uploadCoverImage = vi.fn().mockResolvedValue("https://storage.example.com/cover.png");
+  });
+
+  it("uses book_page purpose for Page 0 and suppresses references in cover_only mode", async () => {
+    const book: BookData = {
+      ...baseBookData,
+      theme: "fantasy",
+      creationMode: "guided_ai",
+      characterConsistencyMode: "cover_only",
+      childProfileSnapshot: {
+        displayName: "ゆうた",
+        personality: {},
+        visualProfile: {
+          version: 1,
+          referenceImageUrl: "https://example.com/child-photo.png",
+        },
+      },
+      coverImagePrompt: "Cover scene with child",
+    };
+
+    await processBookGeneration("book-page0-fix", book, deps);
+
+    // Filter calls by purpose
+    const page0Call = deps.imageClient.generateImage.mock.calls.find(
+      ([, opts]) => opts.purpose === "book_page"
+    );
+    const coverCall = deps.imageClient.generateImage.mock.calls.find(
+      ([, opts]) => opts.purpose === "book_cover"
+    );
+
+    expect(page0Call).toBeDefined();
+    expect(coverCall).toBeDefined();
+
+    // Page 0 should NOT have reference images in cover_only mode
+    expect(page0Call![1].inputImageUrls).toEqual([]);
+
+    // Cover should HAVE reference images
+    expect(coverCall![1].inputImageUrls).toContain("https://example.com/child-photo.png");
+
+    // Verify Page 0 record in database
+    expect(deps.writePage).toHaveBeenCalledWith(
+      "book-page0-fix",
+      expect.objectContaining({
+        pageNumber: 0,
+        imagePurpose: "book_page",
+      })
+    );
   });
 });
