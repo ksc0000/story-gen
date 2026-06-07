@@ -29,7 +29,7 @@ if [ ! -f "$TEMPLATE_PATH" ]; then echo "Error: Template not found at $TEMPLATE_
 SYSTEM_PROMPT="You are an AI Loop Controller. Your goal is to read the product roadmap and current state, then generate exactly one bounded task for a worker agent. The output must be a Markdown document that will be saved to docs/ai-loop/NEXT_TASK.md. Follow the structure of the provided template exactly."
 
 PAYLOAD=$(jq -n \
-  --arg model "claude-3-5-haiku-20241022" \
+  --arg model "claude-haiku-4-5" \
   --arg system "$SYSTEM_PROMPT" \
   --rawfile roadmap "$ROADMAP_PATH" \
   --rawfile state "$STATE_PATH" \
@@ -47,7 +47,7 @@ PAYLOAD=$(jq -n \
   }')
 
 # 3. Call Anthropic API
-echo "Calling Anthropic API (claude-3-5-haiku-20241022)..."
+echo "Calling Anthropic API (claude-haiku-4-5)..."
 
 RESPONSE_FILE=$(mktemp)
 HTTP_RESPONSE=$(curl -s -w "%{http_code}" -o "$RESPONSE_FILE" https://api.anthropic.com/v1/messages \
