@@ -144,7 +144,7 @@ function StyleSelectionPageContent() {
       let bookId: string;
 
       if (isDemoMode) {
-        bookId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        bookId = `${Date.now()}-${crypto.randomUUID()}`;
         const demoBook: DemoBook = {
           id: bookId,
           title: "",
