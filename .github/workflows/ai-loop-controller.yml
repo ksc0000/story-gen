@@ -39,12 +39,17 @@ jobs:
           echo "task_source=${{ github.event.inputs.task_source }}"
 
       - name: Generate next task
+        env:
+          CTRL_ITERATIONS: ${{ github.event.inputs.iterations }}
+          CTRL_MODE: ${{ github.event.inputs.mode }}
+          CTRL_DRY_RUN: ${{ github.event.inputs.dry_run }}
+          CTRL_TASK_SOURCE: ${{ github.event.inputs.task_source }}
         run: |
           ./scripts/ai-loop/generate-next-task.sh \
-            "${{ github.event.inputs.iterations }}" \
-            "${{ github.event.inputs.mode }}" \
-            "${{ github.event.inputs.dry_run }}" \
-            "${{ github.event.inputs.task_source }}"
+            "$CTRL_ITERATIONS" \
+            "$CTRL_MODE" \
+            "$CTRL_DRY_RUN" \
+            "$CTRL_TASK_SOURCE"
 
       - name: Commit and push changes
         if: github.event.inputs.dry_run == 'false'
