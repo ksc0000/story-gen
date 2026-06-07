@@ -216,7 +216,7 @@ describe("processBookGeneration", () => {
       expect.objectContaining({
         imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "standard",
-        imagePurpose: "book_cover",
+        imagePurpose: "book_page",
         inputImageRoles: ["character_reference"],
         imageModelProfile: "pro_consistent",
         inputImageUrlsCount: expect.any(Number),
@@ -976,7 +976,7 @@ describe("processBookGeneration", () => {
         pageNumber: 0,
         imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "standard",
-        imagePurpose: "book_cover",
+        imagePurpose: "book_page",
         imageModelProfile: "pro_consistent",
       })
     );
@@ -1008,7 +1008,7 @@ describe("processBookGeneration", () => {
         pageNumber: 0,
         imageModel: "black-forest-labs/flux-2-pro",
         imageQualityTier: "standard",
-        imagePurpose: "book_cover",
+        imagePurpose: "book_page",
         imageModelProfile: "pro_consistent",
       })
     );
@@ -1085,7 +1085,7 @@ describe("processBookGeneration", () => {
       },
     };
     deps.getTemplate.mockResolvedValue(fixedTemplate);
-
+    deps.uploadCoverImage = vi.fn().mockResolvedValue("https://storage.example.com/cover.png");
     coverOnlyBook.coverImagePrompt = "Cover";
     await processBookGeneration("book-cover-only", coverOnlyBook, deps);
 
@@ -1637,9 +1637,9 @@ describe("cover image generation", () => {
 
     await processBookGeneration("book-cover-consistency", bookWithCast, deps);
 
-    // Find the generateImage call for the cover (it's called with purpose: "book_cover" and HAS inputImageUrls now)
+    // Find the generateImage call for the cover (it's called with purpose: "book_cover")
     const coverCall = deps.imageClient.generateImage.mock.calls.find(
-      ([prompt, options]) => options.purpose === "book_cover" && options.inputImageUrls.length > 0
+      ([prompt, options]) => options.purpose === "book_cover"
     );
     expect(coverCall).toBeDefined();
     const coverPrompt = coverCall![0];
