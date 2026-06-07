@@ -61,7 +61,7 @@ To better align with caregiver intent, we propose a multi-axial taxonomy.
 | **Character Type** | Animals, Family, Friends, Fantasy, Everyday objects |
 | **Tone** | Gentle (やさしい), Funny (おもしろい), Adventurous (わくわく), Emotional (じーんとする), Bedtime (おやすみ) |
 
-### 2.2 Primary User-Facing Categories (12)
+### 2.2 Primary User-Facing Categories (13)
 
 These represent the main entry points for discovery on the mobile UI.
 
@@ -118,6 +118,12 @@ These represent the main entry points for discovery on the mobile UI.
 | **fixed-cardboard-rocket** | まほうと空想 | 3–8 | | | Adventurous |
 | **fixed-rainy-day-puddle** | はじめての体験 | 2–8 | | | Gentle |
 | **fixed-little-helper** | 生活習慣をたのしく | 3–8 | Social behavior | | Gentle |
+| **fixed-first-zoo-8p** | はじめての体験 | 1–6 | | Journey | Gentle |
+| **fixed-first-birthday-8p** | はじめての体験 | 1–6 | | | Emotional |
+| **fixed-brush-teeth-8p** | 生活習慣をたのしく | 2–6 | Social behavior | | Gentle |
+| **fixed-sleepy-moon-adventure-8p** | おやすみ前のおはなし | 2–8 | | | Bedtime |
+
+_Note: 8-page variants share the same taxonomy mapping as their 4-page counterparts. They are listed separately to enable complete variant coverage in future seed/UI work._
 
 ---
 
