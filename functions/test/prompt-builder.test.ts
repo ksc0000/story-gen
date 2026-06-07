@@ -48,6 +48,8 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("3歳以上では、単なる音遊びや擬音の羅列にしない");
     expect(result).toContain("意味の通らない造語を使わない");
     expect(result).toContain("日本語として自然な文にしてください");
+    expect(result).toContain("特に低年齢（0-4歳）向けでは、ひらがなを主体にし、難しい漢字は一切使用しないでください。");
+    expect(result).toContain("日本語の読みやすさ: 子どもが自分で読んだり、親が読み聞かせたりしやすいよう、ひらがな主体の読みやすい日本語を優先してください。");
     expect(result).toContain("悪い例");
     expect(result).toContain("良い例");
     expect(result).toContain("cast");

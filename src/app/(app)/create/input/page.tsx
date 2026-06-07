@@ -463,7 +463,7 @@ function InputPageContent() {
                   maxLength={200}
                 />
                 <p className="mt-1.5 text-xs text-violet-500">
-                  絵本の最後に入るメッセージです。ひらがな多めがおすすめです。
+                  絵本の最後に入るメッセージです。お子さんが読みやすいよう、ひらがな多めでの入力がおすすめです。
                 </p>
               </div>
             </div>
@@ -644,7 +644,7 @@ function InputPageContent() {
                     maxLength={200}
                   />
                   <p className="mt-1.5 text-xs text-violet-500">
-                    絵本の最後に入るメッセージです。ひらがな多めがおすすめです。
+                    絵本の最後に入るメッセージです。お子さんが読みやすいよう、ひらがな多めでの入力がおすすめです。
                   </p>
                 </div>
               ) : null}
