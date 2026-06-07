@@ -1,3 +1,4 @@
+import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { GenerationProgress } from "@/components/generation-progress";
@@ -5,10 +6,10 @@ import type { BookDoc, PageDoc } from "@/lib/types";
 
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, className, ...props }: any) => (
+    div: ({ children, className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
       <div className={className} {...props}>{children}</div>
     ),
-    circle: ({ ...props }: any) => (
+    circle: (props: React.SVGProps<SVGCircleElement>) => (
       <circle {...props} />
     ),
   },
