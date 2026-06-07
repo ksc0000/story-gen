@@ -21,28 +21,33 @@ export const cleanupExpired = onSchedule(
     let deletedCount = 0;
     let errorCount = 0;
 
-    for (const bookDoc of expiredBooksSnapshot.docs) {
-      const bookId = bookDoc.id;
-      try {
-        const pagesSnapshot = await db.collection("books").doc(bookId).collection("pages").get();
-        const batch = db.batch();
-        for (const pageDoc of pagesSnapshot.docs) { batch.delete(pageDoc.ref); }
-        batch.delete(bookDoc.ref);
-        await batch.commit();
+    const chunkSize = 10;
+    for (let i = 0; i < expiredBooksSnapshot.docs.length; i += chunkSize) {
+      const chunk = expiredBooksSnapshot.docs.slice(i, i + chunkSize);
 
+      await Promise.all(chunk.map(async (bookDoc) => {
+        const bookId = bookDoc.id;
         try {
-          const [files] = await bucket.getFiles({ prefix: `books/${bookId}/pages/` });
-          if (files.length > 0) { await Promise.all(files.map((file) => file.delete())); }
-        } catch (storageError) {
-          logger.warn(`Failed to delete storage files for book ${bookId}`, { storageError });
-        }
+          const pagesSnapshot = await db.collection("books").doc(bookId).collection("pages").get();
+          const batch = db.batch();
+          for (const pageDoc of pagesSnapshot.docs) { batch.delete(pageDoc.ref); }
+          batch.delete(bookDoc.ref);
+          await batch.commit();
 
-        deletedCount++;
-        logger.info(`Deleted expired book: ${bookId}`);
-      } catch (err) {
-        errorCount++;
-        logger.error(`Failed to delete expired book: ${bookId}`, { err });
-      }
+          try {
+            const [files] = await bucket.getFiles({ prefix: `books/${bookId}/pages/` });
+            if (files.length > 0) { await Promise.all(files.map((file) => file.delete())); }
+          } catch (storageError) {
+            logger.warn(`Failed to delete storage files for book ${bookId}`, { storageError });
+          }
+
+          deletedCount++;
+          logger.info(`Deleted expired book: ${bookId}`);
+        } catch (err) {
+          errorCount++;
+          logger.error(`Failed to delete expired book: ${bookId}`, { err });
+        }
+      }));
     }
 
     logger.info("Expired book cleanup complete", { deletedCount, errorCount });
