@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Progress } from "@/components/ui/progress";
+import * as React from "react";
+import { Progress, ProgressTrack, ProgressIndicator } from "@/components/ui/progress";
 import { pulseVariants } from "@/lib/motion";
 import type { BookDoc, PageDoc } from "@/lib/types";
 
@@ -12,14 +13,36 @@ export function GenerationProgress({ book, pages }: GenerationProgressProps) {
   const completed = pages.filter((p) => p.status === "completed" || p.status === "fallback_completed").length;
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
+  const currentStatus =
+    completed === total ? "まもなく完成です！" :
+    completed > total / 2 ? "もう少しで描き終わります..." :
+    completed > 0 ? "お話に合わせて絵を描いています..." :
+    "物語を組み立てています...";
+
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex justify-between text-sm text-purple-800">
-          <span>生成中...</span>
-          <span>{completed} / {total} ページ</span>
+    <div className="space-y-8">
+      <div className="text-center">
+        <div className="em-loading__ring-wrap mb-4">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" className="em-loading__ring-track" />
+            <motion.circle
+              cx="50" cy="50" r="45"
+              className="em-loading__ring-progress"
+              strokeDasharray="283"
+              strokeDashoffset={283 - (283 * percent) / 100}
+            />
+          </svg>
+          <div className="em-loading__percent">{percent}%</div>
         </div>
-        <Progress value={percent} className="mt-2 h-3" />
+        <h2 className="em-loading__title">{currentStatus}</h2>
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <Progress value={percent} className="h-2 w-48">
+            <ProgressTrack>
+              <ProgressIndicator />
+            </ProgressTrack>
+          </Progress>
+          <span className="text-xs font-bold text-purple-600"><span>{completed}</span> / <span>{total}</span> ページ</span>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {Array.from({ length: total }, (_, i) => {

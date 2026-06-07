@@ -59,7 +59,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ehonai-theme')||'night';document.documentElement.dataset.theme=t;}catch(_){document.documentElement.dataset.theme='night';}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('ehonai-theme')||'pastel';if(t==='starry')t='night';document.documentElement.dataset.theme=t;}catch(_){document.documentElement.dataset.theme='pastel';}})();`,
           }}
         />
       </head>

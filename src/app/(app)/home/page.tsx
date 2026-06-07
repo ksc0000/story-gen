@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookCard } from "@/components/book-card";
-import { FloatingParticles } from "@/components/floating-particles";
+import { HeroBook3D } from "@/components/hero-book-3d";
 import { PageTransition } from "@/components/page-transition";
 import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
@@ -36,20 +35,25 @@ export default function HomePage() {
 
   return (
     <PageTransition className="relative mx-auto max-w-4xl px-4 py-8">
-      <FloatingParticles />
       <div className="relative z-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-purple-900">あなたの本棚</h1>
-            {activeChild ? (
-              <p className="mt-1 text-sm text-violet-500">主人公: {activeChild.nickname || activeChild.displayName}</p>
-            ) : null}
+        <header className="em-header">
+          <div className="em-header__badge">
+            ✨ あなたの本棚
           </div>
-          <Badge variant="outline">今月あと{Math.max(0, remaining)}冊作れます</Badge>
-        </div>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/create/select-child">
-            <Button size="lg" className="text-base px-6">新しい絵本を作る</Button>
+          {activeChild && (
+            <p className="em-header__subtitle">主人公: {activeChild.nickname || activeChild.displayName}</p>
+          )}
+          <div className="mt-4">
+            <Badge variant="outline" className="bg-white/50 backdrop-blur-sm border-purple-200 text-purple-700">
+              今月あと{Math.max(0, remaining)}冊作れます
+            </Badge>
+          </div>
+        </header>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link href="/create/select-child" className="w-full sm:w-auto">
+            <Button size="lg" className="em-btn-cta text-lg w-full sm:w-auto">
+              新しい絵本を作る
+            </Button>
           </Link>
           <Link href="/children">
             <Button size="lg" variant="outline" className="text-base px-6">子どもプロフィール</Button>
@@ -78,15 +82,9 @@ export default function HomePage() {
             <p className="mt-2 text-sm">{error.message}</p>
           </div>
         ) : books.length === 0 ? (
-          <div className="mt-16 text-center">
-            <Image
-              src="/images/illustrations/empty-shelf.webp"
-              alt="空の本棚"
-              width={200}
-              height={150}
-              className="mx-auto rounded-xl"
-            />
-            <p className="mt-4 text-violet-500">まだ絵本がありません。最初の一冊を作りましょう！</p>
+          <div className="mt-16 text-center em-fade-up">
+            <HeroBook3D />
+            <p className="mt-4 text-violet-500 font-medium">まだ絵本がありません。最初の一冊を作りましょう！</p>
           </div>
         ) : (
           <StaggerContainer className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">

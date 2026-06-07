@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { DreamyBackground } from "@/components/dreamy-background";
 import { useAuth } from "@/lib/hooks/use-auth";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -28,6 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-shell">
+      <DreamyBackground />
       <header className="app-header">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
           <Link href="/home" className="app-brand text-lg font-bold">
