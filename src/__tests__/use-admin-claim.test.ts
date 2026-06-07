@@ -24,7 +24,7 @@ describe("useAdminClaim", () => {
       user: null,
       loading: true,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 
@@ -38,7 +38,7 @@ describe("useAdminClaim", () => {
       user: null,
       loading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 
@@ -61,7 +61,7 @@ describe("useAdminClaim", () => {
       user: mockUser,
       loading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 
@@ -85,7 +85,7 @@ describe("useAdminClaim", () => {
       user: mockUser,
       loading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 
@@ -108,7 +108,7 @@ describe("useAdminClaim", () => {
       user: mockUser,
       loading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 
@@ -132,7 +132,7 @@ describe("useAdminClaim", () => {
       user: mockUser,
       loading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 

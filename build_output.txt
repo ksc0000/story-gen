@@ -1,0 +1,37 @@
+
+> story-gen@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.15
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 5.1s
+   Linting and checking validity of types ...
+
+./src/app/(app)/children/page.tsx
+46:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(app)/create/select-child/page.tsx
+48:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/19) ...
+Error occurred prerendering page "/admin/image-model-tests". Read more: https://nextjs.org/docs/messages/prerender-error
+Error [FirebaseError]: Firebase: Error (auth/invalid-api-key).
+    at r (.next/server/chunks/19.js:3:38073)
+    at s (.next/server/chunks/19.js:3:38121)
+    at e.instanceFactory (.next/server/chunks/19.js:3:88192)
+    at g.getOrInitializeService (.next/server/chunks/19.js:3:17666)
+    at g.initialize (.next/server/chunks/19.js:3:17074)
+    at aO (.next/server/chunks/19.js:3:76033)
+    at bp (.next/server/chunks/19.js:3:88861)
+    at 13737 (.next/server/chunks/59.js:1:1525)
+    at c (.next/server/webpack-runtime.js:1:128)
+    at 64820 (.next/server/chunks/59.js:1:4439) {
+  code: 'auth/invalid-api-key',
+  customData: [Object],
+  digest: '395590323'
+}
+Export encountered an error on /(app)/admin/image-model-tests/page: /admin/image-model-tests, exiting the build.
+ ⨯ Next.js build worker exited with code: 1 and signal: null
