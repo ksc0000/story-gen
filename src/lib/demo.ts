@@ -82,3 +82,9 @@ export function updateDemoBook(bookId: string, patch: Partial<DemoBook>): void {
   storage[bookId] = { ...existing, ...patch };
   saveDemoStorage(storage);
 }
+
+export function deleteDemoBook(bookId: string): void {
+  const storage = getDemoStorage();
+  delete storage[bookId];
+  saveDemoStorage(storage);
+}

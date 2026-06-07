@@ -4,6 +4,8 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 
+import { isDemoMode } from "./demo";
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -12,6 +14,11 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
+
+if (isDemoMode && !firebaseConfig.apiKey) {
+  firebaseConfig.apiKey = "DummyKey";
+  firebaseConfig.projectId = "dummy-project";
+}
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
