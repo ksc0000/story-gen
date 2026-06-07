@@ -21,6 +21,7 @@ import {
   isCandidateProfile,
   resolveImageModelProfile,
   resolveImageFallbackProfiles,
+  isSaferRetryEnabled,
 } from "../src/lib/image-model-policy";
 // Compatibility check: replicate.ts must re-export the same bindings.
 import {
@@ -28,6 +29,7 @@ import {
   isCandidateProfile as replicateIsCandidateProfile,
   resolveImageModelProfile as replicateResolveImageModelProfile,
   resolveImageFallbackProfiles as replicateResolveImageFallbackProfiles,
+  isSaferRetryEnabled as replicateIsSaferRetryEnabled,
 } from "../src/lib/replicate";
 import type { ImageModelProfile } from "../src/lib/types";
 
@@ -276,5 +278,36 @@ describe("replicate.ts compatibility re-exports — P3-8", () => {
     expect(replicateResolveImageModelProfile({ purpose: "child_avatar" })).toBe(
       resolveImageModelProfile({ purpose: "child_avatar" })
     );
+  });
+
+  it("replicate.ts isSaferRetryEnabled re-export is the same function", () => {
+    expect(replicateIsSaferRetryEnabled).toBe(isSaferRetryEnabled);
+  });
+});
+
+// -------------------------------------------------------------------------
+// 6. isSaferRetryEnabled
+// -------------------------------------------------------------------------
+
+describe("isSaferRetryEnabled", () => {
+  it("returns true for pro_consistent (P5-4a)", () => {
+    expect(isSaferRetryEnabled("pro_consistent")).toBe(true);
+  });
+
+  it("returns false for klein_fast", () => {
+    expect(isSaferRetryEnabled("klein_fast")).toBe(false);
+  });
+
+  it("returns false for klein_base", () => {
+    expect(isSaferRetryEnabled("klein_base")).toBe(false);
+  });
+
+  it("returns false for kontext_reference", () => {
+    expect(isSaferRetryEnabled("kontext_reference")).toBe(false);
+  });
+
+  it("returns false for candidate profiles", () => {
+    expect(isSaferRetryEnabled("openai_image_candidate")).toBe(false);
+    expect(isSaferRetryEnabled("flux11_pro_candidate")).toBe(false);
   });
 });

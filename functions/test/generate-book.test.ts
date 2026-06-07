@@ -1962,7 +1962,7 @@ describe("p5ModelUnification safer_retry (P5-3f)", () => {
   });
 });
 
-describe("P5-3k Option C: reference-aware retry (always-on)", () => {
+describe("P5-4a: Promoted safer_retry to production default", () => {
   const E005_ERROR = new Error("Prediction failed: The input or output was flagged as sensitive. Please try again with different inputs. (E005) (uIJ6l3ruRD)");
 
   const onePage: GeneratedStory = { ...mockStory, pages: [mockStory.pages[0]] };
@@ -1984,8 +1984,8 @@ describe("P5-3k Option C: reference-aware retry (always-on)", () => {
     deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
     deps.imageClient.generateImage.mockRejectedValueOnce(E005_ERROR); // Step a fails
 
-    // No p5ModelUnification override — shouldEnableReferenceAwareRetry path alone triggers Step b
-    await processBookGeneration("book-p53k-always-on", baseBookData, deps);
+    // No p5ModelUnification override — isSaferRetryEnabled triggers Step b
+    await processBookGeneration("book-p54a-always-on", baseBookData, deps);
 
     expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
     const [, stepAOpts] = deps.imageClient.generateImage.mock.calls[0];
@@ -2015,42 +2015,37 @@ describe("P5-3k Option C: reference-aware retry (always-on)", () => {
     expect(stepBLog).toBeDefined();
   });
 
-  it("does NOT activate Step b when pro_consistent book has no reference images", async () => {
+  it("DOES activate Step b even when pro_consistent book has no reference images (new P5-4a behavior)", async () => {
     // Story without any cast reference images, no childProfileSnapshot
     const noRefStory: GeneratedStory = {
       ...onePage,
       cast: [{ ...mockStory.cast[0], approvedImageUrl: undefined, referenceImageUrl: undefined, generatedReferenceImageUrl: undefined }],
     };
     deps.llmClient.generateStory.mockResolvedValueOnce(noRefStory);
-    // Both pro_consistent attempts fail (no Step b because refs are empty) → klein_fast succeeds
-    deps.imageClient.generateImage
-      .mockRejectedValueOnce(E005_ERROR)  // pro_consistent attempt 0
-      .mockRejectedValueOnce(E005_ERROR); // pro_consistent attempt 1 (plain retry, no Step b)
+    // Step a fails → Step b succeeds
+    deps.imageClient.generateImage.mockRejectedValueOnce(E005_ERROR);
 
-    await processBookGeneration("book-p53k-no-ref", baseBookData, deps);
+    await processBookGeneration("book-p54a-no-ref", baseBookData, deps);
 
-    // 3 calls: pro_consistent a0 (fail), pro_consistent a1 (fail), klein_fast a0 (succeed)
-    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(3);
+    // 2 calls: pro_consistent a0 (fail), pro_consistent a1 (Step b succeed)
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
     const [, call0Opts] = deps.imageClient.generateImage.mock.calls[0];
     const [, call1Opts] = deps.imageClient.generateImage.mock.calls[1];
-    const [, call2Opts] = deps.imageClient.generateImage.mock.calls[2];
 
     expect(call0Opts.imageModelProfile).toBe("pro_consistent");
-    // attempt 1 is a plain retry (no Step b): inputImageUrls is empty (no refs), not cleared by Step b
     expect(call1Opts.imageModelProfile).toBe("pro_consistent");
-    expect(call2Opts.imageModelProfile).toBe("klein_fast"); // klein_fast fallback after both pro fail
 
     const page0Data = deps.writePage.mock.calls[0][1];
-    expect(page0Data.imageFallbackUsed).toBe(true);
-    expect(page0Data.imageModelProfile).toBe("klein_fast");
+    expect(page0Data.imageFallbackUsed ?? false).toBe(false);
+    expect(page0Data.imageModelProfile).toBe("pro_consistent");
 
-    // No Step b diagnostic log
+    // Step b diagnostic log emitted
     const stepBLogs = logSpy.mock.calls.filter(
       ([msg, payload]) =>
         msg === "p5_model_unification_retry_active" &&
         (payload as Record<string, unknown>)?.["step"] === "b"
     );
-    expect(stepBLogs).toHaveLength(0);
+    expect(stepBLogs).toHaveLength(1);
   });
 
   it("does NOT activate Step b when primary profile is klein_fast (not pro_consistent)", async () => {

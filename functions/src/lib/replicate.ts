@@ -14,12 +14,14 @@ import {
   isCandidateProfile,
   resolveImageModelProfile,
   resolveImageFallbackProfiles,
+  isSaferRetryEnabled,
 } from "./image-model-policy";
 export {
   CANDIDATE_IMAGE_PROFILES,
   isCandidateProfile,
   resolveImageModelProfile,
   resolveImageFallbackProfiles,
+  isSaferRetryEnabled,
 };
 
 // Legacy fallback only. Not used in normal generation.

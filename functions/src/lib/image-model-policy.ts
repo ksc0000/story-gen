@@ -140,3 +140,13 @@ export function resolveImageFallbackProfiles(profile: ImageModelProfile): ImageM
       return ["klein_fast"];
   }
 }
+
+/**
+ * Returns true if the given profile should use the 3-step "safer retry" mechanism.
+ * P5-4a: Promoted pro_consistent to use safer_retry by default.
+ *
+ * P3-8: replicate.ts re-exports this function.
+ */
+export function isSaferRetryEnabled(profile: ImageModelProfile): boolean {
+  return profile === "pro_consistent";
+}
