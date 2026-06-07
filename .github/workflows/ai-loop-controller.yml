@@ -20,7 +20,8 @@ on:
         required: true
         default: "docs"
   schedule:
-    - cron: "0 */5 * * *"
+    - cron: "0 */2 * * *"
+    - cron: "0 1,11 * * *"
 
 jobs:
   controller:
