@@ -784,6 +784,83 @@ body {
 }
 
 /* ================================================================
+   15. テーマトグル
+   ================================================================ */
+.theme-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--em-glass-border) 80%, transparent);
+  background: color-mix(in srgb, var(--em-glass-bg) 92%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+}
+
+.theme-toggle__button {
+  border: 0;
+  background: transparent;
+  color: var(--em-text-secondary);
+  border-radius: 9999px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle__button:hover {
+  color: var(--em-text-primary);
+  transform: translateY(-1px);
+}
+
+.theme-toggle__button--active {
+  color: var(--em-text-primary);
+  background: linear-gradient(135deg, var(--em-accent-purple), var(--em-accent-blue));
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.22);
+}
+
+/* ================================================================
+   16. 生成進捗 ローディングリング
+   ================================================================ */
+.em-loading__ring-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.em-loading__ring-track {
+  fill: none;
+  stroke: var(--em-glass-border);
+  stroke-width: 6;
+}
+
+.em-loading__ring-progress {
+  fill: none;
+  stroke: var(--em-accent-primary);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.em-loading__percent {
+  position: absolute;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--em-text-primary);
+  font-family: var(--em-font-display);
+}
+
+.em-loading__title {
+  font-size: 0.9rem;
+  color: var(--em-text-secondary);
+  font-weight: 600;
+}
+
+/* ================================================================
    EOF — ehon-magic.css  v1.1
     © えほんメーカー Magic Edition
    ================================================================ */

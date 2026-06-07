@@ -16,11 +16,9 @@ vi.mock("framer-motion", () => ({
 }));
 
 vi.mock("@/components/ui/progress", () => ({
-  Progress: ({ value, children }: { value: number; children?: React.ReactNode }) => (
-    <div data-testid="progress-bar" aria-valuenow={value}>{children}</div>
+  Progress: ({ value }: { value: number }) => (
+    <div data-testid="progress-bar" aria-valuenow={value} />
   ),
-  ProgressTrack: ({ children }: { children?: React.ReactNode }) => <div data-testid="progress-track">{children}</div>,
-  ProgressIndicator: () => <div data-testid="progress-indicator" />,
 }));
 
 vi.mock("@/lib/motion", () => ({

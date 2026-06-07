@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import * as React from "react";
-import { Progress, ProgressTrack, ProgressIndicator } from "@/components/ui/progress";
+import { Progress } from "@/components/ui/progress";
 import { pulseVariants } from "@/lib/motion";
 import type { BookDoc, PageDoc } from "@/lib/types";
 
@@ -36,11 +35,7 @@ export function GenerationProgress({ book, pages }: GenerationProgressProps) {
         </div>
         <h2 className="em-loading__title">{currentStatus}</h2>
         <div className="flex items-center justify-center gap-2 mt-4">
-          <Progress value={percent} className="h-2 w-48">
-            <ProgressTrack>
-              <ProgressIndicator />
-            </ProgressTrack>
-          </Progress>
+          <Progress value={percent} className="h-2 w-48" />
           <span className="text-xs font-bold text-purple-600"><span>{completed}</span> / <span>{total}</span> ページ</span>
         </div>
       </div>
