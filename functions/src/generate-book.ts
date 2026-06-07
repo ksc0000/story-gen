@@ -32,6 +32,7 @@ import {
   buildP5SimplifiedPagePrompt,
   appendQualityRetryInstruction,
   buildFinalCharacterBible,
+  buildCharacterConsistencyRules,
 } from "./lib/prompt-builder";
 import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates, getParseErrorDiagnostics } from "./lib/gemini";
 import {

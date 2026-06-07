@@ -12,7 +12,7 @@ import {
 } from "./lib/replicate";
 import { buildCoverImagePrompt, buildFinalCharacterBible } from "./lib/prompt-builder";
 import { getAgeReadingProfile } from "./lib/age-reading-profile";
-import type { ImageModelProfile, CoverStatus, ImageQualityTier, BookData } from "./lib/types";
+import type { ImageModelProfile, CoverStatus, BookData } from "./lib/types";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
@@ -101,7 +101,7 @@ async function generateCoverImage(params: GenerateCoverImageParams): Promise<Cov
         if (err instanceof ImageTimeoutError) {
           lastFailureReason = "image_timeout";
           logger.warn("Cover regen timeout", {
-            bookId: params.bookId,
+            bookId: "(regen)",
             profile,
             attempt,
             timeoutMs: IMAGE_GENERATION_TIMEOUT_MS,
@@ -110,7 +110,7 @@ async function generateCoverImage(params: GenerateCoverImageParams): Promise<Cov
         }
         lastFailureReason = err instanceof Error ? err.message : "unknown";
         logger.warn("Cover regen attempt failed", {
-          bookId: params.bookId,
+          bookId: "(regen)",
           profile,
           attempt,
           error: lastFailureReason,
