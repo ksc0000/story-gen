@@ -1,5 +1,9 @@
 "use client";
 
+import { logEvent } from "firebase/analytics";
+
+import { analytics } from "@/lib/firebase";
+
 type AnalyticsEventName =
   | "select_product_plan"
   | "select_story_theme"
@@ -12,7 +16,6 @@ type AnalyticsEventName =
 
 type AnalyticsPayload = Record<string, string | number | boolean | undefined>;
 
-// TODO: Connect these events to Firebase Analytics or a server-side data pipeline.
 // Keep payloads free of personal data such as child names or free-form story text.
 export function trackAnalyticsEvent(
   eventName: AnalyticsEventName,
@@ -24,5 +27,9 @@ export function trackAnalyticsEvent(
 
   if (process.env.NODE_ENV !== "production") {
     console.debug("[analytics]", eventName, payload);
+  }
+
+  if (analytics) {
+    logEvent(analytics, eventName, payload);
   }
 }
