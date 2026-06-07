@@ -124,14 +124,14 @@ jobs:
             }
 
             const body = [
-              "@claude review",
-              "",
               "@codex review for correctness, regressions, missing tests, and accidental scope creep",
               "",
               "Review scope:",
               "- Verify the PR satisfies the linked issue acceptance criteria.",
               "- Prioritize correctness, user-visible regressions, security, data loss, and missing tests.",
               "- Do not merge this PR.",
+              "",
+              "Note: @claude review will be triggered automatically after Codex responds (two-stage review).",
               "",
               marker,
             ].join("\n");
