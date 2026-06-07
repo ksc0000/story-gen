@@ -2367,7 +2367,6 @@ export default function AdminBookQualityReviewPage() {
 
                       {/* Quality Review Panel (Phase 2) */}
                       <QualityReviewPanel
-                        book={selectedBook}
                         qualityReviews={qualityReviews}
                         loading={qualityReviewsLoading}
                         error={qualityReviewsError}
