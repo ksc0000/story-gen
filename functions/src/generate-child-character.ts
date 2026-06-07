@@ -43,6 +43,7 @@ export const generateChildCharacter = onCall(
     secrets: [replicateApiToken],
     memory: "1GiB",
     timeoutSeconds: 300,
+    consumeAppCheckToken: true,
   },
   async (request) => {
     if (!request.auth) {

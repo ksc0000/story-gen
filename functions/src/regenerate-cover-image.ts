@@ -216,7 +216,7 @@ interface RegenerateCoverImageResponse {
 }
 
 export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<RegenerateCoverImageResponse>>(
-  { secrets: [replicateApiToken] },
+  { secrets: [replicateApiToken], consumeAppCheckToken: true },
   async (request) => {
     /* ---------- Auth ---------- */
     if (!request.auth) {
