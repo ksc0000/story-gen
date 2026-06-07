@@ -13,8 +13,8 @@ jobs:
   assign-copilot:
     name: Assign Copilot to ready issue
     if: >
-      github.event.label.name == 'copilot-ready' &&
-      github.event.sender.type == 'User' &&
+      (github.event.label.name == 'copilot-ready' || github.event.label.name == 'jules-ready') &&
+      github.event.sender.type != 'Bot' &&
       !contains(github.event.issue.assignees.*.login, 'copilot')
     runs-on: ubuntu-latest
 
