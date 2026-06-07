@@ -227,6 +227,7 @@ export interface BookData {
   productPlan?: ProductPlan;
   imageQualityTier?: ImageQualityTier;
   characterConsistencyMode?: CharacterConsistencyMode;
+  characterBible?: string;
   imageModelProfile?: ImageModelProfile;
   scenePolicy?: ScenePolicy;
   storyModel?: string;

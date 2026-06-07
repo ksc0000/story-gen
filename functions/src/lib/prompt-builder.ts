@@ -10,6 +10,8 @@ import type {
   StoryCharacter,
   ScenePolicy,
   StoryCharacterKind,
+  ChildProfileSnapshot,
+  CharacterUsage,
 } from "./types";
 import type { AgeReadingProfile } from "./age-reading-profile";
 import type { StoryQualityReport } from "./story-quality";
@@ -392,8 +394,8 @@ ${ageReadingGuidance}
 - 挿絵のスタイル: ${styleProfile.name}
 - 生成時の絵柄制御は style preview 画像ではなく、styleBible とスタイル指示文で行ってください。
 - 各ページの imagePrompt は英語で、挿絵の内容を具体的に描写してください。
-- characterBible は全ページで同じ主人公として見えるように、年齢感、髪型、服装、固定アイテム、表情の特徴を英語で具体化してください。
-- styleBible は全ページで同じ画風として見えるように、カテゴリのビジュアル方向、線、色、質感、光、構図のルールを英語で具体化してください。
+- characterBible は全ページで同じ主人公として見えるように、年齢感、髪型、服装、固定アイテム、表情の特徴、頭身（head-to-body ratio）や体格などの身体的特徴を英語で具体化してください。
+- styleBible は全ページで同じ画風として見えるように、カテゴリのビジュアル方向、キャラクターのデフォルメ具合（degree of deformation）、線、色、質感、光、構図のルールを英語で具体化してください。
 - imagePrompt にはページ固有の場面だけを書き、characterBible と styleBible の内容を重複させすぎないでください。
 - 各ページの imagePrompt は、主人公の見た目だけでなく、場面・背景・周囲の出来事・画面の焦点を具体的に書いてください。
 - すべてのページで主人公を中央に大きく描く構図は禁止です。
@@ -455,8 +457,8 @@ ${GOOD_TEXT_EXAMPLE}
 \`\`\`json
 {
   "title": "絵本のタイトル",
-  "characterBible": "Consistent English character design description used for every illustration",
-  "styleBible": "Consistent English visual style guide used for every illustration",
+  "characterBible": "Consistent English character design description used for every illustration. Must include age impression, hairstyle, outfit, and physical proportions (e.g., head-to-body ratio).",
+  "styleBible": "Consistent English visual style guide used for every illustration. Must include artistic style, line weight, color palette, degree of character deformation, and lighting rules.",
   "storyGoal": "たっちゃんが、すなばで出会ったほしのこと一緒に、なくした星のかけらを探す",
   "mainQuestObject": "星のかけら",
   "forbiddenQuestObjects": ["すいか", "食べ物"],
@@ -531,6 +533,69 @@ export function buildUserPrompt(input: BookInput, pageCount: PageCount): string 
   return lines.join("\n");
 }
 
+export function buildFinalCharacterBible(params: {
+  storyCharacterBible: string;
+  childProfileSnapshot?: ChildProfileSnapshot;
+  characterUsage?: CharacterUsage;
+  childAge?: number;
+}): string {
+  const visual = params.childProfileSnapshot?.visualProfile;
+  const outfitRule = buildOutfitRule(params.characterUsage, visual);
+  return [
+    visual?.characterBible ? `Approved child profile: ${visual.characterBible}` : "",
+    params.storyCharacterBible,
+    buildCharacterConsistencyRules({
+      childProfileSnapshot: params.childProfileSnapshot,
+      childAge: params.childAge,
+    }),
+    outfitRule,
+  ].filter(Boolean).join(" ");
+}
+
+export function buildCharacterConsistencyRules(params: {
+  childProfileSnapshot?: ChildProfileSnapshot;
+  childAge?: number;
+}): string {
+  const visual = params.childProfileSnapshot?.visualProfile;
+  const age = params.childProfileSnapshot?.age ?? params.childAge;
+
+  return [
+    "Character consistency rules:",
+    "The protagonist must be the same child on every page.",
+    age ? `Keep the same age impression: around ${age} years old.` : "",
+    "Do not change hairstyle, hair length, face shape, age impression, or body proportions.",
+    visual?.outfit
+      ? `Keep the same outfit unless the outfit mode explicitly allows adaptation: ${visual.outfit}.`
+      : "Keep the same outfit unless the outfit mode explicitly allows adaptation.",
+    visual?.signatureItem
+      ? `Keep the same signature item when appropriate: ${visual.signatureItem}.`
+      : "Keep the same signature item when appropriate.",
+    "If the child is seen from behind, from the side, or far away, preserve hairstyle, silhouette, outfit logic, and recognizable body proportions.",
+    "Do not redesign the protagonist between pages.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function buildOutfitRule(
+  usage?: CharacterUsage,
+  visual?: ChildProfileSnapshot["visualProfile"]
+): string {
+  if (!usage) return "";
+
+  const signatureRule = usage.keepSignatureItem && visual?.signatureItem
+    ? `Keep the signature item when appropriate: ${visual.signatureItem}.`
+    : "Do not force the signature item if it does not fit the scene.";
+
+  if (usage.outfitMode === "profile_default") {
+    return `Outfit rule: use the child's registered default outfit: ${visual?.outfit || "the approved profile outfit"}. ${signatureRule}`;
+  }
+  if (usage.outfitMode === "theme_auto") {
+    return `Outfit rule: keep the same face and age impression, but adapt the outfit to the story theme in a cute child-safe way. ${signatureRule}`;
+  }
+  return `Outfit rule: use this custom outfit: ${usage.customOutfit || visual?.outfit || "a cute child-safe outfit"}. ${signatureRule}`;
+}
+
 function buildCharacterConsistencyGuidance(characterBible?: string): string {
   return [
     characterBible ? `Character consistency: ${characterBible}` : "",
@@ -597,6 +662,9 @@ export function buildCoverImagePrompt(
     cast?: StoryCharacter[];
     childProfileBasePrompt?: string | undefined;
     imageModelProfile?: ImageModelProfile;
+    imageQualityTier?: ImageQualityTier;
+    ageBand?: AgeBand;
+    categoryGroupId?: string;
   }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
@@ -609,9 +677,34 @@ export function buildCoverImagePrompt(
   const castIds = options.cast?.map((c) => c.characterId);
   const castGuidance = buildCastGuidance(options?.cast, castIds);
 
+  const backgroundGuidance = [
+    `Background richness: ${getBackgroundRichnessGuidance(options?.ageBand)}`,
+    "Show meaningful surroundings, not just the protagonist.",
+    buildScenePolicyGuidance(undefined, options?.childProfileBasePrompt),
+    buildSharedPrintedSurfaceNoTextGuidance(),
+    buildCategoryGroupNoTextGuidance(options?.categoryGroupId),
+  ].join(" ");
+
+  const emotionGuidance = `Age-appropriate emotional expression: ${getEmotionalExpressionGuidance(options?.ageBand)}`;
+
+  const modelSpecificGuidance =
+    options?.imageModelProfile === "pro_consistent" || options?.imageModelProfile === "kontext_reference"
+      ? [
+          backgroundGuidance,
+          "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, unreadable text, and over-detailed busy backgrounds.",
+        ].join(" ")
+      : [
+          "Keep the prompt simple and clear for the image model.",
+          backgroundGuidance,
+          "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, unreadable text, and cluttered backgrounds.",
+        ].join(" ");
+
   const starCharacter = hasStarCharacterInCast(options?.cast ?? []);
   const starGuard = starCharacter ? buildStarCharacterGuard() : "";
-  const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters: false });
+  const hasAnimalCharacters =
+    options?.categoryGroupId === "animals" ||
+    hasAnimalCharactersInCast(options?.cast ?? []);
+  const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters });
 
   return [
     "Book cover: single striking scene, text-free, no letters, no logos, no watermarks",
@@ -623,6 +716,8 @@ export function buildCoverImagePrompt(
     `Scene: ${sanitizedBasePrompt}`,
     consistency,
     castGuidance,
+    modelSpecificGuidance,
+    emotionGuidance,
     "Global character count rule: there is exactly one human child protagonist: child_protagonist.",
     "Do not create additional human children unless storyCast explicitly includes another human_child character.",
     "Magical friends must not be drawn as human children unless characterKind is human_child.",
@@ -728,7 +823,10 @@ export function buildImagePrompt(
           "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, unreadable text, and cluttered backgrounds.",
         ].join(" ");
 
-  const hasAnimalCharacters = options?.hasAnimalCharacters ?? options?.categoryGroupId === "animals";
+  const hasAnimalCharacters =
+    options?.hasAnimalCharacters ??
+    (options?.categoryGroupId === "animals" ||
+      hasAnimalCharactersInCast(options?.cast ?? []));
   const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters });
   const starCharacter =
     options?.hasStarCharacter ?? hasStarCharacterInCast(options?.cast ?? []);
@@ -782,6 +880,22 @@ function hasStarCharacterInCast(cast: StoryCharacter[]): boolean {
   );
 }
 
+/**
+ * P5-fix: Detect animal characters in cast to apply animal continuity guardrails.
+ * Checks characterKind, role, and visualBible for animal keywords.
+ */
+export function hasAnimalCharactersInCast(cast: StoryCharacter[]): boolean {
+  return cast.some(
+    (c) =>
+      c.characterId !== "child_protagonist" &&
+      (c.characterKind === "animal" ||
+        c.role === "animal" ||
+        /\b(animal|creature|cat|dog|bear|rabbit|fox|bird|dragon|wolf|lion|tiger|elephant|giraffe|monkey|panda|penguin|sheep|horse|cow|pig|chicken|mouse|hamster|frog|turtle|whale|dolphin|shark|fish|insect|butterfly|bee|spider|monster)\b/i.test(c.characterId) ||
+        /\b(animal|creature|cat|dog|bear|rabbit|fox|bird|dragon|wolf|lion|tiger|elephant|giraffe|monkey|panda|penguin|sheep|horse|cow|pig|chicken|mouse|hamster|frog|turtle|whale|dolphin|shark|fish|insect|butterfly|bee|spider|monster)\b/i.test(c.displayName) ||
+        /\b(animal|creature|cat|dog|bear|rabbit|fox|bird|dragon|wolf|lion|tiger|elephant|giraffe|monkey|panda|penguin|sheep|horse|cow|pig|chicken|mouse|hamster|frog|turtle|whale|dolphin|shark|fish|insect|butterfly|bee|spider|monster)\b/i.test(c.visualBible ?? ""))
+  );
+}
+
 export function buildStarCharacterGuard(): string {
   return [
     "Star character: The star character is one independent recurring creature with its own face, body, and expression — not a decoration, background star, or pattern.",
@@ -798,7 +912,7 @@ export function buildVisualContinuityGuard({
 }): string {
   const parts: string[] = [
     // A. Style consistency
-    "Style consistency: Keep the same illustration style, color palette, line weight, and lighting on every page — one consistent artist throughout. Do not shift style between pages.",
+    "Style consistency: Keep the same illustration style, color palette, line weight, lighting, character proportions and anatomy on every page — one consistent artist throughout. Do not shift style or character scale between pages.",
   ];
   if (hasAnimalCharacters) {
     // B. Animal character consistency + cast-count guard (compressed P5-3j)

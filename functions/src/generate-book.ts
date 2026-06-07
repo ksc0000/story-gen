@@ -25,7 +25,15 @@ import type {
   CoverStatus,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
-import { buildSystemPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, appendQualityRetryInstruction } from "./lib/prompt-builder";
+import {
+  buildSystemPrompt,
+  buildImagePrompt,
+  buildCoverImagePrompt,
+  buildP5SimplifiedPagePrompt,
+  appendQualityRetryInstruction,
+  buildFinalCharacterBible,
+  buildCharacterConsistencyRules,
+} from "./lib/prompt-builder";
 import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates, getParseErrorDiagnostics } from "./lib/gemini";
 import {
   ReplicateImageClient,
@@ -1345,7 +1353,12 @@ export async function processBookGeneration(
       const imagePrompt = buildImagePrompt(
         storyPage.imagePrompt,
         normalizedBookData.style,
-        buildFinalCharacterBible(story.characterBible, normalizedBookData),
+        buildFinalCharacterBible({
+          storyCharacterBible: story.characterBible,
+          childProfileSnapshot: normalizedBookData.childProfileSnapshot,
+          characterUsage: normalizedBookData.characterUsage,
+          childAge: mergedInput.childAge,
+        }),
         story.styleBible,
         {
           pageNumber: i,
@@ -1537,12 +1550,20 @@ export async function processBookGeneration(
       ? buildCoverImagePrompt(
           baseCoverPrompt,
           normalizedBookData.style,
-          buildFinalCharacterBible(story.characterBible, normalizedBookData),
+          buildFinalCharacterBible({
+            storyCharacterBible: story.characterBible,
+            childProfileSnapshot: normalizedBookData.childProfileSnapshot,
+            characterUsage: normalizedBookData.characterUsage,
+            childAge: mergedInput.childAge,
+          }),
           story.styleBible,
           {
             cast: story.cast,
             childProfileBasePrompt: normalizedBookData.childProfileSnapshot?.visualProfile.basePrompt,
             imageModelProfile: normalizedBookData.imageModelProfile,
+            imageQualityTier: normalizedBookData.imageQualityTier,
+            ageBand: readingProfile.ageBand,
+            categoryGroupId: template.categoryGroupId,
           }
         )
       : undefined;
@@ -2458,57 +2479,6 @@ function bookSignatureItem(snapshot: NonNullable<BookData["childProfileSnapshot"
   return input.signatureItem || snapshot.visualProfile.signatureItem;
 }
 
-function buildFinalCharacterBible(storyCharacterBible: string, bookData: BookData): string {
-  const visual = bookData.childProfileSnapshot?.visualProfile;
-  const outfitRule = buildOutfitRule(bookData);
-  return [
-    visual?.characterBible ? `Approved child profile: ${visual.characterBible}` : "",
-    storyCharacterBible,
-    buildCharacterConsistencyRules(bookData),
-    outfitRule,
-  ].filter(Boolean).join(" ");
-}
-
-
-function buildCharacterConsistencyRules(bookData: BookData): string {
-  const visual = bookData.childProfileSnapshot?.visualProfile;
-  const age = bookData.childProfileSnapshot?.age ?? bookData.input.childAge;
-
-  return [
-    "Character consistency rules:",
-    "The protagonist must be the same child on every page.",
-    age ? `Keep the same age impression: around ${age} years old.` : "",
-    "Do not change hairstyle, hair length, face shape, age impression, or body proportions.",
-    visual?.outfit
-      ? `Keep the same outfit unless the outfit mode explicitly allows adaptation: ${visual.outfit}.`
-      : "Keep the same outfit unless the outfit mode explicitly allows adaptation.",
-    visual?.signatureItem
-      ? `Keep the same signature item when appropriate: ${visual.signatureItem}.`
-      : "Keep the same signature item when appropriate.",
-    "If the child is seen from behind, from the side, or far away, preserve hairstyle, silhouette, outfit logic, and recognizable body proportions.",
-    "Do not redesign the protagonist between pages.",
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
-
-function buildOutfitRule(bookData: BookData): string {
-  const usage = bookData.characterUsage;
-  const visual = bookData.childProfileSnapshot?.visualProfile;
-  if (!usage) return "";
-
-  const signatureRule = usage.keepSignatureItem && visual?.signatureItem
-    ? `Keep the signature item when appropriate: ${visual.signatureItem}.`
-    : "Do not force the signature item if it does not fit the scene.";
-
-  if (usage.outfitMode === "profile_default") {
-    return `Outfit rule: use the child's registered default outfit: ${visual?.outfit || "the approved profile outfit"}. ${signatureRule}`;
-  }
-  if (usage.outfitMode === "theme_auto") {
-    return `Outfit rule: keep the same face and age impression, but adapt the outfit to the story theme in a cute child-safe way. ${signatureRule}`;
-  }
-  return `Outfit rule: use this custom outfit: ${usage.customOutfit || visual?.outfit || "a cute child-safe outfit"}. ${signatureRule}`;
-}
 
 function toPublicUrl(pathOrUrl: string): string {
   if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;

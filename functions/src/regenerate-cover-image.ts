@@ -10,7 +10,9 @@ import {
   withImageTimeout,
   ImageTimeoutError,
 } from "./lib/replicate";
-import type { ImageModelProfile, CoverStatus, ImageQualityTier, BookData } from "./lib/types";
+import { buildCoverImagePrompt, buildFinalCharacterBible } from "./lib/prompt-builder";
+import { getAgeReadingProfile } from "./lib/age-reading-profile";
+import type { ImageModelProfile, CoverStatus, BookData } from "./lib/types";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
@@ -33,23 +35,44 @@ interface CoverImageResult {
 }
 
 interface GenerateCoverImageParams {
-  coverImagePrompt: string;
+  bookData: BookData;
   imageClient: { generateImage: (prompt: string, opts: Record<string, unknown>) => Promise<Buffer> };
-  bookId: string;
-  imageQualityTier: ImageQualityTier;
-  imageModelProfile?: ImageModelProfile;
 }
 
 async function generateCoverImage(params: GenerateCoverImageParams): Promise<CoverImageResult> {
+  const { bookData } = params;
   const primaryProfile = resolveImageModelProfile({
     purpose: "book_cover",
-    imageQualityTier: params.imageQualityTier,
-    imageModelProfile: params.imageModelProfile,
+    imageQualityTier: bookData.imageQualityTier,
+    imageModelProfile: bookData.imageModelProfile,
   });
   const fallbackProfiles = resolveImageFallbackProfiles(primaryProfile);
   const startMs = Date.now();
   let totalAttempts = 0;
   let lastFailureReason: string | undefined;
+
+  const readingProfile = getAgeReadingProfile(bookData.input.childAge);
+  const finalCharacterBible = buildFinalCharacterBible({
+    storyCharacterBible: bookData.characterBible || "",
+    childProfileSnapshot: bookData.childProfileSnapshot,
+    characterUsage: bookData.characterUsage,
+    childAge: bookData.input.childAge,
+  });
+
+  const fullCoverPrompt = buildCoverImagePrompt(
+    bookData.coverImagePrompt || "",
+    bookData.style,
+    finalCharacterBible,
+    bookData.styleBible,
+    {
+      cast: bookData.storyCast,
+      childProfileBasePrompt: bookData.childProfileSnapshot?.visualProfile.basePrompt,
+      imageModelProfile: bookData.imageModelProfile,
+      imageQualityTier: bookData.imageQualityTier,
+      ageBand: readingProfile.ageBand,
+      categoryGroupId: bookData.categoryGroupId,
+    }
+  );
 
   for (const profile of fallbackProfiles) {
     const maxRetries = 2;
@@ -57,9 +80,9 @@ async function generateCoverImage(params: GenerateCoverImageParams): Promise<Cov
       totalAttempts++;
       try {
         const buffer = await withImageTimeout(
-          params.imageClient.generateImage(params.coverImagePrompt, {
+          params.imageClient.generateImage(fullCoverPrompt, {
             purpose: "book_cover",
-            imageQualityTier: params.imageQualityTier,
+            imageQualityTier: bookData.imageQualityTier,
             imageModelProfile: profile,
           }),
           IMAGE_GENERATION_TIMEOUT_MS,
@@ -78,7 +101,7 @@ async function generateCoverImage(params: GenerateCoverImageParams): Promise<Cov
         if (err instanceof ImageTimeoutError) {
           lastFailureReason = "image_timeout";
           logger.warn("Cover regen timeout", {
-            bookId: params.bookId,
+            bookId: "(regen)",
             profile,
             attempt,
             timeoutMs: IMAGE_GENERATION_TIMEOUT_MS,
@@ -87,7 +110,7 @@ async function generateCoverImage(params: GenerateCoverImageParams): Promise<Cov
         }
         lastFailureReason = err instanceof Error ? err.message : "unknown";
         logger.warn("Cover regen attempt failed", {
-          bookId: params.bookId,
+          bookId: "(regen)",
           profile,
           attempt,
           error: lastFailureReason,
@@ -237,11 +260,8 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
     let coverResult: CoverImageResult;
     try {
       coverResult = await generateCoverImage({
-        coverImagePrompt,
+        bookData,
         imageClient,
-        bookId,
-        imageQualityTier: bookData.imageQualityTier ?? "light",
-        imageModelProfile: bookData.imageModelProfile,
       });
     } catch (err) {
       logger.error("Cover regeneration unexpected error", {
