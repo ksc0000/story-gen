@@ -15,10 +15,16 @@ on:
         description: "Generate prompts without implementation"
         required: true
         default: "true"
+      task_source:
+        description: "Roadmap or issue reference"
+        required: true
+        default: "docs"
 
 jobs:
   controller:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -30,15 +36,28 @@ jobs:
           echo "iterations=${{ github.event.inputs.iterations }}"
           echo "mode=${{ github.event.inputs.mode }}"
           echo "dry_run=${{ github.event.inputs.dry_run }}"
+          echo "task_source=${{ github.event.inputs.task_source }}"
 
-      - name: Read AI loop docs
+      - name: Generate next task
         run: |
-          ls -R docs/ai-loop || true
+          ./scripts/ai-loop/generate-next-task.sh \
+            "${{ github.event.inputs.iterations }}" \
+            "${{ github.event.inputs.mode }}" \
+            "${{ github.event.inputs.dry_run }}" \
+            "${{ github.event.inputs.task_source }}"
 
-      - name: Placeholder controller step
+      - name: Commit and push changes
+        if: github.event.inputs.dry_run == 'false'
         run: |
-          echo "Future controller agent execution goes here"
-          echo "This phase intentionally does not modify production code"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add docs/ai-loop/NEXT_TASK.md
+          if ! git diff --cached --quiet; then
+            git commit -m "docs: update NEXT_TASK.md via AI Loop Controller"
+            git push
+          else
+            echo "No changes to commit"
+          fi
 
       - name: Safety reminder
         run: |
