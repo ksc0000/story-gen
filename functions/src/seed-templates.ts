@@ -7,10 +7,10 @@ if (getApps().length === 0) initializeApp();
 const db = getFirestore();
 
 const FIXED_IMAGE_PROMPT_STANDARD_SUFFIX =
-  "no readable writing anywhere, no signage, no storefront signs, no text-like marks";
+  "no readable writing anywhere, no signage, no storefront signs, no text-like marks, no text, no letters, no Japanese characters, no logo, no watermark";
 
 const FIXED_IMAGE_PROMPT_REF_ISOLATION_SUFFIX =
-  "use the reference image ONLY for the child character's face, hairstyle, outfit, age, and body proportions; do NOT copy the reference image background, location, pose, sandbox, playground, lighting, camera angle, or composition; place the child naturally into the scene described here";
+  "use the reference image ONLY for the child character's face, hairstyle, outfit, age, and body proportions; do NOT copy the reference image background, location, pose, sandbox, playground, lighting, camera angle, or composition; place the child naturally into the scene described here, NOT a sandbox, NOT a playground";
 
 function withFixedImagePromptSafety(prompt: string): string {
   let result = prompt;
@@ -40,34 +40,34 @@ function withBrushTeeth8pImagePromptGuardrail(prompt: string): string {
   return withFixedImagePromptSafety(result);
 }
 
-const ZOO_8P_CHARACTER_ANCHOR_CLAUSE =
-  "keep the same preschool child across all 8 pages: same short dark hair, same outfit color and style, same round face proportions, same age impression around 4 years old, and consistent gentle picture-book facial features";
+const ZOO_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same child across all pages: same outfit color and style, same round face proportions, same age impression around {childAge} years old, and consistent gentle picture-book facial features; preserve hairstyle and face between pages";
 
-const ZOO_8P_NO_SIGN_TEXT_CLAUSE =
+const ZOO_NO_SIGN_TEXT_CLAUSE =
   "all background signs, boards, and notices are plain-colored shapes with no glyphs or letters, no readable text of any kind";
 
-const ZOO_8P_NO_CLOTHING_TEXT_CLAUSE =
+const ZOO_NO_CLOTHING_TEXT_CLAUSE =
   "clothing and wearable accessories have no visible print, logo, badge text, letters, numbers, mascot word marks, slogan graphics, patches, or readable marks of any kind";
 
-const ZOO_8P_NO_PRINTED_SURFACES_CLAUSE =
+const ZOO_NO_PRINTED_SURFACES_CLAUSE =
   "zoo scene structures stay natural and unmarked: no entrance signs, no zoo name boards, no map boards, no ticket boards, no information panels, no directional markers, no exit markers, no facility placards, no enclosure labels, no warning notices, no posted notices, no hanging banners, and no printed gate or building surfaces";
 
-function withZoo8pImagePromptGuardrail(
+function withZooImagePromptGuardrail(
   prompt: string,
   options?: { signText?: boolean; clothingText?: boolean }
 ): string {
   let result = prompt;
-  if (options?.signText && !result.includes(ZOO_8P_NO_SIGN_TEXT_CLAUSE)) {
-    result = `${result}, ${ZOO_8P_NO_SIGN_TEXT_CLAUSE}`;
+  if (options?.signText && !result.includes(ZOO_NO_SIGN_TEXT_CLAUSE)) {
+    result = `${result}, ${ZOO_NO_SIGN_TEXT_CLAUSE}`;
   }
-  if (options?.signText && !result.includes(ZOO_8P_NO_PRINTED_SURFACES_CLAUSE)) {
-    result = `${result}, ${ZOO_8P_NO_PRINTED_SURFACES_CLAUSE}`;
+  if (options?.signText && !result.includes(ZOO_NO_PRINTED_SURFACES_CLAUSE)) {
+    result = `${result}, ${ZOO_NO_PRINTED_SURFACES_CLAUSE}`;
   }
-  if (options?.clothingText && !result.includes(ZOO_8P_NO_CLOTHING_TEXT_CLAUSE)) {
-    result = `${result}, ${ZOO_8P_NO_CLOTHING_TEXT_CLAUSE}`;
+  if (options?.clothingText && !result.includes(ZOO_NO_CLOTHING_TEXT_CLAUSE)) {
+    result = `${result}, ${ZOO_NO_CLOTHING_TEXT_CLAUSE}`;
   }
-  if (!result.includes(ZOO_8P_CHARACTER_ANCHOR_CLAUSE)) {
-    result = `${result}, ${ZOO_8P_CHARACTER_ANCHOR_CLAUSE}`;
+  if (!result.includes(ZOO_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${ZOO_CHARACTER_ANCHOR_CLAUSE}`;
   }
   return withFixedImagePromptSafety(result);
 }
@@ -428,7 +428,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     fixedStory: {
       titleTemplate: "{childName}とはじめてのどうぶつえん",
       coverImagePromptTemplate:
-        withFixedImagePromptSafety("Picture book cover illustration: a young child standing beside a decorative text-free zoo entrance arch with animal-shaped decorations and zoo paths, with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark, no storefront signs, NOT a sandbox, NOT a playground"),
+        withZooImagePromptGuardrail("Picture book cover illustration: a young child standing beside a decorative text-free zoo entrance arch with animal-shaped decorations and zoo paths, with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details", { signText: true }),
       titleSpreadTextTemplate: "{childName}と はじめての どうぶつえん",
       openingNarrationTemplate:
         "きょうは とくべつな日。{childName}は {familyMembers}と いっしょに、はじめての どうぶつえんへ でかけます。",
@@ -444,7 +444,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           general_child: "{childName}は、{familyMembers}といっしょに{place}へでかけました。どんな どうぶつに あえるかな。",
           pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            "Setting: zoo entrance path with family, animal enclosures and trees — NOT a sandbox, NOT a playground, NOT a park. Establishing wide shot of a young child arriving at a friendly zoo with family. The child stands near a tree-lined path just inside the entrance, looking up with excitement. Family members walk beside the child. A decorative text-free entrance arch frames the top. A small yellow star motif is tucked into the arch. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, soft painterly watercolor texture, no hard outlines, rich watercolor pigment blooms, rounded child-safe shapes, rich but not cluttered background details. No readable writing anywhere, no signage, no storefront signs, no text-like marks, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground.",
+            withZooImagePromptGuardrail("Setting: zoo entrance path with family, animal enclosures and trees. Establishing wide shot of a young child arriving at a friendly zoo with family. The child stands near a tree-lined path just inside the entrance, looking up with excitement. Family members walk beside the child. A decorative text-free entrance arch frames the top. A small yellow star motif is tucked into the arch. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, soft painterly watercolor texture, no hard outlines, rich watercolor pigment blooms, rounded child-safe shapes, rich but not cluttered background details."),
         }),
         buildAgeSpecificPage({
           textTemplate: "大きなどうぶつ、小さなどうぶつ。{childName}の目はきらきらです。",
@@ -459,7 +459,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "大きなどうぶつ、小さなどうぶつ。{childName}の目はきらきらです。つぎは どこを見ようかと こころが はずみます。",
           pageVisualRole: "discovery",
           imagePromptTemplate:
-            "Setting: viewing animal enclosures from a safe path inside the zoo — NOT a sandbox, NOT a playground. Medium shot of a child at a zoo animal enclosure, leaning forward with wide curious eyes. A friendly elephant or giraffe stands in the mid-ground, while small birds or butterflies add life to the foreground. The child points with one hand, the other holding a parent's hand. Family members stand behind the child, smiling. A small yellow star motif is hidden on a fence post. Warm daylight filtering through leaves. Soft watercolor picture book style, clear foreground-midground-background layering, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground.",
+            withZooImagePromptGuardrail("Setting: viewing animal enclosures from a safe path inside the zoo. Medium shot of a child at a zoo animal enclosure, leaning forward with wide curious eyes. A friendly elephant or giraffe stands in the mid-ground, while small birds or butterflies add life to the foreground. The child points with one hand, the other holding a parent's hand. Family members stand behind the child, smiling. A small yellow star motif is hidden on a fence post. Warm daylight filtering through leaves. Soft watercolor picture book style, clear foreground-midground-background layering, rich but not cluttered."),
         }),
         buildAgeSpecificPage({
           textTemplate: "いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。",
@@ -474,7 +474,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "いちばんうれしかったのは、{childName}がにっこり笑ったその瞬間でした。みんなの こころも ぽかぽかに なります。",
           pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
-            "Setting: zoo viewing area with animals in the distance, close-up emotional moment — NOT a sandbox, NOT a playground. Close-up of the child's face beaming with a big joyful smile after a special zoo moment. The child holds a small zoo souvenir or leaf in both hands near their chest. Soft-focus background shows a friendly animal and family members reacting warmly. A small yellow star motif appears on the souvenir or nearby. Warm afternoon light with golden highlights on the child's cheeks. Soft watercolor picture book style, emotional warmth, intimate framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground.",
+            withZooImagePromptGuardrail("Setting: zoo viewing area with animals in the distance, close-up emotional moment. Close-up of the child's face beaming with a big joyful smile after a special zoo moment. The child holds a small zoo souvenir or leaf in both hands near their chest. Soft-focus background shows a friendly animal and family members reacting warmly. A small yellow star motif appears on the souvenir or nearby. Warm afternoon light with golden highlights on the child's cheeks. Soft watercolor picture book style, emotional warmth, intimate framing, rich but not cluttered."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{parentMessage}",
@@ -485,7 +485,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           general_child: "{parentMessage}",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            "Setting: quiet zoo path at sunset leaving the zoo — NOT a sandbox, NOT a playground. Back-view wide shot of the child and family walking away from the zoo toward a golden-hour sunset. A gentle tree-lined path stretches ahead. The child holds a parent's hand, looking slightly back with a content smile. A small yellow star motif glows softly in the evening sky or on a nearby lantern. Warm amber and soft pink sunset tones. Soft watercolor picture book style, peaceful farewell composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground.",
+            withZooImagePromptGuardrail("Setting: quiet zoo path at sunset leaving the zoo. Back-view wide shot of the child and family walking away from the zoo toward a golden-hour sunset. A gentle tree-lined path stretches ahead. The child holds a parent's hand, looking slightly back with a content smile. A small yellow star motif glows softly in the evening sky or on a nearby lantern. Warm amber and soft pink sunset tones. Soft watercolor picture book style, peaceful farewell composition, rich but not cluttered."),
         }),
       ],
     },
@@ -775,7 +775,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "どうぶつえんの あさは、でかける まえから わくわくが いっぱいです。{childName}は てばやく じゅんびを すませます。",
           pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            withZoo8pImagePromptGuardrail("Setting: cozy home in morning light before a zoo outing — NOT a zoo, NOT an animal exhibit, NOT a sandbox, NOT a playground. Establishing wide shot of a young child in a sunlit room ready to go out, wearing a backpack or hat, standing near the front door with family. Family members are smiling and preparing to leave. Warm golden morning light streams through a window. A small yellow star motif is tucked on the child's bag strap or hat. Soft watercolor picture book style, gentle anticipation mood, layered foreground-midground-background, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground."),
+            withZooImagePromptGuardrail("Setting: cozy home in morning light before a zoo outing. Establishing wide shot of a young child in a sunlit room ready to go out, wearing a backpack or hat, standing near the front door with family. Family members are smiling and preparing to leave. Warm golden morning light streams through a window. A small yellow star motif is tucked on the child's bag strap or hat. Soft watercolor picture book style, gentle anticipation mood, layered foreground-midground-background, rich but not cluttered."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。",
@@ -785,12 +785,12 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_reader_5_6:
             "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。いりぐちの ちずを みながら、つぎは どこへ いこうかと そうぞうが ひろがります。",
           early_elementary_7_8:
-            "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。はじめての ばしょの においと おとが、{childName}のまわりをつつみます。",
+            "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。はじめての ばしょの においと おとが、{childName}のまわりを つつみます。",
           general_child:
             "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。たかい ゲートを みあげて、こころが はずみます。",
           pageVisualRole: "discovery",
           imagePromptTemplate:
-            withZoo8pImagePromptGuardrail("Setting: zoo entrance path with family, animal enclosures and trees — NOT a sandbox, NOT a playground, NOT a park. Wide establishing shot of a young child arriving at a friendly zoo entrance with family. The child stands near a tree-lined path just inside the entrance, looking up with excitement at the arch. Family members walk beside the child. A decorative text-free entrance arch frames the top. Use only a welcoming leafy threshold, open gate, trees, and path with no side boards, no map panels, no admission notices, and no posted signs anywhere in view. Dress the child in plain child-safe clothing with simple solid-color fabric only; no shirt lettering, no logo patches, no mascot prints, no badge text, and no decorative number or alphabet graphics on clothing, backpack, hat, or shoes. A small yellow star motif is tucked into the arch decoration. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, soft painterly watercolor texture, no hard outlines, rich watercolor pigment blooms, rounded child-safe shapes, rich but not cluttered background details. Keep all entrance, gate, ticket, map, board, and panel surfaces plain and unmarked, with no readable text, pseudo-text, letters, numbers, logos, symbols, or text-like marks. No readable writing anywhere, no signage, no storefront signs, no text-like marks, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground.", { signText: true, clothingText: true }),
+            withZooImagePromptGuardrail("Setting: zoo entrance path with family, animal enclosures and trees. Wide establishing shot of a young child arriving at a friendly zoo entrance with family. The child stands near a tree-lined path just inside the entrance, looking up with excitement at the arch. Family members walk beside the child. A decorative text-free entrance arch frames the top. Use only a welcoming leafy threshold, open gate, trees, and path with no side boards, no map panels, no admission notices, and no posted signs anywhere in view. Dress the child in plain child-safe clothing with simple solid-color fabric only; no shirt lettering, no logo patches, no mascot prints, no badge text, and no decorative number or alphabet graphics on clothing, backpack, hat, or shoes. A small yellow star motif is tucked into the arch decoration. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, soft painterly watercolor texture, no hard outlines, rich watercolor pigment blooms, rounded child-safe shapes, rich but not cluttered background details. Keep all entrance, gate, ticket, map, board, and panel surfaces plain and unmarked, with no readable text, pseudo-text, letters, numbers, logos, symbols, or text-like marks.", { signText: true, clothingText: true }),
         }),
         buildAgeSpecificPage({
           textTemplate: "おおきな どうぶつを みつけた{childName}は、声も でないほど びっくりしました。",
@@ -805,7 +805,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "おおきな どうぶつを みつけた{childName}は、声も でないほど びっくりしました。でも、すぐに もっと みたくて まえへ すすみます。",
           pageVisualRole: "discovery",
           imagePromptTemplate:
-            withZoo8pImagePromptGuardrail("Setting: viewing animal enclosures from a safe path inside the zoo — NOT a sandbox, NOT a playground. Medium shot of a child at a zoo animal enclosure, leaning forward with wide eyes looking up at a large friendly elephant or giraffe in the mid-ground. The child points with one hand, the other holding a parent's hand. Family members stand behind with smiles. A small yellow star motif is tucked on a fence post nearby. Warm daylight filtering through leafy trees. Soft watercolor picture book style, clear foreground-midground-background layering, sense of wonder and scale, rich but not cluttered. Keep enclosure fences, animal-name placards, background boards, and text-bearing objects plain or out of view, with no readable text, pseudo-text, letters, numbers, logos, or printed marks. Keep the habitat natural and uncluttered with plain fence rhythm only, and no panel-like objects in view. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground.", { signText: true }),
+            withZooImagePromptGuardrail("Setting: viewing animal enclosures from a safe path inside the zoo. Medium shot of a child at a zoo animal enclosure, leaning forward with wide eyes looking up at a large friendly elephant or giraffe in the mid-ground. The child points with one hand, the other holding a parent's hand. Family members stand behind with smiles. A small yellow star motif is tucked on a fence post nearby. Warm daylight filtering through leafy trees. Soft watercolor picture book style, clear foreground-midground-background layering, sense of wonder and scale, rich but not cluttered. Keep enclosure fences, animal-name placards, background boards, and text-bearing objects plain or out of view, with no readable text, pseudo-text, letters, numbers, logos, or printed marks. Keep the habitat natural and uncluttered with plain fence rhythm only, and no panel-like objects in view.", { signText: true }),
         }),
         buildAgeSpecificPage({
           textTemplate: "ちいさな どうぶつたちの うごきに、{childName}の 目が くぎづけになりました。",
@@ -820,7 +820,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "ちいさな どうぶつたちの うごきに、{childName}の 目が くぎづけになりました。すこしも じっと してくれません。",
           pageVisualRole: "object_detail",
           imagePromptTemplate:
-            withZoo8pImagePromptGuardrail("Setting: zoo viewing area with animals in the distance — NOT a sandbox, NOT a playground. Object-detail shot showing a small lively animal close up — a bunny, meerkat, or small colorful bird — in sharp focus, while the child leans in with bright curious eyes in the foreground. The animal is mid-movement: hopping, standing, or tilting its head. A small yellow star motif is visible on a pebble or log in the enclosure. Soft warm daylight. Soft watercolor picture book style, lively but gentle close-detail framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground."),
+            withZooImagePromptGuardrail("Setting: zoo viewing area with animals in the distance. Object-detail shot showing a small lively animal close up — a bunny, meerkat, or small colorful bird — in sharp focus, while the child leans in with bright curious eyes in the foreground. The animal is mid-movement: hopping, standing, or tilting its head. A small yellow star motif is visible on a pebble or log in the enclosure. Soft warm daylight. Soft watercolor picture book style, lively but gentle close-detail framing, rich but not cluttered."),
         }),
         buildAgeSpecificPage({
           textTemplate: "あるどうぶつの まえで、{childName}は すこし どきどきしました。",
@@ -835,7 +835,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "あるどうぶつの まえで、{childName}は すこし どきどきしました。{familyMembers}の てを ぎゅっと にぎります。",
           pageVisualRole: "setback_or_question",
           imagePromptTemplate:
-            withZoo8pImagePromptGuardrail("Setting: viewing animal enclosures from a safe path inside the zoo — NOT a sandbox, NOT a playground. Medium shot of the child taking a small step back or gripping a family member's hand, eyes wide and uncertain, while a large animal in the mid-ground makes a movement or sound. Family member crouches beside the child with a reassuring gentle expression. A small yellow star motif is on the fence post. Soft watercolor picture book style, gentle tension without fear, rich but not cluttered. Use body language and fence rhythm only to communicate caution or surprise, never warning signs or notice boards. Do not include caution notices, warning notices, notice boards, guide panels, animal-name placards, readable text, pseudo-text, letters, numbers, logos, symbols, or text-like marks. Use plain background shapes if a panel-like object is needed. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground.", { signText: true }),
+            withZooImagePromptGuardrail("Setting: viewing animal enclosures from a safe path inside the zoo. Medium shot of the child taking a small step back or gripping a family member's hand, eyes wide and uncertain, while a large animal in the mid-ground makes a movement or sound. Family member crouches beside the child with a reassuring gentle expression. A small yellow star motif is on the fence post. Soft watercolor picture book style, gentle tension without fear, rich but not cluttered. Use body language and fence rhythm only to communicate caution or surprise, never warning signs or notice boards. Do not include caution notices, warning notices, notice boards, guide panels, animal-name placards, readable text, pseudo-text, letters, numbers, logos, symbols, or text-like marks. Use plain background shapes if a panel-like object is needed.", { signText: true }),
         }),
         buildAgeSpecificPage({
           textTemplate: "よく みると、どうぶつたちは みんな やさしい めを していました。",
@@ -850,7 +850,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "よく みると、どうぶつたちは みんな やさしい めを していました。{childName}の どきどきが、すうっと やわらいでいきます。",
           pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
-            withZoo8pImagePromptGuardrail("Setting: zoo viewing area with animals in the distance, emotional turning point — NOT a sandbox, NOT a playground. Close-up shot focused on the gentle eyes of a friendly animal — a giraffe, deer, or calm elephant — filling the left side of the frame. The child's face appears in soft foreground on the right, looking at the animal with wonder and growing warmth, no longer afraid. A small yellow star motif appears on a nearby leaf or rock. Warm afternoon light. Soft watercolor picture book style, intimate eye-to-eye emotional framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground.", { clothingText: true }),
+            withZooImagePromptGuardrail("Setting: zoo viewing area with animals in the distance, emotional turning point. Close-up shot focused on the gentle eyes of a friendly animal — a giraffe, deer, or calm elephant — filling the left side of the frame. The child's face appears in soft foreground on the right, looking at the animal with wonder and growing warmth, no longer afraid. A small yellow star motif appears on a nearby leaf or rock. Warm afternoon light. Soft watercolor picture book style, intimate eye-to-eye emotional framing, rich but not cluttered.", { clothingText: true }),
         }),
         buildAgeSpecificPage({
           textTemplate: "かえりみちに、きょう みた けしきを {childName}は こころに しまいました。",
@@ -865,7 +865,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "かえりみちに、きょう みた けしきを {childName}は こころに しまいました。また きたいな、と そっと つぶやきます。",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            withZoo8pImagePromptGuardrail("Setting: quiet zoo path at sunset leaving the zoo — NOT a sandbox, NOT a playground. Back-view wide shot of the child and family walking away from the zoo toward a golden-hour sunset. A gentle tree-lined path stretches ahead. The child holds a parent's hand, looking slightly back with a content smile. A small yellow star motif glows softly in the evening sky. Warm amber and soft pink sunset tones. Soft watercolor picture book style, peaceful farewell composition, rich but not cluttered. Simplify the exit scene to trees, path, sky glow, and family silhouette only. Avoid exit markers, direction boards, facility wayfinding, maps, readable text, pseudo-text, letters, numbers, logos, or symbols. Use a simple plain arch or path instead of labeled wayfinding, and keep any background structures plain, distant, and unmarked. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground.", { signText: true }),
+            withZooImagePromptGuardrail("Setting: quiet zoo path at sunset leaving the zoo. Back-view wide shot of the child and family walking away from the zoo toward a golden-hour sunset. A gentle tree-lined path stretches ahead. The child holds a parent's hand, looking slightly back with a content smile. A small yellow star motif glows softly in the evening sky. Warm amber and soft pink sunset tones. Soft watercolor picture book style, peaceful farewell composition, rich but not cluttered. Simplify the exit scene to trees, path, sky glow, and family silhouette only. Avoid exit markers, direction boards, facility wayfinding, maps, readable text, pseudo-text, letters, numbers, logos, or symbols. Use a simple plain arch or path instead of labeled wayfinding, and keep any background structures plain, distant, and unmarked.", { signText: true }),
         }),
         buildAgeSpecificPage({
           textTemplate: "{parentMessage}",
@@ -876,7 +876,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           general_child: "{parentMessage}",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            withZoo8pImagePromptGuardrail("Setting: quiet zoo path at sunset leaving the zoo — peaceful closing moment, NOT a sandbox, NOT a playground. Back-view wide shot of the child leaning gently on a family member's shoulder at the end of the zoo day, looking toward a soft sunset or warm home light ahead. The child holds a small leaf-shaped keepsake toy in one hand. A small yellow star motif glows near a round paper light or evening sky. Soft amber and violet dusk tones. Soft watercolor picture book style, serene and affectionate closing framing, rich but not cluttered. Keep any background buildings, lamps, fences, or zoo structures plain, distant, and unmarked, with no signboards, no building labels, and no printed surfaces anywhere in view. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark, NOT a sandbox, NOT a playground.", { signText: true }),
+            withZooImagePromptGuardrail("Setting: quiet zoo path at sunset leaving the zoo — peaceful closing moment. Back-view wide shot of the child leaning gently on a family member's shoulder at the end of the zoo day, looking toward a soft sunset or warm home light ahead. The child holds a small leaf-shaped keepsake toy in one hand. A small yellow star motif glows near a round paper light or evening sky. Soft amber and violet dusk tones. Soft watercolor picture book style, serene and affectionate closing framing, rich but not cluttered. Keep any background buildings, lamps, fences, or zoo structures plain, distant, and unmarked, with no signboards, no building labels, and no printed surfaces anywhere in view.", { signText: true }),
         }),
       ],
     },
