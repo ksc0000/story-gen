@@ -40,10 +40,11 @@
 - **非同期アップロード時:** ユーザーが子どもの写真をアップロードした直後、Firebase Functions (onObjectFinalized) で背景除去を実行。生成リクエスト時のレイテンシを最小化する。
 
 ### データの保存・キャッシュ
-- Cloud Storage 上に以下の構成で保存：
-  - `originals/{childId}.jpg` (元画像：万が一の再処理用)
-  - `neutrals/{childId}.png` (背景除去済み：生成に使用)
-- `childProfiles` ドキュメントに `neutralReferenceImageUrl` フィールドを追加。
+- Cloud Storage 上に以下の構成で保存（既存の ownership モデル `users/{userId}/children/{childId}/...` に準拠）：
+  - `users/{userId}/children/{childId}/originals/ref.jpg` (元画像：万が一の再処理用)
+  - `users/{userId}/children/{childId}/neutrals/ref.png` (背景除去済み：生成に使用)
+- `users/{userId}/children/{childId}` ドキュメントに `neutralReferenceImageUrl` フィールドを追加。
+- この構成により、既存の Storage セキュリティルール（`/users/{userId}/...` 配下）がそのまま適用される。
 
 ### 失敗時のフォールバック
 1. 背景除去プロセスでエラー、または出力画像が空（または閾値以下のサイズ）の場合：
