@@ -15,7 +15,6 @@ import {
 } from "@/lib/quality-review";
 
 type QualityReviewPanelProps = {
-  book: { id: string; title?: string };
   qualityReviews: QualityReviewWithId[];
   loading: boolean;
   error: string | null;
@@ -54,8 +53,6 @@ function computePreviewScore(form: QualityReviewForm): string {
 }
 
 export function QualityReviewPanel({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  book: _book,
   qualityReviews,
   loading,
   error,
