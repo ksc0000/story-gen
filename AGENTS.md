@@ -214,6 +214,44 @@ npm run report:generation-slo # SLO レポート
 
 ---
 
+## Jules / AI エージェント ワークフロー
+
+### PR ルール
+
+| ルール | 内容 |
+|---|---|
+| サイズ上限 | diff 150 行以内（src/ + functions/ 合計） |
+| スコープ | 1 Issue = 1 PR。複数 Issue を混在させない |
+| ドラフト | 実装完了後に Draft → Ready for review に変更する |
+| CI 必須 | `npm test` + `npm run lint` + `npm run build` がすべてパスすること |
+| Node バージョン | functions/ 変更時は Node 20 で確認すること |
+
+### レビューフロー（二段階）
+
+```text
+Jules PR 作成
+  ↓ CI パス確認
+  ↓ request-ai-review ラベル追加（human または Jules）
+  ↓ @codex review（コード正確性・テスト漏れ・スコープ逸脱）
+  ↓ Codex LGTM または token limit 到達の場合
+  ↓ @claude review（設計・保守性・プロダクト一貫性）—— 自動トリガー
+  ↓ human merge
+```
+
+Codex がブロッキング指摘を出した場合は Claude は自動トリガーされない。Jules が修正してから再度 `request-ai-review` ラベルを追加すること。
+
+### Jules 禁止操作
+
+- `firebase deploy` / `firebase functions:deploy` などのデプロイコマンド
+- `.env.local` / service account JSON / API キーへの変更・コミット
+- `firestore.rules` / `firestore.indexes.json` の変更（セキュリティルール変更は human が行う）
+- `main` への直接コミット
+- PR のマージ
+- 複数 Issue にまたがる大規模リファクタリング
+- `package.json` の依存関係追加（要 human 承認）
+
+---
+
 ## 安全ルール
 
 - `firebase deploy`・本番影響操作はユーザー承認後のみ実行
