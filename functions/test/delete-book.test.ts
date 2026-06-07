@@ -3,15 +3,18 @@ import { processDeleteBook } from "../src/delete-book";
 import { HttpsError } from "firebase-functions/v2/https";
 
 describe("processDeleteBook", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockDb = {
     collection: vi.fn(),
     recursiveDelete: vi.fn(),
-  } as any;
+  } as any; // Partial Firestore mock — full type not needed in unit test
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockBookRef = {
     get: vi.fn(),
   } as any;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockAuth = {
     uid: "user-123",
     token: { admin: false },
@@ -38,6 +41,7 @@ describe("processDeleteBook", () => {
   });
 
   it("successfully deletes a book when the user is an admin", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const adminAuth = { uid: "admin-456", token: { admin: true } } as any;
     mockBookRef.get.mockResolvedValue({
       exists: true,

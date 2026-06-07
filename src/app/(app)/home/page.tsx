@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
 import { isDemoMode, deleteDemoBook } from "@/lib/demo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
