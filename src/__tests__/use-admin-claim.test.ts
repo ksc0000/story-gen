@@ -4,6 +4,12 @@ import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import * as useAuthModule from "@/lib/hooks/use-auth";
 
 vi.mock("@/lib/hooks/use-auth");
+vi.mock("@/lib/firebase", () => ({
+  auth: {},
+  db: {},
+  storage: {},
+  functions: {},
+}));
 
 // Mock console.error to avoid spamming the test output
 const originalConsoleError = console.error;

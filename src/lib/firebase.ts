@@ -16,7 +16,7 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-if (isDemoMode && !firebaseConfig.apiKey) {
+if ((isDemoMode || process.env.NODE_ENV === "test") && !firebaseConfig.apiKey) {
   firebaseConfig.apiKey = "DummyKey";
   firebaseConfig.projectId = "dummy-project";
 }
