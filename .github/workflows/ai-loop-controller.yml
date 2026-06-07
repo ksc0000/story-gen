@@ -44,6 +44,7 @@ jobs:
           CTRL_MODE: ${{ github.event.inputs.mode }}
           CTRL_DRY_RUN: ${{ github.event.inputs.dry_run }}
           CTRL_TASK_SOURCE: ${{ github.event.inputs.task_source }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           ./scripts/ai-loop/generate-next-task.sh \
             "$CTRL_ITERATIONS" \

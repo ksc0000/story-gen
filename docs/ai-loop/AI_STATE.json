@@ -1,0 +1,11 @@
+{
+  "current_phase": "1.5b",
+  "max_iterations": 3,
+  "human_review_every": 1,
+  "completed_tasks": [],
+  "failed_tasks": [],
+  "constraints": [
+    "docs-first",
+    "small PRs"
+  ]
+}
