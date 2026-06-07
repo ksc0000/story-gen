@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageTransition } from "@/components/page-transition";
@@ -43,9 +44,11 @@ export default function ChildrenPage() {
             <Card key={child.id}>
               <CardHeader>
                 {child.visualProfile?.approvedImageUrl ? (
-                  <img
+                  <Image
                     src={child.visualProfile.approvedImageUrl}
                     alt={`${child.nickname || child.displayName}のキャラクター`}
+                    width={400}
+                    height={300}
                     className="mb-3 aspect-[4/3] w-full rounded-2xl object-cover"
                   />
                 ) : null}
