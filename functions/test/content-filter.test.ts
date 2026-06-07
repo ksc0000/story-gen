@@ -29,6 +29,26 @@ describe("containsNGWords", () => {
     const result = containsNGWords("KILL the monster");
     expect(result.safe).toBe(false);
   });
+
+  it("avoids partial matches for English words (word boundary check)", () => {
+    expect(containsNGWords("skill").safe).toBe(true);
+    expect(containsNGWords("skillful").safe).toBe(true);
+    expect(containsNGWords("annexed").safe).toBe(true);
+  });
+
+  it("detects hiragana variants of Japanese NG words", () => {
+    expect(containsNGWords("ころす").safe).toBe(false);
+    expect(containsNGWords("しね").safe).toBe(false);
+    expect(containsNGWords("ぼうりょく").safe).toBe(false);
+  });
+
+  it("detects newly added harmful words", () => {
+    expect(containsNGWords("爆弾を作った").safe).toBe(false);
+    expect(containsNGWords("ばくだん").safe).toBe(false);
+    expect(containsNGWords("bomb").safe).toBe(false);
+    expect(containsNGWords("hate speech").safe).toBe(false);
+    expect(containsNGWords("racist").safe).toBe(false);
+  });
 });
 
 describe("sanitizeInput", () => {
