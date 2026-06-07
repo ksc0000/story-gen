@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { httpsCallable } from "firebase/functions";
+import { isDemoMode, deleteDemoBook } from "@/lib/demo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookCard } from "@/components/book-card";
@@ -22,6 +24,8 @@ export default function HomePage() {
   const { user } = useAuth();
   const router = useRouter();
   const { books, loading, error } = useBooks(user?.uid);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const { profile } = useUserProfile(user?.uid);
   const { children, loading: childrenLoading, activeChild } = useChildren(user?.uid);
   const { isAdmin } = useAdminClaim();
@@ -32,6 +36,38 @@ export default function HomePage() {
       router.replace("/onboarding/child");
     }
   }, [children.length, childrenLoading, router]);
+
+  const handleDeleteBook = async (bookId: string, title: string) => {
+    if (!window.confirm(`「${title || "無題の絵本"}」を削除しますか？\nこの操作は取り消せません。`)) {
+      return;
+    }
+
+    setDeletingId(bookId);
+    setDeleteError(null);
+
+    try {
+      if (isDemoMode) {
+        deleteDemoBook(bookId);
+        // In demo mode, we need to trigger a re-render or wait for useBooks to update.
+        // Since useBooks for demo mode just reads from session storage once,
+        // we might need to manually update the local state or reload.
+        window.location.reload();
+        return;
+      }
+      const { functions } = await import("@/lib/firebase");
+      const deleteBookFn = httpsCallable<{ bookId: string }, { success: boolean }>(
+        functions,
+        "deleteBook"
+      );
+      await deleteBookFn({ bookId });
+    } catch (err: unknown) {
+      console.error("Failed to delete book:", err);
+      const message = err instanceof Error ? err.message : "絵本の削除に失敗しました";
+      setDeleteError(message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <PageTransition className="relative mx-auto max-w-4xl px-4 py-8">
@@ -49,6 +85,12 @@ export default function HomePage() {
             </Badge>
           </div>
         </header>
+        {deleteError && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600">
+            {deleteError}
+          </div>
+        )}
+
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link href="/create/select-child" className="w-full sm:w-auto">
             <Button size="lg" className="em-btn-cta text-lg w-full sm:w-auto">
@@ -90,7 +132,15 @@ export default function HomePage() {
           <StaggerContainer className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {books.map((book) => (
               <StaggerItem key={book.id}>
-                <BookCard book={book} />
+                <BookCard
+                  book={book}
+                  onDelete={
+                    book.userId === user?.uid
+                      ? () => handleDeleteBook(book.id, book.title || "")
+                      : undefined
+                  }
+                  isDeleting={deletingId === book.id}
+                />
               </StaggerItem>
             ))}
           </StaggerContainer>
