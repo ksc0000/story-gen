@@ -43,15 +43,11 @@ export default function AdminLoginPage() {
     } catch (err: unknown) {
       console.error("Failed to bootstrap admin claim:", err);
       const code = typeof err === "object" && err && "code" in err ? String((err as { code?: string }).code) : "";
-      const rawMessage =
-        typeof err === "object" && err && "message" in err
-          ? String((err as { message?: string }).message)
-          : "Unknown error";
 
       if (code.includes("permission-denied")) {
         setError("このメールアドレスは管理者として許可されていません");
       } else {
-        setError(`管理者権限の有効化に失敗しました: ${rawMessage}`);
+        setError("管理者権限の有効化に失敗しました。時間をおいて再度お試しください。");
       }
     } finally {
       setActivating(false);
