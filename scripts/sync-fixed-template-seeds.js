@@ -13,13 +13,13 @@ const REQUIRED_COMMON_TOKENS = [
   "no signage",
   "no storefront signs",
   "no text-like marks",
-  "use reference image for child's face and identity only",
-  "ignore reference image background and setting",
+  "use the reference image only for the child character's face",
+  "do not copy the reference image background",
 ];
 
 const REQUIRED_ZOO_TOKENS = [
   "NOT a sandbox",
-  "NOT an outdoor playground",
+  "NOT a playground",
 ];
 
 const REQUIRED_ZOO_ALTERNATE_TOKENS = [
@@ -27,6 +27,7 @@ const REQUIRED_ZOO_ALTERNATE_TOKENS = [
   "NOT an outdoor play area",
   "NOT a sandbox or outdoor playground",
   "NOT a sandbox or an outdoor playground",
+  "not a playground",
 ];
 
 const ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS = [4, 8, 12];
@@ -117,16 +118,17 @@ function assertCompiledSeedHasImg002(seedTemplates) {
     zoo.fixedStory.coverImagePromptTemplate || "",
     ...zoo.fixedStory.pages.map((p) => p.imagePromptTemplate || ""),
   ].join("\n");
+  const allPromptsLower = allPrompts.toLowerCase();
 
   for (const token of REQUIRED_COMMON_TOKENS) {
-    if (!allPrompts.includes(token)) {
+    if (!allPromptsLower.includes(token.toLowerCase())) {
       throw new Error(
         `Compiled seed appears stale (missing token: ${token}). Run: cd functions && npm run build`
       );
     }
   }
 
-  if (allPrompts.toLowerCase().includes("friendly japanese zoo")) {
+  if (allPromptsLower.includes("friendly japanese zoo")) {
     throw new Error("Compiled seed appears stale (contains 'friendly Japanese zoo'). Run: cd functions && npm run build");
   }
 }
@@ -146,7 +148,8 @@ function pickTemplateWritePayload(seedTemplate) {
 }
 
 function hasRequiredCommonTokens(prompt) {
-  return REQUIRED_COMMON_TOKENS.every((token) => prompt.includes(token));
+  const promptLower = (prompt || "").toLowerCase();
+  return REQUIRED_COMMON_TOKENS.every((token) => promptLower.includes(token.toLowerCase()));
 }
 
 function validateFixedStoryPageCount(templateId, fixedStory, issues) {
@@ -215,13 +218,18 @@ function evaluateTemplateSync(templateId, templateDoc) {
     }
 
     if (templateId === "fixed-first-zoo") {
-      const hasPrimary = REQUIRED_ZOO_TOKENS.every((token) => prompt.includes(token));
-      const hasAlternate = REQUIRED_ZOO_ALTERNATE_TOKENS.some((token) => prompt.includes(token));
+      const promptLower = prompt.toLowerCase();
+      const hasPrimary = REQUIRED_ZOO_TOKENS.every((token) =>
+        promptLower.includes(token.toLowerCase())
+      );
+      const hasAlternate = REQUIRED_ZOO_ALTERNATE_TOKENS.some((token) =>
+        promptLower.includes(token.toLowerCase())
+      );
       if (!hasPrimary && !hasAlternate) {
         issues.push(`page ${index} missing zoo scene lock tokens (sandbox/playground exclusions)`);
       }
 
-      if (prompt.toLowerCase().includes("friendly japanese zoo")) {
+      if (promptLower.includes("friendly japanese zoo")) {
         issues.push(`page ${index} still contains 'friendly Japanese zoo'`);
       }
     }
