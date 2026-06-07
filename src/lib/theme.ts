@@ -1,4 +1,4 @@
-export type Theme = "night" | "pastel" | "starry";
-export const THEMES: Theme[] = ["pastel", "night", "starry"];
+export type Theme = "night" | "pastel";
+export const THEMES: Theme[] = ["pastel", "night"];
 export const THEME_STORAGE_KEY = "ehonai-theme";
-export const DEFAULT_THEME: Theme = "night";
+export const DEFAULT_THEME: Theme = "pastel";

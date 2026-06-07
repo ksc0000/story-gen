@@ -12,9 +12,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(DEFAULT_THEME);
 
   useEffect(() => {
-    const saved = (localStorage.getItem(THEME_STORAGE_KEY) as Theme | null) ?? DEFAULT_THEME;
-    setThemeState(saved);
-    document.documentElement.dataset.theme = saved;
+    let saved = localStorage.getItem(THEME_STORAGE_KEY);
+
+    // Migration: starry -> night
+    if (saved === "starry") {
+      saved = "night";
+      localStorage.setItem(THEME_STORAGE_KEY, "night");
+    }
+
+    const initialTheme = (saved as Theme | null) ?? DEFAULT_THEME;
+    setThemeState(initialTheme);
+    document.documentElement.dataset.theme = initialTheme;
   }, []);
 
   const setTheme = (t: Theme) => {
@@ -24,8 +32,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toggle = () => {
-    const order: Theme[] = ["pastel", "night", "starry"];
-    const next = order[(order.indexOf(theme) + 1) % order.length] ?? DEFAULT_THEME;
+    const next = theme === "pastel" ? "night" : "pastel";
     setTheme(next);
   };
 

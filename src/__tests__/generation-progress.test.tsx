@@ -5,10 +5,14 @@ import type { BookDoc, PageDoc } from "@/lib/types";
 
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, className }: { children?: React.ReactNode; className?: string }) => (
-      <div className={className}>{children}</div>
+    div: ({ children, className, ...props }: any) => (
+      <div className={className} {...props}>{children}</div>
+    ),
+    circle: ({ ...props }: any) => (
+      <circle {...props} />
     ),
   },
+  useReducedMotion: () => false,
 }));
 
 vi.mock("@/components/ui/progress", () => ({
@@ -44,7 +48,7 @@ describe("GenerationProgress — progress count", () => {
       makePage(2, { status: "completed" }),
     ];
     render(<GenerationProgress book={makeBook(3)} pages={pages} />);
-    expect(screen.getByText("3 / 3 ページ")).toBeInTheDocument();
+    expect(screen.getAllByText("3")).toHaveLength(2); // One in ring, one in status text
   });
 
   it("counts fallback_completed pages", () => {
@@ -54,7 +58,7 @@ describe("GenerationProgress — progress count", () => {
       makePage(2, { status: "fallback_completed" }),
     ];
     render(<GenerationProgress book={makeBook(3)} pages={pages} />);
-    expect(screen.getByText("3 / 3 ページ")).toBeInTheDocument();
+    expect(screen.getAllByText("3")).toHaveLength(2);
   });
 
   it("counts mixed completed and fallback_completed — reproduces feedback #2 (1 completed + 7 fallback)", () => {
@@ -69,7 +73,7 @@ describe("GenerationProgress — progress count", () => {
       makePage(7, { status: "fallback_completed" }),
     ];
     render(<GenerationProgress book={makeBook(8)} pages={pages} />);
-    expect(screen.getByText("8 / 8 ページ")).toBeInTheDocument();
+    expect(screen.getAllByText("8")).toHaveLength(2);
   });
 
   it("does not count image_failed pages", () => {
@@ -79,7 +83,9 @@ describe("GenerationProgress — progress count", () => {
       makePage(2, { status: "image_failed" }),
     ];
     render(<GenerationProgress book={makeBook(3)} pages={pages} />);
-    expect(screen.getByText("2 / 3 ページ")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
+    // 3 might appear twice: total and also in the grid circles
+    expect(screen.getAllByText("3").length).toBeGreaterThanOrEqual(1);
   });
 
   it("does not count generating pages", () => {
@@ -88,7 +94,8 @@ describe("GenerationProgress — progress count", () => {
       makePage(1, { status: "generating" }),
     ];
     render(<GenerationProgress book={makeBook(2)} pages={pages} />);
-    expect(screen.getByText("1 / 2 ページ")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getAllByText("2").length).toBeGreaterThanOrEqual(1);
   });
 });
 

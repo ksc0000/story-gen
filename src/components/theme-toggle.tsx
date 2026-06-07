@@ -5,7 +5,6 @@ import { THEMES, type Theme } from "@/lib/theme";
 const LABELS: Record<Theme, string> = {
   pastel: "パステル",
   night: "夜空",
-  starry: "星空",
 };
 
 export function ThemeToggle() {
