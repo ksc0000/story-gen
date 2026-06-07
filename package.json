@@ -17,6 +17,8 @@
     "smoke:create-nonfixed-book": "node scripts/create-nonfixed-smoke-book.js",
     "smoke:monitor": "node scripts/monitor-smoke-book.js",
     "smoke:inspect": "node scripts/inspect-smoke-book.js",
+    "smoke:verify-images": "node scripts/verify-book-images.js",
+    "e2e:visual-verify": "node scripts/e2e-visual-verify.js",
     "smoke:upload-reference": "node scripts/setup-smoke-reference.js",
     "template:sync:check": "node scripts/sync-fixed-template-seeds.js",
     "template:sync:write": "node scripts/sync-fixed-template-seeds.js --write",
