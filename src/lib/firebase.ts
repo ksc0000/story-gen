@@ -3,6 +3,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
+import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 import { isDemoMode } from "./demo";
@@ -14,6 +15,7 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 if ((isDemoMode || process.env.NODE_ENV === "test") && !firebaseConfig.apiKey) {
@@ -28,6 +30,8 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app, "asia-northeast1");
 
+export let analytics: Analytics | null = null;
+
 if (typeof window !== "undefined" && !isDemoMode) {
   if (process.env.NODE_ENV !== "production") {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,4 +44,9 @@ if (typeof window !== "undefined" && !isDemoMode) {
       isTokenAutoRefreshEnabled: true,
     });
   }
+  isSupported().then((supported) => {
+    if (supported) {
+      analytics = getAnalytics(app);
+    }
+  });
 }
