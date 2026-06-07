@@ -472,7 +472,7 @@ describe("buildVisualContinuityGuard (P5-3g/P5-3h/P5-3j)", () => {
     expect(result).toContain("Style consistency:");
     expect(result).toContain("color palette, line weight");
     expect(result).toContain("consistent artist throughout");
-    expect(result).toContain("Do not shift style between pages");
+    expect(result).toContain("Do not shift style or character scale between pages");
   });
   it("always includes object grounding guard", () => {
     const result = buildVisualContinuityGuard({ hasAnimalCharacters: false });
