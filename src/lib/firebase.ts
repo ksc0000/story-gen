@@ -3,7 +3,8 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
-import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
+import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 import { isDemoMode } from "./demo";
 
@@ -17,7 +18,7 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-if (isDemoMode && !firebaseConfig.apiKey) {
+if ((isDemoMode || process.env.NODE_ENV === "test") && !firebaseConfig.apiKey) {
   firebaseConfig.apiKey = "DummyKey";
   firebaseConfig.projectId = "dummy-project";
 }
@@ -31,7 +32,18 @@ export const functions = getFunctions(app, "asia-northeast1");
 
 export let analytics: Analytics | null = null;
 
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && !isDemoMode) {
+  if (process.env.NODE_ENV !== "production") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN =
+      process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_DEBUG_TOKEN ?? true;
+  }
+  if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
+      isTokenAutoRefreshEnabled: true,
+    });
+  }
   isSupported().then((supported) => {
     if (supported) {
       analytics = getAnalytics(app);

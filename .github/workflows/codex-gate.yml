@@ -1,0 +1,84 @@
+name: Codex Gate → Claude Review
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  trigger-claude:
+    name: Trigger Claude after Codex review
+    # Only fires on PR comments from a bot whose login contains "codex"
+    if: >
+      github.event.issue.pull_request != null &&
+      github.event.comment.user.type == 'Bot' &&
+      contains(github.event.comment.user.login, 'codex')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Evaluate Codex output and conditionally trigger Claude
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_AW_AGENT_TOKEN || github.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = context.issue.number;
+            const codexBody = context.payload.comment.body || '';
+
+            // Only act when we are in the AI review phase
+            const { data: pr } = await github.rest.pulls.get({
+              owner, repo, pull_number: prNumber,
+            });
+            const labels = new Set(pr.labels.map(l => l.name));
+
+            if (!labels.has('ai-review-requested')) {
+              core.info('PR does not have ai-review-requested label — skipping');
+              return;
+            }
+            if (labels.has('claude-review-triggered')) {
+              core.info('Claude review already triggered for this PR');
+              return;
+            }
+
+            // Detect explicit blockers — Jules should fix these before Claude reviews
+            const hasBlockers = /\b(must[ -]fix|critical issue|blocking|security vuln|injection|data loss)\b/i.test(codexBody);
+            // Detect token / context limit — Claude acts as fallback reviewer
+            const hitLimit = /token.?limit|context.?length.?exceed|too.?large to review|rate.?limit.?exceed/i.test(codexBody);
+
+            if (hasBlockers && !hitLimit) {
+              core.info('Codex has blocking issues — skipping Claude trigger; Jules should fix first');
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number: prNumber,
+                labels: ['codex-needs-fix'],
+              });
+              return;
+            }
+
+            // LGTM / soft suggestions / token-limit — all trigger Claude
+            const marker = '<!-- codex-gate-claude-trigger -->';
+            const { data: existingComments } = await github.rest.issues.listComments({
+              owner, repo, issue_number: prNumber, per_page: 100,
+            });
+            if (existingComments.find(c => c.body?.includes(marker))) {
+              core.info('Claude trigger comment already posted');
+              return;
+            }
+
+            const reason = hitLimit
+              ? '(Codex がトークン制限に達したためフォールバックとしてレビューします)'
+              : '(Codex レビュー完了。設計・保守性・プロダクト整合性をレビューします)';
+
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: prNumber,
+              body: `@claude review\n\n${reason}\n\n${marker}`,
+            });
+
+            await github.rest.issues.addLabels({
+              owner, repo, issue_number: prNumber,
+              labels: ['claude-review-triggered'],
+            });

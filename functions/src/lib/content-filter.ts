@@ -2,24 +2,34 @@ import type { BookInput } from "./types";
 
 const NG_WORDS: string[] = [
   "殺す",
+  "ころす",
   "殺し",
   "死ね",
+  "しね",
   "死ぬ",
+  "しぬ",
   "セクシー",
   "エロ",
   "ヌード",
   "裸",
   "暴力",
+  "ぼうりょく",
   "虐待",
   "いじめ",
   "麻薬",
+  "まやく",
   "ドラッグ",
+  "爆弾",
+  "ばくだん",
   "kill",
   "murder",
   "sex",
   "nude",
   "violence",
   "drug",
+  "bomb",
+  "hate",
+  "racist",
 ];
 
 const MAX_NAME_LENGTH = 50;
@@ -38,10 +48,15 @@ export interface SanitizeResult {
 export function containsNGWords(text: string): NGWordResult {
   if (!text) return { safe: true, matchedWords: [] };
 
-  const lower = text.toLowerCase();
-  const matched = NG_WORDS.filter((word) =>
-    lower.includes(word.toLowerCase())
-  );
+  const matched = NG_WORDS.filter((word) => {
+    const isEnglish = /^[a-z]+$/i.test(word);
+    if (isEnglish) {
+      const wordBoundaryRegex = new RegExp(`\\b${word}\\b`, "i");
+      return wordBoundaryRegex.test(text);
+    }
+    // 日本語はそのまま includes（境界概念なし）
+    return text.toLowerCase().includes(word.toLowerCase());
+  });
 
   return { safe: matched.length === 0, matchedWords: matched };
 }

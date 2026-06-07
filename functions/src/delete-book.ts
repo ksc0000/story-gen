@@ -50,6 +50,7 @@ export const deleteBook = onCall(
     region: "asia-northeast1",
     memory: "256MiB",
     timeoutSeconds: 60,
+    consumeAppCheckToken: true,
   },
   async (request) => {
     // Authentication check

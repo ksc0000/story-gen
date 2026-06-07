@@ -52,13 +52,17 @@ export function buildSnapshotKey(window: string, nowMs: number): string {
  * Calculate ISO 8601 week number and week-year from a Date (interpreted as UTC).
  */
 function getISOYearWeek(d: Date): { year: number; week: number } {
-  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const date = new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+  );
   // Set to nearest Thursday: current date + 4 - current day number (Mon=1, Sun=7)
   const dayNum = date.getUTCDay() || 7;
   date.setUTCDate(date.getUTCDate() + 4 - dayNum);
   const isoYear = date.getUTCFullYear();
   const yearStart = new Date(Date.UTC(isoYear, 0, 1));
-  const week = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  const week = Math.ceil(
+    ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+  );
   return { year: isoYear, week };
 }
 
@@ -114,7 +118,9 @@ export function buildSnapshotWritePayload(
  *
  * Used by both daily and weekly scheduled functions.
  */
-export async function saveSloSnapshot(config: SnapshotConfig): Promise<SnapshotResult> {
+export async function saveSloSnapshot(
+  config: SnapshotConfig,
+): Promise<SnapshotResult> {
   const db = getFirestore();
 
   logger.info(`Starting ${config.window} SLO snapshot`, {
@@ -131,7 +137,15 @@ export async function saveSloSnapshot(config: SnapshotConfig): Promise<SnapshotR
 
   if (booksSnap.empty) {
     logger.info("No books found, skipping snapshot");
-    return { saved: false, totalBooks: 0, totalPages: 0, bookReadableRate: 0, bookHardFailedRate: 0, imageP95Ms: 0, pageImageFailureRate: 0 };
+    return {
+      saved: false,
+      totalBooks: 0,
+      totalPages: 0,
+      bookReadableRate: 0,
+      bookHardFailedRate: 0,
+      imageP95Ms: 0,
+      pageImageFailureRate: 0,
+    };
   }
 
   const books = booksSnap.docs.map((d) => ({
@@ -139,27 +153,47 @@ export async function saveSloSnapshot(config: SnapshotConfig): Promise<SnapshotR
     status: (d.data() as BookData).status,
   }));
 
-  // 2. Batch-load pages for all books
-  const pagesMap = new Map<string, Array<Pick<PageData, "status" | "imageDurationMs" | "imageTimeoutCount" | "imageFallbackUsed" | "imageFailureReason" | "regenerationAttemptCount">>>();
+  // 2. Batch-load pages for all books concurrently
+  const pagesMap = new Map<
+    string,
+    Array<
+      Pick<
+        PageData,
+        | "status"
+        | "imageDurationMs"
+        | "imageTimeoutCount"
+        | "imageFallbackUsed"
+        | "imageFailureReason"
+        | "regenerationAttemptCount"
+      >
+    >
+  >();
 
-  for (const book of books) {
-    const pagesSnap = await db
-      .collection("books")
-      .doc(book.id)
-      .collection("pages")
-      .get();
-    pagesMap.set(
-      book.id,
-      pagesSnap.docs.map((d) => {
-        const data = d.data() as PageData;
-        return {
-          status: data.status,
-          imageDurationMs: data.imageDurationMs,
-          imageTimeoutCount: data.imageTimeoutCount,
-          imageFallbackUsed: data.imageFallbackUsed,
-          imageFailureReason: data.imageFailureReason,
-          regenerationAttemptCount: data.regenerationAttemptCount,
-        };
+  const chunkSize = 10;
+  for (let i = 0; i < books.length; i += chunkSize) {
+    const chunk = books.slice(i, i + chunkSize);
+    await Promise.all(
+      chunk.map(async (book) => {
+        const pagesSnap = await db
+          .collection("books")
+          .doc(book.id)
+          .collection("pages")
+          .get();
+
+        pagesMap.set(
+          book.id,
+          pagesSnap.docs.map((d) => {
+            const data = d.data() as PageData;
+            return {
+              status: data.status,
+              imageDurationMs: data.imageDurationMs,
+              imageTimeoutCount: data.imageTimeoutCount,
+              imageFallbackUsed: data.imageFallbackUsed,
+              imageFailureReason: data.imageFailureReason,
+              regenerationAttemptCount: data.regenerationAttemptCount,
+            };
+          }),
+        );
       }),
     );
   }
@@ -170,13 +204,18 @@ export async function saveSloSnapshot(config: SnapshotConfig): Promise<SnapshotR
   // 4. Save snapshot (idempotent: deterministic doc ID via snapshotKey)
   const nowMs = Date.now();
   const doc = buildSnapshotDoc(metrics, config, nowMs);
-  const itemsRef = db.collection("adminMetrics").doc("sloSnapshots").collection("items");
+  const itemsRef = db
+    .collection("adminMetrics")
+    .doc("sloSnapshots")
+    .collection("items");
   const docRef = itemsRef.doc(doc.snapshotKey);
 
   // Preserve createdAt/createdAtMs on re-execution (at-least-once)
   const existingSnap = await docRef.get();
   const existingCreatedAtMs = existingSnap.exists
-    ? (existingSnap.data() as Record<string, unknown>).createdAtMs as number | undefined
+    ? ((existingSnap.data() as Record<string, unknown>).createdAtMs as
+        | number
+        | undefined)
     : undefined;
   const isNew = !existingSnap.exists;
 

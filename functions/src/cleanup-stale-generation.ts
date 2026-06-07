@@ -20,6 +20,14 @@ export const cleanupStaleGeneration = onSchedule(
     const nowMs = Date.now();
     const config = DEFAULT_STALE_CONFIG;
 
+    const chunkArray = <T>(array: T[], size: number): T[][] => {
+      const result: T[][] = [];
+      for (let i = 0; i < array.length; i += size) {
+        result.push(array.slice(i, i + size));
+      }
+      return result;
+    };
+
     logger.info("Starting stale generation cleanup", { config });
 
     // ------------------------------------------------------------------
@@ -64,32 +72,37 @@ export const cleanupStaleGeneration = onSchedule(
     let skippedPages = 0;
     const affectedBookIds = new Set<string>();
 
-    for (const page of stalePages) {
-      try {
-        await db
-          .collection("books")
-          .doc(page.bookId)
-          .collection("pages")
-          .doc(page.id)
-          .update({
-            ...pagePatch,
-            lastStaleCleanupAt: FieldValue.serverTimestamp(),
-          });
-        updatedPages++;
-        affectedBookIds.add(page.bookId);
-        logger.info("Fixed stale page", {
-          bookId: page.bookId,
-          pageId: page.id,
-          pageNumber: page.pageNumber,
-        });
-      } catch (err) {
-        skippedPages++;
-        logger.error("Failed to fix stale page", {
-          bookId: page.bookId,
-          pageId: page.id,
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
+    const pageChunks = chunkArray(stalePages, 10);
+    for (const chunk of pageChunks) {
+      await Promise.all(
+        chunk.map(async (page) => {
+          try {
+            await db
+              .collection("books")
+              .doc(page.bookId)
+              .collection("pages")
+              .doc(page.id)
+              .update({
+                ...pagePatch,
+                lastStaleCleanupAt: FieldValue.serverTimestamp(),
+              });
+            updatedPages++;
+            affectedBookIds.add(page.bookId);
+            logger.info("Fixed stale page", {
+              bookId: page.bookId,
+              pageId: page.id,
+              pageNumber: page.pageNumber,
+            });
+          } catch (err) {
+            skippedPages++;
+            logger.error("Failed to fix stale page", {
+              bookId: page.bookId,
+              pageId: page.id,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        })
+      );
     }
 
     // ------------------------------------------------------------------
@@ -99,41 +112,46 @@ export const cleanupStaleGeneration = onSchedule(
     let skippedBooks = 0;
     const uniqueBookIds = [...affectedBookIds].slice(0, config.maxBooks);
 
-    for (const bookId of uniqueBookIds) {
-      try {
-        const bookRef = db.collection("books").doc(bookId);
-        const allPagesSnap = await bookRef.collection("pages").get();
-        const pages = allPagesSnap.docs.map((d) => d.data() as PageData);
-        const metrics = deriveBookMetrics(pages);
+    const bookIdChunks = chunkArray(uniqueBookIds, 10);
+    for (const chunk of bookIdChunks) {
+      await Promise.all(
+        chunk.map(async (bookId) => {
+          try {
+            const bookRef = db.collection("books").doc(bookId);
+            const allPagesSnap = await bookRef.collection("pages").get();
+            const pages = allPagesSnap.docs.map((d) => d.data() as PageData);
+            const metrics = deriveBookMetrics(pages);
 
-        await bookRef.update({
-          status: metrics.bookStatus,
-          imageSuccessCount: metrics.imageSuccessCount,
-          imageFailureCount: metrics.imageFailureCount,
-          totalImageCount: metrics.totalImageCount,
-          failedPageNumbers: metrics.failedPageNumbers,
-          generationReliabilityStatus: metrics.generationReliabilityStatus,
-          staleCleanupApplied: true,
-          lastStaleCleanupAt: FieldValue.serverTimestamp(),
-          lastStaleCleanupAtMs: nowMs,
-          updatedAt: FieldValue.serverTimestamp(),
-          updatedAtMs: nowMs,
-        });
+            await bookRef.update({
+              status: metrics.bookStatus,
+              imageSuccessCount: metrics.imageSuccessCount,
+              imageFailureCount: metrics.imageFailureCount,
+              totalImageCount: metrics.totalImageCount,
+              failedPageNumbers: metrics.failedPageNumbers,
+              generationReliabilityStatus: metrics.generationReliabilityStatus,
+              staleCleanupApplied: true,
+              lastStaleCleanupAt: FieldValue.serverTimestamp(),
+              lastStaleCleanupAtMs: nowMs,
+              updatedAt: FieldValue.serverTimestamp(),
+              updatedAtMs: nowMs,
+            });
 
-        updatedBooks++;
-        logger.info("Recalculated stale book metrics", {
-          bookId,
-          newStatus: metrics.bookStatus,
-          imageSuccessCount: metrics.imageSuccessCount,
-          imageFailureCount: metrics.imageFailureCount,
-        });
-      } catch (err) {
-        skippedBooks++;
-        logger.error("Failed to recalculate stale book metrics", {
-          bookId,
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
+            updatedBooks++;
+            logger.info("Recalculated stale book metrics", {
+              bookId,
+              newStatus: metrics.bookStatus,
+              imageSuccessCount: metrics.imageSuccessCount,
+              imageFailureCount: metrics.imageFailureCount,
+            });
+          } catch (err) {
+            skippedBooks++;
+            logger.error("Failed to recalculate stale book metrics", {
+              bookId,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        })
+      );
     }
 
     // ------------------------------------------------------------------

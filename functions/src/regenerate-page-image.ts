@@ -62,7 +62,7 @@ interface RegeneratePageImageResponse {
 }
 
 export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<RegeneratePageImageResponse>>(
-  { secrets: [replicateApiToken] },
+  { secrets: [replicateApiToken], consumeAppCheckToken: true },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "ログインが必要です。");
@@ -399,7 +399,7 @@ async function recalculateBookMetrics(
  * Useful when pages were fixed but book status was not updated.
  */
 export const checkBookCompletion = onCall<{ bookId: string }, Promise<{ bookStatus: string; recovered: boolean }>>(
-  {},
+  { consumeAppCheckToken: true },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "ログインが必要です。");

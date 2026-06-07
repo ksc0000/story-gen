@@ -2,7 +2,8 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     match /books/{bookId}/pages/{fileName} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+        && firestore.get(/databases/(default)/documents/books/$(bookId)).data.userId == request.auth.uid;
       allow write: if false;
     }
     match /{allPaths=**} {
