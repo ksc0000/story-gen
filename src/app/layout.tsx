@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Kaisei_Decol, Zen_Maru_Gothic } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 /**
  * フォント定義
@@ -64,7 +65,9 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <ErrorBoundary>
+          <Providers>{children}</Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );
