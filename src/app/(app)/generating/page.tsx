@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GenerationProgress } from "@/components/generation-progress";
@@ -73,6 +73,57 @@ function getFailureMessage(book: BookDoc): string {
   }
 
   return "途中で生成処理に失敗しました。少し時間をおいて、もう一度お試しください。すぐ作りたい場合は、テンプレート絵本なら短時間で作成できます。";
+}
+
+const TRIVIA = [
+  "FLUX という画像 AI が、主人公の表情を 1 ページずつ丁寧に描いています",
+  "絵本の文章は Gemini が、お子さんの年齢に合わせて書いています",
+  "キャラクター一貫性モードでは、全ページに同じキャラクターが登場するよう調整しています",
+  "画像 1 枚の生成には 30〜60 秒かかることがあります",
+  "テンプレートモードなら、より短時間で絵本を作れます",
+  "完成した絵本は本棚から何度でも読み返せます",
+  "ページ数が多いほど、より豊かなストーリーになります",
+  "生成中もこの画面を閉じて大丈夫。本棚から確認できます",
+];
+
+function TriviaRotation() {
+  const [index, setIndex] = useState(0);
+  const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (shouldReduceMotion) return;
+
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % TRIVIA.length);
+    }, 7000); // 7 seconds
+
+    return () => clearInterval(interval);
+  }, [shouldReduceMotion]);
+
+  if (shouldReduceMotion) {
+    return (
+      <p className="mt-4 text-xs text-violet-400">
+        豆知識: {TRIVIA[0]}
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-4 flex min-h-[2.5rem] items-center justify-center px-4 text-center">
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={index}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.5 }}
+          className="text-xs text-violet-400"
+        >
+          豆知識: {TRIVIA[index]}
+        </motion.p>
+      </AnimatePresence>
+    </div>
+  );
 }
 
 function GeneratingContent() {
@@ -170,6 +221,7 @@ function GeneratingContent() {
               </motion.div>
               <h1 className="mt-3 text-xl font-bold text-purple-900">絵本を作っています</h1>
               <p className="mt-1 text-sm text-violet-500">{summary.step}</p>
+              <TriviaRotation />
               {hasLongWait ? (
                 <p className="mt-1 text-xs text-amber-600">一部画像の仕上げに時間がかかっています</p>
               ) : null}
