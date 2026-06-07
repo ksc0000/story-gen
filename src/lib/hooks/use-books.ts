@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, doc, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { isDemoMode, loadAllDemoBooks } from "@/lib/demo";
 import type { BookDoc } from "@/lib/types";
@@ -31,29 +31,21 @@ export function useBooks(userId: string | undefined): UseBooksResult {
     if (!userId) { setBooks([]); setLoading(false); return; }
 
     const q = query(collection(db, "books"), where("userId", "==", userId), orderBy("createdAt", "desc"));
-    const pageUnsubs = new Map<string, () => void>();
+    const fetchedPageZeroIds = new Set<string>();
 
     const unsubscribe = onSnapshot(q,
       (snapshot) => {
         const nextBooks = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as BookDoc) }));
-        const nextIds = new Set(nextBooks.map((book) => book.id));
-
-        for (const [bookId, unsubPage] of pageUnsubs.entries()) {
-          if (!nextIds.has(bookId)) {
-            unsubPage();
-            pageUnsubs.delete(bookId);
-          }
-        }
-
         setBooks(nextBooks);
 
         for (const book of nextBooks) {
-          if (book.coverImageUrl || book.status !== "completed" || pageUnsubs.has(book.id)) {
+          if (book.coverImageUrl || book.status !== "completed" || fetchedPageZeroIds.has(book.id)) {
             continue;
           }
 
+          fetchedPageZeroIds.add(book.id);
           const pageRef = doc(db, "books", book.id, "pages", "page-0");
-          const unsubPage = onSnapshot(pageRef, (pageSnap) => {
+          getDoc(pageRef).then((pageSnap) => {
             const imageUrl = pageSnap.exists() ? (pageSnap.data().imageUrl as string | undefined) : undefined;
             if (!imageUrl) return;
             setBooks((current) =>
@@ -61,8 +53,9 @@ export function useBooks(userId: string | undefined): UseBooksResult {
                 currentBook.id === book.id ? { ...currentBook, coverImageUrl: imageUrl } : currentBook
               )
             );
+          }).catch((err) => {
+            console.error("Failed to fetch page-0 for book", book.id, err);
           });
-          pageUnsubs.set(book.id, unsubPage);
         }
 
         setLoading(false);
@@ -72,10 +65,7 @@ export function useBooks(userId: string | undefined): UseBooksResult {
 
     return () => {
       unsubscribe();
-      for (const unsubPage of pageUnsubs.values()) {
-        unsubPage();
-      }
-      pageUnsubs.clear();
+      fetchedPageZeroIds.clear();
     };
   }, [userId]);
 
