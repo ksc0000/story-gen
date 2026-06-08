@@ -118,7 +118,7 @@ describe("useChildren", () => {
     vi.mocked(collection).mockReturnValueOnce({} as unknown as CollectionReference);
 
     vi.mocked(onSnapshot).mockImplementation((_ref, _onNext, onError) => {
-      (onError as ((error: Error) => void) | undefined)?.(mockError);
+      (onError as unknown as ((error: Error) => void) | undefined)?.(mockError);
       return mockUnsubscribe;
     });
 
