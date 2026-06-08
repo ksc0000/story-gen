@@ -4,12 +4,6 @@ import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import * as useAuthModule from "@/lib/hooks/use-auth";
 
 vi.mock("@/lib/hooks/use-auth");
-vi.mock("@/lib/firebase", () => ({
-  auth: {},
-  db: {},
-  storage: {},
-  functions: {},
-}));
 
 // Mock console.error to avoid spamming the test output
 const originalConsoleError = console.error;
@@ -30,7 +24,7 @@ describe("useAdminClaim", () => {
       user: null,
       loading: true,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 
@@ -44,7 +38,7 @@ describe("useAdminClaim", () => {
       user: null,
       loading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 
@@ -67,7 +61,7 @@ describe("useAdminClaim", () => {
       user: mockUser,
       loading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 
@@ -91,7 +85,7 @@ describe("useAdminClaim", () => {
       user: mockUser,
       loading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 
@@ -114,7 +108,7 @@ describe("useAdminClaim", () => {
       user: mockUser,
       loading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 
@@ -138,7 +132,7 @@ describe("useAdminClaim", () => {
       user: mockUser,
       loading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useAuthModule.useAuth>);
 
     const { result } = renderHook(() => useAdminClaim());
 

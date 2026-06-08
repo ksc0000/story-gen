@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useChildren } from "../use-children";
-import { onSnapshot, collection } from "firebase/firestore";
+import { onSnapshot, collection, type CollectionReference, type Query, type QuerySnapshot } from "firebase/firestore";
 import * as demoModule from "@/lib/demo";
 import { db } from "@/lib/firebase";
 
@@ -65,7 +65,7 @@ describe("useChildren", () => {
 
   it("should fetch children from firestore, filter active, and sort by createdAt", async () => {
     const mockUnsubscribe = vi.fn();
-    vi.mocked(collection).mockReturnValueOnce({} as any); // Mocking CollectionReference
+    vi.mocked(collection).mockReturnValueOnce({} as unknown as CollectionReference); // Mocking CollectionReference
 
     const mockDocs = [
       {
@@ -86,8 +86,8 @@ describe("useChildren", () => {
       },
     ];
 
-    vi.mocked(onSnapshot).mockImplementation((ref: any, onNext: any) => {
-      onNext({ docs: mockDocs });
+    vi.mocked(onSnapshot).mockImplementation((ref: Query, onNext: (snapshot: QuerySnapshot) => void) => {
+      onNext({ docs: mockDocs } as unknown as QuerySnapshot);
       return mockUnsubscribe;
     });
 
@@ -115,10 +115,10 @@ describe("useChildren", () => {
   it("should handle error from firestore gracefully", async () => {
     const mockError = new Error("Firestore error");
     const mockUnsubscribe = vi.fn();
-    vi.mocked(collection).mockReturnValueOnce({} as any);
+    vi.mocked(collection).mockReturnValueOnce({} as unknown as CollectionReference);
 
-    vi.mocked(onSnapshot).mockImplementation((ref: any, onNext: any, onError: any) => {
-      onError(mockError);
+    vi.mocked(onSnapshot).mockImplementation((ref: Query, onNext: (snapshot: QuerySnapshot) => void, onError?: (error: Error) => void) => {
+      onError?.(mockError);
       return mockUnsubscribe;
     });
 
