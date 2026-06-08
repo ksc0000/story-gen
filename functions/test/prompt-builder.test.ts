@@ -64,6 +64,7 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("opening_establishing:");
     expect(result).toContain("action:");
     expect(result).toContain("quiet_ending:");
+    expect(result).toContain("pageVisualRole が payoff または quiet_ending のページでは、主人公を必ず画面内に存在させてください");
   });
 
   it("includes protagonist name prohibition rule when childName is provided", () => {
@@ -187,6 +188,18 @@ describe("buildImagePrompt", () => {
     expect(result).not.toContain('"hello"');
     expect(result).not.toContain("caption card");
     expect(result).not.toContain("phrase label");
+  });
+  it("includes protagonist presence requirement for payoff and quiet_ending roles", () => {
+    const payoffResult = buildImagePrompt("A child finds the star", "watercolor", undefined, undefined, {
+      pageVisualRole: "payoff",
+    });
+    expect(payoffResult).toContain("The protagonist must be present to show their reaction and achievement");
+    expect(payoffResult).toContain("Do not show only objects or backgrounds");
+
+    const quietEndingResult = buildImagePrompt("The child sleeps", "watercolor", undefined, undefined, {
+      pageVisualRole: "quiet_ending",
+    });
+    expect(quietEndingResult).toContain("The protagonist must be present to provide a sense of closure");
   });
   it("includes recurring cast character consistency only for appearing characters", () => {
     const result = buildImagePrompt(
