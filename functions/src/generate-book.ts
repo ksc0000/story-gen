@@ -202,6 +202,32 @@ export function normalizeStoryCastWithChildProfile(
     story.cast?.find((character) => character.characterId === protagonistId) ??
     story.cast?.find((character) => character.role === "protagonist");
 
+  const wrongName = existingProtagonist?.displayName;
+  const fixName = (text: string | undefined): string | undefined => {
+    if (!text || !wrongName || wrongName === protagonistDisplayName) return text;
+    return text.split(wrongName).join(protagonistDisplayName);
+  };
+  const validateName = (text: string | undefined, fieldName: string) => {
+    if (!text) return;
+    if (!text.includes(protagonistDisplayName)) {
+      logger.warn("Protagonist name mismatch detected in story text", {
+        field: fieldName,
+        expected: protagonistDisplayName,
+        text: text.slice(0, 100),
+      });
+    }
+  };
+
+  const correctedTitle = fixName(story.title) ?? story.title;
+  const correctedStoryGoal = fixName(story.storyGoal);
+  const correctedOpeningNarration = fixName(story.openingNarration);
+  const correctedTitleSpreadText = fixName(story.titleSpreadText);
+
+  validateName(correctedTitle, "title");
+  validateName(correctedStoryGoal, "storyGoal");
+  validateName(correctedOpeningNarration, "openingNarration");
+  validateName(correctedTitleSpreadText, "titleSpreadText");
+
   const protagonistCast: StoryCharacter = removeUndefinedDeep({
     characterId: protagonistId,
     displayName: protagonistDisplayName,
@@ -228,19 +254,29 @@ export function normalizeStoryCastWithChildProfile(
       character.characterId !== protagonistId &&
       character.role !== "protagonist"
   );
-  const normalizedPages = story.pages.map((page) => ({
-    ...page,
-    appearingCharacterIds: page.appearingCharacterIds?.map((characterId) =>
-      isGeneratedProtagonistId(characterId, childProfileSnapshot) ? protagonistId : characterId
-    ),
-    focusCharacterId:
-      page.focusCharacterId && isGeneratedProtagonistId(page.focusCharacterId, childProfileSnapshot)
-        ? protagonistId
-        : page.focusCharacterId,
-  }));
+  const normalizedPages = story.pages.map((page, index) => {
+    const correctedText = fixName(page.text) ?? page.text;
+    validateName(correctedText, `pages[${index}].text`);
+
+    return {
+      ...page,
+      text: correctedText,
+      appearingCharacterIds: page.appearingCharacterIds?.map((characterId) =>
+        isGeneratedProtagonistId(characterId, childProfileSnapshot) ? protagonistId : characterId
+      ),
+      focusCharacterId:
+        page.focusCharacterId && isGeneratedProtagonistId(page.focusCharacterId, childProfileSnapshot)
+          ? protagonistId
+          : page.focusCharacterId,
+    };
+  });
 
   return {
     ...story,
+    title: correctedTitle,
+    storyGoal: correctedStoryGoal,
+    openingNarration: correctedOpeningNarration,
+    titleSpreadText: correctedTitleSpreadText,
     characterBible: visualProfile.characterBible || story.characterBible,
     cast: [protagonistCast, ...otherCast],
     pages: normalizedPages,
@@ -372,7 +408,7 @@ function normalizeStoryForBook(
   };
 }
 
-function sanitizeForbiddenQuestObjects(
+export function sanitizeForbiddenQuestObjects(
   forbiddenQuestObjects: string[] | undefined,
   bookData: BookData,
   mergedInput: BookInput
@@ -382,20 +418,24 @@ function sanitizeForbiddenQuestObjects(
   }
 
   const signatureItem = mergedInput.signatureItem ?? bookData.childProfileSnapshot?.visualProfile.signatureItem;
-  const signatureTokens = new Set(
-    (signatureItem ?? "")
-      .split(/[、,\s]+/)
-      .map((token) => token.trim())
-      .filter((token) => token.length >= 2)
+  const profileTokens = new Set(
+    [
+      ...(signatureItem ?? "").split(/[、,\s]+/),
+      ...(mergedInput.favorites ?? "").split(/[、,\s]+/),
+      ...(mergedInput.colorMood ?? "").split(/[、,\s]+/),
+    ]
+      .map((t) => t.trim().toLowerCase())
+      .filter((t) => t.length >= 2)
   );
+
   const genericForbidden = new Set(["おもちゃ", "おもちゃたち", "玩具", "toys", "toy"]);
 
   const sanitized = forbiddenQuestObjects.filter((value, index, array) => {
-    const normalized = value.trim();
+    const normalized = value.trim().toLowerCase();
     if (!normalized) return false;
-    if (array.findIndex((item) => item.trim() === normalized) !== index) return false;
+    if (array.findIndex((item) => item.trim().toLowerCase() === normalized) !== index) return false;
     if (genericForbidden.has(normalized)) return false;
-    if ([...signatureTokens].some((token) => normalized.includes(token) || token.includes(normalized))) {
+    if ([...profileTokens].some((token) => normalized.includes(token) || token.includes(normalized))) {
       return false;
     }
     return true;
