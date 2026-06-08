@@ -15,6 +15,7 @@
 | **Date** | 2026-05-22 |
 | **Decision basis** | P5-3c-verify PASS (全 5 ケース目視確認済み) |
 | **Scope** | 3–5 テスターへの限定招待のみ |
+| **Execution Plan** | [P5_COHORT_B_EXECUTION_CHECKLIST.md](./P5_COHORT_B_EXECUTION_CHECKLIST.md) |
 | **SJ/IM alert policies** | 引き続き disabled (変更なし) |
 | **Candidate gate rules** | 変更なし |
 | **Production defaults** | 変更なし (P5-3c デプロイ済みパス以外) |
