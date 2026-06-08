@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, type TouchEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { PageDoc, CoverStatus, ReadingStructureVersion } from "@/lib/types";
@@ -216,6 +216,33 @@ export function BookViewer(props: BookViewerProps) {
     },
     [goNext, goPrev],
   );
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input/textarea/select
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable;
+
+      if (isInput) return;
+
+      // Ignore if a dialog/modal is open
+      const isModalOpen = document.querySelector('[role="dialog"]') || document.querySelector('[aria-modal="true"]');
+      if (isModalOpen) return;
+
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        goNext();
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        goPrev();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [goNext, goPrev]);
 
   const item = items[currentPage];
   if (!item) return null;
