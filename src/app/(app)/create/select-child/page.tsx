@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -45,9 +46,11 @@ export default function SelectChildPage() {
               <Card className={`h-full transition ${selectedChildId === child.id ? "border-purple-400 ring-2 ring-purple-200" : "hover:border-purple-300"}`}>
                 <CardHeader>
                   {child.visualProfile?.approvedImageUrl ? (
-                    <img
+                    <Image
                       src={child.visualProfile.approvedImageUrl}
                       alt={`${child.nickname || child.displayName}のキャラクター`}
+                      width={400}
+                      height={300}
                       className="mb-3 aspect-[4/3] w-full rounded-2xl object-cover"
                     />
                   ) : null}
