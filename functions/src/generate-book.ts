@@ -372,7 +372,7 @@ function normalizeStoryForBook(
   };
 }
 
-function sanitizeForbiddenQuestObjects(
+export function sanitizeForbiddenQuestObjects(
   forbiddenQuestObjects: string[] | undefined,
   bookData: BookData,
   mergedInput: BookInput
@@ -382,20 +382,24 @@ function sanitizeForbiddenQuestObjects(
   }
 
   const signatureItem = mergedInput.signatureItem ?? bookData.childProfileSnapshot?.visualProfile.signatureItem;
-  const signatureTokens = new Set(
-    (signatureItem ?? "")
-      .split(/[、,\s]+/)
-      .map((token) => token.trim())
-      .filter((token) => token.length >= 2)
+  const profileTokens = new Set(
+    [
+      ...(signatureItem ?? "").split(/[、,\s]+/),
+      ...(mergedInput.favorites ?? "").split(/[、,\s]+/),
+      ...(mergedInput.colorMood ?? "").split(/[、,\s]+/),
+    ]
+      .map((t) => t.trim().toLowerCase())
+      .filter((t) => t.length >= 2)
   );
+
   const genericForbidden = new Set(["おもちゃ", "おもちゃたち", "玩具", "toys", "toy"]);
 
   const sanitized = forbiddenQuestObjects.filter((value, index, array) => {
-    const normalized = value.trim();
+    const normalized = value.trim().toLowerCase();
     if (!normalized) return false;
-    if (array.findIndex((item) => item.trim() === normalized) !== index) return false;
+    if (array.findIndex((item) => item.trim().toLowerCase() === normalized) !== index) return false;
     if (genericForbidden.has(normalized)) return false;
-    if ([...signatureTokens].some((token) => normalized.includes(token) || token.includes(normalized))) {
+    if ([...profileTokens].some((token) => normalized.includes(token) || token.includes(normalized))) {
       return false;
     }
     return true;

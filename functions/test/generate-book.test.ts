@@ -6,6 +6,7 @@ import {
   normalizeStoryCastWithChildProfile,
   shouldFailBookForQuality,
   gateImageModelProfile,
+  sanitizeForbiddenQuestObjects,
 } from "../src/generate-book";
 import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
 
@@ -2123,5 +2124,68 @@ describe("Page 0 purpose and reference logic (E2E-QA fix)", () => {
         imagePurpose: "book_page",
       })
     );
+  });
+});
+
+describe("sanitizeForbiddenQuestObjects", () => {
+  const dummyBook: BookData = {
+    ...baseBookData,
+    childProfileSnapshot: {
+      displayName: "ゆうた",
+      personality: {},
+      visualProfile: { version: 1, signatureItem: "くまのぬいぐるみ" },
+    },
+  };
+
+  it("removes tokens from signatureItem (input or snapshot)", () => {
+    const input = { childName: "ゆうた", signatureItem: "あかい くるま" };
+    const forbidden = ["りんご", "あかい", "くるま"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    expect(result).toEqual(["りんご"]);
+  });
+
+  it("removes tokens from favorites and colorMood", () => {
+    const input = {
+      childName: "ゆうた",
+      favorites: "オーバーウォッチ, 恐竜",
+      colorMood: "サイバーテクノロジー",
+    };
+    const forbidden = ["りんご", "オーバーウォッチ", "サイバーテクノロジー", "恐竜"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    expect(result).toEqual(["りんご"]);
+  });
+
+  it("is case-insensitive and handles partial matches", () => {
+    const input = {
+      childName: "ゆうた",
+      favorites: "Overwatch",
+    };
+    const forbidden = ["OVERWATCH", "overwatch-game", "game"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    // "OVERWATCH" matches "overwatch"
+    // "overwatch-game" contains "overwatch"
+    expect(result).toEqual(["game"]);
+  });
+
+  it("returns undefined if all objects are sanitized", () => {
+    const input = { childName: "ゆうた", favorites: "りんご, ばなな" };
+    const forbidden = ["りんご", "ばなな"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    expect(result).toBeUndefined();
+  });
+
+  it("removes generic toy words", () => {
+    const input = { childName: "ゆうた" };
+    const forbidden = ["おもちゃ", "toys", "りんご"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    expect(result).toEqual(["りんご"]);
+  });
+
+  it("removes duplicate entries (preserving first encounter casing)", () => {
+    const input = { childName: "ゆうた" };
+    const forbidden = ["りんご", " りんご ", "Ringo", "RINGO"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    // Normalization lowercases and trims for comparison, but preserves original casing of first match
+    expect(result).toEqual(["りんご", "Ringo"]);
   });
 });
