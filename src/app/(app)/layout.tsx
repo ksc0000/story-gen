@@ -47,7 +47,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <main>{children}</main>
+      {/* relative z-[1]: ensures main content stacks above DreamyBackground
+          (em-bg is position:fixed z-index:0, which paints over non-positioned
+          block elements on iOS Safari. A z-index≥1 here fixes the invisible
+          content bug on iPhone.) */}
+      <main className="relative z-[1]">{children}</main>
     </div>
   );
 }
