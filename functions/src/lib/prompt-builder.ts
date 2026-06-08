@@ -70,6 +70,9 @@ const STORY_GOAL_CONSISTENCY_RULES = [
   "例えば、hiddenDetail に『すいか模様の雲』がある場合でも、物語の目的を『すいか探し』に変えてはいけません。",
   "storyRequest が『なくした星を探す』なら、最後まで探す対象は『星』または『星のかけら』です。",
   "4ページ構成では、各ページが storyGoal に向かって少しずつ進む必要があります。",
+  "forbiddenQuestObjects は「クエストの探し物・目標物にしてはいけないもの」のみを入れてください。",
+  "主人公の signatureItem・好きなもの（favorites）・服装・colorMood は forbiddenQuestObjects に含めてはいけません。それらはキャラクターのアイデンティティです。",
+  "例: 主人公が MacBook を持っていても「パソコン」「MacBook」を forbiddenQuestObjects に入れてはいけません。",
 ].join(" ");
 
 const CHARACTER_METADATA_RULES = [
@@ -467,7 +470,7 @@ ${GOOD_TEXT_EXAMPLE}
   "styleBible": "Consistent English visual style guide used for every illustration. Must include artistic style, line weight, color palette, degree of character deformation, and lighting rules.",
   "storyGoal": "たっちゃんが、すなばで出会ったほしのこと一緒に、なくした星のかけらを探す",
   "mainQuestObject": "星のかけら",
-  "forbiddenQuestObjects": ["すいか", "食べ物"],
+  "forbiddenQuestObjects": ["すいか", "食べ物"], // 「クエストの探し物・目標物にしてはいけないもの」のみを入れてください。主人公の signatureItem・好きなもの・服装・colorMood は含めてはいけません。例: 主人公が MacBook を持っていても「パソコン」「MacBook」を入れてはいけません。
   "titleSpreadText": "タイトル見開きに表示する導入テキスト（1〜2文・省略可）",
   "openingNarration": "読み聞かせの最初に読むナレーション（1文・省略可）",
   "coverImagePrompt": "English prompt for generating the book cover image. Describe the main character, setting, mood, and key visual elements in a single scene that represents the story. Do not include any text or title in the image description.",
