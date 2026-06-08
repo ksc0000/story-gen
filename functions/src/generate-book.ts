@@ -228,8 +228,22 @@ export function normalizeStoryCastWithChildProfile(
       character.characterId !== protagonistId &&
       character.role !== "protagonist"
   );
+
+  const wrongName = existingProtagonist?.displayName;
+  const correctName = protagonistDisplayName;
+
+  const replaceName = (text: string | undefined): string | undefined => {
+    if (!text || !wrongName || wrongName === correctName) {
+      return text;
+    }
+    // Standard string replacement for all occurrences.
+    // In Japanese, names are often used without spaces, so split/join is effective.
+    return text.split(wrongName).join(correctName);
+  };
+
   const normalizedPages = story.pages.map((page) => ({
     ...page,
+    text: replaceName(page.text) || page.text,
     appearingCharacterIds: page.appearingCharacterIds?.map((characterId) =>
       isGeneratedProtagonistId(characterId, childProfileSnapshot) ? protagonistId : characterId
     ),
@@ -239,8 +253,47 @@ export function normalizeStoryCastWithChildProfile(
         : page.focusCharacterId,
   }));
 
+  const title = replaceName(story.title) || story.title;
+  const storyGoal = replaceName(story.storyGoal);
+  const openingNarration = replaceName(story.openingNarration);
+  const titleSpreadText = replaceName(story.titleSpreadText);
+
+  if (
+    wrongName &&
+    wrongName !== correctName &&
+    (title !== story.title ||
+      storyGoal !== story.storyGoal ||
+      openingNarration !== story.openingNarration ||
+      titleSpreadText !== story.titleSpreadText ||
+      normalizedPages.some((p, i) => p.text !== story.pages[i].text))
+  ) {
+    logger.info("Protagonist name corrected in story text fields", {
+      wrongName,
+      correctName,
+      title,
+    });
+  }
+
+  // Validation check: ensure the correct name is at least present in key fields
+  if (title && !title.includes(correctName)) {
+    logger.warn("Correct protagonist name missing from title after normalization", {
+      title,
+      correctName,
+    });
+  }
+  if (storyGoal && !storyGoal.includes(correctName)) {
+    logger.warn("Correct protagonist name missing from storyGoal after normalization", {
+      storyGoal,
+      correctName,
+    });
+  }
+
   return {
     ...story,
+    title,
+    storyGoal,
+    openingNarration,
+    titleSpreadText,
     characterBible: visualProfile.characterBible || story.characterBible,
     cast: [protagonistCast, ...otherCast],
     pages: normalizedPages,
@@ -2132,7 +2185,8 @@ async function generateStoryWithQualityGate(params: {
   const baseSystemPrompt = buildSystemPrompt(
     params.template,
     params.normalizedBookData.style,
-    params.readingProfile
+    params.readingProfile,
+    { childName: params.mergedInput.childName }
   );
   const storyModelCandidates = resolveStoryModelCandidates({
     productPlan: params.normalizedBookData.productPlan,

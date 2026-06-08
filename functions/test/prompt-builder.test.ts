@@ -11,13 +11,13 @@ const mockTemplate: TemplateData = {
 
 describe("buildSystemPrompt", () => {
   it("includes template system prompt", () => {
-    expect(buildSystemPrompt(mockTemplate, "watercolor")).toContain("誕生日をテーマにした");
+    expect(buildSystemPrompt(mockTemplate, "watercolor", undefined)).toContain("誕生日をテーマにした");
   });
   it("includes safety instruction", () => {
-    expect(buildSystemPrompt(mockTemplate, "watercolor")).toContain("子ども向けの安全な内容");
+    expect(buildSystemPrompt(mockTemplate, "watercolor", undefined)).toContain("子ども向けの安全な内容");
   });
   it("includes JSON output format instruction", () => {
-    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
     expect(result).toContain("JSON");
     expect(result).toContain("title");
     expect(result).toContain("characterBible");
@@ -26,16 +26,16 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("imagePrompt");
   });
   it("includes style-specific illustration instruction", () => {
-    expect(buildSystemPrompt(mockTemplate, "soft_watercolor")).toContain("水彩");
+    expect(buildSystemPrompt(mockTemplate, "soft_watercolor", undefined)).toContain("水彩");
   });
   it("includes image prompt variety guidance", () => {
-    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
     expect(result).toContain("wide shot / medium shot / close-up / detail shot / bird's-eye view");
     expect(result).toContain("背景、物、家族、友だち、動物、サブキャラクター");
     expect(result).toContain("そのページで何を一番見せたいか");
   });
   it("explains that imagePrompt is for wordless illustrations only", () => {
-    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
     expect(result).toContain("pages[].imagePrompt is only for generating a wordless illustration");
     expect(result).toContain("Never ask the image model to render the story text");
     expect(result).toContain('"pageVisualRole": "opening_establishing"');
@@ -44,7 +44,7 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("Use snake_case exactly");
   });
   it("includes Japanese story quality rules and examples", () => {
-    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
     expect(result).toContain("3歳以上では、単なる音遊びや擬音の羅列にしない");
     expect(result).toContain("意味の通らない造語を使わない");
     expect(result).toContain("日本語として自然な文にしてください");
@@ -66,28 +66,28 @@ describe("buildSystemPrompt", () => {
 
   // P4-7: field type contract tests
   it("includes explicit mainQuestObject string-only type contract (P4-7)", () => {
-    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
     expect(result).toContain("mainQuestObject must be a plain string, not an array or object");
     expect(result).toContain("join them into one concise Japanese string");
   });
   it("includes mainQuestObject invalid/valid examples (P4-7)", () => {
-    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
     // Invalid example: array syntax should appear as the bad pattern to avoid
     expect(result).toContain('"mainQuestObject": ["鍵", "地図"]');
     // Valid example: plain string
     expect(result).toContain('"mainQuestObject": "鍵と地図"');
   });
   it("includes forbiddenQuestObjects array type contract (P4-7)", () => {
-    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
     expect(result).toContain("forbiddenQuestObjects must be an array of strings, not a single string");
   });
   it("includes pages text and imagePrompt string type contract (P4-7)", () => {
-    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
     expect(result).toContain("pages[].text must be a string, not an array or object");
     expect(result).toContain("pages[].imagePrompt must be a string, not an array or object");
   });
   it("field type contract does not instruct to output arrays for mainQuestObject (P4-7)", () => {
-    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
     // The contract must not contain any instruction that would encourage array output
     // It must only show the array as the INVALID example pattern
     expect(result).toContain("not an array or object");
@@ -373,12 +373,23 @@ describe("buildImagePrompt", () => {
     expect(result).not.toContain("Imagination scene guardrail:");
   });
   it("includes fantasy imagePrompt rules in buildSystemPrompt", () => {
-    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
     expect(result).toContain("Fantasy and imagination imagePrompt rules:");
     expect(result).toContain("spell books");
     expect(result).toContain("rune stones or glyph carvings");
     expect(result).toContain("star charts with symbol annotations");
     expect(result).toContain("treasure maps with text labels");
+  });
+
+  it("includes name consistency rule with interpolated childName", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined, { childName: "だいちくん" });
+    expect(result).toContain("主人公の名前は必ず「だいちくん」を使ってください");
+    expect(result).toContain("他の名前（例: たっちゃん、はなちゃん、けんくん など）に変えることは厳禁です");
+  });
+
+  it("uses placeholder if childName is missing in buildSystemPrompt", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined);
+    expect(result).toContain("主人公の名前は必ず「{childName}」を使ってください");
   });
   it("returns a style reference image path", () => {
     expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.webp");

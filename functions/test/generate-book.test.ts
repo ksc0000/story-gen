@@ -1421,6 +1421,52 @@ describe("processBookGeneration", () => {
     expect(deps.imageClient.generateImage).toHaveBeenCalled();
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed-thin", "completed");
   });
+
+  it("corrects mismatched protagonist name in story text fields", () => {
+    const wrongName = "たっちゃん";
+    const correctName = "だいちくん";
+    const mismatchedStory: GeneratedStory = {
+      ...mockStory,
+      title: `${wrongName}ときらきらぼし`,
+      storyGoal: `${wrongName}が、森で出会った…`,
+      openingNarration: `ある晴れた日、${wrongName}は…`,
+      titleSpreadText: `…${wrongName}は歩きだしました。`,
+      cast: [
+        {
+          characterId: "child_protagonist",
+          displayName: wrongName,
+          role: "protagonist",
+          visualBible: "A boy",
+        },
+      ],
+      pages: [
+        {
+          ...mockStory.pages[0],
+          text: `${wrongName}は、すなばで あそんでいました。`,
+        },
+      ],
+    };
+
+    const normalized = normalizeStoryCastWithChildProfile(mismatchedStory, {
+      displayName: correctName,
+      nickname: correctName,
+      age: 4,
+      personality: {},
+      visualProfile: {
+        version: 1,
+        characterLook: "short black hair",
+        outfit: "blue shirt",
+        characterBible: "A boy",
+      },
+    });
+
+    expect(normalized.title).toBe(`${correctName}ときらきらぼし`);
+    expect(normalized.storyGoal).toBe(`${correctName}が、森で出会った…`);
+    expect(normalized.openingNarration).toBe(`ある晴れた日、${correctName}は…`);
+    expect(normalized.titleSpreadText).toBe(`…${correctName}は歩きだしました。`);
+    expect(normalized.pages[0].text).toBe(`${correctName}は、すなばで あそんでいました。`);
+    expect(normalized.cast?.[0].displayName).toBe(correctName);
+  });
 });
 
 describe("shouldUseCharacterReferenceForPage", () => {
