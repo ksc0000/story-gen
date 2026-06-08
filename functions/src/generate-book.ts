@@ -202,6 +202,32 @@ export function normalizeStoryCastWithChildProfile(
     story.cast?.find((character) => character.characterId === protagonistId) ??
     story.cast?.find((character) => character.role === "protagonist");
 
+  const wrongName = existingProtagonist?.displayName;
+  const fixName = (text: string | undefined): string | undefined => {
+    if (!text || !wrongName || wrongName === protagonistDisplayName) return text;
+    return text.split(wrongName).join(protagonistDisplayName);
+  };
+  const validateName = (text: string | undefined, fieldName: string) => {
+    if (!text) return;
+    if (!text.includes(protagonistDisplayName)) {
+      logger.warn("Protagonist name mismatch detected in story text", {
+        field: fieldName,
+        expected: protagonistDisplayName,
+        text: text.slice(0, 100),
+      });
+    }
+  };
+
+  const correctedTitle = fixName(story.title) ?? story.title;
+  const correctedStoryGoal = fixName(story.storyGoal);
+  const correctedOpeningNarration = fixName(story.openingNarration);
+  const correctedTitleSpreadText = fixName(story.titleSpreadText);
+
+  validateName(correctedTitle, "title");
+  validateName(correctedStoryGoal, "storyGoal");
+  validateName(correctedOpeningNarration, "openingNarration");
+  validateName(correctedTitleSpreadText, "titleSpreadText");
+
   const protagonistCast: StoryCharacter = removeUndefinedDeep({
     characterId: protagonistId,
     displayName: protagonistDisplayName,
@@ -228,19 +254,29 @@ export function normalizeStoryCastWithChildProfile(
       character.characterId !== protagonistId &&
       character.role !== "protagonist"
   );
-  const normalizedPages = story.pages.map((page) => ({
-    ...page,
-    appearingCharacterIds: page.appearingCharacterIds?.map((characterId) =>
-      isGeneratedProtagonistId(characterId, childProfileSnapshot) ? protagonistId : characterId
-    ),
-    focusCharacterId:
-      page.focusCharacterId && isGeneratedProtagonistId(page.focusCharacterId, childProfileSnapshot)
-        ? protagonistId
-        : page.focusCharacterId,
-  }));
+  const normalizedPages = story.pages.map((page, index) => {
+    const correctedText = fixName(page.text) ?? page.text;
+    validateName(correctedText, `pages[${index}].text`);
+
+    return {
+      ...page,
+      text: correctedText,
+      appearingCharacterIds: page.appearingCharacterIds?.map((characterId) =>
+        isGeneratedProtagonistId(characterId, childProfileSnapshot) ? protagonistId : characterId
+      ),
+      focusCharacterId:
+        page.focusCharacterId && isGeneratedProtagonistId(page.focusCharacterId, childProfileSnapshot)
+          ? protagonistId
+          : page.focusCharacterId,
+    };
+  });
 
   return {
     ...story,
+    title: correctedTitle,
+    storyGoal: correctedStoryGoal,
+    openingNarration: correctedOpeningNarration,
+    titleSpreadText: correctedTitleSpreadText,
     characterBible: visualProfile.characterBible || story.characterBible,
     cast: [protagonistCast, ...otherCast],
     pages: normalizedPages,
