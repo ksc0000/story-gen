@@ -382,20 +382,59 @@ function sanitizeForbiddenQuestObjects(
   }
 
   const signatureItem = mergedInput.signatureItem ?? bookData.childProfileSnapshot?.visualProfile.signatureItem;
-  const signatureTokens = new Set(
-    (signatureItem ?? "")
-      .split(/[、,\s]+/)
-      .map((token) => token.trim())
-      .filter((token) => token.length >= 2)
-  );
+  const favorites = mergedInput.favorites;
+  const colorMood = mergedInput.colorMood;
+
+  const identityTokens = new Set<string>();
+  const tokenize = (text: string | undefined) => {
+    if (!text) return;
+    // Split by common Japanese and English delimiters
+    text.split(/[、,，\s]+/).forEach((token) => {
+      const trimmed = token.trim();
+      if (trimmed.length >= 2) {
+        identityTokens.add(trimmed);
+      }
+    });
+  };
+
+  tokenize(signatureItem);
+  tokenize(favorites);
+  tokenize(colorMood);
+
+  // Common synonyms/related terms to prevent Gemini from banning identity-related concepts
+  const identityRelatedSynonyms: Record<string, string[]> = {
+    "MacBook": ["パソコン", "PC", "ラップトップ", "computer", "laptop"],
+    "マックブック": ["パソコン", "PC", "ラップトップ", "computer", "laptop"],
+    "Overwatch": ["ゲーム", "ゲーム機", "ビデオゲーム", "game", "video game"],
+    "オーバーウォッチ": ["ゲーム", "ゲーム機", "ビデオゲーム", "game", "video game"],
+    "サイバーテクノロジー": ["サイバー", "テクノロジー", "cyber", "technology"],
+  };
+
+  // Expand identity tokens with synonyms
+  const originalTokens = [...identityTokens];
+  for (const token of originalTokens) {
+    for (const [key, synonyms] of Object.entries(identityRelatedSynonyms)) {
+      if (token.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(token.toLowerCase())) {
+        synonyms.forEach((s) => identityTokens.add(s));
+      }
+    }
+  }
+
   const genericForbidden = new Set(["おもちゃ", "おもちゃたち", "玩具", "toys", "toy"]);
 
   const sanitized = forbiddenQuestObjects.filter((value, index, array) => {
     const normalized = value.trim();
     if (!normalized) return false;
+    // Dedup
     if (array.findIndex((item) => item.trim() === normalized) !== index) return false;
+    // Filter generic toy words
     if (genericForbidden.has(normalized)) return false;
-    if ([...signatureTokens].some((token) => normalized.includes(token) || token.includes(normalized))) {
+    // Filter tokens that overlap with child identity (signatureItem, favorites, colorMood, and synonyms)
+    const lowerNormalized = normalized.toLowerCase();
+    if ([...identityTokens].some((token) => {
+      const lowerToken = token.toLowerCase();
+      return lowerNormalized.includes(lowerToken) || lowerToken.includes(lowerNormalized);
+    })) {
       return false;
     }
     return true;

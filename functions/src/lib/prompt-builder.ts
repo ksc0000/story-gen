@@ -65,6 +65,7 @@ const JAPANESE_STORY_TEXT_RULES = [
 const STORY_GOAL_CONSISTENCY_RULES = [
   "物語の中心目的 storyGoal を最初に決め、最後まで変えないでください。",
   "mainQuestObject を途中で別のものに変えないでください。",
+  "forbiddenQuestObjects は「クエストの目標・探し物にしてはいけないもの」であり、キャラクターの持ち物・服装・性格・好きなものを含めてはいけません。特に、主人公の signatureItem、好きなもの（favorites）、colorMood はキャラクターのアイデンティティであるため、絶対に forbiddenQuestObjects に入れないでください。",
   "hiddenDetail や背景小物を、物語の主目的にしてはいけません。",
   "visualMotif は本文と絵に出してよいが、hiddenDetail は基本的に絵だけの小さな発見要素です。",
   "例えば、hiddenDetail に『すいか模様の雲』がある場合でも、物語の目的を『すいか探し』に変えてはいけません。",

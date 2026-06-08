@@ -1358,6 +1358,33 @@ describe("processBookGeneration", () => {
     expect(metadata.forbiddenQuestObjects).toEqual(["すいか"]);
   });
 
+  it("removes favorites, colorMood, and signature item synonyms from forbidden quest objects", async () => {
+    const bookWithIdentity: BookData = {
+      ...baseBookData,
+      productPlan: "premium_paid",
+      input: {
+        childName: "だいち",
+        signatureItem: "MacBook",
+        favorites: "Overwatch",
+        colorMood: "サイバーテクノロジー",
+      },
+    };
+
+    deps.llmClient.generateStory.mockResolvedValueOnce({
+      ...createPremiumPassingStory(),
+      forbiddenQuestObjects: ["すいか", "パソコン", "PC", "ゲーム", "テクノロジー", "MacBook"],
+    });
+
+    await processBookGeneration("book-identity-sanitize", bookWithIdentity, deps);
+
+    const metadata = deps.updateBookStoryGenerationMetadata.mock.calls.at(-2)?.[1];
+    // MacBook -> laptop/PC/パソコン should be filtered
+    // Overwatch -> game/ビデオゲーム should be filtered
+    // サイバーテクノロジー -> cyber/technology should be filtered
+    // Only "すいか" should remain
+    expect(metadata.forbiddenQuestObjects).toEqual(["すいか"]);
+  });
+
   it("keeps fixed templates working with key_pages reference mode", async () => {
     deps.getTemplate.mockResolvedValue(fixedTemplate);
     const fixedBook: BookData = {
