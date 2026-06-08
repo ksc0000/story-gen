@@ -64,6 +64,21 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("quiet_ending:");
   });
 
+  it("includes coverImagePrompt enforcement rules for outfit and signatureItem when provided", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined, {
+      outfit: "black T-shirt and blue jeans",
+      signatureItem: "MacBook",
+    });
+    expect(result).toContain("- coverImagePrompt には主人公の服装（black T-shirt and blue jeans）を必ず使ってください。新しい服装を作らないでください。");
+    expect(result).toContain("- coverImagePrompt にはシグネチャアイテム（MacBook）を自然な形で含めてください。");
+  });
+
+  it("omits coverImagePrompt enforcement rules when outfit and signatureItem are not provided", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).not.toContain("coverImagePrompt には主人公の服装");
+    expect(result).not.toContain("coverImagePrompt にはシグネチャアイテム");
+  });
+
   // P4-7: field type contract tests
   it("includes explicit mainQuestObject string-only type contract (P4-7)", () => {
     const result = buildSystemPrompt(mockTemplate, "watercolor");

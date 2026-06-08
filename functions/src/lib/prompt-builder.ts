@@ -359,13 +359,21 @@ function getEmotionalExpressionGuidance(ageBand?: AgeBand): string {
 export function buildSystemPrompt(
   template: TemplateData,
   style: IllustrationStyle,
-  readingProfile?: AgeReadingProfile
+  readingProfile?: AgeReadingProfile,
+  options?: { outfit?: string; signatureItem?: string }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
   const visualDirection = template.visualDirection
     ? `\n## カテゴリのビジュアル方向\n${template.visualDirection}\n`
     : "";
   const resolvedReadingProfile = readingProfile;
+  const coverOutfitRule = options?.outfit
+    ? `- coverImagePrompt には主人公の服装（${options.outfit}）を必ず使ってください。新しい服装を作らないでください。`
+    : "";
+  const coverSignatureItemRule = options?.signatureItem
+    ? `- coverImagePrompt にはシグネチャアイテム（${options.signatureItem}）を自然な形で含めてください。`
+    : "";
+
   const ageReadingGuidance = resolvedReadingProfile
     ? `
 ## 年齢に合わせた文章レベル
@@ -396,7 +404,7 @@ ${ageReadingGuidance}
 - 各ページの imagePrompt は英語で、挿絵の内容を具体的に描写してください。
 - characterBible は全ページで同じ主人公として見えるように、年齢感、髪型、服装、固定アイテム、表情の特徴、頭身（head-to-body ratio）や体格などの身体的特徴を英語で具体化してください。
 - styleBible は全ページで同じ画風として見えるように、カテゴリのビジュアル方向、キャラクターのデフォルメ具合（degree of deformation）、線、色、質感、光、構図のルールを英語で具体化してください。
-- imagePrompt にはページ固有の場面だけを書き、characterBible と styleBible の内容を重複させすぎないでください。
+${coverOutfitRule ? coverOutfitRule + "\n" : ""}${coverSignatureItemRule ? coverSignatureItemRule + "\n" : ""}- imagePrompt にはページ固有の場面だけを書き、characterBible と styleBible の内容を重複させすぎないでください。
 - 各ページの imagePrompt は、主人公の見た目だけでなく、場面・背景・周囲の出来事・画面の焦点を具体的に書いてください。
 - すべてのページで主人公を中央に大きく描く構図は禁止です。
 - ページごとに wide shot / medium shot / close-up / detail shot / bird's-eye view などの視点を変えてください。
