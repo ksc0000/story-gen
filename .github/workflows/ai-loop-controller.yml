@@ -19,9 +19,9 @@ on:
         description: "Roadmap or issue reference"
         required: true
         default: "docs"
-  # schedule: # PAUSED — Claude API cost control. Re-enable when ready.
-  #   - cron: "0 */2 * * *"
-  #   - cron: "0 1,11 * * *"
+  schedule:
+    - cron: "0 */2 * * *"
+    - cron: "0 1,11 * * *"
 
 jobs:
   controller:
@@ -48,7 +48,7 @@ jobs:
           CTRL_MODE: ${{ github.event.inputs.mode || 'docs-only' }}
           CTRL_DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
           CTRL_TASK_SOURCE: ${{ github.event.inputs.task_source || 'docs' }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         run: |
           ./scripts/ai-loop/generate-next-task.sh \
             "$CTRL_ITERATIONS" \
