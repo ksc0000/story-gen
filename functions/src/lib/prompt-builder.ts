@@ -400,6 +400,7 @@ ${ageReadingGuidance}
 - characterBible は全ページで同じ主人公として見えるように、年齢感、髪型、服装、固定アイテム、表情の特徴、頭身（head-to-body ratio）や体格などの身体的特徴を英語で具体化してください。
 - styleBible は全ページで同じ画風として見えるように、カテゴリのビジュアル方向、キャラクターのデフォルメ具合（degree of deformation）、線、色、質感、光、構図のルールを英語で具体化してください。
 - imagePrompt にはページ固有の場面だけを書き、characterBible と styleBible の内容を重複させすぎないでください。
+- imagePrompt のシーン記述に、主人公の年齢を具体的な数字（例: "around 7-8 years old", "12-year-old child" など）で書き込まないでください。年齢感の管理は characterBible に一元化します。imagePrompt に年齢数字を入れると characterBible と矛盾し、画像生成で別人になります。
 - 各ページの imagePrompt は、主人公の見た目だけでなく、場面・背景・周囲の出来事・画面の焦点を具体的に書いてください。
 - すべてのページで主人公を中央に大きく描く構図は禁止です。
 - ページごとに wide shot / medium shot / close-up / detail shot / bird's-eye view などの視点を変えてください。
