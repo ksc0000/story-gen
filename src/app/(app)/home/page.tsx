@@ -17,8 +17,7 @@ import { useBooks } from "@/lib/hooks/use-books";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
-
-const FREE_MONTHLY_LIMIT = 3;
+import { FREE_MONTHLY_BOOK_LIMIT } from "@/lib/usage";
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -29,7 +28,7 @@ export default function HomePage() {
   const { profile } = useUserProfile(user?.uid);
   const { children, loading: childrenLoading, activeChild } = useChildren(user?.uid);
   const { isAdmin } = useAdminClaim();
-  const remaining = FREE_MONTHLY_LIMIT - (profile?.monthlyGenerationCount ?? 0);
+  const remaining = FREE_MONTHLY_BOOK_LIMIT - (profile?.monthlyGenerationCount ?? 0);
 
   useEffect(() => {
     if (!childrenLoading && children.length === 0) {
