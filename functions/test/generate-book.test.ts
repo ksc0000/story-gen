@@ -378,6 +378,65 @@ describe("processBookGeneration", () => {
     expect(normalized.pages[0].appearingCharacterIds).toEqual(["tatchan", "magic_friend_01"]);
   });
 
+  it("corrects and validates protagonist name in story text fields", () => {
+    const warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
+
+    const story: GeneratedStory = {
+      ...mockStory,
+      title: "たっくんのぼうけん",
+      storyGoal: "たっくんが星をさがす",
+      openingNarration: "むかしむかし、たっくんがいました。",
+      titleSpreadText: "たっくんの はじまりの物語",
+      cast: [
+        {
+          characterId: "child_protagonist",
+          displayName: "たっくん",
+          role: "protagonist",
+          visualBible: "boy",
+        },
+      ],
+      pages: [
+        {
+          text: "たっくんは、こうえんにいきました。",
+          imagePrompt: "park",
+        },
+        {
+          text: "なまえがないページ。",
+          imagePrompt: "missing name",
+        },
+      ],
+    };
+
+    const normalized = normalizeStoryCastWithChildProfile(story, {
+      displayName: "ゆうた",
+      nickname: "ゆうた",
+      age: 4,
+      personality: {},
+      visualProfile: {
+        version: 1,
+        characterBible: "child",
+      },
+    });
+
+    expect(normalized.title).toBe("ゆうたのぼうけん");
+    expect(normalized.storyGoal).toBe("ゆうたが星をさがす");
+    expect(normalized.openingNarration).toBe("むかしむかし、ゆうたがいました。");
+    expect(normalized.titleSpreadText).toBe("ゆうたの はじまりの物語");
+    expect(normalized.pages[0].text).toBe("ゆうたは、こうえんにいきました。");
+    expect(normalized.pages[1].text).toBe("なまえがないページ。");
+
+    // Check that warning was logged for the page missing the name
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Protagonist name mismatch detected in story text",
+      expect.objectContaining({
+        field: "pages[1].text",
+        expected: "ゆうた",
+      })
+    );
+
+    warnSpy.mockRestore();
+  });
+
   it("sanitizes story metadata and page data before Firestore writes", async () => {
     const storyWithUndefinedCast: GeneratedStory = {
       ...mockStory,
