@@ -1,308 +1,302 @@
 # NEXT_TASK.md
 
-**Generated:** 2026-05-07  
-**Phase:** 1.5b (Production Smoke Evidence Pending)  
-**Scope:** Docs-first + Live Verification
-
----
-
 ## Context
 
-The roadmap shows Phase 1 (Reliability First) is functionally complete but requires **production smoke evidence** before closure. Phase 3 (Template Mode) and Phase 4 (Gemini JSON Hardening) are largely complete with smoke checkups needed. Phase 5 (Soft Launch) is actively executing with Cohort B pending.
+Based on the roadmap analysis:
 
-Key blockers:
-1. **Phase 1 closure**: Needs `docs/smoke-results/PRODUCTION_SMOKE_RESULTS.md` with real evidence
-2. **Phase 3 T1-Smoke**: Fixed template 6-template smoke checklist execution
-3. **Phase 5 Cohort B**: `simplified_scene` experiment PASS verification + limited rollout
+- **Phase 1** (Reliability): Production smoke checklist pending. Scheduler automation is implemented but needs live evidence.
+- **Phase 3** (Template Mode): 10 templates seeded, smoke checklist defined, but not yet executed on production-like scale.
+- **Phase 4** (Gemini JSON): Hardening complete with permanent SLO monitoring in place. responseSchema rollout abandoned.
+- **Phase 5** (Soft Launch): Cohort A completed successfully. Cohort B limited rollout is GO with `simplified_scene` experiment active. P5-3d ガード実装 complete, awaiting PM deployment approval.
 
-Current decision point: **P5-3c-verify is complete and PASS-verified**. Cohort B is approved for limited rollout but needs formal execution checklist + invitation kit deployment.
+**Current blocking item**: Phase 1 production smoke checklist execution. Without live evidence from production Firestore + Cloud Scheduler, the "production smoke evidence pending" gate cannot close, and Phase 2 quality work remains at lower priority.
+
+**Recommended next step**: Execute Phase 1 production smoke checklist to unblock Phase 2 quality focus.
 
 ---
 
 ## Objective
 
-**Generate Phase 5 Cohort B execution checklist** with concrete pre-flight steps, rollout procedure, 1-hour monitoring window, stop conditions, and follow-up decision gates.
+Write the **Phase 1 Production Smoke Results** document (`docs/smoke-results/PRODUCTION_SMOKE_RESULTS.md`) by executing the checklist items against the live production environment and recording:
 
-This is the next critical task to unblock Cohort B limited rollout (3–5 testers) and establish the operational foundation for Phase 1 closure decision.
+1. **Scheduler execution evidence** (saveDailySloSnapshot, saveWeeklySloSnapshot, cleanupStaleGeneration)
+2. **Firestore rules + index verification** (composite index for collection group query, runs subcollection read permissions)
+3. **SLO metrics from production** (book readable rate, failure rate, p95 latency, fallback usage)
+4. **Pass/fail summary** against MVP baseline criteria
+5. **Known issues discovered** (if any)
+
+This document will close the "production smoke evidence pending" gate and unlock Phase 2 prioritization.
 
 ---
 
-## Scope: Editable Directories
+## Allowed Scope
 
-```
-docs/
-├── P5_COHORT_B_EXECUTION_CHECKLIST.md (CREATE)
-├── P5_COHORT_B_GO_NOGO_CHECKLIST.md (UPDATE if needed)
-└── PM_SIGN_OFF_LOG.md (UPDATE)
-```
+You may create and edit:
+
+- `docs/smoke-results/PRODUCTION_SMOKE_RESULTS.md` (new file)
+- `docs/PRODUCTION_SMOKE_CHECKLIST.md` (read existing, may add notes/timestamps)
+- `docs/AI-LOOP/NEXT_TASK.md` (update with follow-up)
+
+You may **read**:
+
+- Cloud Console (Firestore, Cloud Scheduler, Cloud Logging, Cloud Monitoring)
+- Admin dashboard (SLO Dashboard, Quality Review UI)
+- Existing roadmap docs
 
 ---
 
 ## Forbidden Scope
 
-- Code changes (Firebase Functions, UI, backend logic)
-- Infrastructure (Firestore, Cloud Run, Cloud Monitoring)
-- Secrets, billing, or authentication changes
-- Generated assets or images
-- Live Firestore data modification
-- Alert policy creation/modification (monitoring only)
+- **Do not** modify code (Firebase Functions, React, Node.js)
+- **Do not** change Firestore rules or indexes (read-only verification only)
+- **Do not** modify environment variables
+- **Do not** deploy or trigger scheduler jobs manually (observe only)
+- **Do not** modify product data or user accounts
 
 ---
 
 ## Requirements
 
+### Evidence to Collect
+
+1. **Scheduler Execution Logs**
+   - Verify `saveDailySloSnapshot` ran at 03:00 JST (last 7 days)
+   - Verify `saveWeeklySloSnapshot` ran on Monday 03:15 JST (last 2 weeks)
+   - Verify `cleanupStaleGeneration` ran at 03:30 JST (last 7 days)
+   - Cloud Scheduler UI + Cloud Logging queries
+
+2. **Firestore Index + Rules**
+   - Confirm `books` collection group index exists for `createdAt DESC` queries
+   - Confirm `runs` subcollection can be read by admin (check Firestore Rules UI)
+   - Screenshot or note the index status (should be "Enabled")
+
+3. **SLO Metrics from Admin Dashboard**
+   - Book readable rate (last 7 days, target >= 98%)
+   - Book hard failed rate (target <= 2%)
+   - Page image p95 latency (target <= 120s)
+   - Image failed rate (target <= 2%)
+   - Regeneration success rate (target >= 95%)
+
+4. **Live Book Outcomes**
+   - Count total `book_outcomes` in production (last 30 days)
+   - Sample 3–5 books: check `book.status` / `partial_completed` / `failedPageIndices` presence
+
+5. **Fallback Usage**
+   - From SLO Dashboard: count timeout → fallback events
+   - Verify timeout + fallback (pro_consistent → klein_fast, 120s) is working
+
+### Document Structure
+
+```markdown
+# Production Smoke Results
+
+**Date**: YYYY-MM-DD
+**Environment**: Production
+**Tester**: [AI Loop Worker]
+
+## 1. Scheduler Execution Evidence
+
+### saveDailySloSnapshot (03:00 JST)
+- [✓/✗] Last 7 days: [count] executions, [status]
+- Log query: [Cloud Logging filter]
+- Screenshot: [path or "verified in console"]
+
+### saveWeeklySloSnapshot (Monday 03:15 JST)
+- [✓/✗] Last 2 weeks: [count] executions, [status]
+
+### cleanupStaleGeneration (03:30 JST)
+- [✓/✗] Last 7 days: [count] executions, [status]
+
+## 2. Firestore Index + Rules Verification
+
+- [✓/✗] `books` collection group index exists
+- [✓/✗] `runs` subcollection read permission confirmed
+- Index status: [screenshot/note]
+
+## 3. SLO Metrics (Last 7 days)
+
+| Metric | Value | Target | Status |
+|--------|-------|--------|--------|
+| Book readable rate | X% | >= 98% | ✓/✗ |
+| Book hard failed rate | X% | <= 2% | ✓/✗ |
+| Page image p95 (sec) | X | <= 120 | ✓/✗ |
+| Image failed rate | X% | <= 2% | ✓/✗ |
+| Regen success rate | X% | >= 95% | ✓/✗ |
+
+## 4. Live Book Outcomes Sample
+
+- Total books (30d): [count]
+- Sample books: [3 IDs + status summary]
+
+## 5. Fallback + Timeout Evidence
+
+- Timeout → fallback events (7d): [count]
+- pro_consistent → klein_fast recorded: [✓/✗]
+
+## 6. Pass/Fail Summary
+
+| Item | Pass/Fail | Notes |
+|------|-----------|-------|
+| Phase 1 MVP criteria | ✓/✗ | [brief summary] |
+| Scheduler automation | ✓/✗ | |
+| Firestore structure | ✓/✗ | |
+| SLO monitoring | ✓/✗ | |
+
+## 7. Known Issues Discovered
+
+- [Issue 1]: [brief description + mitigation]
+- [No issues found]
+
+## 8. Gate Status
+
+**Phase 1 Production Smoke**: [✓ PASS / ✗ FAIL]
+
+**Recommendation**: 
+- If PASS: "Proceed to Phase 2 quality focus. Update roadmap Final Decision."
+- If FAIL: "Resolve issues in [area]. Rerun checklist."
+
+## 9. Appendix
+
+- Cloud Logging queries used: [links]
+- SLO Dashboard: [link]
+- Scheduler logs: [query or screenshot]
+```
+
 ### Acceptance Criteria
 
-1. ✅ `P5_COHORT_B_EXECUTION_CHECKLIST.md` is created with:
-   - Pre-flight validation steps (build, tests, SLO dashboard check, alert policy status)
-   - Cohort member identification & invitation procedure
-   - Rollout start checklist (time, monitoring setup, PM sign-off gate)
-   - 1-hour monitoring window with concrete metrics to watch (p95 storyMs, p50 imageDurationMs, image_failed_rate, page_early_failed, fallback_pages_ratio)
-   - Stop conditions (page_early_failed > 0, image_failed_rate > 5%, p95 storyMs > 150s, 503 error rate > 2%)
-   - Incident response escalation path
-   - Success criteria (readable_rate >= 98%, image_failed_rate <= 2%, no blocking errors after 1h window)
-   - Cohort B → Cohort C gate evaluation framework
-   - Approval sign-off blocks (PM, Ops, QA)
-
-2. ✅ Cross-reference `P5_SOFT_LAUNCH_INVITE_KIT.md` (invitation template, operator guide, tester release notes)
-
-3. ✅ Document decision inputs from P5-3c-verify (simplified_scene PASS verified, 4 styles confirmed, 32/32 pages completed, no duplicates, no early failures)
-
-4. ✅ Include fallback procedures:
-   - Immediate stop: kill switch (disable invite, revert generationOverride flag)
-   - Partial stop: pause new invites, investigate active sessions
-   - Rollback: revert to Cohort A baseline if critical issue found
-
-5. ✅ Schedule placeholders for:
-   - Cohort B duration (recommended: 48–72 hours minimum before Cohort C decision)
-   - Next review timestamp (e.g., 2026-05-24 18:00 JST)
-   - PM decision gate timestamp
+- [ ] `PRODUCTION_SMOKE_RESULTS.md` created with all 9 sections completed
+- [ ] All 5 MVP baseline criteria have measured values (not estimates)
+- [ ] Scheduler execution verified for last 7 days (all 3 jobs)
+- [ ] At least 1 live book outcome examined
+- [ ] Pass/Fail summary is clear and actionable
+- [ ] No code changes or infrastructure modifications
+- [ ] Document is Markdown-formatted and ready for commit
 
 ### Required Test Commands
 
+None (this is documentation-only). However, verify:
+
 ```bash
-# Verify checklist structure and cross-references
-grep -l "P5_SOFT_LAUNCH_INVITE_KIT" docs/P5_COHORT_B_EXECUTION_CHECKLIST.md
-grep -l "stop condition" docs/P5_COHORT_B_EXECUTION_CHECKLIST.md
-grep -l "readableRate >= 98%" docs/P5_COHORT_B_EXECUTION_CHECKLIST.md
-grep -l "simplified_scene PASS" docs/P5_COHORT_B_EXECUTION_CHECKLIST.md
-
-# Verify no contradictions with existing docs
-grep -c "Cohort B" docs/P5*.md  # Should include execution checklist
-
-# Check markdown syntax
-mdlint docs/P5_COHORT_B_EXECUTION_CHECKLIST.md
+# Check that the document is well-formed Markdown
+npm run lint -- docs/smoke-results/PRODUCTION_SMOKE_RESULTS.md
+# or
+cat docs/smoke-results/PRODUCTION_SMOKE_RESULTS.md | head -20
 ```
+
+---
+
+## Known Issues
+
+- Cloud Scheduler timezone display may be UTC in UI; verify against job schedule definition (JST offset)
+- SLO Dashboard metrics may have a 5–10 minute delay; allow for eventual consistency
+- If fewer than 5 production books exist in the last 7 days, note this and recommend re-running after more real user traffic
+
+---
+
+## Suggested Follow-up Task
+
+Once Phase 1 smoke results are **PASS**:
+
+1. **Update `docs/FINAL_DECISION.md`** to mark Phase 1 as "Complete" and remove "production smoke evidence pending"
+2. **Prioritize Phase 2 quality checklist** (manual QA of 10 template books + quality rubric refinement)
+3. **Execute Phase 3 template smoke** (fixed_template 6 books smoke checklist) in parallel
+
+If Phase 1 smoke results are **FAIL**:
+
+1. **File issue for the discovered problem** (e.g., missing index, scheduler not running)
+2. **Re-run checklist after fix** is deployed
+3. **Block Phase 2 until Phase 1 is stable**
 
 ---
 
 ## Worker Prompt
 
-### Summary of Task
+### Task Summary
 
-You are tasked with writing **Phase 5 Cohort B Execution Checklist**, the operational foundation for the first limited production rollout of `simplified_scene` experiment results.
+You are the AI Loop worker. Your job is to **execute Phase 1 production smoke checklist** and **document results** in `docs/smoke-results/PRODUCTION_SMOKE_RESULTS.md`.
 
-**Input:**
-- P5-3c-verify passed with 4 themes confirmed, 32/32 pages completed, no duplicates, no early failures
-- P5_SOFT_LAUNCH_INVITE_KIT.md defines invitation and operator procedures
-- Phase 1 SLO baselines: book readable rate >= 98%, image_failed_rate <= 2%, p95 storyMs <= 120s
-- Cohort A smoke checklist established operational pattern (1h monitoring window, stop conditions)
-- PM approval is contingent on Cohort B execution following a documented, repeatable procedure
+### Steps
 
-**Output:**
-Create `docs/P5_COHORT_B_EXECUTION_CHECKLIST.md` as a step-by-step checklist that:
-1. **Validates preconditions** (build health, test suite, SLO dashboard ready, alerts configured)
-2. **Identifies rollout members** (3–5 testers by name/email, administrator responsibilities)
-3. **Starts rollout** (time-stamped, PM sign-off gate, monitoring setup confirmation)
-4. **Monitors 1-hour window** (concrete metrics, refresh cadence, decision points)
-5. **Applies stop conditions** (kill switch, partial pause, rollback paths)
-6. **Evaluates success** (readable_rate, image_failed_rate, no blocking errors)
-7. **Gates Cohort C** (decision framework, next review date, PM approval required)
-8. **Documents decisions** (approval dates, rationale, incident logs)
+1. **Access Production Environment**
+   - Open Google Cloud Console (project: `story-gen`)
+   - Verify you have read-only access to Firestore, Cloud Scheduler, Cloud Logging
 
-### Style
+2. **Verify Scheduler Execution** (Section 1)
+   - Go to **Cloud Scheduler** UI
+   - Find jobs: `saveDailySloSnapshot`, `saveWeeklySloSnapshot`, `cleanupStaleGeneration`
+   - For each job, click **View logs** and filter logs from the last 7 days
+   - Count successful executions
+   - Note any FAILED or SKIPPED status
+   - Copy Cloud Logging filter query (e.g., `resource.labels.job_name="saveDailySloSnapshot"`)
 
-- Use checkbox format (`- [ ]`, `- [x]`) for actionable items
-- Include timestamp placeholders (e.g., `[TIME: _____]`, `[DATE: 2026-05-24]`)
-- Link to external resources (P5_SOFT_LAUNCH_INVITE_KIT.md, Cloud Monitoring dashboard, alert policies)
-- Provide command/action snippets where applicable (e.g., disable invite URL, revert flag, query logs)
-- Keep escalation path clear and short (PM → Ops → QA sign-offs)
+3. **Verify Firestore Index + Rules** (Section 2)
+   - Go to **Firestore** → **Indexes**
+   - Search for index on `books` with `createdAt DESC`
+   - Note status (Enabled / Building / etc.)
+   - Go to **Firestore Rules** → review `rules for 'books'` section
+   - Confirm that admin role can read `runs` subcollection
+   - Screenshot or copy the relevant rule lines
 
-### Example Structure
+4. **Extract SLO Metrics** (Section 3)
+   - Go to **Admin Dashboard** (React app, `/admin/slo-dashboard`)
+   - Select last 7 days
+   - Read the 5 metrics from the dashboard:
+     - Book readable rate
+     - Book hard failed rate
+     - Page image p95
+     - Image failed rate
+     - Regeneration success rate
+   - If dashboard shows N/A, go to **Cloud Logging** and run manual SLO queries:
+     - Query: `resource.type="cloud_function" AND jsonPayload.event_type="book_outcome"`
+     - Count outcomes by status (completed / partial_completed / failed)
+   - Record exact values in table format
 
-```markdown
-# Phase 5 Cohort B Execution Checklist
+5. **Sample Live Book Outcomes** (Section 4)
+   - Go to **Firestore** → `books` collection
+   - Click on 3–5 books created in the last 7 days
+   - Note: `status`, `partial_completed` (true/false), `failedPageIndices` (if present)
+   - Record book IDs and brief summary (e.g., "Book A: status=completed, pages=4/4")
 
-## Pre-Flight (12 hours before rollout)
+6. **Verify Fallback Evidence** (Section 5)
+   - Go to **Cloud Logging**
+   - Query: `jsonPayload.imageFallbackUsed=true`
+   - Count fallback events in the last 7 days
+   - Verify log entries contain `imageModel` transition (e.g., `pro_consistent` → `klein_fast`)
 
-### Build & Tests
-- [ ] npm run build --prefix functions ✓
-- [ ] npm run test --prefix functions ✓
-- [ ] npm run lint ✓
-- [ ] Verify no uncommitted changes: git status
+7. **Summarize Pass/Fail** (Section 6)
+   - For each MVP criterion, decide ✓ PASS or ✗ FAIL:
+     - Book readable rate >= 98% → ✓ or ✗
+     - Book hard failed rate <= 2% → ✓ or ✗
+     - Page image p95 <= 120s → ✓ or ✗
+     - Image failed rate <= 2% → ✓ or ✗
+     - Regen success rate >= 95% → ✓ or ✗
+   - If all ✓, mark "Phase 1 Production Smoke: **PASS**"
+   - If any ✗, mark "Phase 1 Production Smoke: **FAIL**" and note the failing criterion
 
-### SLO & Alerts
-- [ ] SLO dashboard is live and accessible
-- [ ] Cloud Logging saved queries operational
-- [ ] Alert policies defined (CG-1 enabled, SJ/IM disabled)
-- [ ] Ops team has alert notifications configured
+8. **Document Known Issues** (Section 7)
+   - If you discover scheduler failures, missing metrics, or data anomalies, list them
+   - Suggest short mitigation (e.g., "Rerun snapshot after rebuilding index")
 
-### Cohort Identification
-- [ ] Tester list: [3-5 names/emails]
-- [ ] Admin contact: [name/role/phone]
-- [ ] Escalation contact: [PM name/slack]
+9. **Write the Document**
+   - Create `docs/smoke-results/PRODUCTION_SMOKE_RESULTS.md`
+   - Use the structure above
+   - Commit with message: `docs: Phase 1 production smoke results [date]`
+   - Push to branch (no PR required for docs-only)
 
-## Rollout Start (Day N, Time T)
+### Tips
 
-### PM Sign-Off Gate
-- [ ] PM approves go/no-go
-- [ ] Timestamp: [_____]
-- [ ] Rationale: [brief reason]
+- **Timezones**: Cloud Scheduler may show UTC in logs; 03:00 JST = 18:00 UTC (previous day)
+- **Metrics delay**: SLO Dashboard updates every 5–10 minutes; refresh browser if needed
+- **No manual triggers**: Do not manually run scheduler jobs; only observe past executions
+- **Sample size**: If < 5 books in production, note this but proceed with smoke results
+- **Fallback queries**: Cloud Logging may require 30 seconds to return large result sets; be patient
 
-### Monitoring Setup
-- [ ] Cloud Monitoring dashboard loaded
-- [ ] Log Explorer open with saved queries
-- [ ] Alert notification channels active
-- [ ] Slack/email escalation configured
+### Questions?
 
-### Send Invites
-- [ ] Use invite template from P5_SOFT_LAUNCH_INVITE_KIT.md
-- [ ] Include release notes + feedback form link
-- [ ] Timestamp invites sent: [_____]
-
-## 1-Hour Monitoring Window (Time T+0 to T+1h)
-
-### Metrics to Watch
-| Metric | Target | Refresh | Status |
-|--------|--------|---------|--------|
-| `readable_rate` | >= 98% | 15 min | [ ] |
-| `image_failed_rate` | <= 2% | 15 min | [ ] |
-| `page_early_failed` | 0 | continuous | [ ] |
-| `p95 storyMs` | <= 150s | 20 min | [ ] |
-| Error rate (503/504) | <= 2% | 10 min | [ ] |
-
-### Stop Conditions (Halt immediately if any occur)
-- [ ] `page_early_failed` > 0 → STOP
-- [ ] `image_failed_rate` > 5% → STOP
-- [ ] Error rate > 2% → STOP
-- [ ] PM reports user complaint → Escalate to Ops
-
-## Success Criteria & Gates
-
-### Cohort B Success (after 1h window)
-- [x] `readable_rate` >= 98% → ✓
-- [x] `image_failed_rate` <= 2% → ✓
-- [x] No blocking errors logged → ✓
-- [x] No stop conditions triggered → ✓
-
-### Cohort C Decision Gate
-- [ ] Review Cohort B metrics (aggregate after 48–72 hours)
-- [ ] Compare to Cohort A baseline
-- [ ] PM decision: expand to Cohort C or hold
-- [ ] Date: [2026-05-24]
-- [ ] Approved by: [PM name]
-```
-
-### Key Decisions You Must Document
-
-1. **Who can trigger the kill switch?** (PM only, or Ops too?)
-2. **Tester identification**: Are names/emails predetermined or TBD by PM?
-3. **Monitoring window duration**: 1 hour or longer for Cohort B (vs. Cohort A)?
-4. **Metrics threshold**: Are p95 storyMs = 150s and image_failed_rate = 5% acceptable stop thresholds, or different values?
-5. **Cohort C criteria**: Should Cohort C be automatic after Cohort B PASS, or require additional gates?
-6. **Feedback collection**: Should testers fill a form during rollout, or after?
-
-### Questions to Answer in the Checklist
-
-- **Pre-flight**: What "Build ✓" means (all tests pass + no linting errors + successful Functions build)
-- **Monitoring**: How often to refresh metrics (every 5/10/15/20 minutes)
-- **Stop logic**: Is one metric failure (e.g., `page_early_failed = 1`) grounds for stop, or does it require escalation first?
-- **Rollback procedure**: Which Firebase config flag to revert, and how long does revert take to propagate?
-- **Success evaluation**: Do we need PM sign-off for success, or is automated gate sufficient?
+- Refer to `docs/PRODUCTION_SMOKE_CHECKLIST.md` for detailed step-by-step instructions per item
+- Refer to `docs/PHASE1_DESIGN.md` for SLO metric definitions and baseline thresholds
+- If blocked on Google Cloud Console access, escalate to PM
 
 ---
 
-## Output Format
-
-### Checklist Markdown Template
-
-Create **`docs/P5_COHORT_B_EXECUTION_CHECKLIST.md`** with:
-
-```
-# Phase 5 Cohort B Execution Checklist
-[Context + decision inputs from P5-3c-verify]
-
-## Pre-Flight Validation (Timestamp: _____)
-[Build, tests, SLO, alerts, admin contact]
-
-## Cohort Identification
-[Tester list with roles]
-
-## Rollout Start (Timestamp: _____)
-[PM sign-off, monitoring setup, invite send]
-
-## 1-Hour Monitoring Window
-[Metrics table, refresh cadence, stop conditions]
-
-## Success Criteria & Gates
-[Readable rate, image failed rate, error rate checks]
-
-## Incident Response
-[Escalation tree, kill switch command, rollback procedure]
-
-## Cohort C Decision Gate
-[Review criteria, timeline, PM sign-off]
-
-## Approval Sign-Offs
-[PM, Ops, QA dates and names]
-```
-
-### Tests to Execute
-
-```bash
-# 1. Verify checklist exists and has required sections
-test -f docs/P5_COHORT_B_EXECUTION_CHECKLIST.md
-
-# 2. Check cross-references
-grep -q "P5_SOFT_LAUNCH_INVITE_KIT" docs/P5_COHORT_B_EXECUTION_CHECKLIST.md && echo "✓ Invite kit referenced"
-
-# 3. Verify markdown syntax
-mdlint docs/P5_COHORT_B_EXECUTION_CHECKLIST.md
-
-# 4. Confirm key sections present
-for section in "Pre-Flight" "Rollout Start" "Monitoring" "Stop Conditions" "Success Criteria" "Cohort C Gate"; do
-  grep -q "## $section" docs/P5_COHORT_B_EXECUTION_CHECKLIST.md && echo "✓ $section found"
-done
-```
-
----
-
-## Known Issues & Follow-Ups
-
-### Resolved by P5-3c-verify
-
-- ✅ `simplified_scene` experiment verified PASS (4 themes, 32/32 pages, no duplicates, no early failures)
-- ✅ Cohort B preconditions met (Build ✓, Tests 1604/1604 ✓, Smoke Evidence ✓)
-
-### Open Follow-Ups (Post-Cohort B)
-
-1. **P5-4**: `prod-baseline` re-measurement after ≥30 real books → P4_PERMANENT §7.N update
-2. **P5-5**: SJ/IM alert policy enablement & threshold tuning (after prod-baseline)
-3. **P5-3f**: Safer High-Quality Retry (Option C) rollout decision (already implemented/smoke-passed, awaiting PM gate)
-4. **Phase 1 Closure**: Production smoke results aggregation (post-Cohort B traffic)
-5. **Phase 3 T1-Smoke**: Fixed template 6-template smoke checklist execution (parallel track)
-
----
-
-## Suggested Next Task (After Cohort B Execution Checklist)
-
-1. **Immediate (same cycle)**: Execute Cohort B rollout using this checklist (manual process, ~2–4 hours active monitoring)
-2. **Follow-up (24–48h after Cohort B starts)**: Aggregate Phase 5-3c + Cohort B data → generate PM decision memo for Cohort C gate
-3. **Parallel**: Execute Phase 3 T1-Smoke (fixed template 6-template smoke checklist) to unblock Phase 1 closure
-4. **Optional Phase 1 closure** (if Cohort B traffic is adequate): Compile `PRODUCTION_SMOKE_RESULTS.md` with real evidence from Cohort A/B
-
----
-
-**Priority:** 🔴 **HIGH** — Blocks Cohort B limited rollout and Phase 1 closure decision  
-**Estimated Time:** 45–60 minutes  
-**Reviewers:** PM (approval gate), Ops (monitoring setup), QA (success criteria validation)
+**Objective**: Complete and commit `docs/smoke-results/PRODUCTION_SMOKE_RESULTS.md` with all 9 sections filled, MVP criteria measured, and a clear PASS/FAIL determination.
