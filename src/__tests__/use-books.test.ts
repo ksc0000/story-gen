@@ -1,8 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { useBooks } from "@/lib/hooks/use-books";
-import { db } from "@/lib/firebase";
-import { collection, doc, getDoc, onSnapshot, query, where, orderBy } from "firebase/firestore";
+import { collection, doc, onSnapshot, query, where, orderBy, type Query, type DocumentReference, type QuerySnapshot, type DocumentSnapshot } from "firebase/firestore";
 
 // Mock the demo functions
 vi.mock("@/lib/demo", () => ({
@@ -15,7 +13,6 @@ vi.mock("firebase/firestore", () => {
   return {
     collection: vi.fn(),
     doc: vi.fn(),
-    getDoc: vi.fn(),
     onSnapshot: vi.fn(),
     query: vi.fn(),
     where: vi.fn(),
@@ -37,7 +34,6 @@ describe("useBooks hook", () => {
     isDemoModeMock = false;
     vi.mocked(collection).mockClear();
     vi.mocked(doc).mockClear();
-    vi.mocked(getDoc).mockClear();
     vi.mocked(onSnapshot).mockClear();
     vi.mocked(query).mockClear();
     vi.mocked(where).mockClear();
@@ -94,11 +90,11 @@ describe("useBooks hook", () => {
 
     // Mock the onSnapshot implementation to immediately call the success callback
     const unsubscribeMock = vi.fn();
-    vi.mocked(query).mockReturnValue("mockQuery" as any);
+    vi.mocked(query).mockReturnValue("mockQuery" as unknown as Query);
 
-    vi.mocked(onSnapshot).mockImplementation((ref, onNext, onError) => {
+    vi.mocked(onSnapshot).mockImplementation(((ref: Query, onNext: (snapshot: QuerySnapshot) => void) => {
       // Simulate the main query on books collection
-      if (ref === "mockQuery") {
+      if ((ref as unknown as string) === "mockQuery") {
         const mockSnapshot = {
           docs: [
             { id: "book1", data: () => ({ title: "Book 1", status: "completed", coverImageUrl: "http://example.com/cover1.jpg" }) },
@@ -107,11 +103,11 @@ describe("useBooks hook", () => {
         };
         // Use setImmediate to let the hook mount first
         setImmediate(() => {
-          (onNext as Function)(mockSnapshot);
+          onNext(mockSnapshot as unknown as QuerySnapshot);
         });
       }
       return unsubscribeMock;
-    });
+    }) as unknown as typeof onSnapshot);
 
     const { result } = renderHook(() => useBooks("user123"));
 
@@ -135,14 +131,14 @@ describe("useBooks hook", () => {
     const unsubscribeMock = vi.fn();
     const mockError = new Error("Permission denied");
 
-    vi.mocked(onSnapshot).mockImplementation((ref, onNext, onError) => {
+    vi.mocked(onSnapshot).mockImplementation(((ref: Query, onNext: (snapshot: QuerySnapshot) => void, onError?: (error: Error) => void) => {
       setImmediate(() => {
         if (onError) {
-          (onError as Function)(mockError);
+          onError(mockError);
         }
       });
       return unsubscribeMock;
-    });
+    }) as unknown as typeof onSnapshot);
 
     const { result } = renderHook(() => useBooks("user123"));
 
@@ -159,8 +155,9 @@ describe("useBooks hook", () => {
     const { useBooks } = await import("@/lib/hooks/use-books");
 
     const booksUnsubscribeMock = vi.fn();
+    const pageUnsubscribeMock = vi.fn();
 
-    vi.mocked(onSnapshot).mockImplementation((ref, onNext) => {
+    vi.mocked(onSnapshot).mockImplementation(((ref: Query | DocumentReference, onNext: (snapshot: QuerySnapshot | DocumentSnapshot) => void) => {
       // If it's the query, simulate the initial fetch
       if (vi.mocked(query).mock.results.length > 0 && ref === vi.mocked(query).mock.results[0].value) {
         const mockSnapshot = {
@@ -169,61 +166,65 @@ describe("useBooks hook", () => {
           ]
         };
         setImmediate(() => {
-          (onNext as Function)(mockSnapshot);
+          (onNext as (snapshot: QuerySnapshot) => void)(mockSnapshot as unknown as QuerySnapshot);
         });
         return booksUnsubscribeMock;
       }
-      return vi.fn();
-    });
 
-    // Mock getDoc for the page
-    const mockPageSnapshot = {
-      exists: () => true,
-      data: () => ({ imageUrl: "http://example.com/page0.jpg" })
-    };
-    vi.mocked(getDoc).mockResolvedValue(mockPageSnapshot as any);
+      // If it's the doc ref for the page
+      const mockPageSnapshot = {
+        exists: () => true,
+        data: () => ({ imageUrl: "http://example.com/page0.jpg" })
+      };
+
+      setImmediate(() => {
+        (onNext as (snapshot: DocumentSnapshot) => void)(mockPageSnapshot as unknown as DocumentSnapshot);
+      });
+
+      return pageUnsubscribeMock;
+    }) as unknown as typeof onSnapshot);
 
     // Provide mock values for the refs
-    vi.mocked(query).mockReturnValue("mockQuery" as any);
-    vi.mocked(doc).mockReturnValue("mockDoc" as any);
+    vi.mocked(query).mockReturnValue("mockQuery" as unknown as Query);
+    vi.mocked(doc).mockReturnValue("mockDoc" as unknown as DocumentReference);
 
     const { result } = renderHook(() => useBooks("user123"));
 
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 20)); // wait for both next ticks
     });
 
     expect(result.current.loading).toBe(false);
     expect(result.current.books).toHaveLength(1);
     expect(result.current.books[0].coverImageUrl).toBe("http://example.com/page0.jpg");
 
-    // Ensure onSnapshot was called once (for the query) and getDoc was called once (for page-0)
-    expect(onSnapshot).toHaveBeenCalledTimes(1);
-    expect(getDoc).toHaveBeenCalledTimes(1);
+    // Ensure onSnapshot was called twice: once for the query, once for the doc
+    expect(onSnapshot).toHaveBeenCalledTimes(2);
   });
 
   it("should clean up listeners on unmount", async () => {
     const { useBooks } = await import("@/lib/hooks/use-books");
 
     const unsubscribeMock = vi.fn();
+    const pageUnsubscribeMock = vi.fn();
 
-    vi.mocked(query).mockReturnValue("mockQuery" as any);
-    vi.mocked(doc).mockReturnValue("mockDoc" as any);
+    vi.mocked(query).mockReturnValue("mockQuery" as unknown as Query);
+    vi.mocked(doc).mockReturnValue("mockDoc" as unknown as DocumentReference);
 
-    vi.mocked(onSnapshot).mockImplementation((ref, onNext) => {
-      if (ref === "mockQuery") {
+    vi.mocked(onSnapshot).mockImplementation(((ref: Query | DocumentReference, onNext: (snapshot: QuerySnapshot | DocumentSnapshot) => void) => {
+      if ((ref as unknown as string) === "mockQuery") {
         const mockSnapshot = {
           docs: [
             { id: "book1", data: () => ({ title: "Book 1", status: "completed" }) }
           ]
         };
         setImmediate(() => {
-          (onNext as Function)(mockSnapshot);
+          (onNext as (snapshot: QuerySnapshot) => void)(mockSnapshot as unknown as QuerySnapshot);
         });
         return unsubscribeMock;
       }
-      return vi.fn();
-    });
+      return pageUnsubscribeMock;
+    }) as unknown as typeof onSnapshot);
 
     const { unmount } = renderHook(() => useBooks("user123"));
 
@@ -234,5 +235,6 @@ describe("useBooks hook", () => {
     unmount();
 
     expect(unsubscribeMock).toHaveBeenCalled();
+    expect(pageUnsubscribeMock).toHaveBeenCalled();
   });
 });

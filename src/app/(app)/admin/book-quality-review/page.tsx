@@ -28,7 +28,6 @@ import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { PLAN_CONFIGS } from "@/lib/plans";
 import {
-  formatBookDate,
   formatResolvedDate,
   normalizeFirestoreDate,
 } from "@/lib/date";
