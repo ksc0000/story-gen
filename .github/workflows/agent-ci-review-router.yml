@@ -123,11 +123,7 @@ jobs:
               }
 
               const commentBody = [
-                "@claude review once",
-                "",
-                "@codex review for correctness, regressions, missing tests, and accidental scope creep",
-                "",
-                "CI is green for the latest agent commit. Please review the current head only.",
+                "✅ CI is green for the latest agent commit.",
                 "",
                 `Head SHA: \`${headSha}\``,
                 "",
