@@ -78,7 +78,7 @@ function BookContent() {
   );
 
   const viewablePages = pages
-    .filter((p) => p.status === "completed" || p.status === "fallback_completed")
+    .filter((p) => p.status === "completed" || p.status === "fallback_completed" || p.status === "image_failed")
     .sort((a, b) => a.pageNumber - b.pageNumber);
 
   const failedPages = pages
@@ -132,6 +132,8 @@ function BookContent() {
           readingStructureVersion={book.readingStructureVersion}
           titleSpreadText={book.titleSpreadText}
           openingNarration={book.openingNarration}
+          onRegeneratePage={isOwner && !isDemoMode ? (index) => handleRegeneratePage(viewablePages[index]) : undefined}
+          isRegeneratingPage={(index) => regeneratingPages.has(viewablePages[index].pageNumber)}
         />
       </div>
 

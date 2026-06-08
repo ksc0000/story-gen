@@ -29,6 +29,8 @@ interface BookViewerProps {
   readingStructureVersion?: ReadingStructureVersion;
   titleSpreadText?: string;
   openingNarration?: string;
+  onRegeneratePage?: (index: number) => void;
+  isRegeneratingPage?: (index: number) => boolean;
 }
 
 /** Build reading items: cover+title spread (single sheet) → story pages (when v2 is active). */
@@ -164,7 +166,7 @@ function CoverSheetMobile({ item }: { item: Extract<ReadingItem, { kind: "cover_
 /* ------------------------------------------------------------------ */
 
 export function BookViewer(props: BookViewerProps) {
-  const { title } = props;
+  const { title, onRegeneratePage, isRegeneratingPage } = props;
   const items = buildReadingItems(props);
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -289,8 +291,23 @@ export function BookViewer(props: BookViewerProps) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="pointer-events-none h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-violet-200">
-                      <div className="text-6xl">○</div>
+                    <div className="flex h-full items-center justify-center p-4">
+                      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-orange-300 bg-orange-50/60 p-6 text-center">
+                        <span className="text-4xl">🎨</span>
+                        <p className="text-sm text-orange-700">この絵は生成できませんでした</p>
+                        {onRegeneratePage && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRegeneratePage(item.storyPageIndex);
+                            }}
+                            disabled={isRegeneratingPage?.(item.storyPageIndex)}
+                            className="rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
+                          >
+                            {isRegeneratingPage?.(item.storyPageIndex) ? "生成中..." : "もう一度生成する"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -324,8 +341,23 @@ export function BookViewer(props: BookViewerProps) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="pointer-events-none h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-violet-200">
-                      <div className="text-6xl">○</div>
+                    <div className="flex h-full items-center justify-center p-4">
+                      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-orange-300 bg-orange-50/60 p-6 text-center">
+                        <span className="text-4xl">🎨</span>
+                        <p className="text-sm text-orange-700">この絵は生成できませんでした</p>
+                        {onRegeneratePage && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRegeneratePage(item.storyPageIndex);
+                            }}
+                            disabled={isRegeneratingPage?.(item.storyPageIndex)}
+                            className="rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
+                          >
+                            {isRegeneratingPage?.(item.storyPageIndex) ? "生成中..." : "もう一度生成する"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
