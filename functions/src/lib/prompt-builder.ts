@@ -161,9 +161,9 @@ function getPageVisualRoleGuidance(role: PageVisualRole): string {
     case "setback_or_question":
       return "Page visual role: setback_or_question. Show a gentle child-safe moment of uncertainty, wondering, or small tension, with clear visual storytelling.";
     case "payoff":
-      return "Page visual role: payoff. Bring back an earlier motif, object, or visual clue so the scene feels satisfying and story-driven.";
+      return "Page visual role: payoff. The protagonist must be present to show their reaction and achievement. Bring back an earlier motif or visual clue. Do not show only objects or backgrounds.";
     case "quiet_ending":
-      return "Page visual role: quiet_ending. Use a scenic wide shot, warm back view, or calm closure image with emotional afterglow.";
+      return "Page visual role: quiet_ending. Use a scenic wide shot, warm back view, or calm closure image. The protagonist must be present to provide a sense of closure.";
     default:
       return "Page visual role: action. Keep the scene dynamic and story-driven.";
   }
@@ -439,6 +439,7 @@ ${ageReadingGuidance}
 - Japanese story text rules: ${JAPANESE_STORY_TEXT_RULES}
 - 日本語の読みやすさ: 子どもが自分で読んだり、親が読み聞かせたりしやすいよう、ひらがな主体の読みやすい日本語を優先してください。
 - Story goal consistency rules: ${STORY_GOAL_CONSISTENCY_RULES}
+- pageVisualRole が payoff または quiet_ending のページでは、主人公を必ず画面内に存在させてください。payoff は達成・喜び・感情のクライマックスであり、主人公の反応・表情・ポーズが必須です。物や背景だけを描くことは禁止です。
 - pageVisualRole ごとの本文設計ルール: ${PAGE_TEXT_ROLE_RULES}
 - Character metadata rules: ${CHARACTER_METADATA_RULES}
 - 悪い例: 「${BAD_TEXT_EXAMPLE}」
