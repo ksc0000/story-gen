@@ -64,6 +64,19 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("quiet_ending:");
   });
 
+  it("includes protagonist name prohibition rule when childName is provided", () => {
+    const input = { childName: "だいちくん" };
+    const result = buildSystemPrompt(mockTemplate, "watercolor", undefined, input);
+    expect(result).toContain("主人公の名前は必ず「だいちくん」を使ってください。");
+    expect(result).toContain("他の名前（たっちゃん、はなちゃん、けんくん など）に変えることは絶対に禁止です。");
+    expect(result).toContain("title・storyGoal・openingNarration・titleSpreadText・pages[].text のすべてで同じ名前を一貫して使ってください。");
+  });
+
+  it("includes placeholder name prohibition rule when childName is NOT provided", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("主人公の名前は必ず「{childName}」を使ってください。");
+  });
+
   // P4-7: field type contract tests
   it("includes explicit mainQuestObject string-only type contract (P4-7)", () => {
     const result = buildSystemPrompt(mockTemplate, "watercolor");
