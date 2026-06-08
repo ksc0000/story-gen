@@ -34,8 +34,8 @@ This task does NOT send invitations, create users, or deploy Firebase. Those ste
 | Saved Cloud Logging queries | ✅ Defined (manual import) |
 | `report-generation-slo.mjs` | ✅ Available (93 self-tests pass) |
 | Firebase Hosting | ✅ https://story-gen-8a769.web.app |
-| prod-baseline | ⚠️ ATTEMPTED (2026-05-21) — 19 `book_outcome` events, dev/test only |
-| Production users | ⏳ **None yet** |
+| prod-baseline | ✅ **COMPLETE (2026-05-23)** — 35 `book_outcome` events, real users |
+| Production users | ✅ **Active (Cohort A + B)** |
 
 **Dashboard URL**:  
 https://console.cloud.google.com/monitoring/dashboards/builder/39c916aa-ea17-4487-80e1-9c81e47cee3b?project=story-gen-8a769
@@ -286,11 +286,11 @@ After confirming a valid production baseline:
 
 ### 8.6 Documentation updates after baseline rerun
 
-1. Add new `§7.N` row to `docs/P4_PERMANENT_STORY_JSON_SLO_PLAN.md` with production baseline metrics.
+1. Add new `§7.N` row to `docs/P4_PERMANENT_STORY_JSON_SLO_PLAN.md` with production baseline metrics. ✅ COMPLETE (2026-05-23)
 2. Update `docs/P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md` §3.2 baseline note.
 3. Update `docs/PRODUCT_ROADMAP.md` prod-baseline row to ✅ COMPLETE.
 4. Delete `tmp/prod-baseline-events.json` and `tmp/prod-baseline-report.json`.
-5. Commit as `docs(prod-baseline): record production baseline — [date]`.
+5. Commit as `docs(prod-baseline): record production baseline — [date]`. ✅ (PROD-BASELINE-2)
 
 ---
 

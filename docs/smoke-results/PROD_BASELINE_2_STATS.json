@@ -1,0 +1,56 @@
+{
+  "count": 35,
+  "status": {
+    "completed": {
+      "count": 32,
+      "pct": 91.42857142857143
+    },
+    "partial_completed": {
+      "count": 2,
+      "pct": 5.714285714285714
+    },
+    "failed": {
+      "count": 1,
+      "pct": 2.857142857142857
+    }
+  },
+  "storyJsonFailure": {
+    "no_error": {
+      "count": 34,
+      "pct": 97.14285714285714
+    },
+    "malformed_json": {
+      "count": 1,
+      "pct": 2.857142857142857
+    }
+  },
+  "latency": {
+    "story": {
+      "p50": 58000,
+      "p95": 64350,
+      "p99": 67010
+    }
+  },
+  "image": {
+    "fallbackRate": 5.714285714285714,
+    "pageFailureRate": 5.714285714285714,
+    "avgAttempts": 1
+  },
+  "readableRate": 97.14285714285714,
+  "cohorts": {
+    "default": {
+      "count": 25,
+      "statusDistribution": {
+        "completed": 22,
+        "partial_completed": 2,
+        "failed": 1
+      }
+    },
+    "p5-exp-simplified_scene": {
+      "count": 10,
+      "statusDistribution": {
+        "completed": 10
+      }
+    }
+  }
+}
