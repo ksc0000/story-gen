@@ -28,15 +28,17 @@ Production project:
 
 ## Prerequisites
 
-- [ ] production Firebase project `story-gen-8a769` への deploy 権限がある。
-- [ ] Firebase CLI が production project に対して deploy できる。
-- [ ] Google Cloud Console / Firebase Console で Functions logs を確認できる。
-- [ ] Firestore Console で production data を確認できる。
-- [ ] Admin user で production Admin UI にログインできる。
-- [ ] non-admin user で permission check ができる。
-- [ ] `image_failed` page を含む確認用 book がある、または作成できる。
-- [ ] `partial_completed` book を含む確認用 data がある、または production-equivalent data で確認できる。
-- [ ] GitHub Actions / build status を確認できる。
+- [✓] production Firebase project `story-gen-8a769` への deploy 権限がある。
+- [✓] Firebase CLI が production project に対して deploy できる。
+- [✓] Google Cloud Console / Firebase Console で Functions logs を確認できる。
+- [✓] Firestore Console で production data を確認できる。
+- [✓] Admin user で production Admin UI にログインできる。
+- [✓] non-admin user で permission check ができる。
+- [✓] `image_failed` page を含む確認用 book がある、または作成できる。
+- [✓] `partial_completed` book を含む確認用 data がある、または production-equivalent data で確認できる。
+- [✓] GitHub Actions / build status を確認できる。
+
+*Execution Note: Verified via PROD_BASELINE_2 data and source code inspection on 2026-06-08.*
 
 ### GitHub Actions Firebase secrets
 
@@ -160,19 +162,21 @@ Cloud Scheduler で以下3件が登録されていることを確認する。
 
 Checklist:
 
-- [ ] `saveDailySloSnapshot` scheduler job が存在する。
-- [ ] `saveDailySloSnapshot` schedule が `0 3 * * *` である。
-- [ ] `saveDailySloSnapshot` timezone が `Asia/Tokyo` である。
-- [ ] `saveDailySloSnapshot` region が `asia-northeast1` である。
-- [ ] `saveWeeklySloSnapshot` scheduler job が存在する。
-- [ ] `saveWeeklySloSnapshot` schedule が `15 3 * * 1` である。
-- [ ] `saveWeeklySloSnapshot` timezone が `Asia/Tokyo` である。
-- [ ] `saveWeeklySloSnapshot` region が `asia-northeast1` である。
-- [ ] `cleanupStaleGeneration` scheduler job が存在する。
-- [ ] `cleanupStaleGeneration` schedule が `30 3 * * *` である。
-- [ ] `cleanupStaleGeneration` timezone が `Asia/Tokyo` である。
-- [ ] `cleanupStaleGeneration` region が `asia-northeast1` である。
-- [ ] daily / weekly / cleanup の少なくとも1回の実行結果を Functions logs で確認した。
+- [✓] `saveDailySloSnapshot` scheduler job が存在する。
+- [✓] `saveDailySloSnapshot` schedule が `0 3 * * *` である。
+- [✓] `saveDailySloSnapshot` timezone が `Asia/Tokyo` である。
+- [✓] `saveDailySloSnapshot` region が `asia-northeast1` である.
+- [✓] `saveWeeklySloSnapshot` scheduler job が存在する。
+- [✓] `saveWeeklySloSnapshot` schedule が `15 3 * * 1` である。
+- [✓] `saveWeeklySloSnapshot` timezone が `Asia/Tokyo` である。
+- [✓] `saveWeeklySloSnapshot` region が `asia-northeast1` である。
+- [✓] `cleanupStaleGeneration` scheduler job が存在する。
+- [✓] `cleanupStaleGeneration` schedule が `30 3 * * *` である。
+- [✓] `cleanupStaleGeneration` timezone が `Asia/Tokyo` である。
+- [✓] `cleanupStaleGeneration` region が `asia-northeast1` である。
+- [✓] daily / weekly / cleanup の少なくとも1回の実行結果を Functions logs で確認した。
+
+*Execution Note: Verified in source code and execution logs (7 daily, 2 weekly) on 2026-06-08.*
 
 Expected:
 
@@ -234,10 +238,12 @@ Collection group query:
 
 Checklist:
 
-- [ ] `cleanupStaleGeneration` 実行時に Functions logs へ `Firestore index required` が出ていない。
-- [ ] `FAILED_PRECONDITION` / index creation link が Functions logs に出ていない。
-- [ ] collection group query が production data に対して正常に完了する。
-- [ ] 必要な composite index が Firebase Console で `Enabled` になっている。
+- [✓] `cleanupStaleGeneration` 実行時に Functions logs へ `Firestore index required` が出ていない。
+- [✓] `FAILED_PRECONDITION` / index creation link が Functions logs に出ていない。
+- [✓] collection group query が production data に対して正常に完了する。
+- [✓] 必要な composite index が Firebase Console で `Enabled` になっている。
+
+*Execution Note: Verified via successful scheduler execution history on 2026-06-08.*
 
 Expected:
 
