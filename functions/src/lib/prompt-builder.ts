@@ -94,7 +94,7 @@ const STORY_JSON_FIELD_TYPE_CONTRACT = [
 ].join(" ");
 
 const PAGE_TEXT_ROLE_RULES = [
-  "opening_establishing: 場所、主人公の行動、storyGoal につながる小さな異変や発見、次ページへの予感を入れる。",
+  "opening_establishing: 場所、主人公の行動、storyGoal につながる小さな異変や発見、次ページへの予感を入れる。画像プロンプトは物語世界の基準点となるため、styleBible のアートスタイル・色調・線質を特に忠実に守ること。",
   "discovery: 見つけたもの、それがなぜ不思議か、何に困っているか、主人公の反応を入れる。場所や手元の状況も1文入れる。",
   "action: mainQuestObject を探すための行動、探す場所、小さな手がかり、同じ目的に向かっていることを明確にする。",
   "emotional_closeup: 表情、手元、気持ち、何を感じて何を決めたかを自然に描く。",
@@ -416,6 +416,7 @@ ${ageReadingGuidance}
   - quiet_ending
 - Do not invent other pageVisualRole values.
 - Use snake_case exactly.
+- pageVisualRole が opening_establishing のページは、物語世界の第一印象を決める重要なページです。styleBible に定義されたアートスタイル・色調・線質を特に忠実に守り、以降のページとの視覚的統一感の基準点となるよう imagePrompt を組み立ててください。
 - Story quality rules: ${STORY_QUALITY_RULES}
 - 3歳以上では、文字数が少なすぎる「薄いページ」にならないようにしてください。行動、気持ち、場面描写のうち少なくとも2つ以上を自然に含めてください。
 - 5歳以上では、小さな原因と結果、短い会話、場面の具体物を入れてください。
