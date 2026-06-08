@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { db, functions } from "@/lib/firebase";
 import { isDemoMode } from "@/lib/demo";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 import type { BookFeedbackDoc, PageDoc } from "@/lib/types";
 
 function BookContent() {
@@ -223,7 +224,7 @@ function BookContent() {
           </div>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <RatingField
+            <StarRating
               label="子どもらしさ"
               value={feedback.childLikenessRating}
               onChange={(value) => {
@@ -231,7 +232,7 @@ function BookContent() {
                 setFeedbackSaved(false);
               }}
             />
-            <RatingField
+            <StarRating
               label="絵のかわいさ"
               value={feedback.illustrationRating}
               onChange={(value) => {
@@ -239,7 +240,7 @@ function BookContent() {
                 setFeedbackSaved(false);
               }}
             />
-            <RatingField
+            <StarRating
               label="お話のよさ"
               value={feedback.storyRating}
               onChange={(value) => {
@@ -247,7 +248,7 @@ function BookContent() {
                 setFeedbackSaved(false);
               }}
             />
-            <RatingField
+            <StarRating
               label="ページ間の統一感"
               value={feedback.consistencyRating}
               onChange={(value) => {
@@ -361,6 +362,37 @@ function BookContent() {
         <Link href="/create/theme"><Button>もう一冊作る</Button></Link>
       </div>
     </PageTransition>
+  );
+}
+
+function StarRating({
+  value,
+  onChange,
+  label,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  label: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-sm font-medium text-violet-700">{label}</span>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => onChange(star)}
+            className={cn(
+              "text-2xl transition",
+              star <= value ? "text-yellow-400" : "text-gray-300 hover:text-yellow-200"
+            )}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
