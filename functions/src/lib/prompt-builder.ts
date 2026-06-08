@@ -398,6 +398,8 @@ ${ageReadingGuidance}
 - 生成時の絵柄制御は style preview 画像ではなく、styleBible とスタイル指示文で行ってください。
 - 各ページの imagePrompt は英語で、挿絵の内容を具体的に描写してください。
 - characterBible は全ページで同じ主人公として見えるように、年齢感、髪型、服装、固定アイテム、表情の特徴、頭身（head-to-body ratio）や体格などの身体的特徴を英語で具体化してください。
+- coverImagePrompt には、主人公の服装とシグネチャアイテムを必ず反映してください。characterBible に記載された服装と持ち物は coverImagePrompt でも省略・変更しないでください。
+- coverImagePrompt で主人公の服装を新たに創作しないでください。登録された服装をそのまま使ってください。
 - styleBible は全ページで同じ画風として見えるように、カテゴリのビジュアル方向、キャラクターのデフォルメ具合（degree of deformation）、線、色、質感、光、構図のルールを英語で具体化してください。
 - imagePrompt にはページ固有の場面だけを書き、characterBible と styleBible の内容を重複させすぎないでください。
 - imagePrompt のシーン記述に、主人公の年齢を具体的な数字（例: "around 7-8 years old", "12-year-old child" など）で書き込まないでください。年齢感の管理は characterBible に一元化します。imagePrompt に年齢数字を入れると characterBible と矛盾し、画像生成で別人になります。
