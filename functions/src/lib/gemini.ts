@@ -1095,6 +1095,7 @@ export class GeminiClient implements LLMClient {
 
     const rewriteInstruction = [
       params.systemPrompt,
+      `The protagonist's name must be "${params.childName}" throughout all text. Do not rename the protagonist.`,
       "## Rewrite task",
       "Rewrite only pages[].text in natural Japanese picture-book prose.",
       "Keep title, characterBible, styleBible, cast, narrativeDevice, titleSpreadText, openingNarration, coverImagePrompt, imagePrompt, compositionHint, pageVisualRole, appearingCharacterIds, and focusCharacterId unchanged.",
