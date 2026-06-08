@@ -36,6 +36,8 @@ describe("buildSystemPrompt", () => {
   });
   it("explains that imagePrompt is for wordless illustrations only", () => {
     const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("coverImagePrompt には、主人公の服装とシグネチャアイテムを必ず反映してください");
+    expect(result).toContain("coverImagePrompt で主人公の服装を新たに創作しないでください");
     expect(result).toContain("pages[].imagePrompt is only for generating a wordless illustration");
     expect(result).toContain("Never ask the image model to render the story text");
     expect(result).toContain('"pageVisualRole": "opening_establishing"');
