@@ -359,9 +359,11 @@ function getEmotionalExpressionGuidance(ageBand?: AgeBand): string {
 export function buildSystemPrompt(
   template: TemplateData,
   style: IllustrationStyle,
-  readingProfile?: AgeReadingProfile
+  readingProfile?: AgeReadingProfile,
+  input?: BookInput
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
+  const childName = input?.childName || "{childName}";
   const visualDirection = template.visualDirection
     ? `\n## カテゴリのビジュアル方向\n${template.visualDirection}\n`
     : "";
@@ -389,6 +391,7 @@ ${visualDirection}
 ${ageReadingGuidance}
 
 ## 制約
+- 主人公の名前は必ず「${childName}」を使ってください。他の名前（たっちゃん、はなちゃん、けんくん など）に変えることは絶対に禁止です。title・storyGoal・openingNarration・titleSpreadText・pages[].text のすべてで同じ名前を一貫して使ってください。
 - 子ども向けの安全な内容のみ生成してください。暴力、恐怖、悲しい結末は禁止です。
 - 親の目的: ${template.parentIntent ?? "子どもに合った絵本を作る"}
 - 挿絵のスタイル: ${styleProfile.name}

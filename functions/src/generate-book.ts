@@ -2172,7 +2172,8 @@ async function generateStoryWithQualityGate(params: {
   const baseSystemPrompt = buildSystemPrompt(
     params.template,
     params.normalizedBookData.style,
-    params.readingProfile
+    params.readingProfile,
+    params.mergedInput
   );
   const storyModelCandidates = resolveStoryModelCandidates({
     productPlan: params.normalizedBookData.productPlan,
