@@ -459,6 +459,8 @@ ${GOOD_TEXT_EXAMPLE}
 - Valid IDs are "child_protagonist" and ids from cast[].characterId.
 - Omit focusCharacterId if unsure.
 - cast を省略してはいけません。ただし完全に主人公だけの話なら空配列は可です。
+- cast に定義されたキャラクターは、登場するすべてのページで visualBible に記述された見た目を守ってください。主人公以外のキャラクターも、体の大きさ・色・特徴的なアイテムをページ間で統一してください。
+- imagePrompt に cast キャラクターを登場させる場合は、そのキャラクターの visualBible の要点（色、体格、特徴）を imagePrompt 内に必ず反映してください。
 - JSON field type contract (must follow exactly): ${STORY_JSON_FIELD_TYPE_CONTRACT}
 
 ## 出力形式

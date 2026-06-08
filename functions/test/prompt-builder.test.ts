@@ -113,6 +113,12 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("主人公の signatureItem・好きなもの（favorites）・服装・colorMood は forbiddenQuestObjects に含めてはいけません。");
     expect(result).toContain("主人公が MacBook を持っていても「パソコン」「MacBook」を forbiddenQuestObjects に入れてはいけません。");
   });
+  it("includes secondary character consistency rules", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("cast に定義されたキャラクターは、登場するすべてのページで visualBible に記述された見た目を守ってください。");
+    expect(result).toContain("主人公以外のキャラクターも、体の大きさ・色・特徴的なアイテムをページ間で統一してください。");
+    expect(result).toContain("imagePrompt に cast キャラクターを登場させる場合は、そのキャラクターの visualBible の要点（色、体格、特徴）を imagePrompt 内に必ず反映してください。");
+  });
 });
 
 describe("buildUserPrompt", () => {
