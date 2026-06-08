@@ -19,9 +19,9 @@ on:
         description: "Roadmap or issue reference"
         required: true
         default: "docs"
-  schedule:
-    - cron: "0 */2 * * *"
-    - cron: "0 1,11 * * *"
+  # schedule: # PAUSED — Claude API cost control. Re-enable when ready.
+  #   - cron: "0 */2 * * *"
+  #   - cron: "0 1,11 * * *"
 
 jobs:
   controller:
