@@ -6,6 +6,7 @@ import {
   normalizeStoryCastWithChildProfile,
   shouldFailBookForQuality,
   gateImageModelProfile,
+  sanitizeForbiddenQuestObjects,
 } from "../src/generate-book";
 import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
 
@@ -376,6 +377,65 @@ describe("processBookGeneration", () => {
     expect(normalized.cast?.[0].doNotChange?.join(" ")).toContain("short black hair and gentle round face");
     expect(normalized.cast?.[0].doNotChange?.join(" ")).toContain("みどりのきょうりゅう");
     expect(normalized.pages[0].appearingCharacterIds).toEqual(["tatchan", "magic_friend_01"]);
+  });
+
+  it("corrects and validates protagonist name in story text fields", () => {
+    const warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
+
+    const story: GeneratedStory = {
+      ...mockStory,
+      title: "たっくんのぼうけん",
+      storyGoal: "たっくんが星をさがす",
+      openingNarration: "むかしむかし、たっくんがいました。",
+      titleSpreadText: "たっくんの はじまりの物語",
+      cast: [
+        {
+          characterId: "child_protagonist",
+          displayName: "たっくん",
+          role: "protagonist",
+          visualBible: "boy",
+        },
+      ],
+      pages: [
+        {
+          text: "たっくんは、こうえんにいきました。",
+          imagePrompt: "park",
+        },
+        {
+          text: "なまえがないページ。",
+          imagePrompt: "missing name",
+        },
+      ],
+    };
+
+    const normalized = normalizeStoryCastWithChildProfile(story, {
+      displayName: "ゆうた",
+      nickname: "ゆうた",
+      age: 4,
+      personality: {},
+      visualProfile: {
+        version: 1,
+        characterBible: "child",
+      },
+    });
+
+    expect(normalized.title).toBe("ゆうたのぼうけん");
+    expect(normalized.storyGoal).toBe("ゆうたが星をさがす");
+    expect(normalized.openingNarration).toBe("むかしむかし、ゆうたがいました。");
+    expect(normalized.titleSpreadText).toBe("ゆうたの はじまりの物語");
+    expect(normalized.pages[0].text).toBe("ゆうたは、こうえんにいきました。");
+    expect(normalized.pages[1].text).toBe("なまえがないページ。");
+
+    // Check that warning was logged for the page missing the name
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Protagonist name mismatch detected in story text",
+      expect.objectContaining({
+        field: "pages[1].text",
+        expected: "ゆうた",
+      })
+    );
+
+    warnSpy.mockRestore();
   });
 
   it("sanitizes story metadata and page data before Firestore writes", async () => {
@@ -2123,5 +2183,68 @@ describe("Page 0 purpose and reference logic (E2E-QA fix)", () => {
         imagePurpose: "book_page",
       })
     );
+  });
+});
+
+describe("sanitizeForbiddenQuestObjects", () => {
+  const dummyBook: BookData = {
+    ...baseBookData,
+    childProfileSnapshot: {
+      displayName: "ゆうた",
+      personality: {},
+      visualProfile: { version: 1, signatureItem: "くまのぬいぐるみ" },
+    },
+  };
+
+  it("removes tokens from signatureItem (input or snapshot)", () => {
+    const input = { childName: "ゆうた", signatureItem: "あかい くるま" };
+    const forbidden = ["りんご", "あかい", "くるま"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    expect(result).toEqual(["りんご"]);
+  });
+
+  it("removes tokens from favorites and colorMood", () => {
+    const input = {
+      childName: "ゆうた",
+      favorites: "オーバーウォッチ, 恐竜",
+      colorMood: "サイバーテクノロジー",
+    };
+    const forbidden = ["りんご", "オーバーウォッチ", "サイバーテクノロジー", "恐竜"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    expect(result).toEqual(["りんご"]);
+  });
+
+  it("is case-insensitive and handles partial matches", () => {
+    const input = {
+      childName: "ゆうた",
+      favorites: "Overwatch",
+    };
+    const forbidden = ["OVERWATCH", "overwatch-game", "game"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    // "OVERWATCH" matches "overwatch"
+    // "overwatch-game" contains "overwatch"
+    expect(result).toEqual(["game"]);
+  });
+
+  it("returns undefined if all objects are sanitized", () => {
+    const input = { childName: "ゆうた", favorites: "りんご, ばなな" };
+    const forbidden = ["りんご", "ばなな"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    expect(result).toBeUndefined();
+  });
+
+  it("removes generic toy words", () => {
+    const input = { childName: "ゆうた" };
+    const forbidden = ["おもちゃ", "toys", "りんご"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    expect(result).toEqual(["りんご"]);
+  });
+
+  it("removes duplicate entries (preserving first encounter casing)", () => {
+    const input = { childName: "ゆうた" };
+    const forbidden = ["りんご", " りんご ", "Ringo", "RINGO"];
+    const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
+    // Normalization lowercases and trims for comparison, but preserves original casing of first match
+    expect(result).toEqual(["りんご", "Ringo"]);
   });
 });
