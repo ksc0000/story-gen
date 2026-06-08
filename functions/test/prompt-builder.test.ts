@@ -92,6 +92,12 @@ describe("buildSystemPrompt", () => {
     // It must only show the array as the INVALID example pattern
     expect(result).toContain("not an array or object");
   });
+  it("includes forbiddenQuestObjects scope clarification (P5-fix)", () => {
+    const result = buildSystemPrompt(mockTemplate, "watercolor");
+    expect(result).toContain("forbiddenQuestObjects は「クエストの探し物・目標物にしてはいけないもの」のみを入れてください。");
+    expect(result).toContain("主人公の signatureItem・好きなもの（favorites）・服装・colorMood は forbiddenQuestObjects に含めてはいけません。");
+    expect(result).toContain("主人公が MacBook を持っていても「パソコン」「MacBook」を forbiddenQuestObjects に入れてはいけません。");
+  });
 });
 
 describe("buildUserPrompt", () => {
