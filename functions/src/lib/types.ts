@@ -24,7 +24,7 @@ export type ImageModelProfile =
   | "openai_standard"         // T6-62: GPT-image-1 (standard tier)
   | "flux11_pro_candidate"    // T6-37: diagnostic only — not for production routing
   | "openai_image_candidate"; // T6-43: diagnostic only — OpenAI Image E005 smoke test
-export type InputImageRole = "character_reference" | "style_reference";
+export type InputImageRole = "character_reference" | "style_reference" | "prev_page_reference";
 export type InputImageSource =
   | "approvedImageUrl"
   | "referenceImageUrl"

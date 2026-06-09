@@ -165,7 +165,13 @@ export function buildReplicateInput(params: {
       aspect_ratio: "4:3",
       output_format: "png",
       ...(dedupedInputImageUrls.length > 0
-        ? { input_image: dedupedInputImageUrls[0] }
+        ? {
+            // FLUX Kontext Pro officially supports single input_image for reference.
+            // When multiple images (child + prev page) are provided, we use input_images (plural).
+            ...(dedupedInputImageUrls.length === 1
+              ? { input_image: dedupedInputImageUrls[0] }
+              : { input_images: dedupedInputImageUrls.slice(0, 2) }),
+          }
         : {}),
     };
   }

@@ -1350,13 +1350,14 @@ export async function processBookGeneration(
       note: "cover=legacy path no ref images; pages=adapter path with ref images if shouldUseRef",
     });
 
-    // Step 8: Process pages concurrently with fallback and partial success
+    // Step 8: Process pages with fallback and partial success
     const totalPages = story.pages.length;
     const isDev = process.env.NODE_ENV === "development";
     const concurrency = IMAGE_CONCURRENCY;
     let completedPageCount = 0;
 
-    const pageTasks = story.pages.map((storyPage, i) => async () => {
+    const generatePageTask = async (i: number, prevPageImageUrl?: string) => {
+      const storyPage = story.pages[i];
       const imagePurpose = getPageImagePurpose(i, normalizedBookData.theme);
       const imageQualityTier = normalizedBookData.imageQualityTier ?? "light";
       const imageModelProfile = resolveImageModelProfile({
@@ -1379,7 +1380,8 @@ export async function processBookGeneration(
         ? buildInputImageRefs(
             normalizedBookData.childProfileSnapshot,
             story.cast,
-            storyPage.appearingCharacterIds
+            storyPage.appearingCharacterIds,
+            prevPageImageUrl
           )
         : [];
       const inputImageUrls = inputImageRefs.map((ref) => ref.url);
@@ -1566,9 +1568,23 @@ export async function processBookGeneration(
       await deps.updateBookProgress(bookId, progress);
 
       return imageResult;
-    });
+    };
 
-    const pageResults = await runWithConcurrencyLimit(pageTasks, concurrency);
+    const isSequentialMode = normalizedBookData.imageModelProfile === "kontext_max";
+    let pageResults: PageImageResult[];
+
+    if (isSequentialMode) {
+      pageResults = [];
+      let prevPageImageUrl: string | undefined = undefined;
+      for (let i = 0; i < totalPages; i++) {
+        const result = await generatePageTask(i, prevPageImageUrl);
+        pageResults.push(result);
+        prevPageImageUrl = result.success && result.imageUrl ? result.imageUrl : undefined;
+      }
+    } else {
+      const pageTasks = story.pages.map((_, i) => () => generatePageTask(i));
+      pageResults = await runWithConcurrencyLimit(pageTasks, concurrency);
+    }
 
     // P5-fix: Regression guard — detect duplicate imageUrls across pages after generation.
     // Identical URLs indicate a storage path collision or adapter re-use bug.
@@ -1855,13 +1871,14 @@ function isValidPageCount(value: number | undefined): value is BookData["pageCou
 function buildInputImageRefs(
   childProfileSnapshot: BookData["childProfileSnapshot"] | undefined,
   cast: GeneratedStory["cast"],
-  appearingCharacterIds?: string[]
+  appearingCharacterIds?: string[],
+  prevPageImageUrl?: string
 ): Array<{
   role: InputImageRole;
   characterId?: string;
-    url: string;
-    source?: InputImageSource;
-  }> {
+  url: string;
+  source?: InputImageSource;
+}> {
   const refs: Array<{
     role: InputImageRole;
     characterId?: string;
@@ -1915,13 +1932,21 @@ function buildInputImageRefs(
     }
   }
 
+  if (prevPageImageUrl) {
+    refs.push({
+      role: "prev_page_reference",
+      url: prevPageImageUrl,
+    });
+  }
+
   const deduped = refs.filter(
     (ref, index, array) =>
       array.findIndex(
         (candidate) =>
           candidate.url === ref.url &&
           candidate.characterId === ref.characterId &&
-          candidate.source === ref.source
+          candidate.source === ref.source &&
+          candidate.role === ref.role
       ) === index
   );
 
@@ -1932,13 +1957,11 @@ function buildInputImageRoles(
   inputImageRefs: Array<{ role: InputImageRole }>,
   stylePreviewUsedAsReference = false
 ): InputImageRole[] {
-  if (inputImageRefs.length === 0) {
-    return [];
+  const roles = new Set(inputImageRefs.map((ref) => ref.role));
+  if (stylePreviewUsedAsReference) {
+    roles.add("style_reference");
   }
-
-  return stylePreviewUsedAsReference
-    ? ["character_reference", "style_reference"]
-    : ["character_reference"];
+  return Array.from(roles);
 }
 
 function shouldGenerateRecurringCharacterReference(
