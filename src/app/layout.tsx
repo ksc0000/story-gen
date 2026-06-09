@@ -39,7 +39,7 @@ const fontLatin = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "EhoNAI - AIで絵本を作ろう",
+  title: "Ehoria - AIで絵本を作ろう",
   description:
     "我が子が主人公になれる絵本を、誰でも5分で作れる。AIが紡ぐ物語と挿絵で、世界にひとつだけの思い出を。",
 };
@@ -60,7 +60,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ehonai-theme')||'pastel';if(t==='starry')t='night';document.documentElement.dataset.theme=t;}catch(_){document.documentElement.dataset.theme='pastel';}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('ehoria-theme')||'pastel';if(t==='starry')t='night';document.documentElement.dataset.theme=t;}catch(_){document.documentElement.dataset.theme='pastel';}})();`,
           }}
         />
       </head>

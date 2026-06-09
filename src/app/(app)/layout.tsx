@@ -33,7 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="app-header">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
           <Link href="/home" className="app-brand text-lg font-bold">
-            EhoNAI
+            Ehoria
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/children" className="hidden text-sm font-semibold text-violet-500 transition hover:text-purple-700 sm:inline">

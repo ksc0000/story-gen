@@ -52,11 +52,11 @@ export default function LandingPage() {
           </StaggerItem>
           <StaggerItem>
             <h1 className="app-title mt-6 text-4xl font-bold tracking-tight sm:text-5xl">
-              EhoNAI
+              Ehoria
             </h1>
           </StaggerItem>
           <StaggerItem>
-            <p className="app-subtitle mt-2 text-lg">えほんAI</p>
+            <p className="app-subtitle mt-2 text-lg">AIで絵本を作ろう</p>
           </StaggerItem>
           <StaggerItem>
             <p className="app-copy mt-6 max-w-xl text-xl leading-relaxed">
