@@ -100,6 +100,12 @@ describe("ReplicateImageAdapter.resolveModelLabel", () => {
     );
   });
 
+  it("kontext_max → flux-kontext-max label", () => {
+    expect(adapter.resolveModelLabel("kontext_max")).toBe(
+      "black-forest-labs/flux-kontext-max"
+    );
+  });
+
   it("flux11_pro_candidate → flux-1.1-pro label", () => {
     expect(adapter.resolveModelLabel("flux11_pro_candidate")).toBe(
       "black-forest-labs/flux-1.1-pro"
