@@ -66,9 +66,30 @@ export const REFERENCE_IMAGE_PROMPT_SUFFIX =
   "NOT a photograph. Generate a completely new scene as described. " +
   "Do NOT copy or reproduce the reference image.";
 
+export const OPENAI_MINI_MODEL = "gpt-image-1-mini";
+export const OPENAI_STANDARD_MODEL = "gpt-image-1";
+
 /** I1/I2 smoke profile: lowest cost, E005 relaxation test */
 export const OPENAI_IMAGE_CANDIDATE_PROFILE: OpenAIClientOptions = {
-  model: "gpt-image-1-mini",
+  model: OPENAI_MINI_MODEL,
+  responsesModel: "gpt-4o",
+  moderation: "low",
+  quality: "low",
+  size: "1024x1024",
+};
+
+/** T6-62: OpenAI Mini profile (free tier, no reference images) */
+export const OPENAI_MINI_PROFILE: OpenAIClientOptions = {
+  model: OPENAI_MINI_MODEL,
+  responsesModel: "gpt-4o",
+  moderation: "low",
+  quality: "low",
+  size: "1024x1024",
+};
+
+/** T6-62: OpenAI Standard profile (standard tier, supports reference images) */
+export const OPENAI_STANDARD_PROFILE: OpenAIClientOptions = {
+  model: OPENAI_STANDARD_MODEL,
   responsesModel: "gpt-4o",
   moderation: "low",
   quality: "low",
@@ -79,13 +100,16 @@ export const OPENAI_IMAGE_CANDIDATE_PROFILE: OpenAIClientOptions = {
  * Returns the correct imageModel label for Firestore page metadata when using OpenAI generation.
  * Two APIs are used depending on whether reference images are present:
  *   - Reference images present → Responses API / gpt-4o   → "openai/gpt-4o"
- *   - No reference images      → Images API / gpt-image-1-mini → "openai/gpt-image-1-mini"
+ *   - No reference images      → Images API / model name → "openai/gpt-image-1"
  * T6-58: fixes misleading "black-forest-labs/flux-2-klein-9b" label on OpenAI-generated pages.
  */
-export function resolveOpenAIModelLabel(hasReferenceImages: boolean): string {
+export function resolveOpenAIModelLabel(
+  hasReferenceImages: boolean,
+  opts: OpenAIClientOptions = OPENAI_IMAGE_CANDIDATE_PROFILE
+): string {
   return hasReferenceImages
-    ? `openai/${OPENAI_IMAGE_CANDIDATE_PROFILE.responsesModel ?? "gpt-4o"}`
-    : `openai/${OPENAI_IMAGE_CANDIDATE_PROFILE.model}`;
+    ? `openai/${opts.responsesModel ?? "gpt-4o"}`
+    : `openai/${opts.model}`;
 }
 
 export class OpenAIImageClient implements ImageClient {

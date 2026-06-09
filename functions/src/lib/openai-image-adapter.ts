@@ -38,7 +38,10 @@ import { classifyProviderError, isProviderErrorRetryable } from "./provider-erro
 import {
   OpenAIImageClient,
   OPENAI_IMAGE_CANDIDATE_PROFILE,
+  OPENAI_MINI_PROFILE,
+  OPENAI_STANDARD_PROFILE,
   resolveOpenAIModelLabel,
+  type OpenAIClientOptions,
 } from "./openai-image";
 
 // -------------------------------------------------------------------------
@@ -133,30 +136,40 @@ export class OpenAIImageAdapter implements ImageProvider {
    * Unit tests use a mock uploader; live smoke belongs to P3-9.
    */
   async generateImage(request: ImageGenerationRequest): Promise<ImageGenerationResult> {
-    if (request.imageModelProfile !== "openai_image_candidate") {
+    const profile = request.imageModelProfile;
+    let opts: OpenAIClientOptions;
+    let inputImageUrls = request.inputImageUrls ?? [];
+
+    if (profile === "openai_mini") {
+      opts = OPENAI_MINI_PROFILE;
+      inputImageUrls = []; // T6-62: OpenAI Mini does not support reference images
+    } else if (profile === "openai_standard") {
+      opts = OPENAI_STANDARD_PROFILE;
+    } else if (profile === "openai_image_candidate") {
+      opts = OPENAI_IMAGE_CANDIDATE_PROFILE;
+    } else {
       throw new Error(
-        `OpenAIImageAdapter supports only openai_image_candidate. ` +
-          `Received: "${request.imageModelProfile}". Use ReplicateImageAdapter for this profile.`
+        `OpenAIImageAdapter does not support profile: "${profile}". ` +
+          `Use ReplicateImageAdapter for Replicate profiles.`
       );
     }
 
     const startMs = Date.now();
-    const client = new OpenAIImageClient(this.apiKey, OPENAI_IMAGE_CANDIDATE_PROFILE);
-    const inputImageUrls = request.inputImageUrls ?? [];
+    const client = new OpenAIImageClient(this.apiKey, opts);
 
     const buffer = await client.generateImage(request.prompt, {
       inputImageUrls,
-      imageModelProfile: request.imageModelProfile,
+      imageModelProfile: profile,
     });
 
-    const imageUrl = await this.uploader(buffer, request.imageModelProfile);
+    const imageUrl = await this.uploader(buffer, profile);
     const hasReferenceImages = inputImageUrls.length > 0;
 
     return {
       imageUrl,
       providerId: "openai",
-      modelLabel: resolveOpenAIModelLabel(hasReferenceImages),
-      profile: request.imageModelProfile,
+      modelLabel: resolveOpenAIModelLabel(hasReferenceImages, opts),
+      profile,
       durationMs: Date.now() - startMs,
       fallbackUsed: false,
     };
@@ -205,14 +218,19 @@ export class OpenAIImageAdapter implements ImageProvider {
    * Throws for any non-OpenAI profile.
    */
   resolveModelLabel(profile: ImageModelProfile): string {
-    if (profile !== "openai_image_candidate") {
-      throw new Error(
-        `OpenAIImageAdapter supports only openai_image_candidate. ` +
-          `Received: "${profile}". Use ReplicateImageAdapter for Replicate profiles.`
-      );
+    if (profile === "openai_mini") {
+      return resolveOpenAIModelLabel(false, OPENAI_MINI_PROFILE);
     }
-    // Static default: text-to-image path. generateImage() returns the accurate label per request.
-    return resolveOpenAIModelLabel(false);
+    if (profile === "openai_standard") {
+      return resolveOpenAIModelLabel(false, OPENAI_STANDARD_PROFILE);
+    }
+    if (profile === "openai_image_candidate") {
+      return resolveOpenAIModelLabel(false, OPENAI_IMAGE_CANDIDATE_PROFILE);
+    }
+    throw new Error(
+      `OpenAIImageAdapter does not support profile: "${profile}". ` +
+        `Use ReplicateImageAdapter for Replicate profiles.`
+    );
   }
 
   /**
