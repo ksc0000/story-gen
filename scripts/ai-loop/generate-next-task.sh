@@ -6,6 +6,7 @@ ITERATIONS="${1:-1}"
 MODE="${2:-docs-only}"
 DRY_RUN="${3:-true}"
 TASK_SOURCE="${4:-docs}"
+OPEN_ISSUES="${5:-}"  # Newline-separated list of open jules-ready issue titles
 
 ROADMAP_PATH="docs/PRODUCT_ROADMAP.md"
 STATE_PATH="docs/ai-loop/AI_STATE.json"
@@ -28,6 +29,11 @@ if [ ! -f "$TEMPLATE_PATH" ]; then echo "Error: Template not found at $TEMPLATE_
 # 2. Construct the payload using jq with --rawfile to safely read and escape file contents
 SYSTEM_PROMPT="You are an AI Loop Controller. Your goal is to read the product roadmap and current state, then generate exactly one bounded task for a worker agent. The output must be a Markdown document that will be saved to docs/ai-loop/NEXT_TASK.md. Follow the structure of the provided template exactly."
 
+OPEN_ISSUES_SECTION=""
+if [ -n "$OPEN_ISSUES" ]; then
+  OPEN_ISSUES_SECTION="\n\n### Already Open Jules Tasks (DO NOT duplicate these)\nThe following tasks are already open and assigned to Jules. Do NOT generate a task that overlaps with any of these:\n${OPEN_ISSUES}"
+fi
+
 PAYLOAD=$(jq -n \
   --arg system "$SYSTEM_PROMPT" \
   --rawfile roadmap "$ROADMAP_PATH" \
@@ -35,6 +41,7 @@ PAYLOAD=$(jq -n \
   --rawfile template "$TEMPLATE_PATH" \
   --arg mode "$MODE" \
   --arg task_source "$TASK_SOURCE" \
+  --arg open_issues_section "$OPEN_ISSUES_SECTION" \
   '{
     system_instruction: {
       parts: [{text: $system}]
@@ -42,7 +49,7 @@ PAYLOAD=$(jq -n \
     contents: [{
       role: "user",
       parts: [{
-        text: ("Please generate the next task for the AI Loop.\n\n### Current Roadmap\n" + $roadmap + "\n\n### Current State\n" + $state + "\n\n### NEXT_TASK.md Template\n" + $template + "\n\n### Execution Context\n- Mode: " + $mode + "\n- Task Source: " + $task_source + "\n- Objective: Determine the single most appropriate next step based on the roadmap and current state.\n\n### Requirements for NEXT_TASK.md\n- Use Markdown format.\n- Objective must be clear and bounded (1 PR size).\n- List Allowed and Forbidden files explicitly.\n- Include Acceptance criteria and Required test commands.\n- The \"Worker prompt\" section should contain the detailed instructions for the worker agent.")
+        text: ("Please generate the next task for the AI Loop.\n\n### Current Roadmap\n" + $roadmap + "\n\n### Current State\n" + $state + "\n\n### NEXT_TASK.md Template\n" + $template + "\n\n### Execution Context\n- Mode: " + $mode + "\n- Task Source: " + $task_source + "\n- Objective: Determine the single most appropriate next step based on the roadmap and current state." + $open_issues_section + "\n\n### Requirements for NEXT_TASK.md\n- Use Markdown format.\n- Objective must be clear and bounded (1 PR size).\n- List Allowed and Forbidden files explicitly.\n- Include Acceptance criteria and Required test commands.\n- The \"Worker prompt\" section should contain the detailed instructions for the worker agent.\n- IMPORTANT: The generated task MUST be different from any already-open Jules tasks listed above.")
       }]
     }],
     generationConfig: {

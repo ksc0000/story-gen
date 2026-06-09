@@ -42,6 +42,24 @@ jobs:
           echo "dry_run=${{ github.event.inputs.dry_run || 'false' }}"
           echo "task_source=${{ github.event.inputs.task_source || 'docs' }}"
 
+      - name: Fetch open jules-ready issues for context
+        id: open_issues
+        env:
+          GH_TOKEN: ${{ secrets.GH_AW_AGENT_TOKEN || github.token }}
+        run: |
+          OPEN_ISSUES=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "jules-ready" \
+            --state open \
+            --limit 20 \
+            --json number,title \
+            --jq '[.[] | "#\(.number) \(.title)"] | join("\n")' 2>/dev/null || echo "")
+          echo "open_issues<<EOF" >> $GITHUB_OUTPUT
+          echo "$OPEN_ISSUES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "Open jules-ready issues:"
+          echo "$OPEN_ISSUES"
+
       - name: Generate next task
         env:
           CTRL_ITERATIONS: ${{ github.event.inputs.iterations || '1' }}
@@ -49,14 +67,17 @@ jobs:
           CTRL_DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
           CTRL_TASK_SOURCE: ${{ github.event.inputs.task_source || 'docs' }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPEN_ISSUES_CONTEXT: ${{ steps.open_issues.outputs.open_issues }}
         run: |
           ./scripts/ai-loop/generate-next-task.sh \
             "$CTRL_ITERATIONS" \
             "$CTRL_MODE" \
             "$CTRL_DRY_RUN" \
-            "$CTRL_TASK_SOURCE"
+            "$CTRL_TASK_SOURCE" \
+            "$OPEN_ISSUES_CONTEXT"
 
       - name: Commit and push NEXT_TASK.md
+        id: commit_task
         if: github.event_name == 'schedule' || github.event.inputs.dry_run == 'false'
         run: |
           git config --local user.email "action@github.com"
@@ -65,12 +86,16 @@ jobs:
           if ! git diff --cached --quiet; then
             git commit -m "docs: update NEXT_TASK.md via AI Loop Controller"
             git push
+            echo "changed=true" >> $GITHUB_OUTPUT
           else
-            echo "No changes to commit"
+            echo "No changes to NEXT_TASK.md — skipping issue creation"
+            echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create GitHub Issue for Jules
-        if: github.event_name == 'schedule' || github.event.inputs.dry_run == 'false'
+        if: |
+          (github.event_name == 'schedule' || github.event.inputs.dry_run == 'false') &&
+          steps.commit_task.outputs.changed == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_AW_AGENT_TOKEN || github.token }}
@@ -82,6 +107,20 @@ jobs:
               ? headingLine.replace(/^#+\s*/, '').replace(/^NEXT TASK:\s*/i, '')
               : 'AI Loop auto-task';
             const title = `[AI Loop] ${rawTitle}`;
+
+            // Dedup: skip if an open issue with the same title already exists
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'jules-ready',
+              per_page: 50,
+            });
+            const duplicate = existing.find(i => i.title === title);
+            if (duplicate) {
+              core.info(`Skipping: open issue already exists — #${duplicate.number} "${title}"`);
+              return;
+            }
 
             const { data: issue } = await github.rest.issues.create({
               owner: context.repo.owner,
