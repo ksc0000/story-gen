@@ -125,6 +125,12 @@ export function resolveImageModelProfile(params: {
  */
 export function resolveImageFallbackProfiles(profile: ImageModelProfile): ImageModelProfile[] {
   switch (profile) {
+    case "openai_standard":
+      return ["openai_standard", "klein_fast"];
+    case "openai_mini":
+      return ["openai_mini", "klein_fast"];
+    case "kontext_max":
+      return ["kontext_max", "klein_fast"];
     case "pro_consistent":
       return ["pro_consistent", "klein_fast"];
     case "klein_base":
@@ -150,5 +156,5 @@ export function resolveImageFallbackProfiles(profile: ImageModelProfile): ImageM
  * P3-8: replicate.ts re-exports this function.
  */
 export function isSaferRetryEnabled(profile: ImageModelProfile): boolean {
-  return profile === "pro_consistent";
+  return profile === "pro_consistent" || profile === "openai_standard" || profile === "openai_mini" || profile === "kontext_max";
 }

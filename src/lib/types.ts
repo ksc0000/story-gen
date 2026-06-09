@@ -20,7 +20,9 @@ export type ImageModelProfile =
   | "klein_base"
   | "pro_consistent"
   | "kontext_reference"
-  | "kontext_max";
+  | "kontext_max"
+  | "openai_mini"
+  | "openai_standard";
 export type InputImageRole = "character_reference" | "style_reference" | "prev_page_reference";
 export type InputImageSource =
   | "approvedImageUrl"

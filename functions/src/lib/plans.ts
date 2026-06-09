@@ -17,6 +17,7 @@ export type ServerPlanConfig = {
   characterConsistencyMode: CharacterConsistencyMode;
   allowedCreationModes: CreationMode[];
   generationMode: GenerationMode;
+  monthlyBookQuota?: number;
   enabled: boolean;
 };
 
@@ -25,11 +26,12 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     productPlan: "free",
     allowedPageCounts: [4],
     defaultPageCount: 4,
-    imageQualityTier: "standard",
-    imageModelProfile: "pro_consistent",
+    imageQualityTier: "light",
+    imageModelProfile: "openai_mini",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
     generationMode: "reliable_fast",
+    monthlyBookQuota: 1,
     enabled: true,
   },
   light_paid: {
@@ -45,25 +47,27 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
   },
   standard_paid: {
     productPlan: "standard_paid",
-    allowedPageCounts: [4, 8, 12],
+    allowedPageCounts: [4, 8],
     defaultPageCount: 8,
     imageQualityTier: "standard",
-    imageModelProfile: "pro_consistent",
+    imageModelProfile: "openai_standard",
     characterConsistencyMode: "all_pages",
-    allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
+    allowedCreationModes: ["fixed_template", "guided_ai"],
     generationMode: "reliable_fast",
-    enabled: false,
+    monthlyBookQuota: 5,
+    enabled: true,
   },
   premium_paid: {
     productPlan: "premium_paid",
     allowedPageCounts: [4, 8, 12],
     defaultPageCount: 8,
     imageQualityTier: "premium",
-    imageModelProfile: "pro_consistent",
+    imageModelProfile: "kontext_max",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
     generationMode: "quality",
-    enabled: false,
+    monthlyBookQuota: 10,
+    enabled: true,
   },
 };
 
