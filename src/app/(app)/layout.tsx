@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DreamyBackground } from "@/components/dreamy-background";
@@ -32,8 +33,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <DreamyBackground />
       <header className="app-header">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-          <Link href="/home" className="app-brand text-lg font-bold">
-            Ehoria
+          <Link href="/home" className="app-brand flex items-center gap-2 text-lg font-bold">
+            <Image
+              src="/logo/ehoria-logo-256.png"
+              alt=""
+              width={32}
+              height={32}
+              className="rounded-md"
+              priority
+            />
+            <span>Ehoria</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/children" className="hidden text-sm font-semibold text-violet-500 transition hover:text-purple-700 sm:inline">
