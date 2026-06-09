@@ -40,16 +40,17 @@ export default function LoginPage() {
           <Card>
             <CardHeader className="text-center">
               <Image
-                src="/images/templates/bedtime.webp"
-                alt="ログイン"
+                src="/logo/ehoria-logo-256.png"
+                alt="Ehoria"
                 width={120}
-                height={90}
+                height={120}
                 className="mx-auto rounded-xl"
+                priority
               />
               <CardTitle className="app-title mt-4 text-2xl">
                 Ehoria にログイン
               </CardTitle>
-              <p className="app-subtitle text-sm">えほんAI</p>
+              <p className="app-subtitle text-sm">AIで絵本を作ろう</p>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <Button

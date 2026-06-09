@@ -42,18 +42,16 @@ export default function LandingPage() {
           </StaggerItem>
           <StaggerItem>
             <Image
-              src="/images/illustrations/hero.webp"
-              alt="子どもが絵本を読んでいるイラスト"
-              width={300}
-              height={225}
+              src="/logo/ehoria-logo-512.png"
+              alt="Ehoria"
+              width={240}
+              height={240}
               priority
               className="rounded-2xl"
             />
           </StaggerItem>
           <StaggerItem>
-            <h1 className="app-title mt-6 text-4xl font-bold tracking-tight sm:text-5xl">
-              Ehoria
-            </h1>
+            <h1 className="sr-only">Ehoria</h1>
           </StaggerItem>
           <StaggerItem>
             <p className="app-subtitle mt-2 text-lg">AIで絵本を作ろう</p>
