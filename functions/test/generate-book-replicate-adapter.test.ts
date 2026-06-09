@@ -143,6 +143,10 @@ const baseBookData: BookData = {
   input: { childName: "はなこ" },
   createdAt: {} as FirebaseFirestore.Timestamp,
   expiresAt: null,
+  // Explicit Replicate-routed profile. After the 3-tier rollout (PR #180),
+  // the default profile (free plan) resolves to openai_mini, which would
+  // bypass the Replicate adapter entirely.
+  imageModelProfile: "pro_consistent",
 };
 
 function createMockDeps(overrides: { replicateApiToken?: string } = {}) {
