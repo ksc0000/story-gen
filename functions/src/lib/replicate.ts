@@ -78,7 +78,6 @@ function resolveProfileModel(imageModelProfile: ImageModelProfile): ReplicateMod
     case "pro_consistent":
       return FLUX_PRO_MODEL;
     case "kontext_reference":
-    case "kontext_max":
       return FLUX_KONTEXT_PRO_MODEL;
     case "kontext_max":
       return FLUX_KONTEXT_MAX_MODEL;
