@@ -167,6 +167,8 @@ function GeneratingContent() {
         pageCount: book.pageCount,
         creationMode: book.creationMode ?? "guided_ai",
         templateId: book.templateId ?? book.theme,
+        failureStage: book.failureStage,
+        failureProvider: book.failureProvider,
       });
     }
   }, [book]);
