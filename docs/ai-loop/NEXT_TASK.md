@@ -1,113 +1,53 @@
+```markdown
 # Worker Prompt Template
 
 ## Context
 
-The product has progressed to a limited production rollout (Cohort A/B). Critical infrastructure for SLO monitoring (metrics, dashboards, disabled alert policies) has been set up, and an initial production baseline (P5-4) has been collected. The Story JSON (SJ) and Image (IM) alert policies are currently defined but disabled.
+The product roadmap highlights the need for continued reliability and quality validation, particularly for the core generation modes. Phase 1 (Reliability First) has pending production smoke evidence, and Phase 3 (Template Mode) focuses on strengthening the most stable generation mode. The next immediate step identified in the roadmap's "優先順位 (Now)" section is to perform the `Template Smoke Checklist`.
 
 ## Objective
 
-Tune the thresholds for the disabled Story JSON (SJ) and Image (IM) alert policies based on the collected production baseline data, and then enable these policies in Cloud Monitoring. This task ensures robust automated monitoring for generation quality as the product scales.
+Execute the `Template Smoke Checklist` for the 6 `fixed_template`s (the initial 4 templates and the 2 added in T2-A). The goal is to verify their real-generation performance and quality, documenting all findings in the designated markdown file.
 
 ## Allowed Scope
 
-- `functions/` (specifically for `firebase.json` for deployment commands, but no functional code changes within `functions/src` or `functions/tests` should be needed unless deriving thresholds requires temporary scripts)
-- `docs/` (to update documentation reflecting the enabled policies and chosen thresholds)
-- Configuration files related to Cloud Monitoring (e.g., YAML specifications for alerts, if applicable for `gcloud` commands)
+- `docs/TEMPLATE_SMOKE_CHECKLIST.md` (for recording test results and observations)
+- `functions/src/` (for creating or using existing local scripts to trigger book generation for testing purposes, if direct UI interaction is not sufficient or efficient)
+- `web/` (for interacting with the admin UI or user-facing generation flow to initiate book creation for the smoke test)
+- `firebase-admin-test-cli/` (for using CLI tools to facilitate book generation for the smoke test)
 
 ## Forbidden Scope
 
-- Infrastructure (beyond Cloud Monitoring alert policy configuration)
-- Billing
+- `firebase.json`
+- `package.json` at root level
+- Infrastructure configuration (e.g., `infra/` directory)
+- Billing related code or configurations
 - Authentication redesign
-- Secrets
-- Generated assets
-- Any application-level code changes (e.g., `generate-book.ts`, UI components)
+- Secrets management (e.g., `.env` files, Google Cloud Secret Manager configurations)
+- Generated assets (`public/`, `dist/`, `lib/` directories in functions)
+- Core database schema changes (Firestore or other)
+- Firebase rules modifications beyond minor additions for quality review documents (if absolutely necessary for results recording, but not expected for this task)
 
 ## Requirements
 
-- Retrieve and analyze the collected production baseline data for `storyJsonFailureCategory` and `imageFailureCategory`.
-- Propose and document appropriate thresholds for the `SJ-1` to `SJ-4` and `IM-1` to `IM-9` alert policies. The thresholds should be sensitive enough to detect regressions but avoid excessive false positives based on the baseline.
-- Update the relevant documentation (e.g., `docs/P2_SJ_IM_ALERT_POLICIES.md`) with the chosen thresholds and the date of enablement.
-- Enable the previously defined `SJ-1` to `SJ-4` and `IM-1` to `IM-9` alert policies in Cloud Monitoring. This will likely involve `gcloud` commands or direct console interaction.
-- Report any observations or challenges during the threshold tuning process.
+- **Identify Templates**: The 6 `fixed_template`s for this smoke test are:
+    - `fixed-animal-adventure`
+    - `fixed-magical-journey`
+    - `fixed-tiny-hero`
+    - `fixed-bedtime-story`
+    - `fixed-memories-sparkle` (from T2-A)
+    - `fixed-emotional-garden` (from T2-A)
+- **Generate Books**: For each of these 6 `fixed_template`s, generate at least one complete book using the standard generation flow (e.g., through the admin UI or a command that accurately simulates the user flow).
+- **Consult Checklist**: Thoroughly review the criteria outlined in `docs/TEMPLATE_SMOKE_CHECKLIST.md` for evaluating each generated book.
+- **Record Results**: Fill out `docs/TEMPLATE_SMOKE_CHECKLIST.md` with detailed, objective observations for each generated book. This must include:
+    - Overall success/failure status.
+    - Any specific quality issues (e.g., story coherence, character consistency, image quality, adherence to `styleBible`, prompt following, unexpected text in images, generation duration, fallback usage).
+    - Links to generated book IDs and relevant screenshots/video snippets (if any significant issues or notable successes are observed).
+- **Identify Issues**: Clearly document any identified issues, regressions, or areas for improvement for each template.
+- **Adhere to Constraints**: The primary output of this task is updated documentation. Minimize code changes unless absolutely necessary to enable the smoke test execution (e.g., a simple local script).
 
 ## Output Format
-
-- Summary
-- Changed files
-- Tests executed
-- Known issues
-- Suggested next task
-
----
-
-## Worker Prompt
 
 ### Summary
 
-The objective is to tune and enable the Story JSON (SJ) and Image (IM) alert policies in Cloud Monitoring. These policies were previously defined and created but left disabled (`enabled: false`) pending the collection of a production baseline. With the `prod-baseline` (P5-4) now complete, it is time to analyze this data, determine appropriate thresholds, and activate the alerts.
-
-### Changed files
-
-- `docs/P2_SJ_IM_ALERT_POLICIES.md` (to update with determined thresholds and enablement status)
-- Cloud Monitoring configurations (via `gcloud` commands or console, which will implicitly update the live configuration, and these commands/console steps should be documented).
-
-### Tests executed
-
-1.  **Baseline Data Analysis:**
-    *   Access Cloud Logging and Cloud Monitoring to retrieve the `storyJsonFailureCategory` and `imageFailureCategory` metrics over the duration of the P5-4 production baseline (7 days, or however long the P5-4 data was collected).
-    *   Analyze the frequency and patterns of `story_json_failure` (e.g., `malformed_json`, `schema_validation`, `field_type_mismatch`, `missing_critical_field`) and `image_failure_category` (e.g., `image_provider_error`, `content_filter_violation`, `timeout`).
-    *   Based on this analysis, propose specific threshold values (e.g., percentage of failures over a given window) for each SJ and IM alert policy.
-2.  **Alert Policy Configuration (Manual/gcloud):**
-    *   For each policy from `SJ-1` to `SJ-4` and `IM-1` to `IM-9` as defined in `docs/P2_SJ_IM_ALERT_POLICIES.md`, update its `threshold` and set `enabled: true`. This should be done carefully, potentially starting with a few policies and then expanding.
-    *   Verify in the Cloud Monitoring console that the policies are enabled and their thresholds are correctly applied.
-    *   No automated unit/integration tests are directly applicable here, as this is a configuration task.
-
-### Known issues
-
--   The baseline might be limited in volume depending on the current production traffic. Thresholds might need further refinement as more data accumulates.
--   Care must be taken to avoid false positives during the initial enablement. It might be prudent to set slightly lenient thresholds initially and tighten them over time.
--   Ensure all required notification channels are correctly configured for these alerts to reach the intended recipients.
-
-### Suggested next task
-
-# Worker Prompt Template
-
-## Context
-
-The Story JSON (SJ) and Image (IM) alert policies have been tuned and enabled, providing automated monitoring for key generation quality metrics. This significantly enhances the reliability monitoring phase. The `Production smoke checklist` for Phase 1 and `Template Smoke Checklist` for Phase 3 T1-Smoke are still open, which are crucial for formally verifying the system's reliability in production.
-
-## Objective
-
-Formally execute and document the `Production smoke checklist` for Phase 1. This involves running specific manual or semi-automated tests in a production or production-like environment and recording the results.
-
-## Allowed Scope
-
-- `docs/` (specifically `docs/PRODUCTION_SMOKE_CHECKLIST.md` and `docs/PRODUCTION_SMOKE_RESULTS.md`)
-- Minimal `functions/` changes if a small helper script is needed to facilitate a smoke test step (must be strictly contained, temporary, and easily removable).
-
-## Forbidden Scope
-
-- Infrastructure changes (beyond running existing `gcloud` or `firebase` commands for observation).
-- Billing
-- Authentication redesign
-- Secrets
-- Generated assets
-- Core application logic changes.
-
-## Requirements
-
-- Thoroughly review `docs/PRODUCTION_SMOKE_CHECKLIST.md`.
-- Execute each item on the checklist in the designated production environment (or a very close staging environment if production interaction is restricted for initial tests).
-- Record the outcome of each checklist item, including any observations, success/failure status, and relevant timestamps.
-- Update `docs/PRODUCTION_SMOKE_RESULTS.md` with the detailed findings.
-- Identify any failures or unexpected behaviors, providing clear descriptions.
-- Report any follow-up tasks arising from the smoke test (e.g., bugs to fix, further investigation needed).
-
-## Output Format
-
-- Summary
-- Changed files
-- Tests executed
-- Known issues
-- Suggested next task
+Executed the `Template Smoke Checklist` for 6 `
