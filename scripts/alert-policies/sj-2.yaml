@@ -1,0 +1,30 @@
+displayName: "SJ-2: schema_validation spike CRITICAL (> 10% / 24h)"
+conditions:
+  - displayName: "schema_validation failures > critical threshold over 24h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/schema_validation_failures"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 2
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "86400s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"
+severity: CRITICAL
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    SJ-2 CRITICAL: schema_validation failure count exceeded 10% threshold over 24h.
+    This is an active incident.
+    First response:
+    1. Open saved query: "SJ-1 schema_validation failures" in Cloud Logging.
+    2. Identify storyJsonFailureCategory — malformed_json, field_type_mismatch, or schema_structural.
+    3. Do NOT enable ENABLE_RESPONSE_SCHEMA or ENABLE_SCHEMA_REPAIR_RETRY.
+    4. Follow GENERATION_SLO_RUNBOOK.md §8.1 (Incident).
+  mimeType: "text/markdown"

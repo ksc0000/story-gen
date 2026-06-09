@@ -1,0 +1,30 @@
+displayName: "IM-7: PROVIDER_5XX page failures (any occurrence)"
+conditions:
+  - displayName: "page_provider5xx_failures > 0 in 1h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/page_provider5xx_failures"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 0
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "3600s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"
+severity: WARNING
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    IM-7 WARNING: PROVIDER_5XX page failures detected.
+    Single occurrences are expected occasionally; watch for recurrence.
+    First response:
+    1. Open saved query: "IM-4 PROVIDER_5XX page failures" in Cloud Logging.
+    2. Check provider and fallbackUsed — did fallback succeed?
+    3. If sustained (> 3 / 1h), IM-8 should also fire.
+    4. Follow GENERATION_SLO_RUNBOOK.md §8.7.
+  mimeType: "text/markdown"

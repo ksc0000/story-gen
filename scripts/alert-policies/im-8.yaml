@@ -1,0 +1,29 @@
+displayName: "IM-8: PROVIDER_5XX sustained (> 1 in 1h)"
+conditions:
+  - displayName: "page_provider5xx_failures > 1 in 1h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/page_provider5xx_failures"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 1
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "3600s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"
+severity: WARNING
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    IM-8 WARNING: PROVIDER_5XX sustained (> 3 in 1h).
+    Check provider status and fallback behavior.
+    1. Check Replicate status: https://status.replicate.com
+    2. Open saved query: "IM-4 PROVIDER_5XX page failures".
+    3. Check if fallback is absorbing failures.
+    4. Follow GENERATION_SLO_RUNBOOK.md §8.7.
+  mimeType: "text/markdown"

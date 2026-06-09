@@ -1,0 +1,30 @@
+displayName: "SJ-4: field_type_mismatch spike WARNING (> 1% / 24h proxy)"
+conditions:
+  - displayName: "field_type_mismatch failures > threshold over 24h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/field_type_mismatch_failures"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 0
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "86400s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"
+severity: WARNING
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    SJ-4 WARNING: field_type_mismatch failures exceeded 1% threshold over 24h.
+    First response:
+    1. Open saved query: "SJ-3 field_type_mismatch failures" in Cloud Logging.
+    2. Identify which field(s) are mismatching (check storyJsonFailureCategory details).
+    3. If same field repeatedly, add targeted prompt hardening or validateStory fix in a separate task.
+    4. Do NOT enable ENABLE_RESPONSE_SCHEMA as a workaround.
+    5. Follow GENERATION_SLO_RUNBOOK.md §8.3.
+  mimeType: "text/markdown"
