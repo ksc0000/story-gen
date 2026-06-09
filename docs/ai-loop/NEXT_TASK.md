@@ -2,37 +2,37 @@
 
 ## Context
 
-The product roadmap indicates a focus on enhancing the reliability and quality of Template Mode stories. Specifically, several P1 quality issues have been identified in existing templates during the T3-2 template quality review. This task addresses one of these issues, focusing on `pageVisualRole` consistency for a specific template.
+The product roadmap shows significant progress across reliability (Phase 1), quality (Phase 2), and template modes (Phase 3). Phase 4 (Gemini JSON Hardening) is now complete, and Phase 5 (Monetization) is in a soft launch phase with active monitoring and several critical bug fixes addressed.
+
+A key follow-up from the Phase 3 Image Provider Abstraction closure (`P3-15s`) was to migrate cover image and character reference generation to the new `ImageProvider` interface. The core `ImageProvider` for page generation is already complete.
 
 ## Objective
 
-Update the `fixed-brush-teeth` template to consolidate and ensure consistent `pageVisualRole` assignments across its pages, as detailed in the `Template Quality Review` document.
+Migrate the existing `generateCoverImage()` function to utilize the `ImageProvider` adapter, completing the abstraction for all image generation types.
 
 ## Allowed Scope
 
-- `src/story/fixed-story-templates/fixed-brush-teeth.ts` (or the equivalent template definition file)
-- `src/story/fixed-story-templates/index.ts` (if needed to update template metadata or exports)
-- Related test files (e.g., `src/story/fixed-story-templates/__tests__/fixed-brush-teeth.test.ts`)
-- Documentation files (e.g., `docs/TEMPLATE_MODE_T3_PLAN.md` to mark this item as completed)
+- `functions/src/image/`
+- `functions/src/imageGenerator/`
+- `functions/src/book/`
+- `functions/test/`
+- `docs/PHASE3_IMAGE_PROVIDER_CLOSURE.md` (for update)
 
 ## Forbidden Scope
 
-- Infrastructure
-- Billing
-- Authentication redesign
-- Secrets
+- Infrastructure configuration (`firebase.json`, `.yaml` files outside of `functions/`)
+- Billing logic
+- Authentication system
+- Database schema changes outside `functions/src/book/types.ts` if strictly necessary for the migration
+- Deployment scripts
 - Generated assets
-- Any files outside the explicitly allowed scope.
 
 ## Requirements
 
-- **Consolidate `pageVisualRole`:**
-    - For `page_0` (cover), `page_1` (title spread), `page_2` (opening narration), and `page_8` (end spread), set `pageVisualRole` to `wide_shot`.
-    - For `page_3` (`brush_teeth_scene_1`), `page_4` (`brush_teeth_scene_2`), `page_5` (`brush_teeth_scene_3`), `page_6` (`brush_teeth_scene_4`), and `page_7` (`final_scene`), set `pageVisualRole` to `medium_shot`.
-- **Verify template integrity:** Ensure all other fields and logic within the template remain unchanged and functional.
-- **Update documentation:** Mark `T3-2a` as completed in `docs/TEMPLATE_MODE_T3_PLAN.md`.
-- Ensure changes are small and reviewable.
-- Include unit tests if any new logic is introduced (though this task is primarily data/config modification).
+- The `generateCoverImage()` function must no longer directly call specific image generation providers (e.g., Replicate, OpenAI) but instead use the `ImageProvider` interface.
+- Ensure that the cover image generation process maintains its current functionality and quality.
+- Update relevant unit or integration tests to reflect the change, ensuring the `ImageProvider` is correctly utilized and mocked/stubbed as necessary.
+- Add a brief note to `docs/PHASE3_IMAGE_PROVIDER_CLOSURE.md` or a new section in the appropriate design doc indicating that cover image generation is now migrated.
 
 ## Output Format
 
@@ -42,44 +42,63 @@ Update the `fixed-brush-teeth` template to consolidate and ensure consistent `pa
 - Known issues
 - Suggested next task
 
----
+## Worker prompt
 
-## Worker Prompt
+```markdown
+# Worker Prompt Template
 
-### Summary
+## Context
 
-The `fixed-brush-teeth` template's `pageVisualRole` assignments are inconsistent across pages. This task involves updating the template definition to ensure the correct `pageVisualRole` (either `wide_shot` or `medium_shot`) is applied to each page according to the specification outlined in `docs/TEMPLATE_MODE_T3_PLAN.md` under `T3-2a`. This improves visual consistency and quality for the template.
+You are tasked with continuing the architectural cleanup and abstraction of image generation within the EhonAI project. The `ImageProvider` interface was successfully implemented for core page generation (Phase 3, P3-15s closure), but cover image and recurring character reference generation were explicitly noted as remaining scope. Your current objective is to address the cover image generation.
 
-### Changed files
+## Objective
 
-- `src/story/fixed-story-templates/fixed-brush-teeth.ts`
-- `docs/TEMPLATE_MODE_T3_PLAN.md`
+Migrate the `generateCoverImage()` function to use the `ImageProvider` abstraction. This involves identifying the appropriate `ImageProvider` methods or extending the interface if necessary, and refactoring `generateCoverImage()` to route through this abstracted layer.
 
-### Tests executed
+## Allowed Scope
 
-1.  **Unit Tests:** Run `npm test` to ensure no existing tests are broken by the template configuration change.
-2.  **Local Generation Smoke Test:**
-    - Manually generate a book using the `fixed-brush-teeth` template in a local development environment.
-    - Verify that the generated book's `BookDoc.pages` array reflects the updated `pageVisualRole` values.
-    - Visually inspect the generated images for the `fixed-brush-teeth` template to confirm that `wide_shot` and `medium_shot` compositions are being applied as expected for their respective pages.
+- `functions/src/image/` (e.g., `imageProviders.ts`, `imageGenerator.ts` if adapting)
+- `functions/src/imageGenerator/` (e.g., `generateCoverImage.ts` and related files)
+- `functions/src/book/` (e.g., `bookProcessor.ts` if `generateCoverImage` is called from there, `types.ts` if minor type updates are strictly necessary)
+- `functions/test/` (for unit/integration tests related to cover image generation)
+- `docs/PHASE3_IMAGE_PROVIDER_CLOSURE.md` (to document the completion of this follow-up)
 
-    Required commands:
-    ```bash
-    npm test
-    # Follow local setup instructions to generate a book using the fixed-brush-teeth template
-    # Example (adjust as per your local setup and template ID):
-    # npm run generate-book -- --template fixed-brush-teeth --childName "Example" --gender girl --ageBand preschool_3_4 --style soft_watercolor
-    ```
+## Forbidden Scope
 
-### Known issues
+- `firebase.json`, `package.json`, `.yaml` files in the root or outside `functions/`
+- Billing-related logic or services
+- User authentication or authorization system changes
+- Database schema migrations (e.g., Firestore rules that are not type-only definitions)
+- Any auto-generated files or assets
 
-- This task specifically addresses `pageVisualRole` for `fixed-brush-teeth`. Other identified P1 quality issues for other templates (T3-2b, T3-2c, T3-2d) remain.
-- The `REF-001: Character Reference Strategy` documentation is still in draft.
+## Requirements
 
-### Suggested next task
+1.  **Refactor `generateCoverImage()`**:
+    *   Locate the `generateCoverImage()` function (likely in `functions/src/imageGenerator/`).
+    *   Modify its implementation to utilize an instance of `ImageProvider` (e.g., `openaiImageProvider`, `replicateImageProvider`) instead of directly calling provider-specific APIs.
+    *   Ensure the function correctly passes the necessary prompt, `styleBible`, and other parameters to the `ImageProvider`.
+2.  **Update `ImageProvider` usage**:
+    *   Confirm that `ImageProvider` interface (e.g., `functions/src/image/imageProviders.ts`) contains a suitable method for generating cover images. If not, carefully consider if a minor extension to the interface is warranted, or if an existing method can be adapted. Prioritize adapting existing methods if possible to avoid interface bloat.
+    *   Ensure the correct `ImageProvider` implementation is selected and injected/passed to `generateCoverImage()`.
+3.  **Testing**:
+    *   Add or update unit tests for `generateCoverImage()` to assert that it correctly calls the `ImageProvider`'s method with the expected parameters. Mock the `ImageProvider` where appropriate.
+    *   Verify that existing integration tests (if any for cover generation) still pass.
+4.  **Documentation**:
+    *   Add a small note to `docs/PHASE3_IMAGE_PROVIDER_CLOSURE.md` under the "Phase 4: Tracking Tasks" section to indicate that `generateCoverImage()` has now been migrated to use the `ImageProvider` adapter.
 
-**Objective:** Address the next P1 template quality issue from the Template Quality Review.
+## Acceptance Criteria
 
-**Task:** Update the `fixed-first-birthday` template to fix the `sampleImage` duplication and category mismatch.
+- `generateCoverImage()` successfully generates cover images by routing through the `ImageProvider` interface.
+- All related tests pass.
+- No direct calls to low-level image generation APIs are made within `generateCoverImage()`.
+- The `PHASE3_IMAGE_PROVIDER_CLOSURE.md` document is updated.
 
-**Reference:** `docs/TEMPLATE_MODE_T3_PLAN.md` (T3-2b)
+## Required Test Commands
+
+- `npm test --prefix functions`
+- Manual verification of cover image generation through admin UI (after deployment, if possible in a dev environment).
+
+## Suggested next task
+
+Migrate `ensureRecurringCharacterReferences()` to use the `ImageProvider` adapter.
+```
