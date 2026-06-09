@@ -1,36 +1,36 @@
-```markdown
 # Worker Prompt Template
 
 ## Context
 
-The product roadmap indicates that the `P5-4 prod-baseline` (real user data for 7 days, >= 30 books) has been completed. This satisfies the prerequisite for tuning and enabling the Story JSON (SJ) and Image Generation (IM) alert policies, as outlined in `P2-10b-enable` and `P5-5`. Currently, these policies are defined but set to `enabled: false`.
+The product roadmap indicates that Phase 4 (Gemini JSON Hardening) is closed, and crucial SLO monitoring metrics and log-based alerts have been defined in Phase 2. The production baseline measurement (P5-4) has recently been completed, providing the necessary data to tune these alerts. Cohort B rollout (P5-3-execute-b) has received a "GO" decision, but wider user invitations require robust monitoring. Currently, the Story JSON (SJ) and Image Generation (IM) alert policies in Cloud Monitoring are defined but disabled (`enabled: false`).
 
 ## Objective
 
-Analyze the collected production baseline data, determine appropriate thresholds for the disabled SJ/IM alert policies, update the policy documentation with these thresholds, and provide clear instructions for their enablement.
+Tune the thresholds for the disabled Story JSON (SJ) and Image Generation (IM) alert policies in Cloud Monitoring based on the completed production baseline (P5-4) data, and then enable these policies. This is a critical step to ensure operational readiness and safety before inviting more users to Cohort B.
 
 ## Allowed Scope
 
-- `docs/`
-- `scripts/` (for any `gcloud` command generation or execution scripts, though manual execution is preferred for sensitive operations like alert enablement)
+- Google Cloud Console (Cloud Monitoring, Cloud Logging)
+- `gcloud` CLI commands for Cloud Monitoring
+- Consultation of `docs/P2_SJ_IM_ALERT_POLICIES.md` for policy details.
 
 ## Forbidden Scope
 
-- `functions/src/` (no application code changes)
-- Infrastructure
-- Billing
-- Authentication redesign
-- Secrets
-- Generated assets
+- Modifications to application code (`functions/`, `web/`, etc.)
+- Infrastructure provisioning (beyond existing Cloud Monitoring resources)
+- Billing configuration
+- Authentication system changes
+- Secrets management
+- Generation of new assets
 
 ## Requirements
 
-- Analyze the `P5-4 prod-baseline` data (referencing `P4_PERMANENT_STORY_JSON_SLO_PLAN.md` §7.3 and actual Cloud Monitoring metrics).
-- Propose specific, data-driven threshold values for all 13 disabled SJ/IM alert policies.
-- Update the `P2_SJ_IM_ALERT_POLICIES.md` document to include these specific thresholds and mark the policies for enablement.
-- Add clear `gcloud` commands or step-by-step instructions within `P2_SJ_IM_ALERT_POLICIES.md` for a human operator to enable these policies in Cloud Monitoring.
-- Ensure all changes are documented "docs-first" and adhere to the "small PRs" constraint.
-- Report any follow-up items necessary for verification or further action.
+- Retrieve the `prod-baseline` data (from P5-4) to understand typical success rates and failure patterns. This data is recorded in `P4_PERMANENT_STORY_JSON_SLO_PLAN.md` §7.3.
+- Access the existing SJ-1..SJ-4 and IM-1..IM-9 alert policies in Cloud Monitoring. These policies are documented in `docs/P2_SJ_IM_ALERT_POLICIES.md` and created live but with `enabled: false`.
+- Carefully determine appropriate thresholds for each alert policy. The goal is to detect *regressions* and *significant deviations* from the baseline, not to trigger alerts for normal, acceptable levels of transient failures.
+- Update each policy's configuration (`yaml` or directly in Console) to set the tuned thresholds.
+- Change the `enabled` field of each policy from `false` to `true`.
+- Document the chosen thresholds and the rationale in a new `docs/P5_SJ_IM_ALERT_TUNING_DECISION.md` document, linking to the baseline data.
 
 ## Output Format
 
@@ -46,26 +46,53 @@ Analyze the collected production baseline data, determine appropriate thresholds
 
 ### Summary
 
-The task is to finalize and enable the disabled Story JSON (SJ) and Image Generation (IM) alert policies in Cloud Monitoring. This involves analyzing the established production baseline data (`P5-4`), proposing specific thresholds for each of the 13 policies currently in `enabled: false` state, updating the `P2_SJ_IM_ALERT_POLICIES.md` document with these tuned thresholds, and providing the necessary `gcloud` commands or manual steps for a human operator to enable them.
+The task is to tune and enable the disabled Story JSON (SJ) and Image Generation (IM) alert policies in Google Cloud Monitoring. These 13 policies (SJ-1..SJ-4 and IM-1..IM-9), defined in `docs/P2_SJ_IM_ALERT_POLICIES.md`, were previously created with `enabled: false`. Using the production baseline data from P5-4 (recorded in `P4_PERMANENT_STORY_JSON_SLO_PLAN.md` §7.3), the worker will determine appropriate thresholds for each policy and enable them. This ensures critical monitoring is active for the ongoing Cohort B rollout.
 
 ### Changed files
 
-- `docs/P2_SJ_IM_ALERT_POLICIES.md`
+- `docs/P5_SJ_IM_ALERT_TUNING_DECISION.md` (New document to record tuning decisions and rationale)
+- No application code changes. All changes are to Cloud Monitoring configurations.
 
 ### Tests executed
 
-- Manual review of `P5-4` baseline data in Cloud Monitoring to inform threshold tuning.
-- Linting and spell-checking on updated documentation.
-- (Verification after enablement, outside this task's scope): Confirm policies appear as `enabled: true` in Cloud Monitoring console.
+1.  **Baseline Data Review:** Confirmed access to and understanding of the `prod-baseline` data from `P4_PERMANENT_STORY_JSON_SLO_PLAN.md` §7.3.
+2.  **Cloud Monitoring Policy Status Check:** Verified that SJ-1..SJ-4 and IM-1..IM-9 policies exist in Cloud Monitoring and are currently `enabled: false`.
+3.  **Threshold Tuning (Manual/Analytical):** Analyzed baseline metrics (`storyJsonFailureCategory` rates, `imageFailedRate`, `imageGenerationTimeoutRate`, etc.) to propose initial thresholds that would detect regressions without excessive noise.
+4.  **Policy Update and Enablement (Cloud Console / `gcloud`):** Executed the necessary steps to update thresholds and set `enabled: true` for all 13 policies.
+5.  **Post-Enablement Verification:** Confirmed that all 13 policies are now active in Cloud Monitoring with the new thresholds.
+6.  **No Immediate Alert Firing Check:** Ensured that newly enabled policies do not immediately fire false positive alerts based on recent historical data (if available within Cloud Monitoring's lookback window).
 
 ### Known issues
 
-- Ensuring the selected thresholds are robust enough to catch actual issues without generating excessive noise will require careful consideration of the `P5-4` baseline data. The thresholds should be set conservatively initially if data is sparse, with a plan for iterative refinement.
+-   Threshold tuning is an iterative process. The initially set thresholds may require further refinement based on actual production traffic and observed patterns during Cohort B.
+-   The notification channels are already configured (e.g., email `kikushun0529@gmail.com` for CG-1 policy), but ensure these are correctly linked to the newly enabled SJ/IM alerts if not already inherited.
 
 ### Suggested next task
 
-**Objective:** Execute the `Production smoke checklist` now that critical production monitoring is enabled.
+**Summary:** Execute Cohort B limited rollout, inviting the first small group of testers. This involves following the `P5_COHORT_B_GO_NOGO_CHECKLIST.md` and initiating the invitation process. This task is primarily operational but requires close monitoring of the newly enabled SLO alerts.
 
-**Reasoning:** With the SJ/IM alert policies enabled following baseline analysis, a crucial layer of production reliability is in place. The next logical step is to perform the `Production smoke checklist` for `fixed_template` books and verify its results to move Phase 1 towards completion.
+**Objective:** Safely initiate the limited rollout of Cohort B by inviting 3-5 testers and closely monitoring the system for any issues.
 
-```
+**Allowed Scope:**
+- No code changes are expected for this task.
+- Interacting with communication tools (email, chat) to send invitations.
+- Interacting with Firebase Console to manage user roles/permissions (if required for inviting specific testers).
+- Monitoring Cloud Monitoring dashboards and alerts.
+- Documenting observations and feedback in `docs/P5_COHORT_B_GO_NOGO_CHECKLIST.md`.
+
+**Forbidden Scope:**
+- Any application code modification.
+- Infrastructure changes.
+
+**Requirements:**
+- Follow all steps outlined in `docs/P5_COHORT_B_GO_NOGO_CHECKLIST.md`.
+- Send invitations to 3-5 designated testers.
+- Activate the initial 1-hour monitoring window as per the checklist.
+- Record observations, especially regarding the newly enabled SJ/IM alerts and user feedback.
+- Document any incidents or issues and follow the defined incident response process.
+- Based on initial monitoring, evaluate the "Go/No-Go" criteria for expanding Cohort B.
+
+**Acceptance criteria:**
+- 3-5 testers have received invitations to Cohort B.
+- The 1-hour initial monitoring period has been completed without critical incidents, or any incidents have been successfully managed and documented.
+- The `P5_COHORT_B_GO_NOGO_CHECKLIST.md` document is updated with the execution details and initial assessment.
