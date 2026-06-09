@@ -1,9 +1,28 @@
 {
-  "current_phase": "1.5b",
+  "current_phase": "5",
   "max_iterations": 3,
   "human_review_every": 1,
-  "completed_tasks": [],
+  "completed_tasks": [
+    "P2-10b: SJ/IM alert policy definitions (disabled)",
+    "P3-15: OpenAI image provider abstraction",
+    "P4-14: Gemini structured output decision (disabled in prod)",
+    "P5-1: Cohort A limited rollout preparation",
+    "P5-2: prod-baseline SLO measurement (P5-4)",
+    "P5-3c: simplified_scene experiment",
+    "P5-3f: safer_retry mechanism",
+    "T6-37: flux11_pro_candidate diagnostic profile",
+    "T6-43: openai_image_candidate diagnostic profile",
+    "T6-62: openai_mini / openai_standard profiles (3-tier model)",
+    "3-tier plan rollout: free/standard_paid/premium_paid",
+    "failureStage / failureProvider analytics (Issue #104)",
+    "App rename EhoNAI → Ehoria (PR #185)",
+    "Ehoria logo integration (PR #187)"
+  ],
   "failed_tasks": [],
+  "in_progress_tasks": [
+    "P5-5: Tune and enable 13 SJ/IM alert policies (Issue #193, PR #194 Draft)",
+    "Template Smoke Checklist (Issue #184, PR #186 Draft)"
+  ],
   "constraints": [
     "docs-first",
     "small PRs"
