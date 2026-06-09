@@ -179,7 +179,7 @@ function createMockDeps() {
     incrementMonthlyCount: vi.fn().mockResolvedValue(undefined),
   };
 }
-const baseBookData: BookData = {
+const baseBookData: BookData = { imageModelProfile: "pro_consistent",
   userId: "user123", title: "", theme: "birthday", style: "watercolor",
   pageCount: 4, status: "generating", progress: 0, input: { childName: "ゆうた" },
   createdAt: {} as FirebaseFirestore.Timestamp, expiresAt: null,
@@ -216,7 +216,7 @@ describe("processBookGeneration", () => {
       "book123",
       expect.objectContaining({
         imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "standard",
+        imageQualityTier: "light",
         imagePurpose: "book_page",
         inputImageRoles: ["character_reference"],
         imageModelProfile: "pro_consistent",
@@ -236,7 +236,7 @@ describe("processBookGeneration", () => {
       "book123",
       expect.objectContaining({
         imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "standard",
+        imageQualityTier: "light",
         imagePurpose: "book_page",
         inputImageRoles: ["character_reference"],
         imageModelProfile: "pro_consistent",
@@ -296,7 +296,7 @@ describe("processBookGeneration", () => {
   it("uses rewriteStoryText for premium_paid books and stores rewrite metadata", async () => {
     const premiumBook: BookData = {
       ...baseBookData,
-      productPlan: "premium_paid",
+      productPlan: "premium_paid", imageModelProfile: "pro_consistent",
       input: { childName: "ゆうた", childAge: 4 },
     };
     deps.llmClient.generateStory.mockResolvedValueOnce({
@@ -471,7 +471,7 @@ describe("processBookGeneration", () => {
       "book-sanitize",
       {
         ...baseBookData,
-        productPlan: "premium_paid",
+        productPlan: "premium_paid", imageModelProfile: "pro_consistent",
         input: { childName: "ゆうた", childAge: 4 },
       },
       deps
@@ -487,7 +487,7 @@ describe("processBookGeneration", () => {
   it("runs premium rewrite up to 2 times when story goal consistency stays weak", async () => {
     const premiumBook: BookData = {
       ...baseBookData,
-      productPlan: "premium_paid",
+      productPlan: "premium_paid", imageModelProfile: "pro_consistent",
       input: { childName: "ゆうた", childAge: 4, storyRequest: "なくした星をさがす" },
     };
     deps.llmClient.generateStory.mockResolvedValueOnce({
@@ -556,7 +556,7 @@ describe("processBookGeneration", () => {
   it("continues generation when premium quality report only has warnings", async () => {
     const premiumBook: BookData = {
       ...baseBookData,
-      productPlan: "premium_paid",
+      productPlan: "premium_paid", imageModelProfile: "pro_consistent",
       input: { childName: "ゆうた", childAge: 4 },
     };
     deps.llmClient.generateStory.mockResolvedValueOnce({
@@ -585,7 +585,7 @@ describe("processBookGeneration", () => {
   it("saves generated text preview when quality gate fails", async () => {
     const premiumBook: BookData = {
       ...baseBookData,
-      productPlan: "premium_paid",
+      productPlan: "premium_paid", imageModelProfile: "pro_consistent",
       input: { childName: "ゆうた", childAge: 4 },
     };
     const driftingStory: GeneratedStory = {
@@ -987,7 +987,7 @@ describe("processBookGeneration", () => {
   it("uses premium model metadata when imageQualityTier is premium", async () => {
     const premiumBook: BookData = {
       ...baseBookData,
-      productPlan: "premium_paid",
+      productPlan: "premium_paid", imageModelProfile: "pro_consistent",
       imageQualityTier: "premium",
       input: { childName: "ゆうた", childAge: 4 },
     };
@@ -1035,7 +1035,7 @@ describe("processBookGeneration", () => {
       expect.objectContaining({
         pageNumber: 0,
         imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "standard",
+        imageQualityTier: "light",
         imagePurpose: "book_page",
         imageModelProfile: "pro_consistent",
       })
@@ -1045,7 +1045,7 @@ describe("processBookGeneration", () => {
       expect.objectContaining({
         pageNumber: 1,
         imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "standard",
+        imageQualityTier: "light",
         imagePurpose: "book_page",
         imageModelProfile: "pro_consistent",
       })
@@ -1077,7 +1077,7 @@ describe("processBookGeneration", () => {
       expect.objectContaining({
         pageNumber: 1,
         imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "standard",
+        imageQualityTier: "light",
         imagePurpose: "book_page",
         imageModelProfile: "pro_consistent",
       })
@@ -1087,7 +1087,7 @@ describe("processBookGeneration", () => {
   it("keeps premium_paid books on pro for both cover and pages", async () => {
     const premiumPaidBook: BookData = {
       ...baseBookData,
-      productPlan: "premium_paid",
+      productPlan: "premium_paid", imageModelProfile: "pro_consistent",
       pageCount: 4,
       input: { childName: "ゆうた", childAge: 4 },
     };
@@ -1316,7 +1316,7 @@ describe("processBookGeneration", () => {
   it("saves the final rewritten quality report summary instead of the pre-rewrite threshold summary", async () => {
     const premiumBook: BookData = {
       ...baseBookData,
-      productPlan: "premium_paid",
+      productPlan: "premium_paid", imageModelProfile: "pro_consistent",
       input: { childName: "ゆうた", childAge: 4 },
     };
     deps.llmClient.generateStory.mockResolvedValueOnce({
@@ -1400,7 +1400,7 @@ describe("processBookGeneration", () => {
       "book-forbidden-sanitize",
       {
         ...baseBookData,
-        productPlan: "premium_paid",
+        productPlan: "premium_paid", imageModelProfile: "pro_consistent",
         input: { childName: "ゆうた", childAge: 4, signatureItem: "みどりのきょうりゅう" },
         childProfileSnapshot: {
           displayName: "ゆうた",

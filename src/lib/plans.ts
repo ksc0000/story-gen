@@ -19,6 +19,7 @@ export type PlanConfig = {
   imageModelProfile?: ImageModelProfile;
   characterConsistencyMode: CharacterConsistencyMode;
   allowedCreationModes: CreationMode[];
+  monthlyBookQuota?: number;
   isPaid: boolean;
   enabled: boolean;
   sampleCtaLabel?: string;
@@ -67,10 +68,11 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     badgeLabels: ["無料", "4ページ", "すぐ作れる"],
     allowedPageCounts: [4],
     defaultPageCount: 4,
-    imageQualityTier: "standard",
-    imageModelProfile: "pro_consistent",
+    imageQualityTier: "light",
+    imageModelProfile: "openai_mini",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
+    monthlyBookQuota: 1,
     isPaid: false,
     enabled: true,
   },
@@ -97,14 +99,15 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     description:
       "思い出や成長を、よりきれいな絵本として残したい方向け。画質と作りやすさのバランスが良いおすすめプランです。",
     badgeLabels: ["おすすめ", "高品質", "思い出向き"],
-    allowedPageCounts: [4, 8, 12],
+    allowedPageCounts: [4, 8],
     defaultPageCount: 8,
     imageQualityTier: "standard",
-    imageModelProfile: "pro_consistent",
+    imageModelProfile: "openai_standard",
     characterConsistencyMode: "all_pages",
-    allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
+    allowedCreationModes: ["fixed_template", "guided_ai"],
+    monthlyBookQuota: 5,
     isPaid: true,
-    enabled: false,
+    enabled: true,
   },
   premium_paid: {
     productPlan: "premium_paid",
@@ -116,11 +119,12 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     allowedPageCounts: [4, 8, 12],
     defaultPageCount: 8,
     imageQualityTier: "premium",
-    imageModelProfile: "pro_consistent",
+    imageModelProfile: "kontext_max",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
+    monthlyBookQuota: 10,
     isPaid: true,
-    enabled: false,
+    enabled: true,
     sampleCtaLabel: "高品質サンプルを見る",
   },
 };
