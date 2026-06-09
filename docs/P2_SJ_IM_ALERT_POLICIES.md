@@ -2,7 +2,7 @@
 
 **Status**: ✅ LIVE (enabled, 2026-06-03) — 9 SJ/IM metrics created; 13 alert policies tuned and enabled
 **Created**: 2026-05-21  
-**Updated**: 2026-06-03 (Tuned thresholds based on P5-4 production baseline)
+**Updated**: 2026-06-03 (Finalized tuning and enabled based on P5-4 production baseline)
 **Task**: P2-10b-live (SJ/IM metric + policy live creation)  
 **Scope**: SJ-1 through SJ-4, IM-1 through IM-9. CG-1 is already live + enabled.  
 **Depends on**: P2-9 (`docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`) — metric definitions  
@@ -51,7 +51,7 @@ Live creation commands are documented in §8 for future use after explicit appro
 | **CG-1** alert policy | Already live + enabled in `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md` |
 | **DQ-1, DQ-2** data quality alerts | Not yet defined; future P2 slice |
 | Response schema changes | Permanent non-goal (see §4) |
-| Schema repair retry changes | Permanent non-goal (see §4) |
+| Schema repair retry changes | Decided OFF after P5-4 baseline (see §4) |
 | ImageProvider routing changes | Permanent non-goal (see §4) |
 | Firebase deploy | Not performed in this task |
 
@@ -81,7 +81,7 @@ These must NOT be changed as part of implementing SJ/IM alert policies, regardle
 |---|---|
 | Do NOT enable `ENABLE_RESPONSE_SCHEMA` | P4-15 §5 criteria not yet met in production |
 | Do NOT enable `RESPONSE_SCHEMA_MODE` | Same as above |
-| Do NOT enable `ENABLE_SCHEMA_REPAIR_RETRY` | Production baseline required first |
+| Do NOT enable `ENABLE_SCHEMA_REPAIR_RETRY` | Decided OFF: schema_validation rate (2.9%) is near target (2%) per P5-4 baseline; retry not yet justified by cost/latency. |
 | Do NOT change Gemini prompts | Prompt changes require separate review and approval |
 | Do NOT change retry behavior | Retry logic changes require evidence from production data |
 | Do NOT change ImageProvider routing | Routing changes require explicit approval + smoke evidence |
@@ -120,9 +120,7 @@ Email: `kikushun0529@gmail.com`
 
 ## 6. Alert Policy Definitions
 
-> All policies have `enabled: false` in the docs/config default.  
-> Set `enabled: true` only when the corresponding P2-9 metrics are verified as live
-> and a production traffic baseline is available (≥ 30 `book_outcome` events).
+> All policies are set to `enabled: true` in the YAML specs below, matching their live state.
 
 ### 6.1 SJ-1: schema_validation failure spike (WARNING)
 
@@ -788,7 +786,7 @@ documentation:
 
 | Property | Value |
 |---|---|
-| Display name | `IM-8: PROVIDER_5XX sustained (> 3 in 1h)` |
+| Display name | `IM-8: PROVIDER_5XX sustained (> 1 in 1h)` |
 | Metric | `logging.googleapis.com/user/generation/page_provider5xx_failures` |
 | Threshold value | `1` (fires on 2+ in 1h) |
 | Alignment period | `3600s` (1h) |
@@ -818,7 +816,7 @@ notificationChannels:
 enabled: true
 documentation:
   content: |
-    IM-8 WARNING: PROVIDER_5XX sustained (> 3 in 1h).
+    IM-8 WARNING: PROVIDER_5XX sustained (> 1 in 1h).
     Check provider status and fallback behavior.
     1. Check Replicate status: https://status.replicate.com
     2. Open saved query: "IM-4 PROVIDER_5XX page failures".
@@ -843,7 +841,7 @@ documentation:
 
 | Property | Value |
 |---|---|
-| Display name | `IM-9: page image failure spike (> 5 in 1h)` |
+| Display name | `IM-9: page image failure spike (> 2 in 1h)` |
 | Metric | `logging.googleapis.com/user/generation/page_failures_total` |
 | Threshold value | `2` (fires on 3+ in 1h) |
 | Alignment period | `3600s` (1h) |
@@ -873,7 +871,7 @@ notificationChannels:
 enabled: true
 documentation:
   content: |
-    IM-9 WARNING: page image failure spike (> 5 in 1h).
+    IM-9 WARNING: page image failure spike (> 2 in 1h).
     Broad signal — break down by error code.
     1. Open saved query: "IM-1 page image failures" in Cloud Logging.
     2. Break down by errorCode using IM-2/IM-3/IM-4 saved queries.
@@ -1100,17 +1098,38 @@ gcloud monitoring policies describe POLICY_ID \
 
 ## 10. Threshold Tuning After Production Baseline
 
-The absolute count thresholds in §6 are provisional estimates based on an assumed ~60 books/day volume.  
-After collecting ≥ 2 weeks of production data:
+The absolute count thresholds in §6 have been tuned based on the **P5-4 production baseline** (2026-06-03), which established a volume of approximately **20 books/day**.
 
+### Baseline Stats (2026-05-23)
+- **Total Outcomes**: 35 books / 2 days (≈17.5 books/day)
+- **Readable Rate**: 97.1%
+- **Schema Validation Failure Rate**: 2.9%
+
+### Calibrated Thresholds (for 20 books/day volume)
+The thresholds are set to fire when failure rates exceed SLO targets, using the smallest integer count that represents the target percentage to minimize noise at low volume.
+
+| Alert ID | Target % | Threshold (Count) | Window | Logic (for 20 books/day) |
+|---|---|---|---|---|
+| **SJ-1** | 5% | > 1 | 24h | Fires on 2+ (10%) |
+| **SJ-2** | 10% | > 2 | 24h | Fires on 3+ (15%) |
+| **SJ-3** | 2% | > 0 | 24h | Fires on 1+ (5%) |
+| **SJ-4** | 1% | > 0 | 24h | Fires on 1+ (5%) |
+| **IM-1** | 2% | > 0 | 24h | Fires on 1+ (5%) |
+| **IM-2** | 5% | > 1 | 24h | Fires on 2+ (10%) |
+| **IM-3** | 10%* | > 0 | 24h | Fires on 1+ E005 (proxy for 10% of page failures) |
+| **IM-4** | 30%* | > 1 | 24h | Fires on 2+ E005 (proxy for 30% of page failures) |
+| **IM-5** | 25%* | > 1 | 24h | Fires on 2+ TIMEOUT (proxy for 25% of page failures) |
+| **IM-6** | 50%* | > 2 | 24h | Fires on 3+ TIMEOUT (proxy for 50% of page failures) |
+| **IM-7** | any | > 0 | 1h | Fires on 1+ 5XX |
+| **IM-8** | > 1/h | > 1 | 1h | Fires on 2+ 5XX |
+| **IM-9** | > 2/h | > 2 | 1h | Fires on 3+ page failures total |
+
+\* IM-3 through IM-6 use absolute count thresholds as proxies for page failure rate percentages, assuming a baseline of ≈5-8 total page failures per day (based on 20 books/day × 8 pages/book × 5% page failure rate ≈ 8 failures).
+
+For future tuning as volume increases:
 1. Run `node scripts/report-generation-slo.mjs --input tmp/events.json --format console`.
-2. Record daily `book_outcomes_total`, `schema_validation_failures`, and `page_failures_total`.
-3. Recompute thresholds as:
-   - SJ-1 threshold = `ceil(avg_daily_outcomes × 0.05)`
-   - SJ-2 threshold = `ceil(avg_daily_outcomes × 0.10)`
-   - SJ-3 threshold = `ceil(avg_daily_outcomes × 0.02)`
-   - IM-1 threshold = `ceil(avg_daily_outcomes × 0.02)`
-   - etc.
+2. Record daily `book_outcomes_total`.
+3. Recompute thresholds as `ceil(avg_daily_outcomes × target_rate) - 1`.
 4. Update policy thresholds via `gcloud monitoring policies update`.
 5. Record updated values in §9 registry.
 
