@@ -190,6 +190,11 @@ const baseBookData: BookData = {
   input: { childName: "みらい" },
   createdAt: {} as FirebaseFirestore.Timestamp,
   expiresAt: null,
+  // Tests in this file assume baseBookData → a Replicate profile (pro_consistent)
+  // so they can verify OpenAI routing is NOT triggered. After the 3-tier rollout
+  // (PR #180), the default profile resolves to openai_mini, which would invert
+  // the test premise.
+  imageModelProfile: "pro_consistent",
 };
 
 const openAIBookData: BookData = {

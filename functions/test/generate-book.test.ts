@@ -216,7 +216,7 @@ describe("processBookGeneration", () => {
       "book123",
       expect.objectContaining({
         imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "light",
+        imageQualityTier: "standard",
         imagePurpose: "book_page",
         inputImageRoles: ["character_reference"],
         imageModelProfile: "pro_consistent",
@@ -236,7 +236,7 @@ describe("processBookGeneration", () => {
       "book123",
       expect.objectContaining({
         imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "light",
+        imageQualityTier: "standard",
         imagePurpose: "book_page",
         inputImageRoles: ["character_reference"],
         imageModelProfile: "pro_consistent",
@@ -1077,7 +1077,7 @@ describe("processBookGeneration", () => {
       expect.objectContaining({
         pageNumber: 1,
         imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "light",
+        imageQualityTier: "standard",
         imagePurpose: "book_page",
         imageModelProfile: "pro_consistent",
       })
