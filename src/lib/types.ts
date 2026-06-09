@@ -19,8 +19,9 @@ export type ImageModelProfile =
   | "klein_fast"
   | "klein_base"
   | "pro_consistent"
-  | "kontext_reference";
-export type InputImageRole = "character_reference" | "style_reference";
+  | "kontext_reference"
+  | "kontext_max";
+export type InputImageRole = "character_reference" | "style_reference" | "prev_page_reference";
 export type InputImageSource =
   | "approvedImageUrl"
   | "referenceImageUrl"

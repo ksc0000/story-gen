@@ -229,12 +229,27 @@ describe("buildReplicateInput", () => {
     });
   });
 
-  it("builds kontext input with input_image", () => {
+  it("builds kontext input with input_images when multiple URLs are provided", () => {
     expect(
       buildReplicateInput({
         model: "black-forest-labs/flux-kontext-pro",
         prompt: "test prompt",
         inputImageUrls: ["https://example.com/1.png", "https://example.com/2.png"],
+      })
+    ).toEqual({
+      prompt: "test prompt",
+      aspect_ratio: "4:3",
+      output_format: "png",
+      input_images: ["https://example.com/1.png", "https://example.com/2.png"],
+    });
+  });
+
+  it("builds kontext input with input_image when a single URL is provided", () => {
+    expect(
+      buildReplicateInput({
+        model: "black-forest-labs/flux-kontext-pro",
+        prompt: "test prompt",
+        inputImageUrls: ["https://example.com/1.png"],
       })
     ).toEqual({
       prompt: "test prompt",
