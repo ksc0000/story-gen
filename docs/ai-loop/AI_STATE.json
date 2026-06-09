@@ -16,12 +16,13 @@
     "3-tier plan rollout: free/standard_paid/premium_paid",
     "failureStage / failureProvider analytics (Issue #104)",
     "App rename EhoNAI → Ehoria (PR #185)",
-    "Ehoria logo integration (PR #187)"
+    "Ehoria logo integration (PR #187)",
+    "P5-5: Tune and enable 13 SJ/IM alert policies (PR #194, merged)",
+    "Template Smoke Checklist (PR #186, merged)"
   ],
   "failed_tasks": [],
   "in_progress_tasks": [
-    "P5-5: Tune and enable 13 SJ/IM alert policies (Issue #193, PR #194 Draft)",
-    "Template Smoke Checklist (Issue #184, PR #186 Draft)"
+    "REF-001: Character Reference Strategy docs — Problem Statement & Proposed Solution (Issue #196, PR #197 Draft)"
   ],
   "constraints": [
     "docs-first",
