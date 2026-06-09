@@ -1,0 +1,32 @@
+displayName: "IM-5: TIMEOUT page failures WARNING (> 25% of page failures)"
+conditions:
+  - displayName: "page_timeout_failures count > threshold over 24h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/page_timeout_failures"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 1
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "86400s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"
+severity: WARNING
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    IM-5 WARNING: TIMEOUT page failures rising.
+    Indicates provider latency degradation or generation timeout configuration issues.
+    First response:
+    1. Open saved query: "IM-3 TIMEOUT page failures" in Cloud Logging.
+    2. Check imageDurationMs and imageTimedOut fields.
+    3. Check provider status page — is Replicate experiencing degradation?
+    4. Check fallbackUsed — is fallback profile (klein_fast) absorbing timeouts?
+    5. Do not change timeout configuration or routing without explicit approval.
+    6. Follow GENERATION_SLO_RUNBOOK.md §8.6.
+  mimeType: "text/markdown"

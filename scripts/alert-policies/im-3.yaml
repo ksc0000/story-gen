@@ -1,0 +1,32 @@
+displayName: "IM-3: E005 page failures WARNING (> 10% of page failures)"
+conditions:
+  - displayName: "page_e005_failures count > threshold over 24h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/page_e005_failures"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 0
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "86400s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"
+severity: WARNING
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    IM-3 WARNING: E005 page failures rising.
+    E005 = content-sensitivity rejection by Replicate.
+    First response:
+    1. Open saved query: "IM-2 E005 page failures" in Cloud Logging.
+    2. Inspect safe metadata only — do NOT log or expose prompt content.
+    3. Check primaryProfile and provider — is it a specific model profile?
+    4. Investigate character reference or prompt safety triggers in a separate task.
+    5. Do NOT change candidate gate or routing without explicit approval.
+    6. Follow GENERATION_SLO_RUNBOOK.md §8.5.
+  mimeType: "text/markdown"
