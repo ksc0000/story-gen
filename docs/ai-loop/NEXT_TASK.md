@@ -2,36 +2,34 @@
 
 ## Context
 
-The Cohort B soft launch is decided and in preparation, with several critical reliability improvements (like `simplified_scene` and safer retry mechanisms) recently implemented and deployed. Robust monitoring is essential before and during this rollout. The Story JSON (SJ) and Image Generation (IM) alert policies (P2-10b) have been defined, their metrics are live, and the policies exist but are currently disabled (`enabled: false`). The `prod-baseline` data (P5-4) has now been collected, providing the necessary information to tune these alerts.
+The product roadmap identifies `REF-001 (Character Reference Strategy)` as a key `design-in-progress` item under "Now" priorities. This strategy aims to improve character consistency by minimizing unwanted background and composition leakage from reference images. The current state shows several Phase 5 (Monetization) tasks are in progress or completed, and Phase 4 (Gemini JSON Hardening) is closed. The focus is on preparing the foundation for robust image generation.
 
 ## Objective
 
-Tune the thresholds for the 13 disabled Story JSON (SJ) and Image Generation (IM) alert policies, and then enable them.
+Draft the "Problem Statement" and "Proposed Solution Overview" sections within the `docs/CHARACTER_REFERENCE_STRATEGY.md` document. This task specifically focuses on formalizing the design for an `identity-only reference strategy`, articulating the issues with current character reference approaches and outlining the high-level vision for the new strategy.
 
 ## Allowed Scope
 
-- `docs/P2_SJ_IM_ALERT_POLICIES.md` (for threshold rationale and final policy status)
-- `cloud_monitoring_configs/` (or equivalent directory where Cloud Monitoring alert policy YAMLs/configurations are stored)
-- `functions/` (if there's any helper script for deploying these configs)
-- Project Cloud Monitoring console (for verification)
+- `docs/CHARACTER_REFERENCE_STRATEGY.md`
 
 ## Forbidden Scope
 
-- Infrastructure changes (beyond alert policy configuration)
+- `functions/`
+- `web/`
+- `tests/`
+- `scripts/`
+- Infrastructure configuration (`firebase.json`, `.firebaserc`, `package.json` scripts)
 - Billing
 - Authentication redesign
-- Secrets management (beyond existing access)
-- Generated assets
-- Core business logic unrelated to monitoring
+- Secrets management
+- Generated assets (`lib/`, `dist/`)
 
 ## Requirements
 
-- **Review `prod-baseline` data:** Analyze the results from P5-4 (`prod-baseline` re-measurement) to determine appropriate, realistic thresholds for each of the 13 SJ/IM alert policies. The goal is to detect actual regressions/failures without generating excessive noise.
-- **Update Alert Policy Configurations:** Modify the configurations for the 13 policies (e.g., YAML files referenced in `P2_SJ_IM_ALERT_POLICIES.md` or a new configuration file) to:
-    - Set `enabled: true` for all policies.
-    - Set the `threshold` values based on the `prod-baseline` analysis.
-- **Apply Changes:** Deploy the updated alert policy configurations to Google Cloud Monitoring.
-- **Document Rationale:** Add notes to `docs/P2_SJ_IM_ALERT_POLICIES.md` (or a linked document) detailing the chosen thresholds and the reasoning behind them, referencing the `prod-baseline` data.
+- Clearly define the problem of background/composition leakage in character reference.
+- Outline the core concept of an `identity-only reference strategy`, including the role of neutral reference images and character sheets.
+- Ensure the language is precise and aligns with the existing technical terminology in the project.
+- The update should be a self-contained addition to the existing document, clearly labeled.
 
 ## Output Format
 
@@ -43,37 +41,20 @@ Tune the thresholds for the 13 disabled Story JSON (SJ) and Image Generation (IM
 
 ---
 
-## Worker Prompt
+### Worker Prompt
 
-### Summary
+Please update the `docs/CHARACTER_REFERENCE_STRATEGY.md` file.
 
-The task is to enable 13 critical monitoring alert policies for Story JSON (SJ) and Image Generation (IM) failures, which are currently defined but disabled. This involves analyzing the `prod-baseline` data to set appropriate thresholds and then applying the updated configurations. This action is crucial for robust monitoring during the upcoming Cohort B soft launch.
+1.  **Add a new top-level section titled "Problem Statement: Background and Composition Leakage"**
+    *   Describe how the current method of using character reference images can inadvertently transfer background elements, poses, or compositional biases from the reference image into the generated page illustrations.
+    *   Explain why this is an issue for story consistency and artistic quality.
+    *   Reference `IMG-002` (prompt-level character reference isolation) as an existing mitigation, but highlight its limitations and the need for a more structural solution.
 
-### Changed files
-
-List of files you expect to change, e.g.:
-- `docs/P2_SJ_IM_ALERT_POLICIES.md`
-- `cloud_monitoring_configs/sj-alert-policy-1.yaml`
-- `cloud_monitoring_configs/im-alert-policy-1.yaml`
-- ... (and other relevant policy YAML files)
-
-### Tests executed
-
-1.  **Verification of enabled policies:**
-    ```bash
-    gcloud monitoring alert-policies list --filter="displayName=sj-policy-name" --format="value(enabled)"
-    gcloud monitoring alert-policies list --filter="displayName=im-policy-name" --format="value(enabled)"
-    # Repeat for all 13 policies, confirming `true`
-    ```
-    (Replace `sj-policy-name` and `im-policy-name` with actual policy display names.)
-2.  **Verification of thresholds:** Manually inspect each alert policy in the Cloud Monitoring UI to confirm the `threshold` values match the updated configurations.
-3.  **Documentation check:** Verify that the `docs/P2_SJ_IM_ALERT_POLICIES.md` (or relevant linked doc) has been updated with the threshold rationale.
-
-### Known issues
-
-- (None yet, to be filled by worker)
-
-### Suggested next task
-
-After this task is complete and verified:
-- **P5-3-execute-b: Cohort B Limited Rollout Execution.** Once monitoring is robustly enabled, proceed with the actual invitation and onboarding of 3-5 testers for Cohort B, as documented in `docs/P5_COHORT_B_GO_NOGO_CHECKLIST.md`. This will involve manual operational steps rather than coding.
+2.  **Add another new top-level section titled "Proposed Solution Overview: Identity-Only Reference Strategy"**
+    *   Introduce the concept of an "identity-only reference strategy."
+    *   Explain that this strategy aims to decouple character identity (facial features, unique traits, attire) from environmental context, pose, and composition.
+    *   Describe the high-level components of this solution:
+        *   **Neutral Reference Images:** Standardized, context-free images of characters (e.g., full-body, neutral pose, plain background) used solely to capture identity.
+        *   **Character Sheets (Conceptual):** A collection of prompt directives and potentially multiple neutral reference images (for different angles/expressions) that collectively define a character's visual identity.
+    *   Briefly explain how this strategy is expected to reduce background/composition leakage while maintaining character consistency across diverse scenes and actions.
+    *   Mention that this is a "design-in-progress" and subsequent sections will detail implementation steps.
