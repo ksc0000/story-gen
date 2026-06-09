@@ -3,51 +3,69 @@
 
 ## Context
 
-The product roadmap highlights the need for continued reliability and quality validation, particularly for the core generation modes. Phase 1 (Reliability First) has pending production smoke evidence, and Phase 3 (Template Mode) focuses on strengthening the most stable generation mode. The next immediate step identified in the roadmap's "優先順位 (Now)" section is to perform the `Template Smoke Checklist`.
+The product roadmap indicates that the `P5-4 prod-baseline` (real user data for 7 days, >= 30 books) has been completed. This satisfies the prerequisite for tuning and enabling the Story JSON (SJ) and Image Generation (IM) alert policies, as outlined in `P2-10b-enable` and `P5-5`. Currently, these policies are defined but set to `enabled: false`.
 
 ## Objective
 
-Execute the `Template Smoke Checklist` for the 6 `fixed_template`s (the initial 4 templates and the 2 added in T2-A). The goal is to verify their real-generation performance and quality, documenting all findings in the designated markdown file.
+Analyze the collected production baseline data, determine appropriate thresholds for the disabled SJ/IM alert policies, update the policy documentation with these thresholds, and provide clear instructions for their enablement.
 
 ## Allowed Scope
 
-- `docs/TEMPLATE_SMOKE_CHECKLIST.md` (for recording test results and observations)
-- `functions/src/` (for creating or using existing local scripts to trigger book generation for testing purposes, if direct UI interaction is not sufficient or efficient)
-- `web/` (for interacting with the admin UI or user-facing generation flow to initiate book creation for the smoke test)
-- `firebase-admin-test-cli/` (for using CLI tools to facilitate book generation for the smoke test)
+- `docs/`
+- `scripts/` (for any `gcloud` command generation or execution scripts, though manual execution is preferred for sensitive operations like alert enablement)
 
 ## Forbidden Scope
 
-- `firebase.json`
-- `package.json` at root level
-- Infrastructure configuration (e.g., `infra/` directory)
-- Billing related code or configurations
+- `functions/src/` (no application code changes)
+- Infrastructure
+- Billing
 - Authentication redesign
-- Secrets management (e.g., `.env` files, Google Cloud Secret Manager configurations)
-- Generated assets (`public/`, `dist/`, `lib/` directories in functions)
-- Core database schema changes (Firestore or other)
-- Firebase rules modifications beyond minor additions for quality review documents (if absolutely necessary for results recording, but not expected for this task)
+- Secrets
+- Generated assets
 
 ## Requirements
 
-- **Identify Templates**: The 6 `fixed_template`s for this smoke test are:
-    - `fixed-animal-adventure`
-    - `fixed-magical-journey`
-    - `fixed-tiny-hero`
-    - `fixed-bedtime-story`
-    - `fixed-memories-sparkle` (from T2-A)
-    - `fixed-emotional-garden` (from T2-A)
-- **Generate Books**: For each of these 6 `fixed_template`s, generate at least one complete book using the standard generation flow (e.g., through the admin UI or a command that accurately simulates the user flow).
-- **Consult Checklist**: Thoroughly review the criteria outlined in `docs/TEMPLATE_SMOKE_CHECKLIST.md` for evaluating each generated book.
-- **Record Results**: Fill out `docs/TEMPLATE_SMOKE_CHECKLIST.md` with detailed, objective observations for each generated book. This must include:
-    - Overall success/failure status.
-    - Any specific quality issues (e.g., story coherence, character consistency, image quality, adherence to `styleBible`, prompt following, unexpected text in images, generation duration, fallback usage).
-    - Links to generated book IDs and relevant screenshots/video snippets (if any significant issues or notable successes are observed).
-- **Identify Issues**: Clearly document any identified issues, regressions, or areas for improvement for each template.
-- **Adhere to Constraints**: The primary output of this task is updated documentation. Minimize code changes unless absolutely necessary to enable the smoke test execution (e.g., a simple local script).
+- Analyze the `P5-4 prod-baseline` data (referencing `P4_PERMANENT_STORY_JSON_SLO_PLAN.md` §7.3 and actual Cloud Monitoring metrics).
+- Propose specific, data-driven threshold values for all 13 disabled SJ/IM alert policies.
+- Update the `P2_SJ_IM_ALERT_POLICIES.md` document to include these specific thresholds and mark the policies for enablement.
+- Add clear `gcloud` commands or step-by-step instructions within `P2_SJ_IM_ALERT_POLICIES.md` for a human operator to enable these policies in Cloud Monitoring.
+- Ensure all changes are documented "docs-first" and adhere to the "small PRs" constraint.
+- Report any follow-up items necessary for verification or further action.
 
 ## Output Format
 
+- Summary
+- Changed files
+- Tests executed
+- Known issues
+- Suggested next task
+
+---
+
+## Worker Prompt
+
 ### Summary
 
-Executed the `Template Smoke Checklist` for 6 `
+The task is to finalize and enable the disabled Story JSON (SJ) and Image Generation (IM) alert policies in Cloud Monitoring. This involves analyzing the established production baseline data (`P5-4`), proposing specific thresholds for each of the 13 policies currently in `enabled: false` state, updating the `P2_SJ_IM_ALERT_POLICIES.md` document with these tuned thresholds, and providing the necessary `gcloud` commands or manual steps for a human operator to enable them.
+
+### Changed files
+
+- `docs/P2_SJ_IM_ALERT_POLICIES.md`
+
+### Tests executed
+
+- Manual review of `P5-4` baseline data in Cloud Monitoring to inform threshold tuning.
+- Linting and spell-checking on updated documentation.
+- (Verification after enablement, outside this task's scope): Confirm policies appear as `enabled: true` in Cloud Monitoring console.
+
+### Known issues
+
+- Ensuring the selected thresholds are robust enough to catch actual issues without generating excessive noise will require careful consideration of the `P5-4` baseline data. The thresholds should be set conservatively initially if data is sparse, with a plan for iterative refinement.
+
+### Suggested next task
+
+**Objective:** Execute the `Production smoke checklist` now that critical production monitoring is enabled.
+
+**Reasoning:** With the SJ/IM alert policies enabled following baseline analysis, a crucial layer of production reliability is in place. The next logical step is to perform the `Production smoke checklist` for `fixed_template` books and verify its results to move Phase 1 towards completion.
+
+```
