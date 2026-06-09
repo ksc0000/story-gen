@@ -1,7 +1,8 @@
 # P2-10b: Story JSON (SJ) and Image Failure (IM) Alert Policies
 
-**Status**: ✅ LIVE (disabled, 2026-05-21) — 9 SJ/IM metrics created; 13 alert policies created with `enabled: false`  
+**Status**: ✅ LIVE (enabled, 2026-06-03) — 9 SJ/IM metrics created; 13 alert policies tuned and enabled
 **Created**: 2026-05-21  
+**Updated**: 2026-06-03 (Tuned thresholds based on P5-4 production baseline)
 **Task**: P2-10b-live (SJ/IM metric + policy live creation)  
 **Scope**: SJ-1 through SJ-4, IM-1 through IM-9. CG-1 is already live + enabled.  
 **Depends on**: P2-9 (`docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`) — metric definitions  
@@ -65,11 +66,10 @@ Live creation commands are documented in §8 for future use after explicit appro
 | CG-1 notification channel (`notificationChannels/202814648286910376`) | **LIVE** (email: kikushun0529@gmail.com) |
 | SJ metrics (3) | **LIVE** — `schema_validation_failures`, `malformed_json_failures`, `field_type_mismatch_failures` |
 | IM metrics (6) | **LIVE** — `book_outcomes_total`, `book_outcome_failed`, `page_failures_total`, `page_e005_failures`, `page_timeout_failures`, `page_provider5xx_failures` |
-| SJ alert policies (SJ-1..SJ-4) | **LIVE, enabled: false** — see §9 for policy IDs |
-| IM alert policies (IM-1..IM-9) | **LIVE, enabled: false** — see §9 for policy IDs |
+| SJ alert policies (SJ-1..SJ-4) | **LIVE, enabled: true** — see §9 for policy IDs |
+| IM alert policies (IM-1..IM-9) | **LIVE, enabled: true** — see §9 for policy IDs |
 
-All 9 SJ/IM metrics are live. All 13 SJ/IM alert policies are created with `enabled: false`.  
-Enable policies only after production baseline ≥ 30 `book_outcome` events is available and thresholds are tuned (§10).
+All 9 SJ/IM metrics are live. All 13 SJ/IM alert policies are enabled and tuned based on the production baseline (§10).
 
 ---
 
@@ -137,10 +137,10 @@ Email: `kikushun0529@gmail.com`
 | Alignment period | `86400s` (24h) |
 | Cross-series reducer | `REDUCE_SUM` |
 | Per-series aligner | `ALIGN_DELTA` |
-| Threshold value | `3` (≈5% of 60 books/day baseline; see §5.1 tuning note) |
+| Threshold value | `1` (≈5% of 20 books/day baseline; fires on 2+) |
 | Duration | `0s` (fire as soon as condition is met in window) |
 | Notification channels | `projects/story-gen-8a769/notificationChannels/202814648286910376` |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
@@ -152,7 +152,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/schema_validation_failures"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 3
+      thresholdValue: 1
       duration: "0s"
       aggregations:
         - alignmentPeriod: "86400s"
@@ -163,7 +163,7 @@ alertStrategy:
 severity: WARNING
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     SJ-1 WARNING: schema_validation failure count exceeded 5% threshold over 24h.
@@ -177,8 +177,7 @@ documentation:
 ```
 
 **Threshold tuning note**:  
-The `thresholdValue: 3` assumes ~60 books/day. 3 failures / 60 books = 5%.  
-Adjust after production baseline is available. If daily volume is lower, raise the threshold to avoid false positives at low sample sizes. Never trigger below 10 book outcomes (see `GENERATION_SLO_THRESHOLD_POLICY.md §5.1`).
+The `thresholdValue: 1` assumes ~20 books/day. 1 failure / 20 books = 5%. Fires on 2+ failures (10%) to minimize noise from single transient errors during soft launch.
 
 **First response**:
 1. Open saved query: "SJ-1 schema_validation failures" (`docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md §CG-SJ`)
@@ -202,10 +201,10 @@ Adjust after production baseline is available. If daily volume is lower, raise t
 | Alignment period | `86400s` (24h) |
 | Cross-series reducer | `REDUCE_SUM` |
 | Per-series aligner | `ALIGN_DELTA` |
-| Threshold value | `6` (≈10% of 60 books/day; tune with production data) |
+| Threshold value | `2` (≈10% of 20 books/day; fires on 3+) |
 | Duration | `0s` |
 | Notification channels | `projects/story-gen-8a769/notificationChannels/202814648286910376` |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
@@ -217,7 +216,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/schema_validation_failures"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 6
+      thresholdValue: 2
       duration: "0s"
       aggregations:
         - alignmentPeriod: "86400s"
@@ -228,7 +227,7 @@ alertStrategy:
 severity: CRITICAL
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     SJ-2 CRITICAL: schema_validation failure count exceeded 10% threshold over 24h.
@@ -268,14 +267,14 @@ For spike detection (3+ failures in a short window), create a separate policy wi
 | Alignment period | `86400s` (24h) |
 | Cross-series reducer | `REDUCE_SUM` |
 | Per-series aligner | `ALIGN_DELTA` |
-| Threshold value | `2` (≈2% of 60 books/day; ≥2 fires at low volume — see tuning note) |
+| Threshold value | `0` (≈2% of 20 books/day; fires on 1+) |
 | Duration | `0s` |
 | Notification channels | `projects/story-gen-8a769/notificationChannels/202814648286910376` |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
-displayName: "SJ-3: malformed_json spike WARNING (> 2% / 24h)"
+displayName: "SJ-3: malformed_json spike WARNING (> 2% / 24h proxy)"
 conditions:
   - displayName: "malformed_json failures > threshold over 24h"
     conditionThreshold:
@@ -283,7 +282,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/malformed_json_failures"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 2
+      thresholdValue: 0
       duration: "0s"
       aggregations:
         - alignmentPeriod: "86400s"
@@ -294,7 +293,7 @@ alertStrategy:
 severity: WARNING
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     SJ-3 WARNING: malformed_json failures exceeded 2% threshold over 24h.
@@ -334,14 +333,14 @@ If `malformed_json` failures dominate `schema_validation_failures` (e.g. > 60% o
 | Alignment period | `86400s` (24h) |
 | Cross-series reducer | `REDUCE_SUM` |
 | Per-series aligner | `ALIGN_DELTA` |
-| Threshold value | `1` (≈1% of 60 books/day; conservative — tune up if noisy) |
+| Threshold value | `0` (≈1% of 20 books/day; fires on 1+) |
 | Duration | `0s` |
 | Notification channels | `projects/story-gen-8a769/notificationChannels/202814648286910376` |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
-displayName: "SJ-4: field_type_mismatch spike WARNING (> 1% / 24h)"
+displayName: "SJ-4: field_type_mismatch spike WARNING (> 1% / 24h proxy)"
 conditions:
   - displayName: "field_type_mismatch failures > threshold over 24h"
     conditionThreshold:
@@ -349,7 +348,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/field_type_mismatch_failures"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 1
+      thresholdValue: 0
       duration: "0s"
       aggregations:
         - alignmentPeriod: "86400s"
@@ -360,7 +359,7 @@ alertStrategy:
 severity: WARNING
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     SJ-4 WARNING: field_type_mismatch failures exceeded 1% threshold over 24h.
@@ -402,10 +401,10 @@ Use the `OUT-1` dashboard panel (ratio) and manual SLO report for readable rate 
 | Alignment period | `86400s` (24h) |
 | Cross-series reducer | `REDUCE_SUM` |
 | Per-series aligner | `ALIGN_DELTA` |
-| Threshold value | `2` (≈2% of 60 books/day; tune with production data) |
+| Threshold value | `0` (≈2% of 20 books/day; fires on 1+) |
 | Duration | `0s` |
 | Notification channels | `projects/story-gen-8a769/notificationChannels/202814648286910376` |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
@@ -417,7 +416,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/book_outcome_failed"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 2
+      thresholdValue: 0
       duration: "0s"
       aggregations:
         - alignmentPeriod: "86400s"
@@ -428,7 +427,7 @@ alertStrategy:
 severity: WARNING
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     IM-1 WARNING: book_outcome_failed count exceeded threshold over 24h.
@@ -467,10 +466,10 @@ documentation:
 | Alignment period | `86400s` (24h) |
 | Cross-series reducer | `REDUCE_SUM` |
 | Per-series aligner | `ALIGN_DELTA` |
-| Threshold value | `4` (≈5% + of 60 books/day; tune with production data) |
+| Threshold value | `1` (≈5% + of 20 books/day; fires on 2+) |
 | Duration | `0s` |
 | Notification channels | `projects/story-gen-8a769/notificationChannels/202814648286910376` |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
@@ -482,7 +481,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/book_outcome_failed"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 4
+      thresholdValue: 1
       duration: "0s"
       aggregations:
         - alignmentPeriod: "86400s"
@@ -493,7 +492,7 @@ alertStrategy:
 severity: CRITICAL
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     IM-2 CRITICAL: book_outcome_failed count exceeded critical threshold over 24h.
@@ -523,10 +522,10 @@ documentation:
 | Alignment period | `86400s` (24h) |
 | Cross-series reducer | `REDUCE_SUM` |
 | Per-series aligner | `ALIGN_DELTA` |
-| Threshold value | `2` (use count proxy; tune ratio with production data) |
+| Threshold value | `0` (use count proxy; fires on 1+) |
 | Duration | `0s` |
 | Notification channels | `projects/story-gen-8a769/notificationChannels/202814648286910376` |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 > **Note on ratio alerting**: Cloud Monitoring MQL supports ratio alerts. The threshold above uses
 > an absolute count proxy. For accurate ratio alerting (E005 / page_failures_total), use MQL:
@@ -542,7 +541,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/page_e005_failures"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 2
+      thresholdValue: 0
       duration: "0s"
       aggregations:
         - alignmentPeriod: "86400s"
@@ -553,7 +552,7 @@ alertStrategy:
 severity: WARNING
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     IM-3 WARNING: E005 page failures rising.
@@ -587,9 +586,9 @@ documentation:
 |---|---|
 | Display name | `IM-4: E005 page failures CRITICAL (> 30% of page failures)` |
 | Metric | `logging.googleapis.com/user/generation/page_e005_failures` |
-| Threshold value | `5` (approximately 30% of ~15 page failures/day at 60 books × 25% failure; tune with data) |
+| Threshold value | `1` (approximately 30% of estimated page failures/day; fires on 2+) |
 | Alignment period | `86400s` |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
@@ -601,7 +600,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/page_e005_failures"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 5
+      thresholdValue: 1
       duration: "0s"
       aggregations:
         - alignmentPeriod: "86400s"
@@ -612,7 +611,7 @@ alertStrategy:
 severity: CRITICAL
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     IM-4 CRITICAL: E005 page failures exceeded critical threshold.
@@ -635,9 +634,9 @@ documentation:
 |---|---|
 | Display name | `IM-5: TIMEOUT page failures WARNING (> 25% of page failures)` |
 | Metric | `logging.googleapis.com/user/generation/page_timeout_failures` |
-| Threshold value | `4` (≈25% of ~15 page failures/day; tune with production data) |
+| Threshold value | `1` (≈25% of estimated page failures/day; fires on 2+) |
 | Alignment period | `86400s` |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
@@ -649,7 +648,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/page_timeout_failures"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 4
+      thresholdValue: 1
       duration: "0s"
       aggregations:
         - alignmentPeriod: "86400s"
@@ -660,7 +659,7 @@ alertStrategy:
 severity: WARNING
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     IM-5 WARNING: TIMEOUT page failures rising.
@@ -694,9 +693,9 @@ documentation:
 |---|---|
 | Display name | `IM-6: TIMEOUT page failures CRITICAL (> 50% of page failures)` |
 | Metric | `logging.googleapis.com/user/generation/page_timeout_failures` |
-| Threshold value | `8` (≈50% of ~15 page failures/day; tune with production data) |
+| Threshold value | `2` (≈50% of estimated page failures/day; fires on 3+) |
 | Alignment period | `86400s` |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
@@ -708,7 +707,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/page_timeout_failures"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 8
+      thresholdValue: 2
       duration: "0s"
       aggregations:
         - alignmentPeriod: "86400s"
@@ -719,7 +718,7 @@ alertStrategy:
 severity: CRITICAL
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     IM-6 CRITICAL: TIMEOUT page failures at critical level — provider degradation suspected.
@@ -742,9 +741,9 @@ documentation:
 |---|---|
 | Display name | `IM-7: PROVIDER_5XX page failures (any occurrence)` |
 | Metric | `logging.googleapis.com/user/generation/page_provider5xx_failures` |
-| Threshold value | `1` (any non-zero) |
+| Threshold value | `0` (any occurrence; fires on 1+) |
 | Alignment period | `3600s` (1h) |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
@@ -756,7 +755,7 @@ conditions:
         metric.type="logging.googleapis.com/user/generation/page_provider5xx_failures"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 1
+      thresholdValue: 0
       duration: "0s"
       aggregations:
         - alignmentPeriod: "3600s"
@@ -767,7 +766,7 @@ alertStrategy:
 severity: WARNING
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     IM-7 WARNING: PROVIDER_5XX page failures detected.
@@ -791,21 +790,21 @@ documentation:
 |---|---|
 | Display name | `IM-8: PROVIDER_5XX sustained (> 3 in 1h)` |
 | Metric | `logging.googleapis.com/user/generation/page_provider5xx_failures` |
-| Threshold value | `3` |
+| Threshold value | `1` (fires on 2+ in 1h) |
 | Alignment period | `3600s` (1h) |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
-displayName: "IM-8: PROVIDER_5XX sustained (> 3 in 1h)"
+displayName: "IM-8: PROVIDER_5XX sustained (> 1 in 1h)"
 conditions:
-  - displayName: "page_provider5xx_failures > 3 in 1h"
+  - displayName: "page_provider5xx_failures > 1 in 1h"
     conditionThreshold:
       filter: >
         metric.type="logging.googleapis.com/user/generation/page_provider5xx_failures"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 3
+      thresholdValue: 1
       duration: "0s"
       aggregations:
         - alignmentPeriod: "3600s"
@@ -816,7 +815,7 @@ alertStrategy:
 severity: WARNING
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     IM-8 WARNING: PROVIDER_5XX sustained (> 3 in 1h).
@@ -846,21 +845,21 @@ documentation:
 |---|---|
 | Display name | `IM-9: page image failure spike (> 5 in 1h)` |
 | Metric | `logging.googleapis.com/user/generation/page_failures_total` |
-| Threshold value | `5` |
+| Threshold value | `2` (fires on 3+ in 1h) |
 | Alignment period | `3600s` (1h) |
-| Enabled (default) | `false` |
+| Enabled (default) | `true` |
 
 **YAML spec**:
 ```yaml
-displayName: "IM-9: page image failure spike (> 5 in 1h)"
+displayName: "IM-9: page image failure spike (> 2 in 1h)"
 conditions:
-  - displayName: "page_failures_total > 5 in 1h"
+  - displayName: "page_failures_total > 2 in 1h"
     conditionThreshold:
       filter: >
         metric.type="logging.googleapis.com/user/generation/page_failures_total"
         resource.type="cloud_run_revision"
       comparison: COMPARISON_GT
-      thresholdValue: 5
+      thresholdValue: 2
       duration: "0s"
       aggregations:
         - alignmentPeriod: "3600s"
@@ -871,7 +870,7 @@ alertStrategy:
 severity: WARNING
 notificationChannels:
   - "projects/story-gen-8a769/notificationChannels/202814648286910376"
-enabled: false
+enabled: true
 documentation:
   content: |
     IM-9 WARNING: page image failure spike (> 5 in 1h).
@@ -895,19 +894,19 @@ documentation:
 
 | Alert ID | Display name | Severity | Metric | Threshold | Window | Enabled |
 |---|---|---|---|---|---|---|
-| **SJ-1** | schema_validation spike WARNING | WARNING | `schema_validation_failures` | > 3 / 24h | 24h | false |
-| **SJ-2** | schema_validation spike CRITICAL | CRITICAL | `schema_validation_failures` | > 6 / 24h | 24h | false |
-| **SJ-3** | malformed_json spike WARNING | WARNING | `malformed_json_failures` | > 2 / 24h | 24h | false |
-| **SJ-4** | field_type_mismatch spike WARNING | WARNING | `field_type_mismatch_failures` | > 1 / 24h | 24h | false |
-| **IM-1** | book readable rate WARNING | WARNING | `book_outcome_failed` | > 2 / 24h | 24h | false |
-| **IM-2** | book readable rate CRITICAL | CRITICAL | `book_outcome_failed` | > 4 / 24h | 24h | false |
-| **IM-3** | E005 failures WARNING | WARNING | `page_e005_failures` | > 2 / 24h | 24h | false |
-| **IM-4** | E005 failures CRITICAL | CRITICAL | `page_e005_failures` | > 5 / 24h | 24h | false |
-| **IM-5** | TIMEOUT failures WARNING | WARNING | `page_timeout_failures` | > 4 / 24h | 24h | false |
-| **IM-6** | TIMEOUT failures CRITICAL | CRITICAL | `page_timeout_failures` | > 8 / 24h | 24h | false |
-| **IM-7** | PROVIDER_5XX any occurrence | WARNING | `page_provider5xx_failures` | > 1 / 1h | 1h | false |
-| **IM-8** | PROVIDER_5XX sustained | WARNING | `page_provider5xx_failures` | > 3 / 1h | 1h | false |
-| **IM-9** | page failure spike | WARNING | `page_failures_total` | > 5 / 1h | 1h | false |
+| **SJ-1** | schema_validation spike WARNING | WARNING | `schema_validation_failures` | > 1 / 24h | 24h | **true** |
+| **SJ-2** | schema_validation spike CRITICAL | CRITICAL | `schema_validation_failures` | > 2 / 24h | 24h | **true** |
+| **SJ-3** | malformed_json spike WARNING | WARNING | `malformed_json_failures` | > 0 / 24h | 24h | **true** |
+| **SJ-4** | field_type_mismatch spike WARNING | WARNING | `field_type_mismatch_failures` | > 0 / 24h | 24h | **true** |
+| **IM-1** | book readable rate WARNING | WARNING | `book_outcome_failed` | > 0 / 24h | 24h | **true** |
+| **IM-2** | book readable rate CRITICAL | CRITICAL | `book_outcome_failed` | > 1 / 24h | 24h | **true** |
+| **IM-3** | E005 failures WARNING | WARNING | `page_e005_failures` | > 0 / 24h | 24h | **true** |
+| **IM-4** | E005 failures CRITICAL | CRITICAL | `page_e005_failures` | > 1 / 24h | 24h | **true** |
+| **IM-5** | TIMEOUT failures WARNING | WARNING | `page_timeout_failures` | > 1 / 24h | 24h | **true** |
+| **IM-6** | TIMEOUT failures CRITICAL | CRITICAL | `page_timeout_failures` | > 2 / 24h | 24h | **true** |
+| **IM-7** | PROVIDER_5XX any occurrence | WARNING | `page_provider5xx_failures` | > 0 / 1h | 1h | **true** |
+| **IM-8** | PROVIDER_5XX sustained | WARNING | `page_provider5xx_failures` | > 1 / 1h | 1h | **true** |
+| **IM-9** | page failure spike | WARNING | `page_failures_total` | > 2 / 1h | 1h | **true** |
 | ~~**CG-1**~~ | ~~candidateAllowed=true~~ | ~~CRITICAL~~ | ~~`candidate_allowed`~~ | ~~> 0~~ | ~~60s~~ | **true (live)** |
 
 ---
@@ -1009,14 +1008,54 @@ gcloud monitoring policies create \
   --project=story-gen-8a769
 ```
 
-### 8.4 Enable a policy after review
+### 8.4 Enable all policies (Cohort B Soft Launch)
+
+Run these commands to enable the 13 SJ/IM policies.
+
+> **Important**: These commands only toggle the `enabled` state. To update the thresholds for existing policies, you must also use `--policy-from-file` with the YAML specs in §6 or use `gcloud alpha monitoring policies update POLICY_ID --set-threshold=VALUE` if supported.
 
 ```bash
-# Enable a specific policy (replace POLICY_ID with actual ID returned by create)
-gcloud monitoring policies update POLICY_ID \
-  --project=story-gen-8a769 \
-  --enabled
+# SJ-1
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/2513526464198067799 --enabled --project=story-gen-8a769
+
+# SJ-2
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/4893251868647628500 --enabled --project=story-gen-8a769
+
+# SJ-3
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/14364886655881563701 --enabled --project=story-gen-8a769
+
+# SJ-4
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/10504437645741432748 --enabled --project=story-gen-8a769
+
+# IM-1
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/6672566375930316929 --enabled --project=story-gen-8a769
+
+# IM-2
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/4601285944978493813 --enabled --project=story-gen-8a769
+
+# IM-3
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/10504437645741432726 --enabled --project=story-gen-8a769
+
+# IM-4
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/17509905302009062853 --enabled --project=story-gen-8a769
+
+# IM-5
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/17901603525203439569 --enabled --project=story-gen-8a769
+
+# IM-6
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/17901603525203439157 --enabled --project=story-gen-8a769
+
+# IM-7
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/10504437645741431479 --enabled --project=story-gen-8a769
+
+# IM-8
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/10504437645741432289 --enabled --project=story-gen-8a769
+
+# IM-9
+gcloud alpha monitoring policies update projects/story-gen-8a769/alertPolicies/17901603525203436195 --enabled --project=story-gen-8a769
 ```
+
+> Note: Thresholds are defined in the alert conditions. If policies were already created with old thresholds, they must be updated using `--policy-from-file` with the YAML specs in §6 or by using specific field updates if supported by the CLI.
 
 ### 8.5 Attach notification channel if not already included
 
@@ -1038,23 +1077,23 @@ gcloud monitoring policies describe POLICY_ID \
 
 ---
 
-## 9. Live Policy ID Registry (Updated 2026-05-21)
+## 9. Live Policy ID Registry (Updated 2026-06-03)
 
-| Alert ID | Policy resource name | Enabled | Created |
-|---|---|---|---|
-| SJ-1 | `projects/story-gen-8a769/alertPolicies/2513526464198067799` | false | 2026-05-21 |
-| SJ-2 | `projects/story-gen-8a769/alertPolicies/4893251868647628500` | false | 2026-05-21 |
-| SJ-3 | `projects/story-gen-8a769/alertPolicies/14364886655881563701` | false | 2026-05-21 |
-| SJ-4 | `projects/story-gen-8a769/alertPolicies/10504437645741432748` | false | 2026-05-21 |
-| IM-1 | `projects/story-gen-8a769/alertPolicies/6672566375930316929` | false | 2026-05-21 |
-| IM-2 | `projects/story-gen-8a769/alertPolicies/4601285944978493813` | false | 2026-05-21 |
-| IM-3 | `projects/story-gen-8a769/alertPolicies/10504437645741432726` | false | 2026-05-21 |
-| IM-4 | `projects/story-gen-8a769/alertPolicies/17509905302009062853` | false | 2026-05-21 |
-| IM-5 | `projects/story-gen-8a769/alertPolicies/17901603525203439569` | false | 2026-05-21 |
-| IM-6 | `projects/story-gen-8a769/alertPolicies/17901603525203439157` | false | 2026-05-21 |
-| IM-7 | `projects/story-gen-8a769/alertPolicies/10504437645741431479` | false | 2026-05-21 |
-| IM-8 | `projects/story-gen-8a769/alertPolicies/10504437645741432289` | false | 2026-05-21 |
-| IM-9 | `projects/story-gen-8a769/alertPolicies/17901603525203436195` | false | 2026-05-21 |
+| Alert ID | Policy resource name | Enabled | Threshold | Updated |
+|---|---|---|---|---|
+| SJ-1 | `projects/story-gen-8a769/alertPolicies/2513526464198067799` | **true** | > 1 / 24h | 2026-06-03 |
+| SJ-2 | `projects/story-gen-8a769/alertPolicies/4893251868647628500` | **true** | > 2 / 24h | 2026-06-03 |
+| SJ-3 | `projects/story-gen-8a769/alertPolicies/14364886655881563701` | **true** | > 0 / 24h | 2026-06-03 |
+| SJ-4 | `projects/story-gen-8a769/alertPolicies/10504437645741432748` | **true** | > 0 / 24h | 2026-06-03 |
+| IM-1 | `projects/story-gen-8a769/alertPolicies/6672566375930316929` | **true** | > 0 / 24h | 2026-06-03 |
+| IM-2 | `projects/story-gen-8a769/alertPolicies/4601285944978493813` | **true** | > 1 / 24h | 2026-06-03 |
+| IM-3 | `projects/story-gen-8a769/alertPolicies/10504437645741432726` | **true** | > 0 / 24h | 2026-06-03 |
+| IM-4 | `projects/story-gen-8a769/alertPolicies/17509905302009062853` | **true** | > 1 / 24h | 2026-06-03 |
+| IM-5 | `projects/story-gen-8a769/alertPolicies/17901603525203439569` | **true** | > 1 / 24h | 2026-06-03 |
+| IM-6 | `projects/story-gen-8a769/alertPolicies/17901603525203439157` | **true** | > 2 / 24h | 2026-06-03 |
+| IM-7 | `projects/story-gen-8a769/alertPolicies/10504437645741431479` | **true** | > 0 / 1h | 2026-06-03 |
+| IM-8 | `projects/story-gen-8a769/alertPolicies/10504437645741432289` | **true** | > 1 / 1h | 2026-06-03 |
+| IM-9 | `projects/story-gen-8a769/alertPolicies/17901603525203436195` | **true** | > 2 / 1h | 2026-06-03 |
 | **CG-1** | `projects/story-gen-8a769/alertPolicies/16928978327782001994` | **true** | 2026-05-21 |
 
 ---
