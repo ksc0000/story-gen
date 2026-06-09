@@ -1,0 +1,31 @@
+displayName: "SJ-3: malformed_json spike WARNING (> 2% / 24h proxy)"
+conditions:
+  - displayName: "malformed_json failures > threshold over 24h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/malformed_json_failures"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 0
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "86400s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"
+severity: WARNING
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    SJ-3 WARNING: malformed_json failures exceeded 2% threshold over 24h.
+    First response:
+    1. Open saved query: "SJ-2 malformed_json failures" in Cloud Logging.
+    2. Check parse diagnostics — markdown fencing, truncated output, non-JSON preamble.
+    3. Check storyDurationMs — elevated latency may indicate truncation at context limit.
+    4. Check provider/model — which Gemini model version was in use?
+    5. Do NOT enable ENABLE_SCHEMA_REPAIR_RETRY based on dev/test data alone.
+    6. Follow GENERATION_SLO_RUNBOOK.md §8.2.
+  mimeType: "text/markdown"

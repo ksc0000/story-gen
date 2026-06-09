@@ -1,0 +1,32 @@
+displayName: "IM-2: book readable rate CRITICAL (< 95% proxy)"
+conditions:
+  - displayName: "book_outcome_failed count > critical threshold over 24h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/book_outcome_failed"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 1
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "86400s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"
+severity: CRITICAL
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    IM-2 CRITICAL: book_outcome_failed count exceeded critical threshold over 24h.
+    Treat as active incident — readable rate may have dropped below 95%.
+    First response:
+    1. Run manual SLO report: node scripts/report-generation-slo.mjs --input tmp/events.json
+    2. Confirm readable rate from report output.
+    3. Open IM-1/IM-2/IM-3/IM-4 saved queries to identify error code breakdown.
+    4. Check ImageProvider fallback status — is fallback also failing?
+    5. Do NOT change routing without explicit approval + blast-radius assessment.
+    6. Follow GENERATION_SLO_RUNBOOK.md §8.4 (Incident).
+  mimeType: "text/markdown"

@@ -1,0 +1,30 @@
+displayName: "SJ-1: schema_validation spike WARNING (> 5% / 24h)"
+conditions:
+  - displayName: "schema_validation failures > threshold over 24h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/schema_validation_failures"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 1
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "86400s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"  # 7 days
+severity: WARNING
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    SJ-1 WARNING: schema_validation failure count exceeded 5% threshold over 24h.
+    First response:
+    1. Open saved query: "SJ-1 schema_validation failures" in Cloud Logging.
+    2. Check storyJsonFailureCategory breakdown.
+    3. Do NOT enable ENABLE_RESPONSE_SCHEMA or ENABLE_SCHEMA_REPAIR_RETRY.
+    4. If rate > 10%, SJ-2 CRITICAL should also fire — treat as active incident.
+    5. Follow GENERATION_SLO_RUNBOOK.md §8.1.
+  mimeType: "text/markdown"

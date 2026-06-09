@@ -1,0 +1,32 @@
+displayName: "IM-1: book readable rate WARNING (failed books rising)"
+conditions:
+  - displayName: "book_outcome_failed count > threshold over 24h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/book_outcome_failed"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 0
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "86400s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"
+severity: WARNING
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    IM-1 WARNING: book_outcome_failed count exceeded threshold over 24h.
+    Indicates potential readable rate degradation (target >= 98%).
+    First response:
+    1. Open saved query: "OUT-1 book outcomes by status" in Cloud Logging.
+    2. Compute readable rate manually: (completed + partial_completed) / total_outcomes.
+    3. If readable rate < 98%: open "IM-1 page image failures" saved query.
+    4. Break down by E005 / TIMEOUT / PROVIDER_5XX using IM-2/IM-3/IM-4 saved queries.
+    5. Do not change candidate gate or ImageProvider routing without explicit approval.
+    6. Follow GENERATION_SLO_RUNBOOK.md §8.4.
+  mimeType: "text/markdown"

@@ -1,0 +1,29 @@
+displayName: "IM-6: TIMEOUT page failures CRITICAL (> 50% of page failures)"
+conditions:
+  - displayName: "page_timeout_failures count > critical threshold over 24h"
+    conditionThreshold:
+      filter: >
+        metric.type="logging.googleapis.com/user/generation/page_timeout_failures"
+        resource.type="cloud_run_revision"
+      comparison: COMPARISON_GT
+      thresholdValue: 2
+      duration: "0s"
+      aggregations:
+        - alignmentPeriod: "86400s"
+          crossSeriesReducer: REDUCE_SUM
+          perSeriesAligner: ALIGN_DELTA
+alertStrategy:
+  autoClose: "604800s"
+severity: CRITICAL
+notificationChannels:
+  - "projects/story-gen-8a769/notificationChannels/202814648286910376"
+enabled: true
+documentation:
+  content: |
+    IM-6 CRITICAL: TIMEOUT page failures at critical level — provider degradation suspected.
+    Treat as active incident.
+    1. Check Replicate status: https://status.replicate.com
+    2. Open saved query: "IM-3 TIMEOUT page failures".
+    3. Run manual SLO report to confirm readable rate impact.
+    4. If sustained, follow GENERATION_SLO_RUNBOOK.md §8.6 (Incident).
+  mimeType: "text/markdown"

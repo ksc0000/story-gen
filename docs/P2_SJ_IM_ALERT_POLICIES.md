@@ -1,8 +1,8 @@
 # P2-10b: Story JSON (SJ) and Image Failure (IM) Alert Policies
 
-**Status**: ✅ LIVE (enabled, 2026-06-03) — 9 SJ/IM metrics created; 13 alert policies tuned and enabled
+**Status**: ✅ LIVE (enabled, 2026-06-09) — 9 SJ/IM metrics created; 13 alert policies tuned and enabled
 **Created**: 2026-05-21  
-**Updated**: 2026-06-03 (Tuned thresholds based on P5-4 production baseline)
+**Updated**: 2026-06-09 (Tuned thresholds based on P5-4 production baseline)
 **Task**: P2-10b-live (SJ/IM metric + policy live creation)  
 **Scope**: SJ-1 through SJ-4, IM-1 through IM-9. CG-1 is already live + enabled.  
 **Depends on**: P2-9 (`docs/P2_GENERATION_SLO_LOG_BASED_METRICS.md`) — metric definitions  
@@ -1098,9 +1098,35 @@ gcloud monitoring policies describe POLICY_ID \
 
 ---
 
-## 10. Threshold Tuning After Production Baseline
+## 10. Threshold Tuning After Production Baseline (June 2026)
 
-The absolute count thresholds in §6 are provisional estimates based on an assumed ~60 books/day volume.  
+The thresholds in §6 have been tuned based on the **P5-4 (PROD_BASELINE_2)** data collected in June 2026.
+
+### 10.1 Baseline Data Summary (P5-4)
+- **Total volume**: 35 books (approx. 35 books/day observed).
+- **Readable rate**: 97.1% (34/35). Target is ≥ 98%.
+- **Story JSON failure rate**: 2.9% (1/35, malformed_json).
+- **Page failure rate**: 5.7% (2/35 books had partial failures).
+
+### 10.2 Tuning Rationale
+Given the volume of ~35 books/day, the following thresholds are calibrated to detect regressions while avoiding noise from single transient failures:
+
+| Alert | Target % | Threshold (Count) | Rationale |
+|---|---|---|---|
+| **SJ-1** | > 5% | `> 1` (fires on 2+) | 2/35 ≈ 5.7%. Threshold of 1 ensures a single failure doesn't trigger, but two will. |
+| **SJ-2** | > 10% | `> 2` (fires on 3+) | 3/35 ≈ 8.6%. Calibrated as CRITICAL. |
+| **SJ-3** | > 2% | `> 0` (fires on 1+) | 1/35 ≈ 2.8%. Any SJ failure at this volume is a "Watch" signal. |
+| **IM-1** | < 98% | `> 0` (fires on 1+) | 1 failed book = 97.1% readable rate. Correctly triggers WARNING when below 98%. |
+| **IM-2** | < 95% | `> 1` (fires on 2+) | 2 failed books = 94.2% readable rate. Correctly triggers CRITICAL when below 95%. |
+| **IM-9** | Spike | `> 2 / 1h` | Detects rapid degradation in image generation performance. |
+
+These thresholds will be re-evaluated if volume increases significantly (e.g. > 100 books/day).
+
+---
+
+## 11. Threshold Tuning After Production Baseline (General Procedure)
+
+The absolute count thresholds in §6 are provisional estimates based on an assumed ~35-60 books/day volume.
 After collecting ≥ 2 weeks of production data:
 
 1. Run `node scripts/report-generation-slo.mjs --input tmp/events.json --format console`.
