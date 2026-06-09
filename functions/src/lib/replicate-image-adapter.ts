@@ -172,9 +172,13 @@ export class ReplicateImageAdapter implements ImageProvider {
     if (profile === "kontext_max") {
       return "black-forest-labs/flux-kontext-max";
     }
-    if (profile === "openai_image_candidate") {
+    if (
+      profile === "openai_image_candidate" ||
+      profile === "openai_mini" ||
+      profile === "openai_standard"
+    ) {
       throw new Error(
-        "ReplicateImageAdapter does not support openai_image_candidate. " +
+        `ReplicateImageAdapter does not support ${profile}. ` +
           "Use OpenAIImageAdapter for this profile (P3-4)."
       );
     }

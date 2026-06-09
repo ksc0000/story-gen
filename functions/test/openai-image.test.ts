@@ -2,6 +2,8 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import {
   OpenAIImageClient,
   OPENAI_IMAGE_CANDIDATE_PROFILE,
+  OPENAI_MINI_PROFILE,
+  OPENAI_STANDARD_PROFILE,
   REFERENCE_IMAGE_SYSTEM_INSTRUCTION,
   REFERENCE_IMAGE_PROMPT_PREFIX,
   REFERENCE_IMAGE_PROMPT_SUFFIX,
@@ -26,8 +28,8 @@ describe("OpenAIImageClient", () => {
     mockResponsesCreate.mockReset();
   });
 
-  describe("OPENAI_IMAGE_CANDIDATE_PROFILE", () => {
-    it("has expected smoke profile values", () => {
+  describe("Profiles (T6-62)", () => {
+    it("OPENAI_IMAGE_CANDIDATE_PROFILE has expected smoke profile values", () => {
       expect(OPENAI_IMAGE_CANDIDATE_PROFILE).toEqual({
         model: "gpt-image-1-mini",
         responsesModel: "gpt-4o",
@@ -36,20 +38,45 @@ describe("OpenAIImageClient", () => {
         size: "1024x1024",
       });
     });
+
+    it("OPENAI_MINI_PROFILE has expected values", () => {
+      expect(OPENAI_MINI_PROFILE).toEqual({
+        model: "gpt-image-1-mini",
+        responsesModel: "gpt-4o",
+        moderation: "low",
+        quality: "low",
+        size: "1024x1024",
+      });
+    });
+
+    it("OPENAI_STANDARD_PROFILE has expected values", () => {
+      expect(OPENAI_STANDARD_PROFILE).toEqual({
+        model: "gpt-image-1",
+        responsesModel: "gpt-4o",
+        moderation: "low",
+        quality: "low",
+        size: "1024x1024",
+      });
+    });
   });
 
-  describe("resolveOpenAIModelLabel (T6-58)", () => {
-    it("returns openai/gpt-4o when reference images are present", () => {
+  describe("resolveOpenAIModelLabel (T6-58, T6-62)", () => {
+    it("returns openai/gpt-4o when reference images are present (default profile)", () => {
       expect(resolveOpenAIModelLabel(true)).toBe("openai/gpt-4o");
     });
 
-    it("returns openai/gpt-image-1-mini when no reference images", () => {
+    it("returns openai/gpt-image-1-mini when no reference images (default profile)", () => {
       expect(resolveOpenAIModelLabel(false)).toBe("openai/gpt-image-1-mini");
     });
 
-    it("reflects OPENAI_IMAGE_CANDIDATE_PROFILE model constants", () => {
-      expect(resolveOpenAIModelLabel(false)).toContain(OPENAI_IMAGE_CANDIDATE_PROFILE.model);
-      expect(resolveOpenAIModelLabel(true)).toContain(OPENAI_IMAGE_CANDIDATE_PROFILE.responsesModel ?? "");
+    it("reflects profile model when no reference images", () => {
+      expect(resolveOpenAIModelLabel(false, OPENAI_STANDARD_PROFILE)).toBe("openai/gpt-image-1");
+      expect(resolveOpenAIModelLabel(false, OPENAI_MINI_PROFILE)).toBe("openai/gpt-image-1-mini");
+    });
+
+    it("reflects profile responsesModel when reference images are present", () => {
+      const customProfile = { ...OPENAI_STANDARD_PROFILE, responsesModel: "gpt-4o-custom" };
+      expect(resolveOpenAIModelLabel(true, customProfile)).toBe("openai/gpt-4o-custom");
     });
   });
 

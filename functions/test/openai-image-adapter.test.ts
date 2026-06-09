@@ -83,6 +83,18 @@ describe("OpenAIImageAdapter.resolveModelLabel", () => {
     );
   });
 
+  it("openai_mini → 'openai/gpt-image-1-mini'", () => {
+    expect(adapter.resolveModelLabel("openai_mini")).toBe(
+      "openai/gpt-image-1-mini"
+    );
+  });
+
+  it("openai_standard → 'openai/gpt-image-1'", () => {
+    expect(adapter.resolveModelLabel("openai_standard")).toBe(
+      "openai/gpt-image-1"
+    );
+  });
+
   it("resolveModelLabel returns a string starting with 'openai/'", () => {
     const label = adapter.resolveModelLabel("openai_image_candidate");
     expect(label).toMatch(/^openai\//);
@@ -91,13 +103,13 @@ describe("OpenAIImageAdapter.resolveModelLabel", () => {
   // 3. Non-OpenAI profiles throw
   it("pro_consistent throws — Replicate profile not supported by OpenAI adapter", () => {
     expect(() => adapter.resolveModelLabel("pro_consistent")).toThrowError(
-      /openai_image_candidate/
+      /OpenAIImageAdapter does not support profile/
     );
   });
 
   it("klein_fast throws — Replicate profile not supported by OpenAI adapter", () => {
     expect(() => adapter.resolveModelLabel("klein_fast")).toThrowError(
-      /openai_image_candidate/
+      /OpenAIImageAdapter does not support profile/
     );
   });
 
@@ -115,7 +127,7 @@ describe("OpenAIImageAdapter.resolveModelLabel", () => {
 
   it("flux11_pro_candidate throws — Replicate profile not supported by OpenAI adapter", () => {
     expect(() => adapter.resolveModelLabel("flux11_pro_candidate")).toThrowError(
-      /openai_image_candidate/
+      /OpenAIImageAdapter does not support profile/
     );
   });
 
@@ -242,17 +254,25 @@ describe("OpenAIImageAdapter.generateImage (mock uploader, no network)", () => {
     // Subclass to skip real OpenAI API call while exercising uploader + result construction.
     class TestableOpenAIAdapter extends OpenAIImageAdapter {
       override async generateImage(request: import("../src/lib/image-provider").ImageGenerationRequest) {
-        if (request.imageModelProfile !== "openai_image_candidate") {
-          throw new Error(`OpenAIImageAdapter supports only openai_image_candidate. Received: "${request.imageModelProfile}". Use ReplicateImageAdapter for this profile.`);
+        const profile = request.imageModelProfile;
+        if (profile !== "openai_image_candidate" && profile !== "openai_mini" && profile !== "openai_standard") {
+          throw new Error(`OpenAIImageAdapter does not support profile: "${profile}". Use ReplicateImageAdapter for Replicate profiles.`);
         }
         const syntheticBuffer = Buffer.from("fake-openai-image-data");
-        const hasReferenceImages = (request.inputImageUrls ?? []).length > 0;
-        const imageUrl = await uploaderSpy(syntheticBuffer, request.imageModelProfile);
+        const inputImageUrls = profile === "openai_mini" ? [] : (request.inputImageUrls ?? []);
+        const hasReferenceImages = inputImageUrls.length > 0;
+        const imageUrl = await uploaderSpy(syntheticBuffer, profile);
+
+        let modelLabel = this.resolveModelLabel(profile);
+        if (hasReferenceImages) {
+          modelLabel = "openai/gpt-4o";
+        }
+
         return {
           imageUrl,
           providerId: "openai" as const,
-          modelLabel: this.resolveModelLabel(request.imageModelProfile),
-          profile: request.imageModelProfile,
+          modelLabel,
+          profile,
           durationMs: 2000,
           fallbackUsed: false,
         };
@@ -280,25 +300,26 @@ describe("OpenAIImageAdapter.generateImage (mock uploader, no network)", () => {
     expect(result.fallbackUsed).toBe(false);
   });
 
-  it("generateImage with reference images returns Responses API label", async () => {
+  it("openai_mini ignores reference images and returns mini label", async () => {
     const uploaderSpy = vi.fn(mockUploader);
 
     class TestableOpenAIAdapter extends OpenAIImageAdapter {
       override async generateImage(request: import("../src/lib/image-provider").ImageGenerationRequest) {
-        if (request.imageModelProfile !== "openai_image_candidate") {
-          throw new Error(`OpenAIImageAdapter supports only openai_image_candidate.`);
-        }
-        const syntheticBuffer = Buffer.from("fake-openai-ref-image-data");
-        const hasReferenceImages = (request.inputImageUrls ?? []).length > 0;
-        const imageUrl = await uploaderSpy(syntheticBuffer, request.imageModelProfile);
-        // Import resolveOpenAIModelLabel behavior: with refs → gpt-4o label
-        const modelLabel = hasReferenceImages ? "openai/gpt-4o" : "openai/gpt-image-1-mini";
+        const profile = request.imageModelProfile;
+        if (profile !== "openai_mini") throw new Error("Expected openai_mini");
+
+        const syntheticBuffer = Buffer.from("fake-openai-mini-data");
+        // mini explicitly ignores refs
+        const inputImageUrls: string[] = [];
+        const hasReferenceImages = false;
+        const imageUrl = await uploaderSpy(syntheticBuffer, profile);
+
         return {
           imageUrl,
           providerId: "openai" as const,
-          modelLabel,
-          profile: request.imageModelProfile,
-          durationMs: 3000,
+          modelLabel: "openai/gpt-image-1-mini",
+          profile,
+          durationMs: 1500,
           fallbackUsed: false,
         };
       }
@@ -306,19 +327,45 @@ describe("OpenAIImageAdapter.generateImage (mock uploader, no network)", () => {
 
     const adapter = new TestableOpenAIAdapter("sk-test", uploaderSpy);
     const result = await adapter.generateImage({
-      prompt: "A child playing in the park",
-      imageModelProfile: "openai_image_candidate",
-      inputImageUrls: ["https://example.com/child-ref.jpg"],
-      metadata: {
-        bookId: "book-789",
-        pageIndex: 0,
-        candidateRequested: true,
-        candidateAllowed: true,
-      },
+      prompt: "A cat in the hat",
+      imageModelProfile: "openai_mini",
+      inputImageUrls: ["https://example.com/ignored.jpg"],
     });
 
-    expect(result.modelLabel).toBe("openai/gpt-4o");
-    expect(result.providerId).toBe("openai");
+    expect(result.modelLabel).toBe("openai/gpt-image-1-mini");
+    expect(result.profile).toBe("openai_mini");
+  });
+
+  it("openai_standard returns standard label (no refs)", async () => {
+    const uploaderSpy = vi.fn(mockUploader);
+
+    class TestableOpenAIAdapter extends OpenAIImageAdapter {
+      override async generateImage(request: import("../src/lib/image-provider").ImageGenerationRequest) {
+        const profile = request.imageModelProfile;
+        if (profile !== "openai_standard") throw new Error("Expected openai_standard");
+
+        const syntheticBuffer = Buffer.from("fake-openai-standard-data");
+        const imageUrl = await uploaderSpy(syntheticBuffer, profile);
+
+        return {
+          imageUrl,
+          providerId: "openai" as const,
+          modelLabel: "openai/gpt-image-1",
+          profile,
+          durationMs: 2500,
+          fallbackUsed: false,
+        };
+      }
+    }
+
+    const adapter = new TestableOpenAIAdapter("sk-test", uploaderSpy);
+    const result = await adapter.generateImage({
+      prompt: "A majestic lion",
+      imageModelProfile: "openai_standard",
+    });
+
+    expect(result.modelLabel).toBe("openai/gpt-image-1");
+    expect(result.profile).toBe("openai_standard");
   });
 
   // 8. generateImage throws for non-candidate profile
@@ -329,7 +376,7 @@ describe("OpenAIImageAdapter.generateImage (mock uploader, no network)", () => {
         prompt: "A dragon",
         imageModelProfile: "pro_consistent",
       })
-    ).rejects.toThrowError(/openai_image_candidate/);
+    ).rejects.toThrowError(/OpenAIImageAdapter does not support profile/);
   });
 
   it("generateImage throws for klein_fast", async () => {
@@ -448,12 +495,15 @@ describe("PROFILE_PROVIDER_MAP consistency with OpenAIImageAdapter", () => {
     }
   });
 
-  it("only one openai profile in PROFILE_PROVIDER_MAP (openai_image_candidate)", () => {
+  it("three openai profiles in PROFILE_PROVIDER_MAP (openai_mini, openai_standard, openai_image_candidate)", () => {
     const openaiProfiles = Object.entries(PROFILE_PROVIDER_MAP).filter(
       ([, v]) => v === "openai"
     );
-    expect(openaiProfiles).toHaveLength(1);
-    expect(openaiProfiles[0][0]).toBe("openai_image_candidate");
+    expect(openaiProfiles).toHaveLength(3);
+    const profiles = openaiProfiles.map(([p]) => p);
+    expect(profiles).toContain("openai_mini");
+    expect(profiles).toContain("openai_standard");
+    expect(profiles).toContain("openai_image_candidate");
   });
 });
 
