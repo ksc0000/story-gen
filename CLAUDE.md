@@ -1,4 +1,4 @@
-# CLAUDE.md — story-gen (EhonAI)
+# CLAUDE.md — story-gen (Ehoria)
 
 > AI 絵本生成アプリ。Next.js 15 + Firebase (Hosting / Cloud Functions / Firestore / Storage) + Gemini + Replicate/FLUX
 

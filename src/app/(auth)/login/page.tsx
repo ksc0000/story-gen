@@ -47,7 +47,7 @@ export default function LoginPage() {
                 className="mx-auto rounded-xl"
               />
               <CardTitle className="app-title mt-4 text-2xl">
-                EhoNAI にログイン
+                Ehoria にログイン
               </CardTitle>
               <p className="app-subtitle text-sm">えほんAI</p>
             </CardHeader>

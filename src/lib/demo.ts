@@ -1,6 +1,6 @@
 export const isDemoMode =
   typeof window !== "undefined" &&
-  (process.env.NEXT_PUBLIC_EHONAI_DEMO_MODE === "true" ||
+  (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true" ||
     (process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.includes("Dummy") ?? false));
 
 import type { CharacterConsistencyMode, ImageQualityTier, ProductPlan, TemplateDoc } from "@/lib/types";
@@ -21,7 +21,7 @@ export const DEMO_TEMPLATES: (TemplateDoc & { id: string })[] = [
   { id: "original-ai", name: "オリジナル絵本", description: "自由に書いた内容からAIが一から作る絵本", icon: "✨", categoryGroupId: "imagination", creationMode: "original_ai", priceTier: "matsu", storyCostLevel: "standard", sampleImageUrl: "/images/templates/fantasy.webp", order: 13, systemPrompt: "", active: true, isOriginalEntry: true },
 ];
 
-const DEMO_STORAGE_KEY = "ehonai-demo-books";
+const DEMO_STORAGE_KEY = "ehoria-demo-books";
 
 type DemoBookPage = {
   id: string;

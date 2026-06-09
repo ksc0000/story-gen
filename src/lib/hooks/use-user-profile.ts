@@ -17,7 +17,7 @@ export function useUserProfile(userId: string | undefined): UseUserProfileResult
 
   useEffect(() => {
     if (isDemoMode) {
-      setProfile({ displayName: "デモユーザー", email: "demo@ehonai.local", plan: "free", monthlyGenerationCount: 1 } as UserDoc);
+      setProfile({ displayName: "デモユーザー", email: "demo@ehoria.local", plan: "free", monthlyGenerationCount: 1 } as UserDoc);
       setLoading(false);
       return;
     }

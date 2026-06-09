@@ -32,7 +32,7 @@ import { isDemoMode } from "@/lib/demo";
 const DEMO_USER = {
   uid: "demo-user-001",
   displayName: "デモユーザー",
-  email: "demo@ehonai.local",
+  email: "demo@ehoria.local",
 } as unknown as User;
 
 export function AuthProvider({ children }: { children: ReactNode }) {

@@ -31,7 +31,7 @@ export function HeroBook3D() {
           }}
         >
           <div className="text-4xl mb-2">✨</div>
-          <div className="text-xl font-bold text-center">EhoNAI</div>
+          <div className="text-xl font-bold text-center">Ehoria</div>
           <div className="mt-4 h-1 w-12 bg-white/30 rounded" />
         </div>
 
