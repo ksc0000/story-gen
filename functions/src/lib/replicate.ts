@@ -30,6 +30,7 @@ const FLUX_KLEIN_FAST_MODEL = "black-forest-labs/flux-2-klein-9b" as const;
 const FLUX_KLEIN_BASE_MODEL = "black-forest-labs/flux-2-klein-9b-base" as const;
 const FLUX_PRO_MODEL = "black-forest-labs/flux-2-pro" as const;
 const FLUX_KONTEXT_PRO_MODEL = "black-forest-labs/flux-kontext-pro" as const;
+const FLUX_KONTEXT_MAX_MODEL = "black-forest-labs/flux-kontext-max" as const;
 // T6-37: diagnostic candidate only — not exposed in production default routing
 const FLUX_11_PRO_MODEL = "black-forest-labs/flux-1.1-pro" as const;
 
@@ -39,6 +40,7 @@ export type ReplicateModelName =
   | typeof FLUX_KLEIN_BASE_MODEL
   | typeof FLUX_PRO_MODEL
   | typeof FLUX_KONTEXT_PRO_MODEL
+  | typeof FLUX_KONTEXT_MAX_MODEL
   | typeof FLUX_11_PRO_MODEL;
 
 type ReplicateInputPayload = {
@@ -77,6 +79,8 @@ function resolveProfileModel(imageModelProfile: ImageModelProfile): ReplicateMod
       return FLUX_PRO_MODEL;
     case "kontext_reference":
       return FLUX_KONTEXT_PRO_MODEL;
+    case "kontext_max":
+      return FLUX_KONTEXT_MAX_MODEL;
     case "flux11_pro_candidate": // T6-37: diagnostic only
       return FLUX_11_PRO_MODEL;
     case "klein_fast":

@@ -51,6 +51,12 @@ describe("resolveReplicateModel", () => {
     expect(
       resolveReplicateModel({
         purpose: "book_page",
+        imageModelProfile: "kontext_max",
+      })
+    ).toBe("black-forest-labs/flux-kontext-max");
+    expect(
+      resolveReplicateModel({
+        purpose: "book_page",
         imageModelProfile: "flux11_pro_candidate",
       })
     ).toBe("black-forest-labs/flux-1.1-pro");
@@ -86,6 +92,10 @@ describe("resolveImageFallbackProfiles", () => {
 
   it("returns kontext_reference then klein_fast for kontext_reference", () => {
     expect(resolveImageFallbackProfiles("kontext_reference")).toEqual(["kontext_reference", "klein_fast"]);
+  });
+
+  it("returns kontext_max then klein_fast for kontext_max", () => {
+    expect(resolveImageFallbackProfiles("kontext_max")).toEqual(["kontext_max", "klein_fast"]);
   });
 
   it("returns only klein_fast for klein_fast (no further fallback)", () => {
@@ -231,6 +241,21 @@ describe("buildReplicateInput", () => {
       aspect_ratio: "4:3",
       output_format: "png",
       input_image: "https://example.com/1.png",
+    });
+  });
+
+  it("builds kontext max input using default format (input_images)", () => {
+    expect(
+      buildReplicateInput({
+        model: "black-forest-labs/flux-kontext-max",
+        prompt: "test prompt",
+        inputImageUrls: ["https://example.com/1.png"],
+      })
+    ).toEqual({
+      prompt: "test prompt",
+      aspect_ratio: "4:3",
+      output_format: "png",
+      input_images: ["https://example.com/1.png"],
     });
   });
 

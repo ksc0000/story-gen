@@ -169,6 +169,9 @@ export class ReplicateImageAdapter implements ImageProvider {
    * Throws for openai_image_candidate — that profile belongs to OpenAIImageAdapter.
    */
   resolveModelLabel(profile: ImageModelProfile): string {
+    if (profile === "kontext_max") {
+      return "black-forest-labs/flux-kontext-max";
+    }
     if (profile === "openai_image_candidate") {
       throw new Error(
         "ReplicateImageAdapter does not support openai_image_candidate. " +
