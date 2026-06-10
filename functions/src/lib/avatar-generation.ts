@@ -5,7 +5,7 @@ import { getStyleReferenceImagePath } from "./prompt-builder";
 import { ReplicateImageClient } from "./replicate";
 
 export const MAX_ATTEMPTS_PER_CHILD = 5;
-const PUBLIC_SITE_URL = "https://story-gen-8a769.web.app";
+const PUBLIC_SITE_URL = "https://ehoria.app";
 export const AVATAR_VARIANTS: Array<{ style: IllustrationStyle; label: string }> = [
   { style: "soft_watercolor", label: "やさしい水彩" },
   { style: "fluffy_pastel", label: "ふんわりパステル" },
