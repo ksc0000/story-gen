@@ -429,6 +429,7 @@ export interface BookDoc {
   input: BookInput;
   createdAt: Timestamp;
   expiresAt: Timestamp | null;
+  public?: boolean;
 }
 
 export interface PageDoc {

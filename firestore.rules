@@ -65,7 +65,9 @@ service cloud.firestore {
     }
 
     match /books/{bookId} {
-      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow read: if isAdmin()
+               || (isAuthenticated() && resource.data.userId == request.auth.uid)
+               || resource.data.public == true;
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update: if isAdmin() && onlyAdminReviewFieldsChanged();
       allow delete: if false;

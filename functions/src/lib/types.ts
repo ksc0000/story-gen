@@ -332,6 +332,7 @@ export interface BookData {
   recoveredFromPartialCompleted?: boolean;
   recoveredAt?: FirebaseFirestore.Timestamp;
   recoveredAtMs?: number;
+  public?: boolean;
 }
 
 export interface PageData {

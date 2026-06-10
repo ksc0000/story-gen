@@ -3,8 +3,9 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
+import { Share2, Check, Copy, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookViewer } from "@/components/book-viewer";
 import { PageTransition } from "@/components/page-transition";
@@ -43,6 +44,8 @@ function BookContent() {
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [regeneratingPages, setRegeneratingPages] = useState<Set<number>>(new Set());
   const [regenerationErrors, setRegenerationErrors] = useState<Record<number, string>>({});
+  const [isSharing, setIsSharing] = useState(false);
+  const [showCopied, setShowCopied] = useState(false);
   const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
   const isOwner = Boolean(user && book && book.userId === user.uid);
 
@@ -90,6 +93,33 @@ function BookContent() {
 
   const isPartial = book.status === "partial_completed";
 
+  async function handleToggleShare() {
+    if (!book || !isOwner) return;
+    setIsSharing(true);
+    try {
+      const isPublic = !book.public;
+      await updateDoc(doc(db, "books", bookId), {
+        public: isPublic,
+        updatedAt: serverTimestamp(),
+      });
+      if (isPublic) {
+        handleCopyLink();
+      }
+    } catch (err) {
+      console.error("Failed to toggle share:", err);
+    } finally {
+      setIsSharing(false);
+    }
+  }
+
+  function handleCopyLink() {
+    const url = `${window.location.origin}/share?id=${bookId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    });
+  }
+
   async function handleRegeneratePage(page: PageDoc) {
     if (!bookId || regeneratingPages.has(page.pageNumber)) return;
     setRegeneratingPages((prev) => new Set(prev).add(page.pageNumber));
@@ -115,7 +145,54 @@ function BookContent() {
 
   return (
     <PageTransition className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="text-center text-2xl font-bold text-purple-900">{book.title}</h1>
+      <div className="flex flex-col items-center gap-4">
+        <h1 className="text-center text-2xl font-bold text-purple-900">{book.title}</h1>
+        {isOwner && !isDemoMode && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant={book.public ? "outline" : "default"}
+              size="sm"
+              onClick={handleToggleShare}
+              disabled={isSharing}
+              className={cn("rounded-full px-4", book.public && "border-purple-200 text-purple-700")}
+            >
+              {isSharing ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              ) : book.public ? (
+                <>
+                  <Globe className="mr-2 h-4 w-4" />
+                  公開中
+                </>
+              ) : (
+                <>
+                  <Share2 className="mr-2 h-4 w-4" />
+                  共有する
+                </>
+              )}
+            </Button>
+            {book.public && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyLink}
+                className="rounded-full px-4 border-purple-200 text-purple-700"
+              >
+                {showCopied ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4 text-emerald-500" />
+                    コピーしました
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-2 h-4 w-4" />
+                    リンクをコピー
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
       {isPartial && (
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
