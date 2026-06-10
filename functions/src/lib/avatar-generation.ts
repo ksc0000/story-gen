@@ -321,7 +321,8 @@ export async function processAvatarGeneration(params: {
   storage: admin.storage.Storage;
   replicateApiToken: string;
   userId: string;
-  childId: string;
+  childId?: string;
+  characterId?: string;
   request: {
     revisionRequest?: AvatarRevisionRequest;
     baseGenerationId?: string;
@@ -335,16 +336,25 @@ export async function processAvatarGeneration(params: {
   characterBible: string;
   candidates: AvatarCandidate[];
 }> {
-  const { db, storage, replicateApiToken, userId, childId, request } = params;
-  const childRef = db.collection("users").doc(userId).collection("children").doc(childId);
-  const childSnap = await childRef.get();
+  const { db, storage, replicateApiToken, userId, childId, characterId, request } = params;
 
-  if (!childSnap.exists) {
-    throw new Error("子どもプロフィールが見つかりません");
+  let characterRef: admin.firestore.DocumentReference;
+  if (characterId) {
+    characterRef = db.collection("characterProfiles").doc(characterId);
+  } else if (childId) {
+    characterRef = db.collection("users").doc(userId).collection("children").doc(childId);
+  } else {
+    throw new Error("childId or characterId is required");
   }
 
-  const child = childSnap.data() as ChildProfileData;
-  const avatarHistory = await childRef.collection("avatarGenerations").get();
+  const characterSnap = await characterRef.get();
+
+  if (!characterSnap.exists) {
+    throw new Error("キャラクタープロフィールが見つかりません");
+  }
+
+  const child = characterSnap.data() as ChildProfileData;
+  const avatarHistory = await characterRef.collection("avatarGenerations").get();
   const currentAttempt = avatarHistory.docs.reduce((max, doc) => {
     const value = doc.data().attemptNumber;
     return typeof value === "number" ? Math.max(max, value) : max;
@@ -363,7 +373,7 @@ export async function processAvatarGeneration(params: {
   const structuredCorrectionText = buildStructuredCorrectionText(request.revisionRequest);
   const finalCorrectionText = structuredCorrectionText;
   const characterBible = buildCharacterBible(child, finalCorrectionText);
-  const baseGenerationImageUrl = await getBaseGenerationImageUrl(childRef, request.baseGenerationId);
+  const baseGenerationImageUrl = await getBaseGenerationImageUrl(characterRef, request.baseGenerationId);
   const selectedVariant = selectAvatarVariant(request.variantStyle);
 
   const candidates: AvatarCandidate[] = [];
@@ -388,9 +398,9 @@ export async function processAvatarGeneration(params: {
     inputImageUrls,
   });
   const generationId = db.collection("_").doc().id;
-  const imageUrl = await uploadAvatarImage(storage, userId, childId, generationId, imageBuffer);
+  const imageUrl = await uploadAvatarImage(storage, userId, characterId || childId || "unknown", generationId, imageBuffer);
 
-  await childRef.collection("avatarGenerations").doc(generationId).set({
+  await characterRef.collection("avatarGenerations").doc(generationId).set({
     batchId,
     attemptNumber: nextAttempt,
     imageUrl,

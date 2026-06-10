@@ -198,6 +198,13 @@ export interface ChildProfileData {
   active: boolean;
 }
 
+/**
+ * Character profile data stored in characterProfiles/{characterId}.
+ */
+export interface CharacterProfileData extends ChildProfileData {
+  userId: string;
+}
+
 export type AvatarCandidate = {
   generationId: string;
   imageUrl: string;
@@ -208,7 +215,8 @@ export type AvatarCandidate = {
 
 export interface ChildAvatarGenerationJob {
   userId: string;
-  childId: string;
+  childId?: string; // Legacy: nested users/{uid}/children/{childId}
+  characterId?: string; // New: top-level characterProfiles/{characterId}
   status: "pending" | "generating" | "completed" | "failed";
   request: {
     revisionRequest?: AvatarRevisionRequest;
