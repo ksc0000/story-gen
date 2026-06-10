@@ -348,22 +348,21 @@ Prints all 37 URLs that will be checked without making network requests.
 
 ---
 
-## 7. Suggested Initial Thresholds
+## 7. Tuned SLO Thresholds (June 2026)
 
-> **These are starting thresholds and should be tuned after observing real traffic patterns.**
-> **Full threshold policy, severity levels, sample size rules, and decision matrix**: `docs/GENERATION_SLO_THRESHOLD_POLICY.md`
+> **Thresholds tuned 2026-06-09 based on P5-4 production baseline (35 books/day).**
+> **Full threshold policy, severity levels, and sample size rules**: `docs/GENERATION_SLO_THRESHOLD_POLICY.md`
 
-| Metric | Investigate if | Hard concern if |
-|---|---|---|
-| Readable rate | < 98% | < 95% |
-| Completion rate | < 95% | < 90% |
-| Failure rate | > 2% | > 5% |
-| E005 error code | Increases relative to baseline | Affects >10% of page_image_failed |
-| TIMEOUT error code | Increases relative to baseline | Affects >25% of page_image_failed |
-| PROVIDER_5XX | Any sustained rate | >5% of page_image_failed in a window |
-| book durationMs p95 | > 600,000ms (10 min) | > 900,000ms (15 min) |
-| candidateAllowed unexpectedly non-zero | Always investigate if not expected | Any case where `provider=openai` without deliberate enrollment |
-| asset URL non-200 | Any failure | Any failure |
+| Metric | Target | Watch (Alert) | Incident (Alert) |
+|---|---|---|---|
+| Readable rate | ≥ 98% | > 0 failed (IM-1) | > 1 failed (IM-2) |
+| SJ Failure rate | ≤ 2% | > 1 failure (SJ-1) | > 2 failures (SJ-2) |
+| E005 rate | < 10% | > 0 failure (IM-3) | > 1 failure (IM-4) |
+| TIMEOUT rate | < 25% | > 1 failure (IM-5) | > 2 failures (IM-6) |
+| PROVIDER_5XX | 0 | > 0 / 1h (IM-7) | > 1 / 1h (IM-8) |
+| candidateAllowed | 0 | — | Any non-zero (CG-1) |
+| book durationMs p95 | ≤ 10 min | > 10 min | > 15 min |
+| asset URL 200 rate | 100% | — | Any failure |
 
 ---
 
@@ -945,7 +944,7 @@ The alert automation plan (`P2_GENERATION_SLO_ALERT_AUTOMATION_PLAN.md`) and met
 | **P2-10** | CG-1 alert policy definition + live creation | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md`; `enabled: true` |
 | **P2-11** | Dashboard panel additions | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; live dashboard `projects/story-gen-8a769/dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b` |
 | **P2-12** | Notification routing + CG-1 enable | ✅ COMPLETE (live, 2026-05-21) — Email `notificationChannels/202814648286910376` (kikushun0529@gmail.com); CG-1 `enabled: true` |
-| **P2-10b** | SJ/IM alert policy definitions + live creation | ✅ COMPLETE (live disabled, 2026-05-21) — `docs/P2_SJ_IM_ALERT_POLICIES.md`; 9 metrics live; 13 policies `enabled: false`; enable after prod-baseline |
+| **P2-10b** | SJ/IM alert policy definitions + live creation | ✅ COMPLETE (live enabled, 2026-06-09) — `docs/P2_SJ_IM_ALERT_POLICIES.md`; 9 metrics live; 13 policies tuned and enabled |
 
 CG-1 アラートポリシーは現在 **live かつ enabled**。`candidateAllowed=true` イベントが発生すると 60 秒以内に `kikushun0529@gmail.com` へ CRITICAL メールが送信される。
 
