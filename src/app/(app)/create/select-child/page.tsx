@@ -20,7 +20,7 @@ export default function SelectChildPage() {
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
   return (
-    <PageTransition className="mx-auto max-w-4xl px-4 py-8">
+    <PageTransition className="mx-auto max-w-4xl px-4 pb-28 pt-8">
       <StepIndicator currentStep={1} />
       <div className="mt-6 text-center">
         <h1 className="text-xl font-bold text-purple-900">誰を主人公にしますか？</h1>
@@ -78,13 +78,23 @@ export default function SelectChildPage() {
           </div>
         )}
 
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
+      <div className="mt-8 flex justify-center">
         <Link href="/onboarding/child">
           <Button variant="outline">新しい子を登録</Button>
         </Link>
-        <Button onClick={() => selectedChildId && router.push(`/create/theme?childId=${selectedChildId}`)} disabled={!selectedChildId} className="px-8">
-          この子で作る
-        </Button>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3">
+        <div className="mx-auto max-w-lg">
+          <Button
+            size="lg"
+            className="w-full"
+            disabled={!selectedChildId}
+            onClick={() => selectedChildId && router.push(`/create/theme?childId=${selectedChildId}`)}
+          >
+            この子で作る
+          </Button>
+        </div>
       </div>
     </PageTransition>
   );
