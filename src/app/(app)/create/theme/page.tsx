@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/components/step-indicator";
 import { ThemeCard } from "@/components/theme-card";
+import { TemplatePreviewModal } from "@/components/template-preview-modal";
 import { PageTransition } from "@/components/page-transition";
 import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
@@ -27,6 +28,7 @@ function ThemeSelectionPageContent() {
   const { templates, loading, error } = useTemplates();
   const { categoryGroups, loading: categoryLoading } = useCategoryGroups();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const childId = searchParams.get("childId");
@@ -98,6 +100,11 @@ function ThemeSelectionPageContent() {
         };
       });
   }, [categoryGroupMap, filteredTemplates, selectedCategoryGroupId, selectedMode]);
+
+  const previewTemplate = useMemo(
+    () => templates.find((t) => t.id === previewTemplateId) ?? null,
+    [previewTemplateId, templates]
+  );
 
   const updateQuery = (key: "mode" | "category", value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -204,6 +211,7 @@ function ThemeSelectionPageContent() {
                       template={template}
                       selected={selectedId === template.id}
                       onSelect={() => setSelectedId(template.id)}
+                      onPreview={() => setPreviewTemplateId(template.id)}
                       categoryName={group.groupName}
                     />
                   </StaggerItem>
@@ -220,12 +228,19 @@ function ThemeSelectionPageContent() {
                 template={template}
                 selected={selectedId === template.id}
                 onSelect={() => setSelectedId(template.id)}
+                onPreview={() => setPreviewTemplateId(template.id)}
                 categoryName={categoryGroupMap.get(template.categoryGroupId ?? "")?.name}
               />
             </StaggerItem>
           ))}
         </StaggerContainer>
       )}
+
+      <TemplatePreviewModal
+        template={previewTemplate}
+        isOpen={!!previewTemplateId}
+        onClose={() => setPreviewTemplateId(null)}
+      />
 
       <div className="mt-8 flex justify-center">
         <Button
