@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageTransition } from "@/components/page-transition";
 import { StepIndicator } from "@/components/step-indicator";
+import { AvatarNudgeBanner } from "@/components/avatar-nudge-banner";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { childProfileToSummary } from "@/lib/child-profile";
@@ -69,6 +70,13 @@ export default function SelectChildPage() {
           ))}
         </div>
       )}
+
+      {selectedChildId &&
+        !children.find((c) => c.id === selectedChildId)?.visualProfile?.approvedImageUrl && (
+          <div className="mt-8">
+            <AvatarNudgeBanner childId={selectedChildId} />
+          </div>
+        )}
 
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link href="/onboarding/child">
