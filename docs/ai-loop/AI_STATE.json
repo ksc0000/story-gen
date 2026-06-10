@@ -18,6 +18,7 @@
     "P5-3f: safer_retry mechanism",
     "P5-5: Tune and enable 13 SJ/IM alert policies (PR #194, merged)",
     "PR #219: Add photo upload to child profile creation and editing (merged)",
+    "PR #221: Book completion screen redesign — next actions + coming soon placeholders (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
