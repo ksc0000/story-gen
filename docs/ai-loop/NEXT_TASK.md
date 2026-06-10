@@ -1,33 +1,9 @@
-# Refactor `generateCoverImage()` to use `ImageProvider` Adapter
+# Implement Avatar Async Frontend UI and Logic
 
 ## Context
 
-The product roadmap (Phase 3 Closure and Phase 4 Tracking) explicitly states that the `ImageProvider` abstraction, previously completed for page generation (`P3-15s`), has remaining scope for "カバー画像・キャラ参照". The current `generateCoverImage()` function directly interacts with image generation providers without using this abstraction. This task addresses this technical debt to unify the image generation logic.
+The backend for asynchronous avatar generation, including the `childAvatarGenerationJobs` trigger, has been successfully implemented and merged (Issue #108 Phase 1, PR #202). This allows avatar generation to run in the background without blocking the user interface. The next logical step is to build out the frontend components and logic required to display the status of these asynchronous jobs and update the UI once the avatar images are ready. This task focuses on connecting the frontend to the existing backend infrastructure for avatar generation.
 
 ## Objective
 
-Refactor the `generateCoverImage()` function to utilize the `ImageProvider` interface, ensuring that cover image generation goes through the established abstraction layer.
-
-## Allowed Scope
-
-- `functions/src/ai/image/` (for `ImageProvider` implementation details if any new specific cover logic is needed, though ideally, existing `ReplicateImageProvider` should suffice)
-- `functions/src/controllers/imageGeneration.ts` (where `generateCoverImage` resides)
-- `functions/src/types/` (for any type definition updates related to image providers or cover generation)
-- `functions/src/index.ts` (for wiring the `ImageProvider` if not already done for cover generation context)
-- `functions/tests/` (for adding/updating tests)
-
-## Forbidden Scope
-
-- Infrastructure changes (e.g., Firebase project settings, Cloud Functions deployment config beyond `index.ts` changes)
-- Billing system modifications
-- Authentication redesign
-- Secrets management (e.g., adding new secrets, changing existing secret access)
-- Generated assets (e.g., client-side generated code)
-- Any changes to the actual image generation models or prompts, beyond adapting them to the `ImageProvider` interface.
-
-## Requirements
-
-- **Refactor `generateCoverImage()`:** Modify the `generateCoverImage` function in `functions/src/controllers/imageGeneration.ts` to call an `ImageProvider` instance (e.g., `ReplicateImageProvider`) instead of directly interacting with the Replicate API.
-- **Preserve Existing Logic:** Ensure that the original logic for selecting the cover image model (e.g., FLUX, SDXL) and handling input parameters (prompt, negative prompt, style, `generationOverride`s, etc.) is maintained and correctly passed through the `ImageProvider`.
-- **Maintain Data Flow:** Verify that the `coverImagePrompt`, `coverStatus`, and other relevant fields in the `BookDoc` are updated correctly after the image generation, just as they are currently.
-- **Type Safety:** Update any relevant
+Implement the frontend user interface and logic to display the status of an ongoing avatar generation job, show a loading state, and update with the generated avatar image once available. This includes leveraging the `useAvatarGenerationJob` hook
