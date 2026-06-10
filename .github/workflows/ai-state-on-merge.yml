@@ -1,0 +1,56 @@
+name: Update AI State on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  update-state:
+    # マージされた PR のみ処理（Close だけは無視）
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Append merged PR to completed_tasks
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          ENTRY="PR #${PR_NUMBER}: ${PR_TITLE} (merged)"
+
+          # jq で completed_tasks に追記（重複は除去）
+          jq --arg entry "$ENTRY" '
+            .completed_tasks |= (. + [$entry] | unique)
+          ' docs/ai-loop/AI_STATE.json > /tmp/ai_state.json
+
+          mv /tmp/ai_state.json docs/ai-loop/AI_STATE.json
+          echo "Added to completed_tasks: $ENTRY"
+          cat docs/ai-loop/AI_STATE.json
+
+      - name: Commit and push
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add docs/ai-loop/AI_STATE.json
+
+          if git diff --cached --quiet; then
+            echo "No changes — skipping commit"
+            exit 0
+          fi
+
+          git commit -m "chore(ai-loop): mark PR #${{ github.event.pull_request.number }} completed in AI_STATE"
+
+          # 同時マージ時のコンフリクトをリトライで吸収
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin main && break
+            echo "Push attempt $attempt failed, retrying..."
+            sleep $((attempt * 3))
+          done
