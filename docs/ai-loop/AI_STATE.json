@@ -29,6 +29,7 @@
     "PR #231: Creation Flow Polish: Sticky CTAs and UI Cleanup (merged)",
     "PR #232: Redesign Step 2 Creation Flow - Mode Renaming and Theme Hierarchy (merged)",
     "PR #233: Refine fixed-brush-teeth Template for Visual Consistency (merged)",
+    "PR #234: feat(ux): mobile-compact theme grid, all-mode dedup, style carousel (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
