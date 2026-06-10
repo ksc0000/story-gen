@@ -12,6 +12,7 @@ import { useChildren } from "@/lib/hooks/use-children";
 import { db, storage } from "@/lib/firebase";
 import { buildChildProfilePayload } from "@/lib/child-profile";
 import type { ChildProfileDoc } from "@/lib/types";
+import { useAvatarGenerationJob } from "@/lib/hooks/use-avatar-generation-job";
 
 function ChildEditPageContent() {
   const { user } = useAuth();
@@ -21,6 +22,7 @@ function ChildEditPageContent() {
   const { children, loading } = useChildren(user?.uid);
   const [saving, setSaving] = useState(false);
   const child = useMemo(() => children.find((item) => item.id === childId) ?? null, [childId, children]);
+  const { startJob } = useAvatarGenerationJob(null);
 
   useEffect(() => {
     if (!loading && !childId) {
@@ -45,11 +47,15 @@ function ChildEditPageContent() {
       await updateDoc(doc(db, "users", user.uid, "children", childId), payload);
       if (needsAvatarRefresh || values.photoFile) {
         const regenerate = window.confirm("この内容でキャラクター画像を生成しなおしますか？");
-        router.push(
-          regenerate
-            ? `/onboarding/child/avatar?childId=${childId}&reason=profile_updated`
-            : "/children"
-        );
+        if (regenerate) {
+          const jobId = await startJob({
+            userId: user.uid,
+            childId,
+          });
+          router.push(`/onboarding/child/avatar?childId=${childId}&reason=profile_updated&jobId=${jobId}`);
+        } else {
+          router.push("/children");
+        }
         return;
       }
       router.push("/children");

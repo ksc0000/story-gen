@@ -292,6 +292,37 @@ export interface ChildProfileDoc {
   active: boolean;
 }
 
+export type AvatarCandidate = {
+  generationId: string;
+  imageUrl: string;
+  style: IllustrationStyle;
+  styleLabel: string;
+  prompt: string;
+};
+
+export interface ChildAvatarGenerationJob {
+  id?: string;
+  userId: string;
+  childId: string;
+  status: "pending" | "generating" | "completed" | "failed";
+  request: {
+    revisionRequest?: AvatarRevisionRequest;
+    baseGenerationId?: string;
+    variantStyle?: IllustrationStyle;
+  };
+  result?: {
+    batchId: string;
+    attemptNumber: number;
+    candidates: AvatarCandidate[];
+  };
+  error?: {
+    message: string;
+    code: string;
+  };
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 export interface CompanionVisualDescription {
   size: string;
   color: string;
