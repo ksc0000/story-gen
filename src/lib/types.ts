@@ -647,3 +647,28 @@ export function isValidPageCount(n: number): n is PageCount {
 export function isValidBookInput(input: BookInput): boolean {
   return typeof input.childName === "string" && input.childName.trim().length > 0;
 }
+
+export type CompanionSpecies =
+  | "dog"
+  | "cat"
+  | "rabbit"
+  | "bear"
+  | "fox"
+  | "dragon"
+  | "robot"
+  | "fairy"
+  | "unicorn"
+  | "monster";
+
+export interface CompanionData {
+  userId: string;
+  name: string;
+  species: CompanionSpecies;
+  personality: string[];
+  specialAbility: string;
+  colorMain: string;
+  size: "small" | "medium" | "large";
+  visualDescription: string;
+  generatedImageUrl?: string;
+  createdAt: Timestamp;
+}
