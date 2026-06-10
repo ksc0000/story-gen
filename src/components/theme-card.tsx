@@ -27,7 +27,6 @@ interface ThemeCardProps {
   template: TemplateDoc & { id: string };
   selected: boolean;
   onSelect: () => void;
-  onPreview?: () => void;
   categoryName?: string;
 }
 
@@ -69,7 +68,7 @@ function getAgeLabel(template: TemplateDoc): string | null {
   return `~${template.recommendedAgeMax}歳`;
 }
 
-export function ThemeCard({ template, selected, onSelect, onPreview, categoryName }: ThemeCardProps) {
+export function ThemeCard({ template, selected, onSelect, categoryName }: ThemeCardProps) {
   const iconSrc = ICON_MAP[template.icon];
   const [showSamples, setShowSamples] = useState(false);
   const hasQualitySamples = Boolean(template.sampleImages?.light || template.sampleImages?.premium);
@@ -128,22 +127,6 @@ export function ThemeCard({ template, selected, onSelect, onPreview, categoryNam
               ) : null}
             </div>
             <p className="mt-2 break-all text-[10px] text-violet-400">id: {template.id}</p>
-            {template.creationMode === "fixed_template" && onPreview && (
-              <div className="mt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-[10px] sm:text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onPreview();
-                  }}
-                >
-                  ストーリーを見る
-                </Button>
-              </div>
-            )}
             {hasQualitySamples ? (
               <div className="mt-4 rounded-2xl bg-violet-50/80 p-3 text-left">
                 <Button

@@ -1,6 +1,7 @@
 export const isDemoMode =
-  process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true" ||
-  (process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.includes("Dummy") ?? false);
+  typeof window !== "undefined" &&
+  (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true" ||
+    (process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.includes("Dummy") ?? false));
 
 import type { CharacterConsistencyMode, ImageQualityTier, ProductPlan, TemplateDoc } from "@/lib/types";
 
@@ -15,8 +16,8 @@ export const DEMO_TEMPLATES: (TemplateDoc & { id: string })[] = [
   { id: "food", name: "おいしいおはなし", description: "パンや野菜、スイーツが主役のかわいい物語", icon: "🍳", genre: "Food", categoryGroupId: "favorite-worlds", creationMode: "guided_ai", priceTier: "take", storyCostLevel: "standard", sampleImageUrl: "/images/templates/food.webp", order: 8, systemPrompt: "", active: true },
   { id: "seasonal", name: "季節とイベント", description: "春夏秋冬、誕生日や行事を楽しむ絵本", icon: "🌸", genre: "Seasonal", categoryGroupId: "seasonal-events", creationMode: "guided_ai", priceTier: "take", storyCostLevel: "standard", sampleImageUrl: "/images/templates/seasonal.webp", order: 9, systemPrompt: "", active: true },
   { id: "vehicles-robots", name: "のりもの・ロボット", description: "電車・車・飛行機・ロボットの楽しい世界", icon: "🤖", genre: "Vehicles & Robots", categoryGroupId: "favorite-worlds", creationMode: "guided_ai", priceTier: "take", storyCostLevel: "standard", sampleImageUrl: "/images/templates/vehicles-robots.webp", order: 10, systemPrompt: "", active: true },
-  { id: "fixed-first-zoo", name: "はじめてのどうぶつえん", description: "はじめてのおでかけをやさしく残す固定テンプレート", icon: "🦁", categoryGroupId: "memories", creationMode: "fixed_template", priceTier: "ume", storyCostLevel: "none", sampleImageUrl: "/images/templates/animals.webp", order: 11, systemPrompt: "", active: true, fixedStory: { titleTemplate: "はじめてのどうぶつえん", pages: [{ textTemplate: "今日ははじめての動物園！象さんに会えるかな？", imagePromptTemplate: "A child visiting a zoo for the first time, looking at an elephant with wonder" }, { textTemplate: "わあ、キリンさんが高いところの葉っぱを食べているよ。", imagePromptTemplate: "A giraffe eating leaves from a tall tree, child watching in amazement" }] } },
-  { id: "fixed-bedtime-good-day", name: "きょうもいい日だったね", description: "寝る前に短く読める安心テンプレート", icon: "🛏️", categoryGroupId: "bedtime", creationMode: "fixed_template", priceTier: "ume", storyCostLevel: "none", sampleImageUrl: "/images/templates/bedtime.webp", order: 12, systemPrompt: "", active: true, fixedStory: { titleTemplate: "きょうもいい日だったね", pages: [{ textTemplate: "お風呂に入ってさっぱり。パジャマに着替えよう。", imagePromptTemplate: "A happy child in pajamas after bath, cozy bedroom setting" }, { textTemplate: "お布団に入って、おやすみなさい。", imagePromptTemplate: "A child tucked in bed with a teddy bear, soft night light, peaceful atmosphere" }] } },
+  { id: "fixed-first-zoo", name: "はじめてのどうぶつえん", description: "はじめてのおでかけをやさしく残す固定テンプレート", icon: "🦁", categoryGroupId: "memories", creationMode: "fixed_template", priceTier: "ume", storyCostLevel: "none", sampleImageUrl: "/images/templates/animals.webp", order: 11, systemPrompt: "", active: true },
+  { id: "fixed-bedtime-good-day", name: "きょうもいい日だったね", description: "寝る前に短く読める安心テンプレート", icon: "🛏️", categoryGroupId: "bedtime", creationMode: "fixed_template", priceTier: "ume", storyCostLevel: "none", sampleImageUrl: "/images/templates/bedtime.webp", order: 12, systemPrompt: "", active: true },
   { id: "original-ai", name: "オリジナル絵本", description: "自由に書いた内容からAIが一から作る絵本", icon: "✨", categoryGroupId: "imagination", creationMode: "original_ai", priceTier: "matsu", storyCostLevel: "standard", sampleImageUrl: "/images/templates/fantasy.webp", order: 13, systemPrompt: "", active: true, isOriginalEntry: true },
 ];
 

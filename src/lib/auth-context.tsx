@@ -41,7 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isDemoMode) {
-      setUser(DEMO_USER);
       setLoading(false);
       return;
     }

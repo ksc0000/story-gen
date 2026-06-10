@@ -206,35 +206,6 @@ export type AvatarCandidate = {
   prompt: string;
 };
 
-export interface CompanionVisualDescription {
-  size: string;
-  color: string;
-  species: string;
-  personality: string;
-  specialAbility: string;
-}
-
-export interface CompanionData {
-  userId: string;
-  name: string;
-  visualDescription: CompanionVisualDescription;
-  generatedImageUrl?: string;
-  createdAt: FirebaseFirestore.Timestamp;
-  updatedAt: FirebaseFirestore.Timestamp;
-}
-
-export interface CompanionImageJob {
-  userId: string;
-  companionId: string;
-  status: "pending" | "generating" | "completed" | "failed";
-  error?: {
-    message: string;
-    code: string;
-  };
-  createdAt: FirebaseFirestore.FieldValue;
-  updatedAt: FirebaseFirestore.FieldValue;
-}
-
 export interface ChildAvatarGenerationJob {
   userId: string;
   childId: string;

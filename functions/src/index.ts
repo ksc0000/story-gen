@@ -17,5 +17,3 @@ export { saveWeeklySloSnapshot } from "./save-weekly-slo-snapshot";
 export { cleanupStaleGeneration } from "./cleanup-stale-generation";
 export { createCheckoutSession, stripeWebhook } from "./stripe-checkout";
 export { onAvatarJobCreated } from "./generate-avatar-job";
-export { generateTemplate } from "./generate-template";
-export { onCompanionImageJobCreated } from "./generate-companion-image";

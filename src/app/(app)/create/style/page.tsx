@@ -74,6 +74,12 @@ function StyleSelectionPageContent() {
   const outfitMode = (searchParams.get("outfitMode") ?? "profile_default") as OutfitMode;
   const customOutfit = searchParams.get("customOutfit");
   const keepSignatureItem = searchParams.get("keepSignatureItem") !== "false";
+  const qualityLabel = IMAGE_QUALITY_LABELS[selectedPlanConfig.imageQualityTier];
+  const consistencyLabel = CHARACTER_CONSISTENCY_LABELS[selectedPlanConfig.characterConsistencyMode];
+  const creationModeLabel = CREATION_MODE_LABELS[mode];
+  const outfitModeLabel = OUTFIT_MODE_LABELS[outfitMode];
+  const ageReadingProfile = getAgeReadingDisplayProfile(child?.age);
+  const hasChildAge = typeof child?.age === "number";
   const visibleStyleProfiles = useMemo(
     () => getStylePickerProfilesForTemplate(template?.id),
     [template?.id]
@@ -232,7 +238,7 @@ function StyleSelectionPageContent() {
   };
 
   return (
-    <PageTransition className="mx-auto max-w-5xl px-4 pb-28 pt-8">
+    <PageTransition className="mx-auto max-w-5xl px-4 py-8">
       <StepIndicator currentStep={3} />
       <h1 className="mt-6 text-center text-xl font-bold text-purple-900">絵のタッチを選んでね</h1>
       <p className="mt-2 text-center text-sm text-violet-500">
@@ -247,12 +253,49 @@ function StyleSelectionPageContent() {
         />
       </div>
       <div className="mx-auto mt-6 max-w-3xl rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-5">
-        <h2 className="text-base font-semibold text-purple-900">この内容で作ります ✅</h2>
+        <h2 className="text-base font-semibold text-purple-900">作成内容を確認</h2>
+        <p className="mt-1 text-sm text-violet-600">
+          この内容で絵本を作ります。あとから本棚で確認できます。
+        </p>
+        <div className="mt-3 rounded-2xl bg-violet-50 p-4 text-sm text-violet-600">
+          <p className="font-medium text-purple-900">年齢に合わせた文章レベル</p>
+          <p className="mt-1">
+            登録された年齢に合わせて、文章量や言葉のむずかしさを調整します。
+          </p>
+          {!hasChildAge ? (
+            <p className="mt-2 text-xs leading-relaxed text-violet-500">
+              年齢が未登録のため、3〜6歳向けの標準設定で作成します。年齢を登録すると、より合った文章量に調整できます。
+            </p>
+          ) : null}
+          {mode === "fixed_template" ? (
+            <p className="mt-2 text-xs leading-relaxed text-violet-500">
+              AI生成のお話では、年齢に合わせて文章量を調整します。テンプレート絵本では、今後さらに細かく対応予定です。
+            </p>
+          ) : null}
+        </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <SummaryItem label="主人公" value={childName || "未設定"} />
-          <SummaryItem label="テーマ" value={template?.name ?? "未設定"} />
+          <SummaryItem label="プラン名" value={selectedPlanConfig.label} />
           <SummaryItem label="ページ数" value={`${pageCount}ページ`} />
-          <SummaryItem label="スタイル" value={selected ? getIllustrationStyleProfile(selected).name : "未選択"} />
+          <SummaryItem
+            label="画質"
+            value={`${qualityLabel.label} / ${qualityLabel.description}`}
+          />
+          <SummaryItem
+            label="一貫性"
+            value={`${consistencyLabel.label} / ${consistencyLabel.description}`}
+          />
+          <SummaryItem label="作成モード" value={creationModeLabel} />
+          <SummaryItem label="主人公名" value={childName || "未設定"} />
+          <SummaryItem label="テーマ名" value={template?.name ?? "未設定"} />
+          <SummaryItem label="文章レベル" value={hasChildAge ? ageReadingProfile.label : "3〜6歳向けの標準設定"} />
+          <SummaryItem label="本文量" value={ageReadingProfile.targetCharsPerPage} />
+          <SummaryItem label="お話の深さ" value={ageReadingProfile.storyLevelSummary} />
+          <SummaryItem label="服装モード" value={outfitModeLabel} />
+          <SummaryItem
+            label="固定アイテム"
+            value={keepSignatureItem ? "できるだけ出す" : "必要な場面だけにする"}
+          />
+          <SummaryItem label="文章の雰囲気" value={ageReadingProfile.uiDescription} />
         </div>
       </div>
       {createError ? (
@@ -261,17 +304,10 @@ function StyleSelectionPageContent() {
           <p className="mt-1 break-words">{createError}</p>
         </div>
       ) : null}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3">
-        <div className="mx-auto max-w-lg">
-          <Button
-            size="lg"
-            className="w-full"
-            disabled={!selected || creating || !childName || !template}
-            onClick={handleCreate}
-          >
-            {creating ? "絵本を作っています..." : "絵本を作る！"}
-          </Button>
-        </div>
+      <div className="mt-8 flex justify-center">
+        <Button onClick={handleCreate} disabled={!selected || creating || !childName || !template} size="lg" className="px-8 py-6 text-lg">
+          {creating ? "絵本を作っています..." : "絵本を作る！"}
+        </Button>
       </div>
     </PageTransition>
   );
