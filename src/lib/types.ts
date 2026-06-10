@@ -292,6 +292,35 @@ export interface ChildProfileDoc {
   active: boolean;
 }
 
+export interface CompanionVisualDescription {
+  size: string;
+  color: string;
+  species: string;
+  personality: string;
+  specialAbility: string;
+}
+
+export interface CompanionDoc {
+  userId: string;
+  name: string;
+  visualDescription: CompanionVisualDescription;
+  generatedImageUrl?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface CompanionImageJob {
+  userId: string;
+  companionId: string;
+  status: "pending" | "generating" | "completed" | "failed";
+  error?: {
+    message: string;
+    code: string;
+  };
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 export interface ChildProfileSnapshot {
   displayName: string;
   nickname?: string;
