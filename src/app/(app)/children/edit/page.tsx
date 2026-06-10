@@ -3,12 +3,13 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { doc, updateDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { PageTransition } from "@/components/page-transition";
 import { ChildProfileForm, type ChildProfileFormValues } from "@/components/child-profile-form";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
-import { db } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase";
 import { buildChildProfilePayload } from "@/lib/child-profile";
 import type { ChildProfileDoc } from "@/lib/types";
 
@@ -32,9 +33,17 @@ function ChildEditPageContent() {
     setSaving(true);
     try {
       const payload = buildChildProfilePayload(values, child.visualProfile);
+
+      if (values.photoFile) {
+        const storageRef = ref(storage, `childPhotos/${user.uid}/${childId}/original.jpg`);
+        const snapshot = await uploadBytes(storageRef, values.photoFile);
+        const photoUrl = await getDownloadURL(snapshot.ref);
+        payload.photoUrl = photoUrl;
+      }
+
       const needsAvatarRefresh = hasAvatarAffectingChanges(child, payload);
       await updateDoc(doc(db, "users", user.uid, "children", childId), payload);
-      if (needsAvatarRefresh) {
+      if (needsAvatarRefresh || values.photoFile) {
         const regenerate = window.confirm("この内容でキャラクター画像を生成しなおしますか？");
         router.push(
           regenerate

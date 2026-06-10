@@ -35,6 +35,7 @@ export function buildChildProfilePayload(values: ChildProfileFormValues, existin
       avoidExpressions: [],
       allowedPersonalization: true,
     },
+    photoUrl: values.photoUrl || null,
     updatedAt: serverTimestamp(),
     active: true,
   };

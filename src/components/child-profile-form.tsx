@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PhotoUploadInput } from "@/components/photo-upload-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ChildProfileDoc, IllustrationStyle, PageCount } from "@/lib/types";
@@ -26,6 +27,8 @@ type ChildProfileFormValues = {
   colorMood: string;
   defaultStyle: IllustrationStyle;
   defaultPageCount: PageCount;
+  photoUrl?: string;
+  photoFile: File | null;
 };
 
 interface ChildProfileFormProps {
@@ -53,6 +56,7 @@ const defaultValues: ChildProfileFormValues = {
   colorMood: "やさしいパステル",
   defaultStyle: "soft_watercolor",
   defaultPageCount: 8,
+  photoFile: null,
 };
 
 export function ChildProfileForm({ initialChild, submitLabel, saving = false, onSubmit }: ChildProfileFormProps) {
@@ -75,6 +79,7 @@ export function ChildProfileForm({ initialChild, submitLabel, saving = false, on
     colorMood: initialChild?.visualProfile?.colorMood ?? "やさしいパステル",
     defaultStyle: initialChild?.generationSettings?.defaultStyle ?? "soft_watercolor",
     defaultPageCount: initialChild?.generationSettings?.defaultPageCount ?? 8,
+    photoUrl: initialChild?.photoUrl,
   }), [initialChild]);
 
   const [values, setValues] = useState(initialValues);
@@ -159,6 +164,18 @@ export function ChildProfileForm({ initialChild, submitLabel, saving = false, on
           <Field label="よく着る服" value={values.outfit} onChange={(value) => update("outfit", value)} placeholder="青いオーバーオール" />
           <Field label="毎回出したい持ち物" value={values.signatureItem} onChange={(value) => update("signatureItem", value)} placeholder="黄色い帽子" />
           <Field label="色や雰囲気" value={values.colorMood} onChange={(value) => update("colorMood", value)} placeholder="やさしいパステル" />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>お子さんの写真（任意）</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PhotoUploadInput
+            value={values.photoUrl}
+            onChange={(file) => setValues((current) => ({ ...current, photoFile: file }))}
+          />
         </CardContent>
       </Card>
 
