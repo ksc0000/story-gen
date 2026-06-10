@@ -77,7 +77,7 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
     "quiet_ending",
   ],
   "fixed-bedtime-good-day": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
-  "fixed-brush-teeth": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-brush-teeth": ["opening_establishing", "action", "payoff", "quiet_ending"],
   "fixed-first-christmas": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-sharing-friends": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-sleepy-moon-adventure": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],

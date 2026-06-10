@@ -23,19 +23,19 @@ function withFixedImagePromptSafety(prompt: string): string {
   return result;
 }
 
-const BRUSH_TEETH_8P_CHARACTER_ANCHOR_CLAUSE =
-  "keep the same preschool child across all 8 pages: same short black bob hair, same mint-green long-sleeve pajamas, same round face proportions, same age impression around 4-5 years old, and consistent gentle picture-book facial features";
+const BRUSH_TEETH_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same preschool child across all pages: same short black bob hair, same mint-green long-sleeve pajamas, same round face proportions, same age impression around 4-5 years old, and consistent gentle picture-book facial features";
 
-const BRUSH_TEETH_8P_OBJECT_NO_TEXT_CLAUSE =
+const BRUSH_TEETH_OBJECT_NO_TEXT_CLAUSE =
   "bathroom objects must be plain and unlabeled: use solid-color cups, bottles, tubes, and shelf containers with no brand marks, no labels, no stickers, no icon-like glyphs, and no decorative text-like patterns on mirror, shelf, tiles, or packaging";
 
-function withBrushTeeth8pImagePromptGuardrail(prompt: string): string {
+function withBrushTeethImagePromptGuardrail(prompt: string): string {
   let result = prompt;
-  if (!result.includes(BRUSH_TEETH_8P_CHARACTER_ANCHOR_CLAUSE)) {
-    result = `${result}, ${BRUSH_TEETH_8P_CHARACTER_ANCHOR_CLAUSE}`;
+  if (!result.includes(BRUSH_TEETH_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${BRUSH_TEETH_CHARACTER_ANCHOR_CLAUSE}`;
   }
-  if (!result.includes(BRUSH_TEETH_8P_OBJECT_NO_TEXT_CLAUSE)) {
-    result = `${result}, ${BRUSH_TEETH_8P_OBJECT_NO_TEXT_CLAUSE}`;
+  if (!result.includes(BRUSH_TEETH_OBJECT_NO_TEXT_CLAUSE)) {
+    result = `${result}, ${BRUSH_TEETH_OBJECT_NO_TEXT_CLAUSE}`;
   }
   return withFixedImagePromptSafety(result);
 }
@@ -995,62 +995,56 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     fixedStory: {
       titleTemplate: "{childName}のはみがきできたよ",
       coverImagePromptTemplate:
-        withFixedImagePromptSafety("Picture book cover illustration: a cheerful preschool child holding a toothbrush in a bright clean bathroom, fresh morning or evening light, friendly mirror reflection, recurring shining star motif, encouraging cheerful mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+        withBrushTeethImagePromptGuardrail("Picture book cover illustration: a cheerful preschool child with short dark bob hair, wearing mint-green pajamas, holding a colorful toothbrush in a bright clean bathroom, fresh morning or evening light, friendly mirror reflection, recurring shining star motif, encouraging cheerful heroic mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details"),
       titleSpreadTextTemplate: "{childName}の はみがき できたよ",
       openingNarrationTemplate:
         "きょうも はみがきの じかんが やってきました。{childName}は どんなふうに がんばるかな。",
       pages: [
-        {
+        buildAgeSpecificPage({
           textTemplate: "{childName}は、きょうもおくちをあーん。",
-          textTemplatesByAge: {
-            baby_toddler: "{childName}、あーん。",
-            preschool_3_4: "{childName}は、きょうもおくちをあーん。",
-            early_reader_5_6:
-              "{childName}は、きょうもおくちをあーん。じぶんで はぶらしを もって、やってみるきもちになりました。",
-            early_elementary_7_8:
-              "{childName}は、きょうもおくちをあーん。きれいな はにするために、じぶんで はぶらしをにぎって はじめてみます。",
-            general_child: "{childName}は、きょうもおくちをあーん。",
-          },
-          pageVisualRole: "opening_establishing" as const,
+          baby_toddler: "{childName}、あーん。",
+          preschool_3_4: "{childName}は、きょうもおくちをあーん。",
+          early_reader_5_6:
+            "{childName}は、きょうもおくちをあーん。じぶんで はぶらしを もって、やってみるきもちになりました。",
+          early_elementary_7_8:
+            "{childName}は、きょうもおくちをあーん。きれいな はにするために、じぶんで はぶらしをにぎって はじめてみます。",
+          general_child: "{childName}は、きょうもおくちをあーん。",
+          pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Establishing wide shot of a preschool child standing on a small step stool in a bright, clean bathroom. The child reaches for a colorful toothbrush in a cup on the sink counter. A friendly mirror reflects the child's eager face. Toothpaste, a rinse cup, and a hand towel are neatly arranged. A small shining star motif is tucked on the cup or mirror corner. Bright morning or evening light from a window. Soft watercolor picture book style, rounded child-safe shapes, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
-        },
-        {
+            withBrushTeethImagePromptGuardrail("Establishing wide shot of a preschool child standing on a small step stool in a bright, clean bathroom. The child, with short dark hair and mint-green pajamas, reaches for a colorful toothbrush in a cup on the sink counter. A friendly mirror reflects the child's eager face. Toothpaste, a rinse cup, and a hand towel are neatly arranged. A small shining star motif is tucked on the cup or mirror corner. Bright morning light from a window. Soft watercolor picture book style, rounded child-safe shapes, rich but not cluttered."),
+        }),
+        buildAgeSpecificPage({
           textTemplate: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
-          textTemplatesByAge: {
-            baby_toddler: "しゃかしゃか。ぴかぴか。",
-            preschool_3_4: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
-            early_reader_5_6:
-              "しゃかしゃか、こしこし。みがきにくい ところも、ゆっくり うごかすと すこしずつ きれいになります。",
-            early_elementary_7_8:
-              "しゃかしゃか、こしこし。おくばや はのうらも わすれないように、かがみを見ながら ていねいに みがいていきます。",
-            general_child: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
-          },
-          pageVisualRole: "discovery" as const,
+          baby_toddler: "しゃかしゃか。ぴかぴか。",
+          preschool_3_4: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
+          early_reader_5_6:
+            "しゃかしゃか、こしこし。みがきにくい ところも、ゆっくり うごかすと すこしずつ きれいになります。",
+          early_elementary_7_8:
+            "しゃかしゃか、こしこし。おくばや はのうらも わすれないように、かがみを見ながら ていねいに みがいていきます。",
+          general_child: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
+          pageVisualRole: "action",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Medium action shot of a child actively brushing teeth with concentration. The child holds the toothbrush with both small hands, mouth slightly open with gentle foam. A friendly mirror shows the child's focused expression from a slightly different angle. Soft bubbles float near the sink. A small shining star motif appears on the toothbrush handle or a nearby tile. Clean, bright bathroom setting with rounded edges. Soft watercolor picture book style, dynamic but gentle composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
-        },
-        {
+            withBrushTeethImagePromptGuardrail("Medium action shot of the child with short dark hair and mint-green pajamas actively brushing teeth with hero-like concentration. The child holds the toothbrush with both small hands, mouth slightly open with gentle white foam. A friendly mirror shows the child's focused, determined expression. Soft bubbles float near the sink. A small shining star motif appears on the toothbrush handle. Clean, bright bathroom setting. Soft watercolor picture book style, dynamic but gentle composition, rich but not cluttered."),
+        }),
+        buildAgeSpecificPage({
           textTemplate: "おわったあと、{childName}はちょっぴりうれしそうでした。",
-          textTemplatesByAge: {
-            baby_toddler: "{childName}、にこっ。",
-            preschool_3_4: "おわったあと、{childName}はちょっぴりうれしそうでした。",
-            early_reader_5_6:
-              "おわったあと、{childName}は にっこり。じぶんで できたことが うれしくて、むねが ぽっと あたたかくなりました。",
-            early_elementary_7_8:
-              "みがきおわると、{childName}は にっこりしました。すこし むずかしくても さいごまでできたことが、自信につながったのです。",
-            general_child: "おわったあと、{childName}はちょっぴりうれしそうでした。",
-          },
-          pageVisualRole: "emotional_closeup" as const,
+          baby_toddler: "{childName}、にこっ。",
+          preschool_3_4: "おわったあと、{childName}はちょっぴりうれしそうでした。",
+          early_reader_5_6:
+            "おわったあと、{childName}は にっこり。じぶんで できたことが うれしくて、むねが ぽっと あたたかくなりました。",
+          early_elementary_7_8:
+            "みがきおわると、{childName}は にっこりしました。すこし むずかしくても さいごまでできたことが、自信につながったのです。",
+          general_child: "おわったあと、{childName}はちょっぴりうれしそうでした。",
+          pageVisualRole: "payoff",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Close-up of a child's proud, beaming smile after finishing brushing teeth. The child holds up the toothbrush triumphantly with one hand, the other hand on their hip. Sparkling clean teeth visible in a wide grin. The mirror behind reflects the happy moment. A small shining star motif glows near the child or on the mirror. Warm encouraging light. Soft watercolor picture book style, celebratory intimate framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
-        },
-        {
+            withBrushTeethImagePromptGuardrail("Close-up of the child's proud, beaming smile after finishing brushing teeth. Sparkling clean teeth visible in a wide grin. The child, in mint-green pajamas, holds up the toothbrush triumphantly like a tiny hero. The mirror behind reflects the happy moment. A small shining star motif glows near the child. Warm encouraging light. Soft watercolor picture book style, celebratory hero-like framing, rich but not cluttered."),
+        }),
+        buildAgeSpecificPage({
           textTemplate: "{parentMessage}",
-          pageVisualRole: "quiet_ending" as const,
+          pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            withFixedImagePromptSafety("Wide warm shot of a parent and child together at the bathroom doorway, seen from behind or side view. The child holds the parent's hand, looking up with a satisfied smile. The bathroom is tidy behind them, with the toothbrush cup neatly placed. A hallway or bedroom beckons warmly ahead. A small shining star motif is visible on a doorframe or nightlight. Soft evening glow. Soft watercolor picture book style, peaceful transition composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
-        },
+            withBrushTeethImagePromptGuardrail("Wide warm shot of a parent and child together at the bathroom doorway, seen from side view. The child, in mint-green pajamas, holds the parent's hand, looking up with a satisfied smile. The bathroom is tidy behind them. A hallway beckons warmly ahead. A small shining star motif is visible on a doorframe. Soft evening glow. Soft watercolor picture book style, peaceful transition composition, rich but not cluttered."),
+        }),
       ],
     },
   },
@@ -1099,7 +1093,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "朝だ。{childName}は、お水をながして顔を洗います。きょうも はみがきのじゅんびが はじまります。",
           pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            withBrushTeeth8pImagePromptGuardrail("Establishing wide shot of a preschool child at a bathroom sink in bright morning light, reaching for a faucet on a small step stool. The child's face is eager and alert. A bathroom mirror ahead shows the child's reflection. A colorful toothbrush cup sits on the counter with other bathroom items arranged neatly. Use only plain, unlabeled bathroom objects. Do not include readable text, product labels, logos, numbers, letters, posters, charts, or written marks anywhere in the sink area, mirror, counter, or background. A small shining star motif is tucked on the mirror frame. Soft watercolor picture book style, clean bright morning bathroom, rounded child-safe shapes, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBrushTeethImagePromptGuardrail("Establishing wide shot of a preschool child at a bathroom sink in bright morning light, reaching for a faucet on a small step stool. The child's face is eager and alert. A bathroom mirror ahead shows the child's reflection. A colorful toothbrush cup sits on the counter with other bathroom items arranged neatly. Use only plain, unlabeled bathroom objects. Do not include readable text, product labels, logos, numbers, letters, posters, charts, or written marks anywhere in the sink area, mirror, counter, or background. A small shining star motif is tucked on the mirror frame. Soft watercolor picture book style, clean bright morning bathroom, rounded child-safe shapes, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "でも、歯みがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。",
@@ -1114,7 +1108,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "でも、歯みがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。おへやから あぶくの音が きこえてきました。",
           pageVisualRole: "setback_or_question",
           imagePromptTemplate:
-            withBrushTeeth8pImagePromptGuardrail("Medium shot of the child sitting on the bathroom floor with a slightly pouty or uncertain expression, looking at the toothbrush with hesitation. The toothbrush and solid-colored toothpaste tube sit on the counter above with no labels, no brand marks, no text. Soft bubbles or steam are visible near the sink. The room is still bright and welcoming despite the child's reluctance. A small shining star motif appears on the floor tile. Soft watercolor picture book style, relatable reluctance without negativity, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.")
+            withBrushTeethImagePromptGuardrail("Medium shot of the child sitting on the bathroom floor with a slightly pouty or uncertain expression, looking at the toothbrush with hesitation. The toothbrush and solid-colored toothpaste tube sit on the counter above with no labels, no brand marks, no text. Soft bubbles or steam are visible near the sink. The room is still bright and welcoming despite the child's reluctance. A small shining star motif appears on the floor tile. Soft watercolor picture book style, relatable reluctance without negativity, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.")
         }),
         buildAgeSpecificPage({
           textTemplate: "でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。",
@@ -1129,7 +1123,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。{childName}の目が きらりと 光ります。",
           pageVisualRole: "discovery",
           imagePromptTemplate:
-            withBrushTeeth8pImagePromptGuardrail("Medium action shot of the child actively brushing with delight. The toothbrush fills with foam bubbles that float in soft white clouds near the mouth. The child's expression shifts from reluctance to joy, eyes bright. Soft bubbles drift near the sink. A small shining star motif appears on the toothbrush handle or bubbles. Bright bathroom light. Soft watercolor picture book style, transformation moment, dynamic but gentle, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBrushTeethImagePromptGuardrail("Medium action shot of the child actively brushing with delight. The toothbrush fills with foam bubbles that float in soft white clouds near the mouth. The child's expression shifts from reluctance to joy, eyes bright. Soft bubbles drift near the sink. A small shining star motif appears on the toothbrush handle or bubbles. Bright bathroom light. Soft watercolor picture book style, transformation moment, dynamic but gentle, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。",
@@ -1144,7 +1138,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。{childName}は、歯のひとつひとつに 気持ちを こめて 磨きます。",
           pageVisualRole: "action",
           imagePromptTemplate:
-            withBrushTeeth8pImagePromptGuardrail("Action-focused medium shot of the child concentrating hard on brushing the front teeth. The child's hands are on both sides of the toothbrush, mouth open with gentle foam. Keep the toothbrush, toothpaste tube, cup, mirror, and counter completely plain and unlabeled, with no brand marks, product labels, letters, numbers, or readable markings. The toothpaste tube must be completely blank, plain white, and label-free, with no printed text, fake text, logo, brand mark, decorative writing, symbols, numbers, or letter-like shapes. If needed, turn the tube away from the viewer or partially hide it behind the cup so no product surface can show markings. The mirror reflects the child's focused, determined face. Soft bubbles float around the mouth area. A small shining star motif appears on the mirror frame or tooth foam. Bright clean bathroom. Soft watercolor picture book style, determination and effort, dynamic but gentle, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBrushTeethImagePromptGuardrail("Action-focused medium shot of the child concentrating hard on brushing the front teeth. The child's hands are on both sides of the toothbrush, mouth open with gentle foam. Keep the toothbrush, toothpaste tube, cup, mirror, and counter completely plain and unlabeled, with no brand marks, product labels, letters, numbers, or readable markings. The toothpaste tube must be completely blank, plain white, and label-free, with no printed text, fake text, logo, brand mark, decorative writing, symbols, numbers, or letter-like shapes. If needed, turn the tube away from the viewer or partially hide it behind the cup so no product surface can show markings. The mirror reflects the child's focused, determined face. Soft bubbles float around the mouth area. A small shining star motif appears on the mirror frame or tooth foam. Bright clean bathroom. Soft watercolor picture book style, determination and effort, dynamic but gentle, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。",
@@ -1159,7 +1153,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。{childName}は、鏡を覗きながら 一生懸命 探します。",
           pageVisualRole: "object_detail",
           imagePromptTemplate:
-            withBrushTeeth8pImagePromptGuardrail("Object-detail close shot focused on the child's mouth area as the toothbrush moves toward the back teeth, seen in the mirror. The child tilts the head slightly to the side, concentrating. Soft foam reveals gentle brushing action. Use a plain mirror frame and simple bathroom objects only. Avoid pseudo-text, decorative symbols, label-like marks, written notes, product labels, posters, charts, letters, or numbers. The mirror reflects the child's focused expression. A small shining star motif appears on the mirror edge. Soft bathroom light highlighting the brushing motion. Soft watercolor picture book style, intimate exploration, gentle care, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBrushTeethImagePromptGuardrail("Object-detail close shot focused on the child's mouth area as the toothbrush moves toward the back teeth, seen in the mirror. The child tilts the head slightly to the side, concentrating. Soft foam reveals gentle brushing action. Use a plain mirror frame and simple bathroom objects only. Avoid pseudo-text, decorative symbols, label-like marks, written notes, product labels, posters, charts, letters, or numbers. The mirror reflects the child's focused expression. A small shining star motif appears on the mirror edge. Soft bathroom light highlighting the brushing motion. Soft watercolor picture book style, intimate exploration, gentle care, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "その様子を、おかあさん（またはおとうさん）が、やさしく見守っていました。",
@@ -1174,7 +1168,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "その様子を、おかあさん（またはおとうさん）が、やさしく見守っていました。{childName}は、その視線に 気づき、もっと 頑張ろう と 思いました。",
           pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
-            withBrushTeeth8pImagePromptGuardrail("Close-up emotional shot of the child brushing intently in the mirror while a family member (parent) stands in soft focus in the background, watching with a warm, proud smile. The parent's hand rests gently on the child's shoulder or nearby. The parent's face shows gentle encouragement without pressure. The mirror frame is plain and simplified with no decorative patterns or pseudo-text marks. The bathroom wall behind the mirror is plain solid color with no posters, charts, or label-like objects. A small shining star motif appears on the parent's shirt or nearby. Soft warm bathroom light. Soft watercolor picture book style, supportive family moment, tender and reassuring, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBrushTeethImagePromptGuardrail("Close-up emotional shot of the child brushing intently in the mirror while a family member (parent) stands in soft focus in the background, watching with a warm, proud smile. The parent's hand rests gently on the child's shoulder or nearby. The parent's face shows gentle encouragement without pressure. The mirror frame is plain and simplified with no decorative patterns or pseudo-text marks. The bathroom wall behind the mirror is plain solid color with no posters, charts, or label-like objects. A small shining star motif appears on the parent's shirt or nearby. Soft warm bathroom light. Soft watercolor picture book style, supportive family moment, tender and reassuring, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。",
@@ -1189,7 +1183,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。{childName}は、最後の仕上げに 気合いが入ります。",
           pageVisualRole: "payoff",
           imagePromptTemplate:
-            withBrushTeeth8pImagePromptGuardrail("Wide payoff shot of the child rinsing vigorously, water streaming over the face with gentle splashes, foam and bubbles spinning away. The child's expression is determined and joyful. The bathroom counter is tidy around them. A small shining star motif appears on the rinse cup or soap dispenser. Clear water, bright light, sense of completion. Soft watercolor picture book style, accomplishment and freshness, dynamic but clean, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBrushTeethImagePromptGuardrail("Wide payoff shot of the child rinsing vigorously, water streaming over the face with gentle splashes, foam and bubbles spinning away. The child's expression is determined and joyful. The bathroom counter is tidy around them. A small shining star motif appears on the rinse cup or soap dispenser. Clear water, bright light, sense of completion. Soft watercolor picture book style, accomplishment and freshness, dynamic but clean, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{parentMessage}",
@@ -1200,7 +1194,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           general_child: "{parentMessage}",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            withBrushTeeth8pImagePromptGuardrail("Wide quiet ending shot of the child at the bathroom mirror after brushing, looking up at their own reflection with a proud, happy smile, holding the toothbrush in one hand. A family member stands beside or behind the child, both gazing at the reflection with warmth. The bathroom is tidy and calm. The mirror is plain with a simple frame and no pseudo-text or decorative marks. The wall around the mirror is plain solid color—no posters, charts, written notes, product labels, brand marks, or label-like objects. A small shining star motif glows on the nightlight or mirror frame edge only. Soft evening or warm bathroom light. Soft watercolor picture book style, serene satisfied framing, family pride, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBrushTeethImagePromptGuardrail("Wide quiet ending shot of the child at the bathroom mirror after brushing, looking up at their own reflection with a proud, happy smile, holding the toothbrush in one hand. A family member stands beside or behind the child, both gazing at the reflection with warmth. The bathroom is tidy and calm. The mirror is plain with a simple frame and no pseudo-text or decorative marks. The wall around the mirror is plain solid color—no posters, charts, written notes, product labels, brand marks, or label-like objects. A small shining star motif glows on the nightlight or mirror frame edge only. Soft evening or warm bathroom light. Soft watercolor picture book style, serene satisfied framing, family pride, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
         }),
       ],
     },
