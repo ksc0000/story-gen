@@ -233,6 +233,26 @@ export default function HomePage() {
           ) : null}
         </div>
         {isAdmin ? <p className="mt-2 text-sm text-violet-500">管理者向け: Book品質レビューと画像モデル比較を利用できます</p> : null}
+
+        {/* Upgrade banner for free plan users */}
+        {profile && profile.plan === "free" && (
+          <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50/80 px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div>
+              <p className="font-semibold text-amber-800 text-sm">
+                {remaining <= 0 ? "今月の無料枠を使い切りました 📚" : "もっとたくさん絵本を作りたいですか？ ✨"}
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                有料プランで月5〜10冊・高品質生成が使えます
+              </p>
+            </div>
+            <Link href="/pricing" className="shrink-0">
+              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white border-0">
+                プランを見る
+              </Button>
+            </Link>
+          </div>
+        )}
+
         {loading ? (
           <p className="mt-8 text-center text-violet-400">読み込み中...</p>
         ) : error ? (
