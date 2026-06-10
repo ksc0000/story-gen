@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { PageTransition } from "@/components/page-transition";
 import { ChildProfileForm, type ChildProfileFormValues } from "@/components/child-profile-form";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { db } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase";
 import { buildChildProfilePayload } from "@/lib/child-profile";
 
 export default function ChildOnboardingPage() {
@@ -23,7 +24,16 @@ export default function ChildOnboardingPage() {
         createdAt: serverTimestamp(),
       });
       await updateDoc(doc(db, "users", user.uid), { activeChildId: childRef.id });
-      router.replace(`/onboarding/child/avatar?childId=${childRef.id}`);
+
+      if (values.photoFile) {
+        const storageRef = ref(storage, `childPhotos/${user.uid}/${childRef.id}/original.jpg`);
+        const snapshot = await uploadBytes(storageRef, values.photoFile);
+        const photoUrl = await getDownloadURL(snapshot.ref);
+        await updateDoc(childRef, { photoUrl });
+        router.replace(`/onboarding/child/avatar?childId=${childRef.id}`);
+      } else {
+        router.replace("/home");
+      }
     } finally {
       setSaving(false);
     }

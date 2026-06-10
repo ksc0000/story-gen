@@ -286,6 +286,7 @@ export interface ChildProfileDoc {
   personality: ChildPersonalityProfile;
   visualProfile: ChildVisualProfile;
   generationSettings: ChildGenerationSettings;
+  photoUrl?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   active: boolean;
