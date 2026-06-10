@@ -70,19 +70,29 @@ export function StylePicker({ selected, onSelect, styles }: StylePickerProps) {
   );
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    /* Mobile: horizontal snap-scroll carousel; sm+: CSS grid */
+    <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 sm:[scroll-snap-type:none] lg:grid-cols-5">
       {visibleStyles.map((s) => (
-        <AnimatedCard key={s.id} onClick={() => onSelect(s.id)}>
-          <Card className={`h-full cursor-pointer overflow-hidden transition ${selected === s.id ? "ring-2 ring-purple-500 border-purple-400" : ""}`}>
+        <AnimatedCard
+          key={s.id}
+          onClick={() => onSelect(s.id)}
+          className="w-[72vw] max-w-[260px] flex-none snap-center sm:w-auto sm:max-w-none"
+        >
+          <Card className={`h-full cursor-pointer overflow-hidden transition ${selected === s.id ? "ring-2 ring-purple-500 border-purple-400 shadow-lg" : "shadow-sm sm:shadow-none"}`}>
             <CardContent className="flex h-full flex-col p-0 text-center">
               <div className="relative aspect-[2/3] w-full overflow-hidden bg-violet-50">
                 <Image
                   src={s.previewImageUrl}
                   alt={`${s.name}のサンプル画像`}
                   fill
-                  sizes="(min-width: 1024px) 180px, (min-width: 640px) 45vw, 90vw"
+                  sizes="(min-width: 1024px) 180px, (min-width: 640px) 45vw, 72vw"
                   className="object-cover transition duration-300 hover:scale-105"
                 />
+                {selected === s.id && (
+                  <div className="absolute inset-0 flex items-end justify-center pb-3 sm:hidden">
+                    <span className="rounded-full bg-purple-600 px-3 py-1 text-xs font-bold text-white shadow">選択中</span>
+                  </div>
+                )}
               </div>
               <div className="flex flex-1 flex-col p-3">
                 <h3 className="text-sm font-semibold text-purple-900">{s.name}</h3>
