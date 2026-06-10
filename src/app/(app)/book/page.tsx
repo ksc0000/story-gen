@@ -5,13 +5,14 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { Share2, Check, Copy, Globe } from "lucide-react";
+import { Share2, Check, Copy, Globe, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookViewer } from "@/components/book-viewer";
 import { BookNextActions } from "@/components/book-next-actions";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { db, functions } from "@/lib/firebase";
 import { isDemoMode } from "@/lib/demo";
 import { trackAnalyticsEvent } from "@/lib/analytics";
@@ -22,6 +23,7 @@ function BookContent() {
   const searchParams = useSearchParams();
   const bookId = searchParams.get("id") ?? "";
   const { user } = useAuth();
+  const { profile } = useUserProfile(user?.uid);
   const { book, pages, loading } = useGenerationProgress(bookId);
   const [feedback, setFeedback] = useState<{
     rating: "great" | "okay" | "redo";
@@ -447,6 +449,24 @@ function BookContent() {
           </div>
         </div>
       ) : null}
+      {user && !isDemoMode && isOwner && profile?.plan === "free" && (
+        <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-medium text-amber-900 leading-tight">
+              ✨ プレミアムにアップグレードすると<br className="sm:hidden" />
+              次の絵本から高品質生成が使えます
+            </p>
+          </div>
+          <Link href="/pricing" className="shrink-0 w-full sm:w-auto">
+            <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white border-0 w-full">
+              プランを見る
+            </Button>
+          </Link>
+        </div>
+      )}
       {!isOwner && (
         <div className="mt-8 flex justify-center gap-4">
           <Link href="/home"><Button variant="outline">本棚に戻る</Button></Link>
