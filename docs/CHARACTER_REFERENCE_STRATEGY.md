@@ -6,7 +6,35 @@
 
 ---
 
-## 1. Problem
+## 1. Problem Statement: Background and Composition Leakage
+
+The current implementation of character reference images often leads to unintentional "leakage" where background elements, specific poses, or compositional biases from the reference photo are inadvertently transferred into the generated storybook illustrations. For instance, a child photographed in a sandbox or playground might cause those specific environments to appear in scenes where they don't belong, such as an animal adventure at the zoo.
+
+This leakage is a significant issue because it:
+- Compromises story consistency by introducing conflicting environmental elements.
+- Reduces artistic quality by forcing the AI model to merge disparate visual contexts.
+- Limits the creative flexibility of the generation pipeline by over-constraining the scene's composition.
+
+While IMG-002 (prompt-level character reference isolation) introduced basic prompt-based mitigations to instruct the model to focus on identity, these are often insufficient to override the strong visual cues present in the reference images themselves. A more structural solution is required to truly isolate the character's visual identity.
+
+---
+
+## 2. Proposed Solution Overview: Identity-Only Reference Strategy
+
+The "Identity-Only Reference Strategy" aims to decouple a character's visual identity from their environmental context, pose, and composition. By strictly separating "who" the character is from "where" they are and "what" they are doing, we can ensure consistent character representation across diverse story settings without unwanted background leakage.
+
+The core components of this strategy include:
+
+- **Neutral Reference Images**: Standardized, context-free images of the character. These images should ideally feature a neutral pose (e.g., standing), a plain or transparent background, and uniform lighting. Their sole purpose is to provide the AI model with a clear, unambiguous visual definition of the character's facial features, hair, and attire.
+- **Character Sheets (Conceptual)**: A collection of technical directives and potentially multiple neutral reference images captured from different angles or with various expressions. This "sheet" serves as the definitive visual anchor for the character throughout the entire book generation process.
+
+By transitioning to this identity-only approach, we expect to significantly reduce background and composition leakage, resulting in higher-quality illustrations that strictly adhere to the intended story scene while maintaining perfect character consistency.
+
+Note that this is currently a "design-in-progress," and the subsequent sections of this document will detail the specific implementation steps and technical requirements.
+
+---
+
+## 3. Problem
 
 現在の child reference image は、顔・髪型・服装だけでなく、背景・場所・構図・小物・照明までモデルに拾われる可能性がある。
 
@@ -16,7 +44,7 @@
 
 ---
 
-## 2. Goal
+## 4. Goal
 
 Reference image を character identity のみに使える状態にする。
 
@@ -42,7 +70,7 @@ Do not preserve:
 
 ---
 
-## 3. Neutral Reference Image Spec
+## 5. Neutral Reference Image Spec
 
 推奨仕様:
 
@@ -66,7 +94,7 @@ Do not preserve:
 
 ---
 
-## 4. Data Model Draft
+## 6. Data Model Draft
 
 `childProfiles/{childId}`
 
@@ -92,7 +120,7 @@ BookDoc snapshot:
 
 ---
 
-## 5. Generation Flow Options
+## 7. Generation Flow Options
 
 ### Option A: 子ども登録時に neutral reference を生成
 
@@ -137,7 +165,7 @@ Cons:
 
 ---
 
-## 6. Prompt Policy
+## 8. Prompt Policy
 
 Reference image use:
 
@@ -154,7 +182,7 @@ Prompt guardrails:
 
 ---
 
-## 7. Mode-specific Handling
+## 9. Mode-specific Handling
 
 ### fixed_template
 
@@ -174,7 +202,7 @@ Prompt guardrails:
 
 ---
 
-## 8. Smoke / Quality Criteria (Acceptance)
+## 10. Smoke / Quality Criteria (Acceptance)
 
 Acceptance criteria:
 
@@ -194,7 +222,7 @@ Acceptance criteria:
 
 ---
 
-## 9. Rollout Plan
+## 11. Rollout Plan
 
 ### Phase R1: Design only / docs
 
@@ -223,7 +251,7 @@ Acceptance criteria:
 
 ---
 
-## 10. Risks
+## 12. Risks
 
 - identity が弱くなる
 - neutral reference 生成コストが増える
@@ -240,7 +268,7 @@ Acceptance criteria:
 
 ---
 
-## 11. Non-goals
+## 13. Non-goals
 
 - 今回すぐ実装しない
 - provider 変更しない
