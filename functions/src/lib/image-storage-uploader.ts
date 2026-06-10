@@ -47,6 +47,14 @@ export type PageImageUploadFn = (
 ) => Promise<string>;
 
 /**
+ * The upload callback signature used for cover images.
+ */
+export type CoverImageUploadFn = (
+  bookId: string,
+  buffer: Buffer
+) => Promise<string>;
+
+/**
  * The upload callback signature expected by ImageProvider adapters
  * (ReplicateStorageUploader / OpenAIStorageUploader).
  *
@@ -92,5 +100,19 @@ export function makePageUploader(params: {
   const { bookId, pageNumber, uploadImage } = params;
   return async (buffer: Buffer, _profile: ImageModelProfile): Promise<string> => {
     return uploadImage(bookId, pageNumber, buffer);
+  };
+}
+
+/**
+ * Create an AdapterStorageUploader closure that delegates to an existing
+ * CoverImageUploadFn with pre-bound bookId.
+ */
+export function makeCoverUploader(params: {
+  bookId: string;
+  uploadCoverImage: CoverImageUploadFn;
+}): AdapterStorageUploader {
+  const { bookId, uploadCoverImage } = params;
+  return async (buffer: Buffer, _profile: ImageModelProfile): Promise<string> => {
+    return uploadCoverImage(bookId, buffer);
   };
 }

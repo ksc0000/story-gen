@@ -137,8 +137,6 @@ export function resolveImageFallbackProfiles(profile: ImageModelProfile): ImageM
       return ["klein_base", "klein_fast"];
     case "kontext_reference":
       return ["kontext_reference", "klein_fast"];
-    case "kontext_max":
-      return ["kontext_max", "klein_fast"];
     case "flux11_pro_candidate": // T6-37: diagnostic only
       return ["flux11_pro_candidate", "klein_fast"];
     case "openai_image_candidate": // T6-43: no Replicate fallback — OpenAI only
