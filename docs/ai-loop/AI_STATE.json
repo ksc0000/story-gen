@@ -18,11 +18,14 @@
     "App rename EhoNAI → Ehoria (PR #185)",
     "Ehoria logo integration (PR #187)",
     "P5-5: Tune and enable 13 SJ/IM alert policies (PR #194, merged)",
-    "Template Smoke Checklist (PR #186, merged)"
+    "Template Smoke Checklist (PR #186, merged)",
+    "Stripe Checkout subscription flow (PR #198, merged)",
+    "Avatar async design doc (PR #200, merged)"
   ],
   "failed_tasks": [],
   "in_progress_tasks": [
-    "REF-001: Character Reference Strategy docs — Problem Statement & Proposed Solution (Issue #196, PR #197 Draft)"
+    "REF-001: Character Reference Strategy docs — Problem Statement & Proposed Solution (Issue #196, PR #197 Draft)",
+    "Issue #108: Avatar async design doc (PR #200 merged) — implementation pending"
   ],
   "constraints": [
     "docs-first",
