@@ -1,13 +1,29 @@
 "use client";
 
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BookViewer } from "@/components/book-viewer";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 
-export default function SharePageClient({ bookId }: { bookId: string }) {
+function ShareBookContent() {
+  const searchParams = useSearchParams();
+  const bookId = searchParams.get("id") ?? "";
+
   const { book, pages, loading } = useGenerationProgress(bookId);
+
+  if (!bookId) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <p className="text-violet-500">絵本が指定されていません</p>
+        <Link href="/" className="mt-4 inline-block">
+          <Button variant="outline">トップページに戻る</Button>
+        </Link>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -63,5 +79,19 @@ export default function SharePageClient({ bookId }: { bookId: string }) {
         </Link>
       </div>
     </PageTransition>
+  );
+}
+
+export default function SharePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <p className="text-violet-500">読み込み中...</p>
+        </div>
+      }
+    >
+      <ShareBookContent />
+    </Suspense>
   );
 }

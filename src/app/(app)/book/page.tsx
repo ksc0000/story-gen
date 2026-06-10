@@ -113,7 +113,7 @@ function BookContent() {
   }
 
   function handleCopyLink() {
-    const url = `${window.location.origin}/share/${bookId}`;
+    const url = `${window.location.origin}/share?id=${bookId}`;
     navigator.clipboard.writeText(url).then(() => {
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
