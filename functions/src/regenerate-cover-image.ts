@@ -4,133 +4,17 @@ import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 import { randomUUID } from "crypto";
 import {
-  ReplicateImageClient,
   resolveImageModelProfile,
   resolveImageFallbackProfiles,
-  withImageTimeout,
-  ImageTimeoutError,
 } from "./lib/replicate";
 import { buildCoverImagePrompt, buildFinalCharacterBible } from "./lib/prompt-builder";
 import { getAgeReadingProfile } from "./lib/age-reading-profile";
 import type { ImageModelProfile, CoverStatus, BookData } from "./lib/types";
+import { generateCoverImageWithFallback } from "./controllers/imageGeneration";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
-const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
 const STORAGE_BUCKET = "story-gen-8a769.firebasestorage.app";
 
-/* ------------------------------------------------------------------ */
-/*  Cover image generation (same logic as generate-book.ts)            */
-/* ------------------------------------------------------------------ */
-
-interface CoverImageResult {
-  success: boolean;
-  coverStatus: CoverStatus;
-  imageBuffer?: Buffer;
-  usedProfile?: ImageModelProfile;
-  primaryProfile?: ImageModelProfile;
-  fallbackUsed: boolean;
-  attemptCount: number;
-  durationMs: number;
-  failureReason?: string;
-}
-
-interface GenerateCoverImageParams {
-  bookData: BookData;
-  imageClient: { generateImage: (prompt: string, opts: Record<string, unknown>) => Promise<Buffer> };
-}
-
-async function generateCoverImage(params: GenerateCoverImageParams): Promise<CoverImageResult> {
-  const { bookData } = params;
-  const primaryProfile = resolveImageModelProfile({
-    purpose: "book_cover",
-    imageQualityTier: bookData.imageQualityTier,
-    imageModelProfile: bookData.imageModelProfile,
-  });
-  const fallbackProfiles = resolveImageFallbackProfiles(primaryProfile);
-  const startMs = Date.now();
-  let totalAttempts = 0;
-  let lastFailureReason: string | undefined;
-
-  const readingProfile = getAgeReadingProfile(bookData.input.childAge);
-  const finalCharacterBible = buildFinalCharacterBible({
-    storyCharacterBible: bookData.characterBible || "",
-    childProfileSnapshot: bookData.childProfileSnapshot,
-    characterUsage: bookData.characterUsage,
-    childAge: bookData.input.childAge,
-  });
-
-  const fullCoverPrompt = buildCoverImagePrompt(
-    bookData.coverImagePrompt || "",
-    bookData.style,
-    finalCharacterBible,
-    bookData.styleBible,
-    {
-      cast: bookData.storyCast,
-      childProfileBasePrompt: bookData.childProfileSnapshot?.visualProfile.basePrompt,
-      imageModelProfile: bookData.imageModelProfile,
-      imageQualityTier: bookData.imageQualityTier,
-      ageBand: readingProfile.ageBand,
-      categoryGroupId: bookData.categoryGroupId,
-    }
-  );
-
-  for (const profile of fallbackProfiles) {
-    const maxRetries = 2;
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      totalAttempts++;
-      try {
-        const buffer = await withImageTimeout(
-          params.imageClient.generateImage(fullCoverPrompt, {
-            purpose: "book_cover",
-            imageQualityTier: bookData.imageQualityTier,
-            imageModelProfile: profile,
-          }),
-          IMAGE_GENERATION_TIMEOUT_MS,
-        );
-        return {
-          success: true,
-          coverStatus: "completed",
-          imageBuffer: buffer,
-          usedProfile: profile,
-          primaryProfile,
-          fallbackUsed: profile !== primaryProfile,
-          attemptCount: totalAttempts,
-          durationMs: Date.now() - startMs,
-        };
-      } catch (err) {
-        if (err instanceof ImageTimeoutError) {
-          lastFailureReason = "image_timeout";
-          logger.warn("Cover regen timeout", {
-            bookId: "(regen)",
-            profile,
-            attempt,
-            timeoutMs: IMAGE_GENERATION_TIMEOUT_MS,
-          });
-          break;
-        }
-        lastFailureReason = err instanceof Error ? err.message : "unknown";
-        logger.warn("Cover regen attempt failed", {
-          bookId: "(regen)",
-          profile,
-          attempt,
-          error: lastFailureReason,
-        });
-        if (attempt < maxRetries - 1) continue;
-        break;
-      }
-    }
-  }
-
-  return {
-    success: false,
-    coverStatus: "failed",
-    primaryProfile,
-    fallbackUsed: fallbackProfiles.length > 1,
-    attemptCount: totalAttempts,
-    durationMs: Date.now() - startMs,
-    failureReason: lastFailureReason,
-  };
-}
 
 /* ------------------------------------------------------------------ */
 /*  Build Firestore patches (exported for tests)                       */
@@ -256,12 +140,51 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
     });
 
     /* ---------- Generate cover image ---------- */
-    const imageClient = new ReplicateImageClient(replicateApiToken.value());
-    let coverResult: CoverImageResult;
+    let coverResult: import("./controllers/imageGeneration").CoverImageResult;
     try {
-      coverResult = await generateCoverImage({
-        bookData,
-        imageClient,
+      const readingProfile = getAgeReadingProfile(bookData.input.childAge);
+      const finalCharacterBible = buildFinalCharacterBible({
+        storyCharacterBible: bookData.characterBible || "",
+        childProfileSnapshot: bookData.childProfileSnapshot,
+        characterUsage: bookData.characterUsage,
+        childAge: bookData.input.childAge,
+      });
+
+      const fullCoverPrompt = buildCoverImagePrompt(
+        bookData.coverImagePrompt || "",
+        bookData.style,
+        finalCharacterBible,
+        bookData.styleBible,
+        {
+          cast: bookData.storyCast,
+          childProfileBasePrompt: bookData.childProfileSnapshot?.visualProfile.basePrompt,
+          imageModelProfile: bookData.imageModelProfile,
+          imageQualityTier: bookData.imageQualityTier,
+          ageBand: readingProfile.ageBand,
+          categoryGroupId: bookData.categoryGroupId,
+        }
+      );
+
+      const uploadCoverImage = async (_bookId: string, buffer: Buffer): Promise<string> => {
+        const storage = admin.storage();
+        const bucket = storage.bucket(STORAGE_BUCKET);
+        const filename = `books/${bookId}/cover-regen-${Date.now()}.png`;
+        const file = bucket.file(filename);
+        const downloadToken = randomUUID();
+        await file.save(buffer, {
+          contentType: "image/png",
+          metadata: { metadata: { firebaseStorageDownloadTokens: downloadToken } },
+        });
+        return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
+      };
+
+      coverResult = await generateCoverImageWithFallback({
+        coverImagePrompt: fullCoverPrompt,
+        bookId,
+        imageQualityTier: bookData.imageQualityTier ?? "light",
+        imageModelProfile: bookData.imageModelProfile,
+        replicateApiToken: replicateApiToken.value(),
+        uploadCoverImage,
       });
     } catch (err) {
       logger.error("Cover regeneration unexpected error", {
@@ -275,7 +198,7 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
     }
 
     /* ---------- Handle generation failure ---------- */
-    if (!coverResult.success || !coverResult.imageBuffer) {
+    if (!coverResult.success || !coverResult.imageUrl) {
       const failurePatch = buildCoverRegenerationFailurePatch({
         failureReason: coverResult.failureReason ?? "cover_regeneration_failed",
         usedProfile: coverResult.primaryProfile,
@@ -289,35 +212,7 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
       throw new HttpsError("internal", `カバー画像の再生成に失敗しました: ${coverResult.failureReason}`);
     }
 
-    /* ---------- Upload to Storage ---------- */
-    let coverImageUrl: string;
-    try {
-      const storage = admin.storage();
-      const bucket = storage.bucket(STORAGE_BUCKET);
-      const filename = `books/${bookId}/cover-regen-${Date.now()}.png`;
-      const file = bucket.file(filename);
-      const downloadToken = randomUUID();
-      await file.save(coverResult.imageBuffer, {
-        contentType: "image/png",
-        metadata: { metadata: { firebaseStorageDownloadTokens: downloadToken } },
-      });
-      coverImageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
-    } catch (uploadErr) {
-      logger.error("Cover regen upload failed", {
-        bookId,
-        error: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
-      });
-      await bookRef.update(
-        buildCoverRegenerationFailurePatch({
-          failureReason: "upload_failed",
-          usedProfile: coverResult.usedProfile,
-          durationMs: coverResult.durationMs,
-          fallbackUsed: coverResult.fallbackUsed,
-          hadValidCover,
-        }),
-      );
-      throw new HttpsError("internal", "カバー画像のアップロードに失敗しました。");
-    }
+    const coverImageUrl = coverResult.imageUrl;
 
     /* ---------- Success: update BookDoc ---------- */
     const successPatch = buildCoverRegenerationSuccessPatch({

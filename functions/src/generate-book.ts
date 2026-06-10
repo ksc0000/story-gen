@@ -59,6 +59,7 @@ import {
 } from "./lib/story-quality";
 import { removeUndefinedDeep } from "./lib/firestore-sanitize";
 import { getIllustrationStyleProfile } from "./lib/illustration-styles";
+import { generateCoverImageWithFallback } from "./controllers/imageGeneration";
 import {
   getStyleTemplateExposure,
   isAllowedStyleExposureStatus,
@@ -620,17 +621,6 @@ interface PageImageResult {
   retryable?: boolean;
 }
 
-interface CoverImageResult {
-  success: boolean;
-  coverStatus: CoverStatus;
-  imageBuffer?: Buffer;
-  usedProfile?: ImageModelProfile;
-  primaryProfile?: ImageModelProfile;
-  fallbackUsed: boolean;
-  attemptCount: number;
-  durationMs: number;
-  failureReason?: string;
-}
 
 /**
  * P5-3f: Classify why Step a failed so the diagnostic log can report the cause category.
@@ -912,88 +902,6 @@ async function runWithConcurrencyLimit<T>(
   return results;
 }
 
-async function generateCoverImage(params: {
-  coverImagePrompt: string;
-  imageClient: ImageClient;
-  bookId: string;
-  imageQualityTier: import("./lib/types").ImageQualityTier;
-  imageModelProfile?: ImageModelProfile;
-  inputImageUrls?: string[];
-}): Promise<CoverImageResult> {
-  const primaryProfile = resolveImageModelProfile({
-    purpose: "book_cover",
-    imageQualityTier: params.imageQualityTier,
-    imageModelProfile: params.imageModelProfile,
-  });
-  const fallbackProfiles = resolveImageFallbackProfiles(primaryProfile);
-  const startMs = Date.now();
-  let totalAttempts = 0;
-  let lastFailureReason: string | undefined;
-
-  for (const profile of fallbackProfiles) {
-    const maxRetries = 2;
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      totalAttempts++;
-      try {
-        const buffer = await withImageTimeout(
-          params.imageClient.generateImage(params.coverImagePrompt, {
-            purpose: "book_cover",
-            imageQualityTier: params.imageQualityTier,
-            imageModelProfile: profile,
-            inputImageUrls: params.inputImageUrls,
-          }),
-          IMAGE_GENERATION_TIMEOUT_MS
-        );
-        return {
-          success: true,
-          coverStatus: "completed",
-          imageBuffer: buffer,
-          usedProfile: profile,
-          primaryProfile,
-          fallbackUsed: profile !== primaryProfile,
-          attemptCount: totalAttempts,
-          durationMs: Date.now() - startMs,
-        };
-      } catch (err) {
-        if (err instanceof ImageTimeoutError) {
-          lastFailureReason = "image_timeout";
-          logger.warn("Cover image generation timeout", {
-            bookId: params.bookId,
-            profile,
-            attempt,
-            timeoutMs: IMAGE_GENERATION_TIMEOUT_MS,
-          });
-          break;
-        }
-        const retryAfterMs = getRetryAfterMs(err);
-        lastFailureReason = err instanceof Error ? err.message : "unknown";
-        logger.warn("Cover image generation attempt failed", {
-          bookId: params.bookId,
-          profile,
-          attempt,
-          error: lastFailureReason,
-        });
-        if (attempt < maxRetries - 1) {
-          if (retryAfterMs > 0) {
-            await new Promise((resolve) => setTimeout(resolve, Math.min(retryAfterMs, 30_000)));
-          }
-          continue;
-        }
-        break;
-      }
-    }
-  }
-
-  return {
-    success: false,
-    coverStatus: "failed",
-    primaryProfile,
-    fallbackUsed: fallbackProfiles.length > 1,
-    attemptCount: totalAttempts,
-    durationMs: Date.now() - startMs,
-    failureReason: lastFailureReason,
-  };
-}
 
 export async function processBookGeneration(
   bookId: string,
@@ -1635,18 +1543,32 @@ export async function processBookGeneration(
         );
         const coverInputImageUrls = coverInputImageRefs.map((ref) => ref.url);
 
-        const coverResult = await generateCoverImage({
+        const coverResult = await generateCoverImageWithFallback({
           coverImagePrompt,
-          imageClient: deps.imageClient,
           bookId,
           imageQualityTier: normalizedBookData.imageQualityTier ?? "light",
           imageModelProfile: normalizedBookData.imageModelProfile,
           inputImageUrls: coverInputImageUrls,
+          replicateApiToken: deps.replicateApiToken,
+          openaiApiKey: deps.openaiApiKey,
+          imageClient: deps.imageClient,
+          uploadCoverImage: deps.uploadCoverImage,
         });
 
-        if (coverResult.success && coverResult.imageBuffer) {
-          try {
-            const coverUrl = await deps.uploadCoverImage(bookId, coverResult.imageBuffer);
+        if (coverResult.success) {
+          let coverUrl = coverResult.imageUrl;
+          if (!coverUrl && coverResult.imageBuffer && deps.uploadCoverImage) {
+            try {
+              coverUrl = await deps.uploadCoverImage(bookId, coverResult.imageBuffer);
+            } catch (uploadErr) {
+              logger.error("Cover image upload failed (legacy path)", {
+                bookId,
+                error: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
+              });
+            }
+          }
+
+          if (coverUrl) {
             await deps.updateBookCoverImage(bookId, coverUrl);
             coverMetadata = removeUndefinedDeep({
               coverStatus: "completed" as CoverStatus,
@@ -1657,11 +1579,7 @@ export async function processBookGeneration(
               hasCoverPage: true,
               readingStructureVersion: "v2_cover_title_story",
             });
-          } catch (uploadErr) {
-            logger.error("Cover image upload failed", {
-              bookId,
-              error: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
-            });
+          } else {
             coverMetadata = removeUndefinedDeep({
               coverStatus: "failed" as CoverStatus,
               coverFailureReason: "upload_failed",
