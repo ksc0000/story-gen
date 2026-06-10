@@ -196,7 +196,18 @@ export default function HomePage() {
           {activeChild && <p className="em-header__subtitle">主人公: {activeChild.nickname || activeChild.displayName}</p>}
           <div className="mt-4">
             <Badge variant="outline" className="bg-white/50 backdrop-blur-sm border-purple-200 text-purple-700">
-              今月あと{Math.max(0, remaining)}冊作れます
+              {remaining >= 3 ? (
+                `今月あと${remaining}冊作れます ✨`
+              ) : remaining > 0 ? (
+                <>
+                  今月あと{remaining}冊 —{" "}
+                  <Link href="/pricing" className="underline ml-1 text-xs opacity-80 hover:opacity-100 transition-opacity">
+                    プレミアムならもっと作れます
+                  </Link>
+                </>
+              ) : (
+                `今月あと${Math.max(0, remaining)}冊作れます`
+              )}
             </Badge>
           </div>
         </header>

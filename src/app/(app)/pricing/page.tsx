@@ -182,6 +182,45 @@ export default function PricingPage() {
           })}
         </div>
 
+        {/* Premium Benefits Gallery */}
+        <div className="mt-16">
+          <h2 className="mb-8 text-center text-2xl font-bold">プレミアムでできること</h2>
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="rounded-2xl border bg-card p-6 shadow-sm">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-2xl">
+                📚
+              </div>
+              <h3 className="mb-2 font-bold">12ページの長編絵本</h3>
+              <p className="text-sm text-muted-foreground">
+                物語の深みが増す、ボリュームたっぷりの12ページ構成で、より豊かな読書体験を。
+              </p>
+            </div>
+            <div className="rounded-2xl border bg-card p-6 shadow-sm">
+              <div className="mb-4 aspect-video overflow-hidden rounded-xl bg-muted">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/samples/adventure_premium.webp"
+                  alt="高品質イラスト例"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <h3 className="mb-2 font-bold">高品質イラスト</h3>
+              <p className="text-sm text-muted-foreground">
+                FLUXエンジンによる、細部まで描き込まれた美しく鮮やかな挿絵が物語を彩ります。
+              </p>
+            </div>
+            <div className="rounded-2xl border bg-card p-6 shadow-sm">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-2xl">
+                👤
+              </div>
+              <h3 className="mb-2 font-bold">キャラクター一貫性</h3>
+              <p className="text-sm text-muted-foreground">
+                全ページを通して、主人公の見た目や服装をしっかり維持。没入感を高めます。
+              </p>
+            </div>
+          </div>
+        </div>
+
         {error && (
           <p className="mt-4 text-center text-sm text-destructive">{error}</p>
         )}
