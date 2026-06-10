@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { doc, serverTimestamp, writeBatch } from "firebase/firestore";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AvatarRevisionForm } from "@/components/avatar-revision-form";
@@ -12,15 +13,8 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { db } from "@/lib/firebase";
 import { generateChildCharacterCallable } from "@/lib/functions";
-import type { AvatarRevisionRequest } from "@/lib/types";
-
-type Candidate = {
-  generationId: string;
-  imageUrl: string;
-  style: string;
-  styleLabel: string;
-  prompt: string;
-};
+import type { AvatarRevisionRequest, AvatarCandidate } from "@/lib/types";
+import { useAvatarGenerationJob } from "@/lib/hooks/use-avatar-generation-job";
 
 const LEAVE_MESSAGE = "キャラクターが保存されていません。生成結果が消えてしまいます。本当に別の画面に移動してよいですか？";
 
@@ -29,13 +23,17 @@ function ChildAvatarPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const childId = searchParams.get("childId");
+  const initialJobId = searchParams.get("jobId");
   const reason = searchParams.get("reason");
-  const { children, loading } = useChildren(user?.uid);
+  const { children, loading: loadingChildren } = useChildren(user?.uid);
   const child = useMemo(() => children.find((item) => item.id === childId) ?? null, [childId, children]);
 
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [currentJobId, setCurrentJobId] = useState<string | null>(initialJobId);
+  const { job, loading: loadingJob, error: jobError, startJob } = useAvatarGenerationJob(currentJobId);
+
+  const [candidates, setCandidates] = useState<AvatarCandidate[]>([]);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
-  const [characterBible, setCharacterBible] = useState<string | null>(child?.visualProfile?.characterBible ?? null);
+  const [characterBible, setCharacterBible] = useState<string | null>(null);
   const [revisionRequest, setRevisionRequest] = useState<AvatarRevisionRequest>({});
   const [attemptNumber, setAttemptNumber] = useState<number | null>(null);
   const [maxAttempts, setMaxAttempts] = useState(5);
@@ -51,8 +49,37 @@ function ChildAvatarPageContent() {
 
   useEffect(() => {
     if (!child) return;
-    setCharacterBible(child.visualProfile?.characterBible ?? null);
-  }, [child]);
+    if (characterBible === null) {
+      setCharacterBible(child.visualProfile?.characterBible ?? null);
+    }
+  }, [child, characterBible]);
+
+  useEffect(() => {
+    if (!job) return;
+
+    if (job.status === "completed" && job.result) {
+      setCandidates(job.result.candidates);
+      if (job.result.candidates.length > 0) {
+        setSelectedCandidateId(job.result.candidates[0].generationId);
+      }
+      setAttemptNumber(job.result.attemptNumber);
+      setRemainingAttempts(maxAttempts - job.result.attemptNumber);
+      setHasUnsavedGeneration(true);
+      setGenerating(false);
+    } else if (job.status === "failed") {
+      setError(job.error?.message || "生成に失敗しました");
+      setGenerating(false);
+    } else if (job.status === "generating" || job.status === "pending") {
+      setGenerating(true);
+    }
+  }, [job, maxAttempts]);
+
+  useEffect(() => {
+    if (jobError) {
+      setError(jobError.message);
+      setGenerating(false);
+    }
+  }, [jobError]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -105,29 +132,25 @@ function ChildAvatarPageContent() {
   };
 
   const generate = async (options?: { requestOverride?: AvatarRevisionRequest; useBaseGeneration?: boolean }) => {
-    if (!childId) return;
+    if (!childId || !user) return;
     setGenerating(true);
     setError(null);
+    setCandidates([]);
     try {
       const request = options?.requestOverride ?? revisionRequest;
-      const result = await generateChildCharacterCallable({
+      const jobId = await startJob({
+        userId: user.uid,
         childId,
         revisionRequest: request,
         ...(options?.useBaseGeneration && selectedCandidate?.generationId ? { baseGenerationId: selectedCandidate.generationId } : {}),
       });
-      setCandidates(result.candidates);
-      setSelectedCandidateId(result.candidates[0]?.generationId ?? null);
-      setCharacterBible(result.characterBible);
-      setAttemptNumber(result.attemptNumber);
-      setMaxAttempts(result.maxAttempts);
-      setRemainingAttempts(result.remainingAttempts);
+      setCurrentJobId(jobId);
       setHasUnsavedGeneration(true);
       setAllowNavigation(false);
       setRevisionRequest({});
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(`キャラクター生成に失敗しました: ${message}`);
-    } finally {
       setGenerating(false);
     }
   };
@@ -163,7 +186,7 @@ function ChildAvatarPageContent() {
     }
   };
 
-  if (loading) {
+  if (loadingChildren) {
     return <div className="p-8 text-center text-violet-400">読み込み中...</div>;
   }
 
@@ -200,7 +223,21 @@ function ChildAvatarPageContent() {
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
           ) : null}
 
-          {candidates.length > 0 ? (
+          {generating ? (
+            <div className="flex min-h-80 flex-col items-center justify-center rounded-[28px] border border-[rgba(240,171,252,0.35)] bg-purple-50/50 px-6 text-center">
+              <motion.div
+                className="h-12 w-12 rounded-full border-4 border-purple-200 border-t-purple-500"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              />
+              <p className="mt-6 font-semibold text-purple-900">
+                {job?.status === "pending" ? "準備しています..." : "キャラクターを描いています..."}
+              </p>
+              <p className="mt-2 text-sm text-violet-500">
+                AIがあなたのリクエストに合わせて特別な1枚を制作中です。30秒〜1分ほどかかることがあります。
+              </p>
+            </div>
+          ) : candidates.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-3">
               {candidates.map((candidate) => (
                 <button

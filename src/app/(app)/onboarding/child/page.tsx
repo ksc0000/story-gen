@@ -9,11 +9,13 @@ import { ChildProfileForm, type ChildProfileFormValues } from "@/components/chil
 import { useAuth } from "@/lib/hooks/use-auth";
 import { db, storage } from "@/lib/firebase";
 import { buildChildProfilePayload } from "@/lib/child-profile";
+import { useAvatarGenerationJob } from "@/lib/hooks/use-avatar-generation-job";
 
 export default function ChildOnboardingPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const { startJob } = useAvatarGenerationJob(null);
 
   const handleSubmit = async (values: ChildProfileFormValues) => {
     if (!user) return;
@@ -30,7 +32,14 @@ export default function ChildOnboardingPage() {
         const snapshot = await uploadBytes(storageRef, values.photoFile);
         const photoUrl = await getDownloadURL(snapshot.ref);
         await updateDoc(childRef, { photoUrl });
-        router.replace(`/onboarding/child/avatar?childId=${childRef.id}`);
+
+        // Trigger async avatar generation
+        const jobId = await startJob({
+          userId: user.uid,
+          childId: childRef.id,
+        });
+
+        router.replace(`/onboarding/child/avatar?childId=${childRef.id}&jobId=${jobId}`);
       } else {
         router.replace("/home");
       }
