@@ -1,86 +1,40 @@
-# Refine `fixed-brush-teeth` Template for Visual Consistency
+# Implement Avatar Async Frontend UI and Logic
 
 ## Context
 
-The product roadmap's Phase 3: Template Mode focuses on strengthening the `fixed_template` mode for reliability and quality. The recent T3-2 "Existing 10 templates quality refinement" status update (`TEMPLATE_QUALITY_REVIEW.md`) identified several P1 items. This task addresses P1-1, which targets visual consistency issues in the `fixed-brush-teeth` template. Specifically, the current `pageVisualRole` and `imagePromptTemplate` fields for this template need refinement to more strongly guide image generation towards the theme of teeth brushing across all pages.
+The backend for asynchronous avatar generation, including the `childAvatarGenerationJobs` trigger and associated Cloud Functions, has been successfully implemented and merged (`Issue #108 Phase 1`). The current state indicates that the frontend implementation for this feature is pending. This task focuses on connecting the frontend UI to this backend process, allowing users to initiate avatar generation, monitor its status, and display the resulting avatar. This is crucial for completing the user experience around personalized character avatars, a core feature for enhancing user engagement within Phase 5 (Monetization).
 
 ## Objective
 
-Improve the image generation quality and consistency of the `fixed-brush-teeth` template by refining its `pageVisualRole` and `imagePromptTemplate` fields to better reflect and emphasize the theme of teeth brushing.
+Implement the frontend UI and logic required to integrate asynchronous avatar generation into the child profile creation and editing flow. This includes triggering avatar generation jobs, displaying their status, and showing the generated avatar image.
 
 ## Allowed Scope
 
-- `src/storyTemplates/fixed-brush-teeth.ts`
-- `docs/TEMPLATE_QUALITY_REVIEW.md` (for status update)
+- `web/src/components/`: UI components related to child profiles and avatar display.
+- `web/src/hooks/`: Custom hooks for managing avatar generation state.
+- `web/src/services/`: Services interacting with Firebase/Firestore for avatar generation jobs.
+- `web/src/pages/`: Pages where child profile creation/editing occurs.
+- `web/src/types/`: Type definitions for avatar generation job data.
+- `functions/src/`: Minor adjustments to existing Cloud Functions or API endpoints if strictly necessary for frontend consumption (e.g., adding a status field to an existing response).
 
 ## Forbidden Scope
 
-- Creation of new story templates.
-- Any UI changes.
-- Changes to any other story template files.
-- Infrastructure or billing-related modifications.
-- Generating new sample images.
+- Infrastructure configuration (Firebase rules, Cloud Functions deployment outside of code changes).
+- Billing logic.
+- Authentication redesign.
+- Secrets management (beyond existing patterns).
+- Generation of static assets.
+- Core UI layout changes not directly related to avatar generation.
 
 ## Requirements
 
-- Adjust the `pageVisualRole` and `imagePromptTemplate` fields within `src/storyTemplates/fixed-brush-teeth.ts` to improve the visual storytelling around teeth brushing.
-- Ensure the changes result in generated images that are more consistent and clearer in depicting the act or context of teeth brushing.
-- Verify that these changes do not introduce any new visual inconsistencies or reduce overall image quality for the template.
-- Add a brief note to `docs/TEMPLATE_QUALITY_REVIEW.md` under the `fixed-brush-teeth` P1 item, indicating that the `pageVisualRole` and `imagePromptTemplate` have been refined.
-
-## Output Format
-
-### Summary
-
-Refined the `fixed-brush-teeth` template by updating `pageVisualRole` and `imagePromptTemplate` to enhance visual consistency related to teeth brushing. Documented the change in `docs/TEMPLATE_QUALITY_REVIEW.md`.
-
-### Changed files
-
-- `src/storyTemplates/fixed-brush-teeth.ts`
-- `docs/TEMPLATE_QUALITY_REVIEW.md`
-
-### Tests executed
-
-1.  **Unit Tests:** `npm test` (All tests passed, ensuring no regressions from type/logic changes).
-2.  **Manual Generation Test:** `npm run generate-book -- --templateId=fixed-brush-teeth`
-    -   Verified the generated book's images visually to ensure the theme of teeth brushing is consistently and clearly depicted across all pages.
-    -   Confirmed that `pageVisualRole`'s influence on composition and `imagePromptTemplate`'s specific instructions lead to improved outcomes without unexpected elements.
-
-### Known issues
-
-- No new issues were introduced.
-
-### Suggested next task
-
-# Refine `fixed-first-birthday` Template's `titleSpreadImageUrl`
-
-## Context
-
-The product roadmap's Phase 3: Template Mode continues to focus on refining existing templates for improved quality and consistency. The `TEMPLATE_QUALITY_REVIEW.md` document, an outcome of the T3-2 "Existing 10 templates quality refinement" task, identified several P1 items. Following the refinement of the `fixed-brush-teeth` template, the next logical step is to address P1-2, concerning the `fixed-first-birthday` template. Specifically, its `titleSpreadImageUrl` needs to be updated as it currently features a sample image inconsistent with the template's 'first birthday' theme, instead depicting an animal zoo setting.
-
-## Objective
-
-Update the `titleSpreadImageUrl` for the `fixed-first-birthday` template to use a sample image that accurately reflects the 'first birthday' theme, replacing the current inconsistent animal zoo image.
-
-## Allowed Scope
-
-- `src/storyTemplates/fixed-first-birthday.ts`
-- `docs/TEMPLATE_QUALITY_REVIEW.md` (for status update)
-- Potentially `public/story-templates-preview/` if a new, appropriate sample image needs to be added (though ideally, an existing, suitable image from `public/` could be leveraged, or a placeholder if no suitable image is immediately available).
-
-## Forbidden Scope
-
-- Creating or generating new images from scratch (unless absolutely necessary and explicitly approved for a placeholder).
-- Any UI changes.
-- Changes to any other story template files or core generation logic.
-- Infrastructure or billing-related modifications.
-
-## Requirements
-
-- Identify or create (as a placeholder if no suitable existing image can be found) a `titleSpreadImageUrl` that appropriately represents a 'first birthday' theme.
-- Update the `titleSpreadImageUrl` field in `src/storyTemplates/fixed-first-birthday.ts` with the path to the chosen image.
-- Ensure the new image visually aligns with the template's 'first birthday' theme, avoiding generic or misleading imagery.
-- Add a brief note to `docs/TEMPLATE_QUALITY_REVIEW.md` under the `fixed-first-birthday` P1 item, indicating that the `titleSpreadImageUrl` has been updated.
+- **Trigger Generation:** When a user creates or updates a child profile with an uploaded photo, a new avatar generation job should be initiated.
+- **Status Display:** The UI must display the current status of the avatar generation job (e.g., "Generating...", "Generated", "Failed").
+- **Avatar Image Display:** Once an avatar is successfully generated, it should be displayed on the child's profile and potentially in other relevant UI areas.
+- **Error Handling:** Gracefully handle cases where avatar generation fails or times out, providing user-friendly feedback.
+- **`useAvatarGenerationJob` Hook:** Utilize or create a custom React hook (e.g., `useAvatarGenerationJob`) to manage the state and lifecycle of an avatar generation job.
+- **Integration with Existing Flows:** Ensure seamless integration with the existing child profile creation and editing flows (`PR #219`).
+- **Tests:** Add unit or integration tests for new hooks and complex UI logic where appropriate.
 
 ## Output Format
 
@@ -89,3 +43,7 @@ Update the `titleSpreadImageUrl` for the `fixed-first-birthday` template to use 
 - Tests executed
 - Known issues
 - Suggested next task
+
+## Suggested next task
+
+Finalize the operational monitoring for Phase 5.
