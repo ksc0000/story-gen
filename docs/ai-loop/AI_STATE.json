@@ -30,6 +30,7 @@
     "PR #232: Redesign Step 2 Creation Flow - Mode Renaming and Theme Hierarchy (merged)",
     "PR #233: Refine fixed-brush-teeth Template for Visual Consistency (merged)",
     "PR #234: feat(ux): mobile-compact theme grid, all-mode dedup, style carousel (merged)",
+    "PR #236: Implement Avatar Async Frontend UI and Logic (merged)",
     "PR #237: feat(ux): simplify input page — hide plan/pagecount/outfit in advanced settings (merged)",
     "PR #239: Tune and Enable SJ/IM Alert Policies (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
