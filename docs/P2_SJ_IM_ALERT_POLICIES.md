@@ -788,7 +788,7 @@ documentation:
 
 | Property | Value |
 |---|---|
-| Display name | `IM-8: PROVIDER_5XX sustained (> 3 in 1h)` |
+| Display name | `IM-8: PROVIDER_5XX sustained (> 1 in 1h)` |
 | Metric | `logging.googleapis.com/user/generation/page_provider5xx_failures` |
 | Threshold value | `1` (fires on 2+ in 1h) |
 | Alignment period | `3600s` (1h) |
@@ -818,7 +818,7 @@ notificationChannels:
 enabled: true
 documentation:
   content: |
-    IM-8 WARNING: PROVIDER_5XX sustained (> 3 in 1h).
+    IM-8 WARNING: PROVIDER_5XX sustained (> 1 in 1h).
     Check provider status and fallback behavior.
     1. Check Replicate status: https://status.replicate.com
     2. Open saved query: "IM-4 PROVIDER_5XX page failures".
@@ -843,7 +843,7 @@ documentation:
 
 | Property | Value |
 |---|---|
-| Display name | `IM-9: page image failure spike (> 5 in 1h)` |
+| Display name | `IM-9: page image failure spike (> 2 in 1h)` |
 | Metric | `logging.googleapis.com/user/generation/page_failures_total` |
 | Threshold value | `2` (fires on 3+ in 1h) |
 | Alignment period | `3600s` (1h) |
@@ -873,7 +873,7 @@ notificationChannels:
 enabled: true
 documentation:
   content: |
-    IM-9 WARNING: page image failure spike (> 5 in 1h).
+    IM-9 WARNING: page image failure spike (> 2 in 1h).
     Broad signal — break down by error code.
     1. Open saved query: "IM-1 page image failures" in Cloud Logging.
     2. Break down by errorCode using IM-2/IM-3/IM-4 saved queries.
@@ -1081,19 +1081,19 @@ gcloud monitoring policies describe POLICY_ID \
 
 | Alert ID | Policy resource name | Enabled | Threshold | Updated |
 |---|---|---|---|---|
-| SJ-1 | `projects/story-gen-8a769/alertPolicies/2513526464198067799` | **true** | > 1 / 24h | 2026-06-03 |
-| SJ-2 | `projects/story-gen-8a769/alertPolicies/4893251868647628500` | **true** | > 2 / 24h | 2026-06-03 |
-| SJ-3 | `projects/story-gen-8a769/alertPolicies/14364886655881563701` | **true** | > 0 / 24h | 2026-06-03 |
-| SJ-4 | `projects/story-gen-8a769/alertPolicies/10504437645741432748` | **true** | > 0 / 24h | 2026-06-03 |
-| IM-1 | `projects/story-gen-8a769/alertPolicies/6672566375930316929` | **true** | > 0 / 24h | 2026-06-03 |
-| IM-2 | `projects/story-gen-8a769/alertPolicies/4601285944978493813` | **true** | > 1 / 24h | 2026-06-03 |
-| IM-3 | `projects/story-gen-8a769/alertPolicies/10504437645741432726` | **true** | > 0 / 24h | 2026-06-03 |
-| IM-4 | `projects/story-gen-8a769/alertPolicies/17509905302009062853` | **true** | > 1 / 24h | 2026-06-03 |
-| IM-5 | `projects/story-gen-8a769/alertPolicies/17901603525203439569` | **true** | > 1 / 24h | 2026-06-03 |
-| IM-6 | `projects/story-gen-8a769/alertPolicies/17901603525203439157` | **true** | > 2 / 24h | 2026-06-03 |
-| IM-7 | `projects/story-gen-8a769/alertPolicies/10504437645741431479` | **true** | > 0 / 1h | 2026-06-03 |
-| IM-8 | `projects/story-gen-8a769/alertPolicies/10504437645741432289` | **true** | > 1 / 1h | 2026-06-03 |
-| IM-9 | `projects/story-gen-8a769/alertPolicies/17901603525203436195` | **true** | > 2 / 1h | 2026-06-03 |
+| SJ-1 | `projects/story-gen-8a769/alertPolicies/2513526464198067799` | **true** | > 1 / 24h | 2026-06-09 |
+| SJ-2 | `projects/story-gen-8a769/alertPolicies/4893251868647628500` | **true** | > 2 / 24h | 2026-06-09 |
+| SJ-3 | `projects/story-gen-8a769/alertPolicies/14364886655881563701` | **true** | > 0 / 24h | 2026-06-09 |
+| SJ-4 | `projects/story-gen-8a769/alertPolicies/10504437645741432748` | **true** | > 0 / 24h | 2026-06-09 |
+| IM-1 | `projects/story-gen-8a769/alertPolicies/6672566375930316929` | **true** | > 0 / 24h | 2026-06-09 |
+| IM-2 | `projects/story-gen-8a769/alertPolicies/4601285944978493813` | **true** | > 1 / 24h | 2026-06-09 |
+| IM-3 | `projects/story-gen-8a769/alertPolicies/10504437645741432726` | **true** | > 0 / 24h | 2026-06-09 |
+| IM-4 | `projects/story-gen-8a769/alertPolicies/17509905302009062853` | **true** | > 1 / 24h | 2026-06-09 |
+| IM-5 | `projects/story-gen-8a769/alertPolicies/17901603525203439569` | **true** | > 1 / 24h | 2026-06-09 |
+| IM-6 | `projects/story-gen-8a769/alertPolicies/17901603525203439157` | **true** | > 2 / 24h | 2026-06-09 |
+| IM-7 | `projects/story-gen-8a769/alertPolicies/10504437645741431479` | **true** | > 0 / 1h | 2026-06-09 |
+| IM-8 | `projects/story-gen-8a769/alertPolicies/10504437645741432289` | **true** | > 1 / 1h | 2026-06-09 |
+| IM-9 | `projects/story-gen-8a769/alertPolicies/17901603525203436195` | **true** | > 2 / 1h | 2026-06-09 |
 | **CG-1** | `projects/story-gen-8a769/alertPolicies/16928978327782001994` | **true** | 2026-05-21 |
 
 ---

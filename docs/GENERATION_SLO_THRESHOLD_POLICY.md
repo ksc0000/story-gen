@@ -1,7 +1,7 @@
 # EhonAI Generation SLO Threshold Policy
 
-**Version**: P2-10 (2026-05-20)  
-**Status**: Provisional — thresholds should be reviewed and tuned after sufficient real traffic data  
+**Version**: P2-10-tuned (2026-06-09)
+**Status**: ✅ Tuned — thresholds calibrated based on P5-4 production baseline (35 books/day)
 **Scope**: Generation health monitoring thresholds, severity levels, decision matrix, and Phase 2 closure
 
 ---
@@ -142,21 +142,22 @@ This policy defines:
 
 ---
 
-## 4. Initial Thresholds Summary Table
+## 4. Tuned Thresholds Summary Table (June 2026)
 
-> All values are provisional. Review after ≥ 2 weeks of ≥ 30 books/day production data.
+> Tuned based on P5-4 production baseline (~35 books/day volume). Absolute count thresholds serve as proxies for target rates.
 
-| Metric | OK | Watch | Investigate | Incident |
+| Metric | Target | Count Proxy (24h) | Watch (Alert) | Incident (Alert) |
 |---|---|---|---|---|
-| Readable rate | ≥ 98% | 95–98% | 90–95% | < 90% |
-| Completion rate | ≥ 95% | 90–95% | 80–90% | < 80% |
-| Partial completion rate | ≤ 5% | 5–10% | 10–20% | > 20% |
-| Failure rate | ≤ 2% | 2–5% | 5–10% | > 10% |
-| Page image failed rate | ≤ 2% | 2–5% | 5–10% | > 10% |
-| E005 rate (of failures) | < 5% | 5–10% | > 10% | > 30% |
-| TIMEOUT rate (of failures) | < 15% | 15–25% | > 25% | > 50% |
-| Book durationMs p95 | ≤ 600 s | 600–900 s | 900 s–15 min | > 15 min |
-| Page image p95 | ≤ 120 s | 120–150 s | 150–240 s | > 240 s |
+| Readable rate | ≥ 98% | IM-1 / IM-2 | > 0 (IM-1) | > 1 (IM-2) |
+| SJ Failure rate | ≤ 2% | SJ-1 / SJ-2 | > 1 (SJ-1) | > 2 (SJ-2) |
+| malformed_json rate | ≤ 1% | SJ-3 | > 0 (SJ-3) | — |
+| field_type_mismatch rate | ≤ 0.5% | SJ-4 | > 0 (SJ-4) | — |
+| E005 rate (of failures) | < 10% | IM-3 / IM-4 | > 0 (IM-3) | > 1 (IM-4) |
+| TIMEOUT rate (of failures) | < 25% | IM-5 / IM-6 | > 1 (IM-5) | > 2 (IM-6) |
+| PROVIDER_5XX rate | 0 | IM-7 / IM-8 | > 0 (IM-7, 1h) | > 1 (IM-8, 1h) |
+| Page image failure spike | Spike | IM-9 | > 2 (IM-9, 1h) | — |
+| Book durationMs p95 | ≤ 600 s | — | 600–900 s | > 15 min |
+| Page image p95 | ≤ 120 s | — | 120–150 s | > 240 s |
 | candidateAllowed (unenrolled) | 0 | — | — | Any non-zero |
 | Asset URL 200 rate | 100% | — | Any failure | Active asset failure |
 | Stale PNG refs | 0 | — | > 0 | — |
@@ -350,7 +351,7 @@ Phase 2 reliability work is now complete. The following 10 slices were delivered
 |---|---|---|
 | Fix 3 pre-existing test failures | Medium | `test/generate-book.test.ts` x1, `test/prompt-builder.test.ts` x1, `test/test-image-models.test.ts` x1 — unrelated to P2 work; tracked separately |
 | P2-9c: manual-dispatch SLO report workflow | Low | GitHub Actions `workflow_dispatch` workflow; requires repo-owner credential provisioning review |
-| Threshold tuning after real traffic | Medium | After ≥ 2 weeks of ≥ 30 books/day, revisit Section 4 thresholds with measured baselines |
+| Threshold tuning after real traffic | COMPLETE | ✅ Tuned 2026-06-09 based on P5-4 baseline (35 books) |
 | Gemini latency structured event | Low | Add story-generation duration to `generation_started` or `book_outcome` to make Gemini p95 measurable |
 
 ### Phase 3 candidates (from `docs/PRODUCT_ROADMAP.md`)

@@ -1,6 +1,6 @@
 # P2 Generation SLO Alert Automation Plan
 
-**Status**: 📋 PLAN COMPLETE — P2-9 metric definitions complete; P2-10 CG-1 policy definition complete; live metric/policy creation pending  
+**Status**: ✅ LIVE (enabled, 2026-06-09) — 9 SJ/IM metrics created; 13 alert policies tuned and enabled
 **Created**: 2026-05-21  
 **Task**: P2-7 (SLO Alert Automation, post-P4 closure)  
 **Preceding work**: P4-17 (Phase 4 Gemini JSON hardening closure), P2-6 (report-generation-slo.mjs)  
@@ -394,18 +394,17 @@ Wait for production data ≥ 30 `book_outcome` events; then evaluate against P4-
 | **P2-10** | Alert policies | ✅ COMPLETE (live, 2026-05-21) — CG-1 policy live + enabled in `docs/P2_CG1_CANDIDATE_GATE_ALERT_POLICY.md` | HIGH |
 | **P2-11** | Dashboard panel additions | ✅ COMPLETE (live, 2026-05-21) — `docs/P2_GENERATION_SLO_DASHBOARD_PANELS.md`; 8 required + 2 optional panels; live dashboard `projects/story-gen-8a769/dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b`; LAT-1 p95/p99 live (P2-latency-metric) | MEDIUM |
 | **P2-12** | Notification routing + incident runbook integration | ✅ COMPLETE (live, 2026-05-21) — Email channel `notificationChannels/202814648286910376` (kikushun0529@gmail.com) 接続済み; CG-1 `enabled: true` | HIGH |
-| **P2-10b** | SJ/IM alert policy definitions + live creation (disabled) | ✅ COMPLETE (live disabled, 2026-05-21) — `docs/P2_SJ_IM_ALERT_POLICIES.md`; 9 metrics live; 13 policies live `enabled: false`; enable after production baseline | HIGH |
+| **P2-10b** | SJ/IM alert policy definitions + live creation (disabled) | ✅ COMPLETE (live enabled, 2026-06-09) — `docs/P2_SJ_IM_ALERT_POLICIES.md`; 9 metrics live; 13 policies live `enabled: true`; tuned after production baseline | HIGH |
 
 ### Recommended ordering
 
 ```
 prod-baseline (collect ≥ 30 book_outcomes) → P2-10b-enable (tune thresholds + enable SJ/IM policies)
-  ↑ prod-baseline attempted 2026-05-21: 19 book_outcomes (dev/test only) — insufficient; retry after production traffic
-  ↑ P2-10b-live complete (2026-05-21) — metrics live, policies disabled
-  ↑ P2-dashboard-live complete (2026-05-21) — live dashboard `dashboards/39c916aa-ea17-4487-80e1-9c81e47cee3b`
+  ↑ prod-baseline established (2026-05-23, P5-4): 35 records
+  ↑ P2-10b-enable complete (2026-06-09): 13 SJ/IM policies tuned and enabled
 ```
 
-**P2-10b status**: 9 SJ/IM metrics live, 13 alert policies created with `enabled: false`. Policy IDs in `docs/P2_SJ_IM_ALERT_POLICIES.md §9`. Enable after production baseline ≥ 30 book_outcome events and threshold tuning (§10 of that doc).
+**P2-10b status**: 9 SJ/IM metrics live. 13 alert policies tuned based on P5-4 production baseline and enabled (2026-06-09).
 
 ---
 
