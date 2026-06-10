@@ -1,4 +1,4 @@
-# Worker Prompt Template
+# [REPLACE WITH ACTUAL TASK TITLE]
 
 ## Context
 
