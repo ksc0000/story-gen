@@ -15,15 +15,11 @@ import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
-import { getAgeReadingDisplayProfile } from "@/lib/age-reading-profile";
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import {
-  CHARACTER_CONSISTENCY_LABELS,
-  CREATION_MODE_LABELS,
   getCompatiblePlanConfigs,
   getDefaultProductPlanForCreationMode,
   IMAGE_QUALITY_LABELS,
-  OUTFIT_MODE_LABELS,
   PLAN_CONFIGS,
 } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
@@ -192,7 +188,6 @@ function InputPageContent() {
   }, [creationMode, template, templates]);
 
   const fixedStoryPages = template?.fixedStory?.pages ?? [];
-  const fixedTemplatePageCount = getFixedTemplatePageCount(template);
   const storyPlaceholder = STORY_REQUEST_PLACEHOLDERS[template?.categoryGroupId ?? ""] ?? "例：うちの子らしい冒険のおはなし";
   const requiredInputs = useMemo(() => template?.requiredInputs ?? [], [template]);
   const optionalInputs = useMemo(() => template?.optionalInputs ?? [], [template]);
@@ -201,6 +196,10 @@ function InputPageContent() {
     [creationMode]
   );
   const allowUpcomingPlans = isAdmin || process.env.NODE_ENV === "development";
+  const visiblePlans = useMemo(
+    () => compatiblePlans.filter((plan) => plan.enabled || allowUpcomingPlans),
+    [compatiblePlans, allowUpcomingPlans]
+  );
   const defaultProductPlan = useMemo(() => {
     const fallback = getDefaultProductPlanForCreationMode(creationMode);
     return compatiblePlans.find((plan) => plan.productPlan === fallback)?.productPlan
@@ -234,7 +233,6 @@ function InputPageContent() {
   const planPageCountOptions = PAGE_COUNT_OPTIONS.filter((option) =>
     selectedPlanConfig.allowedPageCounts.includes(option.value)
   );
-  const allCompatiblePlansLocked = compatiblePlans.length > 0 && compatiblePlans.every((plan) => !plan.enabled);
   const missingTemplateFields = getMissingTemplateFields({
     requiredInputs,
     place,
@@ -246,12 +244,6 @@ function InputPageContent() {
   });
   const canProceed = Boolean(childId && child && theme) && (creationMode !== "fixed_template" || missingTemplateFields.length === 0);
 
-  const qualityLabel = IMAGE_QUALITY_LABELS[selectedPlanConfig.imageQualityTier];
-  const consistencyLabel = CHARACTER_CONSISTENCY_LABELS[selectedPlanConfig.characterConsistencyMode];
-  const creationModeLabel = CREATION_MODE_LABELS[creationMode];
-  const outfitModeLabel = OUTFIT_MODE_LABELS[outfitMode];
-  const ageReadingProfile = getAgeReadingDisplayProfile(child?.age);
-  const hasChildAge = typeof child?.age === "number";
 
   useEffect(() => {
     if (!compatiblePlans.some((plan) => plan.productPlan === productPlan)) {
@@ -404,6 +396,28 @@ function InputPageContent() {
     }
   };
 
+  const handleNext = () => {
+    const params = new URLSearchParams();
+    const finalTemplate = relatedTemplates.find((t) => getFixedTemplatePageCount(t) === pageCount) || template;
+    params.set("theme", finalTemplate?.id ?? theme);
+    params.set("mode", creationMode);
+    if (childId) params.set("childId", childId);
+    params.set("productPlan", productPlan);
+    params.set("outfitMode", outfitMode);
+    params.set("keepSignatureItem", String(keepSignatureItem));
+    if (creationMode !== "fixed_template") {
+      params.set("pageCount", String(pageCount));
+    }
+    if (storyRequest) params.set("storyRequest", storyRequest);
+    if (lessonToTeach) params.set("lessonToTeach", lessonToTeach);
+    if (memoryToRecreate) params.set("memoryToRecreate", memoryToRecreate);
+    if (familyMembers) params.set("familyMembers", familyMembers);
+    if (place) params.set("place", place);
+    if (parentMessage) params.set("parentMessage", parentMessage);
+    if (customOutfit) params.set("customOutfit", customOutfit);
+    router.push(`/create/style?${params.toString()}`);
+  };
+
   const primaryFieldLabel =
     creationMode === "fixed_template"
       ? "このテンプレートに入れる情報"
@@ -412,15 +426,9 @@ function InputPageContent() {
         : "今回の絵本で描きたいこと";
 
   return (
-    <PageTransition className="mx-auto max-w-lg px-4 py-8">
-      <StepIndicator currentStep={3} />
-      <div className="mt-6 text-center">
-        <h1 className="text-xl font-bold text-purple-900">内容を入力してください</h1>
-        <p className="mt-2 text-sm text-violet-500">
-          主人公の情報を入れるとより素敵な絵本になります
-        </p>
-      </div>
-
+    <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
+      <StepIndicator currentStep={2} />
+      <h1 className="mt-6 text-center text-xl font-bold text-purple-900">内容を入力してください</h1>
       <Card className="mt-6">
         <CardContent className="space-y-4 p-6">
           <div className="rounded-2xl bg-purple-50 p-4 text-sm text-violet-600">
@@ -439,7 +447,6 @@ function InputPageContent() {
               <p className="mt-1">{template.description}</p>
               {creationMode === "fixed_template" ? (
                 <div className="mt-2 space-y-1 text-xs text-violet-500">
-                  <p>このテンプレートは、決まった物語にお子さんの名前や思い出を差し込んで作ります。早く・安定して作れます。</p>
                   <p>
                     必須: {requiredInputs.map((item) => INPUT_LABELS[item] ?? item).join(" / ") || "お子さんの名前"}
                   </p>
@@ -458,59 +465,63 @@ function InputPageContent() {
                 ページ数と画質を選べます。まずは短く試すことも、きれいに残すこともできます。
               </p>
             </div>
-            <div className="grid gap-3">
-              {compatiblePlans.map((plan) => {
-                const locked = !plan.enabled && !allowUpcomingPlans;
-                const selectedPlan = productPlan === plan.productPlan;
-                return (
-                  <button
-                    key={plan.productPlan}
-                    type="button"
-                    onClick={() => {
-                      if (locked) return;
-                      setProductPlan(plan.productPlan);
-                      trackAnalyticsEvent("select_product_plan", {
-                        productPlan: plan.productPlan,
-                        imageQualityTier: plan.imageQualityTier,
-                        creationMode,
-                      });
-                    }}
-                    className={`rounded-3xl border p-4 text-left transition ${
-                      selectedPlan
-                        ? "border-purple-400 bg-white shadow-sm"
-                        : "border-[rgba(240,171,252,0.3)] bg-white/80"
-                    } ${locked ? "cursor-not-allowed opacity-65" : "hover:border-purple-300"}`}
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-purple-900">{plan.label}</p>
-                      {plan.badgeLabels.map((badge) => (
-                        <span
-                          key={`${plan.productPlan}-${badge}`}
-                          className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-medium text-violet-700"
-                        >
-                          {badge}
-                        </span>
-                      ))}
-                      {!plan.enabled ? (
-                        <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-medium text-amber-700">
-                          準備中
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="mt-2 text-sm leading-relaxed text-violet-600">{plan.description}</p>
-                    <div className="mt-3 space-y-1 text-xs text-violet-500">
-                      <p>ページ数: {plan.allowedPageCounts.join(" / ")}ページ</p>
-                      <p>
-                        画質: {IMAGE_QUALITY_LABELS[plan.imageQualityTier].label}
-                        {" ・ "}
-                        {IMAGE_QUALITY_LABELS[plan.imageQualityTier].description}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            {!allowUpcomingPlans && allCompatiblePlansLocked ? (
+            {visiblePlans.length === 1 ? (
+              <p className="text-sm text-violet-500">無料プランで作成します</p>
+            ) : (
+              <div className="grid gap-3">
+                {visiblePlans.map((plan) => {
+                  const locked = !plan.enabled && !allowUpcomingPlans;
+                  const selectedPlan = productPlan === plan.productPlan;
+                  return (
+                    <button
+                      key={plan.productPlan}
+                      type="button"
+                      onClick={() => {
+                        if (locked) return;
+                        setProductPlan(plan.productPlan);
+                        trackAnalyticsEvent("select_product_plan", {
+                          productPlan: plan.productPlan,
+                          imageQualityTier: plan.imageQualityTier,
+                          creationMode,
+                        });
+                      }}
+                      className={`rounded-3xl border p-4 text-left transition ${
+                        selectedPlan
+                          ? "border-purple-400 bg-white shadow-sm"
+                          : "border-[rgba(240,171,252,0.3)] bg-white/80"
+                      } ${locked ? "cursor-not-allowed opacity-65" : "hover:border-purple-300"}`}
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-purple-900">{plan.label}</p>
+                        {plan.badgeLabels.map((badge) => (
+                          <span
+                            key={`${plan.productPlan}-${badge}`}
+                            className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-medium text-violet-700"
+                          >
+                            {badge}
+                          </span>
+                        ))}
+                        {!plan.enabled ? (
+                          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-medium text-amber-700">
+                            準備中
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 text-sm leading-relaxed text-violet-600">{plan.description}</p>
+                      <div className="mt-3 space-y-1 text-xs text-violet-500">
+                        <p>ページ数: {plan.allowedPageCounts.join(" / ")}ページ</p>
+                        <p>
+                          画質: {IMAGE_QUALITY_LABELS[plan.imageQualityTier].label}
+                          {" ・ "}
+                          {IMAGE_QUALITY_LABELS[plan.imageQualityTier].description}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {!allowUpcomingPlans && visiblePlans.length === 0 ? (
               <p className="text-xs leading-relaxed text-violet-500">
                 この作り方の有料プランは準備中です。現在は内部の標準設定で作成フローを進めます。
               </p>
@@ -537,22 +548,10 @@ function InputPageContent() {
               </p>
               <div className="rounded-2xl bg-violet-50 p-4 text-sm text-violet-600">
                 <p className="font-medium text-purple-900">{primaryFieldLabel}</p>
-                <p className="mt-1">このテンプレートは、決まった物語にお子さんの名前や思い出を差し込んで作ります。{fixedTemplatePageCount}ページ構成で、ストーリー確認済み。早く・安定して作れます。</p>
               </div>
               {fixedStoryPages.length ? (
                 <div className="rounded-2xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.95)] p-4">
-                  <div className="flex flex-wrap gap-2">
-                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-purple-700">
-                      {fixedTemplatePageCount}ページ構成
-                    </span>
-                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-violet-600">
-                      ストーリー確認済み
-                    </span>
-                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-pink-600">
-                      早く作れる
-                    </span>
-                  </div>
-                  <div className="mt-3">
+                  <div className="mt-0">
                     <p className="text-sm font-medium text-purple-900">この絵本の流れ</p>
                     <div className="mt-3 space-y-3">
                       {fixedStoryPages.map((page, index) => {
@@ -626,6 +625,47 @@ function InputPageContent() {
             </div>
           )}
 
+          {((creationMode === "fixed_template" && relatedTemplates.length > 1) ||
+            (creationMode !== "fixed_template" && planPageCountOptions.length > 1)) && (
+            <div>
+              <Label className="text-purple-800">ページ数</Label>
+              <div className="mt-1 flex gap-2">
+                {creationMode === "fixed_template"
+                  ? relatedTemplates
+                      .map((t) => ({ value: getFixedTemplatePageCount(t), label: `${getFixedTemplatePageCount(t)}ページ` }))
+                      .sort((a, b) => a.value - b.value)
+                      .map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setPageCount(opt.value)}
+                          className={`flex-1 rounded-full border px-2 py-2 text-xs transition ${
+                            pageCount === opt.value
+                              ? "border-purple-400 bg-[rgba(167,139,250,0.1)] font-medium text-purple-700"
+                              : "border-[rgba(240,171,252,0.3)] text-violet-400 hover:border-purple-300"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))
+                  : planPageCountOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setPageCount(opt.value)}
+                        className={`flex-1 rounded-full border px-2 py-2 text-xs transition ${
+                          pageCount === opt.value
+                            ? "border-purple-400 bg-[rgba(167,139,250,0.1)] font-medium text-purple-700"
+                            : "border-[rgba(240,171,252,0.3)] text-violet-400 hover:border-purple-300"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+              </div>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => setShowOptional(!showOptional)}
@@ -678,46 +718,6 @@ function InputPageContent() {
                 <input type="checkbox" checked={keepSignatureItem} onChange={(e) => setKeepSignatureItem(e.target.checked)} />
                 固定アイテムをできるだけ出す
               </label>
-
-              <div>
-                <Label className="text-purple-800">ページ数</Label>
-                <div className="mt-1 flex gap-2">
-                  {creationMode === "fixed_template" ? (
-                    relatedTemplates
-                      .map((t) => ({ value: getFixedTemplatePageCount(t), label: `${getFixedTemplatePageCount(t)}ページ` }))
-                      .sort((a, b) => a.value - b.value)
-                      .map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => setPageCount(opt.value)}
-                          className={`flex-1 rounded-full border px-2 py-2 text-xs transition ${
-                            pageCount === opt.value
-                              ? "border-purple-400 bg-[rgba(167,139,250,0.1)] font-medium text-purple-700"
-                              : "border-[rgba(240,171,252,0.3)] text-violet-400 hover:border-purple-300"
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))
-                  ) : (
-                    planPageCountOptions.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setPageCount(opt.value)}
-                        className={`flex-1 rounded-full border px-2 py-2 text-xs transition ${
-                          pageCount === opt.value
-                            ? "border-purple-400 bg-[rgba(167,139,250,0.1)] font-medium text-purple-700"
-                            : "border-[rgba(240,171,252,0.3)] text-violet-400 hover:border-purple-300"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
 
               {creationMode !== "fixed_template" ? (
                 <div>
@@ -797,67 +797,16 @@ function InputPageContent() {
           )}
         </CardContent>
       </Card>
+      {creationMode === "fixed_template" && missingTemplateFields.length > 0 && (
+        <div className="mt-8 text-center">
+          <p className="text-sm text-rose-600">テンプレートに必要な情報を入力してください</p>
+        </div>
+      )}
 
-      <div className="mx-auto mt-6 max-w-3xl rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-5">
-        <h2 className="text-base font-semibold text-purple-900">作成内容を確認</h2>
-        <p className="mt-1 text-sm text-violet-600">
-          この内容で絵本を作ります。あとから本棚で確認できます。
-        </p>
-        <div className="mt-3 rounded-2xl bg-violet-50 p-4 text-sm text-violet-600">
-          <p className="font-medium text-purple-900">年齢に合わせた文章レベル</p>
-          <p className="mt-1">
-            登録された年齢に合わせて、文章量や言葉のむずかしさを調整します。
-          </p>
-          {!hasChildAge ? (
-            <p className="mt-2 text-xs leading-relaxed text-violet-500">
-              年齢が未登録のため、3〜6歳向けの標準設定で作成します。年齢を登録すると、より合った文章量に調整できます。
-            </p>
-          ) : null}
-          {creationMode === "fixed_template" ? (
-            <p className="mt-2 text-xs leading-relaxed text-violet-500">
-              AI生成のお話では、年齢に合わせて文章量を調整します。テンプレート絵本では、今後さらに細かく対応予定です。
-            </p>
-          ) : null}
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <SummaryItem label="プラン名" value={selectedPlanConfig.label} />
-          <SummaryItem label="ページ数" value={`${pageCount}ページ`} />
-          <SummaryItem
-            label="画質"
-            value={`${qualityLabel.label} / ${qualityLabel.description}`}
-          />
-          <SummaryItem
-            label="一貫性"
-            value={`${consistencyLabel.label} / ${consistencyLabel.description}`}
-          />
-          <SummaryItem label="作成モード" value={creationModeLabel} />
-          <SummaryItem label="主人公名" value={childName || "未設定"} />
-          <SummaryItem label="テーマ名" value={template?.name ?? "未設定"} />
-          <SummaryItem label="文章レベル" value={hasChildAge ? ageReadingProfile.label : "3〜6歳向けの標準設定"} />
-          <SummaryItem label="本文量" value={ageReadingProfile.targetCharsPerPage} />
-          <SummaryItem label="お話の深さ" value={ageReadingProfile.storyLevelSummary} />
-          <SummaryItem label="服装モード" value={outfitModeLabel} />
-          <SummaryItem
-            label="固定アイテム"
-            value={keepSignatureItem ? "できるだけ出す" : "必要な場面だけにする"}
-          />
-          <SummaryItem label="文章の雰囲気" value={ageReadingProfile.uiDescription} />
-        </div>
-      </div>
-      {createError ? (
-        <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          <p className="font-semibold">生成を開始できませんでした</p>
-          <p className="mt-1 break-words">{createError}</p>
-        </div>
-      ) : null}
-
-      <div className="mt-8 flex justify-center">
-        <div className="flex flex-col items-center gap-2">
-          {creationMode === "fixed_template" && missingTemplateFields.length > 0 ? (
-            <p className="text-sm text-rose-600">テンプレートに必要な情報を入力してください</p>
-          ) : null}
-          <Button onClick={handleCreate} disabled={!canProceed || creating || !childName || !template} size="lg" className="px-8 py-6 text-lg">
-            {creating ? "絵本を作っています..." : "絵本を作る！"}
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3">
+        <div className="mx-auto max-w-lg">
+          <Button size="lg" className="w-full" disabled={!canProceed} onClick={handleNext}>
+            次へ
           </Button>
         </div>
       </div>
