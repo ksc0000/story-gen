@@ -11,6 +11,8 @@ import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCategoryGroups } from "@/lib/hooks/use-category-groups";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { useChildren } from "@/lib/hooks/use-children";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import type { CreationMode } from "@/lib/types";
 
@@ -25,6 +27,8 @@ const MODE_OPTIONS: Array<{
 ];
 
 function ThemeSelectionPageContent() {
+  const { user } = useAuth();
+  const { children } = useChildren(user?.uid);
   const { templates, loading, error } = useTemplates();
   const { categoryGroups, loading: categoryLoading } = useCategoryGroups();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -115,9 +119,24 @@ function ThemeSelectionPageContent() {
     router.replace(`/create/theme?${params.toString()}`);
   };
 
+  const selectedChild = useMemo(() => {
+    return children.find((c) => c.id === childId);
+  }, [children, childId]);
+
+  const showAvatarNudge = selectedChild && !selectedChild.visualProfile?.approvedImageUrl;
+
   return (
     <PageTransition className="mx-auto max-w-6xl px-4 py-4 md:py-8">
       <StepIndicator currentStep={1} />
+
+      {showAvatarNudge && (
+        <div className="mt-4 text-center">
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 text-[11px] font-medium text-violet-600 border border-violet-100">
+            <span>💡</span>
+            アバターを設定するとキャラクターがもっと一致します
+          </p>
+        </div>
+      )}
 
       <div className="mt-6 space-y-4">
         <div className="text-center">
