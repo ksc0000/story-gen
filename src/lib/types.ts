@@ -196,6 +196,9 @@ export interface UserDoc {
   displayName: string;
   email: string;
   plan: UserPlan;
+  productPlan?: ProductPlan;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string | null;
   activeChildId?: string | null;
   createdAt: Timestamp;
   monthlyGenerationCount: number;
