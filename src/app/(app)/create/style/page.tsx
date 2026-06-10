@@ -12,15 +12,10 @@ import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
-import { getAgeReadingDisplayProfile } from "@/lib/age-reading-profile";
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import { getStylePickerProfilesForTemplate } from "@/lib/style-exposure";
 import {
-  CHARACTER_CONSISTENCY_LABELS,
-  CREATION_MODE_LABELS,
   getDefaultProductPlanForCreationMode,
-  IMAGE_QUALITY_LABELS,
-  OUTFIT_MODE_LABELS,
   PLAN_CONFIGS,
 } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";

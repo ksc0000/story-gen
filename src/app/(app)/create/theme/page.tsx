@@ -67,18 +67,16 @@ function ThemeSelectionPageContent() {
       return true;
     });
 
-    if (selectedMode !== "fixed_template") return list;
-
-    // For fixed templates, de-duplicate by name to avoid showing multiple page-count variants.
+    // De-duplicate by name across all modes to avoid showing multiple page-count variants.
     const uniqueMap = new Map<string, (typeof templates)[0]>();
     for (const t of list) {
       if (!uniqueMap.has(t.name)) {
         uniqueMap.set(t.name, t);
       } else {
-        // If we have multiple, prefer one that might be considered a default (e.g. 8 pages)
+        // Prefer 8-page variant; otherwise prefer 4-page over other counts
         const existing = uniqueMap.get(t.name)!;
-        const existingPages = existing.fixedStory?.pages?.length ?? 0;
-        const currentPages = t.fixedStory?.pages?.length ?? 0;
+        const existingPages = existing.fixedStory?.pages?.length ?? (existing as { pageCount?: number }).pageCount ?? 0;
+        const currentPages = t.fixedStory?.pages?.length ?? (t as { pageCount?: number }).pageCount ?? 0;
         if (currentPages === 8 || (existingPages !== 8 && currentPages === 4)) {
           uniqueMap.set(t.name, t);
         }
@@ -241,7 +239,7 @@ function ThemeSelectionPageContent() {
                   <h2 className="text-sm font-semibold text-purple-900">{group.groupIcon} {group.groupName}</h2>
                   <span className="text-xs text-violet-500">{group.templates.length}件</span>
                 </div>
-                <StaggerContainer className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <StaggerContainer className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {group.templates.map((template) => (
                     <StaggerItem key={template.id}>
                       <ThemeCard
@@ -258,7 +256,7 @@ function ThemeSelectionPageContent() {
             ))}
           </div>
         ) : (
-          <StaggerContainer className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <StaggerContainer className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {filteredTemplates.map((template) => (
               <StaggerItem key={template.id}>
                 <ThemeCard

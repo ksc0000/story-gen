@@ -80,7 +80,7 @@ export function ThemeCard({ template, selected, onSelect, onPreview, categoryNam
       <Card className={`h-full cursor-pointer overflow-hidden transition ${selected ? "ring-2 ring-purple-500 border-purple-400" : ""}`}>
         <CardContent className="flex h-full flex-col p-0 text-center">
           {template.sampleImageUrl ? (
-            <div className="relative aspect-[16/9] w-full overflow-hidden bg-violet-50 sm:aspect-[3/4]">
+            <div className="relative aspect-square w-full overflow-hidden bg-violet-50 sm:aspect-[3/4]">
               <Image
                 src={template.sampleImageUrl}
                 alt={template.sampleImageAlt ?? template.name}
@@ -91,7 +91,7 @@ export function ThemeCard({ template, selected, onSelect, onPreview, categoryNam
               <div className="absolute left-2 top-2 rounded-full bg-white/85 px-1.5 py-0.5 text-base shadow-sm sm:px-2 sm:py-1 sm:text-lg">{iconSrc || template.icon}</div>
             </div>
           ) : (
-            <div className="flex aspect-[16/9] w-full items-center justify-center bg-violet-50 text-3xl sm:aspect-[3/4] sm:text-5xl">{iconSrc || template.icon}</div>
+            <div className="flex aspect-square w-full items-center justify-center bg-violet-50 text-3xl sm:aspect-[3/4] sm:text-5xl">{iconSrc || template.icon}</div>
           )}
           <div className="flex flex-1 flex-col p-2.5 sm:p-3">
             <h3 className="text-xs font-bold text-purple-900 sm:text-sm sm:font-semibold">{template.name}</h3>
@@ -127,7 +127,6 @@ export function ThemeCard({ template, selected, onSelect, onPreview, categoryNam
                 <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 sm:px-2 sm:py-1 sm:text-[11px]">安定</span>
               ) : null}
             </div>
-            <p className="mt-2 break-all text-[10px] text-violet-400">id: {template.id}</p>
             {template.creationMode === "fixed_template" && onPreview && (
               <div className="mt-2">
                 <Button

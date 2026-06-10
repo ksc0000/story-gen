@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +12,6 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
-import { db } from "@/lib/firebase";
-import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
-import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import {
   getCompatiblePlanConfigs,
   getDefaultProductPlanForCreationMode,
@@ -24,12 +20,8 @@ import {
 } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import type {
-  CharacterUsage,
-  CharacterConsistencyMode,
-  ChildProfileSnapshot,
   CreationMode,
   FixedStoryPageTemplate,
-  IllustrationStyle,
   OutfitMode,
   PageVisualRole,
   ProductPlan,
@@ -170,7 +162,6 @@ function InputPageContent() {
   const theme = searchParams.get("theme") ?? "";
   const childId = searchParams.get("childId") ?? "";
   const mode = (searchParams.get("mode") as CreationMode | null) ?? "guided_ai";
-  const style = (searchParams.get("style") as IllustrationStyle | null) ?? "soft_watercolor";
   const router = useRouter();
   const { user } = useAuth();
   const { isAdmin } = useAdminClaim();
@@ -179,7 +170,6 @@ function InputPageContent() {
   const child = children.find((item) => item.id === childId) ?? null;
   const template = templates.find((item) => item.id === theme);
   const creationMode = template?.creationMode ?? mode;
-  const childName = child?.nickname || child?.displayName || "";
 
   // Find all templates with the same name to allow page count selection for fixed templates
   const relatedTemplates = useMemo(() => {
@@ -226,8 +216,6 @@ function InputPageContent() {
   const [customOutfit, setCustomOutfit] = useState("");
   const [keepSignatureItem, setKeepSignatureItem] = useState(true);
   const [showOptional, setShowOptional] = useState(creationMode === "fixed_template");
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
 
   const selectedPlanConfig = PLAN_CONFIGS[productPlan] ?? PLAN_CONFIGS.free;
   const planPageCountOptions = PAGE_COUNT_OPTIONS.filter((option) =>
@@ -257,144 +245,6 @@ function InputPageContent() {
       setPageCount(selectedPlanConfig.defaultPageCount);
     }
   }, [creationMode, pageCount, selectedPlanConfig]);
-
-  const simulateDemoGeneration = async (bookId: string) => {
-    const demoPages = [
-      { text: "むかしむかし、あるところに。", imagePrompt: "A magical storybook opening" },
-      { text: `${childName}がいました。`, imagePrompt: "A happy child" },
-      { text: "きょうはとくべつな日。", imagePrompt: "A special moment" },
-      { text: "すべてが新しくはじまります。", imagePrompt: "A new beginning" },
-    ];
-
-    for (let i = 0; i < demoPages.length; i++) {
-      const page = {
-        id: `page-${i}`,
-        pageNumber: i,
-        text: demoPages[i].text,
-        imageUrl: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23f3e8ff' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='24' fill='%23a78bfa'%3EDemo Image %23${i + 1}%3C/text%3E%3C/svg%3E`,
-        imagePrompt: demoPages[i].imagePrompt,
-        status: "completed" as const,
-      };
-
-      updateDemoBook(bookId, {
-        pages: [...(loadDemoBook(bookId)?.pages ?? []), page],
-        progress: Math.round(((i + 1) / demoPages.length) * 100),
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-
-    updateDemoBook(bookId, {
-      title: template?.name || `${childName}の絵本`,
-      status: "completed",
-      progress: 100,
-    });
-  };
-
-  const handleCreate = async () => {
-    if (!style || !user || !template) return;
-    setCreating(true);
-    setCreateError(null);
-    try {
-      const now = Timestamp.now();
-      const expiresAt = Timestamp.fromMillis(now.toMillis() + 30 * 24 * 60 * 60 * 1000);
-      const createdAtMs = Date.now();
-      const selectedStyleProfile = getIllustrationStyleProfile(style);
-      let bookId: string;
-
-      if (isDemoMode) {
-        bookId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-        const demoBook: DemoBook = {
-          id: bookId,
-          title: "",
-          theme,
-          style: style,
-          pageCount,
-          productPlan: selectedPlanConfig.productPlan,
-          imageQualityTier: selectedPlanConfig.imageQualityTier,
-          characterConsistencyMode: selectedPlanConfig.characterConsistencyMode,
-          status: "generating",
-          progress: 0,
-          pages: [],
-        };
-        saveDemoBook(demoBook);
-        simulateDemoGeneration(bookId).catch(console.error);
-      } else {
-        const childProfileSnapshot = child
-          ? buildChildProfileSnapshot(child)
-          : buildLegacyChildProfileSnapshot({ childName });
-        const characterUsage: CharacterUsage = {
-          useRegisteredCharacter: Boolean(child),
-          faceSource: "child_profile",
-          outfitMode,
-          customOutfit: customOutfit || null,
-          keepSignatureItem,
-        };
-        const bookPayload = stripUndefined({
-          userId: user.uid,
-          childId: childId || null,
-          childProfileSnapshot,
-          characterUsage,
-          title: "",
-          theme,
-          templateId: theme,
-          categoryGroupId: template.categoryGroupId ?? "favorite-worlds",
-          creationMode: template.creationMode ?? "guided_ai",
-          priceTier: template.priceTier ?? "take",
-          storyCostLevel: template.storyCostLevel ?? "standard",
-          productPlan: selectedPlanConfig.productPlan,
-          imageQualityTier: selectedPlanConfig.imageQualityTier,
-          imageModelProfile: selectedPlanConfig.imageModelProfile,
-          characterConsistencyMode: selectedPlanConfig.characterConsistencyMode as CharacterConsistencyMode,
-          style: style,
-          selectedStyleId: selectedStyleProfile.id,
-          selectedStyleName: selectedStyleProfile.name,
-          styleBible: selectedStyleProfile.styleBible,
-          stylePreviewImageUrl: selectedStyleProfile.previewImageUrl,
-          stylePreviewUsedAsReference: false,
-          pageCount,
-          status: "generating",
-          progress: 0,
-          input: {
-            childName,
-            ...(child?.age ? { childAge: child.age } : {}),
-            ...(child?.personality?.favoriteThings?.length
-              ? { favorites: child.personality.favoriteThings.join("、") }
-              : {}),
-            ...(storyRequest ? { storyRequest } : {}),
-            ...(lessonToTeach ? { lessonToTeach } : {}),
-            ...(memoryToRecreate ? { memoryToRecreate } : {}),
-            ...(familyMembers ? { familyMembers } : {}),
-            ...(place ? { place } : {}),
-            ...(parentMessage ? { parentMessage } : {}),
-          },
-          createdAt: serverTimestamp(),
-          createdAtMs,
-          createdAtSource: "client_create",
-          updatedAt: serverTimestamp(),
-          updatedAtMs: createdAtMs,
-          expiresAt,
-        });
-        const bookRef = await addDoc(collection(db, "books"), bookPayload);
-        bookId = bookRef.id;
-      }
-
-      trackAnalyticsEvent("start_book_generation", {
-        productPlan: selectedPlanConfig.productPlan,
-        imageQualityTier: selectedPlanConfig.imageQualityTier,
-        pageCount,
-        creationMode: creationMode,
-        templateId: template.id,
-      });
-
-      router.push(`/generating?id=${bookId}`);
-    } catch (err) {
-      console.error("Failed to create book:", err);
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setCreateError(`絵本の作成を開始できませんでした: ${message}`);
-      setCreating(false);
-    }
-  };
 
   const handleNext = () => {
     const params = new URLSearchParams();
@@ -812,54 +662,6 @@ function InputPageContent() {
       </div>
     </PageTransition>
   );
-}
-
-function SummaryItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl bg-white/90 p-3">
-      <p className="text-xs font-medium text-violet-500">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-purple-900">{value}</p>
-    </div>
-  );
-}
-
-function stripUndefined<T>(value: T): T {
-  if (Array.isArray(value)) {
-    return value.map((item) => stripUndefined(item)) as T;
-  }
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value)
-        .filter(([, entryValue]) => entryValue !== undefined)
-        .map(([key, entryValue]) => [key, stripUndefined(entryValue)])
-    ) as T;
-  }
-  return value;
-}
-
-function buildLegacyChildProfileSnapshot(params: { childName: string }): ChildProfileSnapshot {
-  return {
-    displayName: params.childName,
-    personality: {},
-    visualProfile: {
-      version: 1,
-    },
-  };
-}
-
-function buildChildProfileSnapshot(child: ChildProfileSnapshot & { id?: string }): ChildProfileSnapshot {
-  return {
-    displayName: child.displayName,
-    nickname: child.nickname,
-    age: child.age,
-    genderExpression: child.genderExpression,
-    personality: child.personality ?? {},
-    visualProfile: {
-      ...(child.visualProfile ?? { version: 1 }),
-      referenceImageUrl: child.visualProfile?.referenceImageUrl || child.visualProfile?.approvedImageUrl,
-      version: child.visualProfile?.version ?? 1,
-    },
-  };
 }
 
 export default function InputPage() {
