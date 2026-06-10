@@ -3,10 +3,8 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { StepIndicator } from "@/components/step-indicator";
 import { ThemeCard } from "@/components/theme-card";
-import { TemplatePreviewModal } from "@/components/template-preview-modal";
 import { PageTransition } from "@/components/page-transition";
 import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
@@ -18,38 +16,17 @@ import type { CreationMode } from "@/lib/types";
 const MODE_OPTIONS: Array<{
   mode: CreationMode;
   label: string;
-  icon: string;
   description: string;
-  shortDescription: string;
 }> = [
-  {
-    mode: "fixed_template",
-    label: "テンプレート",
-    icon: "⚡️",
-    description: "「すぐに作れる！約2分」早い・安い・失敗しにくい",
-    shortDescription: "早い・安定",
-  },
-  {
-    mode: "guided_ai",
-    label: "かんたんカスタム",
-    icon: "🎨",
-    description: "「AIと一緒にお話作り」質問に答えてAIが作る",
-    shortDescription: "質問に答える",
-  },
-  {
-    mode: "original_ai",
-    label: "オリジナル",
-    icon: "✍️",
-    description: "「自由な発想で」自由に作る",
-    shortDescription: "自由に作る",
-  },
+  { mode: "fixed_template", label: "テンプレート", description: "早い・安い・失敗しにくい" },
+  { mode: "guided_ai", label: "かんたんカスタム", description: "質問に答えてAIが作る" },
+  { mode: "original_ai", label: "オリジナル", description: "自由に作る" },
 ];
 
 function ThemeSelectionPageContent() {
   const { templates, loading, error } = useTemplates();
   const { categoryGroups, loading: categoryLoading } = useCategoryGroups();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const childId = searchParams.get("childId");
@@ -70,11 +47,13 @@ function ThemeSelectionPageContent() {
 
     if (selectedMode !== "fixed_template") return list;
 
+    // For fixed templates, de-duplicate by name to avoid showing multiple page-count variants.
     const uniqueMap = new Map<string, (typeof templates)[0]>();
     for (const t of list) {
       if (!uniqueMap.has(t.name)) {
         uniqueMap.set(t.name, t);
       } else {
+        // If we have multiple, prefer one that might be considered a default (e.g. 8 pages)
         const existing = uniqueMap.get(t.name)!;
         const existingPages = existing.fixedStory?.pages?.length ?? 0;
         const currentPages = t.fixedStory?.pages?.length ?? 0;
@@ -120,11 +99,6 @@ function ThemeSelectionPageContent() {
       });
   }, [categoryGroupMap, filteredTemplates, selectedCategoryGroupId, selectedMode]);
 
-  const previewTemplate = useMemo(
-    () => templates.find((t) => t.id === previewTemplateId) ?? null,
-    [previewTemplateId, templates]
-  );
-
   const updateQuery = (key: "mode" | "category", value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set(key, value);
@@ -142,7 +116,7 @@ function ThemeSelectionPageContent() {
         <div className="text-center">
           <h1 className="text-lg font-bold text-purple-900 md:text-xl">作り方・テーマを選ぶ</h1>
           <p className="mt-1 text-xs text-violet-500 md:text-sm">
-            どんな絵本にしますか？スタイルと内容を選びましょう
+            目的や手間、自由度に合わせて選べます。
           </p>
         </div>
 
@@ -154,26 +128,18 @@ function ThemeSelectionPageContent() {
               key={option.mode}
               type="button"
               onClick={() => updateQuery("mode", option.mode)}
-              className={`relative rounded-2xl border px-2 py-3 text-center transition md:rounded-3xl md:p-4 md:text-left ${
+              className={`rounded-2xl border px-2 py-3 text-center transition md:rounded-3xl md:p-4 md:text-left ${
                 active
                   ? "border-purple-400 bg-purple-50 shadow-sm"
                   : "border-[rgba(240,171,252,0.3)] bg-white hover:border-purple-300"
               }`}
             >
-              {option.mode === "fixed_template" && (
-                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 md:left-4 md:translate-x-0">
-                  <Badge variant="default" className="bg-amber-100 text-amber-700 border-amber-200 text-[10px] h-4.5 px-1.5 font-bold">おすすめ</Badge>
-                </div>
-              )}
-              <div className="flex flex-col items-center md:flex-row md:items-start md:gap-2">
-                <span className="text-lg md:text-xl">{option.icon}</span>
-                <div className="text-xs font-bold text-purple-900 md:text-sm">{option.label}</div>
-              </div>
-              <div className="mt-1 hidden text-[10px] leading-tight text-violet-500 md:block md:text-xs md:leading-relaxed whitespace-pre-wrap">
+              <div className="text-xs font-bold text-purple-900 md:text-sm">{option.label}</div>
+              <div className="mt-1 hidden text-[10px] leading-tight text-violet-500 md:block md:text-xs md:leading-relaxed">
                 {option.description}
               </div>
               <div className="mt-0.5 block text-[9px] leading-tight text-violet-400 md:hidden">
-                {option.shortDescription}
+                {option.mode === "fixed_template" ? "早い・安定" : option.mode === "guided_ai" ? "質問に答える" : "自由に作る"}
               </div>
             </button>
           );
@@ -238,7 +204,6 @@ function ThemeSelectionPageContent() {
                       template={template}
                       selected={selectedId === template.id}
                       onSelect={() => setSelectedId(template.id)}
-                      onPreview={() => setPreviewTemplateId(template.id)}
                       categoryName={group.groupName}
                     />
                   </StaggerItem>
@@ -255,19 +220,12 @@ function ThemeSelectionPageContent() {
                 template={template}
                 selected={selectedId === template.id}
                 onSelect={() => setSelectedId(template.id)}
-                onPreview={() => setPreviewTemplateId(template.id)}
                 categoryName={categoryGroupMap.get(template.categoryGroupId ?? "")?.name}
               />
             </StaggerItem>
           ))}
         </StaggerContainer>
       )}
-
-      <TemplatePreviewModal
-        template={previewTemplate}
-        isOpen={!!previewTemplateId}
-        onClose={() => setPreviewTemplateId(null)}
-      />
 
       <div className="mt-8 flex justify-center">
         <Button
@@ -278,7 +236,7 @@ function ThemeSelectionPageContent() {
               creationMode: selectedMode,
             });
             router.push(
-              `/create/style?theme=${selectedId}&mode=${selectedMode}${childId ? `&childId=${childId}` : ""}`
+              `/create/input?theme=${selectedId}&mode=${selectedMode}${childId ? `&childId=${childId}` : ""}`
             );
           }}
           disabled={!selectedId}

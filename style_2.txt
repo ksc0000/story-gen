@@ -1,0 +1,150 @@
+          theme,
+          style: selected,
+          pageCount,
+          productPlan: selectedPlanConfig.productPlan,
+          imageQualityTier: selectedPlanConfig.imageQualityTier,
+          characterConsistencyMode: selectedPlanConfig.characterConsistencyMode,
+          status: "generating",
+          progress: 0,
+          pages: [],
+        };
+        saveDemoBook(demoBook);
+        simulateDemoGeneration(bookId).catch(console.error);
+      } else {
+        const childProfileSnapshot = child
+          ? buildChildProfileSnapshot(child)
+          : buildLegacyChildProfileSnapshot({ childName });
+        const characterUsage: CharacterUsage = {
+          useRegisteredCharacter: Boolean(child),
+          faceSource: "child_profile",
+          outfitMode,
+          customOutfit: customOutfit || null,
+          keepSignatureItem,
+        };
+        const bookPayload = stripUndefined({
+          userId: user.uid,
+          childId: childId || null,
+          childProfileSnapshot,
+          characterUsage,
+          title: "",
+          theme,
+          templateId: theme,
+          categoryGroupId: template.categoryGroupId ?? "favorite-worlds",
+          creationMode: template.creationMode ?? "guided_ai",
+          priceTier: template.priceTier ?? "take",
+          storyCostLevel: template.storyCostLevel ?? "standard",
+          productPlan: selectedPlanConfig.productPlan,
+          imageQualityTier: selectedPlanConfig.imageQualityTier,
+          imageModelProfile: selectedPlanConfig.imageModelProfile,
+          characterConsistencyMode: selectedPlanConfig.characterConsistencyMode as CharacterConsistencyMode,
+          style: selected,
+          selectedStyleId: selectedStyleProfile.id,
+          selectedStyleName: selectedStyleProfile.name,
+          styleBible: selectedStyleProfile.styleBible,
+          stylePreviewImageUrl: selectedStyleProfile.previewImageUrl,
+          stylePreviewUsedAsReference: false,
+          pageCount,
+          status: "generating",
+          progress: 0,
+          input: {
+            childName,
+            ...(child?.age ? { childAge: child.age } : {}),
+            ...(child?.personality?.favoriteThings?.length
+              ? { favorites: child.personality.favoriteThings.join("、") }
+              : {}),
+            ...(storyRequest ? { storyRequest } : {}),
+            ...(lessonToTeach ? { lessonToTeach } : {}),
+            ...(memoryToRecreate ? { memoryToRecreate } : {}),
+            ...(familyMembers ? { familyMembers } : {}),
+            ...(place ? { place } : {}),
+            ...(parentMessage ? { parentMessage } : {}),
+          },
+          createdAt: serverTimestamp(),
+          createdAtMs,
+          createdAtSource: "client_create",
+          updatedAt: serverTimestamp(),
+          updatedAtMs: createdAtMs,
+          expiresAt,
+        });
+        const bookRef = await addDoc(collection(db, "books"), bookPayload);
+        bookId = bookRef.id;
+      }
+
+      trackAnalyticsEvent("start_book_generation", {
+        productPlan: selectedPlanConfig.productPlan,
+        imageQualityTier: selectedPlanConfig.imageQualityTier,
+        pageCount,
+        creationMode: mode,
+        templateId: template.id,
+      });
+
+      router.push(`/generating?id=${bookId}`);
+    } catch (err) {
+      console.error("Failed to create book:", err);
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setCreateError(`絵本の作成を開始できませんでした: ${message}`);
+      setCreating(false);
+    }
+  };
+
+  return (
+    <PageTransition className="mx-auto max-w-5xl px-4 py-8">
+      <StepIndicator currentStep={3} />
+      <h1 className="mt-6 text-center text-xl font-bold text-purple-900">絵のタッチを選んでね</h1>
+      <p className="mt-2 text-center text-sm text-violet-500">
+        {childName ? `${childName}を主人公にします。` : "主人公が未選択です。"}
+        {template ? ` ${template.name} をこのタッチで仕上げます。` : ""}迷ったら「やさしい水彩」のままで大丈夫です。
+      </p>
+      <div className="mt-6">
+        <StylePicker
+          selected={selected}
+          onSelect={setSelected}
+          styles={visibleStyleProfiles}
+        />
+      </div>
+      <div className="mx-auto mt-6 max-w-3xl rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-5">
+        <h2 className="text-base font-semibold text-purple-900">作成内容を確認</h2>
+        <p className="mt-1 text-sm text-violet-600">
+          この内容で絵本を作ります。あとから本棚で確認できます。
+        </p>
+        <div className="mt-3 rounded-2xl bg-violet-50 p-4 text-sm text-violet-600">
+          <p className="font-medium text-purple-900">年齢に合わせた文章レベル</p>
+          <p className="mt-1">
+            登録された年齢に合わせて、文章量や言葉のむずかしさを調整します。
+          </p>
+          {!hasChildAge ? (
+            <p className="mt-2 text-xs leading-relaxed text-violet-500">
+              年齢が未登録のため、3〜6歳向けの標準設定で作成します。年齢を登録すると、より合った文章量に調整できます。
+            </p>
+          ) : null}
+          {mode === "fixed_template" ? (
+            <p className="mt-2 text-xs leading-relaxed text-violet-500">
+              AI生成のお話では、年齢に合わせて文章量を調整します。テンプレート絵本では、今後さらに細かく対応予定です。
+            </p>
+          ) : null}
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <SummaryItem label="プラン名" value={selectedPlanConfig.label} />
+          <SummaryItem label="ページ数" value={`${pageCount}ページ`} />
+          <SummaryItem
+            label="画質"
+            value={`${qualityLabel.label} / ${qualityLabel.description}`}
+          />
+          <SummaryItem
+            label="一貫性"
+            value={`${consistencyLabel.label} / ${consistencyLabel.description}`}
+          />
+          <SummaryItem label="作成モード" value={creationModeLabel} />
+          <SummaryItem label="主人公名" value={childName || "未設定"} />
+          <SummaryItem label="テーマ名" value={template?.name ?? "未設定"} />
+          <SummaryItem label="文章レベル" value={hasChildAge ? ageReadingProfile.label : "3〜6歳向けの標準設定"} />
+          <SummaryItem label="本文量" value={ageReadingProfile.targetCharsPerPage} />
+          <SummaryItem label="お話の深さ" value={ageReadingProfile.storyLevelSummary} />
+          <SummaryItem label="服装モード" value={outfitModeLabel} />
+          <SummaryItem
+            label="固定アイテム"
+            value={keepSignatureItem ? "できるだけ出す" : "必要な場面だけにする"}
+          />
+          <SummaryItem label="文章の雰囲気" value={ageReadingProfile.uiDescription} />
+        </div>
+      </div>

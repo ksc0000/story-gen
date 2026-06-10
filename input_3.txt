@@ -1,0 +1,200 @@
+                      {fixedTemplatePageCount}ページ構成
+                    </span>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-violet-600">
+                      ストーリー確認済み
+                    </span>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-pink-600">
+                      早く作れる
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-sm font-medium text-purple-900">この絵本の流れ</p>
+                    <div className="mt-3 space-y-3">
+                      {fixedStoryPages.map((page, index) => {
+                        const previewText = shortenTemplatePreview(formatTemplatePreviewText(page.textTemplate));
+                        return (
+                          <div key={`${theme || "template"}-preview-${index}`} className="rounded-2xl bg-white/90 p-3">
+                            <p className="text-xs font-semibold text-purple-700">
+                              {index + 1}ページ目: {getFixedPageRoleLabel(page, index, fixedStoryPages.length)}
+                            </p>
+                            <p className="mt-1 text-sm leading-relaxed text-violet-600">{previewText}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              {shouldShowTemplateField("place", requiredInputs, optionalInputs) ? (
+                <div>
+                  <Label htmlFor="place-fixed" className="text-purple-800">どこでの思い出？</Label>
+                  <Input
+                    id="place-fixed"
+                    value={place}
+                    onChange={(e) => setPlace(e.target.value)}
+                    placeholder="例：上野動物園、近所の公園"
+                    className="mt-1"
+                    maxLength={200}
+                  />
+                </div>
+              ) : null}
+              {shouldShowTemplateField("familyMembers", requiredInputs, optionalInputs) ? (
+                <div>
+                  <Label htmlFor="familyMembers-fixed" className="text-purple-800">だれと一緒だった？</Label>
+                  <Input
+                    id="familyMembers-fixed"
+                    value={familyMembers}
+                    onChange={(e) => setFamilyMembers(e.target.value)}
+                    placeholder="例：ママ、パパ、おばあちゃん"
+                    className="mt-1"
+                    maxLength={200}
+                  />
+                </div>
+              ) : null}
+              <div>
+                <Label htmlFor="parentMessage-fixed" className="text-purple-800">伝えたいメッセージ</Label>
+                <textarea
+                  id="parentMessage-fixed"
+                  value={parentMessage}
+                  onChange={(e) => setParentMessage(e.target.value)}
+                  placeholder="例：また一緒に行こうね"
+                  className="mt-1 w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
+                  rows={3}
+                  maxLength={200}
+                />
+                <p className="mt-1.5 text-xs text-violet-500">
+                  絵本の最後に入るメッセージです。お子さんが読みやすいよう、ひらがな多めでの入力がおすすめです。
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <Label htmlFor="storyRequest" className="text-purple-800">{primaryFieldLabel}</Label>
+              <Input
+                id="storyRequest"
+                value={storyRequest}
+                onChange={(e) => setStoryRequest(e.target.value)}
+                placeholder={storyPlaceholder}
+                className="mt-1"
+                maxLength={200}
+              />
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setShowOptional(!showOptional)}
+            className="text-sm text-violet-600 hover:underline"
+          >
+            {showOptional ? "▲ シンプルに戻す" : "▼ もっとカスタマイズ"}
+          </button>
+
+          {showOptional && (
+            <div className="space-y-4 border-t border-[rgba(240,171,252,0.3)] pt-4">
+              <div className="space-y-2">
+                <Label className="text-purple-800">服装をどうしますか？</Label>
+                <div className="grid gap-2">
+                  {[
+                    { value: "profile_default", label: "いつもの服装を使う" },
+                    { value: "theme_auto", label: "絵本テーマに合わせてAIにおまかせ" },
+                    { value: "user_custom", label: "自分で指定する" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setOutfitMode(option.value as OutfitMode)}
+                      className={`rounded-2xl border px-3 py-3 text-left text-sm transition ${
+                        outfitMode === option.value
+                          ? "border-purple-400 bg-purple-50 text-purple-700"
+                          : "border-[rgba(240,171,252,0.3)] text-violet-500"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {outfitMode === "user_custom" ? (
+                <div>
+                  <Label htmlFor="customOutfit" className="text-purple-800">指定したい服装</Label>
+                  <Input
+                    id="customOutfit"
+                    value={customOutfit}
+                    onChange={(e) => setCustomOutfit(e.target.value)}
+                    placeholder="例：赤いパーカー、黄色い長靴、白いリュック"
+                    className="mt-1"
+                    maxLength={200}
+                  />
+                </div>
+              ) : null}
+
+              <label className="flex items-center gap-2 rounded-2xl bg-purple-50 p-3 text-sm text-violet-600">
+                <input type="checkbox" checked={keepSignatureItem} onChange={(e) => setKeepSignatureItem(e.target.checked)} />
+                固定アイテムをできるだけ出す
+              </label>
+
+              <div>
+                <Label className="text-purple-800">ページ数</Label>
+                <div className="mt-1 flex gap-2">
+                  {creationMode === "fixed_template" ? (
+                    relatedTemplates
+                      .map((t) => ({ value: getFixedTemplatePageCount(t), label: `${getFixedTemplatePageCount(t)}ページ` }))
+                      .sort((a, b) => a.value - b.value)
+                      .map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setPageCount(opt.value)}
+                          className={`flex-1 rounded-full border px-2 py-2 text-xs transition ${
+                            pageCount === opt.value
+                              ? "border-purple-400 bg-[rgba(167,139,250,0.1)] font-medium text-purple-700"
+                              : "border-[rgba(240,171,252,0.3)] text-violet-400 hover:border-purple-300"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))
+                  ) : (
+                    planPageCountOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setPageCount(opt.value)}
+                        className={`flex-1 rounded-full border px-2 py-2 text-xs transition ${
+                          pageCount === opt.value
+                            ? "border-purple-400 bg-[rgba(167,139,250,0.1)] font-medium text-purple-700"
+                            : "border-[rgba(240,171,252,0.3)] text-violet-400 hover:border-purple-300"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {creationMode !== "fixed_template" ? (
+                <div>
+                  <Label htmlFor="lesson" className="text-purple-800">教えたいこと</Label>
+                  <Input
+                    id="lesson"
+                    value={lessonToTeach}
+                    onChange={(e) => setLessonToTeach(e.target.value)}
+                    placeholder="例：はみがきをがんばる"
+                    className="mt-1"
+                    maxLength={200}
+                  />
+                </div>
+              ) : null}
+
+              {creationMode !== "fixed_template" ? (
+                <>
+                  <div>
+                    <Label htmlFor="place-optional" className="text-purple-800">場所</Label>
+                    <Input
+                      id="place-optional"
+                      value={place}
+                      onChange={(e) => setPlace(e.target.value)}
+                      placeholder="例：上野動物園、近所の公園"
+                      className="mt-1"

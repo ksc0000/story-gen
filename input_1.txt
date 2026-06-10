@@ -1,0 +1,200 @@
+"use client";
+
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { StepIndicator } from "@/components/step-indicator";
+import { PageTransition } from "@/components/page-transition";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
+import { useChildren } from "@/lib/hooks/use-children";
+import { useTemplates } from "@/lib/hooks/use-templates";
+import {
+  getCompatiblePlanConfigs,
+  getDefaultProductPlanForCreationMode,
+  IMAGE_QUALITY_LABELS,
+  PLAN_CONFIGS,
+} from "@/lib/plans";
+import { trackAnalyticsEvent } from "@/lib/analytics";
+import type {
+  CreationMode,
+  FixedStoryPageTemplate,
+  OutfitMode,
+  PageVisualRole,
+  ProductPlan,
+  TemplateDoc,
+} from "@/lib/types";
+
+const PAGE_COUNT_OPTIONS = [
+  { value: 4, label: "短い（4ページ）" },
+  { value: 8, label: "ふつう（8ページ）" },
+  { value: 12, label: "長い（12ページ）" },
+] as const;
+
+const STORY_REQUEST_PLACEHOLDERS: Record<string, string> = {
+  memories: "例：初めて動物園に行った日のこと",
+  "growth-support": "例：歯みがきを楽しくできるようになってほしい",
+  bedtime: "例：今日がんばったことを思い出して安心して眠る話",
+  imagination: "例：雲の上の国へ冒険に行く話",
+  "seasonal-events": "例：クリスマスの日に家族で過ごした思い出",
+};
+
+const INPUT_LABELS: Record<string, string> = {
+  childName: "お子さんの名前",
+  place: "場所",
+  familyMembers: "一緒に登場する人",
+  parentMessage: "伝えたいメッセージ",
+  lessonToTeach: "教えたいこと",
+  memoryToRecreate: "再現したい思い出",
+  storyRequest: "作りたい内容",
+};
+
+const TEMPLATE_PREVIEW_PLACEHOLDERS: Record<string, string> = {
+  "{childName}": "お子さん",
+  "{childAge}": "お子さんの年齢",
+  "{favorites}": "好きなもの",
+  "{lessonToTeach}": "伝えたいこと",
+  "{memoryToRecreate}": "思い出",
+  "{characterLook}": "お子さんらしい見た目",
+  "{signatureItem}": "お気に入りのアイテム",
+  "{colorMood}": "やさしい雰囲気",
+  "{place}": "思い出の場所",
+  "{familyMembers}": "家族",
+  "{season}": "その季節",
+  "{parentMessage}": "伝えたいメッセージ",
+};
+
+const ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS = [4, 8, 12] as const;
+
+const PAGE_VISUAL_ROLE_LABELS: Record<PageVisualRole, string> = {
+  opening_establishing: "おはなしのはじまり",
+  discovery: "発見シーン",
+  action: "行動シーン",
+  emotional_closeup: "気持ちのシーン",
+  object_detail: "だいじなもののシーン",
+  setback_or_question: "困りごと・問いのシーン",
+  payoff: "締めのシーン",
+  quiet_ending: "おやすみシーン",
+};
+
+function isAllowedFixedTemplatePageCount(value: number): value is 4 | 8 | 12 {
+  return ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS.includes(value as 4 | 8 | 12);
+}
+
+function getFixedTemplatePageCount(template?: (TemplateDoc & { id: string }) | null): number {
+  const metadataPageCount = (template?.fixedStory as { pageCount?: number } | undefined)?.pageCount;
+  if (typeof metadataPageCount === "number" && isAllowedFixedTemplatePageCount(metadataPageCount)) {
+    return metadataPageCount;
+  }
+
+  const pagesLength = Array.isArray(template?.fixedStory?.pages) ? template.fixedStory.pages.length : 0;
+  if (isAllowedFixedTemplatePageCount(pagesLength)) {
+    return pagesLength;
+  }
+
+  return 4;
+}
+
+function formatTemplatePreviewText(text: string) {
+  const replaced = Object.entries(TEMPLATE_PREVIEW_PLACEHOLDERS).reduce(
+    (current, [placeholder, label]) => current.replaceAll(placeholder, label),
+    text,
+  );
+
+  return replaced.replace(/\s+/g, " ").trim();
+}
+
+function shortenTemplatePreview(text: string, maxLength = 42) {
+  return text.length <= maxLength ? text : `${text.slice(0, maxLength).trim()}…`;
+}
+
+function getFixedPageRoleLabel(page: FixedStoryPageTemplate, index: number, total: number) {
+  if (page.pageVisualRole) {
+    return PAGE_VISUAL_ROLE_LABELS[page.pageVisualRole] ?? `ページ ${index + 1}`;
+  }
+
+  const textTemplate = page.textTemplate ?? "";
+  if (textTemplate.includes("{parentMessage}") || index === total - 1) {
+    return "伝えたいメッセージ";
+  }
+  if (index === 0) {
+    return "おはなしのはじまり";
+  }
+  if (index === 1) {
+    return "発見や体験";
+  }
+  if (index === 2) {
+    return "うれしかった瞬間";
+  }
+  return `ページ ${index + 1}`;
+}
+
+function shouldShowTemplateField(field: string, requiredInputs: string[], optionalInputs: string[]) {
+  return field === "parentMessage" || requiredInputs.includes(field) || optionalInputs.includes(field);
+}
+
+function getMissingTemplateFields(params: {
+  requiredInputs: string[];
+  place: string;
+  familyMembers: string;
+  parentMessage: string;
+  lessonToTeach: string;
+  memoryToRecreate: string;
+  storyRequest: string;
+}) {
+  const fieldValues: Record<string, string> = {
+    place: params.place,
+    familyMembers: params.familyMembers,
+    parentMessage: params.parentMessage,
+    lessonToTeach: params.lessonToTeach,
+    memoryToRecreate: params.memoryToRecreate,
+    storyRequest: params.storyRequest,
+  };
+
+  return params.requiredInputs.filter((field) => field !== "childName" && !(fieldValues[field]?.trim()));
+}
+
+function InputPageContent() {
+  const searchParams = useSearchParams();
+  const theme = searchParams.get("theme") ?? "";
+  const childId = searchParams.get("childId") ?? "";
+  const mode = (searchParams.get("mode") as CreationMode | null) ?? "guided_ai";
+  const router = useRouter();
+  const { user } = useAuth();
+  const { isAdmin } = useAdminClaim();
+  const { children, loading: childrenLoading } = useChildren(user?.uid);
+  const { templates, loading: templatesLoading } = useTemplates();
+  const child = children.find((item) => item.id === childId) ?? null;
+  const template = templates.find((item) => item.id === theme);
+  const creationMode = template?.creationMode ?? mode;
+
+  // Find all templates with the same name to allow page count selection for fixed templates
+  const relatedTemplates = useMemo(() => {
+    if (creationMode !== "fixed_template" || !template) return [];
+    return templates.filter((t) => t.name === template.name && t.creationMode === "fixed_template");
+  }, [creationMode, template, templates]);
+
+  const fixedStoryPages = template?.fixedStory?.pages ?? [];
+  const fixedTemplatePageCount = getFixedTemplatePageCount(template);
+  const storyPlaceholder = STORY_REQUEST_PLACEHOLDERS[template?.categoryGroupId ?? ""] ?? "例：うちの子らしい冒険のおはなし";
+  const requiredInputs = useMemo(() => template?.requiredInputs ?? [], [template]);
+  const optionalInputs = useMemo(() => template?.optionalInputs ?? [], [template]);
+  const compatiblePlans = useMemo(
+    () => getCompatiblePlanConfigs(creationMode),
+    [creationMode]
+  );
+  const allowUpcomingPlans = isAdmin || process.env.NODE_ENV === "development";
+  const defaultProductPlan = useMemo(() => {
+    const fallback = getDefaultProductPlanForCreationMode(creationMode);
+    return compatiblePlans.find((plan) => plan.productPlan === fallback)?.productPlan
+      ?? compatiblePlans[0]?.productPlan
+      ?? fallback;
+  }, [compatiblePlans, creationMode]);
+
+  const [pageCount, setPageCount] = useState<number>(8);
+
+  // Sync pageCount with template when theme changes
+  useEffect(() => {
