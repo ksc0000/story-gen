@@ -8,6 +8,7 @@ import { httpsCallable } from "firebase/functions";
 import { Share2, Check, Copy, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookViewer } from "@/components/book-viewer";
+import { BookNextActions } from "@/components/book-next-actions";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -215,6 +216,16 @@ function BookContent() {
         />
       </div>
 
+      {isOwner && (
+        <BookNextActions
+          bookId={bookId}
+          book={book}
+          isDemoMode={isDemoMode}
+          onToggleShare={handleToggleShare}
+          isSharing={isSharing}
+        />
+      )}
+
       {(failedPages.length > 0 || generatingPages.length > 0) && (
         <div className="mt-8 space-y-4">
           <h2 className="text-lg font-semibold text-purple-900">未完成のページ</h2>
@@ -271,7 +282,7 @@ function BookContent() {
         </div>
       )}
 
-      {user && !isDemoMode ? (
+      {user && !isDemoMode && isOwner ? (
         <div className="mt-8 rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-6">
           <h2 className="text-lg font-semibold text-purple-900">この絵本はどうでしたか？</h2>
           <p className="mt-1 text-sm text-violet-600">
@@ -436,10 +447,12 @@ function BookContent() {
           </div>
         </div>
       ) : null}
-      <div className="mt-8 flex justify-center gap-4">
-        <Link href="/home"><Button variant="outline">本棚に戻る</Button></Link>
-        <Link href="/create/theme"><Button>もう一冊作る</Button></Link>
-      </div>
+      {!isOwner && (
+        <div className="mt-8 flex justify-center gap-4">
+          <Link href="/home"><Button variant="outline">本棚に戻る</Button></Link>
+          <Link href="/create/theme"><Button>もう一冊作る</Button></Link>
+        </div>
+      )}
     </PageTransition>
   );
 }
