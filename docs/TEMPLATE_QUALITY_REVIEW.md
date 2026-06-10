@@ -58,8 +58,9 @@
 
 - 9本: `opening_establishing` → `discovery` → `emotional_closeup` → `quiet_ending`
 - ~~`fixed-brush-teeth` のみ: `opening_establishing` → `action` → `payoff` → `quiet_ending`~~
-- 対応: `fixed-brush-teeth` の page 2 / page 3 を canonical sequence (`discovery` / `emotional_closeup`) に揃えた
-- 検証: `functions/test/seed-templates.test.ts` の `EXPECTED_PAGE_ROLES` も同じく揃えるよう更新、vitest 256 tests pass
+- 対応: `fixed-brush-teeth` の page 2 / page 3 を canonical sequence (`discovery` / `emotional_closeup`) に揃えた (2026-05-12)
+- 再調整: `fixed-brush-teeth` の `pageVisualRole` を `action` / `payoff` に戻し、`imagePromptTemplate` を「Tiny Hero」テーマに合わせて強化。視覚的一貫性を高めるためのガードレールを適用。 (2026-06-10)
+- 検証: `functions/test/seed-templates.test.ts` の `EXPECTED_PAGE_ROLES` を更新し、全テストパスを確認。
 
 ### 4.2 Sample image duplication / mismatch （優先度 P1〜P2、**partially resolved 2026-05-12**）
 
