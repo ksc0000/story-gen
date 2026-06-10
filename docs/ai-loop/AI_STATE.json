@@ -22,6 +22,7 @@
     "PR #221: Book completion screen redesign — next actions + coming soon placeholders (merged)",
     "PR #222: Avatar onboarding nudge for book creation flow (merged)",
     "PR #223: Admin Template Generator — create new fixed_template entries via Gemini (merged)",
+    "PR #224: Creation flow UX — step descriptions, mode guide, and recommended badge (merged)",
     "PR #227: Companion Image Generation via Replicate FLUX (merged)",
     "PR #228: Premium upgrade — positive framing and contextual upsell (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
