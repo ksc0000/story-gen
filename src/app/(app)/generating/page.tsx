@@ -130,6 +130,7 @@ function GeneratingContent() {
   const searchParams = useSearchParams();
   const bookId = searchParams.get("id") ?? "";
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
   const { book, pages, loading } = useGenerationProgress(bookId);
   const completedPages = pages.filter((page) => page.status === "completed" || page.status === "fallback_completed").length;
   const totalPages = book?.pageCount ?? Math.max(pages.length, 1);
@@ -216,7 +217,7 @@ function GeneratingContent() {
           <CardContent className="p-6">
             <div className="text-center">
               <motion.div
-                animate={{ y: [0, -8, 0] }}
+                animate={shouldReduceMotion ? undefined : { y: [0, -8, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
                 <Image src="/images/illustrations/generating.webp" alt="生成中" width={120} height={90} className="mx-auto rounded-xl" />
