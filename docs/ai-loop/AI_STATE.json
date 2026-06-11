@@ -35,7 +35,8 @@
     "PR #239: Tune and Enable SJ/IM Alert Policies (merged)",
     "PR #241: Refactor generateCoverImage() to use ImageProvider Adapter (merged)",
     "PR #243: Avatar async frontend — useAvatarCandidates hook + improved generation page UI (merged)",
-    "Issue #108 Phase 2: Avatar async frontend — useAvatarGenerationJob hook + UI (PR #236, #243, merged)"
+    "Issue #108 Phase 2: Avatar async frontend — useAvatarGenerationJob hook + UI (PR #236, #243, merged)",
+    "PR #244: fix(perf): disable JS-driven infinite animations on mobile to prevent overheating (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",

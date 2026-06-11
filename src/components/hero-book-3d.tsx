@@ -1,8 +1,18 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 export function HeroBook3D() {
+  const shouldReduceMotion = useReducedMotion();
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+
+  useEffect(() => {
+    setIsCoarsePointer(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
+
+  const disableAnimation = shouldReduceMotion || isCoarsePointer;
+
   return (
     <div className="flex items-center justify-center p-10" style={{ perspective: "1200px" }}>
       <motion.div
@@ -12,7 +22,7 @@ export function HeroBook3D() {
           borderRadius: "4px 12px 12px 4px",
         }}
         initial={{ rotateY: -30, rotateX: 10 }}
-        animate={{
+        animate={disableAnimation ? undefined : {
           rotateY: [-30, -10, -30],
           rotateX: [10, 15, 10],
         }}
