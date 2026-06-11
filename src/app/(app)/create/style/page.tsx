@@ -69,6 +69,9 @@ function StyleSelectionPageContent() {
   const outfitMode = (searchParams.get("outfitMode") ?? "profile_default") as OutfitMode;
   const customOutfit = searchParams.get("customOutfit");
   const keepSignatureItem = searchParams.get("keepSignatureItem") !== "false";
+  const companionId = searchParams.get("companionId");
+  const companionName = searchParams.get("companionName");
+  const companionVisualDescription = searchParams.get("companionVisualDescription");
   const visibleStyleProfiles = useMemo(
     () => getStylePickerProfilesForTemplate(template?.id),
     [template?.id]
@@ -197,6 +200,9 @@ function StyleSelectionPageContent() {
             ...(familyMembers ? { familyMembers } : {}),
             ...(place ? { place } : {}),
             ...(parentMessage ? { parentMessage } : {}),
+            ...(companionId ? { companionId } : {}),
+            ...(companionName ? { companionName } : {}),
+            ...(companionVisualDescription ? { companionVisualDescription } : {}),
           },
           createdAt: serverTimestamp(),
           createdAtMs,
@@ -248,6 +254,7 @@ function StyleSelectionPageContent() {
           <SummaryItem label="テーマ" value={template?.name ?? "未設定"} />
           <SummaryItem label="ページ数" value={`${pageCount}ページ`} />
           <SummaryItem label="スタイル" value={selected ? getIllustrationStyleProfile(selected).name : "未選択"} />
+          {companionName ? <SummaryItem label="相棒" value={companionName} /> : null}
         </div>
       </div>
       {createError ? (

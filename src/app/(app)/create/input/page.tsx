@@ -12,6 +12,8 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
+import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
+import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
 import {
   getCompatiblePlanConfigs,
   getDefaultProductPlanForCreationMode,
@@ -157,6 +159,7 @@ function InputPageContent() {
   const { user } = useAuth();
   const { isAdmin } = useAdminClaim();
   const { children, loading: childrenLoading } = useChildren(user?.uid);
+  const { companions, loading: companionsLoading } = useCompanions(user?.uid);
   const { templates } = useTemplates();
   const child = children.find((item) => item.id === childId) ?? null;
   const template = templates.find((item) => item.id === theme);
@@ -206,6 +209,7 @@ function InputPageContent() {
   const [outfitMode, setOutfitMode] = useState<OutfitMode>("profile_default");
   const [customOutfit, setCustomOutfit] = useState("");
   const [keepSignatureItem, setKeepSignatureItem] = useState(true);
+  const [selectedCompanionId, setSelectedCompanionId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const selectedPlanConfig = PLAN_CONFIGS[productPlan] ?? PLAN_CONFIGS.free;
@@ -256,6 +260,12 @@ function InputPageContent() {
     if (place) params.set("place", place);
     if (parentMessage) params.set("parentMessage", parentMessage);
     if (customOutfit) params.set("customOutfit", customOutfit);
+    const selectedCompanion = companions.find((c) => c.id === selectedCompanionId);
+    if (selectedCompanion) {
+      params.set("companionId", selectedCompanion.id);
+      params.set("companionName", selectedCompanion.name);
+      params.set("companionVisualDescription", selectedCompanion.visualDescription);
+    }
     router.push(`/create/style?${params.toString()}`);
   };
 
@@ -494,6 +504,53 @@ function InputPageContent() {
                 <input type="checkbox" checked={keepSignatureItem} onChange={(e) => setKeepSignatureItem(e.target.checked)} />
                 固定アイテムをできるだけ出す
               </label>
+
+              {/* 相棒キャラクター */}
+              <div>
+                <Label className="text-purple-800">相棒を登場させる</Label>
+                {companionsLoading ? (
+                  <p className="mt-2 text-xs text-violet-400">読み込み中...</p>
+                ) : companions.length === 0 ? (
+                  <p className="mt-2 text-xs text-violet-400">
+                    まだ相棒がいません。
+                    <a href="/companions/create" className="ml-1 text-violet-500 underline">作成する →</a>
+                  </p>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCompanionId(null)}
+                      className={`w-full rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
+                        selectedCompanionId === null
+                          ? "border-purple-400 bg-purple-50 text-purple-700"
+                          : "border-[rgba(240,171,252,0.3)] text-violet-500"
+                      }`}
+                    >
+                      なし
+                    </button>
+                    {companions.map((companion) => (
+                      <button
+                        key={companion.id}
+                        type="button"
+                        onClick={() => setSelectedCompanionId(companion.id)}
+                        className={`w-full rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
+                          selectedCompanionId === companion.id
+                            ? "border-purple-400 bg-purple-50 text-purple-700"
+                            : "border-[rgba(240,171,252,0.3)] text-violet-500"
+                        }`}
+                      >
+                        <span className="mr-2">{getSpeciesEmoji(companion.species)}</span>
+                        <span className="font-medium">{companion.name}</span>
+                        {companion.generatedImageUrl ? (
+                          <span className="ml-2 text-xs text-emerald-500">✓ 絵あり（一貫性UP）</span>
+                        ) : (
+                          <span className="ml-2 text-xs text-violet-400">絵なし</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* guided/original 用の追加フィールド */}
               {creationMode !== "fixed_template" ? (

@@ -1153,6 +1153,9 @@ export async function processBookGeneration(
         })
       : storyResult.story;
 
+    // Step 6b: Inject companion character reference image (if companion selected)
+    story = await injectCompanionCharacterReference({ story, mergedInput });
+
     const { qualityReport } = storyResult;
     const selectedStyleProfile = getIllustrationStyleProfile(normalizedBookData.style);
     const hasAnyCharacterReference =
@@ -1937,6 +1940,44 @@ function buildRecurringCharacterReferencePrompt(
   ]
     .filter(Boolean)
     .join(" ");
+}
+
+/**
+ * 相棒キャラクターの generatedImageUrl を cast エントリの referenceImageUrl に注入する。
+ * companion が未設定・画像なし・cast に見つからない場合はそのまま返す（エラー非致命的）。
+ */
+async function injectCompanionCharacterReference(params: {
+  story: GeneratedStory;
+  mergedInput: BookInput;
+}): Promise<GeneratedStory> {
+  const { story, mergedInput } = params;
+  if (!mergedInput.companionId || !story.cast?.length) return story;
+  try {
+    const companionSnap = await admin.firestore()
+      .collection("companions").doc(mergedInput.companionId).get();
+    if (!companionSnap.exists) {
+      logger.warn("injectCompanionCharacterReference: companion not found", {
+        companionId: mergedInput.companionId,
+      });
+      return story;
+    }
+    const companionData = companionSnap.data() as { name: string; generatedImageUrl?: string };
+    if (!companionData.generatedImageUrl) return story;
+    const companionNameLower = (mergedInput.companionName ?? companionData.name).toLowerCase();
+    const updatedCast = story.cast.map((character) => {
+      if (character.displayName.toLowerCase().includes(companionNameLower)) {
+        return { ...character, referenceImageUrl: companionData.generatedImageUrl };
+      }
+      return character;
+    });
+    return { ...story, cast: updatedCast };
+  } catch (err) {
+    logger.warn("injectCompanionCharacterReference: failed, continuing without companion ref", {
+      companionId: mergedInput.companionId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return story;
+  }
 }
 
 async function ensureRecurringCharacterReferences(params: {

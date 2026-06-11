@@ -132,6 +132,10 @@ export interface BookInput {
   season?: string;
   parentMessage?: string;
   storyRequest?: string;
+  /** 相棒キャラクター */
+  companionId?: string;
+  companionName?: string;
+  companionVisualDescription?: string;
 }
 
 export type GenderExpression = "boy" | "girl" | "neutral" | "unspecified";

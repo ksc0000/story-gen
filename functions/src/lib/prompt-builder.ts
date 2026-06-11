@@ -542,6 +542,10 @@ export function buildUserPrompt(input: BookInput, pageCount: PageCount): string 
   if (input.familyMembers) lines.push(`一緒に登場させたい人: ${input.familyMembers}`);
   if (input.season) lines.push(`季節・時期: ${input.season}`);
   if (input.parentMessage) lines.push(`最後に伝えたい言葉: ${input.parentMessage}`);
+  if (input.companionName && input.companionVisualDescription) {
+    lines.push(`相棒キャラクター（必ず絵本に登場させてください）: "${input.companionName}" — ${input.companionVisualDescription}`);
+    lines.push(`"${input.companionName}"はcastに必ず含め、半数以上のページのappearingCharacterIdsに入れてください。`);
+  }
   lines.push(`ページ数: ${pageCount}ページ`);
   return lines.join("\n");
 }
