@@ -144,14 +144,9 @@ export function buildStructuredCorrectionText(revisionRequest: AvatarRevisionReq
 
 export function fixedSandboxBackgroundPrompt(): string {
   return [
-    "Background must always be a quiet Japanese neighborhood park.",
-    "Include a square sandbox with a low wooden frame and beige sand.",
-    "The child must be inside the sandbox, not beside it.",
-    "The sandbox must occupy the lower half of the image.",
-    "The wooden sandbox border must be clearly visible.",
-    "Place simple green hedges and a few plain trees in the distance.",
-    "Do not replace the sandbox with grass, pavement, classroom, indoor room, or playground.",
-    "Do not include playground equipment, buildings, roads, or signs.",
+    "Use a clean white background with no scenery, no environmental details, and no location.",
+    "Do not include parks, sandboxes, playgrounds, classrooms, rooms, buildings, roads, or signs.",
+    "The background must be plain white so the character can be reused in any storybook scene.",
     "Use a front-facing, eye-level, medium-distance, almost full-body composition.",
   ].join(" ");
 }
