@@ -50,6 +50,7 @@
     "PR #258: fix: companions Firestore 複合インデックス追加 (merged)",
     "PR #259: fix(deploy): firestore:indexes を deploy 対象に追加 (merged)",
     "PR #260: fix(companion): 画像生成プロンプトのバグ修正 (merged)",
+    "PR #261: fix(companion): 作成後プロフィールへ遷移・画像生成を自動キック (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
