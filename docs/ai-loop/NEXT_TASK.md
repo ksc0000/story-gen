@@ -1,56 +1,74 @@
-# Execute Template Smoke Checklist for 6 Fixed Templates
+# Add Two New Fixed Templates: 'Learning' and 'Favorite Worlds'
 
 ## Context
 
-Phase 3 of the roadmap focuses on strengthening `Template Mode` for reliability and stable quality. We have integrated cover/title/narration support (`T1-A` to `T1-C`) and enhanced `imagePromptTemplate` and `pageVisualRole` (`T1-D`) for a set of `fixed_template` entries. The "Now" section of the roadmap explicitly prioritizes `T1-Smoke`: executing the template smoke checklist for these 6 templates to verify the stability and quality of the generated books. This verification is crucial before proceeding with further template expansion or wider feature rollouts.
+The product roadmap includes "Phase 3: Template Mode" to strengthen `fixed_template` generation. Under "Phase T2: テンプレート拡充 (4 ページ × 10 本目標)", steps T2-A and T2-B have been completed, adding templates 5-8. The next logical step is to complete T2-C. This involves adding two new 4-page templates based on the themes 'learning' and 'favorite-worlds'. This task focuses on the data definition and initial content for these templates.
 
 ## Objective
 
-Generate books using the 6 specified `fixed_template` entries (4 existing + 2 from T2-A) and thoroughly execute the `Template Smoke Checklist` (`docs/TEMPLATE_SMOKE_CHECKLIST.md`), documenting the results.
+Implement the data definitions for two new 4-page fixed templates, focusing on the themes of 'learning' and 'favorite-worlds', as part of Phase T2-C of the Template Mode expansion.
 
 ## Allowed Scope
 
-- `docs/` (for updating `TEMPLATE_SMOKE_CHECKLIST.md`)
-- `scripts/` (for invoking book generation, e.g., `generate-book.ts`)
-- Admin UI (for monitoring generation status and quality review)
+-   `functions/src/templates/fixed-story-templates.ts`
+-   `functions/src/config/` (if configuration for new categories is required)
+-   `functions/src/prompts/` (for adding new, reusable prompt fragments if necessary)
+-   `functions/test/` (for unit tests if any new logic is inadvertently introduced, though unlikely for data-only changes)
 
 ## Forbidden Scope
 
-- Infrastructure changes (e.g., Firebase project settings, Cloud Run configurations)
-- Billing configuration
-- Authentication redesign
-- Secrets management
-- Direct modification of core AI generation logic in `functions/` (unless specifically required for diagnostics and approved)
-- Generated assets (e.g., `.next/`, `lib/` in `functions/`)
+-   `web/src/` (UI changes are not part of this task)
+-   Infrastructure changes (Firebase rules, CI/CD, etc.)
+-   Billing or payment-related logic
+-   Authentication or user management redesign
+-   Secrets management
+-   Generated assets
+-   Changes to existing template logic (only additions are allowed)
 
 ## Requirements
 
-1.  **Generate Books**: For each of the following 6 `fixed_template` entries, generate one complete book using the `fixed_template` mode and typical user inputs (e.g., character name, age, simple themes):
-    *   `fixed-a-day-at-the-zoo`
-    *   `fixed-magical-forest-adventure`
-    *   `fixed-farm-friends`
-    *   `fixed-outer-space-journey`
-    *   `fixed-memories-of-grandma` (from T2-A)
-    *   `fixed-the-growing-tree` (from T2-A)
-2.  **Execute Checklist**: For each generated book, thoroughly fill out the `docs/TEMPLATE_SMOKE_CHECKLIST.md`. Pay close attention to:
-    *   Successful generation of all pages, cover, title spread, and opening narration.
-    *   Overall story coherence and alignment with the template's theme and intent.
-    *   Visual quality, style adherence, and page diversity.
-    *   Character consistency across pages.
-    *   Absence of problematic elements (e.g., text in images, unexpected objects/characters).
-    *   Verification of `pageVisualRole` application.
-3.  **Document Findings**: Record the `bookId` for each generated book in the checklist. Document any observed issues, unexpected behaviors, or quality regressions in detail within the checklist or as an attached note.
-4.  **Confirm Phase 1 State**: As a meta-check, briefly confirm if the Cohort B rollout is providing sufficient real production evidence to advance the `Phase 1: Reliability First` smoke checklists.
+-   Add two new entries to the `fixedStoryTemplates` array in `functions/src/templates/fixed-story-templates.ts`.
+-   Each new template must be a 4-page template.
+-   The themes for the new templates should be 'learning' and 'favorite-worlds'.
+-   Each new template object must include:
+    -   `templateId` (unique identifier)
+    -   `seed` (a brief, unique starting point for the story)
+    -   `category` (assign to an existing category, or propose a new one if appropriate, e.g., "Educational" or "Fantasy")
+    -   `titleSpreadTextTemplate`
+    -   `openingNarrationTemplate`
+    -   `coverImagePromptTemplate`
+    -   `pageTemplates` (an array of 4 page objects).
+    -   Each `pageTemplate` must contain:
+        -   `textTemplate`
+        -   `imagePromptTemplate` (including `pageVisualRole` for varied compositions)
+-   Ensure that the `imagePromptTemplate` for the new templates incorporates best practices for quality (e.g., `no-text` constraints) and character reference isolation where applicable, following `IMG-001` and `IMG-002` guidelines.
+-   The `textTemplate` should be appropriate for the `preschool_3_4` age band, adhering to the Japanese Orthography Policy (hiragana-first).
+-   All new template content must be in Japanese.
 
 ## Output Format
 
-- Summary
-- Changed files
-- Tests executed
-- Known issues
-- Suggested next task
+-   Summary
+-   Changed files
+-   Tests executed
+-   Known issues
+-   Suggested next task
 
-## Worker Prompt
+---
 
-```markdown
-Generate books for the 6 specified `fixed_template` entries (fixed-a-day-at-the-zoo, fixed-magical-forest-adventure, fixed-farm-friends, fixed-outer-space-journey, fixed-memories-of-grandma, fixed-the-growing-tree) using the `fixed_template
+## Worker prompt
+
+Please create two new 4-page fixed templates for the themes of 'learning' and 'favorite-worlds' by modifying `functions/src/templates/fixed-story-templates.ts`.
+
+1.  **Define two new `FixedStoryTemplate` objects.**
+    *   One for a 'learning' theme (e.g., about discovering numbers, letters, or nature).
+    *   One for a 'favorite-worlds' theme (e.g., exploring a magical forest, a city of toys, or outer space).
+2.  **Populate all required fields** for each template: `templateId`, `seed`, `category`, `titleSpreadTextTemplate`, `openingNarrationTemplate`, `coverImagePromptTemplate`, and `pageTemplates` (with 4 `pageTemplate` objects inside).
+3.  For each `pageTemplate`, ensure `textTemplate` and `imagePromptTemplate` (including `pageVisualRole`) are provided.
+4.  **Craft the prompts carefully:**
+    *   `imagePromptTemplate` should incorporate `no-text` and other quality constraints.
+    *   `textTemplate` should be in Japanese and suitable for `preschool_3_4` (hiragana-first).
+5.  **Assign appropriate `category` values** to the new templates. You may add new `category` entries to `functions/src/config/template-config.ts` if the themes don't fit existing categories (e.g., "まなび", "ふしぎな世界").
+6.  **Run `npm test`** within the `functions` directory to ensure no regressions.
+7.  **Manually verify template structure:** Generate one book for each new template using the `fixed_template` mode locally. This is to visually inspect the generated story JSON, particularly `titleSpreadText`, `openingNarration`, `coverImagePrompt`, and the `text` and `imagePrompt` of each page, without needing to generate actual images. Confirm that the content aligns with the intended theme and quality guidelines.
+
+Please ensure your changes are focused solely on adding these new template definitions.
