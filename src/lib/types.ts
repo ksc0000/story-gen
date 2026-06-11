@@ -184,6 +184,7 @@ export interface FixedStoryPageTemplate {
 
 export interface FixedStoryTemplate {
   titleTemplate: string;
+  previewImageUrl?: string;
   coverImagePromptTemplate?: string;
   titleSpreadTextTemplate?: string;
   openingNarrationTemplate?: string;

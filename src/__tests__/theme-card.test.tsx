@@ -1,0 +1,135 @@
+import type { ComponentPropsWithoutRef } from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { ThemeCard } from "@/components/theme-card";
+import type { TemplateDoc } from "@/lib/types";
+
+vi.mock("next/image", () => ({
+  default: (props: ComponentPropsWithoutRef<"img"> & { fill?: boolean }) => {
+    const { fill, ...imgProps } = props;
+    void fill;
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img {...imgProps} alt={imgProps.alt ?? ""} />;
+  },
+}));
+
+// Mock framer-motion to avoid animation issues in tests
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, whileHover, whileTap, ...props }: any) => <div {...props}>{children}</div>,
+  },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+  useMotionValue: () => ({
+    get: () => 0,
+    set: () => {},
+  }),
+  useTransform: () => ({
+    get: () => 0,
+  }),
+  useSpring: () => ({
+    get: () => 0,
+  }),
+}));
+
+describe("ThemeCard", () => {
+  const mockTemplate: TemplateDoc & { id: string } = {
+    id: "test-template",
+    name: "Test Template",
+    description: "Test Description",
+    icon: "🎂",
+    order: 1,
+    systemPrompt: "Test System Prompt",
+    active: true,
+    sampleImageUrl: "http://example.com/sample.jpg",
+  };
+
+  it("renders with sampleImageUrl if previewImageUrl is missing", () => {
+    render(
+      <ThemeCard
+        template={mockTemplate}
+        selected={false}
+        onSelect={() => {}}
+      />
+    );
+
+    const img = screen.getByRole("img");
+    expect(img).toHaveAttribute("src", "http://example.com/sample.jpg");
+  });
+
+  it("prioritizes previewImageUrl from fixedStory", () => {
+    const templateWithPreview = {
+      ...mockTemplate,
+      fixedStory: {
+        titleTemplate: "Title",
+        previewImageUrl: "http://example.com/preview.jpg",
+        pages: [],
+      },
+    };
+
+    render(
+      <ThemeCard
+        template={templateWithPreview}
+        selected={false}
+        onSelect={() => {}}
+      />
+    );
+
+    const img = screen.getByRole("img");
+    expect(img).toHaveAttribute("src", "http://example.com/preview.jpg");
+  });
+
+  it("renders icon placeholder if no image is provided", () => {
+    const templateNoImage = {
+      ...mockTemplate,
+      sampleImageUrl: undefined,
+    };
+
+    render(
+      <ThemeCard
+        template={templateNoImage}
+        selected={false}
+        onSelect={() => {}}
+      />
+    );
+
+    expect(screen.getByText("🎂")).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
+  it("calls onSelect when clicked", () => {
+    const onSelect = vi.fn();
+    render(
+      <ThemeCard
+        template={mockTemplate}
+        selected={false}
+        onSelect={onSelect}
+      />
+    );
+
+    fireEvent.click(screen.getByText("Test Template"));
+    expect(onSelect).toHaveBeenCalled();
+  });
+
+  it("renders preview button if onPreview is provided for fixed_template", () => {
+    const onPreview = vi.fn();
+    const fixedTemplate = {
+      ...mockTemplate,
+      creationMode: "fixed_template" as const,
+    };
+
+    render(
+      <ThemeCard
+        template={fixedTemplate}
+        selected={false}
+        onSelect={() => {}}
+        onPreview={onPreview}
+      />
+    );
+
+    const previewButton = screen.getByText("ストーリーを見る");
+    expect(previewButton).toBeInTheDocument();
+
+    fireEvent.click(previewButton);
+    expect(onPreview).toHaveBeenCalled();
+  });
+});

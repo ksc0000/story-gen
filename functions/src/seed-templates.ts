@@ -427,6 +427,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、家族の思い出をやさしく残す絵本です。",
     fixedStory: {
       titleTemplate: "{childName}とはじめてのどうぶつえん",
+      previewImageUrl: "/images/templates/animals.webp",
       coverImagePromptTemplate:
         withZooImagePromptGuardrail("Picture book cover illustration: a young child standing beside a decorative text-free zoo entrance arch with animal-shaped decorations and zoo paths, with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details", { signText: true }),
       titleSpreadTextTemplate: "{childName}と はじめての どうぶつえん",
