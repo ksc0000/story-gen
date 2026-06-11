@@ -40,6 +40,7 @@
     "PR #245: fix(perf): guard remaining animations on mobile + analytics dedup + AI state update (merged)",
     "PR #246: feat(companion): 相棒キャラクターを絵本生成に統合 (#218) (merged)",
     "PR #247: feat(companion): Homeになかよしウィジェット追加・プロフィール画面新設 (merged)",
+    "PR #248: fix: regenerate-cover-image.ts の未使用import削除 (CI修復) (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
