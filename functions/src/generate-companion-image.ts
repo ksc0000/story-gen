@@ -93,17 +93,14 @@ export const onCompanionImageJobCreated = onDocumentCreated(
 );
 
 function buildCompanionPrompt(companion: CompanionData): string {
-  const { visualDescription } = companion;
-  const { size, color, species, personality, specialAbility } = visualDescription;
-
-  // Requirement prompt: "A [size] [color] [species], [personality] expression,
-  // [specialAbility ability hint], cute children's book illustration style,
-  // white background, full body"
+  // visualDescription は buildVisualDescription() で生成した英語文字列
+  // 例: "A small, white dog with a energetic personality who has the ability to fly."
   return [
-    `A ${size} ${color} ${species}, ${personality} expression,`,
-    `${specialAbility} ability hint,`,
-    "cute children's book illustration style,",
-    "white background, full body"
+    companion.visualDescription,
+    "Cute soft children's picture book illustration,",
+    "pastel watercolor style, white background,",
+    "centered full-body character, simple round friendly shapes,",
+    "no text, no letters, no watermarks.",
   ].join(" ");
 }
 
