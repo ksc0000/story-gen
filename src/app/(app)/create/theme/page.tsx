@@ -134,9 +134,18 @@ function ThemeSelectionPageContent() {
       templateId: selectedId || "ai_custom",
       creationMode: selectedMode,
     });
-    router.push(
-      `/create/input?theme=${selectedId || ""}&mode=${selectedMode}${childId ? `&childId=${childId}` : ""}`
-    );
+    const params = new URLSearchParams();
+    params.set("theme", selectedId || "");
+    params.set("mode", selectedMode);
+    if (childId) params.set("childId", childId);
+    // companion params をスルーパス
+    const companionId = searchParams.get("companionId");
+    const companionName = searchParams.get("companionName");
+    const companionVisualDescription = searchParams.get("companionVisualDescription");
+    if (companionId) params.set("companionId", companionId);
+    if (companionName) params.set("companionName", companionName);
+    if (companionVisualDescription) params.set("companionVisualDescription", companionVisualDescription);
+    router.push(`/create/input?${params.toString()}`);
   };
 
   return (

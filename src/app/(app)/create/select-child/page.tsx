@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageTransition } from "@/components/page-transition";
@@ -13,11 +13,25 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { childProfileToSummary } from "@/lib/child-profile";
 
-export default function SelectChildPage() {
+function SelectChildContent() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { children, loading, error } = useChildren(user?.uid);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+
+  // companion params をスルーパスするためのクエリ文字列を構築
+  const companionQuery = (() => {
+    const companionId = searchParams.get("companionId");
+    const companionName = searchParams.get("companionName");
+    const companionVisualDescription = searchParams.get("companionVisualDescription");
+    const params = new URLSearchParams();
+    if (companionId) params.set("companionId", companionId);
+    if (companionName) params.set("companionName", companionName);
+    if (companionVisualDescription) params.set("companionVisualDescription", companionVisualDescription);
+    const qs = params.toString();
+    return qs ? `&${qs}` : "";
+  })();
 
   return (
     <PageTransition className="mx-auto max-w-4xl px-4 pb-28 pt-8">
@@ -90,12 +104,20 @@ export default function SelectChildPage() {
             size="lg"
             className="w-full"
             disabled={!selectedChildId}
-            onClick={() => selectedChildId && router.push(`/create/theme?childId=${selectedChildId}`)}
+            onClick={() => selectedChildId && router.push(`/create/theme?childId=${selectedChildId}${companionQuery}`)}
           >
             この子で作る
           </Button>
         </div>
       </div>
     </PageTransition>
+  );
+}
+
+export default function SelectChildPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-violet-400">読み込み中...</div>}>
+      <SelectChildContent />
+    </Suspense>
   );
 }
