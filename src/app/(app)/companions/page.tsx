@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageTransition } from "@/components/page-transition";
@@ -73,17 +74,27 @@ export default function CompanionsPage() {
           {companions.map((companion) => (
             <Card key={companion.id} className="overflow-hidden transition-all hover:shadow-md">
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-3xl shadow-sm">
-                    {getSpeciesEmoji(companion.species)}
-                  </div>
+                <Link href={`/companions/profile?id=${companion.id}`} className="flex items-center gap-3 hover:opacity-80">
+                  {companion.generatedImageUrl ? (
+                    <Image
+                      src={companion.generatedImageUrl}
+                      alt={companion.name}
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 shrink-0 rounded-2xl object-cover shadow-sm"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-3xl shadow-sm">
+                      {getSpeciesEmoji(companion.species)}
+                    </div>
+                  )}
                   <div>
                     <CardTitle className="text-xl text-purple-900">{companion.name}</CardTitle>
                     <p className="text-xs text-violet-400">
                       {companion.size === "small" ? "ちっちゃい" : companion.size === "large" ? "おおきい" : "ふつうサイズ"}
                     </p>
                   </div>
-                </div>
+                </Link>
                 <Button
                   variant="ghost"
                   size="icon-sm"

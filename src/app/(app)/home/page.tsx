@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { httpsCallable } from "firebase/functions";
@@ -21,6 +22,8 @@ import { useChildren } from "@/lib/hooks/use-children";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { cn } from "@/lib/utils";
 import { FREE_MONTHLY_BOOK_LIMIT } from "@/lib/usage";
+import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
+import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
 
 /**
  * Internal AlertDialog components to comply with file constraints.
@@ -140,6 +143,7 @@ export default function HomePage() {
   const { profile } = useUserProfile(user?.uid);
   const { children, loading: childrenLoading, activeChild } = useChildren(user?.uid);
   const { isAdmin } = useAdminClaim();
+  const { companions, loading: companionsLoading } = useCompanions(user?.uid);
   const remaining = FREE_MONTHLY_BOOK_LIMIT - (profile?.monthlyGenerationCount ?? 0);
 
   useEffect(() => {
@@ -244,6 +248,62 @@ export default function HomePage() {
           ) : null}
         </div>
         {isAdmin ? <p className="mt-2 text-sm text-violet-500">管理者向け: Book品質レビューと画像モデル比較を利用できます</p> : null}
+
+        {/* なかよしキャラ widget */}
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg">🐾</span>
+              <span className="text-sm font-semibold text-purple-800">なかよしキャラ</span>
+            </div>
+            <Link href="/companions" className="text-xs text-violet-500 hover:underline">
+              すべて見る →
+            </Link>
+          </div>
+          {companionsLoading ? null : companions.length === 0 ? (
+            <Link href="/companions/create" className="block">
+              <div className="flex items-center gap-3 rounded-2xl border border-dashed border-purple-200 bg-white/60 px-4 py-3 hover:bg-white/90 hover:border-purple-300 transition-all">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">✨</div>
+                <div>
+                  <p className="text-sm font-medium text-purple-800">なかよしキャラを作ろう！</p>
+                  <p className="text-xs text-violet-400">絵本に登場するオリジナルのキャラクターを作れます</p>
+                </div>
+                <span className="ml-auto text-violet-300 text-lg">＋</span>
+              </div>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {companions.map((companion) => (
+                <Link
+                  key={companion.id}
+                  href={`/companions/profile?id=${companion.id}`}
+                  className="flex shrink-0 items-center gap-2 rounded-2xl border border-purple-100 bg-white/70 px-3 py-2 hover:bg-white hover:border-purple-200 transition-all"
+                >
+                  {companion.generatedImageUrl ? (
+                    <Image
+                      src={companion.generatedImageUrl}
+                      alt={companion.name}
+                      width={36}
+                      height={36}
+                      className="h-9 w-9 shrink-0 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">
+                      {getSpeciesEmoji(companion.species)}
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-purple-800 whitespace-nowrap">{companion.name}</span>
+                </Link>
+              ))}
+              <Link
+                href="/companions/create"
+                className="flex shrink-0 h-[52px] w-[52px] items-center justify-center rounded-2xl border border-dashed border-purple-200 bg-white/60 hover:bg-white hover:border-purple-300 transition-all text-violet-400 text-xl"
+              >
+                ＋
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Upgrade banner for free plan users */}
         {profile && profile.plan === "free" && (

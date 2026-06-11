@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -513,7 +514,7 @@ function InputPageContent() {
                 ) : companions.length === 0 ? (
                   <p className="mt-2 text-xs text-violet-400">
                     まだ相棒がいません。
-                    <a href="/companions/create" className="ml-1 text-violet-500 underline">作成する →</a>
+                    <Link href="/companions/create" className="ml-1 text-violet-500 underline">作成する →</Link>
                   </p>
                 ) : (
                   <div className="mt-2 space-y-2">
