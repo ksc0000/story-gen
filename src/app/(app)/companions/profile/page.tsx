@@ -25,9 +25,13 @@ function CompanionProfileContent() {
   const { user } = useAuth();
   const { companions, loading, error, deleteCompanion } = useCompanions(user?.uid);
   const [deleting, setDeleting] = useState(false);
-  const [generatingImage, setGeneratingImage] = useState(false);
 
   const companion = companions.find((c) => c.id === id);
+
+  // Firestore onSnapshot 経由でリアルタイム更新される生成ステータス
+  const genStatus = companion?.imageGenerationStatus;
+  const isGenerating = genStatus === "pending" || genStatus === "generating";
+  const hasFailed = genStatus === "failed";
 
   const handleDelete = async () => {
     if (!window.confirm(`「${companion?.name}」を削除しますか？`)) return;
@@ -43,25 +47,27 @@ function CompanionProfileContent() {
   };
 
   const handleGenerateImage = async () => {
-    if (!user) return;
-    setGeneratingImage(true);
+    if (!user || isGenerating) return;
     try {
       const { db } = await import("@/lib/firebase");
-      const { collection, addDoc, serverTimestamp } = await import("firebase/firestore");
-      // onCompanionImageJobCreated Firestore トリガーを起動する
-      await addDoc(collection(db, "companionImageJobs"), {
+      const { collection, addDoc, doc, updateDoc, serverTimestamp, writeBatch } = await import("firebase/firestore");
+      // 楽観的更新: companion の status を即時 pending に（ボタンをすぐ無効化）
+      const batch = writeBatch(db);
+      const jobRef = doc(collection(db, "companionImageJobs"));
+      batch.set(jobRef, {
         userId: user.uid,
         companionId: id,
         status: "pending",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      // useCompanions の onSnapshot が companions/{id}.generatedImageUrl を自動更新する
+      batch.update(doc(db, "companions", id), {
+        imageGenerationStatus: "pending",
+      });
+      await batch.commit();
     } catch (err) {
       console.error(err);
-      alert("画像生成に失敗しました");
-    } finally {
-      setGeneratingImage(false);
+      alert("画像生成を開始できませんでした");
     }
   };
 
@@ -125,46 +131,58 @@ function CompanionProfileContent() {
 
       {/* ヒーロー画像またはアイコン */}
       <div className="mt-4 flex flex-col items-center gap-4">
-        {companion.generatedImageUrl ? (
-          <div className="relative h-52 w-52 overflow-hidden rounded-3xl shadow-lg ring-4 ring-purple-100">
-            <Image
-              src={companion.generatedImageUrl}
-              alt={companion.name}
-              fill
-              className="object-cover"
-              unoptimized
-            />
-          </div>
-        ) : (
-          <div className="flex h-52 w-52 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg ring-4 ring-purple-100 text-[80px]">
-            {speciesEmoji}
-          </div>
-        )}
+        <div className="relative h-52 w-52">
+          {companion.generatedImageUrl ? (
+            <div className="relative h-52 w-52 overflow-hidden rounded-3xl shadow-lg ring-4 ring-purple-100">
+              <Image
+                src={companion.generatedImageUrl}
+                alt={companion.name}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div className="flex h-52 w-52 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-100 to-purple-50 shadow-lg ring-4 ring-purple-100 text-[80px]">
+              {speciesEmoji}
+            </div>
+          )}
+          {/* 生成中オーバーレイ */}
+          {isGenerating && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-3xl bg-white/80 backdrop-blur-sm">
+              <Loader2 className="size-8 animate-spin text-purple-400" />
+              <p className="text-xs font-medium text-purple-500">
+                {genStatus === "generating" ? "絵を描いています…" : "生成待機中…"}
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* 画像生成ボタン */}
-        {!companion.generatedImageUrl ? (
+        {hasFailed && (
+          <p className="text-xs text-red-400">生成に失敗しました</p>
+        )}
+        {!companion.generatedImageUrl && !isGenerating ? (
           <Button
             variant="outline"
             size="sm"
             className="gap-1.5 border-violet-200 text-violet-600 hover:bg-violet-50"
             onClick={handleGenerateImage}
-            disabled={generatingImage}
           >
-            {generatingImage ? <Loader2 className="size-4 animate-spin" /> : <Wand2 className="size-4" />}
-            {generatingImage ? "絵を描いています…" : "絵を作る ✨"}
+            <Wand2 className="size-4" />
+            {hasFailed ? "もう一度試す" : "絵を作る ✨"}
           </Button>
-        ) : (
+        ) : companion.generatedImageUrl && !isGenerating ? (
           <Button
             variant="ghost"
             size="sm"
             className="gap-1.5 text-violet-400 hover:text-violet-600"
             onClick={handleGenerateImage}
-            disabled={generatingImage}
           >
-            {generatingImage ? <Loader2 className="size-4 animate-spin" /> : <Wand2 className="size-4" />}
-            {generatingImage ? "描き直しています…" : "描き直す"}
+            <Wand2 className="size-4" />
+            描き直す
           </Button>
-        )}
+        ) : null}
       </div>
 
       {/* 名前 */}

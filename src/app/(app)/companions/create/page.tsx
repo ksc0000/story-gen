@@ -93,17 +93,24 @@ export default function CreateCompanionPage() {
         visualDescription,
       });
 
-      // 作成直後に画像生成ジョブをキック（プロフィール画面で自動的に生成開始）
+      // 作成直後に画像生成ジョブをキック（プロフィール画面でローディングを即表示）
       try {
         const { db } = await import("@/lib/firebase");
-        const { collection: col, addDoc: add, serverTimestamp: sts } = await import("firebase/firestore");
-        await add(col(db, "companionImageJobs"), {
+        const { collection: col, doc, writeBatch, serverTimestamp: sts } = await import("firebase/firestore");
+        const batch = writeBatch(db);
+        const jobRef = doc(col(db, "companionImageJobs"));
+        batch.set(jobRef, {
           userId: user.uid,
           companionId,
           status: "pending",
           createdAt: sts(),
           updatedAt: sts(),
         });
+        // companion ドキュメントにも即時反映（プロフィール画面でローディング表示）
+        batch.update(doc(db, "companions", companionId), {
+          imageGenerationStatus: "pending",
+        });
+        await batch.commit();
       } catch {
         // 画像生成の失敗は致命的ではない（プロフィール画面で再試行できる）
       }

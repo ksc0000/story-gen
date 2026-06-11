@@ -706,5 +706,7 @@ export interface CompanionData {
   size: "small" | "medium" | "large";
   visualDescription: string;
   generatedImageUrl?: string;
+  /** 画像生成ジョブの進行状態。完了時はフィールドごと削除される */
+  imageGenerationStatus?: "pending" | "generating" | "failed";
   createdAt: Timestamp;
 }

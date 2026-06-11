@@ -35,10 +35,17 @@ export const onCompanionImageJobCreated = onDocumentCreated(
     const companionRef = db.collection("companions").doc(jobData.companionId);
 
     try {
-      await jobRef.update({
-        status: "generating",
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      await Promise.all([
+        jobRef.update({
+          status: "generating",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }),
+        // companion ドキュメントにもステータスを反映（フロントの onSnapshot で即時表示）
+        companionRef.update({
+          imageGenerationStatus: "generating",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }),
+      ]);
 
       const companionSnap = await companionRef.get();
       if (!companionSnap.exists) {
@@ -56,7 +63,7 @@ export const onCompanionImageJobCreated = onDocumentCreated(
       const imageClient = new ReplicateImageClient(replicateApiToken.value());
 
       const imageBuffer = await imageClient.generateImage(prompt, {
-        purpose: "book_page", // Using book_page as it's for general illustration
+        purpose: "book_page",
         imageModelProfile: "pro_consistent",
       });
 
@@ -69,25 +76,30 @@ export const onCompanionImageJobCreated = onDocumentCreated(
         imageBuffer
       );
 
-      await companionRef.update({
-        generatedImageUrl: imageUrl,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      await jobRef.update({
-        status: "completed",
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      await Promise.all([
+        companionRef.update({
+          generatedImageUrl: imageUrl,
+          imageGenerationStatus: admin.firestore.FieldValue.delete(),  // 完了時はフィールドを削除
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }),
+        jobRef.update({
+          status: "completed",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }),
+      ]);
     } catch (err) {
       const message = normalizeSensitiveError(err);
-      await jobRef.update({
-        status: "failed",
-        error: {
-          message,
-          code: "internal",
-        },
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      await Promise.all([
+        jobRef.update({
+          status: "failed",
+          error: { message, code: "internal" },
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }),
+        companionRef.update({
+          imageGenerationStatus: "failed",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }).catch(() => { /* companion が消えていた場合は無視 */ }),
+      ]);
     }
   }
 );

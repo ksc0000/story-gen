@@ -211,21 +211,16 @@ export type AvatarCandidate = {
   prompt: string;
 };
 
-export interface CompanionVisualDescription {
-  size: string;
-  color: string;
-  species: string;
-  personality: string;
-  specialAbility: string;
-}
-
 export interface CompanionData {
   userId: string;
   name: string;
-  visualDescription: CompanionVisualDescription;
+  /** buildVisualDescription() で生成した英語文字列 */
+  visualDescription: string;
   generatedImageUrl?: string;
+  /** 画像生成ジョブの進行状態。完了時はフィールドごと削除される */
+  imageGenerationStatus?: "pending" | "generating" | "failed";
   createdAt: FirebaseFirestore.Timestamp;
-  updatedAt: FirebaseFirestore.Timestamp;
+  updatedAt?: FirebaseFirestore.Timestamp;
 }
 
 export interface CompanionImageJob {
