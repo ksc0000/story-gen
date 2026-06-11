@@ -56,14 +56,15 @@ export function useCompanions(userId: string | undefined) {
     return unsubscribe;
   }, [userId]);
 
-  const addCompanion = async (data: Omit<CompanionData, "userId" | "createdAt">) => {
+  const addCompanion = async (data: Omit<CompanionData, "userId" | "createdAt">): Promise<string> => {
     if (!userId) throw new Error("User not authenticated");
     const companionsRef = collection(db, "companions");
-    await addDoc(companionsRef, {
+    const docRef = await addDoc(companionsRef, {
       ...data,
       userId,
       createdAt: serverTimestamp(),
     });
+    return docRef.id;
   };
 
   const deleteCompanion = async (companionId: string) => {
