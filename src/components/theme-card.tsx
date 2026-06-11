@@ -74,15 +74,16 @@ export function ThemeCard({ template, selected, onSelect, onPreview, categoryNam
   const [showSamples, setShowSamples] = useState(false);
   const hasQualitySamples = Boolean(template.sampleImages?.light || template.sampleImages?.premium);
   const ageLabel = getAgeLabel(template);
+  const previewImageUrl = template.fixedStory?.previewImageUrl || template.sampleImageUrl;
 
   return (
     <AnimatedCard onClick={onSelect}>
       <Card className={`h-full cursor-pointer overflow-hidden transition ${selected ? "ring-2 ring-purple-500 border-purple-400" : ""}`}>
         <CardContent className="flex h-full flex-col p-0 text-center">
-          {template.sampleImageUrl ? (
+          {previewImageUrl ? (
             <div className="relative aspect-square w-full overflow-hidden bg-violet-50 sm:aspect-[3/4]">
               <Image
-                src={template.sampleImageUrl}
+                src={previewImageUrl}
                 alt={template.sampleImageAlt ?? template.name}
                 fill
                 sizes="(min-width: 640px) 180px, 45vw"
