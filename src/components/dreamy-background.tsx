@@ -7,34 +7,45 @@ import { motion, useReducedMotion } from "framer-motion";
  * DreamyBackground
  * 夢のような演出を行う背景コンポーネント。
  * AmbientOrbs, FloatingBooks, MagicSparkles で構成。
+ *
+ * パフォーマンス方針:
+ * - タッチデバイス(スマホ)では全アニメーションを無効化（発熱・バッテリー消費対策）
+ * - prefers-reduced-motion ユーザーでも削減
  */
 export function DreamyBackground() {
   const shouldReduceMotion = useReducedMotion();
   const [isMounted, setIsMounted] = useState(false);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
+    // pointer: coarse = タッチデバイス（スマホ・タブレット）
+    setIsCoarsePointer(window.matchMedia("(pointer: coarse)").matches);
   }, []);
 
   if (!isMounted) return null;
+
+  // モバイル端末ではアニメーション全停止（発熱・バッテリー消費対策）
+  const isMobile = isCoarsePointer;
 
   return (
     <div className="em-bg" aria-hidden="true">
       <div className="em-bg__gradient" />
 
       {/* 1. Ambient Orbs: ぼんやりとした光の球体 */}
-      <AmbientOrbs count={shouldReduceMotion ? 2 : 4} />
+      <AmbientOrbs count={isMobile ? 0 : shouldReduceMotion ? 2 : 4} />
 
       {/* 2. Floating Books: 浮遊するミニ絵本 */}
-      <FloatingBooks count={shouldReduceMotion ? 0 : 5} />
+      <FloatingBooks count={isMobile ? 0 : shouldReduceMotion ? 0 : 5} />
 
       {/* 3. Magic Sparkles: キラキラ */}
-      <MagicSparkles count={shouldReduceMotion ? 5 : 15} />
+      <MagicSparkles count={isMobile ? 0 : shouldReduceMotion ? 5 : 15} />
     </div>
   );
 }
 
 function AmbientOrbs({ count }: { count: number }) {
+  if (count === 0) return null;
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
@@ -96,6 +107,7 @@ function FloatingBooks({ count }: { count: number }) {
 }
 
 function MagicSparkles({ count }: { count: number }) {
+  if (count === 0) return null;
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (

@@ -40,7 +40,7 @@ export function useGenerationProgress(bookId: string): UseGenerationProgressResu
         }
       };
       syncDemo();
-      const interval = window.setInterval(syncDemo, 300);
+      const interval = window.setInterval(syncDemo, 1000);
       return () => window.clearInterval(interval);
     }
 
