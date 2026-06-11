@@ -156,6 +156,7 @@ function InputPageContent() {
   const theme = searchParams.get("theme") ?? "";
   const childId = searchParams.get("childId") ?? "";
   const mode = (searchParams.get("mode") as CreationMode | null) ?? "guided_ai";
+  const preselectedCompanionId = searchParams.get("companionId");
   const router = useRouter();
   const { user } = useAuth();
   const { isAdmin } = useAdminClaim();
@@ -210,8 +211,8 @@ function InputPageContent() {
   const [outfitMode, setOutfitMode] = useState<OutfitMode>("profile_default");
   const [customOutfit, setCustomOutfit] = useState("");
   const [keepSignatureItem, setKeepSignatureItem] = useState(true);
-  const [selectedCompanionId, setSelectedCompanionId] = useState<string | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [selectedCompanionId, setSelectedCompanionId] = useState<string | null>(preselectedCompanionId);
+  const [showAdvanced, setShowAdvanced] = useState(!!preselectedCompanionId);
 
   const selectedPlanConfig = PLAN_CONFIGS[productPlan] ?? PLAN_CONFIGS.free;
   const planPageCountOptions = PAGE_COUNT_OPTIONS.filter((option) =>

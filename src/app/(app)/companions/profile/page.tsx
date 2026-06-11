@@ -43,13 +43,20 @@ function CompanionProfileContent() {
   };
 
   const handleGenerateImage = async () => {
+    if (!user) return;
     setGeneratingImage(true);
     try {
-      const { functions } = await import("@/lib/firebase");
-      const { httpsCallable } = await import("firebase/functions");
-      const generateFn = httpsCallable(functions, "generateCompanionImage");
-      await generateFn({ companionId: id });
-      // onSnapshot が自動で companion データを更新する
+      const { db } = await import("@/lib/firebase");
+      const { collection, addDoc, serverTimestamp } = await import("firebase/firestore");
+      // onCompanionImageJobCreated Firestore トリガーを起動する
+      await addDoc(collection(db, "companionImageJobs"), {
+        userId: user.uid,
+        companionId: id,
+        status: "pending",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      // useCompanions の onSnapshot が companions/{id}.generatedImageUrl を自動更新する
     } catch (err) {
       console.error(err);
       alert("画像生成に失敗しました");
