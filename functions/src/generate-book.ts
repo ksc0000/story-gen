@@ -1350,11 +1350,12 @@ export async function processBookGeneration(
       });
 
       // P5-3d: Guarded conditional routing — simplified_scene applies only to photo-less books.
-      // Photo-backed books (childProfileSnapshot.visualProfile.referenceImageUrl present) must
+      // Photo-backed books (referenceImageUrl or approvedImageUrl present) must
       // remain on the reference-aware path because simplified_scene clears finalInputImageUrls=[],
       // which would discard the child's reference photo and break face likeness.
       const hasReferenceImage = Boolean(
-        normalizedBookData.childProfileSnapshot?.visualProfile?.referenceImageUrl
+        normalizedBookData.childProfileSnapshot?.visualProfile?.referenceImageUrl ||
+        normalizedBookData.childProfileSnapshot?.visualProfile?.approvedImageUrl
       );
       const useSimplifiedScene =
         deps.p5PageExperiment === "simplified_scene" && !hasReferenceImage;

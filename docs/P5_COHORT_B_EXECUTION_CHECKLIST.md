@@ -6,19 +6,19 @@ Based on the success of **P5-3c-verify** (2026-05-22), Phase 5 Cohort B is appro
 - **Experiment**: `simplified_scene` is enabled for Cohort B (guarded by `hasReferenceImage` in P5-3d).
 - **Goal**: Establish operational foundation for Phase 1 closure and evaluate readiness for Cohort C.
 
-## Pre-Flight Validation (Timestamp: [TIME: _____])
+## Pre-Flight Validation (Timestamp: 2026-06-11 08:39:50 UTC)
 
 ### Build & Tests
-- [ ] **Build Check**: `npm run build --prefix functions` successful.
-- [ ] **Test Check**: `npm run test --prefix functions` successful (all 1746+ tests pass).
-- [ ] **Lint Check**: `npm run lint` pass (no critical errors).
-- [ ] **Git Status**: No uncommitted changes in `origin/main`.
+- [x] **Build Check**: `npm run build --prefix functions` successful.
+- [x] **Test Check**: `npm run test --prefix functions` successful (all 1746+ tests pass).
+- [x] **Lint Check**: `npm run lint` pass (no critical errors).
+- [ ] **Git Status**: No uncommitted changes in `origin/main`. (Pending final commit)
 
 ### SLO & Alerts
-- [ ] **SLO Dashboard**: Accessible at [Cloud Monitoring](https://console.cloud.google.com/monitoring/dashboards/builder/39c916aa-ea17-4487-80e1-9c81e47cee3b?project=story-gen-8a769).
-- [ ] **Logging Queries**: Saved queries from `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md` are operational.
-- [ ] **Alert Policy**: CG-1 (Candidate Gate) is **enabled**; SJ/IM policies are **disabled** but configured.
-- [ ] **Notification**: Ops team confirmed alert notification channels (Email/Slack) are active.
+- [x] **SLO Dashboard**: Accessible at [Cloud Monitoring](https://console.cloud.google.com/monitoring/dashboards/builder/39c916aa-ea17-4487-80e1-9c81e47cee3b?project=story-gen-8a769).
+- [x] **Logging Queries**: Saved queries from `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md` are operational.
+- [x] **Alert Policy**: CG-1 (Candidate Gate) is **enabled**; SJ/IM policies are **enabled** and tuned (as of 2026-06-09).
+- [x] **Notification**: Ops team confirmed alert notification channels (Email/Slack) are active.
 
 ### Admin Contact
 - [ ] **Admin Owner**: [Name/Role] is available for the 1-hour window.

@@ -69,18 +69,13 @@ Complete all items before sending Cohort B invitations.
 - [ ] **Feedback form URL finalized** — `[FEEDBACK_FORM_URL]` or confirm DM fallback
 - [ ] **Cohort B tester list** — 3–5 people identified; stored outside git (not in any committed file)
 
-### 3.3 Monitoring readiness
+### 3.3 Monitoring readiness (Verified: 2026-06-11)
 
-- [ ] **Dashboard accessible**:  
+- [x] **Dashboard accessible**:
   https://console.cloud.google.com/monitoring/dashboards/builder/39c916aa-ea17-4487-80e1-9c81e47cee3b?project=story-gen-8a769
-- [ ] **Cloud Logging queries ready** — reference: `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md`
-- [ ] **CG-1 panel (Panel 1) = 0** before invitations go out
-- [ ] **SJ/IM policies remain `enabled: false`** — verify:
-  ```powershell
-  $gcloud = "C:\Users\CN63738\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd"
-  & $gcloud monitoring policies list --project=story-gen-8a769 --format="table(displayName,enabled)" | Select-String "True|False"
-  ```
-  Expected: CG-1 = True, all SJ/IM = False
+- [x] **Cloud Logging queries ready** — reference: `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md`
+- [x] **CG-1 panel (Panel 1) = 0** before invitations go out
+- [x] **SJ/IM policies enabled and tuned** — as of 2026-06-09. Reference: `docs/P2_SJ_IM_ALERT_POLICIES.md`.
 
 ### 3.4 Security
 
