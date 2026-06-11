@@ -139,22 +139,29 @@ function buildAgeSpecificPage(params: {
   early_elementary_7_8?: string;
   general_child?: string;
 }): FixedStoryPageTemplate {
-  const textTemplatesByAge = {
+  // Filter out undefined values so Firestore doesn't reject {key: undefined}
+  const rawByAge = {
     baby_toddler: params.baby_toddler,
     preschool_3_4: params.preschool_3_4,
     early_reader_5_6: params.early_reader_5_6,
     early_elementary_7_8: params.early_elementary_7_8,
     general_child: params.general_child,
   };
+  const textTemplatesByAge = Object.fromEntries(
+    Object.entries(rawByAge).filter(([, v]) => v !== undefined)
+  ) as Partial<typeof rawByAge>;
 
-  return {
+  const base: FixedStoryPageTemplate = {
     textTemplate: params.textTemplate,
-    textTemplatesByAge: Object.values(textTemplatesByAge).some(Boolean)
-      ? textTemplatesByAge
-      : undefined,
     imagePromptTemplate: withFixedImagePromptSafety(params.imagePromptTemplate),
-    pageVisualRole: params.pageVisualRole,
   };
+  if (Object.keys(textTemplatesByAge).length > 0) {
+    base.textTemplatesByAge = textTemplatesByAge as NonNullable<FixedStoryPageTemplate["textTemplatesByAge"]>;
+  }
+  if (params.pageVisualRole !== undefined) {
+    base.pageVisualRole = params.pageVisualRole;
+  }
+  return base;
 }
 
 const categoryGroups: Record<string, CategoryGroupData> = {
