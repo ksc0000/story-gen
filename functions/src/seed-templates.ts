@@ -512,7 +512,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     icon: "🎂",
     categoryGroupId: "seasonal-events",
     subcategoryId: "first-birthday",
-    parentIntent: "この瞬間を残したい",
+    parentIntent: "季節の体験を特別な思い出にしたい",
     recommendedAgeMin: 1,
     recommendedAgeMax: 6,
     requiredInputs: ["childName", "familyMembers"],
@@ -530,6 +530,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、はじめての誕生日の思い出をやさしく残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のはじめてのたんじょうび",
+      previewImageUrl: "/images/templates/seasonal.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
@@ -601,7 +602,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     icon: "🎂",
     categoryGroupId: "seasonal-events",
     subcategoryId: "first-birthday",
-    parentIntent: "この瞬間を残したい",
+    parentIntent: "季節の体験を特別な思い出にしたい",
     recommendedAgeMin: 1,
     recommendedAgeMax: 6,
     requiredInputs: ["childName", "familyMembers"],
@@ -619,6 +620,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、はじめての誕生日の思い出を8ページでゆっくり残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のはじめてのたんじょうび",
+      previewImageUrl: "/images/templates/seasonal.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
