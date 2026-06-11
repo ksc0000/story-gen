@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ThemeCard } from "@/components/theme-card";
@@ -16,9 +16,9 @@ vi.mock("next/image", () => ({
 // Mock framer-motion to avoid animation issues in tests
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, whileHover, whileTap, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, whileHover: _wh, whileTap: _wt, ...props }: ComponentPropsWithoutRef<"div"> & { whileHover?: unknown; whileTap?: unknown }) => <div {...props}>{children}</div>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
   useMotionValue: () => ({
     get: () => 0,
     set: () => {},
