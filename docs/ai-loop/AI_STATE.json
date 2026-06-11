@@ -46,6 +46,7 @@
     "PR #253: Display Template Preview Images in Theme Selection UI (merged)",
     "PR #254: fix: theme-card.test.tsx のESLintエラー修正 (Deploy CI修復) (merged)",
     "PR #256: Execute Cohort B Limited Rollout (merged)",
+    "PR #257: fix(companion): 画像生成ボタン修正・プロフィールCTAから相棒を事前選択 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
