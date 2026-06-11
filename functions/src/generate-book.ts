@@ -74,8 +74,13 @@ import {
 } from "./lib/generation-event-logger";
 import { ReplicateImageAdapter } from "./lib/replicate-image-adapter";
 import { OpenAIImageAdapter } from "./lib/openai-image-adapter";
-import { makePageUploader, type PageImageUploadFn } from "./lib/image-storage-uploader";
+import {
+  makePageUploader,
+  makeCharacterReferenceUploader,
+  type PageImageUploadFn,
+} from "./lib/image-storage-uploader";
 import { PROFILE_PROVIDER_MAP } from "./lib/image-provider";
+import { createImageAdapter, resolveImageProviderId } from "./lib/image-adapter-factory";
 
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
 const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCURRENCY ?? "2")));
@@ -1984,7 +1989,7 @@ async function ensureRecurringCharacterReferences(params: {
   bookId: string;
   story: GeneratedStory;
   normalizedBookData: BookData;
-  deps: Pick<GenerationDeps, "imageClient" | "uploadImage">;
+  deps: Pick<GenerationDeps, "imageClient" | "uploadImage" | "replicateApiToken" | "openaiApiKey">;
 }): Promise<GeneratedStory> {
   if (!params.story.cast?.length) {
     return params.story;
@@ -2004,17 +2009,106 @@ async function ensureRecurringCharacterReferences(params: {
       params.normalizedBookData
     );
 
-    try {
-      const buffer = await withImageTimeout(
-        params.deps.imageClient.generateImage(referencePrompt, {
-          purpose: "book_page",
-          imageQualityTier: params.normalizedBookData.imageQualityTier,
-          imageModelProfile: params.normalizedBookData.imageModelProfile,
-          inputImageUrls: [],
-        }),
-        IMAGE_GENERATION_TIMEOUT_MS
-      );
-      const url = await params.deps.uploadImage(params.bookId, -100 - index, buffer);
+    const imagePurpose = "book_page" as const;
+    const primaryProfile = resolveImageModelProfile({
+      purpose: imagePurpose,
+      imageQualityTier: params.normalizedBookData.imageQualityTier ?? "light",
+      imageModelProfile: params.normalizedBookData.imageModelProfile,
+    });
+    const fallbackProfiles = resolveImageFallbackProfiles(primaryProfile);
+
+    let success = false;
+    let url: string | undefined;
+    let lastError: unknown;
+
+    search_loop: for (const profile of fallbackProfiles) {
+      const maxRetries = 2;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const pid = resolveImageProviderId(profile);
+          const hasToken = pid === "replicate" ? !!params.deps.replicateApiToken : !!params.deps.openaiApiKey;
+
+          if (hasToken) {
+            const uploader = makeCharacterReferenceUploader({
+              bookId: params.bookId,
+              characterIndex: index,
+              uploadImage: params.deps.uploadImage,
+            });
+
+            const adapter = createImageAdapter({
+              imageModelProfile: profile,
+              replicateApiToken: params.deps.replicateApiToken || "",
+              openaiApiKey: params.deps.openaiApiKey || "",
+              replicateUploader: uploader,
+              openaiUploader: uploader,
+            });
+
+            const result = await withImageTimeout(
+              adapter.generateCharacterReferenceImage({
+                prompt: referencePrompt,
+                imageModelProfile: profile,
+                inputImageUrls: [],
+                metadata: {
+                  bookId: params.bookId,
+                  characterId: character.characterId,
+                },
+              }),
+              IMAGE_GENERATION_TIMEOUT_MS
+            );
+
+            url = result.imageUrl;
+            success = true;
+            break search_loop;
+          }
+
+          // Legacy path fallback (primarily for test environments without adapter tokens)
+          const buffer = await withImageTimeout(
+            params.deps.imageClient.generateImage(referencePrompt, {
+              purpose: imagePurpose,
+              imageQualityTier: params.normalizedBookData.imageQualityTier,
+              imageModelProfile: profile,
+              inputImageUrls: [],
+            }),
+            IMAGE_GENERATION_TIMEOUT_MS
+          );
+          url = await params.deps.uploadImage(params.bookId, -100 - index, buffer);
+          success = true;
+          break search_loop;
+        } catch (err) {
+          lastError = err;
+          if (err instanceof ImageTimeoutError) {
+            logger.warn("Recurring character reference generation timeout", {
+              bookId: params.bookId,
+              characterId: character.characterId,
+              profile,
+              attempt,
+              timeoutMs: IMAGE_GENERATION_TIMEOUT_MS,
+            });
+            break; // Try next profile
+          }
+
+          const retryAfterMs = getRetryAfterMs(err);
+          logger.warn("Recurring character reference generation attempt failed", {
+            bookId: params.bookId,
+            characterId: character.characterId,
+            profile,
+            attempt,
+            error: err instanceof Error ? err.message : String(err),
+          });
+          if (attempt < maxRetries - 1) {
+            if (retryAfterMs > 0) {
+              await new Promise((resolve) => setTimeout(resolve, Math.min(retryAfterMs, 30_000)));
+            } else {
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+            }
+            continue;
+          }
+          break; // Try next profile
+        }
+      }
+    }
+
+    if (success && url) {
       nextCast.push(
         removeUndefinedDeep({
           ...character,
@@ -2024,11 +2118,11 @@ async function ensureRecurringCharacterReferences(params: {
           referenceImageStatus: "completed" as const,
         }) as StoryCharacter
       );
-    } catch (error) {
-      logger.warn("Recurring character reference generation failed, continuing without reference", {
+    } else {
+      logger.warn("Recurring character reference generation failed after fallbacks, continuing without reference", {
         bookId: params.bookId,
         characterId: character.characterId,
-        error: error instanceof Error ? error.message : String(error),
+        error: lastError instanceof Error ? lastError.message : String(lastError),
       });
       nextCast.push(
         removeUndefinedDeep({

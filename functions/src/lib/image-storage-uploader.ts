@@ -116,3 +116,19 @@ export function makeCoverUploader(params: {
     return uploadCoverImage(bookId, buffer);
   };
 }
+
+/**
+ * Create an AdapterStorageUploader closure for character reference images.
+ * Uses the -100 - characterIndex convention for the page number.
+ */
+export function makeCharacterReferenceUploader(params: {
+  bookId: string;
+  characterIndex: number;
+  uploadImage: PageImageUploadFn;
+}): AdapterStorageUploader {
+  const { bookId, characterIndex, uploadImage } = params;
+  const pageNumber = -100 - characterIndex;
+  return async (buffer: Buffer, _profile: ImageModelProfile): Promise<string> => {
+    return uploadImage(bookId, pageNumber, buffer);
+  };
+}

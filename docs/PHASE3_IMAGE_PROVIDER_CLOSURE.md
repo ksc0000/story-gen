@@ -21,9 +21,12 @@ provider API tokens injected from Firebase secrets. No feature flags are require
 `78636e8`. Both adapters activated correctly in production. The candidate gate remained secure
 throughout (no OpenAI model assigned to unenrolled users).
 
-**Remaining legacy scope** is limited to two non-page generation flows: `generateCoverImage()`
-and `ensureRecurringCharacterReferences()`. These intentionally retain `deps.imageClient` (via
-`createImageClient()`) and are tracked for a future P4 cleanup cycle.
+**Remaining legacy scope** is limited to one non-page generation flow: `generateCoverImage()`.
+This intentionally retains `deps.imageClient` (via `createImageClient()`) and is tracked for a
+future P4 cleanup cycle.
+
+`ensureRecurringCharacterReferences()` has been refactored to use the `ImageProvider` adapter
+interface, completing the character reference abstraction.
 
 ---
 
@@ -214,17 +217,16 @@ Two non-page image flows intentionally remain on the legacy `createImageClient()
 | Flow | Function | Still uses | Reason |
 |---|---|---|---|
 | Cover image generation | `generateCoverImage()` | `deps.imageClient` (legacy `ReplicateImageClient` / `OpenAIImageClient`) | Out of P3 scope — separate visual prompt logic |
-| Recurring character reference | `ensureRecurringCharacterReferences()` | `deps.imageClient` | Out of P3 scope — input_images reference pattern differs |
+| Recurring character reference | `ensureRecurringCharacterReferences()` | `ImageProvider` adapter | **MIGRATED** |
 
-`createImageClient()` in `generate-book.ts` is **not removed**. It has a JSDoc comment marking it as retained for these flows.
+`createImageClient()` in `generate-book.ts` is **not removed**. It has a JSDoc comment marking it as retained for the cover generation flow.
 
 **Recommended follow-up (P4)**:
 
 | Task | Description | Priority |
 |---|---|---|
 | P4-1 | Migrate `generateCoverImage()` to `ImageProvider` adapter | Medium |
-| P4-2 | Migrate `ensureRecurringCharacterReferences()` to `ImageProvider` adapter | Medium |
-| P4-3 (stretch) | Remove `createImageClient()` after P4-1 + P4-2 | Low |
+| P4-2 (stretch) | Remove `createImageClient()` after P4-1 | Low |
 
 ---
 

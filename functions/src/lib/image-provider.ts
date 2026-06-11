@@ -82,6 +82,8 @@ export interface ImageGenerationMetadata {
   candidateRequested?: boolean;
   /** Whether the candidate gate allowed it. */
   candidateAllowed?: boolean;
+  /** Character identifier when applicable (character reference generation). */
+  characterId?: string;
 }
 
 // -------------------------------------------------------------------------
@@ -205,6 +207,11 @@ export interface ImageProvider {
    * Throws on failure — callers should catch and call classifyError.
    */
   generateImage(request: ImageGenerationRequest): Promise<ImageGenerationResult>;
+  /**
+   * Generate a character reference image for a recurring character.
+   * Throws on failure — callers should catch and call classifyError.
+   */
+  generateCharacterReferenceImage(request: ImageGenerationRequest): Promise<ImageGenerationResult>;
   /**
    * Classify an unknown error thrown by generateImage() into a normalized failure descriptor.
    * Must not re-throw. Must return a valid ImageGenerationFailure for any input.

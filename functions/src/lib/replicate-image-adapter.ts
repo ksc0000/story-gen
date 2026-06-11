@@ -101,6 +101,14 @@ export class ReplicateImageAdapter implements ImageProvider {
   }
 
   /**
+   * Generate a character reference image for a recurring character using Replicate.
+   * Delegates to generateImage.
+   */
+  async generateCharacterReferenceImage(request: ImageGenerationRequest): Promise<ImageGenerationResult> {
+    return this.generateImage(request);
+  }
+
+  /**
    * Generate an image using Replicate and return an ImageGenerationResult.
    *
    * Internally creates a ReplicateImageClient, calls generateImageWithMetadata,

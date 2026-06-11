@@ -300,6 +300,38 @@ describe("OpenAIImageAdapter.generateImage (mock uploader, no network)", () => {
     expect(result.fallbackUsed).toBe(false);
   });
 
+  it("generateCharacterReferenceImage with mock client returns correct shape (delegates to generateImage)", async () => {
+    const uploaderSpy = vi.fn(mockUploader);
+
+    class TestableOpenAIAdapter extends OpenAIImageAdapter {
+      override async generateImage(request: import("../src/lib/image-provider").ImageGenerationRequest) {
+        const profile = request.imageModelProfile;
+        const syntheticBuffer = Buffer.from("fake-openai-image-data");
+        const imageUrl = await uploaderSpy(syntheticBuffer, profile);
+        return {
+          imageUrl,
+          providerId: "openai" as const,
+          modelLabel: "openai/gpt-image-1-mini",
+          profile,
+          durationMs: 1200,
+          fallbackUsed: false,
+        };
+      }
+    }
+
+    const adapter = new TestableOpenAIAdapter("sk-test", uploaderSpy);
+    const result = await adapter.generateCharacterReferenceImage({
+      prompt: "Character reference prompt",
+      imageModelProfile: "openai_image_candidate",
+      metadata: { bookId: "book-456", characterId: "char-2" },
+    });
+
+    expect(uploaderSpy).toHaveBeenCalledOnce();
+    expect(result.providerId).toBe("openai");
+    expect(result.profile).toBe("openai_image_candidate");
+    expect(result.imageUrl).toContain("mock-openai-openai_image_candidate");
+  });
+
   it("openai_mini ignores reference images and returns mini label", async () => {
     const uploaderSpy = vi.fn(mockUploader);
 
