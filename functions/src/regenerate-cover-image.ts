@@ -3,10 +3,6 @@ import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 import { randomUUID } from "crypto";
-import {
-  resolveImageModelProfile,
-  resolveImageFallbackProfiles,
-} from "./lib/replicate";
 import { buildCoverImagePrompt, buildFinalCharacterBible } from "./lib/prompt-builder";
 import { getAgeReadingProfile } from "./lib/age-reading-profile";
 import type { ImageModelProfile, CoverStatus, BookData } from "./lib/types";
