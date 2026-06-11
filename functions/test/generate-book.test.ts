@@ -1830,6 +1830,32 @@ describe("p5PageExperiment simplified_scene routing (P5-3d)", () => {
     }
   });
 
+  it("suppresses simplified_scene for books with approvedImageUrl and keeps reference images active", async () => {
+    const approvedPhotoBook: BookData = {
+      ...baseBookData,
+      characterConsistencyMode: "all_pages",
+      childProfileSnapshot: {
+        displayName: "テスト",
+        personality: {},
+        visualProfile: {
+          version: 1,
+          approvedImageUrl: "https://example.com/approved-photo.png",
+        },
+      },
+    };
+    const depsWithExperiment = { ...deps, p5PageExperiment: "simplified_scene" as const };
+    await processBookGeneration("book-with-approved-photo", approvedPhotoBook, depsWithExperiment);
+
+    const anyPageWithRef = deps.imageClient.generateImage.mock.calls.some(
+      ([, opts]) => (opts.inputImageUrls ?? []).includes("https://example.com/approved-photo.png")
+    );
+    expect(anyPageWithRef).toBe(true);
+
+    for (const [promptArg] of deps.imageClient.generateImage.mock.calls) {
+      expect(promptArg).toContain("Character consistency rules:");
+    }
+  });
+
   it("leaves the default prompt path unchanged when p5PageExperiment is absent", async () => {
     await processBookGeneration("book-default", baseBookData, deps);
 
