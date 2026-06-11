@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -131,6 +131,9 @@ function GeneratingContent() {
   const bookId = searchParams.get("id") ?? "";
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
+  // Firestore onSnapshot は毎更新で新しいオブジェクト参照を返すため、
+  // useEffect([book]) が重複発火する。bookId:status をキーに1回だけ送信する。
+  const reportedStatusRef = useRef<string | null>(null);
   const { book, pages, loading } = useGenerationProgress(bookId);
   const completedPages = pages.filter((page) => page.status === "completed" || page.status === "fallback_completed").length;
   const totalPages = book?.pageCount ?? Math.max(pages.length, 1);
@@ -143,6 +146,13 @@ function GeneratingContent() {
 
   useEffect(() => {
     if (!book) return;
+    const terminalStatuses = ["completed", "partial_completed", "failed"];
+    if (!terminalStatuses.includes(book.status)) return;
+    // 同じ (bookId, status) の組み合わせで重複発火しないよう dedup
+    const key = `${book.id}:${book.status}`;
+    if (reportedStatusRef.current === key) return;
+    reportedStatusRef.current = key;
+
     if (book.status === "completed") {
       trackAnalyticsEvent("complete_book_generation", {
         productPlan: book.productPlan ?? "free",

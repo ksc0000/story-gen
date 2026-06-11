@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { doc, serverTimestamp, writeBatch } from "firebase/firestore";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AvatarRevisionForm } from "@/components/avatar-revision-form";
@@ -19,6 +19,7 @@ import { useAvatarCandidates } from "@/lib/hooks/use-avatar-candidates";
 const LEAVE_MESSAGE = "キャラクターが保存されていません。生成結果が消えてしまいます。本当に別の画面に移動してよいですか？";
 
 function ChildAvatarPageContent() {
+  const shouldReduceMotion = useReducedMotion();
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -200,7 +201,7 @@ function ChildAvatarPageContent() {
       <div className="flex min-h-screen items-center justify-center p-8 text-center text-violet-400">
         <motion.div
           className="h-8 w-8 rounded-full border-2 border-violet-200 border-t-violet-500"
-          animate={{ rotate: 360 }}
+          animate={shouldReduceMotion ? undefined : { rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         />
         <span className="ml-3">読み込み中...</span>
@@ -262,12 +263,12 @@ function ChildAvatarPageContent() {
               <div className="relative mb-6">
                 <motion.div
                   className="h-16 w-16 rounded-full border-4 border-purple-100 border-t-purple-500"
-                  animate={{ rotate: 360 }}
+                  animate={shouldReduceMotion ? undefined : { rotate: 360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 />
                 <motion.div
                   className="absolute inset-0 flex items-center justify-center text-2xl"
-                  animate={{ scale: [1, 1.2, 1] }}
+                  animate={shouldReduceMotion ? undefined : { scale: [1, 1.2, 1] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
                   🎨
