@@ -1,16 +1,16 @@
 import { CompanionSpecies } from "@/lib/types";
 
-export const SPECIES_OPTIONS: { value: CompanionSpecies; label: string; emoji: string; en: string }[] = [
-  { value: "dog", label: "いぬ", emoji: "🐕", en: "dog" },
-  { value: "cat", label: "ねこ", emoji: "🐱", en: "cat" },
-  { value: "rabbit", label: "うさぎ", emoji: "🐰", en: "rabbit" },
-  { value: "bear", label: "くま", emoji: "🐻", en: "bear" },
-  { value: "fox", label: "きつね", emoji: "🦊", en: "fox" },
-  { value: "dragon", label: "ドラゴン", emoji: "🐲", en: "dragon" },
-  { value: "robot", label: "ロボット", emoji: "🤖", en: "robot" },
-  { value: "fairy", label: "妖精", emoji: "🧚", en: "fairy" },
-  { value: "unicorn", label: "ユニコーン", emoji: "🦄", en: "unicorn" },
-  { value: "monster", label: "モンスター", emoji: "👾", en: "monster" },
+export const SPECIES_OPTIONS: { value: CompanionSpecies; label: string; emoji: string; en: string; imageUrl?: string }[] = [
+  { value: "dog", label: "いぬ", emoji: "🐕", en: "dog", imageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/companion-species-previews%2Fdog.png?alt=media&token=0c215725-a15f-4073-bb83-2e1d75714f64" },
+  { value: "cat", label: "ねこ", emoji: "🐱", en: "cat", imageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/companion-species-previews%2Fcat.png?alt=media&token=244440cc-f5a5-43e5-94fe-398583764e5f" },
+  { value: "rabbit", label: "うさぎ", emoji: "🐰", en: "rabbit", imageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/companion-species-previews%2Frabbit.png?alt=media&token=999d3a21-97f5-43b0-853e-be374afb2445" },
+  { value: "bear", label: "くま", emoji: "🐻", en: "bear", imageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/companion-species-previews%2Fbear.png?alt=media&token=d472c128-d41f-4ffb-a874-90284a3ca7e9" },
+  { value: "fox", label: "きつね", emoji: "🦊", en: "fox", imageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/companion-species-previews%2Ffox.png?alt=media&token=3ee4b862-ad08-4d31-9e77-19adc7486c59" },
+  { value: "dragon", label: "ドラゴン", emoji: "🐲", en: "dragon", imageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/companion-species-previews%2Fdragon.png?alt=media&token=7ddc6588-0c71-459a-a69e-2d4658f3e085" },
+  { value: "robot", label: "ロボット", emoji: "🤖", en: "robot", imageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/companion-species-previews%2Frobot.png?alt=media&token=53af660c-7440-4ea7-a01d-c8bf26e9e87f" },
+  { value: "fairy", label: "妖精", emoji: "🧚", en: "fairy", imageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/companion-species-previews%2Ffairy.png?alt=media&token=f2d279b8-ee8d-4644-af9d-715035aff571" },
+  { value: "unicorn", label: "ユニコーン", emoji: "🦄", en: "unicorn", imageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/companion-species-previews%2Funicorn.png?alt=media&token=3235f0cc-361f-418e-a583-d64372bb06a0" },
+  { value: "monster", label: "モンスター", emoji: "👾", en: "monster", imageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/companion-species-previews%2Fmonster.png?alt=media&token=29b43156-ec5c-441e-a352-fdeed6826a1f" },
 ];
 
 export const PERSONALITY_OPTIONS: { value: string; label: string; en: string }[] = [

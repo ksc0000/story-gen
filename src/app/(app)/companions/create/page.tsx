@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -142,14 +143,29 @@ export default function CreateCompanionPage() {
                   key={opt.value}
                   onClick={() => setSpecies(opt.value)}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-4 transition-all",
+                    "relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border-2 p-3 transition-all",
                     species === opt.value
-                      ? "border-purple-500 bg-purple-50"
+                      ? "border-purple-500 bg-purple-50 shadow-sm"
                       : "border-transparent bg-violet-50/50 hover:bg-violet-50"
                   )}
                 >
-                  <span className="text-3xl">{opt.emoji}</span>
+                  {opt.imageUrl ? (
+                    <div className="relative h-20 w-20 overflow-hidden rounded-xl">
+                      <Image
+                        src={opt.imageUrl}
+                        alt={opt.label}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-4xl leading-none py-2">{opt.emoji}</span>
+                  )}
                   <span className="text-sm font-medium text-purple-900">{opt.label}</span>
+                  {species === opt.value && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-white text-xs">✓</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -261,8 +277,20 @@ export default function CreateCompanionPage() {
           {step === "confirm" && (
             <div className="space-y-6">
               <div className="flex items-center gap-4 rounded-3xl bg-violet-50 p-6">
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-5xl shadow-sm">
-                  {SPECIES_OPTIONS.find(o => o.value === species)?.emoji}
+                <div className="relative h-20 w-20 overflow-hidden rounded-2xl bg-white shadow-sm">
+                  {SPECIES_OPTIONS.find(o => o.value === species)?.imageUrl ? (
+                    <Image
+                      src={SPECIES_OPTIONS.find(o => o.value === species)!.imageUrl!}
+                      alt={SPECIES_OPTIONS.find(o => o.value === species)?.label ?? ""}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-5xl">
+                      {SPECIES_OPTIONS.find(o => o.value === species)?.emoji}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-purple-900">{name}</div>
