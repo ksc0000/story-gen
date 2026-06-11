@@ -242,4 +242,12 @@ export class OpenAIImageAdapter implements ImageProvider {
       throw new Error("OpenAIImageAdapter: apiKey must not be empty");
     }
   }
+
+  /**
+   * Generate a character reference image for a recurring character using OpenAI.
+   * Delegates to generateImage.
+   */
+  async generateCharacterReferenceImage(request: ImageGenerationRequest): Promise<ImageGenerationResult> {
+    return this.generateImage(request);
+  }
 }

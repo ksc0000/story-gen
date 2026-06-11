@@ -284,6 +284,37 @@ describe("ReplicateImageAdapter.generateImage (mock uploader, no network)", () =
     expect(result.imageUrl).toContain("mock-pro_consistent");
     expect(result.fallbackUsed).toBe(false);
   });
+
+  it("generateCharacterReferenceImage returns correct shape (delegates to generateImage)", async () => {
+    const uploaderSpy = vi.fn(mockUploader);
+
+    class TestableReplicateAdapter extends ReplicateImageAdapter {
+      override async generateImage(request: import("../src/lib/image-provider").ImageGenerationRequest) {
+        const syntheticBuffer = Buffer.from("fake-image-data");
+        const imageUrl = await uploaderSpy(syntheticBuffer, request.imageModelProfile);
+        return {
+          imageUrl,
+          providerId: "replicate" as const,
+          modelLabel: this.resolveModelLabel(request.imageModelProfile),
+          profile: request.imageModelProfile,
+          durationMs: 150,
+          fallbackUsed: false,
+        };
+      }
+    }
+
+    const adapter = new TestableReplicateAdapter("tok-test", uploaderSpy);
+    const result = await adapter.generateCharacterReferenceImage({
+      prompt: "Character reference prompt",
+      imageModelProfile: "pro_consistent",
+      metadata: { bookId: "book-123", characterId: "char-1" },
+    });
+
+    expect(uploaderSpy).toHaveBeenCalledOnce();
+    expect(result.providerId).toBe("replicate");
+    expect(result.profile).toBe("pro_consistent");
+    expect(result.imageUrl).toContain("mock-pro_consistent");
+  });
 });
 
 // -------------------------------------------------------------------------
