@@ -1884,6 +1884,3786 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-cherry-blossom": {
+    name: "はなみさんぽ",
+    description: "春の公園でお花見さんぽ。ピンクの花びらが舞う特別な一日の思い出固定テンプレート",
+    icon: "🌸",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "spring-events",
+    parentIntent: "季節の行事を一緒に楽しみたい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["spring", "cherry-blossom", "nature", "picnic"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageAlt: "春の桜の木の下を歩く子どもの絵本イメージ",
+    visualDirection:
+      "Soft spring park atmosphere with cherry blossom trees in full bloom, pink petals drifting gently, and a tiny pink petal motif recurring throughout.",
+    order: 50,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、春のお花見さんぽの思い出絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はなみさんぽ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child walking under a tunnel of blooming cherry blossom trees, pink petals drifting all around, soft warm spring sunlight, a tiny pink petal motif floating near the child, gentle spring park mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "はるの さくら、きれいだね",
+      openingNarrationTemplate:
+        "はるのあたたかいひ、{childName}は こうえんへ でかけました。さくらのきが ピンクのはなびらを ふわりと まとっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は桜の木の下を歩きました。ピンクの花びらがひらひら舞っています。",
+          baby_toddler: "さくら きれい。はなびら ひらひら。",
+          preschool_3_4:
+            "{childName}は さくらの きの したを あるきました。ピンクの はなびらが ひらひら まっています。",
+          early_reader_5_6:
+            "{childName}は さくらの きの したを あるきました。ピンクの はなびらが かぜに のって ひらひら まっていて、まるで ゆきのようです。",
+          early_elementary_7_8:
+            "{childName}は さくらの きの したを あるきました。ピンクの はなびらが かぜに のって ひらひら まっていて、てのひらで つかまえようと しました。",
+          general_child: "{childName}は桜の木の下を歩きました。ピンクの花びらがひらひら舞っています。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a park path lined with cherry blossom trees in full bloom, pink petals drifting through the air like soft snow. A child walks along the petal-covered path with arms slightly raised. Tiny pink petal motifs dot the ground. Warm spring sunlight, watercolor picture book style, peaceful spring park mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "青いシートを広げてお花見ピクニック。ピンクの花びらがお弁当に飛んできました。",
+          baby_toddler: "シート ひろげて ぴくにっく！",
+          preschool_3_4:
+            "あおい シートを ひろげて おはなみ ぴくにっく。ピンクの はなびらが とんで きました。",
+          early_reader_5_6:
+            "あおい シートに すわって おべんとうを ひろげると、ピンクの はなびらが そっと とんで きました。はるの おとずれを かんじます。",
+          early_elementary_7_8:
+            "あおい シートに すわって おべんとうを ひろげると、ピンクの はなびらが ひとひら おちてきました。「はるが おいしいよって いってるね」と {childName}は わらいました。",
+          general_child: "青いシートを広げてお花見ピクニック。ピンクの花びらがお弁当に飛んできました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of a spring picnic scene with a light blue picnic sheet spread under cherry blossom trees. A child sits happily with a bento box open, a single tiny pink petal landed gently on the food. Cherry blossoms frame above. Soft spring light. Watercolor picture book style, warm family picnic mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は集めた花びらを空に向かって投げました。ふわっと舞い上がりました！",
+          baby_toddler: "はなびら まーい！わーい！",
+          preschool_3_4:
+            "{childName}は あつめた はなびらを そらに むかって なげました。ふわっと まいあがりました！",
+          early_reader_5_6:
+            "{childName}は てのひらの はなびらを そらへ なげました。ピンクのはなびらが ふわっと まいあがって、そらが ピンクに そまりました。",
+          early_elementary_7_8:
+            "{childName}は てのひらの はなびらを そらへ なげると、ふわっと まいあがった はなびらたちが かぜに のって どこまでも とんでいきました。",
+          general_child: "{childName}は集めた花びらを空に向かって投げました。ふわっと舞い上がりました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of a child tossing a handful of cherry blossom petals into the air, face tilted up with a radiant joyful smile. Petals swirl all around in a pink cloud. Tiny pink petal motifs fill the air. Warm spring light, watercolor picture book style, peak joy moment, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "帰り道、{childName}の手にはピンクの花びらがそっと残っていました。{parentMessage}",
+          baby_toddler: "はなびら おてて に。{parentMessage}",
+          preschool_3_4:
+            "かえりみち、{childName}の てには ピンクの はなびらが のこっていました。{parentMessage}",
+          early_reader_5_6:
+            "かえりみち、{childName}の てのひらに はなびらが ひとひら のっていました。きょうのおはなみ、ずっとわすれないね。{parentMessage}",
+          early_elementary_7_8:
+            "かえりみち、{childName}の てのひらに ピンクの はなびらが そっと のっていました。はるの きおくが てのひらに やどっているみたいです。{parentMessage}",
+          general_child:
+            "かえりみち、{childName}の てには ピンクの はなびらが のこっていました。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of a child walking home along a cherry blossom-lined path in soft golden afternoon light, one hand open with a single pink petal resting on the palm. Tender memory-filled mood. Watercolor picture book style, peaceful spring ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-hinamatsuri": {
+    name: "ひなまつり",
+    description: "おひなさまと一緒にお祝い。3月3日、女の子のすこやかな成長を願う特別な日の絵本",
+    icon: "🎎",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "japanese-traditional",
+    parentIntent: "季節の行事を一緒に楽しみたい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["hinamatsuri", "traditional", "spring", "dolls"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageAlt: "ひなまつりのおひなさまと一緒にお祝いする子どもの絵本イメージ",
+    visualDirection:
+      "Traditional Hinamatsuri atmosphere with tiered doll displays, soft pink and gold tones, peach blossoms, and a tiny golden diamond motif throughout.",
+    order: 51,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、ひなまつりのお祝い絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の ひなまつり",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing in front of a beautiful tiered Hina doll display, peach blossoms beside it, soft pink and gold hues, a tiny golden diamond motif on the doll's garment, traditional Hinamatsuri celebration mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "おひなさま、おめでとう",
+      openingNarrationTemplate:
+        "さんがつみっか、ひなまつりの ひ。{childName}は おうちに かざられた おひなさまに あいさつを しました。きんの ひしもようが キラリと ひかります。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はひな人形の前に座ってご挨拶しました。きれいなおひなさまです。",
+          baby_toddler: "おひなさま、きれい。にこにこ。",
+          preschool_3_4:
+            "{childName}は ひなにんぎょうの まえに すわって ごあいさつ しました。きれいな おひなさまです。",
+          early_reader_5_6:
+            "{childName}は ひなにんぎょうの まえに すわって ごあいさつ しました。きんの ひしもようが キラリ ひかって、おひなさまは にっこり しているみたいです。",
+          early_elementary_7_8:
+            "{childName}は ひなにんぎょうの まえに すわって ごあいさつ しました。きんの ひしもようが きらきら ひかって、「{childName}の すこやかな せいちょうを おいわい しているよ」と いってくれているようです。",
+          general_child: "{childName}はひな人形の前に座ってご挨拶しました。きれいなおひなさまです。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy Japanese living room with a beautiful tiered Hina doll display. The child sits politely in front, looking up at the Emperor and Empress dolls on the top tier. Soft pink and gold hues fill the scene. Peach blossoms in a vase beside the display. Tiny golden diamond motifs decorate the doll garments. Warm indoor light. Watercolor picture book style, traditional Hinamatsuri celebration mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ひしもちとあられをお供えしました。ピンク・白・緑のきれいな色です。",
+          baby_toddler: "もも いろ おもち、かわいい！",
+          preschool_3_4:
+            "ひしもちと あられを おそなえ しました。ピンク・しろ・みどりの きれいな いろです。",
+          early_reader_5_6:
+            "ひしもちと あられを おそなえ しました。ピンクと しろと みどりの かわいい いろは、はるの きせつを あらわしているそうです。",
+          early_elementary_7_8:
+            "ひしもちと あられを おそなえ しました。ピンクは もも、しろは ゆき、みどりは のはら を あらわしているそうです。{childName}は それぞれの いろを ゆっくり ながめました。",
+          general_child: "ひしもちとあられをお供えしました。ピンク・白・緑のきれいな色です。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of a child carefully arranging pink, white, and green diamond-shaped hishi mochi rice cakes and small round arare crackers on a low table in front of the Hina display. Peach blossoms frame the right side. Tiny golden diamond motifs appear on the cloth corners. Soft warm indoor light. Watercolor picture book style, traditional Japanese atmosphere, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はおひなさまと目が合って、やさしい気持ちになりました。",
+          baby_toddler: "おひなさま、みてるよ。やさしい。",
+          preschool_3_4:
+            "{childName}は おひなさまと めが あって、やさしい きもちに なりました。",
+          early_reader_5_6:
+            "{childName}は おひなさまと しずかに めを あわせました。おひなさまの やさしい ひょうじょうを みていると、あたたかい きもちに なります。",
+          early_elementary_7_8:
+            "{childName}は おひなさまと しずかに めを あわせました。きんの ひしもようが やわらかく ひかって、「いつまでも げんきで いてね」と おひなさまが いっている ようです。",
+          general_child: "{childName}はおひなさまと目が合って、やさしい気持ちになりました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child's face looking up at the gentle Emperor Hina doll's expression. The child smiles softly. Peach blossoms softly blur in the background. Golden diamond motifs gleam on the doll's court garment. Warm soft candlelight mood. Watercolor picture book style, intimate tender moment, traditional Hinamatsuri atmosphere, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}の健やかな成長を、おひなさまが優しく見守っています。{parentMessage}",
+          baby_toddler: "おひなさま、みてるね。{parentMessage}",
+          preschool_3_4:
+            "{childName}の すこやかな せいちょうを、おひなさまが やさしく みまもっています。{parentMessage}",
+          early_reader_5_6:
+            "{childName}の すこやかな せいちょうを、おひなさまが ずっと やさしく みまもっています。たいせつな ひなまつりの おもいで。{parentMessage}",
+          early_elementary_7_8:
+            "{childName}の すこやかな せいちょうを、おひなさまが ずっと みまもっています。きんの ひしもようが こころに のこる、たいせつな ひなまつりのおもいでです。{parentMessage}",
+          general_child:
+            "{childName}の すこやかな せいちょうを、おひなさまが やさしく みまもっています。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child bowing gently before the Hina doll display, the golden diamond motifs on the dolls' garments gleaming warmly. Peach blossoms in the vase cast soft shadows. Peaceful protective mood. Watercolor picture book style, tender traditional ending, warm soft lighting, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-childrens-day": {
+    name: "こいのぼりのひ",
+    description: "5月5日こどもの日、こいのぼりと一緒に元気いっぱい。男の子の健やかな成長を願う絵本",
+    icon: "🎏",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "japanese-traditional",
+    parentIntent: "季節の行事を一緒に楽しみたい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["childrens-day", "koinobori", "traditional", "spring"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageAlt: "こどもの日にこいのぼりと遊ぶ子どもの絵本イメージ",
+    visualDirection:
+      "Bright spring sky with colorful koinobori carp streamers flying high, blue scale motif, energetic and celebratory atmosphere throughout.",
+    order: 52,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、こどもの日のこいのぼり絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と こいのぼり",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing in a sunny yard with colorful koinobori carp streamers flying high above — large black, red, and blue carp banners flapping in the breeze — bright spring sky, a tiny blue fish scale motif on the child's outfit, energetic celebratory mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "こいのぼり、たかく およげ！",
+      openingNarrationTemplate:
+        "ごがつ いつか、こどもの ひ。{childName}は そらをみあげました。おおきな こいのぼりが かぜに のって およいでいます。あおい うろこが きらりと ひかります。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は空を見上げました。こいのぼりが大きく泳いでいます！",
+          baby_toddler: "こいのぼり、おおきい！わーい！",
+          preschool_3_4:
+            "{childName}は そらを みあげました。こいのぼりが おおきく およいでいます！",
+          early_reader_5_6:
+            "{childName}は そらを みあげました。くろ・あか・あおの こいのぼりが かぜを うけて おおきく およいでいます！あおい うろこが キラリと ひかります。",
+          early_elementary_7_8:
+            "{childName}は そらを みあげました。おとうさんこい・おかあさんこい・{childName}こい が かぜを うけて おおきく およいでいます。あおい うろこが キラリと ひかり、{childName}も まけずに げんきをだそうと おもいました。",
+          general_child: "{childName}は空を見上げました。こいのぼりが大きく泳いでいます！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a sunny yard with colorful koinobori carp streamers flying high on a tall pole against a bright blue spring sky. Black, red, and blue carp banners flap in the breeze. A child stands below, looking up with wide excited eyes. Tiny blue fish scale motifs appear on the pole decorations. Warm spring sunlight, watercolor picture book style, energetic celebratory mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「ぼくもこいのぼりみたいに空を泳ぎたいな！」{childName}は両手を広げました。",
+          baby_toddler: "ておよぎ、こいのぼりみたい！",
+          preschool_3_4:
+            "「ぼくも こいのぼりみたいに そらを およぎたいな！」{childName}は りょうてを ひろげました。",
+          early_reader_5_6:
+            "「ぼくも こいのぼりみたいに そらを およぎたいな！」{childName}は りょうてを ひろげて、かぜを うけながら はしりました。",
+          early_elementary_7_8:
+            "{childName}は りょうてを ひろげて、かぜを うけながら はしりました。こいのぼりのように たかく たかく そらを およぎたい。あおい うろこのように つよく げんきに！",
+          general_child: "「ぼくもこいのぼりみたいに空を泳ぎたいな！」{childName}は両手を広げました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child running with arms spread wide like wings across a sunny green lawn, looking up at the koinobori streamers above. The child's face is full of energy and joy, hair blown by the spring breeze. Colorful koinobori trail in the sky behind. Tiny blue fish scale motifs appear on the child's clothing. Bright spring light. Watercolor picture book style, exuberant outdoor fun mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "かぶとをかぶった{childName}はとても勇ましく見えました。",
+          baby_toddler: "かぶと、つよそう！かっこいい！",
+          preschool_3_4:
+            "かぶとを かぶった {childName}は とても ゆうましく みえました。",
+          early_reader_5_6:
+            "いえの なかには きりがみの かぶとが かざってありました。{childName}が かぶると、とても ゆうましく みえました。",
+          early_elementary_7_8:
+            "いえの なかには かぶとが かざってありました。{childName}が かぶると、まるで ゆうしゃのようです。あおい うろこのような つよさが こころに みなぎります。",
+          general_child: "かぶとをかぶった{childName}はとても勇ましく見えました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child wearing a traditional folded paper kabuto warrior helmet, sitting proudly with a confident and brave expression. A small Boys' Day display with kabuto decoration is visible in the background. Tiny blue fish scale motifs decorate the folded paper. Warm indoor light. Watercolor picture book style, proud celebratory close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}が元気に大きくなれますように。こいのぼりが空を泳ぎます。{parentMessage}",
+          baby_toddler: "こいのぼり、げんきでね。{parentMessage}",
+          preschool_3_4:
+            "{childName}が げんきに おおきく なれますように。こいのぼりが そらを およぎます。{parentMessage}",
+          early_reader_5_6:
+            "{childName}が げんきに おおきく なれますように。こいのぼりが そらたかく、かぜを うけて およいでいます。{parentMessage}",
+          early_elementary_7_8:
+            "こいのぼりが そらを たかく およぎます。{childName}が かわを のぼる こいのように、つよく げんきに おおきく なれますように。{parentMessage}",
+          general_child:
+            "{childName}が げんきに おおきく なれますように。こいのぼりが そらを およぎます。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the koinobori carp streamers flying peacefully against a pastel evening sky, the child watching from below with a calm happy smile. Soft golden late-afternoon light. Tiny blue fish scale motifs glimmer on the banners. Tender and hopeful mood. Watercolor picture book style, gentle celebratory farewell, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-tanabata": {
+    name: "たなばたのねがい",
+    description: "7月7日、たなばたの夜に星に願いを。笹に短冊をかけて、{childName}の夢を星に届けよう",
+    icon: "🎋",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "japanese-traditional",
+    parentIntent: "季節の行事を一緒に楽しみたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["tanabata", "star", "wish", "summer"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageAlt: "たなばたの夜に笹に短冊を飾る子どもの絵本イメージ",
+    visualDirection:
+      "Magical summer night with a bamboo branch hung with colorful tanzaku wish strips, a Milky Way sky, and a tiny silver star motif throughout.",
+    order: 53,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、たなばたの願い事絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の たなばたの ねがい",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child hanging a colorful wish tanzaku strip on a bamboo branch decorated with streamers and paper decorations, a starry Milky Way sky above, tiny silver star motifs drifting like snow, magical summer night mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "ほしに ねがいを とどけよう",
+      openingNarrationTemplate:
+        "しちがつ なのか、たなばたの よる。{childName}は そらを みあげました。あまのがわが きれいです。ぎんいろの ほしが またたいています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は笹の葉にお願いを書いた短冊をかざりました。",
+          baby_toddler: "ほし きれい。たんざく かわいい。",
+          preschool_3_4:
+            "{childName}は ささの はに おねがいを かいた たんざくを かざりました。",
+          early_reader_5_6:
+            "{childName}は ねがいごとを かいた たんざくを、ささの はに そっと かざりました。ぎんいろの ほしが ぴかりと ひかります。",
+          early_elementary_7_8:
+            "{childName}は ねがいごとを かいた たんざくを ささに かざりました。ひとつひとつの たんざくに みんなの ゆめが こめられています。ぎんいろの ほしが やさしく ひかります。",
+          general_child: "{childName}は笹の葉にお願いを書いた短冊をかざりました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a child carefully hanging a colorful tanzaku wish strip on a decorated bamboo branch. The bamboo is adorned with paper streamers, net decorations, and more wish strips. A starry sky with a soft Milky Way glow is visible through the window. Tiny silver star motifs dot the decorations. Warm indoor light. Watercolor picture book style, magical Tanabata celebration mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "空を見上げると、天の川がきれいに輝いていました。",
+          baby_toddler: "ほし、ぴかぴか。きれい！",
+          preschool_3_4:
+            "そらを みあげると、あまのがわが きれいに かがやいていました。",
+          early_reader_5_6:
+            "そとに でて そらを みあげると、あまのがわが しろく かがやいて、ほしが いくつも またたいています。ぎんいろの ほしが きれいです。",
+          early_elementary_7_8:
+            "そとで あまのがわを みあげると、ほしが かがやいています。「ひこぼしと おりひめが きょうだけ であえるんだよ」と きいて、{childName}は むねが あつく なりました。",
+          general_child: "空を見上げると、天の川がきれいに輝いていました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child standing outside under a spectacular Milky Way night sky, looking up with sparkling eyes of wonder. Stars shimmer in bands of pale light across the dark blue sky. Tiny silver star motifs float down like snowflakes around the child. The bamboo with tanzaku is visible at the edge of the scene. Watercolor picture book style, magical summer night mood, luminous star light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は星に向かってそっと願い事を言いました。",
+          baby_toddler: "ほしさん、おねがい！",
+          preschool_3_4:
+            "{childName}は ほしに むかって そっと ねがいごとを いいました。",
+          early_reader_5_6:
+            "{childName}は こころの なかで ねがいごとを となえました。ぎんいろの ほしが ぴかりと ひかって、こたえてくれたみたいです。",
+          early_elementary_7_8:
+            "{childName}は めを とじて、こころの なかで ねがいごとを となえました。ぎんいろの ほしが ぴかりと またたいて、ほしが きいてくれたような きがしました。",
+          general_child: "{childName}は星に向かってそっと願い事を言いました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child standing under the night sky, eyes gently closed, hands clasped together making a wish. Tiny silver star motifs drift softly around the child's face. A distant Milky Way glows in the dark blue sky above. The child's expression is peaceful and earnest. Watercolor picture book style, tender wish-making close-up, luminous star light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}の願い事が、きっと星まで届きますように。{parentMessage}",
+          baby_toddler: "ほしさん、とどけー！{parentMessage}",
+          preschool_3_4:
+            "{childName}の ねがいごとが、きっと ほしまで とどきますように。{parentMessage}",
+          early_reader_5_6:
+            "{childName}の ねがいごとが、あまのがわを わたって ほしまで とどきますように。{parentMessage}",
+          early_elementary_7_8:
+            "{childName}の ねがいごとが、あまのがわを こえて、ひこぼしと おりひめに とどきますように。ぎんいろの ほしが やさしく またたいています。{parentMessage}",
+          general_child:
+            "{childName}の ねがいごとが、きっと ほしまで とどきますように。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the decorated bamboo branch with tanzaku strips silhouetted against a luminous starry night sky. A shooting star with a silver tail arcs gently across the Milky Way above. The scene is peaceful and magical. Tiny silver star motifs drift softly. Watercolor picture book style, dreamy starlit ending, luminous night sky, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-summer-festival": {
+    name: "なつまつりのひ",
+    description: "夏祭りのにぎやかな夜。浴衣を着て、屋台をまわって、盆踊りを踊る楽しい夜の思い出絵本",
+    icon: "🏮",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "summer-events",
+    parentIntent: "季節の行事を一緒に楽しみたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["summer", "festival", "yukata", "bon-odori"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageAlt: "夏祭りで浴衣を着て屋台をまわる子どもの絵本イメージ",
+    visualDirection:
+      "Lively summer festival night with warm lantern glow, colorful food stalls, yukata-clad crowds, and a tiny red paper lantern glow motif throughout.",
+    order: 54,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、夏祭りの楽しい夜の思い出絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の なつまつり",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child in a colorful yukata walking through a summer festival at night, rows of glowing red paper lanterns overhead, colorful food stall lights in the background, a tiny red lantern glow motif nearby, lively festive atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "なつまつり、はじまるよ！",
+      openingNarrationTemplate:
+        "なつの よる、おまつりの ひ。{childName}は ゆかたを きて、おまつりに やってきました。あかい ちょうちんの あかりが きらきら ひかっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は浴衣を着てお祭りに来ました。赤い提灯がいっぱい！",
+          baby_toddler: "ちょうちん あかい、きれい！",
+          preschool_3_4:
+            "{childName}は ゆかたを きて おまつりに きました。あかい ちょうちんが いっぱい！",
+          early_reader_5_6:
+            "{childName}は ゆかたを きて おまつりに きました。あかい ちょうちんが ずらりと ならんで、よる なのに あかるくて にぎやかです。",
+          early_elementary_7_8:
+            "{childName}は ゆかたを きて おまつりに やってきました。あかい ちょうちんが ならんで、やたいの においが ふんわり ひろがって、わくわくが とまりません。",
+          general_child: "{childName}は浴衣を着てお祭りに来ました。赤い提灯がいっぱい！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a lively summer festival at night. Rows of glowing red paper lanterns hang overhead along a festival path. Colorful food stalls line both sides with warm lights. Families in yukata walk the path. The child arrives at the entrance with bright excited eyes. Tiny red lantern glow motifs reflect in puddles on the ground. Watercolor picture book style, lively warm festival night mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "屋台でわたあめを買いました。ふわふわで大きくてびっくり！",
+          baby_toddler: "わたあめ、ふわふわ！おおきい！",
+          preschool_3_4:
+            "やたいで わたあめを かいました。ふわふわで おおきくて びっくり！",
+          early_reader_5_6:
+            "やたいで わたあめを かってもらいました。おかおより おおきい ふわふわの わたあめ。あかい ちょうちんの あかりが わたあめを ピンクに そめています。",
+          early_elementary_7_8:
+            "やたいで わたあめを かってもらいました。てにもちきれないくらい おおきくて ふわふわ。あかい ちょうちんの あかりが うつって、まるで まほうみたいに きれいです。",
+          general_child: "屋台でわたあめを買いました。ふわふわで大きくてびっくり！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child holding a huge fluffy pink cotton candy at a festival food stall, eyes wide with delight. The cotton candy is bigger than the child's head. Red lantern glow reflects warmly on the cotton candy. Festival stalls with colorful lights blur in the background. Tiny red lantern motifs hang above. Watercolor picture book style, joyful festival discovery mood, warm night light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "盆踊りの輪に入って{childName}も一緒に踊りました！",
+          baby_toddler: "おどろう！てをあげて、えいえい！",
+          preschool_3_4:
+            "ぼんおどりの わに はいって {childName}も いっしょに おどりました！",
+          early_reader_5_6:
+            "ぼんおどりの わの なかに はいって、{childName}も みんなと いっしょに おどりました。あかい ちょうちんのあかりが ゆれて、たのしくて しかたありません。",
+          early_elementary_7_8:
+            "ぼんおどりの わに はいって みんなと いっしょに おどりました。あかい ちょうちんが ゆれるなか、てあしを あわせて おどると、こころが ぽかぽかに なりました。",
+          general_child: "盆踊りの輪に入って{childName}も一緒に踊りました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child dancing in a Bon Odori circle, arms raised in a traditional dance pose, surrounded by other festival-goers in yukata. The child's face glows with joy and excitement. Red paper lanterns hang above casting warm amber light on the dancers. Tiny red lantern glow motifs appear on the yukata pattern. Watercolor picture book style, energetic joyful festival dance close-up, warm night light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "楽しいお祭りの夜。{childName}の心にあかい提灯の灯りが残りました。{parentMessage}",
+          baby_toddler: "まつり、たのしかった！{parentMessage}",
+          preschool_3_4:
+            "たのしい おまつりの よる。あかい ちょうちんの あかりが こころに のこりました。{parentMessage}",
+          early_reader_5_6:
+            "たのしい おまつりの よるが おわります。あかい ちょうちんの あかりが こころに のこって、また らいねんも きたいな。{parentMessage}",
+          early_elementary_7_8:
+            "たのしい なつまつりの よるが おわります。あかい ちょうちんの あかりが やさしく ゆれながら、{childName}の こころに なつの おもいでを きざんでいきます。{parentMessage}",
+          general_child:
+            "たのしい おまつりの よる。あかい ちょうちんの あかりが こころに のこりました。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of a festival path at night, the child walking home with family, looking back at the rows of red lanterns still glowing warmly in the distance. The lanterns reflect in the path below. A cool summer breeze rustles the yukata. Tender and nostalgic mood. Watercolor picture book style, peaceful festival farewell ending, warm lantern light, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-fireworks": {
+    name: "はなびのよる",
+    description: "夏の夜空に咲く大輪の花火。{childName}と一緒に見た、忘れられない花火の夜の思い出絵本",
+    icon: "🎆",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "summer-events",
+    parentIntent: "季節の行事を一緒に楽しみたい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["fireworks", "summer", "night", "memory"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageAlt: "夏の花火大会で夜空を見上げる子どもの絵本イメージ",
+    visualDirection:
+      "Magical summer night with bursting colorful fireworks reflected in water, star-shaped sparkle motif, wonder-filled atmosphere throughout.",
+    order: 55,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、花火の夜の思い出絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はなびのよる",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child looking up at a magnificent burst of colorful fireworks lighting up the night sky, reflections shimmering in a river below, a tiny star-shaped sparkle motif near the child, magical summer night atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "はなびが よぞらに さいたよ",
+      openingNarrationTemplate:
+        "なつの よる、はなびたいかいの ひ。{childName}は ざぶとんを もって かわべりに やってきました。ほしのような ひかりが ちらちらと おちてきます。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は川辺に座って花火を待ちました。ドキドキします。",
+          baby_toddler: "くら い よる、どきどき。まつよ。",
+          preschool_3_4:
+            "{childName}は かわべりに すわって はなびを まちました。どきどき します。",
+          early_reader_5_6:
+            "{childName}は かわべりに すわって はなびを まちました。くらい よぞらに ほしが きらきら して、もうすぐ はなびが あがるんだ と どきどき します。",
+          early_elementary_7_8:
+            "{childName}は かわべりに すわって はなびを まちました。くらい よぞらに ほしが またたいて、かわのみずが しずかに ながれています。もうすぐ よぞらが はなばたけに なります。",
+          general_child: "{childName}は川辺に座って花火を待ちました。ドキドキします。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a riverbank at night, the child sitting on a cushion with family, all looking up at the dark summer sky in anticipation. Stars reflect in the calm river below. The crowd along the bank is visible in silhouette. A tiny star-shaped sparkle motif glints in the sky. Watercolor picture book style, excited anticipation mood, dark night with warm crowd atmosphere, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "どーん！大きな花火が夜空に咲きました！",
+          baby_toddler: "どーん！はなび、おおきい！きれい！",
+          preschool_3_4:
+            "どーん！おおきな はなびが よぞらに さきました！",
+          early_reader_5_6:
+            "どーん！というおとと ともに、おおきな はなびが よぞらに ぱあっと さきました。ほしのような ひかりが ぱらぱらと ちってきます。",
+          early_elementary_7_8:
+            "どーん！というおとが おなかに ひびいて、よぞらに おおきな はなびが ぱあっと ひらきました。ほしのような ひかりが ちってきて、かわのみずに うつっています。",
+          general_child: "どーん！大きな花火が夜空に咲きました！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the first magnificent firework bursting in the night sky above the river — a huge chrysanthemum of gold and red light. The child's face is lit up in warm glow, mouth open in amazement. The firework reflection shimmers in the river below. Star-shaped sparkle motifs trail down from the burst. Watercolor picture book style, explosive wonder moment, luminous firework light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は空いっぱいの花火に大歓声をあげました！",
+          baby_toddler: "わあ！きれい！ぱちぱちぱち！",
+          preschool_3_4:
+            "{childName}は そらいっぱいの はなびに おおかんせいを あげました！",
+          early_reader_5_6:
+            "よぞらに はなびが つぎつぎと ひらいて、{childName}は おもわず たちあがって おおかんせいを あげました！ほしのような ひかりが あめのように ふってきます。",
+          early_elementary_7_8:
+            "よぞらが はなばたけのようになって、{childName}は たちあがって おおかんせいを あげました。ほしのような ひかりが おちてくるたびに、こころが はじけるようで す。",
+          general_child: "{childName}は空いっぱいの花火に大歓声をあげました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child standing with both arms raised high, face tilted up with a radiant expression of pure joy, lit by the brilliant multicolored light of fireworks bursting overhead. Star-shaped sparkle motifs rain down around the child. The sky above is filled with blooming fireworks in gold, red, blue, and green. Watercolor picture book style, peak excitement close-up, luminous firework glow, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "花火の夜はずっとずっと忘れない。{parentMessage}",
+          baby_toddler: "はなび、きれかった。{parentMessage}",
+          preschool_3_4:
+            "はなびの よるは ずっとずっと わすれない。{parentMessage}",
+          early_reader_5_6:
+            "はなびの よるが おわりました。よぞらに のこった ほしのような ひかりが、こころのなかに のこっています。{parentMessage}",
+          early_elementary_7_8:
+            "はなびたいかいが おわり、よぞらが また くらくなりました。でも {childName}の こころの なかには、あの ほしのような ひかりが ずっと かがやき つづけています。{parentMessage}",
+          general_child:
+            "はなびの よるは ずっとずっと わすれない。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the river at night after the fireworks, the child held in a family member's arms, looking up at the last fading sparkles in the sky. The river below still shimmers with soft reflections. Star-shaped sparkle motifs drift slowly downward. Tender, memory-preserving mood. Watercolor picture book style, peaceful fireworks farewell, luminous night sky, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-halloween": {
+    name: "ハロウィンぼうけん",
+    description: "魔法使いや怪物のかわいい変装でハロウィンのお菓子集め！オレンジのかぼちゃが光る夜の冒険絵本",
+    icon: "🎃",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "halloween",
+    parentIntent: "季節の行事を一緒に楽しみたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["halloween", "trick-or-treat", "costume", "autumn"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageAlt: "ハロウィンのコスチュームでお菓子を集める子どもの絵本イメージ",
+    visualDirection:
+      "Spooky-cute Halloween night with carved orange jack-o-lanterns, bat silhouettes, candy bags, and a tiny orange pumpkin motif throughout — friendly not scary.",
+    order: 56,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、ハロウィンのかわいいお菓子集め冒険絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の ハロウィン ぼうけん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child in a cute Halloween costume (witch hat and cape or friendly monster) holding a candy bag, standing in front of a glowing carved orange pumpkin jack-o-lantern, friendly bats fluttering above, autumn night with warm orange glow, tiny orange pumpkin motif beside the child, soft watercolor style, rounded child-safe composition, NOT scary, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "トリック・オア・トリート！",
+      openingNarrationTemplate:
+        "じゅうがつ さんじゅういちにち、ハロウィンの よる。{childName}は かわいい コスチュームを きて そとに でました。オレンジの かぼちゃが あちこちで ひかっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はかわいいコスチュームに変身しました。オレンジのかぼちゃがニコニコ。",
+          baby_toddler: "へんしん！かわいい！かぼちゃ にこにこ。",
+          preschool_3_4:
+            "{childName}は かわいい コスチュームに へんしん しました。オレンジの かぼちゃが にこにこ しています。",
+          early_reader_5_6:
+            "{childName}は かわいい コスチュームに へんしん しました。オレンジの かぼちゃが にこにこ ひかって、「がんばれ！」と おうえん してくれているようです。",
+          early_elementary_7_8:
+            "{childName}は コスチュームに へんしん しました。オレンジの かぼちゃが あちこちで にこにこ ひかっています。まるで まちぜんたいが ハロウィンの ぶたいになったみたいです。",
+          general_child: "{childName}はかわいいコスチュームに変身しました。オレンジのかぼちゃがニコニコ。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a quiet neighborhood street at Halloween night, glowing orange jack-o-lanterns lining the path, friendly bat decorations in windows. The child stands at the start of the street in a cute costume (witch hat or ghost sheet), candy bag in hand, ready to begin. Tiny orange pumpkin motifs glow at front porches. Watercolor picture book style, spooky-cute friendly Halloween night, warm orange glow, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「トリック・オア・トリート！」お菓子をいっぱいもらいました！",
+          baby_toddler: "おかし いっぱい！やったー！",
+          preschool_3_4:
+            "「トリック・オア・トリート！」おかしを いっぱい もらいました！",
+          early_reader_5_6:
+            "「トリック・オア・トリート！」と げんきよく いうと、おかしを いっぱい もらいました。ふくろが おもくなっていきます！",
+          early_elementary_7_8:
+            "「トリック・オア・トリート！」と こえを あわせると、おかしを いっぱい もらいました。オレンジの かぼちゃが ひかって、「よくできました！」と いっているみたいです。",
+          general_child: "「トリック・オア・トリート！」お菓子をいっぱいもらいました！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child at a doorway saying trick or treat, arms outstretched toward a candy bag being filled with colorful sweets. The child's face shines with excitement. Orange pumpkin decorations frame the doorway. Tiny orange pumpkin motifs appear on the candy wrappers. Warm orange Halloween glow. Watercolor picture book style, joyful trick-or-treat discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は友だちと一緒に仮装パレードをしました！",
+          baby_toddler: "おともだちと いっしょ！えへへ。",
+          preschool_3_4:
+            "{childName}は ともだちと いっしょに かそう パレードを しました！",
+          early_reader_5_6:
+            "{childName}は ともだちと いっしょに かそう パレードをしました。いろんな コスチュームが ならんで、とても たのしいです。",
+          early_elementary_7_8:
+            "{childName}は ともだちと いっしょに かそう パレードを しました。まほうつかい・おばけ・きゅうけつき、みんなで ならんで あるくと、まちが ハロウィンの どうきょうに なりました。",
+          general_child: "{childName}は友だちと一緒に仮装パレードをしました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child walking in a Halloween parade with friends in various cute costumes — a witch, a ghost, a pumpkin — all smiling and holding candy bags. Orange jack-o-lanterns line the path. Tiny orange pumpkin motifs glow between the children. Warm orange Halloween night light. Watercolor picture book style, joyful group friendship close-up, spooky-cute friendly mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ハロウィンの夜は楽しかったね。またくるよ、オレンジのかぼちゃ。{parentMessage}",
+          baby_toddler: "かぼちゃ、またね！{parentMessage}",
+          preschool_3_4:
+            "ハロウィンの よるは たのしかったね。またくるよ、オレンジの かぼちゃ。{parentMessage}",
+          early_reader_5_6:
+            "ハロウィンの よるが おわります。オレンジの かぼちゃが やさしく ひかって、「また らいねんも きてね」と いっているようです。{parentMessage}",
+          early_elementary_7_8:
+            "ハロウィンの よるが おわります。オレンジの かぼちゃが やさしく ほほえんで、{childName}の たのしかったおもいでを しずかに てらしています。{parentMessage}",
+          general_child:
+            "ハロウィンの よるは たのしかったね。またくるよ、オレンジの かぼちゃ。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child walking home at the end of Halloween night, candy bag full, glancing back at a row of glowing orange jack-o-lanterns still smiling warmly. Friendly bat silhouettes circle in the moonlit sky. Tiny orange pumpkin motifs glow softly along the path. Tender farewell mood. Watercolor picture book style, spooky-cute Halloween ending, warm orange night glow, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-new-year": {
+    name: "おしょうがつのあさ",
+    description: "新年のお正月の朝。初日の出を見て、神社へお参りして、おせちを食べる特別な一日の絵本",
+    icon: "⛩️",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "new-year",
+    parentIntent: "季節の行事を一緒に楽しみたい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["new-year", "shrine", "oshogatsu", "tradition"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageAlt: "お正月の朝に神社へお参りする子どもの絵本イメージ",
+    visualDirection:
+      "Peaceful New Year morning with golden sunrise light, a shrine with rope decorations, oshiruko and osechi, and a tiny golden bell motif throughout.",
+    order: 57,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、お正月の朝の特別な一日絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の おしょうがつの あさ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child in a colorful kimono standing at a torii gate of a shrine on a crisp New Year morning, golden sunrise light streaming over snow-dusted hills, pine and bamboo decorations at the gate, a tiny golden bell motif hanging nearby, peaceful celebratory New Year mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "あけまして、おめでとう！",
+      openingNarrationTemplate:
+        "いちがつ ついたち、おしょうがつの あさ。{childName}は きものを きて、はつひので を みようと おきました。きんの すずが ちりんと なっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は初日の出を見に外へ出ました。空が金色に染まっています。",
+          baby_toddler: "おひさま、きんいろ！きれい！",
+          preschool_3_4:
+            "{childName}は はつひので を みに そとへ でました。そらが きんいろに そまっています。",
+          early_reader_5_6:
+            "{childName}は はつひのでを みに そとへ でました。そらが きんいろと もも いろに そまって、あたらしい いちねんが はじまります。",
+          early_elementary_7_8:
+            "{childName}は はつひのでを みに そとへ でました。そらが きんいろと ももいろに そまって、さいしょの ひかりが あたりを てらしました。ことしも いいとしに なりそうです。",
+          general_child: "{childName}は初日の出を見に外へ出ました。空が金色に染まっています。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a crisp New Year morning scene. A child in a colorful kimono stands outside watching the first sunrise of the year — a glowing golden orb rising over snow-dusted hills, the sky painted in gold and pink. Pine and bamboo New Year kadomatsu decorations stand at the door. A tiny golden bell motif hangs from the kadomatsu. Watercolor picture book style, peaceful celebratory New Year mood, luminous golden morning light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "神社に行って初詣をしました。金の鈴を鳴らしてお祈りをしました。",
+          baby_toddler: "すず ちりん！おてを あわせて。",
+          preschool_3_4:
+            "じんじゃに いって はつもうでを しました。きんの すずを ならして おいのりを しました。",
+          early_reader_5_6:
+            "じんじゃに いって はつもうでを しました。きんの すずを ちりんと ならして、てを あわせて おいのりを しました。",
+          early_elementary_7_8:
+            "じんじゃに いって はつもうでを しました。きんの すずを ちりんと ならして、てを あわせて ねがいごとを こころのなかで となえました。あたらしい いちねんの はじまりです。",
+          general_child: "神社に行って初詣をしました。金の鈴を鳴らしてお祈りをしました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child standing at a shrine's offering box, both hands raised holding the thick rope attached to a large golden bell, about to ring it. The child's kimono is colorful and festive. Pine rope shimenawa decoration hangs above. Tiny golden bell motifs appear on the rope. Crisp winter sunlight. Watercolor picture book style, reverent New Year shrine visit mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おうちでおせちとお雑煮をいただきました。おいしくて温かい！",
+          baby_toddler: "おぞうに、あたたかい！おいしい！",
+          preschool_3_4:
+            "おうちで おせちと おぞうにを いただきました。おいしくて あたたかい！",
+          early_reader_5_6:
+            "おうちで おせちりょうりと おぞうにを いただきました。だしのいい においと やわらかい おもちが あたたかくて、しあわせです。",
+          early_elementary_7_8:
+            "おうちで おせちりょうりと おぞうにを いただきました。ひとつひとつに いみがあって、かぞく みんなで たべると もっと おいしい。きんの すずのような まんまるの おもちが とくに すきです。",
+          general_child: "おうちでおせちとお雑煮をいただきました。おいしくて温かい！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child sitting at a low New Year table, both hands wrapped around a warm bowl of ozoni soup. The child's face is full of contentment and warmth. A beautiful osechi bento box is open beside them with colorful traditional New Year foods. A tiny golden bell motif appears on the lacquerware lid. Warm indoor family New Year light. Watercolor picture book style, cozy warm family celebration close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "新しい一年が始まりました。{childName}にとって良い一年になりますように。{parentMessage}",
+          baby_toddler: "あたらしい とし、おめでとう！{parentMessage}",
+          preschool_3_4:
+            "あたらしい いちねんが はじまりました。{childName}にとって よい いちねんに なりますように。{parentMessage}",
+          early_reader_5_6:
+            "あたらしい いちねんが はじまりました。はつひので・はつもうで・おせち、たいせつな おしょうがつのおもいで。{parentMessage}",
+          early_elementary_7_8:
+            "あたらしい いちねんが はじまりました。きんの すずの おとが こころに のこって、{childName}の ことしの ぼうけんが はじまります。{parentMessage}",
+          general_child:
+            "あたらしい いちねんが はじまりました。{childName}にとって よい いちねんに なりますように。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child in kimono standing at the shrine entrance as morning light streams in golden rays across the torii gate. A tiny golden bell hangs from the gate, swaying gently. Pine and bamboo kadomatsu stand at the sides. The scene radiates peace, hope, and a fresh beginning. Watercolor picture book style, serene New Year blessing ending, luminous golden morning light, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-first-nursery": {
+    name: "はじめてのにゅうえん",
+    description: "はじめて保育園・幼稚園に行った日。ドキドキしながらも頑張った{childName}の記念日絵本",
+    icon: "👒",
+    categoryGroupId: "memories",
+    subcategoryId: "nursery-school",
+    parentIntent: "大切な思い出を絵本として残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 5,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["nursery", "first-day", "milestone", "friends"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "はじめての保育園入園の日を振り返る子どもの絵本イメージ",
+    visualDirection:
+      "Warm nursery school atmosphere with bright classroom colors, a yellow sun-hat motif, cheerful but tender first-day emotions throughout.",
+    order: 60,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめての入園の記念日絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はじめての にゅうえん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a small child wearing a bright yellow sun hat standing at the gate of a cheerful nursery school, one hand holding a parent's hand and one hand waving bravely, colorful flowers in the school garden, a tiny yellow hat motif above the gate, tender bittersweet first-day mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "はじめての おそとの せかい",
+      openingNarrationTemplate:
+        "はるのあさ、{childName}は きいろい ぼうしを かぶって にゅうえんの ひを むかえました。どきどきするけど、がんばるぞ！",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は黄色い帽子をかぶって保育園の門に立ちました。ドキドキします。",
+          baby_toddler: "きいろい ぼうし、かわいい。どきどき。",
+          preschool_3_4:
+            "{childName}は きいろい ぼうしを かぶって ほいくえんの もんに たちました。どきどきします。",
+          early_reader_5_6:
+            "{childName}は きいろい ぼうしを かぶって ほいくえんの もんに たちました。どきどきするけど、なかに はいってみよう。",
+          early_elementary_7_8:
+            "{childName}は きいろい ぼうしを かぶって ほいくえんの もんに たちました。どきどきするきもちと、がんばるきもちが いっしょになっています。",
+          general_child: "{childName}は黄色い帽子をかぶって保育園の門に立ちました。ドキドキします。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cheerful nursery school entrance gate with colorful flower garden. A small child stands at the gate wearing a bright yellow sun hat, looking slightly nervous but brave. A parent's hand gently holds the child's. Tiny yellow hat motifs appear on the gate decorations. Warm spring morning sunlight. Watercolor picture book style, tender first-day milestone mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "先生が優しく迎えてくれました。「いっしょに遊ぼうね！」",
+          baby_toddler: "せんせい、やさしい。にこにこ。",
+          preschool_3_4:
+            "せんせいが やさしく むかえてくれました。「いっしょに あそぼうね！」",
+          early_reader_5_6:
+            "せんせいが にっこりして むかえてくれました。「{childName}ちゃん、まっていたよ！いっしょに あそぼうね」と てを つないでくれました。",
+          early_elementary_7_8:
+            "せんせいが にっこりして むかえてくれました。やさしい てのひらの あたたかさに、どきどきが すこし おちつきました。「いっしょに たのしもうね」。",
+          general_child: "先生が優しく迎えてくれました。「いっしょに遊ぼうね！」",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of a warm nursery classroom interior. A kind teacher crouches to the child's level, smiling gently and extending a hand in welcome. Colorful toys and soft mats are visible behind. Other children play in the background. A tiny yellow hat motif hangs on a coat hook nearby. Soft warm classroom light. Watercolor picture book style, reassuring welcome mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はお友だちと一緒に遊んで、笑顔になりました。",
+          baby_toddler: "おともだち！いっしょに あそぼ！",
+          preschool_3_4:
+            "{childName}は おともだちと いっしょに あそんで、えがおに なりました。",
+          early_reader_5_6:
+            "{childName}は おともだちと ブロックで あそびました。はじめは どきどきしていたのに、いつの まにか えがおに なっていました。",
+          early_elementary_7_8:
+            "{childName}は おともだちと ブロックで あそびながら、いつの まにか なかよく なっていました。きいろい ぼうしの こが「なんて なまえ？」と きいてくれました。",
+          general_child: "{childName}はお友だちと一緒に遊んで、笑顔になりました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child playing happily alongside a new friend, both laughing over shared colorful building blocks on a soft play mat. The child's yellow hat sits nearby on a hook. The initial nervousness is gone — replaced by pure joyful connection. Soft warm light. Watercolor picture book style, warm first friendship moment close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "よくがんばった{childName}。明日も一緒に遊ぼうね。{parentMessage}",
+          baby_toddler: "がんばったね！えらい！{parentMessage}",
+          preschool_3_4:
+            "よく がんばった {childName}。あしたも いっしょに あそぼうね。{parentMessage}",
+          early_reader_5_6:
+            "はじめての にゅうえん、よく がんばりました。あしたは もっと たのしくなるよ。{parentMessage}",
+          early_elementary_7_8:
+            "はじめての にゅうえん、よく がんばりました。きいろい ぼうしを かぶった {childName}は、もう たくさんの ことを のりこえました。{parentMessage}",
+          general_child:
+            "よく がんばった {childName}。あしたも いっしょに あそぼうね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child arriving home after the first day, yellow hat in hand, being hugged warmly by a parent. The child's expression is tired but quietly proud and happy. A yellow hat motif rests on the shoe shelf. Warm afternoon sunlight through the entryway. Watercolor picture book style, tender achievement ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-first-elementary": {
+    name: "しょうがっこうへ",
+    description: "小学校入学の日。ランドセルを背負った{childName}の大きな一歩を記念する絵本",
+    icon: "🏫",
+    categoryGroupId: "memories",
+    subcategoryId: "elementary-school",
+    parentIntent: "大切な思い出を絵本として残したい",
+    recommendedAgeMin: 5,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["elementary", "school", "first-day", "milestone"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "小学校入学式の日にランドセルを背負った子どもの絵本イメージ",
+    visualDirection:
+      "Bright spring school entrance ceremony atmosphere with cherry blossoms, a red randoseru backpack badge motif, proud milestone emotions throughout.",
+    order: 61,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、小学校入学の記念日絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の しょうがっこう にゅうがく",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a proud child wearing a large red randoseru backpack standing at the entrance of an elementary school with cherry blossoms in full bloom, wearing a crisp new uniform, a tiny red randoseru badge motif on the bag, spring milestone celebration mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "ランドセル、しょってしゅっぱつ！",
+      openingNarrationTemplate:
+        "はるのあさ、にゅうがくしきの ひ。{childName}は あたらしい ランドセルを しょって、しょうがっこうに むかいました。あかい ランドセルが キラリと ひかります。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はランドセルを背負って小学校の門に立ちました。",
+          baby_toddler: "おおきな かばん、えらいね！",
+          preschool_3_4:
+            "{childName}は ランドセルを しょって しょうがっこうの もんに たちました。",
+          early_reader_5_6:
+            "{childName}は ランドセルを しょって しょうがっこうの もんに たちました。さくらの はなびらが ふわりと まいてきます。",
+          early_elementary_7_8:
+            "{childName}は ランドセルを しょって しょうがっこうの もんに たちました。さくらの はなびらが まいおりて、あたらしい ぼうけんが はじまる きがします。",
+          general_child: "{childName}はランドセルを背負って小学校の門に立ちました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of an elementary school entrance surrounded by blooming cherry blossoms. A child stands proudly at the school gate, wearing a large red randoseru backpack. Pink petals drift gently around. A tiny red randoseru badge motif appears on the bag's front. Parents watch warmly in the background. Bright spring morning light. Watercolor picture book style, proud milestone celebration mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "入学式で{childName}は新しいお友だちと出会いました。",
+          baby_toddler: "おともだち、いっぱい！わーい！",
+          preschool_3_4:
+            "にゅうがくしきで {childName}は あたらしい おともだちと であいました。",
+          early_reader_5_6:
+            "にゅうがくしきで {childName}は あたらしい おともだちと であいました。「いっしょに がんばろうね」と てを ふってくれた こが いました。",
+          early_elementary_7_8:
+            "にゅうがくしきで {childName}は あたらしい おともだちと であいました。ちがう ようちえんや ほいくえんから きた こたちが あつまって、あたらしい がっきゅうが できていきます。",
+          general_child: "入学式で{childName}は新しいお友だちと出会いました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot inside a bright elementary school gymnasium decorated for an entrance ceremony. The child sits with other new students, exchanging shy smiles with a neighbor. Tiny red randoseru motifs can be seen on the bags leaning against the chairs. Soft ceremonial light. Watercolor picture book style, hopeful new beginning mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "初めての教室で{childName}は自分の席に座りました。",
+          baby_toddler: "じぶんの せき、うれしい！",
+          preschool_3_4:
+            "はじめての きょうしつで {childName}は じぶんの せきに すわりました。",
+          early_reader_5_6:
+            "はじめての きょうしつで {childName}は じぶんの せきに すわりました。きれいな こくばんと つくえ。ここが {childName}の ばしょです。",
+          early_elementary_7_8:
+            "はじめての きょうしつで {childName}は じぶんの せきに すわりました。きれいな こくばんを まえに、ここから たくさんのことを まなんでいくんだ と こころが たかまりました。",
+          general_child: "初めての教室で{childName}は自分の席に座りました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child sitting at their own desk in a bright new classroom, hands folded neatly, wearing a proud and eager expression. The red randoseru backpack hangs on the hook beside the desk. Sunlight streams through windows onto the wooden desk surface. A tiny red randoseru badge motif glints on the bag. Watercolor picture book style, proud first-day readiness close-up, bright welcoming classroom mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}の小学校生活が始まりました。たくさんのことを学ぼうね。{parentMessage}",
+          baby_toddler: "がんばれ、{childName}！{parentMessage}",
+          preschool_3_4:
+            "{childName}の しょうがっこうせいかつが はじまりました。たくさんのことを まなぼうね。{parentMessage}",
+          early_reader_5_6:
+            "{childName}の しょうがっこうせいかつが はじまりました。まいにちが あたらしい はっけんで いっぱいです。{parentMessage}",
+          early_elementary_7_8:
+            "{childName}の しょうがっこうせいかつが はじまりました。ランドセルに つめた ゆめと きもちを もって、まいにちを たいせつに すすんでいこう。{parentMessage}",
+          general_child:
+            "{childName}の しょうがっこうせいかつが はじまりました。たくさんのことを まなぼうね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child walking home after the first day, red randoseru on their back, looking back at the school building with cherry blossoms still in bloom. The child walks with quiet pride. A tiny red randoseru badge motif glints in the afternoon light. Warm spring afternoon. Watercolor picture book style, proud milestone farewell ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-new-sibling": {
+    name: "あかちゃんがきた",
+    description: "新しい赤ちゃんが家族に加わった日。お兄ちゃん・お姉ちゃんになった{childName}の特別な記念絵本",
+    icon: "👶",
+    categoryGroupId: "memories",
+    subcategoryId: "family-growth",
+    parentIntent: "大切な思い出を絵本として残したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["sibling", "baby", "family", "milestone"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "赤ちゃんを優しく見つめるお兄ちゃん・お姉ちゃんの絵本イメージ",
+    visualDirection:
+      "Warm tender family atmosphere with a new baby, soft nursery colors, and a tiny white star motif representing the new arrival throughout.",
+    order: 62,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、新しい赤ちゃんが来た記念絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}、おにいちゃん・おねえちゃんに なったよ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: an older child leaning gently over a baby's crib, looking at the new baby with wonder and tender love, a tiny white star motif floating above the crib like a guardian angel, soft nursery pastel colors, warm family bond mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "あかちゃん、よく きたね",
+      openingNarrationTemplate:
+        "あるひ、{childName}の おうちに あかちゃんが やってきました。ちいさくて ふわふわで、しろい ほしのような たいせつな いのちです。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は初めて赤ちゃんを見てびっくりしました。こんなに小さいの！",
+          baby_toddler: "あかちゃん、ちっちゃい！かわいい。",
+          preschool_3_4:
+            "{childName}は はじめて あかちゃんを みて びっくりしました。こんなに ちいさいの！",
+          early_reader_5_6:
+            "{childName}は はじめて あかちゃんを みて びっくりしました。こんなに ちいさいのに、てのひらと あしのゆびまで ちゃんと ある！",
+          early_elementary_7_8:
+            "{childName}は はじめて あかちゃんを みて おどろきました。こんなに ちいさいのに、めを ぎゅっと つぶって、いのちを いっしょうけんめい いきているんだ と かんじました。",
+          general_child: "{childName}は初めて赤ちゃんを見てびっくりしました。こんなに小さいの！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy nursery room. The older child stands at the crib's edge, eyes wide with wonder, looking down at the new sleeping baby wrapped in a soft blanket. A tiny white star mobile hangs above the crib. Soft warm nursery light. Gentle, tender family mood. Watercolor picture book style, wonder-filled first encounter, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "赤ちゃんが{childName}の指を握りました。あたたかくて、うれしい！",
+          baby_toddler: "あかちゃん、てつないだ！あったかい。",
+          preschool_3_4:
+            "あかちゃんが {childName}の ゆびを にぎりました。あたたかくて、うれしい！",
+          early_reader_5_6:
+            "あかちゃんが {childName}の ゆびを ぎゅっと にぎりました。ちいさくて あたたかくて、うれしさが こころに ひろがります。",
+          early_elementary_7_8:
+            "あかちゃんが {childName}の ゆびを ちいさな てで ぎゅっと にぎりました。「おにいちゃん・おねえちゃん、よろしくね」って いっているみたいで、{childName}の こころが あたたかく なりました。",
+          general_child: "赤ちゃんが{childName}の指を握りました。あたたかくて、うれしい！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the older child extending one finger toward the baby, and the baby's tiny hand grasping it firmly. Both children's faces visible — the baby sleeping peacefully, the older child's face lit up with joyful surprise. A tiny white star motif appears on the baby's blanket. Soft warm light. Watercolor picture book style, magical first connection moment, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は赤ちゃんを優しく守ろうと心に決めました。",
+          baby_toddler: "あかちゃん、まもるよ！",
+          preschool_3_4:
+            "{childName}は あかちゃんを やさしく まもろうと こころに きめました。",
+          early_reader_5_6:
+            "{childName}は あかちゃんを やさしく まもろうと こころに きめました。おにいちゃん・おねえちゃんとして、いっしょに おおきく なろうね。",
+          early_elementary_7_8:
+            "{childName}は あかちゃんを みながら おもいました。この こを まもれる おにいちゃん・おねえちゃんに なりたい。しろい ほしのように、ずっとそばで ひかっていたい。",
+          general_child: "{childName}は赤ちゃんを優しく守ろうと心に決めました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the older child leaning close to the sleeping baby, face full of tender protective love. The older child's hand rests gently near the baby. A tiny white star motif glows softly above them both like a guardian light. Soft warm nursery glow. Watercolor picture book style, profound family love close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "二人でいっしょに大きくなろうね。{parentMessage}",
+          baby_toddler: "いっしょに おおきくなろうね。{parentMessage}",
+          preschool_3_4:
+            "ふたりで いっしょに おおきく なろうね。{parentMessage}",
+          early_reader_5_6:
+            "ふたりで いっしょに おおきく なろうね。しろい ほしのような あかちゃんと、{childName}の これからが はじまります。{parentMessage}",
+          early_elementary_7_8:
+            "ふたりで いっしょに おおきく なろうね。{childName}と あかちゃんの これからの ものがたりは、まだ はじまったばかりです。{parentMessage}",
+          general_child:
+            "ふたりで いっしょに おおきく なろうね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of both children together — the older child sitting beside the baby's crib, gently humming or reading a picture book to the sleeping baby. White star mobile turns slowly above. Warm soft nursery light fills the room. Tender family peace. Watercolor picture book style, tender sibling bond ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-first-airplane": {
+    name: "はじめてのひこうき",
+    description: "はじめて飛行機に乗った日。空の上からの絶景と、{childName}のドキドキ冒険の記念絵本",
+    icon: "✈️",
+    categoryGroupId: "memories",
+    subcategoryId: "travel",
+    parentIntent: "大切な思い出を絵本として残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["airplane", "travel", "first-time", "sky"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "はじめて飛行機に乗って空から景色を眺める子どもの絵本イメージ",
+    visualDirection:
+      "Exciting first flight atmosphere with the airplane cabin, fluffy white clouds outside the window, and a tiny white cloud motif throughout.",
+    order: 63,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめての飛行機搭乗記念絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はじめての ひこうき",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child looking out of an airplane window at fluffy white clouds below and a brilliant blue sky, tiny white cloud motifs drifting past the window, expression of pure wonder and excitement, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "ひこうきで そらへ とびたつよ！",
+      openingNarrationTemplate:
+        "きょうは はじめて ひこうきに のる ひ。{childName}は くうこうで めを まるくしました。しろい くもが とびたつのを まっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は空港でドキドキしながら飛行機を眺めました。",
+          baby_toddler: "ひこうき おおきい！どきどき。",
+          preschool_3_4:
+            "{childName}は くうこうで どきどきしながら ひこうきを ながめました。",
+          early_reader_5_6:
+            "{childName}は くうこうの まどから おおきな ひこうきを みあげました。こんなに おおきなものが そらを とぶなんて、ふしぎでたまりません。",
+          early_elementary_7_8:
+            "{childName}は くうこうの まどから おおきな ひこうきを みあげました。あのひこうきに のって、そらのうえに いける んだ と おもうと むねが どきどきしました。",
+          general_child: "{childName}は空港でドキドキしながら飛行機を眺めました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of an airport terminal with a large white airplane visible through the panoramic window. A child stands at the glass, hands pressed against it, gazing at the airplane with wide excited eyes. Tiny white cloud motifs float in the sky beyond the window. Bright airport light. Watercolor picture book style, first-flight excited anticipation mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "飛行機が離陸しました！{childName}はぎゅっと目をつぶりました。",
+          baby_toddler: "とびたった！うわあ！",
+          preschool_3_4:
+            "ひこうきが りりくしました！{childName}は ぎゅっと めを つぶりました。",
+          early_reader_5_6:
+            "ひこうきが うごきだして、どんどん はやくなりました。「とびたったぞ！」と おもった しゅんかん、そとが まっしろな くもに なりました。",
+          early_elementary_7_8:
+            "ひこうきが りりくして、ぐんぐん うえに のぼっていきました。まちが ちいさくなって、くもを とおりぬけたとき、しろい くもが まどの むこうに ひろがりました。",
+          general_child: "飛行機が離陸しました！{childName}はぎゅっと目をつぶりました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot inside the airplane cabin as it ascends through clouds. The child is seated at the window seat, one hand gripping the armrest, the other pressing against the glass as the plane breaks through white fluffy clouds. Outside is a brilliant blue sky above the clouds. Tiny white cloud motifs float past the window. Warm cabin light. Watercolor picture book style, exciting takeoff discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "窓の外には白い雲がいっぱい！{childName}は雲の上を飛んでいます。",
+          baby_toddler: "くも、しろい！そらのうえ！",
+          preschool_3_4:
+            "まどの そとには しろい くもが いっぱい！{childName}は くもの うえを とんでいます。",
+          early_reader_5_6:
+            "まどの そとには しろい くもが うみのように ひろがっています。{childName}は くもの うえを とんでいます。まるで ゆめのようです。",
+          early_elementary_7_8:
+            "まどの そとには しろい くもが うみのように ひろがっていました。{childName}は くもの うえを とんでいます。ここから みる せかいは、ちいさくて うつくしい。",
+          general_child: "窓の外には白い雲がいっぱい！{childName}は雲の上を飛んでいます。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child's delighted face pressed close to the airplane window, staring out at a sea of fluffy white clouds stretching to the horizon under a deep blue sky. The child's expression is one of pure amazement and joy. Tiny white cloud motifs press against the glass from outside. Watercolor picture book style, wonder-filled aerial discovery close-up, luminous sky light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "はじめての飛行機、{childName}は大空を飛んだ！{parentMessage}",
+          baby_toddler: "そら とんだよ！すごい！{parentMessage}",
+          preschool_3_4:
+            "はじめての ひこうき、{childName}は おおぞらを とんだ！{parentMessage}",
+          early_reader_5_6:
+            "はじめての ひこうき、くもの うえを とぶきぶんを おぼえているよ。{parentMessage}",
+          early_elementary_7_8:
+            "はじめて おおぞらを とんだ {childName}。しろい くもの うえから みた せかいは、ずっと こころに のこります。{parentMessage}",
+          general_child:
+            "はじめての ひこうき、{childName}は おおぞらを とんだ！{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the airplane descending through pink and gold clouds at sunset, the child visible at the window with a contented smile. Tiny white cloud motifs drift alongside the plane. The world below is bathed in golden light. Tender memory-preserving mood. Watercolor picture book style, peaceful landing ending, luminous sunset sky, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-first-sports-day": {
+    name: "うんどうかい がんばったね",
+    description: "運動会で一生懸命頑張った{childName}の勇気と努力を記念する絵本",
+    icon: "🏅",
+    categoryGroupId: "memories",
+    subcategoryId: "school-events",
+    parentIntent: "大切な思い出を絵本として残したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["sports-day", "effort", "friends", "milestone"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "運動会で全力で走る子どもの絵本イメージ",
+    visualDirection:
+      "Bright outdoor sports day atmosphere with colorful red and white flags, a finishing line, cheering crowd, and a red-and-white flag motif throughout.",
+    order: 64,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、運動会の頑張りを記念した絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の うんどうかい",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a determined child running with all their might on a sports day track, red-and-white flags fluttering overhead, cheering crowd blurred in the background, a tiny red-and-white flag motif near the finish line, bright outdoor sports day atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "よーい、どん！がんばれ！",
+      openingNarrationTemplate:
+        "うんどうかいの あさ。{childName}は そらを みあげました。よく はれた あおいそら。あかしろの はたが かぜに ひらひら します。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はよーい、どんでスタートしました！",
+          baby_toddler: "よーい、どん！はしった！",
+          preschool_3_4:
+            "{childName}は よーい、どんで スタートしました！",
+          early_reader_5_6:
+            "{childName}は よーい、どんの あいずで とびだしました！あしが じめんを けって、かぜを きって はしります。",
+          early_elementary_7_8:
+            "よーい、どんの あいずで {childName}は とびだしました。いっぱい れんしゅうした あのきもちを おもいだしながら、ぜんりょくで はしります。",
+          general_child: "{childName}はよーい、どんでスタートしました！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of an elementary school sports day running track. The child crouches at the starting line beside other racers. Red and white decorative flags flutter overhead. The sky is brilliant blue. Tiny red-and-white flag motifs appear on the track side markers. Bright outdoor sunlight. Watercolor picture book style, excited sports day start mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "転んでも立ち上がって、{childName}はゴールを目指しました！",
+          baby_toddler: "ころんでも、えいっ！おきた！",
+          preschool_3_4:
+            "ころんでも たちあがって、{childName}は ゴールを めざしました！",
+          early_reader_5_6:
+            "とちゅうで ころんでしまいました。でも {childName}は すぐに たちあがって、またはしりだしました。ゴールまで あきらめない！",
+          early_elementary_7_8:
+            "とちゅうで ころんでしまいました。いたいけど、{childName}は たちあがりました。「あきらめない」そのきもちが あしを うごかします。",
+          general_child: "転んでも立ち上がって、{childName}はゴールを目指しました！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child getting back up after falling on the track, face set with determination. One knee scraped, but the child is already running again. Cheering spectators are visible at the sides. Tiny red-and-white flag motifs flutter along the track. Bright outdoor sunlight. Watercolor picture book style, determined perseverance mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はゴールしました！やったー！",
+          baby_toddler: "ゴール！やったー！えらい！",
+          preschool_3_4:
+            "{childName}は ゴール しました！やったー！",
+          early_reader_5_6:
+            "{childName}は ゴールテープを きりました！かぞくの おうえんが きこえて、うれしくて なみだが でそうになりました。",
+          early_elementary_7_8:
+            "{childName}は ゴールテープを きりました！くるしくても あきらめなかった。その きもちが こころに メダルのように かがやいています。",
+          general_child: "{childName}はゴールしました！やったー！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child crossing the finish line with both arms raised in triumph, face beaming with exhausted but pure joy. Red-and-white finish flags frame the scene. The crowd's hands are visible cheering at the edges. Tiny red-and-white flag motifs flutter around the moment. Bright outdoor sunlight. Watercolor picture book style, triumphant achievement close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "よくがんばった{childName}。諦めない心がすごい！{parentMessage}",
+          baby_toddler: "がんばった！えらい！{parentMessage}",
+          preschool_3_4:
+            "よく がんばった {childName}。あきらめない こころが すごい！{parentMessage}",
+          early_reader_5_6:
+            "よく がんばった {childName}。ころんでも たちあがった その こころが、いちばんの メダルだよ。{parentMessage}",
+          early_elementary_7_8:
+            "よく がんばった {childName}。かちまけより も たいせつな ことを、きょうの うんどうかいで みせてくれました。{parentMessage}",
+          general_child:
+            "よく がんばった {childName}。あきらめない こころが すごい！{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child sitting with family after sports day, holding a participation ribbon or medal, face glowing with happy exhaustion. Red-and-white flags flutter gently in the background sky. Tiny red-and-white flag motif on the ribbon. Warm late afternoon golden light. Watercolor picture book style, peaceful proud achievement ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-first-recital": {
+    name: "はっぴょうかい できたよ",
+    description: "発表会や音楽会で頑張った{childName}の勇気ある舞台姿を記念する絵本",
+    icon: "🎤",
+    categoryGroupId: "memories",
+    subcategoryId: "performance",
+    parentIntent: "大切な思い出を絵本として残したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["recital", "performance", "courage", "milestone"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "発表会の舞台で輝く子どもの絵本イメージ",
+    visualDirection:
+      "Bright stage performance atmosphere with spotlight, audience, costumes, and a tiny gold star motif representing the child's shining moment throughout.",
+    order: 65,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、発表会・音楽会の記念絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はっぴょうかい",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a child in a colorful performance costume standing center stage under a warm spotlight, facing a cheering audience, a tiny gold star motif glowing at the top of the stage curtain, proud shining performance moment, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "ステージの うえで かがやけ！",
+      openingNarrationTemplate:
+        "はっぴょうかいの ひ。{childName}は ぶたいのそでで まっていました。どきどきするけど、たくさん れんしゅうしたんだもん。きんいろの ほしが みまもっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は舞台の袖でドキドキしながら出番を待ちました。",
+          baby_toddler: "ぶたい、どきどき。がんばるよ！",
+          preschool_3_4:
+            "{childName}は ぶたいの そでで どきどきしながら でばんを まちました。",
+          early_reader_5_6:
+            "{childName}は ぶたいの そでで まっていました。どきどきするけど、いっぱい れんしゅうしたから だいじょうぶ！",
+          early_elementary_7_8:
+            "{childName}は ぶたいの そでで まちながら、れんしゅうの ひびを おもいだしました。なんども まちがえて、それでも あきらめなかった。きんいろの ほしが かがやいています。",
+          general_child: "{childName}は舞台の袖でドキドキしながら出番を待ちました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a stage wing area in a school auditorium. The child waits in costume at the edge of the curtain, peeking at the lit stage beyond. A warm spotlight glows on the empty stage. A tiny gold star motif appears on the curtain. The child's expression shows excited nervousness. Watercolor picture book style, pre-performance anticipation mood, warm stage light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "いよいよ{childName}の出番です！舞台に出て大きく息を吸いました。",
+          baby_toddler: "でた！ぶたいに でた！",
+          preschool_3_4:
+            "いよいよ {childName}の でばんです！ぶたいに でて おおきく いきを すいました。",
+          early_reader_5_6:
+            "いよいよ {childName}の でばんです！ぶたいに でると、スポットライトが あたって、きんいろに かがやいているようでした。",
+          early_elementary_7_8:
+            "いよいよ {childName}の でばんです！ぶたいに でると スポットライトが あたりました。おきゃくさんの かおが みえた しゅんかん、どきどきが ふわっと きえました。",
+          general_child: "いよいよ{childName}の出番です！舞台に出て大きく息を吸いました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child stepping onto the stage into the spotlight for the first time, face turning from nervous to brave. The audience is visible as a soft blur in the background. Tiny gold star motifs sparkle around the spotlight beam. Warm golden stage light. Watercolor picture book style, brave debut moment, luminous performance atmosphere, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は全力でパフォーマンスしました！みんなが拍手しています。",
+          baby_toddler: "ぱちぱちぱち！じょうず！",
+          preschool_3_4:
+            "{childName}は ぜんりょくで パフォーマンスしました！みんなが はくしゅしています。",
+          early_reader_5_6:
+            "{childName}は ぜんりょくで えんそうや おどりを したあと、はくしゅが おきました。ぐっと むねが あつくなります。",
+          early_elementary_7_8:
+            "{childName}は ぜんりょくで えんそうを しました。はくしゅが おきたとき、れんしゅうの ひびが むくわれたような きがして、こころが きんいろに ひかりました。",
+          general_child: "{childName}は全力でパフォーマンスしました！みんなが拍手しています。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child mid-performance on stage — singing, dancing, or playing an instrument with full concentration and joy. The spotlight highlights their beaming face. The audience's blurred hands clap in the background. Tiny gold star motifs float around the spotlight. Watercolor picture book style, shining peak performance close-up, luminous warm stage light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "よくできた{childName}！頑張った姿が金の星みたいに輝いていたよ。{parentMessage}",
+          baby_toddler: "じょうずだった！えらい！{parentMessage}",
+          preschool_3_4:
+            "よく できた {childName}！がんばった すがたが きんの ほしみたいに かがやいていたよ。{parentMessage}",
+          early_reader_5_6:
+            "よく できた {childName}！れんしゅうを のりこえた その きんの ほしが、こころで かがやいているよ。{parentMessage}",
+          early_elementary_7_8:
+            "よく できた {childName}！ぶたいの うえで かがやいた その すがたは、ずっと こころに のこります。きんの ほしみたいに。{parentMessage}",
+          general_child:
+            "よく できた {childName}！がんばった すがたが きんの ほしみたいに かがやいていたよ。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child backstage after the performance, still in costume, holding a small bouquet of flowers given by family, face glowing with happy exhaustion and pride. A tiny gold star motif shines on the costume. Warm backstage light. Watercolor picture book style, tender proud achievement ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-growing-taller": {
+    name: "こんなに おおきくなったよ",
+    description: "身長を測ったら、こんなに大きくなっていた！{childName}の成長を喜ぶ記念日絵本",
+    icon: "📏",
+    categoryGroupId: "memories",
+    subcategoryId: "child-growth",
+    parentIntent: "大切な思い出を絵本として残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["growth", "height", "milestone", "memory"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "身長を測って成長を喜ぶ子どもの絵本イメージ",
+    visualDirection:
+      "Warm cozy home atmosphere with a height measuring chart, rainbows of color showing growth stages, and a tiny rainbow star motif throughout.",
+    order: 66,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、{childName}の成長を喜ぶ記念絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}、こんなに おおきく なったよ！",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing straight and tall against a colorful height measurement chart on a wall, looking proud at how much they have grown, tiny rainbow star motifs along the measurement marks, warm cozy home atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "どんどん おおきく なってる！",
+      openingNarrationTemplate:
+        "きょうは {childName}の せを はかる ひ。かべの しるしが どこまで きたかな。にじいろの ほしが きらきら ならんでいます。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は背中を壁にピタッとつけてせいくらべしました。",
+          baby_toddler: "せのびのびー！おおきく なあれ。",
+          preschool_3_4:
+            "{childName}は せなかを かべに ピタッと つけて せいくらべ しました。",
+          early_reader_5_6:
+            "{childName}は せなかを かべに ピタッと つけて せを はかりました。はかるたびに すこしずつ おおきく なっているのが うれしいです。",
+          early_elementary_7_8:
+            "{childName}は せなかを まっすぐ かべに つけて せを はかりました。にじいろの ほしが ならんだ しるしを みると、じぶんが どれだけ おおきくなったかが わかります。",
+          general_child: "{childName}は背中を壁にピタッとつけてせいくらべしました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy home wall with a colorful height measurement chart. The child stands straight against the wall with a parent marking their height. Tiny rainbow star motifs mark each centimeter line on the chart. Warm home light. Watercolor picture book style, warm family milestone mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "去年より大きくなっていた！{childName}はとても嬉しそう。",
+          baby_toddler: "おおきく なった！やったー！",
+          preschool_3_4:
+            "きょねんより おおきく なっていた！{childName}は とても うれしそう。",
+          early_reader_5_6:
+            "きょねんの しるしより ずっと うえに せが きていました！{childName}は うれしくて とびはねました。",
+          early_elementary_7_8:
+            "きょねんの しるしより ずっと うえに せが きていました！{childName}は にじいろの ほしの ならびを みながら、じぶんが どれだけ おおきくなったか を かんじました。",
+          general_child: "去年より大きくなっていた！{childName}はとても嬉しそう。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child pointing excitedly at the new height mark on the wall chart, which is clearly higher than the previous year's mark. The child's face beams with pride. Rainbow star motifs line the chart beside the new measurement. Parent watches with a warm smile. Watercolor picture book style, joyful growth discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は昔の小さかった自分の写真を見て、にっこりしました。",
+          baby_toddler: "むかし ちっちゃかった、いまは おおきい！",
+          preschool_3_4:
+            "{childName}は むかしの ちいさかった じぶんの しゃしんを みて、にっこりしました。",
+          early_reader_5_6:
+            "{childName}は むかしの ちいさかった じぶんの しゃしんを みました。あのころと くらべると、こんなに おおきくなったんだ と うれしくなります。",
+          early_elementary_7_8:
+            "{childName}は むかしの ちいさかった じぶんの しゃしんを みました。ちいさかった じぶんが、いまの じぶんに なるまでに、たくさんの ことが あったんだな と おもいました。",
+          general_child: "{childName}は昔の小さかった自分の写真を見て、にっこりしました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child holding or looking at an old baby photo, smiling softly as they compare their tiny past self to their current grown self. Rainbow star motifs float gently around the photo. Warm family room light. Watercolor picture book style, tender self-discovery reflection close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "これからもどんどん大きくなってね、{childName}。{parentMessage}",
+          baby_toddler: "もっと おおきく なあれ！{parentMessage}",
+          preschool_3_4:
+            "これからも どんどん おおきく なってね、{childName}。{parentMessage}",
+          early_reader_5_6:
+            "これからも どんどん おおきく なってね。にじいろの ほしが {childName}の これからを てらしています。{parentMessage}",
+          early_elementary_7_8:
+            "これからも どんどん おおきく なってね、{childName}。せだけじゃなくて、こころも。にじいろの ほしが これからの せいちょうを てらしています。{parentMessage}",
+          general_child:
+            "これからも どんどん おおきく なってね、{childName}。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child standing tall beside the height chart on the wall, looking toward a bright window with a hopeful expression. Rainbow star motifs line the chart beside them. Warm morning light streams in. The scene radiates growth, hope, and pride. Watercolor picture book style, hopeful growth celebration ending, luminous warm light, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-learning-colors": {
+    name: "いろのふしぎ",
+    description: "赤・青・黄色…世界はいろんな色でいっぱい！色の不思議を楽しく学ぶ絵本",
+    icon: "🎨",
+    categoryGroupId: "learning",
+    subcategoryId: "colors",
+    parentIntent: "楽しく学んでほしい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 5,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["colors", "learning", "nature", "art"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/learning.webp",
+    sampleImageAlt: "カラフルな色を探索する子どもの絵本イメージ",
+    visualDirection:
+      "Vibrant colorful world with rainbow spectrum throughout, a rainbow arc motif, each page featuring a different color discovery.",
+    order: 70,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、色について楽しく学ぶ絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と いろのふしぎ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child surrounded by a rainbow of colorful objects — red apples, blue sky, yellow sunflowers, green leaves, purple grapes — all swirling in a playful circular arrangement, a tiny rainbow arc motif above the child, vibrant learning mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "せかいは いろいろな いろで いっぱい！",
+      openingNarrationTemplate:
+        "きょう {childName}は いろを さがしに でかけました。あかい いろ、あおい いろ、きいろい いろ。にじの ようなせかいが まっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は赤いりんごを見つけました。赤は元気な色！",
+          baby_toddler: "あかい りんご！あか、あか！",
+          preschool_3_4:
+            "{childName}は あかい りんごを みつけました。あかは げんきな いろ！",
+          early_reader_5_6:
+            "{childName}は あかい りんごを みつけました。あかは げんきで つよい いろです。ほかに あかい ものは なにかな？",
+          early_elementary_7_8:
+            "{childName}は あかい りんごを みつけました。あかは あついきもちや げんき を あらわす いろです。たいようや ばらも あかい。",
+          general_child: "{childName}は赤いりんごを見つけました。赤は元気な色！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a colorful market or garden setting. The child reaches excitedly for bright red apples on a low branch or stand. The scene is vibrant with reds — red apples, red strawberries, red roses. A tiny rainbow arc motif arches in the sky above. Warm sunlight. Watercolor picture book style, joyful color discovery learning mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "青い空と青い海。{childName}は青がいっぱいの世界を見ました。",
+          baby_toddler: "そら あおい！うみ あおい！",
+          preschool_3_4:
+            "あおい そらと あおい うみ。{childName}は あおが いっぱいの せかいを みました。",
+          early_reader_5_6:
+            "あおい そらと あおい うみが つながっています。{childName}は あおが いっぱいの せかいに むねが いっぱいに なりました。",
+          early_elementary_7_8:
+            "あおい そらと あおい うみが どこまでも つながっています。{childName}は あおい いろが ひろがりと しずけさを あらわしていると かんじました。",
+          general_child: "青い空と青い海。{childName}は青がいっぱいの世界を見ました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child standing on a beach or hillside, looking out at a brilliant blue sky and blue ocean meeting at the horizon. Blue colors dominate — sky, sea, blue butterfly nearby. A tiny rainbow arc motif appears in the sky. Bright joyful light. Watercolor picture book style, expansive color discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "黄色いひまわりと緑の葉っぱ。色には名前があるんだね！",
+          baby_toddler: "きいろい はな！みどりの は！",
+          preschool_3_4:
+            "きいろい ひまわりと みどりの はっぱ。いろには なまえが あるんだね！",
+          early_reader_5_6:
+            "きいろい ひまわりが みどりの はっぱに かこまれています。たくさんの いろに それぞれ なまえが あるのが ふしぎで たのしいです。",
+          early_elementary_7_8:
+            "きいろい ひまわりと みどりの はっぱ。いろには それぞれ なまえが あって、あわせると また あたらしい いろが うまれることも あります。",
+          general_child: "黄色いひまわりと緑の葉っぱ。色には名前があるんだね！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child's face among giant yellow sunflowers with vivid green leaves, looking up with delight at the colors around them. Yellow petals frame the scene. A tiny rainbow arc motif curves above the sunflowers. Warm golden sunlight. Watercolor picture book style, warm color wonder close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "世界はいろんな色でいっぱい。{childName}はどんな色が好き？{parentMessage}",
+          baby_toddler: "にじ きれい！すき！{parentMessage}",
+          preschool_3_4:
+            "せかいは いろんな いろで いっぱい。{childName}は どんな いろが すき？{parentMessage}",
+          early_reader_5_6:
+            "せかいは たくさんの いろで いっぱいです。{childName}の すきな いろは なにかな？いろを さがすたびに、せかいが もっと たのしくなります。{parentMessage}",
+          early_elementary_7_8:
+            "せかいは たくさんの いろで いっぱいです。いろは きもちや ものを あらわします。{childName}が いちばん すきな いろは どんな いろかな？{parentMessage}",
+          general_child:
+            "せかいは いろんな いろで いっぱい。{childName}は どんな いろが すき？{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child sitting in a flower meadow surrounded by flowers of every color — red, orange, yellow, green, blue, purple — arms spread wide embracing the rainbow of colors. A full rainbow arc motif stretches across the sky above. Warm golden light. Watercolor picture book style, joyful colorful celebration ending, luminous light, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-learning-numbers": {
+    name: "かずをかぞえよう",
+    description: "1つ、2つ、3つ…かずをかぞえながら世界を探検！楽しく数を学ぶ絵本",
+    icon: "🔢",
+    categoryGroupId: "learning",
+    subcategoryId: "numbers",
+    parentIntent: "楽しく学んでほしい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 5,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["numbers", "counting", "learning", "nature"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/learning.webp",
+    sampleImageAlt: "数を数えながら探索する子どもの絵本イメージ",
+    visualDirection:
+      "Playful counting adventure with groups of round natural objects, round pebble motif, each page featuring counting 1 through 10.",
+    order: 71,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、かずを楽しく学ぶ絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と かずの たんけん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child counting colorful round pebbles arranged on a path — the child touches them one by one with a counting finger, tiny round pebble motifs scattered around, playful counting adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "ひとつ ふたつ みっつ！かぞえよう！",
+      openingNarrationTemplate:
+        "きょう {childName}は かずを かぞえる たんけんに でかけました。いくつ みつけられるかな？まるい いし が ならんでいます。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はりんごを1つ見つけました。ひとつ！",
+          baby_toddler: "ひとつ！りんご いち！",
+          preschool_3_4:
+            "{childName}は りんごを 1つ みつけました。ひとつ！",
+          early_reader_5_6:
+            "{childName}は りんごを 1つ みつけました。ひとつ！まるい いしのように ころんと して います。",
+          early_elementary_7_8:
+            "{childName}は りんごを 1つ みつけました。ひとつ。かずの はじまりは「1」、たった ひとつ でも、とくべつな いちご みたい。",
+          general_child: "{childName}はりんごを1つ見つけました。ひとつ！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a garden or orchard. The child spots one perfect round red apple on a low branch and reaches for it with one finger pointing. A single round pebble motif rests nearby on the path. Warm sunlight. Watercolor picture book style, playful counting learning mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "2つの蝶々、3つの花。{childName}はどんどんかぞえました！",
+          baby_toddler: "ちょうちょ ふたつ！はな みっつ！",
+          preschool_3_4:
+            "2つの ちょうちょ、3つの はな。{childName}は どんどん かぞえました！",
+          early_reader_5_6:
+            "2つの ちょうちょが とんできて、3つの はなに とまりました。{childName}は ゆびを さして どんどん かぞえました！",
+          early_elementary_7_8:
+            "2つの ちょうちょが とんできて、3つの はなに とまりました。かぞえるたびに せかいが もっと たのしく みえてきます。",
+          general_child: "2つの蝶々、3つの花。{childName}はどんどんかぞえました！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child in a flower meadow, counting two butterflies landing on three flowers with an excited expression. Round pebble motifs rest near the flowers. Colorful butterflies with wings spread. Warm sunny afternoon. Watercolor picture book style, enthusiastic counting discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は丸い石を10個並べました。とお！できた！",
+          baby_toddler: "いし ならべて、とお！やった！",
+          preschool_3_4:
+            "{childName}は まるい いしを 10こ ならべました。とお！できた！",
+          early_reader_5_6:
+            "{childName}は まるい いしを いち、に、さん…とお！と かぞえながら ならべました。10こ できた！",
+          early_elementary_7_8:
+            "{childName}は まるい いしを 10こ ならべました。いち から とお まで かぞえると、なんでも かぞえられる きがして うれしくなります。",
+          general_child: "{childName}は丸い石を10個並べました。とお！できた！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child kneeling on the ground, arranging ten round pebbles in a neat row with careful focus. The child's face shows concentration turning to proud satisfaction as they finish. The ten round pebble motifs gleam in soft light. Watercolor picture book style, proud counting achievement close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "かずを知るともっとたくさんのことがわかる。{parentMessage}",
+          baby_toddler: "かず、たのしい！{parentMessage}",
+          preschool_3_4:
+            "かずを しると もっと たくさんのことが わかる。{parentMessage}",
+          early_reader_5_6:
+            "かずを しると まちの ものも、しぜんも もっと たのしく みえてきます。{childName}は かずを かぞえるのが すきになりました。{parentMessage}",
+          early_elementary_7_8:
+            "かずを しると せかいが もっと みえてくる。りんごが いくつ、ほしが なんこ、てのひらの ゆびが なんぼん。かずは どこにでも あります。{parentMessage}",
+          general_child:
+            "かずを しると もっと たくさんのことが わかる。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child sitting peacefully outdoors, surrounded by nature, contentedly counting stars appearing in the early evening sky — one, two, three... Round pebble motifs sit in a neat row beside them. Soft warm evening light. Watercolor picture book style, peaceful learning celebration ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-learning-animals": {
+    name: "どうぶつさんの こえ",
+    description: "ライオンはガオー、ゾウはパオーン！動物の鳴き声を楽しく学ぶ絵本",
+    icon: "🐘",
+    categoryGroupId: "learning",
+    subcategoryId: "animals",
+    parentIntent: "楽しく学んでほしい",
+    recommendedAgeMin: 0,
+    recommendedAgeMax: 4,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["animals", "sounds", "learning", "nature"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/learning.webp",
+    sampleImageAlt: "動物の鳴き声を真似する子どもの絵本イメージ",
+    visualDirection:
+      "Friendly animal parade with expressive animal characters, musical note motifs floating around each animal's sound, joyful learning atmosphere.",
+    order: 72,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、動物の鳴き声を楽しく学ぶ絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と どうぶつさんの こえ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child surrounded by friendly cartoon animals — elephant, lion, dog, cat, frog — each with an open mouth making their sound, musical note motifs floating around each animal, playful animal learning mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "どうぶつさんは なんていう？",
+      openingNarrationTemplate:
+        "きょう {childName}は どうぶつえんに やってきました。どうぶつさんたちが こえを きかせてくれます。おんぷが ふわりと とんでいます。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "ライオンさんがガオーと言いました。{childName}もガオー！",
+          baby_toddler: "らいおん！がおー！がおー！",
+          preschool_3_4:
+            "ライオンさんが ガオーと いいました。{childName}も ガオー！",
+          early_reader_5_6:
+            "ライオンさんが おおきく くちを あけて ガオーと いいました。{childName}も まねして ガオー！おんぷが とんでいきます。",
+          early_elementary_7_8:
+            "ライオンさんが ガオーと ほえました。{childName}も おなかのそこから ガオー！どうぶつの こえを まねするのが たのしくて しかたありません。",
+          general_child: "ライオンさんがガオーと言いました。{childName}もガオー！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a zoo or safari setting. A friendly cartoon lion stands proudly, mouth open wide with musical note motifs floating from its roar. The child stands nearby, mimicking the roar with both arms raised. Notes float around both lion and child. Warm sunny day. Watercolor picture book style, joyful animal learning mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ゾウさんはパオーン！ワンちゃんはワンワン！鳴き声ってたのしいな。",
+          baby_toddler: "ぞう、ぱおーん！いぬ、わんわん！",
+          preschool_3_4:
+            "ゾウさんは パオーン！ワンちゃんは ワンワン！なきごえって たのしいな。",
+          early_reader_5_6:
+            "ゾウさんは パオーン！ワンちゃんは ワンワン！なきごえを ならべて うたみたいに なりました。",
+          early_elementary_7_8:
+            "ゾウさんは パオーン、ワンちゃんは ワンワン、ねこは ニャーニャー。どうぶつに よって こえが ちがうのが ふしぎで おもしろいです。",
+          general_child: "ゾウさんはパオーン！ワンちゃんはワンワン！鳴き声ってたのしいな。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child between a friendly elephant and a happy dog, both making their sounds — musical notes float up from each. The child laughs and claps hands with delight. Musical note motifs fill the air around the trio. Bright joyful light. Watercolor picture book style, playful sound discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はカエルの鳴き声を真似しました。ケロケロケロ！",
+          baby_toddler: "かえる、けろけろ！おもしろい！",
+          preschool_3_4:
+            "{childName}は カエルの なきごえを まねしました。ケロケロケロ！",
+          early_reader_5_6:
+            "{childName}は カエルの なきごえを まねしました。ケロケロケロ！カエルさんも ケロケロ こたえてくれました。",
+          early_elementary_7_8:
+            "{childName}は カエルの なきごえを まねしました。ケロケロケロ！カエルさんが こたえてくれて、ふたりで なきごえ あいあいを しているみたいです。",
+          general_child: "{childName}はカエルの鳴き声を真似しました。ケロケロケロ！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child crouching face-to-face with a friendly cartoon frog at a pond's edge, both with mouths wide open making their sounds. Musical note motifs bubble up from both. The child's eyes are squinted with laughter. Soft green pond setting. Watercolor picture book style, joyful animal mimicry close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "どうぶつの声を知ると、もっとなかよしになれるね。{parentMessage}",
+          baby_toddler: "どうぶつ、なかよし！{parentMessage}",
+          preschool_3_4:
+            "どうぶつの こえを しると、もっと なかよしに なれるね。{parentMessage}",
+          early_reader_5_6:
+            "どうぶつの こえを しると、もっと なかよしに なれるね。きょうの たんけん、たのしかったな。{parentMessage}",
+          early_elementary_7_8:
+            "どうぶつの こえを しると、どうぶつの きもちが すこし わかるような きがします。{childName}は どうぶつたちが もっと すきになりました。{parentMessage}",
+          general_child:
+            "どうぶつの こえを しると、もっと なかよしに なれるね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child waving goodbye to a lineup of friendly animals — lion, elephant, dog, frog, rabbit — all making their sounds with musical note motifs floating gently above each. The child waves with a big smile. Warm golden sunset light. Watercolor picture book style, warm animal friendship farewell ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-learning-seasons": {
+    name: "しきのえほん",
+    description: "春・夏・秋・冬…四季を巡る自然の変化を{childName}と一緒に発見する絵本",
+    icon: "🍂",
+    categoryGroupId: "learning",
+    subcategoryId: "seasons",
+    parentIntent: "楽しく学んでほしい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["seasons", "nature", "learning", "discovery"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/learning.webp",
+    sampleImageAlt: "四季の変化を楽しむ子どもの絵本イメージ",
+    visualDirection:
+      "Four seasons journey with each page representing one season, a glowing sun motif appearing in all weather, vibrant natural color changes throughout.",
+    order: 73,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、四季を楽しく学ぶ絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と しきのたび",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child at the center of a circular scene divided into four seasons — spring cherry blossoms top-left, summer sunflowers top-right, autumn red leaves bottom-right, winter snowflakes bottom-left — a tiny glowing sun motif at the center, magical seasonal journey mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "はる、なつ、あき、ふゆ！",
+      openingNarrationTemplate:
+        "いちねんは よっつの きせつで できています。{childName}は しきの たびに でかけました。おひさまが やさしく てらしています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "春になりました。桜が咲いて、あたたかいです。",
+          baby_toddler: "はる！さくら さいた！あたたかい。",
+          preschool_3_4:
+            "はるに なりました。さくらが さいて、あたたかいです。",
+          early_reader_5_6:
+            "はるに なりました。さくらが ぱあっと さいて、あたたかいかぜが ふきます。はるは いのちが めざめる きせつです。",
+          early_elementary_7_8:
+            "はるに なりました。さくらが さいて、たんぽぽが ひらいて、ちょうちょが とんでいます。はるは いのちが めざめる、いちばん あたたかい きせつです。",
+          general_child: "春になりました。桜が咲いて、あたたかいです。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a spring scene. A child walks under blooming cherry blossom trees in a park, sunlight warm and golden. A tiny glowing sun motif peeks through the blossoms above. Pink petals drift softly. New green shoots are visible. Watercolor picture book style, gentle awakening spring mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "夏は太陽がまぶしい！海で波と遊びました。",
+          baby_toddler: "なつ！うみ！ざぶーん！",
+          preschool_3_4:
+            "なつは たいようが まぶしい！うみで なみと あそびました。",
+          early_reader_5_6:
+            "なつは たいようが ぎらぎら かがやきます。{childName}は うみの なみと あそびました。あつい なつが すきです。",
+          early_elementary_7_8:
+            "なつは たいようが まぶしく、うみが きらきら かがやきます。{childName}は なみと あそびながら、なつの げんきな エネルギーを からだいっぱいに かんじました。",
+          general_child: "夏は太陽がまぶしい！海で波と遊びました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child splashing and playing in ocean waves on a bright summer day. A blazing sun shines above — the tiny glowing sun motif prominent in the sky. The water is turquoise and sparkling. The child laughs with arms spread wide. Watercolor picture book style, energetic joyful summer mood, luminous sunlight, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "秋になると葉っぱが赤や黄色に変わりました。ふしぎだな！",
+          baby_toddler: "あき！は っぱ あかい！きいろ！",
+          preschool_3_4:
+            "あきに なると はっぱが あかや きいろに かわりました。ふしぎだな！",
+          early_reader_5_6:
+            "あきに なると はっぱが あかや きいろに そまります。{childName}は おちばを ひろいながら、なぜ いろが かわるんだろう と おもいました。",
+          early_elementary_7_8:
+            "あきに なると はっぱが あかや きいろに そまります。しょくぶつが ふゆの じゅんびを しているんだよと おしえてもらいました。",
+          general_child: "秋になると葉っぱが赤や黄色に変わりました。ふしぎだな！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child holding a bright red maple leaf up to the sun, examining it with wonder. Autumn colors surround — red, orange, golden yellow leaves everywhere. A tiny glowing sun motif shines warmly through the leaf. Watercolor picture book style, autumn wonder close-up, warm autumn light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "冬は雪が降ってきた！四季を通して自然は変わるんだね。{parentMessage}",
+          baby_toddler: "ゆき！しろい！さむい！{parentMessage}",
+          preschool_3_4:
+            "ふゆは ゆきが ふってきた！しきを とおして しぜんは かわるんだね。{parentMessage}",
+          early_reader_5_6:
+            "ふゆに なって ゆきが ふってきました。はる・なつ・あき・ふゆ。いちねん かけて しぜんは おおきく かわるんだね。{parentMessage}",
+          early_elementary_7_8:
+            "ふゆに なって ゆきが ふってきました。いちねんで よっつの きせつが めぐります。しぜんは まいとし この たびを くりかえしているんだね。{parentMessage}",
+          general_child:
+            "ふゆは ゆきが ふってきた！しきを とおして しぜんは かわるんだね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child standing in a gently snowing winter scene, arms out to catch snowflakes. A tiny glowing sun motif peeks through the grey clouds. Four small seasonal vignettes — spring, summer, autumn, winter — float around the child like memories. Soft cool winter light. Watercolor picture book style, peaceful seasonal journey ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-learning-shapes": {
+    name: "かたちを さがそう",
+    description: "丸・四角・三角…身のまわりにかくれたかたちを探す、形の探索絵本",
+    icon: "🔷",
+    categoryGroupId: "learning",
+    subcategoryId: "shapes",
+    parentIntent: "楽しく学んでほしい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 5,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["shapes", "learning", "discovery", "environment"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/learning.webp",
+    sampleImageAlt: "身のまわりの形を探す子どもの絵本イメージ",
+    visualDirection:
+      "Shape-finding adventure in everyday environments, rainbow star motifs as shape-found celebration markers, each page discovering a different shape.",
+    order: 74,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、かたちを楽しく学ぶ絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の かたちさがし",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child with a magnifying glass searching for shapes in a park — circle sun, square window, triangle roof, diamond kite — each shape highlighted with a rainbow star motif nearby, playful shape-finding adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "まるや しかく、どこにある？",
+      openingNarrationTemplate:
+        "きょう {childName}は かたちを さがす たんけんに でかけました。まる、しかく、さんかく。にじいろの ほしが かたちを みつけると ひかります。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は丸いものをさがしました。タイヤも時計も丸い！",
+          baby_toddler: "まる！タイヤ まる！おかね まる！",
+          preschool_3_4:
+            "{childName}は まるい ものを さがしました。タイヤも とけいも まるい！",
+          early_reader_5_6:
+            "{childName}は まるい ものを さがしました。タイヤ、とけい、ボール、おつき さまも まるい！まるは どこにでも あります。",
+          early_elementary_7_8:
+            "{childName}は まるい ものを さがしました。タイヤ、ボール、おつきさま、コイン。まるは ころころ うごけて、おわりと はじまりが ないかたちです。",
+          general_child: "{childName}は丸いものをさがしました。タイヤも時計も丸い！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a neighborhood street with a child using a magnifying glass to examine round objects — a bicycle wheel, a round clock on a wall, a ball. Rainbow star motifs glow near each discovered circle. Bright cheerful day. Watercolor picture book style, enthusiastic shape-hunting learning mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "四角い窓、四角い本、四角いブロック！{childName}は次々見つけました。",
+          baby_toddler: "しかく、しかく！まど しかく！",
+          preschool_3_4:
+            "しかくい まど、しかくい ほん、しかくい ブロック！{childName}は つぎつぎ みつけました。",
+          early_reader_5_6:
+            "しかくい まど、ほん、ブロック、はこ。{childName}は つぎつぎ みつけました。しかくは まっすぐな かたちです。",
+          early_elementary_7_8:
+            "しかくい まど、ほん、ブロック、たてもの。しかくは しっかりと してていて、ものを ならべたり つんだりしやすい かたちです。",
+          general_child: "四角い窓、四角い本、四角いブロック！{childName}は次々見つけました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child in a cozy room, discovering square shapes everywhere — square windows, square picture frames, square building blocks stacked in a tower. Rainbow star motifs glow near each found square. The child points with excitement. Warm indoor light. Watercolor picture book style, joyful shape discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は三角形のお山と屋根を見つけました！",
+          baby_toddler: "やま さんかく！やね さんかく！",
+          preschool_3_4:
+            "{childName}は さんかくの おやまと やねを みつけました！",
+          early_reader_5_6:
+            "{childName}は さんかくの おやまと やねを みつけました。さんかくは とがっていて、うえに のびていく かたちです。",
+          early_elementary_7_8:
+            "{childName}は さんかくの おやまと やねを みつけました。おにぎりも さんかく、ピザの きれも さんかく。さんかくは しぜんにも まちにも たくさん あります。",
+          general_child: "{childName}は三角形のお山と屋根を見つけました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child looking at a triangular mountain in the distance while pointing at a triangular rooftop in the foreground. Both shapes are highlighted with rainbow star motifs. The child's face shows excited recognition. Warm outdoor light. Watercolor picture book style, eureka shape recognition close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "かたちを知ると、世界がもっとよく見えてくる。{parentMessage}",
+          baby_toddler: "かたち みつけた！たのしかった！{parentMessage}",
+          preschool_3_4:
+            "かたちを しると、せかいが もっと よく みえてくる。{parentMessage}",
+          early_reader_5_6:
+            "かたちを しると、せかいの なかに かくれた パターンが みえてきます。{childName}は かたちさがしが だいすきに なりました。{parentMessage}",
+          early_elementary_7_8:
+            "かたちを しると、せかいの しくみが すこしずつ わかってきます。まる、しかく、さんかく。まわりのものが ぜんぶ かたちで できているんだね。{parentMessage}",
+          general_child:
+            "かたちを しると、せかいが もっと よく みえてくる。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child sitting under a tree, contentedly sketching shapes in a notebook. Around them, shapes glow softly in the environment — round sun, square house, triangular mountain. Rainbow star motifs float gently near each shape. Warm golden afternoon light. Watercolor picture book style, peaceful shape-learning celebration ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-world-magical-forest": {
+    name: "まほうの もり",
+    description: "光り輝く魔法の森と妖精の世界へ迷い込む、不思議な冒険固定テンプレート",
+    icon: "🌿",
+    categoryGroupId: "imagination",
+    subcategoryId: "enchanted-nature",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["fantasy", "forest", "fairy", "magic"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "光り輝く魔法の森で妖精と出会う子どもの絵本イメージ",
+    visualDirection:
+      "Enchanted forest mood with luminous glowing light particles, tiny fairies, rainbow-shimmer ponds, and soft magical atmosphere throughout.",
+    order: 80,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、光り輝く魔法の森の大冒険絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と まほうの もりのぼうけん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing at the glowing entrance of an enchanted forest, tiny sparkling light particles (magical dust) floating all around, a small glowing fairy peeking from behind a luminous leaf, soft rainbow light filtering through ancient trees, magical wonder mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "まほうの もりへ ようこそ",
+      openingNarrationTemplate:
+        "あるひ、{childName}は きんいろの ひかりに みちびかれて、ふしぎな もりの いりぐちに たどりつきました。まほうのちりが きらきら と ひかっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はきらきら光る森の入り口に立ちました。まほうのちりがふわふわと舞っています。",
+          baby_toddler: "きらきら もり、わくわく。",
+          preschool_3_4:
+            "{childName}は きらきら ひかる もりの いりぐちに たちました。まほうのちりが ふわふわ まっています。",
+          early_reader_5_6:
+            "{childName}は きらきら ひかる もりの いりぐちに たちました。まほうのちりが ふわふわ まっていて、なんだか ふしぎな きぶんです。",
+          early_elementary_7_8:
+            "{childName}は きらきら ひかる もりの いりぐちに たちました。まほうのちりが ふわふわ まっていて、このさきには どんな ふしぎが まっているのか、むねが どきどきしました。",
+          general_child: "{childName}はきらきら光る森の入り口に立ちました。まほうのちりがふわふわと舞っています。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a glowing enchanted forest entrance. Towering ancient trees arch overhead with bioluminescent moss and tiny sparkling light particles (magical dust) drifting through golden air. A small child stands at the threshold with wide eyes of wonder, one hand reaching toward a floating light particle. Soft rainbow light filters through the canopy. Watercolor picture book style, luminous magical lighting, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "小さな妖精が{childName}に話しかけてきました。「いっしょに あそぼう！」",
+          baby_toddler: "ようせい、こんにちは！",
+          preschool_3_4:
+            "ちいさな ようせいが {childName}に はなしかけて きました。「いっしょに あそぼう！」",
+          early_reader_5_6:
+            "ちいさな ようせいが {childName}の まえに あらわれました。「ここは まほうの もり。いっしょに あそぼう！」と にっこり わらいました。",
+          early_elementary_7_8:
+            "ちいさな ようせいが {childName}の まえに あらわれました。「ここは まほうの もり。まほうのちりが ひかるときは、だれかが たのしいことを おもいえがいて いる しるしなんだよ」と おしえてくれました。",
+          general_child: "小さな妖精が{childName}に話しかけてきました。「いっしょに あそぼう！」",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of a tiny glowing fairy hovering at eye level with the child in the enchanted forest. The fairy has soft luminous wings and a friendly smile, surrounded by drifting magical dust particles. The child reaches out a hand with delight. Mossy logs and glowing mushrooms frame the scene. Watercolor picture book style, warm magical encounter mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "虹色に輝く泉を見つけました。まほうのちりがキラキラと水面に光っています。",
+          baby_toddler: "にじいろ いずみ、きらきら！",
+          preschool_3_4:
+            "にじいろに かがやく いずみを みつけました。まほうのちりが きらきら と みなもに ひかっています。",
+          early_reader_5_6:
+            "にじいろに かがやく いずみを みつけました。まほうのちりが きらきら と みなもに ひかって、まるで ほしが おちてきたみたいです。",
+          early_elementary_7_8:
+            "にじいろに かがやく いずみを みつけました。まほうのちりが きらきら みなもに ひかって、{childName}はそのうつくしさに しばらく うごけなくなってしまいました。",
+          general_child: "虹色に輝く泉を見つけました。まほうのちりがキラキラと水面に光っています。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of a shimmering rainbow-colored pond deep in the enchanted forest. The water's surface glows with prismatic light reflections and magical dust particles dancing above it. The child kneels at the edge, face reflecting rainbow colors, expression full of awe and joy. A tiny fairy sits on a mossy stone nearby. Watercolor picture book style, luminous magical lighting close-up, enchanting atmosphere, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4:
+            "もりに さようなら。「またいつか、まほうの もりへ あそびに きてね、{childName}。」",
+          early_reader_5_6:
+            "{childName}は もりを あとに しました。「またいつか、まほうの もりへ あそびに きてね」と ようせいが てを ふっています。{parentMessage}",
+          early_elementary_7_8:
+            "{childName}は もりを あとに しました。まほうのちりが おみやげみたいに てのひらに のこっています。「またいつか、まほうの もりへ あそびに きてね」と ようせいの こえが きこえました。{parentMessage}",
+          general_child:
+            "またいつか、まほうの もりへ あそびに きてね、{childName}。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child walking back along a glowing forest path, waving goodbye to a tiny fairy hovering at the treeline. Magical dust particles drift around the departing figure. Warm golden light spills from the forest canopy onto the path. The mood is tender and hopeful, inviting a return someday. Watercolor picture book style, gentle farewell composition, enchanted fantasy mood, luminous magical lighting, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-world-underwater": {
+    name: "うみの そこへ",
+    description: "海の底の神秘的な世界へ潜る、カラフルな冒険固定テンプレート",
+    icon: "🐠",
+    categoryGroupId: "imagination",
+    subcategoryId: "ocean-adventure",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["fantasy", "ocean", "fish", "underwater"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "海の底でカラフルな魚と泳ぐ子どもの絵本イメージ",
+    visualDirection:
+      "Underwater ocean adventure with colorful tropical fish, glowing coral reefs, shimmering light rays from above, and tiny bubble motif throughout.",
+    order: 81,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、海の底の神秘的な大冒険絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と うみの そこの ぼうけん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child in underwater gear surrounded by colorful tropical fish and glowing coral, soft light rays filtering down from above, tiny bubbles rising all around, vibrant yet gentle ocean mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "うみの そこへ もぐろう",
+      openingNarrationTemplate:
+        "あるひ、{childName}は うみの いりぐちに やってきました。なみの むこうに、ふしぎな せかいが まっています。ぷくぷくと あわが のぼってきます。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は波打ち際に立ってドキドキしました。海の底には何があるのかな。",
+          baby_toddler: "うみ、どきどき。ぷくぷく。",
+          preschool_3_4:
+            "{childName}は なみうちぎわに たって どきどき しました。うみの そこには なにが あるのかな。",
+          early_reader_5_6:
+            "{childName}は なみうちぎわに たって どきどき しました。うみの そこには どんな ふしぎが まっているのか、はやく しりたくて たまりません。",
+          early_elementary_7_8:
+            "{childName}は なみうちぎわに たって どきどき しました。ぷくぷくと あわが うかんできて、うみの そこから なにかが よんでいる きがしました。",
+          general_child: "{childName}は波打ち際に立ってドキドキしました。海の底には何があるのかな。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a child standing at the ocean's edge, turquoise waves lapping gently at their feet, warm sunlight sparkling on the water surface. Colorful coral shapes are faintly visible through the clear shallow water. Tiny bubbles rise from below. The child looks out to sea with bright curious eyes. Watercolor picture book style, inviting ocean adventure mood, luminous magical lighting, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "カラフルな魚の群れの中を{childName}は泳ぎました。ぷくぷくとあわがのぼります。",
+          baby_toddler: "おさかな いっぱい、わーい！",
+          preschool_3_4:
+            "カラフルな さかなの むれの なかを {childName}は およぎました。ぷくぷくと あわが のぼります。",
+          early_reader_5_6:
+            "カラフルな さかなの むれが {childName}の まわりを ぐるぐる およぎました。あかや きいろ、みどりの さかなたちに かこまれて、ぷくぷく あわが のぼります。",
+          early_elementary_7_8:
+            "カラフルな さかなの むれが {childName}の まわりを ぐるぐる およぎました。まるで にじの なかを おさんぽしているみたいで、ぷくぷく あわが のぼるたびに うれしくなります。",
+          general_child: "カラフルな魚の群れの中を{childName}は泳ぎました。ぷくぷくとあわがのぼります。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child swimming underwater surrounded by a swirling school of brightly colored tropical fish. Soft blue-green ocean light filters from above. Tiny bubbles rise past the child's smiling face. Gently swaying sea plants frame the sides. Watercolor picture book style, joyful underwater adventure mood, luminous magical lighting, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "キラキラ輝く珊瑚礁と光のアップ。ぷくぷくあわがそっとのぼります。",
+          baby_toddler: "さんご きらきら、きれい！",
+          preschool_3_4:
+            "きらきら かがやく さんごしょうが ありました。ひかりが ゆらゆら して、ぷくぷく あわが そっと のぼります。",
+          early_reader_5_6:
+            "きらきら かがやく さんごしょうが あらわれました。ひかりが ゆらゆら ゆれて、ぷくぷく あわが のぼるたびに {childName}の むねも ぴかぴか しました。",
+          early_elementary_7_8:
+            "きらきら かがやく さんごしょうが あらわれました。うみの そこから ひかりが かさなりあって、こんなに うつくしいけしきが あるなんて、{childName}は しらなかったと おもいました。",
+          general_child: "キラキラ輝く珊瑚礁と光のアップ。ぷくぷくあわがそっとのぼります。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of a vibrant coral reef scene with the child hovering close to fan corals and sea anemones glowing in prismatic colors. Light rays from the surface create shimmering caustic patterns across the coral. Tiny bubbles drift upward. The child's eyes are wide with wonder. Watercolor picture book style, luminous underwater magical lighting, close-up enchanted mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は海面へ浮上して、海の底を振り返りました。{parentMessage}",
+          baby_toddler: "うかんで、ばいばい。{parentMessage}",
+          preschool_3_4:
+            "{childName}は かいめんへ うかびあがり、うみの そこを ふりかえりました。{parentMessage}",
+          early_reader_5_6:
+            "{childName}は かいめんへ うかびあがりました。うみの そこの さかなたちが みえなくなっても、ぷくぷく あわは まだ のぼってきます。{parentMessage}",
+          early_elementary_7_8:
+            "{childName}は かいめんへ うかびあがりました。ふりかえると、うみの そこに きらきらの ひかりが まだ ゆれています。つぎは どんな ふしぎに であえるかな。{parentMessage}",
+          general_child:
+            "{childName}は海面へ浮上して、うみの そこを ふりかえりました。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child breaking through the ocean surface back into sunlight, looking down through clear water at the colorful reef far below. Sunlight sparkles on the waves above. Tiny bubbles still rise from the depths. The child smiles with happy memories. Watercolor picture book style, gentle hopeful ending, luminous ocean light, enchanted fantasy mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-world-dinosaurs": {
+    name: "きょうりゅうの くに",
+    description: "恐竜たちが暮らす太古の世界へタイムスリップ！やさしい恐竜との出会い固定テンプレート",
+    icon: "🦕",
+    categoryGroupId: "imagination",
+    subcategoryId: "prehistoric-adventure",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["fantasy", "dinosaur", "adventure", "prehistoric"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "恐竜たちと遊ぶ子どもの絵本イメージ",
+    visualDirection:
+      "Lush prehistoric jungle adventure with gentle giant dinosaurs, oversized tropical plants, dappled warm sunlight, and tiny green footprint motif throughout.",
+    order: 82,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、恐竜の世界の大冒険絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と きょうりゅうの くに",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing beside a gentle giant brachiosaurus in a lush prehistoric jungle, large fern leaves and colorful flowers framing the scene, a tiny green dinosaur footprint motif on the ground, warm golden light through ancient trees, safe friendly adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "きょうりゅうの くにへ しゅっぱつ！",
+      openingNarrationTemplate:
+        "あるひ、{childName}は おおきな あしあとを みつけました。きょうりゅうのあしあとです！このさきには どんな きょうりゅうが いるのかな。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は巨大な足跡を発見しました。きょうりゅうのあしあとです！",
+          baby_toddler: "おおきい あしあと、びっくり！",
+          preschool_3_4:
+            "{childName}は きょだいな あしあとを みつけました。きょうりゅうの あしあとです！",
+          early_reader_5_6:
+            "{childName}は きょだいな あしあとを みつけました。きょうりゅうの あしあとです！このさきを すすむと、どんな きょうりゅうに あえるのかな。",
+          early_elementary_7_8:
+            "{childName}は きょだいな あしあとを みつけました。みどりいろの きょうりゅうのあしあとが、おくの もりへと つづいています。このぼうけんは はじまったばかりです。",
+          general_child: "{childName}は巨大な足跡を発見しました。きょうりゅうのあしあとです！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a lush prehistoric jungle with enormous fern fronds and towering ancient trees. A child stands beside a massive dinosaur footprint in soft earth, looking ahead with excited curiosity. Tiny green footprint motifs lead deeper into the jungle. Dappled warm sunlight filters through prehistoric canopy. Watercolor picture book style, adventurous yet safe prehistoric mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "草食恐竜のブラキオサウルスが{childName}に首をのばして挨拶しました。",
+          baby_toddler: "きょうりゅう、おおきい！なかよし！",
+          preschool_3_4:
+            "くさを たべている おおきな きょうりゅうが、{childName}に くびを のばして あいさつ しました。",
+          early_reader_5_6:
+            "くさを たべている ブラキオサウルスが、{childName}に むかって そっと くびを のばしました。おおきいのに、とっても やさしそうです。",
+          early_elementary_7_8:
+            "ブラキオサウルスが {childName}の そばに そっと くびを さしのべました。おおきな めで じっと みつめられて、{childName}は ゆっくり てを のばしました。やさしい きょうりゅうです。",
+          general_child: "草食恐竜のブラキオサウルスが{childName}に首をのばして挨拶しました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of a gentle brachiosaurus lowering its long neck to greet the child in a prehistoric clearing. The child reaches up with a happy smile. Lush prehistoric foliage frames the scene. A tiny green footprint motif appears in the foreground soil. Warm golden prehistoric sunlight. Watercolor picture book style, gentle friendly encounter mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "きょうりゅうの子どもと{childName}は一緒に走って遊びました！",
+          baby_toddler: "いっしょに はしろう！たのしい！",
+          preschool_3_4:
+            "きょうりゅうの こどもと {childName}は いっしょに はしって あそびました！",
+          early_reader_5_6:
+            "ちいさな きょうりゅうの こどもが あらわれました。{childName}と いっしょに げんきよく はしりまわって、たのしくて しかたありません。",
+          early_elementary_7_8:
+            "ちいさな きょうりゅうの こどもが とびだしてきました。{childName}も いっしょに げんきよく かけまわって、きょうりゅうのあしあとが どんどん ふえていきました。",
+          general_child: "きょうりゅうの子どもと{childName}は一緒に走って遊びました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child playing alongside a small friendly young dinosaur in a prehistoric meadow. Both are mid-run with joyful expressions. Tiny green footprints trail behind them both. Warm dappled light. Watercolor picture book style, energetic joyful adventure close-up, enchanted prehistoric mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は恐竜たちに手を振って帰り道につきました。{parentMessage}",
+          baby_toddler: "きょうりゅう、またね！{parentMessage}",
+          preschool_3_4:
+            "{childName}は きょうりゅうたちに てを ふって かえりみちに つきました。{parentMessage}",
+          early_reader_5_6:
+            "{childName}は きょうりゅうたちに てを ふりました。きょうりゅうのあしあとが おみやげみたいに こころに のこっています。{parentMessage}",
+          early_elementary_7_8:
+            "{childName}は きょうりゅうたちに てを ふりました。またいつか、あの おおきくて やさしい きょうりゅうたちに あいに きたいな。{parentMessage}",
+          general_child:
+            "{childName}は きょうりゅうたちに てを ふって かえりみちに つきました。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child walking away along a prehistoric jungle path, waving back at a gentle brachiosaurus and a small young dinosaur watching from the treeline. Tiny green footprints dot the path. Warm golden light fills the prehistoric clearing. Watercolor picture book style, gentle farewell composition, enchanted prehistoric mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-world-candy-land": {
+    name: "おかしの くに",
+    description: "キャンディの木・チョコレートの川・クッキーのお城。甘い夢の国の大冒険固定テンプレート",
+    icon: "🍭",
+    categoryGroupId: "imagination",
+    subcategoryId: "sweets-fantasy",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["fantasy", "candy", "sweets", "dream-world"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "おかしの国でキャンディのお城を探検する子どもの絵本イメージ",
+    visualDirection:
+      "Whimsical candy kingdom with pastel colors, candy-cane trees, chocolate rivers, marshmallow hills, cookie castle, and a small pink candy motif throughout.",
+    order: 83,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、甘くてかわいいおかしの国の大冒険絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と おかしの くにの ぼうけん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing at a grand candy-cane gate entrance to a colorful candy kingdom, lollipop trees and gumdrop bushes all around, a chocolate river glittering in the background, a small pink candy motif at the gate, sweet dreamy mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "おかしの くにへ ようこそ",
+      openingNarrationTemplate:
+        "あるひ、{childName}の まえに あまい においの する もんが あらわれました。ここが おかしの くにの いりぐちです！",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はキャンディの門の前に立ちました。あまいにおいがします。",
+          baby_toddler: "あまい においー！きゃんでぃ！",
+          preschool_3_4:
+            "{childName}は キャンディの もんの まえに たちました。あまい においが します。",
+          early_reader_5_6:
+            "{childName}は キャンディの もんの まえに たちました。あまくて いいにおいが して、むこうには カラフルな きが たちならんでいます。",
+          early_elementary_7_8:
+            "{childName}は キャンディの もんの まえに たちました。あまくて いいにおいが して、キャンディでできた もんを くぐると、おかしの くにの ぼうけんが はじまります。",
+          general_child: "{childName}はキャンディの門の前に立ちました。あまいにおいがします。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a whimsical candy kingdom entrance with towering candy-cane gate pillars, lollipop trees lining the path, gumdrop bushes in pastel pinks and purples, and a glittering chocolate river in the distance. A child stands at the entrance with sparkling eyes of delight. A small pink candy motif rests near the gate post. Watercolor picture book style, sweet dreamy mood, luminous pastel lighting, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "チョコレートの川とマシュマロの丘！{childName}はびっくりしました。",
+          baby_toddler: "チョコかわ、ふわふわ！",
+          preschool_3_4:
+            "チョコレートの かわと マシュマロの おかが ありました！{childName}は びっくりしました。",
+          early_reader_5_6:
+            "チョコレートの かわが ゆっくり ながれていて、マシュマロの おかが ふわふわ ならんでいます。{childName}は めを まるくしました。",
+          early_elementary_7_8:
+            "チョコレートの かわが きらきら ながれていて、マシュマロの おかが ふわふわ かぜに ゆれています。{childName}は こんなに すてきな けしきを みたことが ありませんでした。",
+          general_child: "チョコレートの川とマシュマロの丘！{childName}はびっくりしました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of a flowing chocolate river with glossy dark-brown waves and whipped-cream foam banks. Fluffy marshmallow hills roll in the background. The child stands at the riverside with arms spread wide in amazement. A small pink candy motif floats on the chocolate surface. Cotton candy clouds drift overhead. Watercolor picture book style, sweet wonder mood, luminous pastel lighting, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "クッキーのお城でおかしの王様に会いました！",
+          baby_toddler: "おうさま、こんにちは！",
+          preschool_3_4:
+            "クッキーの おしろで おかしの おうさまに あいました！",
+          early_reader_5_6:
+            "クッキーで できた おしろで、あまいおかしの おうさまに あいました。おうさまは にっこりして {childName}を むかえてくれました。",
+          early_elementary_7_8:
+            "クッキーで できた おしろの まんなかで、おかしの おうさまが てを ふっていました。「よく きてくれました、{childName}！このおかしのくには みんなが たのしく すごせる ばしょですよ」とにっこりわらいました。",
+          general_child: "クッキーのお城でおかしの王様に会いました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child meeting a jolly candy kingdom ruler inside a grand cookie castle throne room. The ruler wears a frosting-decorated crown and has a warm friendly smile. A small pink candy motif decorates the throne armrest. The child's face shows pure delight. Watercolor picture book style, warm friendly royal encounter, sweet dreamy close-up, luminous pastel lighting, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はキャンディのおみやげを持って帰りました。{parentMessage}",
+          baby_toddler: "キャンディ もって かえろう！{parentMessage}",
+          preschool_3_4:
+            "{childName}は キャンディの おみやげを もって かえりました。{parentMessage}",
+          early_reader_5_6:
+            "{childName}は キャンディの おみやげを もって かえりました。あのあまい においを、ずっと おぼえていたいな。{parentMessage}",
+          early_elementary_7_8:
+            "{childName}は ピンクの キャンディを そっと てのひらに のせて、おかしのくにを あとに しました。また いつか かならず もどってこようと こころに きめました。{parentMessage}",
+          general_child:
+            "{childName}は キャンディの おみやげを もって かえりました。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child walking home along a candy-cane lined path, holding a small pink candy in their outstretched hand, glancing back at the cookie castle in the distance with a happy smile. A trail of small pink candy motifs dots the path. Warm pastel evening light. Watercolor picture book style, sweet gentle farewell composition, enchanted fantasy mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-world-cloud-castle": {
+    name: "くもの うえの おしろ",
+    description: "雲の上にある不思議なお城と空からの絶景。白い羽が舞う幻想的な固定テンプレート",
+    icon: "☁️",
+    categoryGroupId: "imagination",
+    subcategoryId: "sky-adventure",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["fantasy", "clouds", "castle", "sky"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "雲の上のお城を探検する子どもの絵本イメージ",
+    visualDirection:
+      "Dreamy sky adventure with fluffy white clouds underfoot, a luminous cloud castle, rainbow bridges, and a tiny white feather motif throughout.",
+    order: 84,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、雲の上のお城の大冒険絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と くもの うえの おしろ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child walking on fluffy white clouds toward a shimmering cloud castle glowing with soft golden and silver light, a tiny white feather motif drifting nearby, a rainbow bridge arching overhead, dreamy sky adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "くもの うえを あるいて いこう",
+      openingNarrationTemplate:
+        "あるひ、{childName}は しろい くもが はしごのように のびているのを みました。のぼっていくと、そこには ふしぎな おしろが ありました。てんしの羽が ふわりと まっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は雲の上を歩いてお城へ向かいました。ふわふわです。",
+          baby_toddler: "くもの うえ、ふわふわ！",
+          preschool_3_4:
+            "{childName}は くもの うえを あるいて おしろへ むかいました。ふわふわで きもちいいです。",
+          early_reader_5_6:
+            "{childName}は くもの うえを ふわふわ あるいて おしろへ むかいました。あしもとが やわらかくて、まるで わたの うえを あるいているみたいです。",
+          early_elementary_7_8:
+            "{childName}は くもの うえを ふわふわ あるいて おしろへ むかいました。しろい はねが ひらひら まっていて、このみちの むこうに どんな ふしぎが まっているのか たのしみでした。",
+          general_child: "{childName}は雲の上を歩いてお城へ向かいました。ふわふわです。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a child walking across fluffy white clouds high in a pastel sky, heading toward a distant luminous cloud castle glowing with soft gold and silver light. A rainbow bridge arches gently. A tiny white feather drifts beside the child. The sky is filled with soft pink and lavender hues. Watercolor picture book style, dreamy sky adventure mood, luminous magical lighting, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "雲のお城の中を探検しました。虹の橋と光の部屋がありました。",
+          baby_toddler: "にじの はし、きれい！",
+          preschool_3_4:
+            "くもの おしろの なかを たんけんしました。にじの はしと ひかりの へやが ありました。",
+          early_reader_5_6:
+            "くもの おしろの なかを たんけんしました。にじの はしを わたると、ひかりでいっぱいの へやに でました。しろい はねが ひらひら まっています。",
+          early_elementary_7_8:
+            "くもの おしろの なかを たんけんしました。にじの はしを わたると、7しょくの ひかりで かがやく へやに でました。しろい はねが ひとつひとつ やさしく まっていました。",
+          general_child: "雲のお城の中を探検しました。虹の橋と光の部屋がありました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot inside a luminous cloud castle corridor. A rainbow bridge arches over a misty gap. The child walks across it with arms stretched for balance, smiling with wonder. Light streams through archways of translucent cloud material. A tiny white feather floats beside the child. Watercolor picture book style, magical interior sky adventure mood, luminous rainbow lighting, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は空から地上の景色を眺めました。なんてきれいなんだろう！",
+          baby_toddler: "したのせかい、きれい！",
+          preschool_3_4:
+            "{childName}は そらから ちじょうの けしきを ながめました。なんて きれいなんだろう！",
+          early_reader_5_6:
+            "{childName}は おしろの まどから ちじょうの けしきを ながめました。ちいさな まちと みどりの もりが、おもちゃのように みえます。",
+          early_elementary_7_8:
+            "{childName}は おしろの いちばん たかい まどから ちじょうを みおろしました。まちも、かわも、もりも、ぜんぶが てのひらの なかに のってしまいそうなくらい ちいさく きれいに みえました。",
+          general_child: "{childName}は空から地上の景色を眺めました。なんてきれいなんだろう！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child leaning out from a cloud castle window, gazing down at the beautiful world below. The child's expression is one of pure awe. A tiny white feather floats past the window. Soft golden light surrounds. Watercolor picture book style, breathtaking aerial perspective close-up, luminous magical sky lighting, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は雲の上から手を振って帰りました。{parentMessage}",
+          baby_toddler: "てを ふって、ばいばい！{parentMessage}",
+          preschool_3_4:
+            "{childName}は くもの うえから てを ふって かえりました。{parentMessage}",
+          early_reader_5_6:
+            "{childName}は くもの おしろに てを ふって かえりました。しろい はねが ひとつ、てのひらに そっと おちてきました。{parentMessage}",
+          early_elementary_7_8:
+            "{childName}は くもの おしろに おおきく てを ふって かえりました。しろい はねが そっと おちてきて、これは おしろからの プレゼントだと おもいました。{parentMessage}",
+          general_child:
+            "{childName}は くもの うえから てを ふって かえりました。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child descending from the clouds, waving back up at the luminous cloud castle above. A tiny white feather drifts slowly downward. The world below is bathed in soft golden evening light. Watercolor picture book style, gentle farewell composition, enchanted sky fantasy mood, luminous magical lighting, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-world-toy-land": {
+    name: "おもちゃが うごきだす",
+    description: "夜中においておもちゃたちが動き出し秘密のパーティーを開いている！不思議な夜の固定テンプレート",
+    icon: "🪆",
+    categoryGroupId: "imagination",
+    subcategoryId: "toy-adventure",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["fantasy", "toys", "night", "party"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "夜中におもちゃたちがパーティーをしている絵本イメージ",
+    visualDirection:
+      "Magical toy room at night with toys coming to life, warm glowing lamp light, colorful festive party atmosphere, and a tiny wind-up key motif throughout.",
+    order: 85,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、おもちゃたちの秘密のパーティー絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と おもちゃたちの ひみつのパーティー",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a child peeking into a cozy toy room at night where toys are dancing and celebrating — a teddy bear, building blocks, a toy train, and a matryoshka doll all animated and joyful — warm golden lamp light glowing, tiny wind-up key motifs on the toys, magical night party mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "よなかの おもちゃのパーティー",
+      openingNarrationTemplate:
+        "よなかに めが さめた {childName}は、へやから なにか おとが きこえることに きがつきました。おもちゃのしるしが ぴかぴか ひかっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}が夜中に目を覚ますと、部屋のおもちゃが動いていました。",
+          baby_toddler: "おもちゃ うごいた！びっくり！",
+          preschool_3_4:
+            "{childName}が よなかに めを さますと、へやの おもちゃが うごいていました。",
+          early_reader_5_6:
+            "{childName}が よなかに めを さますと、へやの おもちゃが みんな うごきだしていました。おもちゃのしるしが ぴかぴか ひかっています。",
+          early_elementary_7_8:
+            "{childName}が よなかに めを さますと、へやの おもちゃが みんな うごきだしていました。くらい へやに おもちゃのしるしが あかるく ひかって、なにかが はじまりそうな よかんがします。",
+          general_child: "{childName}が夜中に目を覚ますと、部屋のおもちゃが動いていました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy toy room at night lit by warm golden lamp glow. Toys are coming to life — a teddy bear waves, building blocks stack themselves, a toy train circles the floor. The child stands in the doorway with a surprised but delighted expression. Tiny wind-up key motifs glow on several toys. Watercolor picture book style, enchanted toy-room night adventure mood, luminous warm lighting, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おもちゃたちが{childName}をパーティーに招待してくれました！",
+          baby_toddler: "パーティー、はいって！わーい！",
+          preschool_3_4:
+            "おもちゃたちが {childName}を パーティーに しょうたいして くれました！",
+          early_reader_5_6:
+            "おもちゃたちが {childName}に むかって てを ふっています。「いっしょに パーティーを しよう！」と くまのぬいぐるみが よんでいます。",
+          early_elementary_7_8:
+            "おもちゃたちが {childName}に むかって てを ふっています。「ぼくたちの ひみつのパーティーに ようこそ！」くまのぬいぐるみが うれしそうに よんでいます。おもちゃのしるしが きらきら ひかります。",
+          general_child: "おもちゃたちが{childName}をパーティーに招待してくれました！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of animated toys welcoming the child into their secret night party. A teddy bear waves with both arms, a matryoshka doll spins joyfully, colorful building blocks form a festive arch. The child steps forward with a big grin. Tiny wind-up key motifs glow on each toy. Warm golden party lighting. Watercolor picture book style, joyful enchanted toy party mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はおもちゃたちと一緒に踊りました！たのしくてたまりません。",
+          baby_toddler: "いっしょに おどろう、たのしい！",
+          preschool_3_4:
+            "{childName}は おもちゃたちと いっしょに おどりました！たのしくて たまりません。",
+          early_reader_5_6:
+            "{childName}は おもちゃたちと いっしょに おどりました。くまのぬいぐるみと てをつないで、くるくる まわります。たのしくて たまりません！",
+          early_elementary_7_8:
+            "{childName}は おもちゃたちと いっしょに おどりました。くまのぬいぐるみと てを つないで くるくる まわると、おもちゃのしるしが みんなで きらきら ひかって、へやが まほうのような ひかりで いっぱいになりました。",
+          general_child: "{childName}はおもちゃたちと一緒に踊りました！たのしくてたまりません。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child dancing hand-in-hand with a teddy bear, both spinning with big joyful smiles. Other toys cheer around them. Tiny wind-up key motifs glow on each toy. The room is filled with warm golden magical party light. Watercolor picture book style, intimate joyful dance close-up, enchanted toy party mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "朝が来て、おもちゃたちは元の場所に戻りました。{parentMessage}",
+          baby_toddler: "おはよう、おもちゃ ねんね。{parentMessage}",
+          preschool_3_4:
+            "あさが きて、おもちゃたちは もとの ばしょに もどりました。{parentMessage}",
+          early_reader_5_6:
+            "あさが きて、おもちゃたちは そっと もとの ばしょに もどりました。でも おもちゃのしるしが ひとつ、そっと ひかったような きがしました。{parentMessage}",
+          early_elementary_7_8:
+            "あさが きて、おもちゃたちは そっと もとの ばしょに もどりました。ふつうの おもちゃにもどって いても、{childName}には あのたのしい パーティーが ほんものだったと わかっています。{parentMessage}",
+          general_child:
+            "あさが きて、おもちゃたちは もとの ばしょに もどりました。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the toy room at dawn with warm morning light streaming through the window. All toys are back in their places — the teddy bear on the shelf, the train on its track, the matryoshka doll on the toy box — but each has a gentle smile. The child stands in the doorway smiling knowingly. A tiny wind-up key motif glints softly on the teddy bear. Watercolor picture book style, tender morning-after composition, enchanted toy fantasy mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-potty-training": {
+    name: "ひとりで トイレ できたよ",
+    description: "トイレトレーニングで一人でできた！自信と達成感を育む固定テンプレート絵本",
+    icon: "🌈",
+    categoryGroupId: "growth-support",
+    subcategoryId: "toilet-training",
+    parentIntent: "生活習慣を楽しく身につけてほしい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 4,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["potty", "independence", "milestone", "growth"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageAlt: "ひとりでトイレができた子どもの絵本イメージ",
+    visualDirection:
+      "Bright encouraging home atmosphere with cheerful rainbow motifs celebrating each success, warm supportive mood throughout.",
+    order: 90,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、トイレトレーニング達成を祝う絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}、ひとりで トイレ できたよ！",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a proud beaming child standing in a bright bathroom doorway with arms raised in triumph, a cheerful rainbow arching above them, warm encouraging home atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "できた！ひとりで できたよ！",
+      openingNarrationTemplate:
+        "きょう {childName}は ひとりで トイレに いくれんしゅうを しています。にじが でたら、できたしるしです。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はトイレに行きたくなりました。「いける！いける！」",
+          baby_toddler: "トイレ、いく！がんばる！",
+          preschool_3_4:
+            "{childName}は トイレに いきたく なりました。「いける！いける！」",
+          early_reader_5_6:
+            "{childName}は おなかに もよおしを かんじました。「いまだ！ひとりで いける！」と こころの なかで つぶやきました。",
+          early_elementary_7_8:
+            "{childName}は おなかに サインを かんじました。「いまだ！ひとりで トイレに いけるぞ！」と こころを きめました。",
+          general_child: "{childName}はトイレに行きたくなりました。「いける！いける！」",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a child standing determinedly in a home hallway, looking toward a cheerful bright bathroom with the door open. The child's expression shows concentration and resolve. A tiny rainbow motif glows above the bathroom door. Warm home lighting. Watercolor picture book style, encouraging independent milestone mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は一人でトイレに座りました。「すごい！ちゃんとできてる！」",
+          baby_toddler: "すわった！えらい！できてる！",
+          preschool_3_4:
+            "{childName}は ひとりで トイレに すわりました。「すごい！ちゃんと できてる！」",
+          early_reader_5_6:
+            "{childName}は ひとりで トイレに すわりました。「わたし、ちゃんと できてる！」と うれしくなりました。",
+          early_elementary_7_8:
+            "{childName}は ひとりで トイレに すわりました。「ひとりで できてる！」という きもちが、むねの なかで にじのように ひろがりました。",
+          general_child: "{childName}は一人でトイレに座りました。「すごい！ちゃんとできてる！」",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child sitting confidently on a child-sized toilet seat in a cheerful bright bathroom, expression focused and proud. A rainbow motif arches gently above on the wall tiles. Warm soft bathroom light. Watercolor picture book style, encouraging self-reliance mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "できた！{childName}はにじを見つけました。「やったー！！」",
+          baby_toddler: "できた！にじ！やったー！！",
+          preschool_3_4:
+            "できた！{childName}は にじを みつけました。「やったー！！」",
+          early_reader_5_6:
+            "できた！{childName}は にじを みつけました。ひとりで できたことが うれしくて、「やったー！！」と さけびました。",
+          early_elementary_7_8:
+            "できた！{childName}は にじを みつけました。ひとりで できたという じかんが、こころの なかで にじのように かがやいています。「やったー！！」",
+          general_child: "できた！{childName}はにじを見つけました。「やったー！！」",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child's triumphant face with both fists raised in celebration, a bright rainbow arching behind them. The expression is pure proud joy. Colorful rainbow motifs sparkle around the child. Warm glowing light. Watercolor picture book style, triumphant achievement close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ひとりでできた{childName}はとても輝いています。{parentMessage}",
+          baby_toddler: "できた！えらい！すごい！{parentMessage}",
+          preschool_3_4:
+            "ひとりで できた {childName}は とても かがやいています。{parentMessage}",
+          early_reader_5_6:
+            "ひとりで できた {childName}は にじのように かがやいています。できることが ひとつ ふえるたびに、{childName}は もっと おおきく なります。{parentMessage}",
+          early_elementary_7_8:
+            "ひとりで できた {childName}は にじのように かがやいています。ちいさな できた が、おおきな じしんに なっていきます。{parentMessage}",
+          general_child:
+            "ひとりで できた {childName}は とても かがやいています。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child standing in the warm home hallway, hands on hips with a confident proud smile. A beautiful full rainbow arches above the scene. The home feels warm and safe. Rainbow motifs glow softly throughout. Watercolor picture book style, warm achievement celebration ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-getting-dressed": {
+    name: "じぶんで おきがえ できたよ",
+    description: "自分でお着替えができた！ボタンを留めて、靴下を履いて、一人でできる喜びを贈る絵本",
+    icon: "👕",
+    categoryGroupId: "growth-support",
+    subcategoryId: "self-care",
+    parentIntent: "生活習慣を楽しく身につけてほしい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 5,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["dressing", "independence", "self-care", "growth"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageAlt: "自分でお着替えができた子どもの絵本イメージ",
+    visualDirection:
+      "Cheerful morning bedroom atmosphere with colorful clothes, yellow button motifs celebrating each dressing success, warm encouraging mood.",
+    order: 91,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、自分でお着替えができた絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}、じぶんで おきがえ できたよ！",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a proud child standing in a cozy bedroom wearing a self-chosen colorful outfit, one arm raised in triumph, yellow button motifs scattered around like confetti, warm morning bedroom atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "じぶんで きがえ、できたよ！",
+      openingNarrationTemplate:
+        "あさ、{childName}は めを さましました。きょうは じぶんで おきがえを するぞ！きいろい ボタンが ぴかりと ひかります。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は自分でシャツを選びました。きいろいボタンがかわいい！",
+          baby_toddler: "シャツ きる！じぶんで！かわいい！",
+          preschool_3_4:
+            "{childName}は じぶんで シャツを えらびました。きいろい ボタンが かわいい！",
+          early_reader_5_6:
+            "{childName}は じぶんで きょうの シャツを えらびました。きいろい ボタンが ならんで いて、ひとつひとつ とめるの が たのしそうです。",
+          early_elementary_7_8:
+            "{childName}は じぶんで きょうの きがえを えらびました。きいろい ボタンが ならんだ シャツを みて、「きょうも じぶんで できるぞ！」と こころに ちからが はいりました。",
+          general_child: "{childName}は自分でシャツを選びました。きいろいボタンがかわいい！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy child's bedroom in the morning. The child stands before an open wardrobe, holding up a colorful shirt with yellow buttons, examining it with delight. Yellow button motifs scatter like tiny suns around the room. Warm morning light. Watercolor picture book style, cheerful independent morning routine mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はボタンをひとつずつ留めました。集中して、できた！",
+          baby_toddler: "ボタン、ぱちっ！できた！",
+          preschool_3_4:
+            "{childName}は ボタンを ひとつずつ とめました。しゅうちゅうして、できた！",
+          early_reader_5_6:
+            "{childName}は ボタンを ひとつずつ ていねいに とめました。さいしょは むずかしかったけど、しゅうちゅうして、できた！",
+          early_elementary_7_8:
+            "{childName}は ボタンを ひとつずつ ていねいに とめていきました。ちいさな きいろい ボタンが とまるたびに、じぶんが すこし おとなに なった きがします。",
+          general_child: "{childName}はボタンをひとつずつ留めました。集中して、できた！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child's small hands carefully fastening yellow buttons on a shirt, tongue sticking out slightly in concentration. Each button that gets done lights up with a tiny yellow glow. Yellow button motifs float softly nearby. Warm bedroom light. Watercolor picture book style, focused self-care discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "靴下も自分で履けました！{childName}は鏡で自分を見てニコニコ。",
+          baby_toddler: "くつした、はいた！じぶんで！",
+          preschool_3_4:
+            "くつしたも じぶんで はけました！{childName}は かがみで じぶんを みて にこにこ。",
+          early_reader_5_6:
+            "くつしたも じぶんで はけました！かがみで じぶんを みると、きちんと きがえた {childName}が いました。にこにこ できます。",
+          early_elementary_7_8:
+            "くつしたも じぶんで はけました！かがみで じぶんを みると、ちゃんと きがえた {childName}が にっこり していました。じぶんで できるって、すごい！",
+          general_child: "靴下も自分で履けました！{childName}は鏡で自分を見てニコニコ。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child looking at their reflection in a bedroom mirror, fully dressed and beaming with proud satisfaction. Yellow button motifs gleam on the shirt. The child's posture is upright and confident. Morning light frames the mirror warmly. Watercolor picture book style, proud self-discovery close-up, warm encouraging mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "自分でできた{childName}はもう立派なお兄ちゃん・お姉ちゃんです。{parentMessage}",
+          baby_toddler: "じぶんで できた！えらい！{parentMessage}",
+          preschool_3_4:
+            "じぶんで できた {childName}は もう りっぱな おにいちゃん・おねえちゃんです。{parentMessage}",
+          early_reader_5_6:
+            "じぶんで できた {childName}。できることが ふえるたびに、{childName}は どんどん すてきに なります。{parentMessage}",
+          early_elementary_7_8:
+            "じぶんで できた {childName}。きいろい ボタンが ひかって いるように、{childName}の まいにちが かがやいています。{parentMessage}",
+          general_child:
+            "じぶんで できた {childName}は もう りっぱです。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child walking out the front door in their self-chosen outfit, ready for the day, waving back with a confident smile. Yellow button motifs gleam on the shirt in morning sunlight. The home doorway frames the child warmly. Watercolor picture book style, proud morning achievement ending, warm sunshine, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-eating-veggies": {
+    name: "やさい たべてみたら",
+    description: "苦手な野菜にチャレンジ！食べてみたら意外においしかった。食育を楽しくする絵本",
+    icon: "🥦",
+    categoryGroupId: "growth-support",
+    subcategoryId: "eating-habits",
+    parentIntent: "生活習慣を楽しく身につけてほしい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["vegetables", "food", "challenge", "growth"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageAlt: "苦手な野菜に挑戦する子どもの絵本イメージ",
+    visualDirection:
+      "Bright cheerful kitchen atmosphere with colorful vegetables, green leaf motifs celebrating each bite, encouraging food-adventure mood.",
+    order: 92,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、野菜を食べることへの挑戦絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と やさいの ぼうけん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a brave child holding a fork with a broccoli floret on it, looking at it curiously, bright friendly vegetables dancing around them — broccoli, carrots, peas — green leaf motifs floating cheerfully, encouraging food adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "やさい、ちょっと たべてみる！",
+      openingNarrationTemplate:
+        "きょう {childName}の おさらに みどりのやさいが のっています。「たべられるかな？」みどりの はっぱが ゆれています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はお皿の野菜をじっと見ました。たべられるかな？",
+          baby_toddler: "みどりの やさい。じっとみてる。",
+          preschool_3_4:
+            "{childName}は おさらの やさいを じっと みました。たべられるかな？",
+          early_reader_5_6:
+            "{childName}は おさらの みどりの やさいを じっと みました。「たべられるかな？」と おもいながら、はしを もちました。",
+          early_elementary_7_8:
+            "{childName}は おさらの やさいを じっと みました。「たべたくない」という きもちと、「たべてみよう」という きもちが むねの なかで いったりきたりしています。",
+          general_child: "{childName}はお皿の野菜をじっと見ました。たべられるかな？",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cheerful kitchen table setting at mealtime. The child sits at the table, staring intently at a plate with colorful vegetables — broccoli, carrots, peas. The child holds chopsticks hesitantly. Green leaf motifs float gently around the plate. Warm kitchen light. Watercolor picture book style, gentle food challenge mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ブロッコリーさんが「おいしいよ！」と言っているみたいです。",
+          baby_toddler: "ブロッコリー、おいしいよ！はっぱ！",
+          preschool_3_4:
+            "ブロッコリーさんが 「おいしいよ！」と いっているみたいです。",
+          early_reader_5_6:
+            "ブロッコリーさんが にっこり して「おいしいよ！ からだに いいよ！」と いっているみたいです。みどりの はっぱが ゆれています。",
+          early_elementary_7_8:
+            "ブロッコリーさんが にっこり して「からだを つよくしてあげるよ！」と いっているみたいです。やさいには それぞれ からだにいい えいようが はいっています。",
+          general_child: "ブロッコリーさんが「おいしいよ！」と言っているみたいです。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of a friendly-looking broccoli character on the plate, seemingly smiling and cheerful — framed as the child's imaginative perception. Green leaf motifs float around the vegetables. The child leans in slightly curious. Warm kitchen light. Watercolor picture book style, playful food imagination mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は目をつぶって、ぱくっと食べてみました！",
+          baby_toddler: "ぱくっ！たべた！どうかな？",
+          preschool_3_4:
+            "{childName}は めを つぶって、ぱくっと たべてみました！",
+          early_reader_5_6:
+            "{childName}は めを つぶって、ぱくっと たべてみました！「あれ？おいしい！？」と びっくりしました。",
+          early_elementary_7_8:
+            "{childName}は めを つぶって、ぱくっと たべてみました。ほんの すこし にがみが あるけど、「あれ、いける！」と おもいました。",
+          general_child: "{childName}は目をつぶって、ぱくっと食べてみました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child with eyes scrunched shut, biting into a piece of broccoli bravely. The expression transitions from nervous to surprised pleasure. Green leaf motifs burst around the bite like a flavor explosion. Warm kitchen light. Watercolor picture book style, brave food challenge close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "やさいを食べた{childName}はもっと強くなれます。{parentMessage}",
+          baby_toddler: "やさい たべた！つよくなる！{parentMessage}",
+          preschool_3_4:
+            "やさいを たべた {childName}は もっと つよく なれます。{parentMessage}",
+          early_reader_5_6:
+            "やさいを たべた {childName}は からだが つよく なれます。ちゃれんじ できた！{parentMessage}",
+          early_elementary_7_8:
+            "やさいを たべた {childName}は からだも こころも つよく なれます。にがてな ことに ちゃれんじ する きもちが、いちばんの えいようです。{parentMessage}",
+          general_child:
+            "やさいを たべた {childName}は もっと つよく なれます。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child at the dinner table with an empty plate, giving a thumbs up with a proud smile. Green leaf motifs float happily around the clean plate. Family watches warmly in the background. Watercolor picture book style, warm food achievement ending, encouraging home atmosphere, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-morning-routine": {
+    name: "じぶんで できた あさ",
+    description: "朝の支度を自分でできた！歯磨き・着替え・準備。自分でできる喜びを育む絵本",
+    icon: "⏰",
+    categoryGroupId: "growth-support",
+    subcategoryId: "morning-routine",
+    parentIntent: "生活習慣を楽しく身につけてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["morning", "routine", "independence", "growth"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageAlt: "朝の支度を自分でできた子どもの絵本イメージ",
+    visualDirection:
+      "Bright cheerful morning home atmosphere, each task completed with a sunrise sun glow motif, encouraging independence routine.",
+    order: 93,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、朝の支度を自分でできた絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の じぶんで できた あさ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a bright-eyed child in pajamas standing in a sunny bedroom, arms raised cheerfully at the start of the morning, a glowing sunrise sun motif visible through the window, warm encouraging morning atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "おはよう！けさも じぶんで できるぞ！",
+      openingNarrationTemplate:
+        "おはよう、{childName}！あさのたいようが まどから さしこんでいます。きょうは じぶんで あさのしたくを するぞ！",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は自分で起きて、顔を洗いました。すっきり！",
+          baby_toddler: "かお あらった！すっきり！おはよう！",
+          preschool_3_4:
+            "{childName}は じぶんで おきて、かおを あらいました。すっきり！",
+          early_reader_5_6:
+            "{childName}は じぶんで めを さまして、かおを あらいました。たいようが まどから はいってきて、あさが はじまります。",
+          early_elementary_7_8:
+            "{childName}は じぶんで めを さまして、かおを あらいました。ひんやりした みずが ねむけを とばして、たいようが まどから はいってきました。",
+          general_child: "{childName}は自分で起きて、顔を洗いました。すっきり！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a bright cheerful bathroom in the morning. The child stands at the sink, water splashing as they wash their face with both hands, eyes still a little sleepy but smiling. A sunrise sun motif glows in the bathroom window. Warm morning light. Watercolor picture book style, fresh encouraging morning mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "歯ブラシを持って、シャカシャカ！自分で歯を磨きました。",
+          baby_toddler: "はみがき、しゃかしゃか！じぶんで！",
+          preschool_3_4:
+            "はブラシを もって、シャカシャカ！じぶんで はを みがきました。",
+          early_reader_5_6:
+            "はブラシを もって しゃかしゃか みがきます。うえ、した、おく。じぶんで ちゃんと みがけました！",
+          early_elementary_7_8:
+            "はブラシを もって ていねいに みがきます。うえのは、したのは、おくの は まで。じぶんで ちゃんと できると、きもちが すっきりします。",
+          general_child: "歯ブラシを持って、シャカシャカ！自分で歯を磨きました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child brushing their teeth enthusiastically at the bathroom mirror, elbow pumping up and down. Toothpaste foam and a big morning smile visible. A sunrise sun motif gleams in the mirror reflection. Warm bathroom light. Watercolor picture book style, energetic morning routine mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "着替えも準備も全部できた！{childName}はドアを開けました。",
+          baby_toddler: "きがえ できた！いってきます！",
+          preschool_3_4:
+            "きがえも じゅんびも ぜんぶ できた！{childName}は ドアを あけました。",
+          early_reader_5_6:
+            "きがえも かばんの じゅんびも ぜんぶ じぶんで できました！{childName}は ドアを あけて、「いってきます！」",
+          early_elementary_7_8:
+            "きがえも かばんの じゅんびも ぜんぶ じぶんで できました。たいようが ドアの むこうで まっています。「いってきます！」",
+          general_child: "着替えも準備も全部できた！{childName}はドアを開けました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child standing at the front door, fully dressed and ready for the day, one hand on the door handle, the other waving goodbye. The sunrise sun motif blazes warmly through the door window. The child's face beams with morning readiness. Watercolor picture book style, triumphant morning departure close-up, luminous morning light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "自分でできた朝は、気持ちいい！{parentMessage}",
+          baby_toddler: "じぶんで できた！えらい！{parentMessage}",
+          preschool_3_4:
+            "じぶんで できた あさは、きもちいい！{parentMessage}",
+          early_reader_5_6:
+            "じぶんで できた あさは、いちにちじゅう きもちがいい。たいようのように かがやく {childName}。{parentMessage}",
+          early_elementary_7_8:
+            "じぶんで できた あさは、こころも からだも かるい。たいようのように かがやく {childName}の まいにちが はじまります。{parentMessage}",
+          general_child:
+            "じぶんで できた あさは、きもちいい！{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child walking out the door into a sunny morning, backpack on, face bright. A glowing sunrise sun motif fills the sky above. The home behind is warm and cozy. The world ahead is bright and welcoming. Watercolor picture book style, hopeful morning adventure beginning ending, luminous morning light, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-chopsticks": {
+    name: "はしで たべられた",
+    description: "お箸で食べられた！練習を重ねてついにできた達成感と誇りを贈る成長絵本",
+    icon: "🥢",
+    categoryGroupId: "growth-support",
+    subcategoryId: "eating-habits",
+    parentIntent: "生活習慣を楽しく身につけてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["chopsticks", "mealtime", "skill", "growth"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageAlt: "お箸で食べられた子どもの絵本イメージ",
+    visualDirection:
+      "Warm cheerful dining table atmosphere, red bean motifs appearing as small victories with each chopstick success, encouraging skill-building mood.",
+    order: 94,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、お箸で食べられた達成感の絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}、はしで たべられた！",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a proud child holding chopsticks with a perfect pinch grip, a cute red bean held triumphantly between the tips, warm mealtime atmosphere, cheerful dining table with friendly food characters, red bean motifs scattered like confetti, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "はし、つかえるかな？",
+      openingNarrationTemplate:
+        "きょう {childName}は おはしを もちました。あかい まめが ちゃぶだいに ならんでいます。「つかめるかな？」",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はお箸をもって、まねしてみました。難しいな…",
+          baby_toddler: "おはし、もった！むずかしい！",
+          preschool_3_4:
+            "{childName}は おはしを もって、まねしてみました。むずかしいな…",
+          early_reader_5_6:
+            "{childName}は おはしを もって、きちんと もちかたを まねしてみました。ゆびが いうことを きいてくれません。",
+          early_elementary_7_8:
+            "{childName}は おはしを もって、もちかたを まねしてみました。ゆびをおいたとおりに うごかそうとするけど、なかなか むずかしい。",
+          general_child: "{childName}はお箸をもって、まねしてみました。難しいな…",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cheerful home dining table at mealtime. The child sits at the table, holding chopsticks awkwardly in both hands, concentrating hard. A bowl of food sits before them. Red bean motifs dot the tablecloth like a pattern. Warm home light. Watercolor picture book style, cheerful mealtime practice mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "れんしゅう、れんしゅう！{childName}はあきらめません。",
+          baby_toddler: "れんしゅう！もういっかい！あきらめない！",
+          preschool_3_4:
+            "れんしゅう、れんしゅう！{childName}は あきらめません。",
+          early_reader_5_6:
+            "れんしゅう、れんしゅう！おはしが すこしずつ ゆびに なじんできました。{childName}は あきらめません。",
+          early_elementary_7_8:
+            "れんしゅう、れんしゅう！なんどやっても むずかしいけど、{childName}は あきらめません。できるまで やってみる、それが {childName}のやりかたです。",
+          general_child: "れんしゅう、れんしゅう！{childName}はあきらめません。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child practicing chopsticks with intense focus, trying again and again to pick up a red bean. Their posture is determined despite difficulty. Small red bean motifs glow encouragingly on the table. Warm home light. Watercolor picture book style, determined practice mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "まめがつかめた！{childName}は「できた！！」と叫びました！",
+          baby_toddler: "まめ、つかめた！やった！できた！！",
+          preschool_3_4:
+            "まめが つかめた！{childName}は 「できた！！」と さけびました！",
+          early_reader_5_6:
+            "まめが つかめた！おはしの さきに まめが のって、「できた！！」と {childName}は さけびました。むねが どきどきしています！",
+          early_elementary_7_8:
+            "まめが つかめた！おはしの さきに あかい まめが のった そのしゅんかん、「できた！！」と {childName}は さけびました。ずっと れんしゅうして きた ほうしゅうが、やってきました。",
+          general_child: "まめがつかめた！{childName}は「できた！！」と叫びました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child's face absolutely beaming with triumph, chopsticks held correctly in hand with a red bean pinched between the tips. Pure joy and proud disbelief on their face. Red bean motifs burst around the moment like tiny sparks. Warm dining light. Watercolor picture book style, triumphant skill mastery close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "お箸を使える{childName}は、もう立派なお兄ちゃん・お姉ちゃんです。{parentMessage}",
+          baby_toddler: "おはし、つかえた！えらい！{parentMessage}",
+          preschool_3_4:
+            "おはしを つかえる {childName}は、もう りっぱな おにいちゃん・おねえちゃんです。{parentMessage}",
+          early_reader_5_6:
+            "おはしを つかえる {childName}は、もう りっぱです。あきらめずに れんしゅうした {childName}の こころが、いちばん すごい。{parentMessage}",
+          early_elementary_7_8:
+            "おはしを つかえる {childName}は、もう りっぱです。むずかしいことも あきらめずに れんしゅうすれば、かならずできる。その きもちは、これから ずっと {childName}の たからものです。{parentMessage}",
+          general_child:
+            "おはしを つかえる {childName}は、もう りっぱです。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child sitting at the dinner table eating happily with chopsticks, food in the bowl, the whole family watching warmly. Red bean motifs glow softly on the table. The child's posture is confident and proud. Warm home dining light. Watercolor picture book style, warm mealtime achievement ending, family warmth, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-first-friend": {
+    name: "はじめての ともだち",
+    description: "はじめてお友だちができた日。勇気を出して声をかけた、特別な日の記念絵本",
+    icon: "🤝",
+    categoryGroupId: "emotional-growth",
+    subcategoryId: "friendship",
+    parentIntent: "こころの成長を助けたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["friendship", "courage", "connection", "growth"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageAlt: "はじめてのお友だちができた日を記念する絵本イメージ",
+    visualDirection:
+      "Warm sunny park or school setting, heart-shaped motifs blooming with each moment of connection, tender friendship building atmosphere.",
+    order: 95,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめての友だちができた日の記念絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はじめての ともだち",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: two small children holding hands in a sunny park, both smiling warmly at each other, heart motifs floating around them like bubbles, tender first friendship mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "ともだち、できるかな？",
+      openingNarrationTemplate:
+        "こうえんで {childName}は おなじ あそびを している こを みつけました。こえを かけてみたい。でも、すこし どきどきします。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は一人で遊んでいる子を見つけました。声をかけてみたいな。",
+          baby_toddler: "あのこ、なにしてる？いっしょにあそぶ？",
+          preschool_3_4:
+            "{childName}は ひとりで あそんでいる こを みつけました。こえを かけてみたいな。",
+          early_reader_5_6:
+            "{childName}は ひとりで あそんでいる こを みつけました。こえを かけてみたいけど、どきどきします。でも、がんばってみよう。",
+          early_elementary_7_8:
+            "{childName}は ひとりで あそんでいる こを みつけました。こえを かけてみたい。でも てが でない。どうしよう、と おもいながらも、{childName}は ゆっくり あるきだしました。",
+          general_child: "{childName}は一人で遊んでいる子を見つけました。声をかけてみたいな。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a sunny park or school yard. The child stands a short distance from another child playing alone. The child's expression shows gentle nervousness mixed with courage. A tiny heart motif floats between them. Warm sunshine. Watercolor picture book style, tender pre-friendship anticipation mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は勇気を出して「いっしょにあそぼう！」と言いました。",
+          baby_toddler: "いっしょにあそぼう！いった！",
+          preschool_3_4:
+            "{childName}は ゆうきを だして 「いっしょに あそぼう！」と いいました。",
+          early_reader_5_6:
+            "{childName}は こころを きめて 「いっしょに あそぼう！」と いいました。むねが どきどきしたけど、ことばが でてきました。",
+          early_elementary_7_8:
+            "{childName}は こころを きめて 「いっしょに あそぼう！」と いいました。ちいさな ゆうきを だした しゅんかん、ハートが こころの なかで ひかりました。",
+          general_child: "{childName}は勇気を出して「いっしょにあそぼう！」と言いました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child taking a step forward, hand outstretched toward the other child, saying their first words of friendship. The other child turns with a big smile. Heart motifs bloom between them like flowers. Warm park sunlight. Watercolor picture book style, brave first friendship step mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "二人は手をつないで一緒に遊びました。とても楽しかった！",
+          baby_toddler: "てつないで、いっしょに！うれしい！",
+          preschool_3_4:
+            "ふたりは てを つないで いっしょに あそびました。とても たのしかった！",
+          early_reader_5_6:
+            "ふたりは てを つないで いっしょに あそびました。{childName}は こころが あたたかくなって、えがおが とまりません。",
+          early_elementary_7_8:
+            "ふたりは てを つないで いっしょに あそびました。ひとりで いるときより、ずっと たのしい。ともだちって、こんなに すてきなんだ。",
+          general_child: "二人は手をつないで一緒に遊びました。とても楽しかった！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of two children playing together hand in hand, both laughing. Heart motifs surround them like a warm glow. Both faces radiate pure joy and connection. Warm sunlight. Watercolor picture book style, warm first friendship close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "勇気を出して声をかけてよかった。{childName}に大切なともだちができました。{parentMessage}",
+          baby_toddler: "ともだち できた！うれしい！{parentMessage}",
+          preschool_3_4:
+            "ゆうきを だして こえを かけてよかった。{childName}に たいせつな ともだちが できました。{parentMessage}",
+          early_reader_5_6:
+            "ゆうきを だして こえを かけてよかった。{childName}に はじめての たいせつな ともだちが できました。{parentMessage}",
+          early_elementary_7_8:
+            "ゆうきを だして こえを かけてよかった。ちいさな ゆうきが、たいせつな ともだちを つれてきてくれました。{parentMessage}",
+          general_child:
+            "ゆうきを だして こえを かけてよかった。{childName}に たいせつな ともだちが できました。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of both children waving goodbye to each other at the park gate, both beaming with new friendship warmth. Heart motifs float gently in the air between them. Warm golden afternoon light. Watercolor picture book style, tender first friendship farewell ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-being-brave": {
+    name: "ゆうきを だして",
+    description: "こわくても、ドキドキしても、勇気を出して一歩踏み出した{childName}の絵本",
+    icon: "🦁",
+    categoryGroupId: "emotional-growth",
+    subcategoryId: "courage",
+    parentIntent: "こころの成長を助けたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["courage", "bravery", "growth", "overcoming-fear"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageAlt: "勇気を出して挑戦する子どもの絵本イメージ",
+    visualDirection:
+      "Warm encouraging atmosphere with a small lion cub as bravery symbol, gold star motifs appearing with each act of courage throughout.",
+    order: 96,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、勇気を出して挑戦する絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の ゆうき",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a small child standing tall and brave at the edge of something challenging — a dark slide, a stage, a new path — a tiny friendly lion cub by their side as a courage companion, gold star motifs floating around both, warm brave adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "こわくても、できるよ！",
+      openingNarrationTemplate:
+        "きょう {childName}は こわいと おもっていることに ちょうせんします。「できないかも」と おもうけど、ゴールドの ほしが かがやいています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はこわくてドキドキしています。でも、やってみたい！",
+          baby_toddler: "どきどき、こわい。でも、やる！",
+          preschool_3_4:
+            "{childName}は こわくて ドキドキしています。でも、やってみたい！",
+          early_reader_5_6:
+            "{childName}は こわくて むねが ドキドキしています。「できないかも」という きもちと「やってみたい！」という きもちが いったりきたりしています。",
+          early_elementary_7_8:
+            "{childName}は こわくて むねが ドキドキしています。「できないかも」という きもちと「やってみたい！」という きもちが むねの なかで ぶつかって います。",
+          general_child: "{childName}はこわくてドキドキしています。でも、やってみたい！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of the child standing at the edge of something challenging — perhaps the top of a tall slide or the entrance to a new place — looking nervous but determined. A tiny friendly lion cub sits beside them as a companion. Gold star motifs float faintly in the air. Warm encouraging light. Watercolor picture book style, brave challenge beginning mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "小さなライオンが「ぼくもいっしょだよ！」と言いました。",
+          baby_toddler: "らいおん、いっしょ！こわくない！",
+          preschool_3_4:
+            "ちいさな ライオンが 「ぼくも いっしょだよ！」と いいました。",
+          early_reader_5_6:
+            "ちいさな ライオンが 「ぼくも いっしょだよ！こわくても、いっぽ ふみだせば へいきだよ」と いいました。",
+          early_elementary_7_8:
+            "ちいさな ライオンが 「こわいって おもうのは、ゆうきが ある しるしだよ。こわくても やれるのが ほんとうの ゆうきだから」と いいました。",
+          general_child: "小さなライオンが「ぼくもいっしょだよ！」と言いました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child and a tiny friendly lion cub side by side, the lion looking up encouragingly. Gold star motifs gleam around them both. The child's expression shifts from worried to determined. Warm encouraging light. Watercolor picture book style, courage companion discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は目をつぶって、いっぽ踏み出しました！できた！",
+          baby_toddler: "いっぽ！できた！やった！",
+          preschool_3_4:
+            "{childName}は めを つぶって、いっぽ ふみだしました！できた！",
+          early_reader_5_6:
+            "{childName}は めを つぶって、いっぽ ふみだしました！あとは もう こわくない。「できた！」と こころの なかで さけびました。",
+          early_elementary_7_8:
+            "{childName}は めを つぶって いっぽ ふみだしました。そのいっぽが、すべてを かえました。「できた！」ゴールドの ほしが こころのなかで かがやきました。",
+          general_child: "{childName}は目をつぶって、いっぽ踏み出しました！できた！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child mid-brave action — at the bottom of the slide, having stepped forward, with an expression of surprised triumph and relief. The lion cub cheers beside them. Gold star motifs burst around the moment. Warm encouraging light. Watercolor picture book style, triumphant courage moment close-up, luminous golden glow, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ゆうきを出した{childName}はゴールドの星のようにかがやいています。{parentMessage}",
+          baby_toddler: "ゆうき だした！すごい！{parentMessage}",
+          preschool_3_4:
+            "ゆうきを だした {childName}は ゴールドの ほしのように かがやいています。{parentMessage}",
+          early_reader_5_6:
+            "ゆうきを だした {childName}は ゴールドの ほしのように かがやいています。こわくても いっぽ ふみだせる こころは、{childName}の たからものです。{parentMessage}",
+          early_elementary_7_8:
+            "ゆうきを だした {childName}は ゴールドの ほしのように かがやいています。こわいと おもっても、ゆうきを だせた。そのきもちは ずっと {childName}の なかに のこります。{parentMessage}",
+          general_child:
+            "ゆうきを だした {childName}は ゴールドの ほしのように かがやいています。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child and their lion cub companion walking forward together into a bright warm scene, gold star motifs trailing behind like a wake of stars. The child's posture is upright and proud. Warm golden light fills the path ahead. Watercolor picture book style, brave confident ending, luminous golden glow, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-saying-sorry": {
+    name: "ごめんなさい できた",
+    description: "ごめんなさいが言えた日。謝ることの大切さとやさしさを育む感情成長絵本",
+    icon: "🌈",
+    categoryGroupId: "emotional-growth",
+    subcategoryId: "apology",
+    parentIntent: "こころの成長を助けたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["apology", "kindness", "emotional-growth", "friendship"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageAlt: "ごめんなさいが言えた子どもの絵本イメージ",
+    visualDirection:
+      "Warm emotional atmosphere, a rainbow appearing after the apology moment, rainbow motifs as forgiveness and reconciliation symbols throughout.",
+    order: 97,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、ごめんなさいが言えた日の感情成長絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の ごめんなさい",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a child standing face-to-face with a friend, one hand extended in an apology gesture, a soft rainbow beginning to appear behind them both, warm reconciliation mood, gentle and earnest expressions, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "ごめんなさい、つたわるかな",
+      openingNarrationTemplate:
+        "きょう {childName}は ともだちを かなしませてしまいました。むねが もやもや します。どうしよう。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はお友だちを泣かせてしまいました。胸がもやもやします。",
+          baby_toddler: "ともだち、ないてる。どうしよう。",
+          preschool_3_4:
+            "{childName}は おともだちを なかせてしまいました。むねが もやもや します。",
+          early_reader_5_6:
+            "{childName}は おともだちを かなしませてしまいました。むねが もやもやして、おかしのあじも わかりません。",
+          early_elementary_7_8:
+            "{childName}は おともだちを かなしませてしまいました。むねが もやもやして、そのこの なみだが こころに つきさされるようです。",
+          general_child: "{childName}はお友だちを泣かせてしまいました。胸がもやもやします。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a child and another child in a park or playground, the second child looking sad or hurt. The first child stands nearby looking troubled and guilty, unable to meet the other's eyes. The sky is overcast but soft. Watercolor picture book style, gentle emotional conflict mood, tender not scary, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はよく考えました。「ごめんなさい」と言わなくては。",
+          baby_toddler: "ごめんなさい、いわなきゃ。",
+          preschool_3_4:
+            "{childName}は よく かんがえました。「ごめんなさい」と いわなくては。",
+          early_reader_5_6:
+            "{childName}は よく かんがえました。「ごめんなさい」と いうのは むずかしい。でも、いわなければ むねの もやもやは きえません。",
+          early_elementary_7_8:
+            "{childName}は よく かんがえました。「ごめんなさい」を いうのは こわい。でも、そのこが かなしんでいるのを みていると、もっと つらい。いうしかない。",
+          general_child: "{childName}はよく考えました。「ごめんなさい」と言わなくては。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child sitting alone in contemplation, arms wrapped around knees, thinking hard. Their expression shows inner conflict resolving into determination. A tiny rainbow arc begins to form faintly in the background sky. Soft light. Watercolor picture book style, reflective emotional growth mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は「ごめんなさい」と言えました。にじが出ました。",
+          baby_toddler: "ごめんなさい、いえた！にじ！",
+          preschool_3_4:
+            "{childName}は 「ごめんなさい」と いえました。にじが でました。",
+          early_reader_5_6:
+            "{childName}は ゆうきを もって 「ごめんなさい」と いえました。そのしゅんかん、そらに にじが でて、ともだちが わらってくれました。",
+          early_elementary_7_8:
+            "{childName}は ゆうきを もって 「ごめんなさい」と いえました。ことばが でたしゅんかん、むねの もやもやが ふわっと きえて、にじが そらに かかりました。",
+          general_child: "{childName}は「ごめんなさい」と言えました。にじが出ました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child facing their friend with sincere apologetic eyes, one hand extended. The friend is beginning to smile, accepting the apology. A bright rainbow bursts into the sky behind them both. Rainbow motifs radiate from the moment. Warm soft light returning. Watercolor picture book style, heartfelt reconciliation close-up, rainbow glow, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ごめんなさいが言えた{childName}のこころはにじのようにかがやいています。{parentMessage}",
+          baby_toddler: "ごめんなさい、なかよし！にじ！{parentMessage}",
+          preschool_3_4:
+            "ごめんなさいが いえた {childName}の こころは にじのように かがやいています。{parentMessage}",
+          early_reader_5_6:
+            "ごめんなさいが いえた {childName}の こころは にじのように かがやいています。むずかしいことを のりこえた じぶんを、すこし すきに なれました。{parentMessage}",
+          early_elementary_7_8:
+            "ごめんなさいが いえた {childName}の こころは にじのように かがやいています。むずかしいことを のりこえた きもちは、これからの {childName}を つよくします。{parentMessage}",
+          general_child:
+            "ごめんなさいが いえた {childName}の こころは にじのように かがやいています。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of both children walking together under a full beautiful rainbow in a clear sky. Both are smiling, side by side. Rainbow motifs glow softly along the path. Warm golden afternoon light. Watercolor picture book style, peaceful rainbow reconciliation ending, luminous warm glow, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-first-snow": {
+    name: "はじめての ゆき",
+    description: "生まれて初めて雪を触った日。冷たくて不思議で楽しかった雪の思い出を贈る絵本",
+    icon: "❄️",
+    categoryGroupId: "daily-life",
+    subcategoryId: "seasons",
+    parentIntent: "日常の特別な瞬間を残したい",
+    recommendedAgeMin: 0,
+    recommendedAgeMax: 5,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["snow", "winter", "first-experience", "wonder"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/dailylife.webp",
+    sampleImageAlt: "はじめて雪を触った子どもの絵本イメージ",
+    visualDirection:
+      "Magical white winter landscape with snowflake crystal motifs glittering throughout, sense of wonder and discovery, soft blue-white palette.",
+    order: 100,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめて雪を触った日の思い出絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はじめての ゆき",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a small wide-eyed child standing in a snowy garden, both mittened hands stretched out to catch snowflakes, expression of pure magical wonder, soft blue-white snowflake crystal motifs floating all around, magical winter atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "ゆき！ゆきが ふってきた！",
+      openingNarrationTemplate:
+        "まどの そとに しろいものが ふってきました。「なにあれ？！」{childName}の めが まるく なりました。ゆきのけっしょうが きらきら ひかっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はまどの外を見て目をまるくしました。しろい！ふしぎ！",
+          baby_toddler: "しろい！なに？！ふしぎ！ゆき！",
+          preschool_3_4:
+            "{childName}は まどの そとを みて めを まるくしました。しろい！ふしぎ！",
+          early_reader_5_6:
+            "{childName}は まどの そとを みて めを まるくしました。しろくて ふわふわしたものが、ひらひらと おちてきます。「なにあれ？！」",
+          early_elementary_7_8:
+            "{childName}は まどの そとを みて めを まるくしました。しろくて ふわふわした ものが ひらひらとおちてきます。ゆきのけっしょうが まどにはりついて、きれいです。",
+          general_child: "{childName}はまどの外を見て目をまるくしました。しろい！ふしぎ！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy home interior, the child pressing their nose and hands against a frosty window, staring wide-eyed at snow falling outside. Snowflake crystal motifs float gently beyond the glass. Warm home interior contrasts with the white world outside. Watercolor picture book style, magical winter wonder mood, soft blue-white glow, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は外に出て、てのひらで雪をうけてみました。つめたい！",
+          baby_toddler: "ゆき、さわった！つめたい！ふわふわ！",
+          preschool_3_4:
+            "{childName}は そとに でて、てのひらで ゆきを うけてみました。つめたい！",
+          early_reader_5_6:
+            "{childName}は そとに でて、てのひらで ゆきを うけてみました。「つめたい！」でも、すぐ とけてしまいます。ゆきのけっしょうは ちいさくて きれいです。",
+          early_elementary_7_8:
+            "{childName}は そとに でて、てのひらに ゆきを うけました。「つめたい！」てのひらの うえで ゆきのけっしょうは ひかって、すぐ とけて しまいます。",
+          general_child: "{childName}は外に出て、てのひらで雪をうけてみました。つめたい！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child outside in the snow, both mittened hands stretched out with snowflakes landing on them, expression shifting from nervous to delighted. Snowflake crystal motifs swirl around them. Winter-wrapped in a warm coat. Watercolor picture book style, magical first-snow discovery mood, soft blue-white light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は雪の上をあるきました。ふかふか！ぎゅっぎゅっ！",
+          baby_toddler: "ゆきのうえ、ぎゅっぎゅっ！おもしろい！",
+          preschool_3_4:
+            "{childName}は ゆきの うえを あるきました。ふかふか！ぎゅっぎゅっ！",
+          early_reader_5_6:
+            "{childName}は ゆきの うえを あるきました。ふかふか、ぎゅっぎゅっ。あしあとが のこります。「{childName}の あしあとだ！」",
+          early_elementary_7_8:
+            "{childName}は ゆきの うえを あるきました。ぎゅっぎゅっと おとがして、しろい ゆきに {childName}の あしあとが のこっていきます。",
+          general_child: "{childName}は雪の上をあるきました。ふかふか！ぎゅっぎゅっ！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child stomping through fresh snow, footprints trailing behind, face glowing with pure snowy joy. Snowflake crystal motifs sparkle all around. The child's cheeks are rosy from the cold. Soft winter light. Watercolor picture book style, joyful winter play close-up, luminous white and blue, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "はじめての雪を楽しんだ{childName}。この日のことは一生わすれません。{parentMessage}",
+          baby_toddler: "ゆき、たのしかった！またあそぼ！{parentMessage}",
+          preschool_3_4:
+            "はじめての ゆきを たのしんだ {childName}。この ひのことは ずっと おぼえています。{parentMessage}",
+          early_reader_5_6:
+            "はじめての ゆきを たのしんだ {childName}。ゆきのけっしょうのように、この ひの きおくは ひかりつづけます。{parentMessage}",
+          early_elementary_7_8:
+            "はじめての ゆきを たのしんだ {childName}。ゆきのけっしょうは とけてしまうけど、この ひの きおくは ずっと ずっと のこります。{parentMessage}",
+          general_child:
+            "はじめての ゆきを たのしんだ {childName}。この ひのことは ずっと おぼえています。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child being carried back inside by a parent, looking back over the shoulder at the snow-covered garden. Their footprints trail across the white snow. Snowflake crystal motifs drift gently in the cold air. Warm light from the house windows ahead. Watercolor picture book style, tender winter memory ending, warm-cold contrast, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-autumn-leaves": {
+    name: "もみじ さんぽ",
+    description: "秋のもみじ散歩。赤や黄色に染まった葉を集めて、秋の日の思い出を贈る絵本",
+    icon: "🍁",
+    categoryGroupId: "daily-life",
+    subcategoryId: "nature-walk",
+    parentIntent: "日常の特別な瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["autumn", "leaves", "nature", "walk"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/dailylife.webp",
+    sampleImageAlt: "秋のもみじ散歩をする子どもの絵本イメージ",
+    visualDirection:
+      "Warm golden autumn forest atmosphere, red maple leaf motifs collected like treasures throughout, rich fall color palette.",
+    order: 101,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、秋のもみじ散歩の思い出絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の もみじ さんぽ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a child walking through a magical autumn forest path, holding a beautiful red maple leaf above their head like an umbrella, autumn leaves raining down all around, warm golden red orange palette, red maple leaf motifs swirling like dancers, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "あかい はっぱを あつめよう！",
+      openingNarrationTemplate:
+        "あきのこうえんは きいろや あかに そまっています。{childName}は あかい もみじを さがして あるきます。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は公園に来ました。木の葉が赤くなっています！",
+          baby_toddler: "あかい はっぱ！きれい！こうえん！",
+          preschool_3_4:
+            "{childName}は こうえんに きました。きのはが あかく なっています！",
+          early_reader_5_6:
+            "{childName}は こうえんに きました。きのはが あかや きいろに そまって、かぜに ゆれています。",
+          early_elementary_7_8:
+            "{childName}は こうえんに きました。きのはが あかや きいろに そまって、かぜが ふくたびに はらはらと おちてきます。あきの においが します。",
+          general_child: "{childName}は公園に来ました。木の葉が赤くなっています！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a beautiful autumn park with maple trees ablaze in red and gold, their leaves floating down like a gentle rain. The child stands at the entrance, looking up with wonder at the spectacle. Red maple leaf motifs float past on a warm breeze. Rich golden autumn light. Watercolor picture book style, magical autumn arrival mood, warm red-gold palette, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はいちばん赤くてきれいなもみじを見つけました。これだ！",
+          baby_toddler: "あかい！きれい！もみじ！これ！",
+          preschool_3_4:
+            "{childName}は いちばん あかくて きれいな もみじを みつけました。これだ！",
+          early_reader_5_6:
+            "{childName}は いちばん あかくて きれいな もみじを みつけました。「これだ！」と こころのなかで さけびながら、そっと ひろいあげました。",
+          early_elementary_7_8:
+            "{childName}は こうえんを あるきながら、いちばん あかくて かたちの よい もみじを さがしました。「あった！これだ！」と こころのなかで さけびました。",
+          general_child: "{childName}はいちばん赤くてきれいなもみじを見つけました。これだ！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child crouching down to pick up a perfect vivid red maple leaf from the ground, expression of delighted discovery. Red maple leaf motifs surround the found treasure. Dappled autumn sunlight through the trees above. Watercolor picture book style, autumn treasure hunt discovery mood, warm golden light, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はもみじを手にもって走りました。かぜがきもちいい！",
+          baby_toddler: "はしった！もみじ、ひらひら！たのしい！",
+          preschool_3_4:
+            "{childName}は もみじを てにもって はしりました。かぜが きもちいい！",
+          early_reader_5_6:
+            "{childName}は もみじを てにもって はしりました。かぜが ほっぺをなでて、あきのかぜが きもちいい。",
+          early_elementary_7_8:
+            "{childName}は もみじを てにもって はしりました。かぜに もみじが ひらひらして、まるで {childName}が あきの なかを とんでいるみたいです。",
+          general_child: "{childName}はもみじを手にもって走りました。かぜがきもちいい！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child running with maple leaves held high in both hands, red leaves trailing behind. The wind lifts their hair and the leaves swirl around them in a joyful autumn dance. Red maple leaf motifs blur with motion. Warm amber autumn light. Watercolor picture book style, joyful autumn run close-up, rich red-gold, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "もみじを大切に持って帰った{childName}。あきのいろがかがやいています。{parentMessage}",
+          baby_toddler: "もみじ、かえった！たからもの！{parentMessage}",
+          preschool_3_4:
+            "もみじを たいせつに もって かえった {childName}。あきのいろが かがやいています。{parentMessage}",
+          early_reader_5_6:
+            "もみじを たいせつに もって かえった {childName}。あきの いろが {childName}の てのひらで かがやいています。{parentMessage}",
+          early_elementary_7_8:
+            "もみじを たいせつに もって かえった {childName}。あきの いろが {childName}の てのひらで かがやいています。あきの いちにちが、たからものになりました。{parentMessage}",
+          general_child:
+            "もみじを たいせつに もって かえった {childName}。あきのいろが かがやいています。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child walking home through a golden autumn avenue of trees, holding their treasured maple leaf in both hands. Red maple leaf motifs carpet the ground ahead. Warm amber evening light filters through the canopy. Watercolor picture book style, tender autumn memory ending, warm golden glow, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-insect-hunt": {
+    name: "むしとり たいかい",
+    description: "虫かごを持って虫取りに挑戦！夏の草むらで生き物を見つける冒険絵本",
+    icon: "🪲",
+    categoryGroupId: "favorite-worlds",
+    subcategoryId: "nature-exploration",
+    parentIntent: "自然や生き物への好奇心を育てたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["insects", "nature", "exploration", "summer"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "虫取り大会に挑戦する子どもの絵本イメージ",
+    visualDirection:
+      "Bright lush summer field and forest edge atmosphere, green bug cage motifs as symbol of discovery, vivid greens and naturalistic wonder.",
+    order: 102,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、虫取り冒険の絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の むしとり だいぼうけん",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: an excited child holding a green bug cage up to examine a captured insect, surrounded by tall summer grasses and colorful insects, green bug cage motifs scattered around like adventure badges, bright energetic summer nature mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "むしを さがしに いくぞ！",
+      openingNarrationTemplate:
+        "みどりの むしかごを もって、{childName}は くさばへ でかけます。「どんな むしに あえるかな？」",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は虫かごをもってくさむらに入りました。いるかな？",
+          baby_toddler: "むしかご、もった！くさむら、入る！むし、どこ？",
+          preschool_3_4:
+            "{childName}は むしかごを もって くさむらに はいりました。いるかな？",
+          early_reader_5_6:
+            "{childName}は みどりの むしかごを もって くさむらに はいりました。しずかに、しずかに。むしを おどろかせないように。",
+          early_elementary_7_8:
+            "{childName}は みどりの むしかごを もって くさむらに はいりました。しずかに、ゆっくりと。むしは かんたんには つかまりません。",
+          general_child: "{childName}は虫かごをもってくさむらに入りました。いるかな？",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a bright summer field with tall green grasses and wildflowers. The child steps carefully into the field, green bug cage in hand, scanning the grass intently. Tiny insects visible here and there in the grass. Green bug cage motifs dot the field like adventure markers. Bright summer light. Watercolor picture book style, excited nature explorer mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "草の葉にバッタがいました！{childName}はそっと近づきます。",
+          baby_toddler: "バッタ！いた！そっと、そっと…",
+          preschool_3_4:
+            "くさの はに バッタが いました！{childName}は そっと ちかづきます。",
+          early_reader_5_6:
+            "くさの はに バッタが いました！{childName}は いきを のんで、そっと そっと ちかづきます。",
+          early_elementary_7_8:
+            "くさの はに バッタが いました！{childName}は いきを のんで、そっと ちかづきます。にげないで、にげないで、と こころのなかで ねがいながら。",
+          general_child: "草の葉にバッタがいました！{childName}はそっと近づきます。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child crouched low in the grass, eyes wide and focused on a large grasshopper perched on a grass blade right in front of them. The child holds the open bug cage ready. Green bug cage motifs glow near the discovery. Bright dappled summer light. Watercolor picture book style, intense insect hunt focus mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "つかまえた！{childName}の虫かごにバッタが入りました！",
+          baby_toddler: "つかまえた！バッタ、はいった！やった！",
+          preschool_3_4:
+            "つかまえた！{childName}の むしかごに バッタが はいりました！",
+          early_reader_5_6:
+            "つかまえた！{childName}の むしかごに バッタが はいりました！「やった！！」と こころのなかで さけびながら、むしかごを そっと もちあげます。",
+          early_elementary_7_8:
+            "つかまえた！{childName}の むしかごに バッタが はいりました！「やった！！」むしかごの なかで バッタが ぴょんぴょんしています。",
+          general_child: "つかまえた！{childName}の虫かごにバッタが入りました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child holding up a green bug cage with a captured grasshopper inside, face absolutely radiant with triumph and excitement. Green bug cage motifs burst around the victorious moment. Bright summer light. Watercolor picture book style, triumphant insect hunter close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "バッタをよく見てから、{childName}はそっと逃がしてあげました。またね！{parentMessage}",
+          baby_toddler: "バッタ、みた！さようなら！またね！{parentMessage}",
+          preschool_3_4:
+            "バッタを よく みてから、{childName}は そっと にがしてあげました。またね！{parentMessage}",
+          early_reader_5_6:
+            "バッタを よく みてから、{childName}は そっと にがしてあげました。「またね！」バッタは くさむらに ぴょんと とんでいきました。{parentMessage}",
+          early_elementary_7_8:
+            "バッタを よく みてから、{childName}は そっと にがしてあげました。「またね！」バッタは くさむらに とんでいきました。むしの せいかつが あるから。{parentMessage}",
+          general_child:
+            "バッタを よく みてから、{childName}は そっと にがしてあげました。またね！{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child opening the green bug cage at the edge of the field, releasing the grasshopper back into the tall grass. The grasshopper leaps free into the sunlit grass. Green bug cage motifs float gently. Bright warm summer light. Watercolor picture book style, gentle nature release ending, compassionate summer mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-flower-garden": {
+    name: "おはなばたけ で",
+    description: "お花畑を散歩して、お気に入りの花を見つけて。自然の美しさに出会う絵本",
+    icon: "🌻",
+    categoryGroupId: "daily-life",
+    subcategoryId: "nature-walk",
+    parentIntent: "日常の特別な瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["flowers", "garden", "nature", "beauty"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/dailylife.webp",
+    sampleImageAlt: "お花畑で遊ぶ子どもの絵本イメージ",
+    visualDirection:
+      "Bright cheerful flower garden, sunflower motifs as the recurring symbol of warmth and joy, colorful blooms everywhere, golden garden light.",
+    order: 103,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、お花畑での散歩絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と おはなばたけ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing in a magnificent sunflower field, arms spread wide in delight, surrounded by towering sunflowers taller than their head, sunflower motifs glowing like small suns around the child, bright golden garden mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "おはなばたけに いこう！",
+      openingNarrationTemplate:
+        "おひさまが かがやく おはなばたけに {childName}は やってきました。いろとりどりの おはなが さいています。ひまわりが にこにこしています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はお花畑に入りました。きれい！どこを見てもお花！",
+          baby_toddler: "おはな！きれい！いっぱい！",
+          preschool_3_4:
+            "{childName}は おはなばたけに はいりました。きれい！どこを みても おはな！",
+          early_reader_5_6:
+            "{childName}は おはなばたけに はいりました。きれい！どこを みても いろとりどりの おはなです。かぜが ふくと はなびらが ゆれて、あまい においが します。",
+          early_elementary_7_8:
+            "{childName}は おはなばたけに はいりました。きれい！どこを みても いろとりどりの おはなです。かぜが ふくと はなびらが ゆれて、なんとも いえない あまい においが します。",
+          general_child: "{childName}はお花畑に入りました。きれい！どこを見てもお花！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a magnificent flower garden or meadow in full bloom — sunflowers, daisies, cosmos, poppies in every direction. The child stands at the garden entrance, arms spread wide, overwhelmed by the beautiful abundance. Sunflower motifs beam like warm suns throughout the scene. Golden garden light. Watercolor picture book style, wonder-filled flower garden arrival, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ひまわりが{childName}よりも大きかった！上を見るとお花の顔。",
+          baby_toddler: "ひまわり！おおきい！{childName}より！",
+          preschool_3_4:
+            "ひまわりが {childName}よりも おおきかった！うえを みると おはなの かお。",
+          early_reader_5_6:
+            "ひまわりが {childName}よりも ずっと おおきかった！うえを みあげると、おおきな ひまわりの かおが にこっと していました。",
+          early_elementary_7_8:
+            "ひまわりが {childName}よりも ずっと おおきかった！うえを みあげると、おおきな ひまわりが にこっと わらっているみたいで、{childName}も にこにこ してしまいます。",
+          general_child: "ひまわりが{childName}よりも大きかった！上を見るとお花の顔。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child looking straight up at enormous sunflowers towering above them, dwarfed by the tall stems. The sunflower faces seem to smile down. Sunflower motifs radiate warm energy all around. Golden garden light. Watercolor picture book style, magical flower discovery mood, warm golden yellows and greens, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はいちばんすきなお花を見つけました。「これがいちばんきれい！」",
+          baby_toddler: "これ！いちばん！きれい！すき！",
+          preschool_3_4:
+            "{childName}は いちばん すきな おはなを みつけました。「これが いちばん きれい！」",
+          early_reader_5_6:
+            "{childName}は いちばん すきな おはなを みつけました。「これが いちばん きれい！」と こころのなかで きめて、じっと みつめました。",
+          early_elementary_7_8:
+            "{childName}は いちばん すきな おはなを みつけました。それは ひとつの ひまわりで、「これが いちばん きれい！」と {childName}は こころのなかで きめました。",
+          general_child: "{childName}はいちばんすきなお花を見つけました。「これがいちばんきれい！」",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child's face next to their favorite sunflower, both faces seemingly at the same level, both glowing. The child's expression is pure joy and connection. Sunflower motifs radiate warmth around them both. Golden garden light. Watercolor picture book style, intimate flower friendship close-up, warm golden glow, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おはなばたけの{childName}はひまわりのようにかがやいています。{parentMessage}",
+          baby_toddler: "おはな、きれかった！また いく！{parentMessage}",
+          preschool_3_4:
+            "おはなばたけの {childName}は ひまわりのように かがやいています。{parentMessage}",
+          early_reader_5_6:
+            "おはなばたけの {childName}は ひまわりのように かがやいています。おはなも {childName}も、おひさまが だいすきです。{parentMessage}",
+          early_elementary_7_8:
+            "おはなばたけの {childName}は ひまわりのように かがやいています。おはなも {childName}も、おひさまのほうを むいて さいています。{parentMessage}",
+          general_child:
+            "おはなばたけの {childName}は ひまわりのように かがやいています。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child walking through the sunflower garden path toward a warm golden sunset, sunflowers framing the path on both sides like an honor guard. Sunflower motifs glow warmly. Golden evening light. Watercolor picture book style, warm garden dream ending, luminous golden glow, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-making-onigiri": {
+    name: "おにぎり つくろう",
+    description: "おにぎり作りに挑戦！はじめて自分で作ったおにぎりの特別なおいしさを伝える絵本",
+    icon: "🍙",
+    categoryGroupId: "daily-life",
+    subcategoryId: "cooking",
+    parentIntent: "日常の特別な瞬間を残したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["cooking", "onigiri", "food", "family"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/dailylife.webp",
+    sampleImageAlt: "おにぎりを作る子どもの絵本イメージ",
+    visualDirection:
+      "Warm cheerful kitchen atmosphere with nori seaweed fragment motifs scattered like confetti, family cooking joy, warm rice-white tones.",
+    order: 104,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、おにぎり作り体験の絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の おにぎり",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a happy child holding up a self-made triangle onigiri triumphantly, bits of nori seaweed visible on the rice, the kitchen behind warm and cozy, nori seaweed fragment motifs scattered around like confetti, warm family cooking mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "じぶんで おにぎり つくるよ！",
+      openingNarrationTemplate:
+        "きょう {childName}は おにぎりを つくります。ふかふかの しろいごはんに、のりの きれはしが ならんでいます。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はてのひらにごはんをのせました。あたたかい！",
+          baby_toddler: "ごはん、のせた！あたたかい！てのひら！",
+          preschool_3_4:
+            "{childName}は てのひらに ごはんを のせました。あたたかい！",
+          early_reader_5_6:
+            "{childName}は てのひらに ごはんを のせました。あたたかくて、ふわふわです。これを おにぎりにするんだ。",
+          early_elementary_7_8:
+            "{childName}は てのひらに ごはんを のせました。あたたかくて ふわふわしたごはんが てのひらに のって、「おにぎりにするぞ！」と きもちが たかぶりました。",
+          general_child: "{childName}はてのひらにごはんをのせました。あたたかい！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a warm cheerful kitchen. The child stands at the kitchen counter, hands covered in plastic wrap holding steaming white rice, concentrating on starting their onigiri. An adult nearby for guidance. Nori seaweed fragment motifs dot the counter surface. Warm kitchen light. Watercolor picture book style, warm family cooking beginning mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ぎゅっ、ぎゅっ！三角になってきた！難しいけど楽しい！",
+          baby_toddler: "ぎゅっぎゅっ！さんかく！できてる！",
+          preschool_3_4:
+            "ぎゅっ、ぎゅっ！さんかくに なってきた！むずかしいけど たのしい！",
+          early_reader_5_6:
+            "ぎゅっ、ぎゅっ！てのひらで ごはんを おして、さんかくを つくります。むずかしいけど たのしい！",
+          early_elementary_7_8:
+            "ぎゅっ、ぎゅっ！てのひらで ごはんを おして、さんかくを つくります。むずかしいけど、かたちが できてくると うれしくなります。",
+          general_child: "ぎゅっ、ぎゅっ！三角になってきた！難しいけど楽しい！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child's small hands pressing and shaping the rice into a triangle, tongue out in concentration. The onigiri shape is starting to form. Nori seaweed fragment motifs float around the cooking scene. Warm kitchen light. Watercolor picture book style, focused cooking craft mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "のりをまいたらできあがり！{childName}がつくったおにぎりです！",
+          baby_toddler: "のり、まいた！できた！おにぎり！",
+          preschool_3_4:
+            "のりを まいたら できあがり！{childName}が つくった おにぎりです！",
+          early_reader_5_6:
+            "のりを まいたら できあがり！{childName}が じぶんで つくった さんかくおにぎりです！",
+          early_elementary_7_8:
+            "のりを まいたら できあがり！{childName}が じぶんで つくった さんかくおにぎり。のりの きれはしが ぴかっと ひかって います。",
+          general_child: "のりをまいたらできあがり！{childName}がつくったおにぎりです！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child holding up their completed triangle onigiri with both hands, presenting it like a trophy. The rice is white and the nori seaweed wraps the bottom. The child's face beams with pride. Nori seaweed fragment motifs gleam around the completed onigiri. Warm kitchen light. Watercolor picture book style, proud cooking achievement close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "じぶんでつくったおにぎりはとくべつにおいしい！{parentMessage}",
+          baby_toddler: "おいしい！じぶんで つくった！{parentMessage}",
+          preschool_3_4:
+            "じぶんで つくった おにぎりは とくべつに おいしい！{parentMessage}",
+          early_reader_5_6:
+            "じぶんで つくった おにぎりは とくべつに おいしい！「せかいで いちばん おいしい！」と {childName}は おもいました。{parentMessage}",
+          early_elementary_7_8:
+            "じぶんで つくった おにぎりは とくべつに おいしい！てまひまを かけた ものは、なぜか いちだんと おいしく かんじます。{parentMessage}",
+          general_child:
+            "じぶんで つくった おにぎりは とくべつに おいしい！{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child sitting at the table with family, eating their homemade onigiri with a blissful expression. The remaining onigiri sit on a plate. Nori seaweed fragment motifs dot the table warmly. Warm home light. Watercolor picture book style, warm family mealtime ending, cozy home atmosphere, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-fruit-picking": {
+    name: "くだもの がり",
+    description: "くだもの狩りに行った日！大きな果物を自分でもいだ特別な思い出絵本",
+    icon: "🍎",
+    categoryGroupId: "memories",
+    subcategoryId: "outing",
+    parentIntent: "特別な思い出を絵本に残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["fruit-picking", "family-outing", "nature", "memories"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "くだもの狩りをする子どもの絵本イメージ",
+    visualDirection:
+      "Bright orchard atmosphere loaded with fruit, red apple motifs as the symbol of discovery and harvest joy, rich green and red palette.",
+    order: 105,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、くだもの狩りの思い出絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の くだもの がり",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a delighted child reaching up to pick a shiny red apple from an apple tree in a lush orchard, the branch bending down, red apple motifs hanging like ornaments everywhere, bright harvest joy, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "くだものを もぎにいくよ！",
+      openingNarrationTemplate:
+        "くだものの えんに やってきた {childName}。きに あかい りんごが いっぱい なっています。「もいでいいの？！」",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はくだもの園に来ました。木がりんごでいっぱい！",
+          baby_toddler: "りんご！いっぱい！あかい！きれい！",
+          preschool_3_4:
+            "{childName}は くだものえんに きました。きが りんごで いっぱい！",
+          early_reader_5_6:
+            "{childName}は くだものえんに きました。みあげると、きに あかい りんごが いっぱい なっています。「これ、ぜんぶ たべていいの？！」",
+          early_elementary_7_8:
+            "{childName}は くだものえんに きました。みあげると、たかい きの えだに あかい りんごが いっぱい なっています。「じぶんで もいでいいんだ！」とわくわくしました。",
+          general_child: "{childName}はくだもの園に来ました。木がりんごでいっぱい！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a beautiful fruit orchard with apple trees laden with bright red apples. The child stands at the orchard entrance, looking up in amazement at the abundance. Red apple motifs hang from every branch. Warm sunny orchard light. Watercolor picture book style, magical abundance arrival mood, rich red-green palette, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は大きくて赤いりんごを見つけました。これをもぐぞ！",
+          baby_toddler: "おおきい りんご！これ！もぐ！",
+          preschool_3_4:
+            "{childName}は おおきくて あかい りんごを みつけました。これを もぐぞ！",
+          early_reader_5_6:
+            "{childName}は えだを みあげて、いちばん おおきくて あかい りんごを みつけました。「これを もぐぞ！」と めを かがやかせました。",
+          early_elementary_7_8:
+            "{childName}は えだを みあげて、いちばん おおきくて あかくて つやつやの りんごを みつけました。「これだ！これを もぐぞ！」と こころに きめました。",
+          general_child: "{childName}は大きくて赤いりんごを見つけました。これをもぐぞ！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child reaching up on tiptoe toward a large perfect red apple on a branch just above their reach, eyes fixed on their target with intense focus. Red apple motifs glow invitingly nearby. Warm orchard light. Watercolor picture book style, determined harvest hunt mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "もげた！{childName}は大きなりんごを両手で持ちました！",
+          baby_toddler: "もげた！おおきい！りょうてで もった！",
+          preschool_3_4:
+            "もげた！{childName}は おおきな りんごを りょうてで もちました！",
+          early_reader_5_6:
+            "もげた！{childName}は おおきな りんごを りょうてで もちました！ずっしりと おもくて、つやつやしています。",
+          early_elementary_7_8:
+            "もげた！{childName}は おおきな りんごを りょうてで もちました！ずっしりと おもくて、つやつやして、いい においが します。「じぶんで もいだ！」",
+          general_child: "もげた！{childName}は大きなりんごを両手で持ちました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child holding a large shiny red apple in both hands, face beaming with pride and achievement. Red apple motifs radiate from the harvested fruit. Warm orchard sunlight. Watercolor picture book style, triumphant harvest close-up, luminous red apple glow, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "じぶんでもいだりんごを食べた{childName}。世界一おいしかった！{parentMessage}",
+          baby_toddler: "りんご、おいしい！じぶんで もいだ！{parentMessage}",
+          preschool_3_4:
+            "じぶんで もいだ りんごを たべた {childName}。せかいいち おいしかった！{parentMessage}",
+          early_reader_5_6:
+            "じぶんで もいだ りんごを たべた {childName}。せかいいち おいしかった！このあじは、ずっと ずっと おぼえています。{parentMessage}",
+          early_elementary_7_8:
+            "じぶんで もいだ りんごを たべた {childName}。せかいいち おいしかった！じぶんで とった ものは、なぜか いつもより ずっと おいしいです。{parentMessage}",
+          general_child:
+            "じぶんで もいだ りんごを たべた {childName}。せかいいち おいしかった！{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child sitting at a picnic table in the orchard, biting into their apple with an expression of pure bliss. Red apple motifs gleam on the table. Family smiles around them. Warm golden orchard light. Watercolor picture book style, warm harvest memory ending, golden orchard light, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-first-swimming": {
+    name: "はじめての スイミング",
+    description: "はじめてプールに入った日！水の中の不思議と楽しさを記念する思い出絵本",
+    icon: "🏊",
+    categoryGroupId: "memories",
+    subcategoryId: "first-experience",
+    parentIntent: "特別な思い出を絵本に残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["swimming", "pool", "first-experience", "water"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "はじめてプールに入った子どもの絵本イメージ",
+    visualDirection:
+      "Bright sparkling pool atmosphere, blue bubble motifs floating like tiny moons through each scene, summery aquatic joy.",
+    order: 106,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめてのスイミングの思い出絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はじめての スイミング",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a delighted child in swimwear splashing happily in a sparkling pool, blue water bubbles floating all around them like tiny moons, bright summer pool atmosphere, aqua blue palette, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "プールに はいるよ！",
+      openingNarrationTemplate:
+        "きらきら ひかる プールに {childName}は やってきました。あおい みずが きれいです。「はいれるかな？」あおい あわが ぷかぷか うかんでいます。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はプールのふちに立ちました。水が青くてきれい！",
+          baby_toddler: "プール！あおい！きれい！はいる？",
+          preschool_3_4:
+            "{childName}は プールの ふちに たちました。みずが あおくて きれい！",
+          early_reader_5_6:
+            "{childName}は プールの ふちに たちました。みずが あおくて きれいです。「はいれるかな？」と すこし どきどきします。",
+          early_elementary_7_8:
+            "{childName}は プールの ふちに たちました。みずが あおくて きれいで、ひかっています。「はいれるかな？」どきどきするけど、たのしそうです。",
+          general_child: "{childName}はプールのふちに立ちました。水が青くてきれい！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a bright sunny swimming pool. The child stands at the pool edge in swimwear, toes dangling over the edge, looking down at the sparkling blue water below. Blue water bubbles float invitingly on the surface. Summer sunshine. Watercolor picture book style, excited pre-swim nervousness mood, bright aqua blue, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はゆっくり水に入りました。つめたい！でも、きもちいい！",
+          baby_toddler: "みずに はいった！つめたい！きもちいい！",
+          preschool_3_4:
+            "{childName}は ゆっくり みずに はいりました。つめたい！でも、きもちいい！",
+          early_reader_5_6:
+            "{childName}は ゆっくり みずに はいりました。「つめたい！」でも、からだが なれてくると きもちいい！",
+          early_elementary_7_8:
+            "{childName}は ゆっくり みずに はいりました。「つめたい！」と おもったけど、からだが なれてくると きもちよくなってきます。みずが からだを つつんでくれています。",
+          general_child: "{childName}はゆっくり水に入りました。つめたい！でも、きもちいい！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child wading in the shallow end of the pool, water up to their waist, expression going from tense to pleased. Blue water bubbles float all around them. Sunlight sparkles on the water surface. Watercolor picture book style, pleasant water discovery mood, bright aqua blue, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}はじゃばじゃば水をたたきました！水しぶきがきれい！",
+          baby_toddler: "じゃばじゃば！みずしぶき！きれい！",
+          preschool_3_4:
+            "{childName}は じゃばじゃば みずを たたきました！みずしぶきが きれい！",
+          early_reader_5_6:
+            "{childName}は じゃばじゃば みずを たたきました！みずしぶきが たかく あがって、きらきら ひかります。",
+          early_elementary_7_8:
+            "{childName}は じゃばじゃば みずを たたきました！みずしぶきが たかく あがって、きらきら ひかります。あおい あわが プールを うかんでいます。",
+          general_child: "{childName}はじゃばじゃば水をたたきました！水しぶきがきれい！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child splashing water enthusiastically with both arms, water droplets sparkling in the sunlight around them. Blue water bubbles explode from the splashing. The child's face is pure uninhibited summer joy. Watercolor picture book style, joyful water play close-up, sparkling aqua blue, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "はじめてのプールで大はしゃぎの{childName}。また来たい！{parentMessage}",
+          baby_toddler: "プール、たのしかった！また きたい！{parentMessage}",
+          preschool_3_4:
+            "はじめての プールで おおはしゃぎの {childName}。また きたい！{parentMessage}",
+          early_reader_5_6:
+            "はじめての プールで おおはしゃぎの {childName}。あおい みずの なかで、{childName}は もっと すきに なりました。{parentMessage}",
+          early_elementary_7_8:
+            "はじめての プールで おおはしゃぎの {childName}。あおい みずと あわと、きもちいい きおくが、ずっと のこります。{parentMessage}",
+          general_child:
+            "はじめての プールで おおはしゃぎの {childName}。また きたい！{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child wrapped in a fluffy towel at the pool edge, still glowing with happiness from the swim, looking back at the pool with longing. Blue water bubbles drift gently on the still pool surface. Summer evening light. Watercolor picture book style, warm summer memory ending, gentle aqua blue, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-first-bike": {
+    name: "じてんしゃ のれた",
+    description: "補助輪なしで自転車に乗れた！何度も転んで、ついに一人でこげた感動の瞬間を贈る絵本",
+    icon: "🚲",
+    categoryGroupId: "memories",
+    subcategoryId: "milestone",
+    parentIntent: "特別な思い出を絵本に残したい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["bicycle", "milestone", "perseverance", "achievement"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "自転車に乗れた子どもの絵本イメージ",
+    visualDirection:
+      "Bright outdoor path, pinwheel windmill motifs spinning with the wind of cycling speed, sense of flight and freedom, energetic joyful mood.",
+    order: 107,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、自転車に乗れた日の感動絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}、じてんしゃ のれた！",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: an exhilarated child riding a bicycle solo with no training wheels, arms slightly out for balance, huge triumphant grin, pinwheel windmill motifs spinning in the wake behind the bike, sense of speed and freedom, bright outdoor atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "ひとりで こげるかな？",
+      openingNarrationTemplate:
+        "きょう {childName}は ほじょりんなしの じてんしゃに のれるよう れんしゅうします。かぜぐるまが くるくる まわっています。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は補助輪なしの自転車に乗ります。ドキドキ！",
+          baby_toddler: "じてんしゃ！のる！どきどき！",
+          preschool_3_4:
+            "{childName}は ほじょりんなしの じてんしゃに のります。ドキドキ！",
+          early_reader_5_6:
+            "{childName}は ほじょりんなしの じてんしゃに はじめて のろうとしています。ドキドキ。たおれないかな？",
+          early_elementary_7_8:
+            "{childName}は ほじょりんなしの じてんしゃに のろうとしています。ドキドキ。たおれたら いたい。でも、のれるように なりたい。",
+          general_child: "{childName}は補助輪なしの自転車に乗ります。ドキドキ！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a sunny park path or neighborhood street. The child straddles a bicycle without training wheels, one foot on the ground, expression a mix of nervousness and determination. A pinwheel windmill spins gently nearby. Warm outdoor light. Watercolor picture book style, brave beginner cycling beginning mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "たおれても、たおれても、{childName}はまた立ち上がります！",
+          baby_toddler: "ころんだ！でも、またのる！あきらめない！",
+          preschool_3_4:
+            "たおれても、たおれても、{childName}は また たちあがります！",
+          early_reader_5_6:
+            "たおれても、たおれても、{childName}は また たちあがります！「もいっかい！」と すぐに のろうとします。",
+          early_elementary_7_8:
+            "たおれても、たおれても、{childName}は また たちあがります。ひざが いたくても、また のる。「もいっかい！」その こころが {childName}を つよくします。",
+          general_child: "たおれても、たおれても、{childName}はまた立ち上がります！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child getting back up after a fall beside the bike, helmet on, knee slightly scraped but expression determined and undaunted. They're already reaching back for the handlebars. Pinwheel windmill motifs spin encouragingly. Warm outdoor light. Watercolor picture book style, resilient perseverance mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "こげた！ひとりで！{childName}は風のように走りました！",
+          baby_toddler: "こげた！ひとりで！かぜみたい！",
+          preschool_3_4:
+            "こげた！ひとりで！{childName}は かぜのように はしりました！",
+          early_reader_5_6:
+            "こげた！ひとりで！{childName}は かぜのように はしりました！「うわー！！」こころのなかで さけびながら、まえに すすんでいきます！",
+          early_elementary_7_8:
+            "こげた！ひとりで！{childName}は かぜのように はしりました！「うわー！！」ながいあいだ できなかったことが、いきなり できるように なった よろこびが はちきれそうです！",
+          general_child: "こげた！ひとりで！{childName}は風のように走りました！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child cycling alone for the first time, expression a burst of pure triumph and freedom — mouth open in a shout of joy, hair flying, eyes sparkling. Pinwheel windmill motifs spin in a blur of speed around them. Warm outdoor light. Watercolor picture book style, triumphant first solo ride close-up, feeling of flight and freedom, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "何度転んでも諦めなかった{childName}。かぜぐるまのようにかがやいています。{parentMessage}",
+          baby_toddler: "のれた！すごい！かっこいい！{parentMessage}",
+          preschool_3_4:
+            "なんど ころんでも あきらめなかった {childName}。かぜぐるまのように かがやいています。{parentMessage}",
+          early_reader_5_6:
+            "なんど ころんでも あきらめなかった {childName}。かぜぐるまのように かがやいています。このきもちを、ずっとわすれないでいてね。{parentMessage}",
+          early_elementary_7_8:
+            "なんど ころんでも あきらめなかった {childName}。かぜぐるまのように かがやいています。あきらめない こころが、{childName}の さいだいの ちからです。{parentMessage}",
+          general_child:
+            "なんど ころんでも あきらめなかった {childName}。かぜぐるまのように かがやいています。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child riding their bicycle down a sunny path, growing smaller in the distance as they ride away confidently, pinwheel windmill motifs spinning in their wake. The path stretches ahead bright and open. Warm golden afternoon light. Watercolor picture book style, hopeful freedom cycling ending, sense of open road ahead, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
   "original-ai": {
     name: "オリジナル絵本",
     description: "自由に書いた内容から、AIが一から物語を作ります",
