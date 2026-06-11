@@ -72,7 +72,7 @@ export default function CreateCompanionPage() {
   };
 
   const handleSubmit = async () => {
-    if (!species || !size) return;
+    if (!species || !size || !user) return;
     setIsSubmitting(true);
     try {
       const visualDescription = buildVisualDescription({
@@ -83,7 +83,7 @@ export default function CreateCompanionPage() {
         size: size as "small" | "medium" | "large",
       });
 
-      await addCompanion({
+      const companionId = await addCompanion({
         name,
         species: species as CompanionSpecies,
         personality: personalities,
@@ -93,7 +93,22 @@ export default function CreateCompanionPage() {
         visualDescription,
       });
 
-      router.push("/companions");
+      // 作成直後に画像生成ジョブをキック（プロフィール画面で自動的に生成開始）
+      try {
+        const { db } = await import("@/lib/firebase");
+        const { collection: col, addDoc: add, serverTimestamp: sts } = await import("firebase/firestore");
+        await add(col(db, "companionImageJobs"), {
+          userId: user.uid,
+          companionId,
+          status: "pending",
+          createdAt: sts(),
+          updatedAt: sts(),
+        });
+      } catch {
+        // 画像生成の失敗は致命的ではない（プロフィール画面で再試行できる）
+      }
+
+      router.push(`/companions/profile?id=${companionId}`);
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
