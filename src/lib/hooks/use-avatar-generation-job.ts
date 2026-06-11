@@ -13,16 +13,19 @@ import type { ChildAvatarGenerationJob, IllustrationStyle, AvatarRevisionRequest
 export function useAvatarGenerationJob(jobId: string | null) {
   const [job, setJob] = useState<ChildAvatarGenerationJob | null>(null);
   const [loading, setLoading] = useState(!!jobId);
+  const [isInitialLoading, setIsInitialLoading] = useState(!!jobId);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    setJob(null);
     if (!jobId) {
-      setJob(null);
       setLoading(false);
+      setIsInitialLoading(false);
       return;
     }
 
     setLoading(true);
+    setIsInitialLoading(true);
     let unsubscribe: Unsubscribe;
 
     try {
@@ -35,11 +38,13 @@ export function useAvatarGenerationJob(jobId: string | null) {
             setError(new Error("Job not found"));
           }
           setLoading(false);
+          setIsInitialLoading(false);
         },
         (err) => {
           console.error("Error watching avatar job:", err);
           setError(err);
           setLoading(false);
+          setIsInitialLoading(false);
         }
       );
     } catch (err) {
@@ -88,6 +93,7 @@ export function useAvatarGenerationJob(jobId: string | null) {
   return {
     job,
     loading,
+    isInitialLoading,
     error,
     startJob,
   };

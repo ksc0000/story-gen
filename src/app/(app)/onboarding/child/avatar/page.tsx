@@ -12,9 +12,9 @@ import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { db } from "@/lib/firebase";
-import { generateChildCharacterCallable } from "@/lib/functions";
 import type { AvatarRevisionRequest, AvatarCandidate } from "@/lib/types";
 import { useAvatarGenerationJob } from "@/lib/hooks/use-avatar-generation-job";
+import { useAvatarCandidates } from "@/lib/hooks/use-avatar-candidates";
 
 const LEAVE_MESSAGE = "キャラクターが保存されていません。生成結果が消えてしまいます。本当に別の画面に移動してよいですか？";
 
@@ -29,9 +29,15 @@ function ChildAvatarPageContent() {
   const child = useMemo(() => children.find((item) => item.id === childId) ?? null, [childId, children]);
 
   const [currentJobId, setCurrentJobId] = useState<string | null>(initialJobId);
-  const { job, loading: loadingJob, error: jobError, startJob } = useAvatarGenerationJob(currentJobId);
+  const {
+    job,
+    loading: loadingJob,
+    isInitialLoading,
+    error: jobError,
+    startJob,
+  } = useAvatarGenerationJob(currentJobId);
+  const { candidates, loading: loadingCandidates } = useAvatarCandidates(user?.uid, childId ?? undefined);
 
-  const [candidates, setCandidates] = useState<AvatarCandidate[]>([]);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [characterBible, setCharacterBible] = useState<string | null>(null);
   const [revisionRequest, setRevisionRequest] = useState<AvatarRevisionRequest>({});
@@ -55,15 +61,19 @@ function ChildAvatarPageContent() {
   }, [child, characterBible]);
 
   useEffect(() => {
+    if (candidates.length > 0 && !selectedCandidateId) {
+      setSelectedCandidateId(candidates[0].generationId);
+    }
+  }, [candidates, selectedCandidateId]);
+
+  useEffect(() => {
     if (!job) return;
 
-    if (job.status === "completed" && job.result) {
-      setCandidates(job.result.candidates);
-      if (job.result.candidates.length > 0) {
-        setSelectedCandidateId(job.result.candidates[0].generationId);
+    if (job.status === "completed") {
+      if (job.result) {
+        setAttemptNumber(job.result.attemptNumber);
+        setRemainingAttempts(maxAttempts - job.result.attemptNumber);
       }
-      setAttemptNumber(job.result.attemptNumber);
-      setRemainingAttempts(maxAttempts - job.result.attemptNumber);
       setHasUnsavedGeneration(true);
       setGenerating(false);
     } else if (job.status === "failed") {
@@ -135,7 +145,6 @@ function ChildAvatarPageContent() {
     if (!childId || !user) return;
     setGenerating(true);
     setError(null);
-    setCandidates([]);
     try {
       const request = options?.requestOverride ?? revisionRequest;
       const jobId = await startJob({
@@ -186,8 +195,17 @@ function ChildAvatarPageContent() {
     }
   };
 
-  if (loadingChildren) {
-    return <div className="p-8 text-center text-violet-400">読み込み中...</div>;
+  if (loadingChildren || (currentJobId && isInitialLoading)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-8 text-center text-violet-400">
+        <motion.div
+          className="h-8 w-8 rounded-full border-2 border-violet-200 border-t-violet-500"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
+        <span className="ml-3">読み込み中...</span>
+      </div>
+    );
   }
 
   if (!child || !childId) {
@@ -200,7 +218,7 @@ function ChildAvatarPageContent() {
   }
 
   return (
-    <PageTransition className="mx-auto max-w-5xl px-4 py-8">
+    <PageTransition className="mx-auto max-w-5xl px-4 pb-28 pt-8">
       <div className="mb-6 text-center">
         <p className="text-sm font-semibold text-violet-500">キャラクター生成</p>
         <h1 className="mt-2 text-2xl font-bold text-purple-900">{child.nickname || child.displayName}の絵本キャラクター</h1>
@@ -217,6 +235,22 @@ function ChildAvatarPageContent() {
         ) : null}
       </div>
 
+      {child.visualProfile?.approvedImageUrl && (
+        <div className="mx-auto mb-8 max-w-md text-center">
+          <p className="mb-3 text-xs font-bold text-violet-500 uppercase tracking-wider">現在のキャラクター</p>
+          <div className="relative mx-auto aspect-[3/4] w-48 overflow-hidden rounded-3xl border-4 border-white shadow-xl ring-1 ring-purple-100">
+            <Image
+              src={child.visualProfile.approvedImageUrl}
+              alt="現在のキャラクター"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+          <p className="mt-3 text-xs text-violet-400">※ この画像が絵本の生成に使用されます</p>
+        </div>
+      )}
+
       <Card>
         <CardContent className="space-y-5 p-6">
           {error ? (
@@ -225,16 +259,30 @@ function ChildAvatarPageContent() {
 
           {generating ? (
             <div className="flex min-h-80 flex-col items-center justify-center rounded-[28px] border border-[rgba(240,171,252,0.35)] bg-purple-50/50 px-6 text-center">
-              <motion.div
-                className="h-12 w-12 rounded-full border-4 border-purple-200 border-t-purple-500"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-              />
-              <p className="mt-6 font-semibold text-purple-900">
-                {job?.status === "pending" ? "準備しています..." : "キャラクターを描いています..."}
-              </p>
+              <div className="relative mb-6">
+                <motion.div
+                  className="h-16 w-16 rounded-full border-4 border-purple-100 border-t-purple-500"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center text-2xl"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  🎨
+                </motion.div>
+              </div>
+              <motion.p
+                className="font-semibold text-purple-900"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                key={job?.status}
+              >
+                {job?.status === "pending" ? "順番を待っています..." : "キャラクターを一生懸命描いています..."}
+              </motion.p>
               <p className="mt-2 text-sm text-violet-500">
-                AIがあなたのリクエストに合わせて特別な1枚を制作中です。30秒〜1分ほどかかることがあります。
+                AIがあなたのリクエストに合わせて特別な1枚を制作中です。<br />30秒〜1分ほどかかることがあります。
               </p>
             </div>
           ) : candidates.length > 0 ? (
@@ -262,16 +310,6 @@ function ChildAvatarPageContent() {
             </div>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Button type="button" onClick={() => generate({ useBaseGeneration: false })} disabled={generating || saving || remainingAttempts === 0}>
-              {generating ? "生成中..." : "候補を生成する"}
-            </Button>
-            {candidates.length > 0 ? (
-              <Button type="button" onClick={approve} disabled={!selectedCandidate || generating || saving}>
-                {saving ? "保存中..." : "選んだキャラクターを保存"}
-              </Button>
-            ) : null}
-          </div>
 
           {candidates.length > 0 ? (
             <div className="space-y-3">
@@ -296,6 +334,32 @@ function ChildAvatarPageContent() {
           </button>
         </CardContent>
       </Card>
+
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3">
+        <div className="mx-auto max-w-lg">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Button
+              type="button"
+              variant={candidates.length > 0 ? "outline" : "default"}
+              className="w-full"
+              onClick={() => generate({ useBaseGeneration: false })}
+              disabled={generating || saving || remainingAttempts === 0}
+            >
+              {generating ? "生成中..." : candidates.length > 0 ? "別案を生成" : "候補を生成する"}
+            </Button>
+            {candidates.length > 0 ? (
+              <Button
+                type="button"
+                className="w-full"
+                onClick={approve}
+                disabled={!selectedCandidate || generating || saving}
+              >
+                {saving ? "保存中..." : "選んだキャラクターを保存"}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      </div>
     </PageTransition>
   );
 }
