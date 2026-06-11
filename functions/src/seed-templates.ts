@@ -1899,7 +1899,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-cherry-blossom.webp",
     sampleImageAlt: "春の桜の木の下を歩く子どもの絵本イメージ",
     visualDirection:
       "Soft spring park atmosphere with cherry blossom trees in full bloom, pink petals drifting gently, and a tiny pink petal motif recurring throughout.",
@@ -1989,7 +1989,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-hinamatsuri.webp",
     sampleImageAlt: "ひなまつりのおひなさまと一緒にお祝いする子どもの絵本イメージ",
     visualDirection:
       "Traditional Hinamatsuri atmosphere with tiered doll displays, soft pink and gold tones, peach blossoms, and a tiny golden diamond motif throughout.",
@@ -2079,7 +2079,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-childrens-day.webp",
     sampleImageAlt: "こどもの日にこいのぼりと遊ぶ子どもの絵本イメージ",
     visualDirection:
       "Bright spring sky with colorful koinobori carp streamers flying high, blue scale motif, energetic and celebratory atmosphere throughout.",
@@ -2169,7 +2169,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-tanabata.webp",
     sampleImageAlt: "たなばたの夜に笹に短冊を飾る子どもの絵本イメージ",
     visualDirection:
       "Magical summer night with a bamboo branch hung with colorful tanzaku wish strips, a Milky Way sky, and a tiny silver star motif throughout.",
@@ -2259,7 +2259,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-summer-festival.webp",
     sampleImageAlt: "夏祭りで浴衣を着て屋台をまわる子どもの絵本イメージ",
     visualDirection:
       "Lively summer festival night with warm lantern glow, colorful food stalls, yukata-clad crowds, and a tiny red paper lantern glow motif throughout.",
@@ -2349,7 +2349,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-fireworks.webp",
     sampleImageAlt: "夏の花火大会で夜空を見上げる子どもの絵本イメージ",
     visualDirection:
       "Magical summer night with bursting colorful fireworks reflected in water, star-shaped sparkle motif, wonder-filled atmosphere throughout.",
@@ -2439,7 +2439,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-halloween.webp",
     sampleImageAlt: "ハロウィンのコスチュームでお菓子を集める子どもの絵本イメージ",
     visualDirection:
       "Spooky-cute Halloween night with carved orange jack-o-lanterns, bat silhouettes, candy bags, and a tiny orange pumpkin motif throughout — friendly not scary.",
@@ -2529,7 +2529,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-new-year.webp",
     sampleImageAlt: "お正月の朝に神社へお参りする子どもの絵本イメージ",
     visualDirection:
       "Peaceful New Year morning with golden sunrise light, a shrine with rope decorations, oshiruko and osechi, and a tiny golden bell motif throughout.",
@@ -2619,7 +2619,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-first-nursery.webp",
     sampleImageAlt: "はじめての保育園入園の日を振り返る子どもの絵本イメージ",
     visualDirection:
       "Warm nursery school atmosphere with bright classroom colors, a yellow sun-hat motif, cheerful but tender first-day emotions throughout.",
@@ -2709,7 +2709,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-first-elementary.webp",
     sampleImageAlt: "小学校入学式の日にランドセルを背負った子どもの絵本イメージ",
     visualDirection:
       "Bright spring school entrance ceremony atmosphere with cherry blossoms, a red randoseru backpack badge motif, proud milestone emotions throughout.",
@@ -2799,7 +2799,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-new-sibling.webp",
     sampleImageAlt: "赤ちゃんを優しく見つめるお兄ちゃん・お姉ちゃんの絵本イメージ",
     visualDirection:
       "Warm tender family atmosphere with a new baby, soft nursery colors, and a tiny white star motif representing the new arrival throughout.",
@@ -2889,7 +2889,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-first-airplane.webp",
     sampleImageAlt: "はじめて飛行機に乗って空から景色を眺める子どもの絵本イメージ",
     visualDirection:
       "Exciting first flight atmosphere with the airplane cabin, fluffy white clouds outside the window, and a tiny white cloud motif throughout.",
@@ -2979,7 +2979,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-first-sports-day.webp",
     sampleImageAlt: "運動会で全力で走る子どもの絵本イメージ",
     visualDirection:
       "Bright outdoor sports day atmosphere with colorful red and white flags, a finishing line, cheering crowd, and a red-and-white flag motif throughout.",
@@ -3069,7 +3069,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-first-recital.webp",
     sampleImageAlt: "発表会の舞台で輝く子どもの絵本イメージ",
     visualDirection:
       "Bright stage performance atmosphere with spotlight, audience, costumes, and a tiny gold star motif representing the child's shining moment throughout.",
@@ -3159,7 +3159,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-growing-taller.webp",
     sampleImageAlt: "身長を測って成長を喜ぶ子どもの絵本イメージ",
     visualDirection:
       "Warm cozy home atmosphere with a height measuring chart, rainbows of color showing growth stages, and a tiny rainbow star motif throughout.",
@@ -3249,7 +3249,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/learning.webp",
+    sampleImageUrl: "/images/templates/fixed-learning-colors.webp",
     sampleImageAlt: "カラフルな色を探索する子どもの絵本イメージ",
     visualDirection:
       "Vibrant colorful world with rainbow spectrum throughout, a rainbow arc motif, each page featuring a different color discovery.",
@@ -3339,7 +3339,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/learning.webp",
+    sampleImageUrl: "/images/templates/fixed-learning-numbers.webp",
     sampleImageAlt: "数を数えながら探索する子どもの絵本イメージ",
     visualDirection:
       "Playful counting adventure with groups of round natural objects, round pebble motif, each page featuring counting 1 through 10.",
@@ -3429,7 +3429,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/learning.webp",
+    sampleImageUrl: "/images/templates/fixed-learning-animals.webp",
     sampleImageAlt: "動物の鳴き声を真似する子どもの絵本イメージ",
     visualDirection:
       "Friendly animal parade with expressive animal characters, musical note motifs floating around each animal's sound, joyful learning atmosphere.",
@@ -3519,7 +3519,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/learning.webp",
+    sampleImageUrl: "/images/templates/fixed-learning-seasons.webp",
     sampleImageAlt: "四季の変化を楽しむ子どもの絵本イメージ",
     visualDirection:
       "Four seasons journey with each page representing one season, a glowing sun motif appearing in all weather, vibrant natural color changes throughout.",
@@ -3609,7 +3609,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/learning.webp",
+    sampleImageUrl: "/images/templates/fixed-learning-shapes.webp",
     sampleImageAlt: "身のまわりの形を探す子どもの絵本イメージ",
     visualDirection:
       "Shape-finding adventure in everyday environments, rainbow star motifs as shape-found celebration markers, each page discovering a different shape.",
@@ -3699,7 +3699,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageUrl: "/images/templates/fixed-world-magical-forest.webp",
     sampleImageAlt: "光り輝く魔法の森で妖精と出会う子どもの絵本イメージ",
     visualDirection:
       "Enchanted forest mood with luminous glowing light particles, tiny fairies, rainbow-shimmer ponds, and soft magical atmosphere throughout.",
@@ -3789,7 +3789,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageUrl: "/images/templates/fixed-world-underwater.webp",
     sampleImageAlt: "海の底でカラフルな魚と泳ぐ子どもの絵本イメージ",
     visualDirection:
       "Underwater ocean adventure with colorful tropical fish, glowing coral reefs, shimmering light rays from above, and tiny bubble motif throughout.",
@@ -3879,7 +3879,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageUrl: "/images/templates/fixed-world-dinosaurs.webp",
     sampleImageAlt: "恐竜たちと遊ぶ子どもの絵本イメージ",
     visualDirection:
       "Lush prehistoric jungle adventure with gentle giant dinosaurs, oversized tropical plants, dappled warm sunlight, and tiny green footprint motif throughout.",
@@ -3969,7 +3969,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageUrl: "/images/templates/fixed-world-candy-land.webp",
     sampleImageAlt: "おかしの国でキャンディのお城を探検する子どもの絵本イメージ",
     visualDirection:
       "Whimsical candy kingdom with pastel colors, candy-cane trees, chocolate rivers, marshmallow hills, cookie castle, and a small pink candy motif throughout.",
@@ -4059,7 +4059,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageUrl: "/images/templates/fixed-world-cloud-castle.webp",
     sampleImageAlt: "雲の上のお城を探検する子どもの絵本イメージ",
     visualDirection:
       "Dreamy sky adventure with fluffy white clouds underfoot, a luminous cloud castle, rainbow bridges, and a tiny white feather motif throughout.",
@@ -4149,7 +4149,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageUrl: "/images/templates/fixed-world-toy-land.webp",
     sampleImageAlt: "夜中におもちゃたちがパーティーをしている絵本イメージ",
     visualDirection:
       "Magical toy room at night with toys coming to life, warm glowing lamp light, colorful festive party atmosphere, and a tiny wind-up key motif throughout.",
@@ -4239,7 +4239,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageUrl: "/images/templates/fixed-potty-training.webp",
     sampleImageAlt: "ひとりでトイレができた子どもの絵本イメージ",
     visualDirection:
       "Bright encouraging home atmosphere with cheerful rainbow motifs celebrating each success, warm supportive mood throughout.",
@@ -4329,7 +4329,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageUrl: "/images/templates/fixed-getting-dressed.webp",
     sampleImageAlt: "自分でお着替えができた子どもの絵本イメージ",
     visualDirection:
       "Cheerful morning bedroom atmosphere with colorful clothes, yellow button motifs celebrating each dressing success, warm encouraging mood.",
@@ -4419,7 +4419,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageUrl: "/images/templates/fixed-eating-veggies.webp",
     sampleImageAlt: "苦手な野菜に挑戦する子どもの絵本イメージ",
     visualDirection:
       "Bright cheerful kitchen atmosphere with colorful vegetables, green leaf motifs celebrating each bite, encouraging food-adventure mood.",
@@ -4509,7 +4509,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageUrl: "/images/templates/fixed-morning-routine.webp",
     sampleImageAlt: "朝の支度を自分でできた子どもの絵本イメージ",
     visualDirection:
       "Bright cheerful morning home atmosphere, each task completed with a sunrise sun glow motif, encouraging independence routine.",
@@ -4599,7 +4599,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageUrl: "/images/templates/fixed-chopsticks.webp",
     sampleImageAlt: "お箸で食べられた子どもの絵本イメージ",
     visualDirection:
       "Warm cheerful dining table atmosphere, red bean motifs appearing as small victories with each chopstick success, encouraging skill-building mood.",
@@ -4689,7 +4689,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageUrl: "/images/templates/fixed-first-friend.webp",
     sampleImageAlt: "はじめてのお友だちができた日を記念する絵本イメージ",
     visualDirection:
       "Warm sunny park or school setting, heart-shaped motifs blooming with each moment of connection, tender friendship building atmosphere.",
@@ -4779,7 +4779,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageUrl: "/images/templates/fixed-being-brave.webp",
     sampleImageAlt: "勇気を出して挑戦する子どもの絵本イメージ",
     visualDirection:
       "Warm encouraging atmosphere with a small lion cub as bravery symbol, gold star motifs appearing with each act of courage throughout.",
@@ -4869,7 +4869,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/growth.webp",
+    sampleImageUrl: "/images/templates/fixed-saying-sorry.webp",
     sampleImageAlt: "ごめんなさいが言えた子どもの絵本イメージ",
     visualDirection:
       "Warm emotional atmosphere, a rainbow appearing after the apology moment, rainbow motifs as forgiveness and reconciliation symbols throughout.",
@@ -4959,7 +4959,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/dailylife.webp",
+    sampleImageUrl: "/images/templates/fixed-first-snow.webp",
     sampleImageAlt: "はじめて雪を触った子どもの絵本イメージ",
     visualDirection:
       "Magical white winter landscape with snowflake crystal motifs glittering throughout, sense of wonder and discovery, soft blue-white palette.",
@@ -5049,7 +5049,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/dailylife.webp",
+    sampleImageUrl: "/images/templates/fixed-autumn-leaves.webp",
     sampleImageAlt: "秋のもみじ散歩をする子どもの絵本イメージ",
     visualDirection:
       "Warm golden autumn forest atmosphere, red maple leaf motifs collected like treasures throughout, rich fall color palette.",
@@ -5139,7 +5139,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageUrl: "/images/templates/fixed-insect-hunt.webp",
     sampleImageAlt: "虫取り大会に挑戦する子どもの絵本イメージ",
     visualDirection:
       "Bright lush summer field and forest edge atmosphere, green bug cage motifs as symbol of discovery, vivid greens and naturalistic wonder.",
@@ -5229,7 +5229,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/dailylife.webp",
+    sampleImageUrl: "/images/templates/fixed-flower-garden.webp",
     sampleImageAlt: "お花畑で遊ぶ子どもの絵本イメージ",
     visualDirection:
       "Bright cheerful flower garden, sunflower motifs as the recurring symbol of warmth and joy, colorful blooms everywhere, golden garden light.",
@@ -5319,7 +5319,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/dailylife.webp",
+    sampleImageUrl: "/images/templates/fixed-making-onigiri.webp",
     sampleImageAlt: "おにぎりを作る子どもの絵本イメージ",
     visualDirection:
       "Warm cheerful kitchen atmosphere with nori seaweed fragment motifs scattered like confetti, family cooking joy, warm rice-white tones.",
@@ -5409,7 +5409,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-fruit-picking.webp",
     sampleImageAlt: "くだもの狩りをする子どもの絵本イメージ",
     visualDirection:
       "Bright orchard atmosphere loaded with fruit, red apple motifs as the symbol of discovery and harvest joy, rich green and red palette.",
@@ -5499,7 +5499,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-first-swimming.webp",
     sampleImageAlt: "はじめてプールに入った子どもの絵本イメージ",
     visualDirection:
       "Bright sparkling pool atmosphere, blue bubble motifs floating like tiny moons through each scene, summery aquatic joy.",
@@ -5589,7 +5589,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-first-bike.webp",
     sampleImageAlt: "自転車に乗れた子どもの絵本イメージ",
     visualDirection:
       "Bright outdoor path, pinwheel windmill motifs spinning with the wind of cycling speed, sense of flight and freedom, energetic joyful mood.",

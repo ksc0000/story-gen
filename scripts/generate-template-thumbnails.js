@@ -126,6 +126,342 @@ const THUMBNAILS = [
       "Rounded mechanical shapes, orange and blue accents, energetic safe motion."
     ),
   },
+  // ── 新規追加 (2026-06) ──────────────────────────────────────────────────────
+  {
+    id: "milestone",
+    prompt: buildPrompt(
+      "Warm milestone memories picture-book cover. A joyful Japanese toddler wearing a tiny graduation cap stands under cherry blossom trees in full bloom, holding a small rolled diploma with both hands. " +
+      "Petals drift gently around them, golden morning light, family warmth. Soft pink and cream watercolor palette, tender celebratory mood."
+    ),
+  },
+  {
+    id: "learning",
+    prompt: buildPrompt(
+      "Colorful learning picture-book cover. An eager child sits cross-legged on a cozy rug surrounded by open books, big wooden alphabet blocks, and floating number and shape motifs glowing softly. " +
+      "A small owl companion perches nearby. Warm afternoon light, magical educational wonder atmosphere, vivid yellows, blues, and greens."
+    ),
+  },
+  {
+    id: "growth",
+    prompt: buildPrompt(
+      "Inspiring growth picture-book cover. A small child stands on a sunny hilltop with arms raised triumphantly, a tiny lion cub companion beside them as a symbol of courage. " +
+      "Gold stars and a rainbow arc gently around both. Warm sunrise horizon, glowing gold and sky-blue palette, sense of achievement and self-confidence."
+    ),
+  },
+  {
+    id: "dailylife",
+    prompt: buildPrompt(
+      "Cozy daily-life picture-book cover. A cheerful child wearing a small apron helps make onigiri rice balls at a warm kitchen table. " +
+      "Sunflowers in a vase, morning sunlight through the window, a cat curled nearby. Rich warm yellows and creams, everyday home warmth, inviting family atmosphere."
+    ),
+  },
+
+  // ── 個別テンプレートサムネイル 42枚 (2026-06) ───────────────────────────────
+  // Batch A: 季節行事
+  {
+    id: "fixed-cherry-blossom",
+    prompt: buildPrompt(
+      "Cherry blossom picture-book cover. A beaming child sits under a magnificent cherry blossom tree in full bloom, pink petals drifting like snow all around. " +
+      "Picnic blanket, bento box, soft spring breeze. Pastel pink and cream palette, gentle spring joy."
+    ),
+  },
+  {
+    id: "fixed-hinamatsuri",
+    prompt: buildPrompt(
+      "Hinamatsuri picture-book cover. A delighted girl in a beautiful floral kimono gazes up at a tiered display of ornate hina dolls — emperor, empress, and attendants in red and gold. " +
+      "Peach blossoms and diamond-shaped rice cakes. Elegant soft pinks and golds, traditional festive mood."
+    ),
+  },
+  {
+    id: "fixed-childrens-day",
+    prompt: buildPrompt(
+      "Children's Day picture-book cover. A proud boy wearing a samurai kabuto helmet holds a golden koi nobori streamer, colorful carp kites flying high in a bright blue sky above a lush hill. " +
+      "Iris flowers below, energetic blue and green palette, celebratory outdoor freedom."
+    ),
+  },
+  {
+    id: "fixed-tanabata",
+    prompt: buildPrompt(
+      "Tanabata star festival picture-book cover. A child reaches up to hang a colorful tanzaku wish paper on a tall bamboo branch under a deep indigo summer night sky full of stars. " +
+      "The Milky Way glows above, paper decorations flutter. Navy and gold star palette, magical wishing mood."
+    ),
+  },
+  {
+    id: "fixed-summer-festival",
+    prompt: buildPrompt(
+      "Summer festival picture-book cover. A happy child in a bright yukata holds a goldfish scooping net at a festive yatai stall, colorful paper lanterns glowing orange above a lively festival street. " +
+      "Cotton candy, watermelon, cheerful crowds in the background. Warm orange and red lantern glow, festive summer excitement."
+    ),
+  },
+  {
+    id: "fixed-fireworks",
+    prompt: buildPrompt(
+      "Fireworks picture-book cover. A child in a yukata looks up with wide shining eyes as enormous colorful fireworks burst across a deep navy night sky over a river. " +
+      "Gold and red reflections shimmer on the water below. Dramatic navy and gold palette, sense of wonder and magic."
+    ),
+  },
+  {
+    id: "fixed-halloween",
+    prompt: buildPrompt(
+      "Halloween picture-book cover. A cheerful child dressed as a friendly ghost with a glowing jack-o-lantern candy bucket walks a path through a whimsical autumn neighborhood. " +
+      "Smiling pumpkins, orange leaves, a crescent moon. Warm orange and purple palette, cute spooky not scary."
+    ),
+  },
+  {
+    id: "fixed-new-year",
+    prompt: buildPrompt(
+      "New Year picture-book cover. A child in a beautiful new kimono makes a formal bow at a shrine gate under brilliant morning light, a red-white kagami mochi and pine-bamboo-plum decoration nearby. " +
+      "Red torii, white snow dusting, golden sunrise. Traditional red, white, and gold palette, fresh hopeful new year joy."
+    ),
+  },
+
+  // Batch B: 思い出・記念
+  {
+    id: "fixed-first-nursery",
+    prompt: buildPrompt(
+      "First day of nursery school picture-book cover. A tiny child in a little school smock clutches a small randoseru backpack and waves bravely goodbye from a colorful classroom doorway. " +
+      "Crayons and picture books visible inside, morning light streaming in. Soft pastels, gentle brave first-step mood."
+    ),
+  },
+  {
+    id: "fixed-first-elementary",
+    prompt: buildPrompt(
+      "First day of elementary school picture-book cover. A proud child in a new uniform stands tall with a bright red randoseru backpack under cherry blossoms, school gate behind them. " +
+      "Yellow safety hat, big smile. Cherry blossom pink and spring green, milestone celebration mood."
+    ),
+  },
+  {
+    id: "fixed-new-sibling",
+    prompt: buildPrompt(
+      "New baby sibling picture-book cover. An older child gently leans in to look at a tiny sleeping newborn in a soft crib, face full of tender wonder and love. " +
+      "Soft nursery light, pastel mobile above. Cream and lavender palette, tender sibling bond mood."
+    ),
+  },
+  {
+    id: "fixed-first-airplane",
+    prompt: buildPrompt(
+      "First airplane ride picture-book cover. A child presses their face excitedly against an airplane window, clouds floating past outside, a small toy plane in hand. " +
+      "Interior warm cabin light, blue sky and cotton clouds beyond. Sky blue and warm yellow, adventurous first-flight wonder."
+    ),
+  },
+  {
+    id: "fixed-first-sports-day",
+    prompt: buildPrompt(
+      "Sports day picture-book cover. A child races with full effort at a colorful school sports day, arms pumping, red and white team flags flying, cheering crowd of families watching. " +
+      "Blue sky, outdoor athletic energy. Red, white, and blue sporty palette, determined joyful effort."
+    ),
+  },
+  {
+    id: "fixed-first-recital",
+    prompt: buildPrompt(
+      "First recital picture-book cover. A child in a sparkly costume stands center stage under warm spotlights, mid-performance — a proud confident moment, audience just visible in the dark below. " +
+      "Stage curtains of deep red, golden spotlight. Red and gold stage palette, shining performance pride."
+    ),
+  },
+  {
+    id: "fixed-growing-taller",
+    prompt: buildPrompt(
+      "Growing taller picture-book cover. A child stands straight and tall against a door frame while a parent lovingly marks their height with a pencil, both smiling. " +
+      "Height marks going up the frame, warm home hallway. Warm cream and soft green, cozy milestone home mood."
+    ),
+  },
+
+  // Batch C: まなび
+  {
+    id: "fixed-learning-colors",
+    prompt: buildPrompt(
+      "Learning colors picture-book cover. A child sits surrounded by floating paint splashes of red, yellow, blue, green, and purple, each color a glowing bubble. " +
+      "A friendly paintbrush character nearby. Vivid rainbow palette, joyful color exploration wonder."
+    ),
+  },
+  {
+    id: "fixed-learning-numbers",
+    prompt: buildPrompt(
+      "Learning numbers picture-book cover. A child reaches up to touch large friendly floating numbers 1 through 10 glowing like stars, each a different warm color. " +
+      "Small animal helpers count along. Warm yellows and blues, playful numerical discovery."
+    ),
+  },
+  {
+    id: "fixed-learning-animals",
+    prompt: buildPrompt(
+      "Learning animals picture-book cover. A delighted child sits in a circle of friendly animals — a bear, rabbit, elephant, lion, and duck — each introducing themselves. " +
+      "Lush green meadow background. Rich natural greens and warm tones, cheerful animal friends gathering."
+    ),
+  },
+  {
+    id: "fixed-learning-seasons",
+    prompt: buildPrompt(
+      "Learning seasons picture-book cover. A child stands at the center of four seasonal quadrants — spring cherry blossoms, summer sunflowers, autumn maple leaves, winter snowflakes — arms wide open. " +
+      "Each season blooms from the child outward. Four-season palette, joyful seasonal discovery."
+    ),
+  },
+  {
+    id: "fixed-learning-shapes",
+    prompt: buildPrompt(
+      "Learning shapes picture-book cover. A child builds a little house out of giant colorful geometric shapes — a triangle roof, square door, circle window — cheerful shape characters watching. " +
+      "Bright primary colors, playful construction scene, creative wonder."
+    ),
+  },
+
+  // Batch D: ファンタジー
+  {
+    id: "fixed-world-magical-forest",
+    prompt: buildPrompt(
+      "Magical forest picture-book cover. A child steps through a glowing arch of ancient trees into an enchanted forest where fireflies, luminous mushrooms, and friendly woodland spirits glow. " +
+      "Deep greens and golds with soft magical light, mysterious but welcoming wonder."
+    ),
+  },
+  {
+    id: "fixed-world-underwater",
+    prompt: buildPrompt(
+      "Underwater world picture-book cover. A child swims gracefully through a vibrant coral reef, surrounded by colorful tropical fish, gentle sea turtles, and a friendly whale in the distance. " +
+      "Sunlight filters from above through clear blue water. Aqua blue and coral palette, serene underwater wonder."
+    ),
+  },
+  {
+    id: "fixed-world-dinosaurs",
+    prompt: buildPrompt(
+      "Dinosaur world picture-book cover. A brave child rides on the back of a friendly gentle brontosaurus through a lush prehistoric jungle, other cheerful dinosaurs watching from the ferns. " +
+      "Volcanoes in the distance, ancient ferns and palms. Rich greens and warm earth tones, thrilling prehistoric adventure."
+    ),
+  },
+  {
+    id: "fixed-world-candy-land",
+    prompt: buildPrompt(
+      "Candy land picture-book cover. A joyful child stands in an incredible land of candy — lollipop trees, chocolate rivers, gingerbread houses, cotton candy clouds. " +
+      "Everything is edible and colorful. Vivid pastel rainbow palette, pure sugary delight and wonder."
+    ),
+  },
+  {
+    id: "fixed-world-cloud-castle",
+    prompt: buildPrompt(
+      "Cloud castle picture-book cover. A child floats up on a fluffy cloud toward a magnificent white castle perched among the clouds, rainbow bridges connecting towers, friendly sky creatures waving. " +
+      "Sunbeams break through the clouds. Soft white and sky blue with gold accents, dreamy skyward adventure."
+    ),
+  },
+  {
+    id: "fixed-world-toy-land",
+    prompt: buildPrompt(
+      "Toy land picture-book cover. A child walks through a magical town built entirely of toys — teddy bear houses, toy train roads, building block buildings all come to life. " +
+      "Wooden toys, plush animals, and tin robots wave hello. Primary colors and wood tones, warm playful magic."
+    ),
+  },
+
+  // Batch E: 成長サポート
+  {
+    id: "fixed-potty-training",
+    prompt: buildPrompt(
+      "Potty training picture-book cover. A small triumphant child stands in a bright cheerful bathroom doorway, arms raised in victory, a beautiful rainbow glowing behind them. " +
+      "Warm encouraging home atmosphere. Rainbow colors on cream background, proud milestone achievement."
+    ),
+  },
+  {
+    id: "fixed-getting-dressed",
+    prompt: buildPrompt(
+      "Getting dressed picture-book cover. A proud child stands in front of a bedroom mirror wearing their self-chosen colorful outfit, yellow buttons gleaming on the shirt, arms out with a big smile. " +
+      "Cozy morning bedroom, clothes on the floor around them. Warm morning yellows, cheerful independent self-care."
+    ),
+  },
+  {
+    id: "fixed-eating-veggies",
+    prompt: buildPrompt(
+      "Eating vegetables picture-book cover. A brave child opens wide to eat a piece of broccoli, while friendly smiling vegetable characters — carrot, peas, broccoli — cheer from the plate. " +
+      "Bright kitchen table, warm encouraging mealtime. Rich greens and orange, playful food-adventure courage."
+    ),
+  },
+  {
+    id: "fixed-morning-routine",
+    prompt: buildPrompt(
+      "Morning routine picture-book cover. A bright-eyed child stands ready at the front door in their school outfit, backpack on, waving goodbye with a confident grin. " +
+      "A glowing sunrise through the door window. Golden morning light and warm home tones, proud independent morning energy."
+    ),
+  },
+  {
+    id: "fixed-chopsticks",
+    prompt: buildPrompt(
+      "Using chopsticks picture-book cover. A child holds chopsticks with perfect grip, triumphantly lifting a shiny red bean, expression of pure proud surprise. " +
+      "Warm dining table with a bowl of food, red bean motifs scattered like confetti. Warm wood and red tones, chopstick mastery joy."
+    ),
+  },
+  {
+    id: "fixed-first-friend",
+    prompt: buildPrompt(
+      "First friend picture-book cover. Two children hold hands warmly in a sunny park, both beaming at each other, heart motifs floating around them like soap bubbles. " +
+      "Green grass, flowers, golden afternoon light. Warm soft pinks and greens, tender first friendship bloom."
+    ),
+  },
+  {
+    id: "fixed-being-brave",
+    prompt: buildPrompt(
+      "Being brave picture-book cover. A small child and a tiny lion cub companion stand side by side on a hilltop at sunrise, both looking forward bravely. " +
+      "Gold star motifs float around them, warm sunrise glow. Gold and sky blue palette, courageous adventurous spirit."
+    ),
+  },
+  {
+    id: "fixed-saying-sorry",
+    prompt: buildPrompt(
+      "Saying sorry picture-book cover. Two children face each other — one extending a hand in apology, the other beginning to smile in forgiveness — a beautiful rainbow arching over them both. " +
+      "Soft park setting, warm afternoon light. Rainbow palette on cream, tender reconciliation warmth."
+    ),
+  },
+
+  // Batch F: 日常・思い出
+  {
+    id: "fixed-first-snow",
+    prompt: buildPrompt(
+      "First snow picture-book cover. A tiny toddler in a puffy snowsuit reaches both mittened hands up to catch snowflakes, eyes wide with magical wonder, standing in a white snowy garden. " +
+      "Snowflake crystals sparkle everywhere. Soft blue-white palette, pure magical winter wonder."
+    ),
+  },
+  {
+    id: "fixed-autumn-leaves",
+    prompt: buildPrompt(
+      "Autumn leaves walk picture-book cover. A child walks through a tunnel of blazing red and gold maple trees, arms outstretched, leaves raining down all around. " +
+      "A perfect red maple leaf held up in one hand. Rich crimson, gold, and amber palette, joyful autumn sensory delight."
+    ),
+  },
+  {
+    id: "fixed-insect-hunt",
+    prompt: buildPrompt(
+      "Insect hunt picture-book cover. An excited child holds up a green bug cage examining a captured grasshopper inside, surrounded by tall summer grass full of cheerful insects. " +
+      "Bright summer sky, vivid greens. Rich summer green and blue, thrilling nature explorer mood."
+    ),
+  },
+  {
+    id: "fixed-flower-garden",
+    prompt: buildPrompt(
+      "Flower garden picture-book cover. A delighted child stands among towering sunflowers in a dazzling summer flower garden, arms spread wide, face turned up to the sun. " +
+      "Sunflowers taller than the child on all sides. Vivid golden yellow and green, joyful sunflower abundance."
+    ),
+  },
+  {
+    id: "fixed-making-onigiri",
+    prompt: buildPrompt(
+      "Making onigiri picture-book cover. A child holds up a perfectly shaped triangle onigiri with both hands, beaming with pride, nori seaweed wrapping the bottom. " +
+      "Warm kitchen table, rice bowl nearby. Warm white, cream, and nori green, proud cooking achievement."
+    ),
+  },
+  {
+    id: "fixed-fruit-picking",
+    prompt: buildPrompt(
+      "Fruit picking picture-book cover. A joyful child reaches up to pick a large shiny red apple from an apple tree in a sunlit orchard, the branch bending down to meet them. " +
+      "Red apples hanging everywhere, warm harvest light. Vivid red and green orchard palette, harvest joy."
+    ),
+  },
+  {
+    id: "fixed-first-swimming",
+    prompt: buildPrompt(
+      "First swimming picture-book cover. A laughing child splashes joyfully in a sparkling blue pool, arms wide, water droplets catching the sunlight like diamonds around them. " +
+      "Blue bubbles float up, summer sky above. Bright aqua blue and summer white, pure water play joy."
+    ),
+  },
+  {
+    id: "fixed-first-bike",
+    prompt: buildPrompt(
+      "First bicycle ride picture-book cover. A child cycles solo on a bicycle for the first time, mouth open in a shout of triumph, hair streaming behind, pinwheel windmills spinning in their wake. " +
+      "Sunny outdoor path stretching ahead. Bright sky blue and warm yellow, sense of speed and newfound freedom."
+    ),
+  },
 ];
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -138,7 +474,8 @@ async function main() {
   const promoteIdx = args.indexOf("--promote");
   const promoteIds = promoteIdx !== -1 ? args[promoteIdx + 1].split(",").map((s) => s.trim()) : [];
   const thumbIdx = args.indexOf("--thumb");
-  const thumbFilter = thumbIdx !== -1 ? args[thumbIdx + 1] : null;
+  // --thumb accepts comma-separated ids: --thumb fixed-cherry-blossom,fixed-hinamatsuri
+  const thumbFilter = thumbIdx !== -1 ? args[thumbIdx + 1].split(",").map((s) => s.trim()) : null;
 
   const isPromote = isPromoteAll || promoteIds.length > 0;
 
@@ -212,11 +549,11 @@ async function main() {
   });
 
   const targets = thumbFilter
-    ? THUMBNAILS.filter((t) => t.id === thumbFilter)
+    ? THUMBNAILS.filter((t) => thumbFilter.includes(t.id))
     : THUMBNAILS;
 
   if (targets.length === 0) {
-    console.error(`[error] No thumbnail found with id: ${thumbFilter}`);
+    console.error(`[error] No thumbnails found for ids: ${thumbFilter?.join(",")}`);
     process.exit(1);
   }
 
