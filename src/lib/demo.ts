@@ -17,7 +17,35 @@ export const DEMO_TEMPLATES: (TemplateDoc & { id: string })[] = [
   { id: "vehicles-robots", name: "のりもの・ロボット", description: "電車・車・飛行機・ロボットの楽しい世界", icon: "🤖", genre: "Vehicles & Robots", categoryGroupId: "favorite-worlds", creationMode: "guided_ai", priceTier: "take", storyCostLevel: "standard", sampleImageUrl: "/images/templates/vehicles-robots.webp", order: 10, systemPrompt: "", active: true },
   { id: "fixed-first-zoo", name: "はじめてのどうぶつえん", description: "はじめてのおでかけをやさしく残す固定テンプレート", icon: "🦁", categoryGroupId: "memories", creationMode: "fixed_template", priceTier: "ume", storyCostLevel: "none", sampleImageUrl: "/images/templates/animals.webp", order: 11, systemPrompt: "", active: true, fixedStory: { titleTemplate: "はじめてのどうぶつえん", previewImageUrl: "/images/templates/animals.webp", pages: [{ textTemplate: "今日ははじめての動物園！象さんに会えるかな？", imagePromptTemplate: "A child visiting a zoo for the first time, looking at an elephant with wonder" }, { textTemplate: "わあ、キリンさんが高いところの葉っぱを食べているよ。", imagePromptTemplate: "A giraffe eating leaves from a tall tree, child watching in amazement" }] } },
   { id: "fixed-bedtime-good-day", name: "きょうもいい日だったね", description: "寝る前に短く読める安心テンプレート", icon: "🛏️", categoryGroupId: "bedtime", creationMode: "fixed_template", priceTier: "ume", storyCostLevel: "none", sampleImageUrl: "/images/templates/bedtime.webp", order: 12, systemPrompt: "", active: true, fixedStory: { titleTemplate: "きょうもいい日だったね", pages: [{ textTemplate: "お風呂に入ってさっぱり。パジャマに着替えよう。", imagePromptTemplate: "A happy child in pajamas after bath, cozy bedroom setting" }, { textTemplate: "お布団に入って、おやすみなさい。", imagePromptTemplate: "A child tucked in bed with a teddy bear, soft night light, peaceful atmosphere" }] } },
-  { id: "original-ai", name: "オリジナル絵本", description: "自由に書いた内容からAIが一から作る絵本", icon: "✨", categoryGroupId: "imagination", creationMode: "original_ai", priceTier: "matsu", storyCostLevel: "standard", sampleImageUrl: "/images/templates/fantasy.webp", order: 13, systemPrompt: "", active: true, isOriginalEntry: true },
+  {
+    id: "fixed-first-birthday",
+    name: "はじめてのたんじょうび",
+    description: "はじめての誕生日の思い出を、やさしく残せる固定テンプレート",
+    icon: "🎂",
+    categoryGroupId: "seasonal-events",
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    order: 13,
+    systemPrompt: "",
+    active: true,
+    fixedStory: {
+      titleTemplate: "{childName}のはじめてのたんじょうび",
+      previewImageUrl: "/images/templates/seasonal.webp",
+      pages: [
+        {
+          textTemplate: "{childName}は、おたんじょうびのじゅんびを はじめました。",
+          imagePromptTemplate: "A child helping decorate for a birthday party",
+        },
+        {
+          textTemplate: "ろうそくのひかりがゆれて、きらきらしています。",
+          imagePromptTemplate: "A birthday cake with glowing candles, warm atmosphere",
+        },
+      ],
+    },
+  },
+  { id: "original-ai", name: "オリジナル絵本", description: "自由に書いた内容からAIが一から作る絵本", icon: "✨", categoryGroupId: "imagination", creationMode: "original_ai", priceTier: "matsu", storyCostLevel: "standard", sampleImageUrl: "/images/templates/fantasy.webp", order: 14, systemPrompt: "", active: true, isOriginalEntry: true },
 ];
 
 const DEMO_STORAGE_KEY = "ehoria-demo-books";
