@@ -157,17 +157,28 @@ function ThemeSelectionPageContent() {
       templateId: effectiveId || "ai_custom",
       creationMode: selectedMode,
     });
-    const params = new URLSearchParams();
-    params.set("theme", effectiveId || "");
-    params.set("mode", selectedMode);
-    if (childId) params.set("childId", childId);
     // companion params をスルーパス
     const companionId = searchParams.get("companionId");
     const companionName = searchParams.get("companionName");
     const companionVisualDescription = searchParams.get("companionVisualDescription");
+
+    const params = new URLSearchParams();
+    if (childId) params.set("childId", childId);
     if (companionId) params.set("companionId", companionId);
     if (companionName) params.set("companionName", companionName);
     if (companionVisualDescription) params.set("companionVisualDescription", companionVisualDescription);
+
+    if (selectedMode === "guided_ai") {
+      // 新フロー: AIにおまかせ → ai-brief 入力ページへ
+      params.set("mode", selectedMode);
+      if (effectiveId) params.set("theme", effectiveId); // ベーステンプレートID
+      router.push(`/create/ai-brief?${params.toString()}`);
+      return;
+    }
+
+    // fixed_template / original_ai は既存の入力ページへ
+    params.set("theme", effectiveId || "");
+    params.set("mode", selectedMode);
     router.push(`/create/input?${params.toString()}`);
   };
 
@@ -218,36 +229,39 @@ function ThemeSelectionPageContent() {
         </div>
       </div>
 
-      <div className="mt-6 flex overflow-x-auto gap-2 pb-2 no-scrollbar">
-        <button
-          type="button"
-          onClick={() => updateQuery("category", "all")}
-          className={cn(
-            "rounded-full border px-3 py-1 text-sm whitespace-nowrap transition-colors",
-            selectedCategoryGroupId === "all"
-              ? "bg-purple-100 border-purple-400 text-purple-700 font-medium"
-              : "border-purple-100 bg-white text-purple-600 hover:border-purple-300"
-          )}
-        >
-          すべて
-        </button>
-        {categoryGroups.map((group) => (
+      {/* カテゴリフィルター: fixed_template のみ表示 */}
+      {selectedMode === "fixed_template" && (
+        <div className="mt-6 flex overflow-x-auto gap-2 pb-2 no-scrollbar">
           <button
-            key={group.id}
             type="button"
-            onClick={() => updateQuery("category", group.id)}
+            onClick={() => updateQuery("category", "all")}
             className={cn(
-              "flex items-center gap-1 rounded-full border px-3 py-1 text-sm whitespace-nowrap transition-colors",
-              selectedCategoryGroupId === group.id
+              "rounded-full border px-3 py-1 text-sm whitespace-nowrap transition-colors",
+              selectedCategoryGroupId === "all"
                 ? "bg-purple-100 border-purple-400 text-purple-700 font-medium"
                 : "border-purple-100 bg-white text-purple-600 hover:border-purple-300"
             )}
           >
-            <span>{group.icon}</span>
-            <span>{group.name}</span>
+            すべて
           </button>
-        ))}
-      </div>
+          {categoryGroups.map((group) => (
+            <button
+              key={group.id}
+              type="button"
+              onClick={() => updateQuery("category", group.id)}
+              className={cn(
+                "flex items-center gap-1 rounded-full border px-3 py-1 text-sm whitespace-nowrap transition-colors",
+                selectedCategoryGroupId === group.id
+                  ? "bg-purple-100 border-purple-400 text-purple-700 font-medium"
+                  : "border-purple-100 bg-white text-purple-600 hover:border-purple-300"
+              )}
+            >
+              <span>{group.icon}</span>
+              <span>{group.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {selectedMode === "fixed_template" ? (
         loading || categoryLoading ? (
@@ -300,7 +314,40 @@ function ThemeSelectionPageContent() {
             ))}
           </StaggerContainer>
         )
+      ) : selectedMode === "guided_ai" ? (
+        /* AIにおまかせ: 新フロー紹介カード */
+        <div className="mt-6 rounded-2xl border border-purple-100 bg-gradient-to-b from-purple-50 to-violet-50 p-6">
+          <div className="text-center">
+            <p className="text-4xl">✨</p>
+            <h2 className="mt-2 text-lg font-bold text-purple-900">
+              AIと一緒に作るオリジナル絵本
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-violet-600">
+              主人公とストーリーのアイデアを入力するだけ。
+              <br />
+              AIが起承転結のある読み応えのある絵本を作ります。
+            </p>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              { icon: "👶", text: "子どもが主人公の成長・冒険の話" },
+              { icon: "🌟", text: "架空キャラの本格ファンタジー" },
+              { icon: "📖", text: "しっかりした起承転結の物語" },
+            ].map((item) => (
+              <div
+                key={item.icon}
+                className="rounded-xl bg-white/70 px-2 py-3 text-center"
+              >
+                <p className="text-xl">{item.icon}</p>
+                <p className="mt-1 text-xs leading-tight text-violet-600">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
+        /* original_ai: 既存の簡易表示 */
         <div className="mt-8 text-center text-violet-500">選択したテーマをもとにAIが作ります</div>
       )}
 

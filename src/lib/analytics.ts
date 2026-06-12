@@ -12,7 +12,8 @@ type AnalyticsEventName =
   | "partial_complete_book_generation"
   | "fail_book_generation"
   | "submit_book_feedback"
-  | "view_quality_sample";
+  | "view_quality_sample"
+  | "submit_ai_brief";
 
 type AnalyticsPayload = Record<string, string | number | boolean | undefined>;
 

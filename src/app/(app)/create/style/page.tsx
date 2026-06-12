@@ -43,7 +43,9 @@ function StyleSelectionPageContent() {
   const childId = searchParams.get("childId");
   const child = children.find((item) => item.id === childId) ?? null;
   const template = templates.find((item) => item.id === theme);
-  const childName = child?.nickname || child?.displayName || "";
+  // protagonistName: ai-brief フロー（架空キャラ or 未登録の子ども名）で渡される
+  const protagonistNameParam = searchParams.get("protagonistName");
+  const childName = protagonistNameParam || child?.nickname || child?.displayName || "";
   const mode = (searchParams.get("mode") ?? template?.creationMode ?? "guided_ai") as
     | "fixed_template"
     | "guided_ai"
