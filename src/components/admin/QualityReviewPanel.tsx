@@ -214,7 +214,7 @@ export function QualityReviewPanel({
                       <p className="text-xs font-medium text-rose-700">Flagged:</p>
                       <ul className="list-inside list-disc text-xs text-rose-600">
                         {review.flaggedIssues.map((issue, i) => (
-                          <li key={i}>{issue}</li>
+                          <li key={i}>[{issue.severity}] {issue.message}</li>
                         ))}
                       </ul>
                     </div>
