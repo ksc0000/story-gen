@@ -8,12 +8,15 @@ const FIXED_TEMPLATE_IDS = [
   "fixed-first-birthday-8p",
   "fixed-first-zoo-8p",
   "fixed-bedtime-good-day",
+  "fixed-bedtime-good-day-8p",
+  "fixed-brush-teeth-8p",
   "fixed-brush-teeth",
   "fixed-first-christmas",
   "fixed-sharing-friends",
   "fixed-sleepy-moon-adventure",
   "fixed-sleepy-moon-adventure-8p",
   "fixed-cardboard-rocket",
+  "fixed-cardboard-rocket-8p",
   "fixed-rainy-day-puddle",
   "fixed-little-helper",
 ] as const;
@@ -38,6 +41,47 @@ const PROMPT_NEGATIVE_CLAUSES = [
   "no storefront signs",
   "no text-like marks",
   "no readable signs",
+  "no brand marks",
+  "no labels",
+  "no stickers",
+  "no icon-like glyphs",
+  "no decorative text-like patterns",
+  "no product labels",
+  "no posters",
+  "no charts",
+  "no written marks",
+  "no signboards",
+  "no building labels",
+  "no entrance signs",
+  "no zoo name boards",
+  "no map boards",
+  "no information panels",
+  "no printed gate or building surfaces",
+  "no side boards",
+  "no map panels",
+  "no admission notices",
+  "no posted signs",
+  "no readable book covers",
+  "no spine writing",
+  "no paper items with visible writing",
+  "no nursery cards",
+  "no word-bearing wall art",
+  "no packaging graphics",
+  "no shirt lettering",
+  "no logo patches",
+  "no mascot prints",
+  "no decorative number or alphabet graphics",
+  "no pseudo-text",
+  "no decorative symbols",
+  "no label-like marks",
+  "no written notes",
+  "unlabeled",
+  "label-free",
+  "no visible bookshelf",
+  "no printed room surfaces",
+  "no message area",
+  "no cloud frame",
+  "no invented writing surface",
   "no text",
   "no letters",
   "no japanese characters",
@@ -56,6 +100,26 @@ function getPositivePrompt(prompt: string): string {
 const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-first-zoo": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-first-birthday": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-bedtime-good-day-8p": [
+    "opening_establishing",
+    "action",
+    "discovery",
+    "object_detail",
+    "payoff",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending",
+  ],
+  "fixed-brush-teeth-8p": [
+    "opening_establishing",
+    "setback_or_question",
+    "discovery",
+    "action",
+    "object_detail",
+    "emotional_closeup",
+    "payoff",
+    "quiet_ending",
+  ],
   "fixed-first-birthday-8p": [
     "opening_establishing",
     "action",
@@ -92,6 +156,16 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
     "quiet_ending",
   ],
   "fixed-cardboard-rocket": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-cardboard-rocket-8p": [
+    "opening_establishing",
+    "action",
+    "discovery",
+    "discovery",
+    "payoff",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending",
+  ],
   "fixed-rainy-day-puddle": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-little-helper": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
 };
@@ -124,12 +198,15 @@ const EXPECTED_FIXED_SAMPLE_IMAGES: Record<string, string> = {
   "fixed-first-birthday-8p": "/images/templates/seasonal.webp",
   "fixed-first-zoo-8p": "/images/templates/animals.webp",
   "fixed-bedtime-good-day": "/images/templates/bedtime.webp",
-  "fixed-brush-teeth": "/images/templates/daily-habits.webp",
+  "fixed-bedtime-good-day-8p": "/images/templates/bedtime.webp",
   "fixed-first-christmas": "/images/templates/seasonal.webp",
+  "fixed-brush-teeth": "/images/templates/daily-habits.webp",
+  "fixed-brush-teeth-8p": "/images/templates/daily-habits.webp",
   "fixed-sharing-friends": "/images/templates/emotional-growth.webp",
   "fixed-sleepy-moon-adventure": "/images/templates/bedtime.webp",
   "fixed-sleepy-moon-adventure-8p": "/images/templates/bedtime.webp",
   "fixed-cardboard-rocket": "/images/templates/adventure.webp",
+  "fixed-cardboard-rocket-8p": "/images/templates/adventure.webp",
   "fixed-rainy-day-puddle": "/images/templates/seasonal.webp",
   "fixed-little-helper": "/images/templates/daily-habits.webp",
 };
@@ -163,10 +240,10 @@ function assertFixedStoryPageCountContract(fixedStory: {
 }
 
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
-  it("Phase T3-8b: fixed templates are expanded to 13 (12 previous + fixed-sleepy-moon-adventure-8p)", () => {
-    expect(FIXED_TEMPLATE_IDS.length).toBe(13);
+  it("Phase T3-8b: fixed templates are expanded to 16 (14 previous + 2 new 8p variants)", () => {
+    expect(FIXED_TEMPLATE_IDS.length).toBe(16);
     const existing = FIXED_TEMPLATE_IDS.filter((id) => SEED_TEMPLATES[id]);
-    expect(existing.length).toBe(13);
+    expect(existing.length).toBe(16);
   });
 
   for (const id of FIXED_TEMPLATE_IDS) {
@@ -570,5 +647,31 @@ describe("fixed-sleepy-moon-adventure-8p — prompt hardening", () => {
     expect(prompt).toContain("no visible book covers");
     expect(prompt).toContain("no spine writing");
     expect(prompt).toContain("no paper items with visible writing");
+  });
+});
+
+describe("fixed-bedtime-good-day-8p — prompt hardening", () => {
+  const template = SEED_TEMPLATES["fixed-bedtime-good-day-8p"];
+  const pages = template.fixedStory?.pages ?? [];
+
+  it("every page prompt keeps the same yellow pajamas and white rabbit plush anchor", () => {
+    for (const page of pages) {
+      const prompt = page.imagePromptTemplate.toLowerCase();
+      expect(prompt).toContain("same soft yellow pajamas with a small simple duckling pattern");
+      expect(prompt).toContain("same white rabbit plush toy");
+    }
+  });
+});
+
+describe("fixed-cardboard-rocket-8p — prompt hardening", () => {
+  const template = SEED_TEMPLATES["fixed-cardboard-rocket-8p"];
+  const pages = template.fixedStory?.pages ?? [];
+
+  it("every page prompt keeps the same red t-shirt and blue star rocket anchor", () => {
+    for (const page of pages) {
+      const prompt = page.imagePromptTemplate.toLowerCase();
+      expect(prompt).toContain("same bright red t-shirt");
+      expect(prompt).toContain("same cardboard rocket with a large blue star on the side");
+    }
   });
 });
