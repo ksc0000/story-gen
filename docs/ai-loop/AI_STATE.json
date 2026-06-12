@@ -58,6 +58,7 @@
     "PR #284: feat: 旧固定テンプレートの共有画像かぶりを解消（個別サムネイル対応） (merged)",
     "PR #287: feat: テンプレート詳細ダイアログにページ数セレクターを追加 (merged)",
     "PR #288: feat: AIにおまかせ 新入力フロー (/create/ai-brief) (merged)",
+    "PR #289: feat: AIあらすじ提案ステップ（generateStoryPitch + ピッチUI） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
