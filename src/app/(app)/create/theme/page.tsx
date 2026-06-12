@@ -59,6 +59,26 @@ function ThemeSelectionPageContent() {
     [categoryGroups]
   );
 
+  /** baseId → all page-count variants of that template, sorted by page count asc */
+  const templateVariantsMap = useMemo(() => {
+    const map = new Map<string, (typeof templates)[0][]>();
+    for (const t of templates) {
+      if ((t.creationMode ?? "guided_ai") !== selectedMode) continue;
+      const baseId = t.id.replace(/-8p$/, "");
+      const arr = map.get(baseId) ?? [];
+      arr.push(t);
+      map.set(baseId, arr);
+    }
+    // Sort each group by page count ascending (4p before 8p)
+    for (const arr of map.values()) {
+      arr.sort(
+        (a, b) =>
+          (a.fixedStory?.pages?.length ?? 4) - (b.fixedStory?.pages?.length ?? 4)
+      );
+    }
+    return map;
+  }, [selectedMode, templates]);
+
   const filteredTemplates = useMemo(() => {
     const list = templates.filter((template) => {
       const templateMode = template.creationMode ?? "guided_ai";
@@ -67,18 +87,20 @@ function ThemeSelectionPageContent() {
       return true;
     });
 
-    // De-duplicate by name across all modes to avoid showing multiple page-count variants.
+    // De-duplicate by base ID (strip -8p suffix) — show one card per template group.
+    // Prefer the 4p variant as the primary display card.
     const uniqueMap = new Map<string, (typeof templates)[0]>();
     for (const t of list) {
-      if (!uniqueMap.has(t.name)) {
-        uniqueMap.set(t.name, t);
+      const baseId = t.id.replace(/-8p$/, "");
+      if (!uniqueMap.has(baseId)) {
+        uniqueMap.set(baseId, t);
       } else {
-        // Prefer 8-page variant; otherwise prefer 4-page over other counts
-        const existing = uniqueMap.get(t.name)!;
-        const existingPages = existing.fixedStory?.pages?.length ?? (existing as { pageCount?: number }).pageCount ?? 0;
-        const currentPages = t.fixedStory?.pages?.length ?? (t as { pageCount?: number }).pageCount ?? 0;
-        if (currentPages === 8 || (existingPages !== 8 && currentPages === 4)) {
-          uniqueMap.set(t.name, t);
+        const existing = uniqueMap.get(baseId)!;
+        const existingPages = existing.fixedStory?.pages?.length ?? 4;
+        const currentPages = t.fixedStory?.pages?.length ?? 4;
+        // Prefer 4-page as primary (smallest count wins)
+        if (currentPages < existingPages) {
+          uniqueMap.set(baseId, t);
         }
       }
     }
@@ -298,14 +320,13 @@ function ThemeSelectionPageContent() {
 
       <TemplateDetailDialog
         template={detailTemplateId ? (templates.find((t) => t.id === detailTemplateId) ?? null) : null}
+        variants={detailTemplateId ? (templateVariantsMap.get(detailTemplateId.replace(/-8p$/, "")) ?? []) : []}
         isOpen={detailTemplateId !== null}
         onClose={() => setDetailTemplateId(null)}
-        onConfirm={() => {
-          if (detailTemplateId) {
-            setSelectedId(detailTemplateId);
-            setDetailTemplateId(null);
-            handleNext(detailTemplateId);
-          }
+        onConfirm={(confirmedId) => {
+          setSelectedId(confirmedId);
+          setDetailTemplateId(null);
+          handleNext(confirmedId);
         }}
       />
     </PageTransition>
