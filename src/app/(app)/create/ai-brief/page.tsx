@@ -211,9 +211,11 @@ function ModeToggle({
 function ChatHistoryItem({
   question,
   answer,
+  onBack,
 }: {
   question: string;
   answer: string;
+  onBack?: () => void;
 }) {
   return (
     <motion.div
@@ -229,6 +231,15 @@ function ChatHistoryItem({
         <span className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">
           ✓ {answer}
         </span>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-[11px] text-violet-300 transition-colors hover:text-violet-500"
+          >
+            変更
+          </button>
+        )}
       </div>
     </motion.div>
   );
@@ -289,6 +300,58 @@ function AiBriefPageContent() {
   const questionSequence = buildQuestionSequence(chatAnswers);
   const currentQuestion = questionSequence[chatStep];
   const isAllAnswered = summaryReady;
+  const minChatStep = childId ? 1 : 0; // childId がある場合 Q1 はスキップ済みで戻れない
+
+  // ── 指定ステップ「以降すべて」クリアして戻る（← 戻るボタン、protagonistType 変更時）
+  const handleGoBackTo = (targetStep: number) => {
+    if (targetStep < minChatStep) return;
+    const seq = buildQuestionSequence(chatAnswers);
+    const newAnswers = { ...chatAnswers };
+    for (let i = targetStep; i < seq.length; i++) {
+      const q = seq[i];
+      if (q.id === "pageCount") newAnswers.pageCount = undefined;
+      else (newAnswers as Record<string, string | number | ProtagonistType | undefined>)[q.id] = undefined;
+    }
+    setChatAnswers(newAnswers);
+    setChatStep(targetStep);
+    setSummaryReady(false);
+    setFreeInputValue("");
+    setShowFreeInput(false);
+    setPitchState({ status: "idle" });
+  };
+
+  // ── 指定ステップの回答だけクリアして戻る（「変更」ボタン）
+  const handleEditStep = (targetStep: number) => {
+    if (targetStep < minChatStep) return;
+    const seq = buildQuestionSequence(chatAnswers);
+    const q = seq[targetStep];
+    if (!q) return;
+    // protagonistType は変更するとシーケンス自体が変わるので以降もリセット
+    if (q.id === "protagonistType") {
+      handleGoBackTo(targetStep);
+      return;
+    }
+    const newAnswers = { ...chatAnswers };
+    if (q.id === "pageCount") newAnswers.pageCount = undefined;
+    else (newAnswers as Record<string, string | number | ProtagonistType | undefined>)[q.id] = undefined;
+    setChatAnswers(newAnswers);
+    setChatStep(targetStep);
+    setSummaryReady(false);
+    setFreeInputValue("");
+    setShowFreeInput(false);
+    setPitchState({ status: "idle" });
+  };
+
+  // ── 次の未回答ステップを探す（単一箇所変更後のスキップ用）
+  const findNextUnansweredStep = (fromStep: number, answers: ChatAnswers): number | null => {
+    const seq = buildQuestionSequence(answers);
+    for (let i = fromStep; i < seq.length; i++) {
+      const q = seq[i];
+      const val = (answers as Record<string, unknown>)[q.id];
+      if (val == null || val === "") return i;
+    }
+    return null; // 全問回答済み
+  };
 
   // チャットモード: 名前の解決
   const chatEffectiveName =
@@ -320,13 +383,12 @@ function AiBriefPageContent() {
     setFreeInputValue("");
     setShowFreeInput(false);
 
-    const nextStep = chatStep + 1;
-    const nextSequence = buildQuestionSequence(newAnswers);
-
-    if (nextStep >= nextSequence.length) {
+    // 次の未回答ステップへ（変更モードで後の回答が残っている場合はスキップ）
+    const nextUnanswered = findNextUnansweredStep(chatStep + 1, newAnswers);
+    if (nextUnanswered === null) {
       setSummaryReady(true);
     } else {
-      setChatStep(nextStep);
+      setChatStep(nextUnanswered);
     }
   };
 
@@ -345,13 +407,12 @@ function AiBriefPageContent() {
     setFreeInputValue("");
     setShowFreeInput(false);
 
-    const nextStep = chatStep + 1;
-    const nextSequence = buildQuestionSequence(newAnswers);
-
-    if (nextStep >= nextSequence.length) {
+    // 次の未回答ステップへ（変更モードで後の回答が残っている場合はスキップ）
+    const nextUnanswered = findNextUnansweredStep(chatStep + 1, newAnswers);
+    if (nextUnanswered === null) {
       setSummaryReady(true);
     } else {
-      setChatStep(nextStep);
+      setChatStep(nextUnanswered);
     }
   };
 
@@ -529,10 +590,15 @@ function AiBriefPageContent() {
             } else if (q.id === "pageCount") {
               displayAnswer = `${rawAnswer}ページ`;
             }
-            // 名前の場合
             if (q.id === "protagonistName" && !rawAnswer) return null;
+            const canEdit = i >= minChatStep && pitchState.status === "idle";
             return (
-              <ChatHistoryItem key={q.id + i} question={q.text} answer={displayAnswer} />
+              <ChatHistoryItem
+                key={q.id + i}
+                question={q.text}
+                answer={displayAnswer}
+                onBack={canEdit ? () => handleEditStep(i) : undefined}
+              />
             );
           })}
 
@@ -583,17 +649,28 @@ function AiBriefPageContent() {
                     </li>
                   )}
                 </ul>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setChatAnswers({});
-                    setChatStep(childId ? 1 : 0);
-                    setSummaryReady(false);
-                  }}
-                  className="mt-3 text-xs text-violet-400 underline"
-                >
-                  最初からやり直す
-                </button>
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleGoBackTo(questionSequence.length - 1)}
+                    className="text-xs text-violet-400 transition hover:text-violet-600"
+                  >
+                    ← 前の質問に戻る
+                  </button>
+                  <span className="text-violet-200">|</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChatAnswers(childId ? { protagonistType: "child" } : {});
+                      setChatStep(childId ? 1 : 0);
+                      setSummaryReady(false);
+                      setPitchState({ status: "idle" });
+                    }}
+                    className="text-xs text-violet-400 transition hover:text-violet-600"
+                  >
+                    最初からやり直す
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -609,12 +686,23 @@ function AiBriefPageContent() {
                 transition={{ type: "spring", damping: 24, stiffness: 280 }}
                 className="rounded-2xl border border-violet-100 bg-white p-5 shadow-sm"
               >
-                {/* ボットアイコン + 質問文 */}
-                <div className="flex items-start gap-2 mb-4">
-                  <span className="text-xl">🤖</span>
-                  <p className="pt-0.5 text-base font-semibold text-purple-900">
-                    {currentQuestion.text}
-                  </p>
+                {/* ボットアイコン + 質問文 + 戻るボタン */}
+                <div className="flex items-start justify-between gap-2 mb-4">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl">🤖</span>
+                    <p className="pt-0.5 text-base font-semibold text-purple-900">
+                      {currentQuestion.text}
+                    </p>
+                  </div>
+                  {chatStep > minChatStep && (
+                    <button
+                      type="button"
+                      onClick={() => handleGoBackTo(chatStep - 1)}
+                      className="shrink-0 rounded-full border border-violet-100 px-2.5 py-1 text-[11px] text-violet-400 transition hover:border-violet-300 hover:text-violet-600"
+                    >
+                      ← 戻る
+                    </button>
+                  )}
                 </div>
 
                 {/* テキスト入力のみ（Q1b: キャラクター名） */}
