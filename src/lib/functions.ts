@@ -120,6 +120,36 @@ export type BootstrapAdminResult = {
   message?: string;
 };
 
+// ---------------------------------------------------------------------------
+// generateStoryPitch
+// ---------------------------------------------------------------------------
+
+export interface StoryPitch {
+  title: string;
+  intro: string;
+  rising: string;
+  climax: string;
+  resolution: string;
+}
+
+export interface GenerateStoryPitchInput {
+  protagonistName: string;
+  storyBrief: string;
+  pageCount: number;
+  protagonistType: "child" | "fictional";
+  refinementRequest?: string;
+}
+
+export async function generateStoryPitchCallable(
+  data: GenerateStoryPitchInput
+): Promise<StoryPitch> {
+  const callable = await getCallable<GenerateStoryPitchInput, StoryPitch>(
+    "generateStoryPitch"
+  );
+  const result = await callable(data);
+  return result.data;
+}
+
 export async function bootstrapAdminCallable(): Promise<BootstrapAdminResult> {
   const callable = await getCallable<Record<string, never>, BootstrapAdminResult>(
     "bootstrapAdmin"
