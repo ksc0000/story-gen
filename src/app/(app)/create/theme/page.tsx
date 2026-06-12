@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StepIndicator } from "@/components/step-indicator";
 import { ThemeCard } from "@/components/theme-card";
-import { TemplatePreviewModal } from "@/components/template-preview-modal";
+import { TemplateDetailDialog } from "@/components/template-detail-dialog";
 import { PageTransition } from "@/components/page-transition";
 import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
@@ -48,7 +48,7 @@ function ThemeSelectionPageContent() {
   const { templates, loading, error } = useTemplates();
   const { categoryGroups, loading: categoryLoading } = useCategoryGroups();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
+  const [detailTemplateId, setDetailTemplateId] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const childId = searchParams.get("childId");
@@ -128,14 +128,15 @@ function ThemeSelectionPageContent() {
     router.replace(`/create/theme?${params.toString()}`);
   };
 
-  const handleNext = () => {
-    if (selectedMode === "fixed_template" && !selectedId) return;
+  const handleNext = (overrideId?: string) => {
+    const effectiveId = overrideId ?? selectedId;
+    if (selectedMode === "fixed_template" && !effectiveId) return;
     trackAnalyticsEvent("select_story_theme", {
-      templateId: selectedId || "ai_custom",
+      templateId: effectiveId || "ai_custom",
       creationMode: selectedMode,
     });
     const params = new URLSearchParams();
-    params.set("theme", selectedId || "");
+    params.set("theme", effectiveId || "");
     params.set("mode", selectedMode);
     if (childId) params.set("childId", childId);
     // companion params をスルーパス
@@ -248,14 +249,13 @@ function ThemeSelectionPageContent() {
                   <h2 className="text-sm font-semibold text-purple-900">{group.groupIcon} {group.groupName}</h2>
                   <span className="text-xs text-violet-500">{group.templates.length}件</span>
                 </div>
-                <StaggerContainer className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <StaggerContainer className="grid grid-cols-3 gap-2 sm:grid-cols-3 xl:grid-cols-4">
                   {group.templates.map((template) => (
                     <StaggerItem key={template.id}>
                       <ThemeCard
                         template={template}
                         selected={selectedId === template.id}
-                        onSelect={() => setSelectedId(template.id)}
-                        onPreview={template.fixedStory ? () => setPreviewTemplateId(template.id) : undefined}
+                        onSelect={() => setDetailTemplateId(template.id)}
                         categoryName={group.groupName}
                       />
                     </StaggerItem>
@@ -265,14 +265,13 @@ function ThemeSelectionPageContent() {
             ))}
           </div>
         ) : (
-          <StaggerContainer className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <StaggerContainer className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-3 xl:grid-cols-4">
             {filteredTemplates.map((template) => (
               <StaggerItem key={template.id}>
                 <ThemeCard
                   template={template}
                   selected={selectedId === template.id}
-                  onSelect={() => setSelectedId(template.id)}
-                  onPreview={template.fixedStory ? () => setPreviewTemplateId(template.id) : undefined}
+                  onSelect={() => setDetailTemplateId(template.id)}
                   categoryName={categoryGroupMap.get(template.categoryGroupId ?? "")?.name}
                 />
               </StaggerItem>
@@ -290,17 +289,24 @@ function ThemeSelectionPageContent() {
             size="lg"
             className="w-full"
             disabled={selectedMode === "fixed_template" && !selectedId}
-            onClick={handleNext}
+            onClick={() => handleNext()}
           >
             次へ
           </Button>
         </div>
       </div>
 
-      <TemplatePreviewModal
-        template={previewTemplateId ? (templates.find((t) => t.id === previewTemplateId) ?? null) : null}
-        isOpen={previewTemplateId !== null}
-        onClose={() => setPreviewTemplateId(null)}
+      <TemplateDetailDialog
+        template={detailTemplateId ? (templates.find((t) => t.id === detailTemplateId) ?? null) : null}
+        isOpen={detailTemplateId !== null}
+        onClose={() => setDetailTemplateId(null)}
+        onConfirm={() => {
+          if (detailTemplateId) {
+            setSelectedId(detailTemplateId);
+            setDetailTemplateId(null);
+            handleNext(detailTemplateId);
+          }
+        }}
       />
     </PageTransition>
   );

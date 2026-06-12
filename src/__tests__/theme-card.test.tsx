@@ -110,26 +110,31 @@ describe("ThemeCard", () => {
     expect(onSelect).toHaveBeenCalled();
   });
 
-  it("renders preview button if onPreview is provided for fixed_template", () => {
-    const onPreview = vi.fn();
-    const fixedTemplate = {
-      ...mockTemplate,
-      creationMode: "fixed_template" as const,
-    };
-
+  it("shows checkmark badge when selected", () => {
     render(
       <ThemeCard
-        template={fixedTemplate}
-        selected={false}
+        template={mockTemplate}
+        selected={true}
         onSelect={() => {}}
-        onPreview={onPreview}
       />
     );
 
-    const previewButton = screen.getByText("ストーリーを見る");
-    expect(previewButton).toBeInTheDocument();
+    // The checkmark SVG path is rendered when selected
+    const svg = document.querySelector("svg");
+    expect(svg).toBeInTheDocument();
+  });
 
-    fireEvent.click(previewButton);
-    expect(onPreview).toHaveBeenCalled();
+  it("does not show checkmark badge when not selected", () => {
+    render(
+      <ThemeCard
+        template={mockTemplate}
+        selected={false}
+        onSelect={() => {}}
+      />
+    );
+
+    // No checkmark SVG when not selected
+    const svg = document.querySelector("svg");
+    expect(svg).not.toBeInTheDocument();
   });
 });
