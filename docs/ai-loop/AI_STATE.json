@@ -71,6 +71,7 @@
     "PR #298: Define LLM Auto Review JSON Schema (merged)",
     "PR #301: feat: チャットQ&Aフローに「戻る」ナビゲーションを追加 (merged)",
     "PR #303: fix: QualityReviewPanel の型エラー修正（reviewed→human_reviewed） (merged)",
+    "PR #304: fix: QualityReviewPanel の flaggedIssues 描画を型変更に対応 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
