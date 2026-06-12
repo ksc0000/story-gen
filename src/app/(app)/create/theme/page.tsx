@@ -347,8 +347,34 @@ function ThemeSelectionPageContent() {
           </div>
         </div>
       ) : (
-        /* original_ai: 既存の簡易表示 */
-        <div className="mt-8 text-center text-violet-500">選択したテーマをもとにAIが作ります</div>
+        /* original_ai: 詳細説明カード */
+        <div className="mt-6 rounded-2xl border border-violet-100 bg-gradient-to-b from-violet-50 to-white p-6">
+          <div className="text-center">
+            <p className="text-4xl">✍️</p>
+            <h2 className="mt-2 text-lg font-bold text-purple-900">
+              思い通りの絵本を自由に作る
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-violet-600">
+              登場人物・場所・伝えたいことを詳しく入力するほど、
+              <br />
+              AIがあなたのイメージに近いストーリーを生成します。
+            </p>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              { icon: "💬", text: "細かく自由に\n指定できる" },
+              { icon: "🎨", text: "世界観や雰囲気を\n自分で設定" },
+              { icon: "📝", text: "思い出や教えたいことも\n自由に入力" },
+            ].map((item) => (
+              <div key={item.icon} className="rounded-xl bg-white/70 px-2 py-3 text-center">
+                <p className="text-xl">{item.icon}</p>
+                <p className="mt-1 whitespace-pre-line text-xs leading-tight text-violet-600">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* 画面下部固定 — iPhone セーフエリア対応 */}

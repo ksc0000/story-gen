@@ -7,7 +7,7 @@ interface StepIndicatorProps {
   currentStep: 1 | 2 | 3;
 }
 
-const steps = ["テーマ", "スタイル", "内容"];
+const steps = ["テーマ", "内容", "スタイル"];
 
 export function StepIndicator({ currentStep }: StepIndicatorProps) {
   return (

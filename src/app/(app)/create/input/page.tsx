@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { StepIndicator } from "@/components/step-indicator";
 import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -285,8 +284,7 @@ function InputPageContent() {
       <StepIndicator currentStep={2} />
       <h1 className="mt-6 text-center text-xl font-bold text-purple-900">内容を入力してください</h1>
 
-      <Card className="mt-6">
-        <CardContent className="space-y-5 p-6">
+      <div className="mt-6 space-y-5 rounded-2xl border border-violet-100 bg-white p-5 shadow-sm">
           {/* ── 主人公 & テーマ確認 ── */}
           <div className="flex items-center gap-3 rounded-2xl bg-purple-50 px-4 py-3 text-sm">
             <span className="text-base">👤</span>
@@ -314,7 +312,7 @@ function InputPageContent() {
                 value={storyRequest}
                 onChange={(e) => setStoryRequest(e.target.value)}
                 placeholder="自由に書いてOKです。主人公、場所、気持ち、起きてほしいことなどをまとめて書けます。"
-                className="mt-1 min-h-40 w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-3 py-3 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
+                className="mt-1 min-h-40 w-full rounded-2xl border border-violet-200 bg-background px-3 py-3 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
                 rows={6}
                 maxLength={800}
               />
@@ -381,7 +379,7 @@ function InputPageContent() {
                   value={parentMessage}
                   onChange={(e) => setParentMessage(e.target.value)}
                   placeholder="例：また一緒に行こうね"
-                  className="mt-1 w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
+                  className="mt-1 w-full rounded-2xl border border-violet-200 bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
                   rows={3}
                   maxLength={200}
                 />
@@ -400,14 +398,14 @@ function InputPageContent() {
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex w-full items-center justify-between rounded-2xl border border-[rgba(240,171,252,0.3)] px-4 py-3 text-sm text-violet-600 transition hover:border-purple-300 hover:bg-violet-50/50"
+            className="flex w-full items-center justify-between rounded-2xl border border-violet-200 px-4 py-3 text-sm text-violet-600 transition hover:border-purple-300 hover:bg-violet-50/50"
           >
             <span>⚙ 詳細設定</span>
             <span className="text-violet-400">{showAdvanced ? "▲" : "▼"}</span>
           </button>
 
           {showAdvanced && (
-            <div className="space-y-5 rounded-2xl border border-[rgba(240,171,252,0.3)] p-4">
+            <div className="space-y-5 rounded-2xl border border-violet-100 bg-violet-50/30 p-4">
 
               {/* ページ数 */}
               {((creationMode === "fixed_template" && relatedTemplates.length > 1) ||
@@ -427,7 +425,7 @@ function InputPageContent() {
                               className={`flex-1 rounded-full border px-2 py-2 text-xs transition ${
                                 pageCount === opt.value
                                   ? "border-purple-400 bg-[rgba(167,139,250,0.1)] font-medium text-purple-700"
-                                  : "border-[rgba(240,171,252,0.3)] text-violet-400 hover:border-purple-300"
+                                  : "border-violet-200 text-violet-400 hover:border-purple-300"
                               }`}
                             >
                               {opt.label}
@@ -441,7 +439,7 @@ function InputPageContent() {
                             className={`flex-1 rounded-full border px-2 py-2 text-xs transition ${
                               pageCount === opt.value
                                 ? "border-purple-400 bg-[rgba(167,139,250,0.1)] font-medium text-purple-700"
-                                : "border-[rgba(240,171,252,0.3)] text-violet-400 hover:border-purple-300"
+                                : "border-violet-200 text-violet-400 hover:border-purple-300"
                             }`}
                           >
                             {opt.label}
@@ -475,7 +473,7 @@ function InputPageContent() {
                           className={`rounded-2xl border p-3 text-left text-sm transition ${
                             selectedPlan
                               ? "border-purple-400 bg-white shadow-sm"
-                              : "border-[rgba(240,171,252,0.3)] bg-white/80"
+                              : "border-violet-100 bg-white/80"
                           } ${locked ? "cursor-not-allowed opacity-65" : "hover:border-purple-300"}`}
                         >
                           <div className="flex flex-wrap items-center gap-1.5">
@@ -513,7 +511,7 @@ function InputPageContent() {
                       className={`rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
                         outfitMode === option.value
                           ? "border-purple-400 bg-purple-50 text-purple-700"
-                          : "border-[rgba(240,171,252,0.3)] text-violet-500"
+                          : "border-violet-100 text-violet-500"
                       }`}
                     >
                       {option.label}
@@ -548,7 +546,7 @@ function InputPageContent() {
                       className={`w-full rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
                         selectedCompanionId === null
                           ? "border-purple-400 bg-purple-50 text-purple-700"
-                          : "border-[rgba(240,171,252,0.3)] text-violet-500"
+                          : "border-violet-100 text-violet-500"
                       }`}
                     >
                       なし
@@ -561,7 +559,7 @@ function InputPageContent() {
                         className={`w-full rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
                           selectedCompanionId === companion.id
                             ? "border-purple-400 bg-purple-50 text-purple-700"
-                            : "border-[rgba(240,171,252,0.3)] text-violet-500"
+                            : "border-violet-100 text-violet-500"
                         }`}
                       >
                         <span className="mr-2">{getSpeciesEmoji(companion.species)}</span>
@@ -599,7 +597,7 @@ function InputPageContent() {
                       value={memoryToRecreate}
                       onChange={(e) => setMemoryToRecreate(e.target.value)}
                       placeholder="例：おばあちゃんの家に遊びに行った"
-                      className="mt-1 w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
+                      className="mt-1 w-full rounded-2xl border border-violet-200 bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
                       rows={3}
                       maxLength={200}
                     />
@@ -611,7 +609,7 @@ function InputPageContent() {
                       value={parentMessage}
                       onChange={(e) => setParentMessage(e.target.value)}
                       placeholder="例：これからもたくさん一緒に冒険しようね"
-                      className="mt-1 w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
+                      className="mt-1 w-full rounded-2xl border border-violet-200 bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
                       rows={3}
                       maxLength={200}
                     />
@@ -621,8 +619,7 @@ function InputPageContent() {
               ) : null}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
 
       {creationMode === "fixed_template" && missingTemplateFields.length > 0 && (
         <div className="mt-4 text-center">

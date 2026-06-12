@@ -6,7 +6,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { GenerationProgress } from "@/components/generation-progress";
 import { FloatingParticles } from "@/components/floating-particles";
 import { PageTransition } from "@/components/page-transition";
@@ -223,8 +222,7 @@ function GeneratingContent() {
     <PageTransition className="relative mx-auto max-w-2xl px-4 py-8">
       <FloatingParticles />
       <div className="relative z-10">
-        <Card>
-          <CardContent className="p-6">
+        <div className="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm">
             <div className="text-center">
               <motion.div
                 animate={shouldReduceMotion ? undefined : { y: [0, -8, 0] }}
@@ -257,8 +255,7 @@ function GeneratingContent() {
             <p className="mt-4 text-center text-sm text-violet-500">
               この画面を閉じても、本棚から確認できます。
             </p>
-          </CardContent>
-        </Card>
+        </div>
         <div className="mt-4 text-center">
           <Link href="/home" className="text-sm text-violet-500 hover:underline">本棚に戻る</Link>
         </div>
