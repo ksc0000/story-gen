@@ -1,25 +1,13 @@
-# Refine `fixed-brush-teeth` Template for `pageVisualRole` Consistency
+# Verify Scheduler Job Execution on Production Data
 
 ## Context
 
-Phase 3 of the product roadmap focuses on enhancing the Template Mode for reliability and quality. The "T3-2 status update" identified critical P1 quality issues for existing templates based on the `TEMPLATE_QUALITY_REVIEW.md` document. Specifically, item T3-2a points to inconsistencies in `pageVisualRole` within the `fixed-brush-teeth` template, which can lead to suboptimal visual storytelling and prompt generation. This task directly addresses this identified quality improvement.
+Phase 1 of the product roadmap, "Reliability First," is currently in `production smoke evidence pending` status. While key components for SLO reporting and cleanup have been implemented and documented, their actual execution and verification against live production data are still pending. This task focuses on verifying the scheduled jobs for SLO snapshots and stale data cleanup, which are critical for closing Phase 1. A diagnostic script (`PR #286`) has been implemented to aid this verification.
 
 ## Objective
 
-Improve the `pageVisualRole` definitions within the `fixed-brush-teeth` template to ensure better visual consistency and narrative flow across the book's pages, aligning with the quality review recommendations.
+Confirm the successful execution of `saveDailySloSnapshot`, `saveWeeklySloSnapshot`, and `cleanupStaleGeneration` scheduler jobs using real production data. Document the verification process and results.
 
 ## Allowed Scope
 
--   `src/common/fixed-templates.ts` (specifically, the `fixed-brush-teeth` template data).
--   `src/common/story-json.ts` (only if `pageVisualRole` enum needs minor adjustment for the template's context, which is unlikely but allowed).
--   `src/functions/generate-book.ts` (only for adding a temporary diagnostic log for `pageVisualRole` values during testing, to be removed before PR merge).
--   Corresponding test files if applicable to the template data structure (unlikely for a simple data change).
-
-## Forbidden Scope
-
--   Infrastructure changes (Firebase rules, Cloud Functions deployment config beyond `src/functions`).
--   Billing or subscription logic.
--   Authentication redesign.
--   Secrets management.
--   Generated assets (e.g., actual template preview images).
--   
+-   `functions/src/firestore/
