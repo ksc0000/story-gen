@@ -1,13 +1,7 @@
-# Verify Scheduler Job Execution on Production Data
+# Enable Safer High-Quality Image Regeneration Retry for Cohort B
 
 ## Context
 
-Phase 1 of the product roadmap, "Reliability First," is currently in `production smoke evidence pending` status. While key components for SLO reporting and cleanup have been implemented and documented, their actual execution and verification against live production data are still pending. This task focuses on verifying the scheduled jobs for SLO snapshots and stale data cleanup, which are critical for closing Phase 1. A diagnostic script (`PR #286`) has been implemented to aid this verification.
+The product roadmap for Phase 5 (Monetization / Soft Launch) indicates that the `P5-3f` task, "Option C Safer High-Quality Retry" (which implements a 3-step fallback mechanism for image generation), has been "IMPLEMENTED / DEPLOYED / SMOKE PASS". However, its rollout for Cohort B users is still pending (`Cohort B rollout pending` in the roadmap). This retry mechanism is designed to improve image generation reliability and quality. Cohort B limited rollout (`P5-3-execute-b`) is currently in progress, and enabling this feature for them is the logical next step to validate its performance in a live, controlled environment.
 
-## Objective
-
-Confirm the successful execution of `saveDailySloSnapshot`, `saveWeeklySloSnapshot`, and `cleanupStaleGeneration` scheduler jobs using real production data. Document the verification process and results.
-
-## Allowed Scope
-
--   `functions/src/firestore/
+This task aims to activate
