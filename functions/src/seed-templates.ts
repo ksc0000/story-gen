@@ -1154,7 +1154,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。{childName}は、歯のひとつひとつに 気持ちを こめて 磨きます。",
           pageVisualRole: "action",
           imagePromptTemplate:
-            withBrushTeethImagePromptGuardrail("Action-focused medium shot of the child concentrating hard on brushing the front teeth. The child's hands are on both sides of the toothbrush, mouth open with gentle foam. Keep the toothbrush, toothpaste tube, cup, mirror, and counter completely plain and unlabeled, with no brand marks, product labels, letters, numbers, or readable markings. The toothpaste tube must be completely blank, plain white, and label-free, with no printed text, fake text, logo, brand mark, decorative writing, symbols, numbers, or letter-like shapes. If needed, turn the tube away from the viewer or partially hide it behind the cup so no product surface can show markings. The mirror reflects the child's focused, determined face. Soft bubbles float around the mouth area. A small shining star motif appears on the mirror frame or tooth foam. Bright clean bathroom. Soft watercolor picture book style, determination and effort, dynamic but gentle, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+            withBrushTeethImagePromptGuardrail("Action-focused medium shot of the child concentrating hard on brushing the front teeth. The child's hands are on both sides of the toothbrush, mouth open with gentle foam. Keep the toothbrush, toothpaste tube, cup, mirror, and counter completely plain and unlabeled, with no brand marks, product labels, letters, numbers, or readable markings. The toothpaste tube must be completely blank, plain white, and label-free, with no printed text, fake text, logo, brand mark, decorative writing, symbols, numbers, or letter-like shapes. If needed, turn the tube away from the viewer or partially hide it behind the cup so no product surface can show markings. The mirror reflects the child's focused, determined face. Soft bubbles float around the mouth area. A small shining star motif appears on the mirror frame or tooth foam. Bright clean bathroom. Soft watercolor picture book style, determination and effort, dynamic but gentle, rich but not cluttered. No text, no letters, no Japanese characters, no logo, no watermark."),
         }),
         buildAgeSpecificPage({
           textTemplate: "さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。",
@@ -5679,6 +5679,186 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-pet-arrival": {
+    name: "ペットがやってきた",
+    description: "新しい家族が加わった日。動物との出会いと、命のあたたかさを感じる思い出絵本",
+    icon: "🐾",
+    categoryGroupId: "growth-support",
+    subcategoryId: "emotional-growth",
+    parentIntent: "優しい子に育ってほしい。自信を持ってほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["pet", "animal", "family", "growth"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/animals.webp",
+    sampleImageAlt: "新しいペットと一緒に過ごす子どもの絵本イメージ",
+    visualDirection:
+      "Warm cozy home atmosphere with a small cute pet, gentle interaction, soft paws or tail motifs as recurring symbols of friendship.",
+    order: 108,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、新しいペットが来た日の絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と ペットの おともだち",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a delighted child sitting on a soft rug, gently stroking a small fluffy puppy or kitten, tiny paw print motifs floating in the air like bubbles, warm indoor sunlight, soft cozy home atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "あたらしい かぞく、よろしくね",
+      openingNarrationTemplate:
+        "あるひ、{childName}の おうちに あたらしい かぞくが やってきました。ふわふわの ちいさな いのちです。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}の前に、小さなお友だちがやってきました。だれかな？",
+          baby_toddler: "だれかな？ふわふわ。おともだち。",
+          preschool_3_4:
+            "{childName}の まえに、ちいさな おともだちが やってきました。だれかな？",
+          early_reader_5_6:
+            "{childName}の まえに、ちいさな おともだちが やってきました。かごの なかから、かわいい おめめが こちらを 見ています。",
+          early_elementary_7_8:
+            "{childName}の まえに、ちいさな おともだちが やってきました。きょうから いっしょに くらす、だいじな かぞくです。",
+          general_child: "{childName}の前に、小さなお友だちがやってきました。だれかな？",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a cozy living room. A child looks with wide curious eyes at a small pet carrier or basket on the rug. A tiny fluffy head peeks out. Soft morning light streams through the window. Tiny paw print motifs are tucked into the rug pattern. Watercolor picture book style, excited discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "そっと撫でてみると、とてもあたたかかったです。なかよしになれるかな？",
+          baby_toddler: "いいこ、いいこ。あったかい。",
+          preschool_3_4:
+            "そっと なでてみると、とても あたたかかったです。なかよしに なれるかな？",
+          early_reader_5_6:
+            "そっと なでてみると、とても あたたかかったです。どきどきしたけれど、ペットも うれしそうに しっぽを ふりました。",
+          early_elementary_7_8:
+            "そっと なでてみると、てのひらに いきものの あたたかさが つたわってきました。「よろしくね」と こころの なかで つぶやきました。",
+          general_child: "そっと撫でてみると、とてもあたたかかったです。なかよしになれるかな？",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot of the child gently reaching out to stroke the small pet's back. The pet looks up at the child with trust. Tiny paw print motifs glow softly near the point of contact. Warm home light. Watercolor picture book style, tender first connection mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "いっしょに遊ぶと、{childName}はとっても楽しい気持ちになりました。",
+          baby_toddler: "いっしょに あそぼ。たのしいね！",
+          preschool_3_4:
+            "いっしょに あそぶと、{childName}は とっても たのしい きもちに なりました。",
+          early_reader_5_6:
+            "おもちゃで いっしょに あそぶと、{childName}は とっても たのしい きもちに なりました。もう ずっと まえからの ともだちみたいです。",
+          early_elementary_7_8:
+            "いっしょに はしったり、じゃれあったり。{childName}は ペットと すごす じかんが、なによりも とくべつな ものに なりました。",
+          general_child: "いっしょに遊ぶと、{childName}はとっても楽しい気持ちになりました。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Action shot of the child and the small pet playing together on the floor with a ball or yarn. Both are moving with joyful energy. Tiny paw print motifs swirl in the air like bubbles. Bright cheerful home light. Watercolor picture book style, playful friendship mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "これからずっといっしょ。大切な家族が増えました。{parentMessage}",
+          baby_toddler: "ずっと いっしょ。だいすき。{parentMessage}",
+          preschool_3_4:
+            "これから ずっと いっしょ。たいせつな かぞくが ふえました。{parentMessage}",
+          early_reader_5_6:
+            "これから ずっと いっしょ。うれしいときも、かなしいときも、ずっと そばに いようね。{parentMessage}",
+          early_elementary_7_8:
+            "これから ずっと いっしょ。いのちの あたたかさを おしえてくれた 小さな ともだち。ずっと いっしょに おおきくなろうね。{parentMessage}",
+          general_child:
+            "これから ずっと いっしょ。たいせつな かぞくが ふえました。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child and the small pet napping together on a sunlit rug, both looking peaceful and content. Tiny paw print motifs glow softly in the evening light. Warm golden glow. Watercolor picture book style, peaceful family bond ending, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-first-errand": {
+    name: "はじめての おつかい",
+    description: "ひとりで買い物に行けた！小さな背中を見守るドキドキと、達成感を描く思い出絵本",
+    icon: "🛍️",
+    categoryGroupId: "memories",
+    subcategoryId: "milestone",
+    parentIntent: "特別な思い出を絵本に残したい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["errand", "milestone", "courage", "achievement"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "はじめてのおつかいに行く子どもの絵本イメージ",
+    visualDirection:
+      "Bright neighborhood street atmosphere, small shopping bag motifs recurring as symbols of independence and bravery.",
+    order: 109,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめてのおつかいの思い出絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はじめての おつかい",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a brave child walking down a sunny neighborhood street holding a small empty shopping bag, looking forward with determination, tiny shopping bag motifs floating like badges of courage, bright cheerful morning light, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+      titleSpreadTextTemplate: "ひとりで いけるかな？",
+      openingNarrationTemplate:
+        "きょう {childName}は、はじめて ひとりでおつかいに でかけます。ちいさな かばんを もって、しゅっぱつです。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は一人で道を歩きました。ドキドキ、わくわく。",
+          baby_toddler: "おつかい！ひとり。どきどき。",
+          preschool_3_4:
+            "{childName}は ひとりで みちを あるきました。どきどき、わくわく。",
+          early_reader_5_6:
+            "{childName}は ひとりで みちを あるきました。いつもの みちが、きょうは なんだか とくべつに 見えます。",
+          early_elementary_7_8:
+            "{childName}は ひとりで みちを あるきました。すこし ふあんだけれど、じぶんで やると きめたのです。まえを むいて あるきます。",
+          general_child: "{childName}は一人で道を歩きました。ドキドキ、わくわく。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing wide shot of a sunny, friendly neighborhood street. The child walks down the sidewalk holding a small colorful bag. Houses and trees line the path. Tiny shopping bag motifs dot the fence or trees. Bright morning light. Watercolor picture book style, brave adventure beginning mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "お店に着いて、頼まれたものを見つけました。あった！",
+          baby_toddler: "お店！あった！これ！",
+          preschool_3_4:
+            "おみせに ついて、たのまれたものを みつけました。あった！",
+          early_reader_5_6:
+            "おみせに ついて、たのまれたものを みつけました。たなを よく 見て、ひとつ ひとつ たしかめます。",
+          early_elementary_7_8:
+            "おみせに ついて、たのまれたものを さがしました。ようやく 見つけたとき、{childName}の こころは ぱっと 明るくなりました。",
+          general_child: "お店に着いて、頼まれたものを見つけました。あった！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery medium shot inside a bright small store-interior (text-free). The child points with excitement at a carton of milk or a loaf of bread on a low shelf. Tiny shopping bag motifs glow nearby. Friendly market atmosphere with soft indoor light. Watercolor picture book style, successful discovery mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「ください」と言えました！自分でお買い物できたよ！",
+          baby_toddler: "ください！いえた！やった！",
+          preschool_3_4:
+            "「ください」と いえました！じぶんで おかいもの できたよ！",
+          early_reader_5_6:
+            "「ください」と 元気に いえました！じぶんで おかいもの できたことが、とても うれしくて なりません。",
+          early_elementary_7_8:
+            "「ください」と しずかだけど しっかりした 声で いえました。おかいものが できた じぶんを、ちょっぴり ほこらしく おもいました。",
+          general_child: "「ください」と言えました！自分でお買い物できたよ！",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of the child's face at a low counter, handing over a coin or small purse with a proud, beaming smile. A friendly shopkeeper's hands (out of focus) are visible. Tiny shopping bag motifs burst around the achievement. Warm inviting light. Watercolor picture book style, proud milestone close-up, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おかえりなさい！がんばったね、{childName}。大成功のおつかいでした。{parentMessage}",
+          baby_toddler: "ただいま！できた！{parentMessage}",
+          preschool_3_4:
+            "おかえりなさい！がんばったね、{childName}。だいせいこうの おつかいでした。{parentMessage}",
+          early_reader_5_6:
+            "おかえりなさい！がんばったね、{childName}。おうちに ついたときの えがおは、きらきら かがやいていました。{parentMessage}",
+          early_elementary_7_8:
+            "おかえりなさい！ひとりで やり遂げた {childName}。この ゆうきが、これからの じぶんを ささえてくれるはずです。{parentMessage}",
+          general_child:
+            "おかえりなさい！がんばったね、{childName}。だいせいこうの おつかいでした。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Wide quiet ending shot of the child arriving at their front door where a family member waits with open arms. The sun is warm and golden. Tiny shopping bag motifs glow softly in the evening sky. Watercolor picture book style, triumphant return ending, warm family pride, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
   "original-ai": {
     name: "オリジナル絵本",
     description: "自由に書いた内容から、AIが一から物語を作ります",
@@ -6798,6 +6978,22 @@ const templateMetadata: Record<string, Partial<TemplateData>> = {
     recommendedAgeMax: 8,
     requiredInputs: ["childName"],
     optionalInputs: ["favorites", "place"],
+  },
+  "fixed-pet-arrival": {
+    categoryGroupId: "growth-support",
+    parentIntent: "優しい子に育ってほしい。自信を持ってほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+  },
+  "fixed-first-errand": {
+    categoryGroupId: "memories",
+    parentIntent: "特別な思い出を絵本に残したい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
   },
 };
 
