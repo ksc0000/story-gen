@@ -237,6 +237,14 @@ const categoryGroups: Record<string, CategoryGroupData> = {
     order: 8,
     active: true,
   },
+  "blank-templates": {
+    name: "穴埋め絵本",
+    description: "ひとことを入れるだけで、そのこだけのオリジナル絵本になる",
+    icon: "✏️",
+    parentIntent: "かんたんに、自分たちだけの絵本を作りたい",
+    order: 10,
+    active: true,
+  },
 };
 
 export const SEED_TEMPLATES: Record<string, TemplateData> = {
@@ -5696,6 +5704,1015 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: `あなたは子ども向け絵本の作家です。親の自由入力を中心に、主人公の個性と家族の思いを生かしたオリジナル絵本を作ってください。
 - 内容は自由でも、幼児が安心して読めるやさしい構成にしてください。
 - 主人公の好きなもの、思い出、教えたいことを必要に応じて自然に織り込んでください。`,
+  },
+
+  // ─────────────────────────────────────────────────
+  // 穴埋めテンプレート — ひとことで完成するオリジナル絵本
+  // ─────────────────────────────────────────────────
+
+  "blank-first-experience": {
+    name: "はじめての○○",
+    description: "何に挑戦したか一言入れるだけ。初挑戦の瞬間を絵本に。",
+    icon: "🌟",
+    categoryGroupId: "blank-templates",
+    parentIntent: "できるようになってほしい。でも怒らず応援したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName", "storyRequest"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["first-time", "challenge", "achievement", "blank"],
+    creationMode: "fixed_template",
+    isBlankTemplate: true,
+    blankLabel: "何に挑戦しましたか？",
+    blankExample: "例：じてんしゃ、スイミング、かけっこ",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-first-zoo.webp",
+    sampleImageAlt: "初挑戦の体験を絵本にしたイメージ",
+    visualDirection:
+      "Warm encouraging picture-book mood capturing the universal joy of trying something new for the very first time — nervous excitement turning into triumphant pride.",
+    order: 110,
+    active: true,
+    systemPrompt: "穴埋めテンプレートを使って、はじめての挑戦をやさしい絵本にします。",
+    fixedStory: {
+      titleTemplate: "{childName}の はじめての {storyRequest}",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a joyful young child about to try something exciting for the very first time, wide eyes full of anticipation and courage, small glowing star motifs floating around them, warm golden encouraging light, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
+      ),
+      titleSpreadTextTemplate: "はじめてのことに ちょうせん！",
+      openingNarrationTemplate:
+        "きょうは {childName}にとって、とくべつな日。はじめての {storyRequest}に挑戦します。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は、はじめての{storyRequest}に挑戦しました。ドキドキ、わくわく！",
+          baby_toddler: "{storyRequest}！{childName}、やる！どきどき！",
+          preschool_3_4:
+            "{childName}は、はじめての{storyRequest}に挑戦しました。どきどき、わくわく！",
+          early_reader_5_6:
+            "{childName}は、はじめての{storyRequest}に挑戦することになりました。むねがどきどき、でも心はわくわくしています。",
+          early_elementary_7_8:
+            "{childName}は、はじめての{storyRequest}に挑戦することになりました。やれるかな？でもやってみたい！",
+          general_child:
+            "{childName}は、はじめての{storyRequest}に挑戦しました。ドキドキ、わくわく！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Wide establishing shot of a young child standing at the very start of a new challenge, bright eager eyes full of anticipation and nervous energy, posture leaning forward with excitement, warm soft golden light, small sparkling star motifs floating in the air, soft watercolor picture book style, hopeful open mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "ちょっとむずかしかったけれど、「もう一かい！」と{childName}はあきらめません。",
+          baby_toddler: "むずかしい！でも、もう一かい！",
+          preschool_3_4:
+            "ちょっとむずかしかったけれど、{childName}はあきらめません。「もう一かい！」",
+          early_reader_5_6:
+            "うまくいかないことも、{childName}はあきらめません。「もう一かい！もう一かい！」何度もくりかえします。",
+          early_elementary_7_8:
+            "最初はなかなかうまくいきません。でも{childName}はあきらめず、何度もチャレンジし続けます。",
+          general_child:
+            "ちょっとむずかしかったけれど、「もう一かい！」と{childName}はあきらめません。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Mid-shot of a young child trying hard with a look of intense focus and determination, slight frustration but full of fighting spirit and perseverance, warm encouraging light around them, soft watercolor picture book style, motivating determined mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "がんばっているうちに、だんだんコツがつかめてきました！",
+          baby_toddler: "できてきた！やった！",
+          preschool_3_4: "がんばっているうちに、だんだんコツがつかめてきました！",
+          early_reader_5_6:
+            "がんばり続けると、だんだんコツがつかめてきました！{childName}の心に自信がむくむくと育ちます。",
+          early_elementary_7_8:
+            "あきらめずに続けていると、少しずつうまくなっていきます。{childName}には確かな手ごたえが感じられました。",
+          general_child: "がんばっているうちに、だんだんコツがつかめてきました！",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Shot of a child visibly improving and gaining confidence, posture more upright and assured, a growing smile spreading across their face, small glowing stars appearing around them like a confidence aura, warm golden light, soft watercolor picture book style, blossoming confidence mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "やった！できた！{childName}はとびきりのえがおになりました。{parentMessage}",
+          baby_toddler: "やった！できた！{parentMessage}",
+          preschool_3_4:
+            "やった！できた！{childName}はとびきりのえがおになりました。{parentMessage}",
+          early_reader_5_6:
+            "やった！できた！{childName}の顔は、今まで見た中でいちばんの笑顔になりました。{parentMessage}",
+          early_elementary_7_8:
+            "やった！できた！{childName}は胸がいっぱいになりました。挑戦して、よかった。{parentMessage}",
+          general_child:
+            "やった！できた！{childName}はとびきりのえがおになりました。{parentMessage}",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Close-up of a joyful child beaming with the biggest smile after achieving success for the first time, arms raised or fists pumped in triumph, golden light radiating around them, star motifs bursting with joy, soft watercolor picture book style, pure triumphant happiness close-up, rich but not cluttered",
+        }),
+      ],
+    },
+  },
+
+  "blank-first-experience-8p": {
+    name: "はじめての○○",
+    description: "何に挑戦したか一言入れるだけ。初挑戦の瞬間を絵本に。",
+    icon: "🌟",
+    categoryGroupId: "blank-templates",
+    parentIntent: "できるようになってほしい。でも怒らず応援したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName", "storyRequest"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["first-time", "challenge", "achievement", "blank"],
+    creationMode: "fixed_template",
+    isBlankTemplate: true,
+    blankLabel: "何に挑戦しましたか？",
+    blankExample: "例：じてんしゃ、スイミング、かけっこ",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-first-zoo.webp",
+    sampleImageAlt: "初挑戦の体験を絵本にしたイメージ",
+    visualDirection:
+      "Warm encouraging picture-book mood capturing the universal joy of trying something new for the very first time — nervous excitement turning into triumphant pride.",
+    order: 111,
+    active: true,
+    systemPrompt: "穴埋めテンプレートを使って、はじめての挑戦をやさしい絵本にします。",
+    fixedStory: {
+      titleTemplate: "{childName}の はじめての {storyRequest}",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a joyful young child about to try something exciting for the very first time, wide eyes full of anticipation and courage, small glowing star motifs floating around them, warm golden encouraging light, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
+      ),
+      titleSpreadTextTemplate: "はじめてのことに ちょうせん！",
+      openingNarrationTemplate:
+        "きょうは {childName}にとって、とくべつな日。はじめての {storyRequest}に挑戦します。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は、はじめての{storyRequest}に挑戦することになりました。",
+          preschool_3_4:
+            "{childName}は、はじめての{storyRequest}に挑戦することになりました。",
+          early_reader_5_6:
+            "{childName}は、はじめての{storyRequest}に挑戦する日がやってきました。むねがどきどきします。",
+          early_elementary_7_8:
+            "{childName}は、はじめての{storyRequest}に挑戦する日がやってきました。心のなかで「やるぞ！」と言いました。",
+          general_child:
+            "{childName}は、はじめての{storyRequest}に挑戦することになりました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Wide establishing shot of a young child at the very start of a new adventure, standing tall with bright excited eyes full of anticipation, warm golden morning light, small star motifs in the air, soft watercolor picture book style, excited arrival mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「どんなかんじかな？」{childName}はじっと見つめています。",
+          preschool_3_4: "「どんなかんじかな？」{childName}はじっと見つめています。",
+          early_reader_5_6:
+            "「どんなかんじかな？」{childName}はじっと見つめています。はじめてのことは、なんでもドキドキするものです。",
+          early_elementary_7_8:
+            "「どんなかんじかな？」{childName}はじっと観察しています。やってみないと分からないことが、たくさんあります。",
+          general_child: "「どんなかんじかな？」{childName}はじっと見つめています。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Close-up of a curious child leaning forward and studying something intently, big curious eyes full of wonder, a thoughtful expression on their face, warm soft light, soft watercolor picture book style, curious observing mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "はじめてのことは、思ったよりむずかしい。でも{childName}はあきらめません。",
+          preschool_3_4:
+            "はじめてのことは、むずかしいな。でも{childName}はあきらめません。",
+          early_reader_5_6:
+            "はじめてのことは、思ったよりむずかしい。でも{childName}は「やめない！」と心にきめました。",
+          early_elementary_7_8:
+            "はじめてのことは、思ったよりずっとむずかしいものです。でも{childName}は「ぜったいにあきらめない」と心にきめました。",
+          general_child:
+            "はじめてのことは、思ったよりむずかしい。でも{childName}はあきらめません。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Mid-shot of a child facing a challenge with a look of concentration — a slight furrow in their brow but eyes still determined, not giving up, warm soft light, soft watercolor picture book style, perseverance in difficulty mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「もう一かい！もう一かい！」{childName}はなんども挑戦します。",
+          preschool_3_4: "「もう一かい！もう一かい！」{childName}はなんども挑戦します。",
+          early_reader_5_6:
+            "「もう一かい！もう一かい！」{childName}はなんども繰り返します。あきらめない心が、{childName}の中にあります。",
+          early_elementary_7_8:
+            "「もう一かい！もう一かい！」{childName}は何度も挑戦します。くじけそうになっても、立ち上がる力があります。",
+          general_child: "「もう一かい！もう一かい！」{childName}はなんども挑戦します。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Action shot of a child actively trying again with renewed energy and determination, fists clenched in effort, an expression of fierce willpower, light and star motifs encouraging them from the sides, soft watercolor picture book style, never-give-up action mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "すると、だんだんうまくいくようになってきました！",
+          preschool_3_4: "すると、だんだんうまくいくようになってきました！",
+          early_reader_5_6:
+            "すると、だんだんうまくいくようになってきました！何かが体でわかってきた気がします。",
+          early_elementary_7_8:
+            "あきらめずに続けていると、少しずつうまくいくようになってきました。努力が実ってきたのです。",
+          general_child: "すると、だんだんうまくいくようになってきました！",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Shot of a child showing visible improvement, a growing smile and lifted posture, confidence beginning to radiate, warm golden light strengthening around them, star motifs beginning to glow, soft watercolor picture book style, growing success mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「あ！できた！」思わず声が出ました。",
+          preschool_3_4: "「あ！できた！」思わず声が出ました。",
+          early_reader_5_6:
+            "「あ！できた！」思わず声が出ました。{childName}の心に、あたたかい気持ちが広がります。",
+          early_elementary_7_8:
+            "「あ！できた！」思わず声が出ました。これが本当にできた瞬間の気持ちです。",
+          general_child: "「あ！できた！」思わず声が出ました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Close-up of a child's face in the exact moment of breakthrough success, eyes wide open with surprise and joy, a spontaneous huge smile, golden light bursting around their face, star motifs exploding with celebration, soft watercolor picture book style, breakthrough moment close-up, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}はできたうれしさで、からだいっぱいになりました。",
+          preschool_3_4:
+            "{childName}はできたうれしさで、からだいっぱいになりました。",
+          early_reader_5_6:
+            "{childName}はできたうれしさで、からだいっぱいになりました。挑戦してよかった、と思います。",
+          early_elementary_7_8:
+            "{childName}はできたうれしさで、からだいっぱいになりました。あきらめなくてよかった。本当にそう思いました。",
+          general_child:
+            "{childName}はできたうれしさで、からだいっぱいになりました。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Triumphant wide shot of the child with arms spread wide in pure joy, face radiant with pride and happiness, warm golden light flooding the scene, stars and sparkles swirling all around them, soft watercolor picture book style, full triumphant joy mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "はじめてのことに挑戦した日のことを、{childName}はずっと覚えているでしょう。{parentMessage}",
+          baby_toddler:
+            "はじめてのことに挑戦した日のことを、{childName}はずっと覚えているでしょう。{parentMessage}",
+          preschool_3_4:
+            "はじめてのことに挑戦した日のことを、{childName}はずっと覚えているでしょう。{parentMessage}",
+          early_reader_5_6:
+            "はじめてのことに挑戦した日のことを、{childName}はずっとずっと覚えているでしょう。あきらめない心は、ずっとそばにいてくれます。{parentMessage}",
+          early_elementary_7_8:
+            "はじめてのことに挑戦し、やりとげた日のことを、{childName}はきっとずっと覚えているでしょう。この経験が、次の挑戦の力になります。{parentMessage}",
+          general_child:
+            "はじめてのことに挑戦した日のことを、{childName}はずっと覚えているでしょう。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Quiet peaceful ending shot of the child with a warm satisfied smile, looking back on a wonderful day of achievement, soft warm evening light, tiny star motifs floating gently around them like a blessing, soft watercolor picture book style, peaceful proud ending mood, rich but not cluttered",
+        }),
+      ],
+    },
+  },
+
+  "blank-favorite-thing": {
+    name: "だいすき！○○",
+    description: "好きなものを一言入れるだけ。大好きな世界の絵本。",
+    icon: "💛",
+    categoryGroupId: "blank-templates",
+    parentIntent: "この子の好きなものを伸ばしたい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName", "storyRequest"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["favorite", "love", "passion", "blank"],
+    creationMode: "fixed_template",
+    isBlankTemplate: true,
+    blankLabel: "好きなものは何ですか？",
+    blankExample: "例：きょうりゅう、でんしゃ、プリンセス、ぬいぐるみ",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "大好きなものと過ごす子どもの絵本イメージ",
+    visualDirection:
+      "Joyful warm picture-book world celebrating a child's passionate love for their absolute favorite thing — pure happiness and wonder.",
+    order: 112,
+    active: true,
+    systemPrompt: "穴埋めテンプレートを使って、大好きなものへの愛を絵本にします。",
+    fixedStory: {
+      titleTemplate: "{childName}の だいすきな {storyRequest}",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a joyful young child surrounded by their very favorite things, arms spread wide in pure delight, heart motifs and soft sparkles floating everywhere, warm golden glowing light, soft watercolor picture book style, rounded child-safe composition, abundant love and joy mood, rich but not cluttered"
+      ),
+      titleSpreadTextTemplate: "せかいで いちばん だいすき！",
+      openingNarrationTemplate:
+        "{childName}には、せかいでいちばん大好きなものがあります。それは、{storyRequest}！",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は、{storyRequest}が大好きです。世界でいちばん！",
+          baby_toddler: "{storyRequest}！{childName}、だいすき！",
+          preschool_3_4:
+            "{childName}は、{storyRequest}が大好きです。世界でいちばん！",
+          early_reader_5_6:
+            "{childName}には、世界でいちばん好きなものがあります。それは、{storyRequest}です。",
+          early_elementary_7_8:
+            "{childName}が世界でいちばん好きなもの、それは{storyRequest}です。思い浮かべるだけで、うれしくなります。",
+          general_child:
+            "{childName}は、{storyRequest}が大好きです。世界でいちばん！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Wide warm shot of a joyful child surrounded by their beloved treasures, arms spread open in total delight, heart-shaped motifs and soft sparkles floating gently around them, golden warm light, soft watercolor picture book style, abundant joy and love mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{storyRequest}のことを考えると、{childName}はうれしくなります。",
+          baby_toddler: "{storyRequest}！うれしい！にこにこ！",
+          preschool_3_4:
+            "{storyRequest}のことを考えると、{childName}はうれしくなります。",
+          early_reader_5_6:
+            "{storyRequest}のことを考えると、{childName}はうれしくなります。何時間でも飽きません。",
+          early_elementary_7_8:
+            "{storyRequest}のことを考えると、{childName}は自然と笑顔になります。どんなときも、心が明るくなります。",
+          general_child:
+            "{storyRequest}のことを考えると、{childName}はうれしくなります。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Close-up of a child with a dreamy happy expression, eyes sparkling as they imagine their favorite thing, soft rosy cheeks, small heart motifs floating around their face, warm gentle light, soft watercolor picture book style, dreamy joyful daydream mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}と{storyRequest}はいつも一緒。どこへ行くときも。",
+          baby_toddler: "{storyRequest}！いっしょ！ずっと！",
+          preschool_3_4:
+            "{childName}と{storyRequest}はいつも一緒。どこへ行くときも。",
+          early_reader_5_6:
+            "{childName}と{storyRequest}はいつも一緒。どこへ行くときも、ずっとそばにいてくれます。",
+          early_elementary_7_8:
+            "{childName}と{storyRequest}はいつも一緒。大好きなものがそばにあると、何でもがんばれる気がします。",
+          general_child:
+            "{childName}と{storyRequest}はいつも一緒。どこへ行くときも。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Warm action shot of a child happily playing and engaging with their beloved favorite thing, total absorption in joyful play, heart motifs dancing around them, golden afternoon light, soft watercolor picture book style, pure happy play mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "だいすきなものがある。それだけで、今日もしあわせです。{parentMessage}",
+          baby_toddler: "だいすき！しあわせ！{parentMessage}",
+          preschool_3_4:
+            "だいすきなものがある。それだけで、今日もしあわせです。{parentMessage}",
+          early_reader_5_6:
+            "だいすきなものがある。それだけで、今日もしあわせです。{storyRequest}、ありがとう。{parentMessage}",
+          early_elementary_7_8:
+            "だいすきなものがある、それだけで、毎日が少し輝いて見えます。{parentMessage}",
+          general_child:
+            "だいすきなものがある。それだけで、今日もしあわせです。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Peaceful quiet ending shot of a content child hugging their treasured favorite thing close, a warm satisfied smile on their face, soft evening golden light, tiny heart motifs floating gently, soft watercolor picture book style, cozy loving ending mood, rich but not cluttered",
+        }),
+      ],
+    },
+  },
+
+  "blank-favorite-thing-8p": {
+    name: "だいすき！○○",
+    description: "好きなものを一言入れるだけ。大好きな世界の絵本。",
+    icon: "💛",
+    categoryGroupId: "blank-templates",
+    parentIntent: "この子の好きなものを伸ばしたい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName", "storyRequest"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["favorite", "love", "passion", "blank"],
+    creationMode: "fixed_template",
+    isBlankTemplate: true,
+    blankLabel: "好きなものは何ですか？",
+    blankExample: "例：きょうりゅう、でんしゃ、プリンセス、ぬいぐるみ",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "大好きなものと過ごす子どもの絵本イメージ",
+    visualDirection:
+      "Joyful warm picture-book world celebrating a child's passionate love for their absolute favorite thing — pure happiness and wonder.",
+    order: 113,
+    active: true,
+    systemPrompt: "穴埋めテンプレートを使って、大好きなものへの愛を絵本にします。",
+    fixedStory: {
+      titleTemplate: "{childName}の だいすきな {storyRequest}",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a joyful young child surrounded by their very favorite things, arms spread wide in pure delight, heart motifs and soft sparkles floating everywhere, warm golden glowing light, soft watercolor picture book style, rounded child-safe composition, abundant love and joy mood, rich but not cluttered"
+      ),
+      titleSpreadTextTemplate: "せかいで いちばん だいすき！",
+      openingNarrationTemplate:
+        "{childName}には、せかいでいちばん大好きなものがあります。それは、{storyRequest}！",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}のいちばんすきなものは、{storyRequest}。もう、だいすき！",
+          preschool_3_4:
+            "{childName}のいちばんすきなものは、{storyRequest}。もう、だいすき！",
+          early_reader_5_6:
+            "{childName}のいちばんすきなものは、{storyRequest}です。それはもう、どれだけ好きか言葉では言えないほど！",
+          early_elementary_7_8:
+            "{childName}が世界でいちばん好きなもの、それは{storyRequest}です。どのくらい好きかというと、もう言葉では表せないくらい！",
+          general_child:
+            "{childName}のいちばんすきなものは、{storyRequest}。もう、だいすき！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Wide establishing shot of a joyful child surrounded by their absolute favorite things in a warm glowing scene, bright sparkling eyes and huge smile, heart motifs and star sparkles everywhere, golden warm light, soft watercolor picture book style, overflowing joy mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "朝おきると、まず{storyRequest}のことを考えます。",
+          preschool_3_4: "朝おきると、まず{storyRequest}のことを考えます。",
+          early_reader_5_6:
+            "朝おきると、まず{storyRequest}のことを考えます。今日も会えるかな、と思いながら。",
+          early_elementary_7_8:
+            "朝目が覚めると、{childName}はまず{storyRequest}のことを考えます。それが毎日のことでした。",
+          general_child: "朝おきると、まず{storyRequest}のことを考えます。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Morning scene of a child just waking up in bed with a dreamy smile, imagining their favorite thing, soft morning light streaming in, small heart motifs floating from their thoughts, soft watercolor picture book style, peaceful happy morning mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{storyRequest}のことならなんでも知っている{childName}です。",
+          preschool_3_4:
+            "{storyRequest}のことならなんでも知っている{childName}です。",
+          early_reader_5_6:
+            "{storyRequest}のことならなんでも知っている{childName}です。いくら調べても、もっと知りたくなります。",
+          early_elementary_7_8:
+            "{storyRequest}については、{childName}がいちばん詳しいかもしれません。大好きだから、もっともっと知りたくなるのです。",
+          general_child:
+            "{storyRequest}のことならなんでも知っている{childName}です。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery shot of a child joyfully sharing everything they know about their beloved subject, eyes bright with expert enthusiasm, heart motifs dancing with excitement, warm soft light, soft watercolor picture book style, passionate expertise mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "ほんとうに好きなものは、見るだけでうれしくなります。",
+          preschool_3_4:
+            "ほんとうに好きなものは、見るだけでうれしくなります。",
+          early_reader_5_6:
+            "ほんとうに好きなものは、見るだけでうれしくなります。そして、もっともっと好きになります。",
+          early_elementary_7_8:
+            "ほんとうに好きなものは、見るだけで心があたたかくなります。それが{storyRequest}です。",
+          general_child:
+            "ほんとうに好きなものは、見るだけでうれしくなります。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of a child's face glowing with pure joy and warmth as they look at their favorite thing, rosy cheeks and starry eyes, heart motifs floating all around their face, soft golden light, soft watercolor picture book style, pure loving joy close-up, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "しずかな時間も、{storyRequest}があればへっちゃら。",
+          preschool_3_4: "しずかな時間も、{storyRequest}があればへっちゃら。",
+          early_reader_5_6:
+            "しずかな時間も、{storyRequest}があればへっちゃら。心が満たされます。",
+          early_elementary_7_8:
+            "どんなときも、{storyRequest}があれば{childName}はひとりじゃない気がします。",
+          general_child:
+            "しずかな時間も、{storyRequest}があればへっちゃら。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Cozy quiet scene of a child contentedly playing alone with their favorite thing, peaceful and self-sufficient, soft afternoon light, gentle heart motifs nearby, soft watercolor picture book style, cozy contentment mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は今日も{storyRequest}と一緒に遊びました。",
+          preschool_3_4:
+            "{childName}は今日も{storyRequest}と一緒に遊びました。",
+          early_reader_5_6:
+            "{childName}は今日も{storyRequest}と一緒に遊びました。どんな日も、これが一番たのしい時間です。",
+          early_elementary_7_8:
+            "{childName}は今日も{storyRequest}と過ごしました。この時間が、何よりも大切です。",
+          general_child:
+            "{childName}は今日も{storyRequest}と一緒に遊びました。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Action shot of a child joyfully playing with their absolute favorite thing, totally absorbed in happiness, warm afternoon light, heart and star motifs swirling playfully, soft watercolor picture book style, pure playful joy mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "好きなものがあるって、とてもしあわせなことです。",
+          preschool_3_4:
+            "好きなものがあるって、とてもしあわせなことです。",
+          early_reader_5_6:
+            "好きなものがあるって、とてもしあわせなことです。{childName}はそれを知っています。",
+          early_elementary_7_8:
+            "大好きなものがある。それは、とても大切な宝物です。",
+          general_child:
+            "好きなものがあるって、とてもしあわせなことです。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Wide warm shot of a child looking serene and deeply happy, surrounded by the things they love most, a golden glow surrounding them like a halo of happiness, heart motifs floating gently, soft watercolor picture book style, deep peaceful happiness mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}のだいすきな{storyRequest}。これからもずっと大切にしようね。{parentMessage}",
+          baby_toddler:
+            "だいすきな{storyRequest}。ずっといっしょ！{parentMessage}",
+          preschool_3_4:
+            "{childName}のだいすきな{storyRequest}。これからもずっと大切にしようね。{parentMessage}",
+          early_reader_5_6:
+            "{childName}のだいすきな{storyRequest}。これからも、ずっとずっと大切にしていこうね。{parentMessage}",
+          early_elementary_7_8:
+            "{childName}のだいすきな{storyRequest}。この気持ちを、これからもずっと大切にしてほしいです。{parentMessage}",
+          general_child:
+            "{childName}のだいすきな{storyRequest}。これからもずっと大切にしようね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Peaceful quiet ending shot of a child holding their treasured favorite thing close with a warm contented smile, soft evening golden light, tiny heart motifs floating gently like a blessing, soft watercolor picture book style, tender loving ending mood, rich but not cluttered",
+        }),
+      ],
+    },
+  },
+
+  "blank-outing": {
+    name: "○○のおでかけ",
+    description: "どこへ行ったか一言入れるだけ。おでかけの思い出を絵本に。",
+    icon: "🗺️",
+    categoryGroupId: "blank-templates",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName", "storyRequest"],
+    optionalInputs: ["familyMembers", "parentMessage"],
+    themeTags: ["outing", "memory", "family", "blank"],
+    creationMode: "fixed_template",
+    isBlankTemplate: true,
+    blankLabel: "どこへ行きましたか？",
+    blankExample: "例：どうぶつえん、うみ、こうえん、おじいちゃんのいえ",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-first-zoo.webp",
+    sampleImageAlt: "おでかけの思い出を絵本にしたイメージ",
+    visualDirection:
+      "Warm family outing memory picture-book mood — the joy of going somewhere special together, full of discovery and togetherness.",
+    order: 114,
+    active: true,
+    systemPrompt: "穴埋めテンプレートを使って、おでかけの思い出絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と {storyRequest}のおでかけ",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a joyful young child setting off on an exciting outing with family, waving hello to a new adventure, bright excited expression, a sense of warm family togetherness, sunny daylight, small compass or map motifs as recurring elements, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
+      ),
+      titleSpreadTextTemplate: "さあ、でかけよう！",
+      openingNarrationTemplate:
+        "{childName}は、{familyMembers}といっしょに{storyRequest}へ出発しました。今日はとくべつな日です！",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は、{familyMembers}といっしょに{storyRequest}へ行きました。",
+          baby_toddler: "{storyRequest}！{childName}、いく！わくわく！",
+          preschool_3_4:
+            "{childName}は、{familyMembers}といっしょに{storyRequest}へ行きました。",
+          early_reader_5_6:
+            "{childName}は、{familyMembers}といっしょに{storyRequest}へ出発しました。どんな発見があるかな？",
+          early_elementary_7_8:
+            "{childName}は、{familyMembers}といっしょに{storyRequest}へ行きました。朝からわくわくが止まりません。",
+          general_child:
+            "{childName}は、{familyMembers}といっしょに{storyRequest}へ行きました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Wide establishing shot of a young child setting out on an exciting outing with family, cheerful departure scene with morning sunlight, the child looking ahead with bright eyes full of anticipation, family members alongside, compass motif tucked into the scene, soft watercolor picture book style, warm family adventure mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "はじめて見るもの、はじめてする体験。{childName}の目がきらきらしています。",
+          baby_toddler: "みてみて！きらきら！すごい！",
+          preschool_3_4:
+            "はじめて見るもの、はじめてする体験。{childName}の目がきらきらしています。",
+          early_reader_5_6:
+            "はじめて見るもの、はじめてする体験。{childName}の目がきらきらしています。もっと見たい、もっとさわりたい！",
+          early_elementary_7_8:
+            "知らなかったことがたくさんあります。{childName}は次々に発見して、心がどんどん広がっていきます。",
+          general_child:
+            "はじめて見るもの、はじめてする体験。{childName}の目がきらきらしています。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Discovery shot of a child leaning forward with wide sparkling eyes, pointing excitedly at something wonderful and new, compass motif visible somewhere in the scene, bright warm daylight, soft watercolor picture book style, wonder-filled discovery mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "「また来たいな！」{childName}は心の中で思いました。",
+          baby_toddler: "またきたい！たのしい！",
+          preschool_3_4:
+            "「また来たいな！」{childName}は心の中で思いました。",
+          early_reader_5_6:
+            "「また来たいな！」{childName}は心の中で思いました。今日のことは、ずっと忘れないでしょう。",
+          early_elementary_7_8:
+            "「また来たいな」と{childName}は心の中で思いました。素敵な場所に来られてよかったと思います。",
+          general_child:
+            "「また来たいな！」{childName}は心の中で思いました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Emotional close-up of a child's face filled with wonder and heartfelt joy, a dreamy satisfied expression as they take in a wonderful experience, compass motif glowing softly nearby, warm afternoon light, soft watercolor picture book style, heartfelt wonder close-up, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "大好きな人たちとの、大切な思い出ができました。{parentMessage}",
+          baby_toddler: "たのしかった！ありがとう！{parentMessage}",
+          preschool_3_4:
+            "大好きな人たちとの、大切な思い出ができました。{parentMessage}",
+          early_reader_5_6:
+            "大好きな人たちと過ごした、大切な思い出ができました。またいっしょにいこうね。{parentMessage}",
+          early_elementary_7_8:
+            "大好きな人たちとの時間が、世界でいちばん宝物です。また行こうね。{parentMessage}",
+          general_child:
+            "大好きな人たちとの、大切な思い出ができました。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Peaceful quiet ending wide shot of the child walking hand-in-hand with family on the way home, golden hour sunset light behind them, a content satisfied expression, compass motif glowing softly in the sky, soft watercolor picture book style, warm family memory ending mood, rich but not cluttered",
+        }),
+      ],
+    },
+  },
+
+  "blank-outing-8p": {
+    name: "○○のおでかけ",
+    description: "どこへ行ったか一言入れるだけ。おでかけの思い出を絵本に。",
+    icon: "🗺️",
+    categoryGroupId: "blank-templates",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName", "storyRequest"],
+    optionalInputs: ["familyMembers", "parentMessage"],
+    themeTags: ["outing", "memory", "family", "blank"],
+    creationMode: "fixed_template",
+    isBlankTemplate: true,
+    blankLabel: "どこへ行きましたか？",
+    blankExample: "例：どうぶつえん、うみ、こうえん、おじいちゃんのいえ",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-first-zoo.webp",
+    sampleImageAlt: "おでかけの思い出を絵本にしたイメージ",
+    visualDirection:
+      "Warm family outing memory picture-book mood — the joy of going somewhere special together, full of discovery and togetherness.",
+    order: 115,
+    active: true,
+    systemPrompt: "穴埋めテンプレートを使って、おでかけの思い出絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}と {storyRequest}のおでかけ",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a joyful young child setting off on an exciting outing with family, waving hello to a new adventure, bright excited expression, a sense of warm family togetherness, sunny daylight, small compass or map motifs as recurring elements, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
+      ),
+      titleSpreadTextTemplate: "さあ、でかけよう！",
+      openingNarrationTemplate:
+        "{childName}は、{familyMembers}といっしょに{storyRequest}へ出発しました。今日はとくべつな日です！",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は、{familyMembers}といっしょに{storyRequest}へ出発しました。",
+          preschool_3_4:
+            "{childName}は、{familyMembers}といっしょに{storyRequest}へ出発しました。",
+          early_reader_5_6:
+            "{childName}は、{familyMembers}といっしょに{storyRequest}へ出発しました。今日はどんな発見があるかな？",
+          early_elementary_7_8:
+            "{childName}は、{familyMembers}といっしょに{storyRequest}へ出発しました。朝から心がはずんでいます。",
+          general_child:
+            "{childName}は、{familyMembers}といっしょに{storyRequest}へ出発しました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Wide establishing shot of a young child cheerfully departing on a family outing, morning sunlight, bright excited face looking forward to the adventure, family members walking alongside, small compass motif in the scene, soft watercolor picture book style, warm departure mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "着いてみると、とても広くてわくわくします。「どこから見ようかな？」",
+          preschool_3_4:
+            "着いてみると、とても広くてわくわくします。「どこから見ようかな？」",
+          early_reader_5_6:
+            "着いてみると、想像より広くてわくわくします。「どこから行こうかな？」{childName}は目を輝かせます。",
+          early_elementary_7_8:
+            "到着してみると、思っていたよりずっと広い！{childName}は早くも目が輝いています。「どこから行こうかな？」",
+          general_child:
+            "着いてみると、とても広くてわくわくします。「どこから見ようかな？」",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Arrival scene of a child and family reaching their destination, the child looking around with wide excited eyes taking it all in, compass motif visible in the background, soft morning light, soft watercolor picture book style, arrival wonder mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "いろんなものを見て、たくさん歩きました。",
+          preschool_3_4: "いろんなものを見て、たくさん歩きました。",
+          early_reader_5_6:
+            "いろんなものを見て、たくさん歩きました。{childName}はひとつも見逃したくありません。",
+          early_elementary_7_8:
+            "いろんなものを見て回りました。知らなかったことを、たくさん知ることができました。",
+          general_child: "いろんなものを見て、たくさん歩きました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Medium shot of a child actively exploring and discovering, looking here and there with bright curious eyes, family nearby, compass motif tucked into the scene, bright warm daylight, soft watercolor picture book style, active exploration mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "「すごい！」「きれい！」{childName}は何度もさけびました。",
+          preschool_3_4:
+            "「すごい！」「きれい！」{childName}は何度もさけびました。",
+          early_reader_5_6:
+            "「すごい！」「きれい！」{childName}は何度も声に出しました。見るものすべてが新鮮です。",
+          early_elementary_7_8:
+            "「すごい！」「きれい！」{childName}は思わず声に出てしまいます。本当に素晴らしいものを見た日でした。",
+          general_child:
+            "「すごい！」「きれい！」{childName}は何度もさけびました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Close-up of a child's face expressing pure amazement and delight at something wonderful, mouth open in awe, sparkling eyes, hands clasped in excitement, warm bright light, soft watercolor picture book style, amazed wonder close-up, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "お昼ごはんも、とってもおいしかったです。",
+          preschool_3_4: "お昼ごはんも、とってもおいしかったです。",
+          early_reader_5_6:
+            "お昼ごはんも、とってもおいしかったです。外で食べると、何でもおいしく感じます。",
+          early_elementary_7_8:
+            "外で食べるお昼ごはんは、いつもよりずっとおいしく感じます。",
+          general_child: "お昼ごはんも、とってもおいしかったです。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Warm scene of a child happily eating lunch outdoors with family, enjoying a meal together, smiling faces all around, compass motif on a small lunchbox or nearby, soft warm daylight, soft watercolor picture book style, cozy family meal mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "帰り道、{childName}はほっぺたが赤くなるほど遊んで満足そうです。",
+          preschool_3_4:
+            "帰り道、{childName}はほっぺたが赤くなるほど遊んで満足そうです。",
+          early_reader_5_6:
+            "帰り道、{childName}はほっぺたが赤くなるほど遊んで、満足そうにしています。",
+          early_elementary_7_8:
+            "帰り道の{childName}は、ほっぺたが赤くて、目がとろんとして、でもとっても満足そうです。",
+          general_child:
+            "帰り道、{childName}はほっぺたが赤くなるほど遊んで満足そうです。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Walking home scene of a tired but deeply satisfied child with rosy cheeks, a happy droopy expression of good tired, walking hand in hand with family as the sun gets lower, soft golden afternoon light, soft watercolor picture book style, happy tired satisfied mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "今日のことは、ずっと覚えていたいです。",
+          preschool_3_4: "今日のことは、ずっと覚えていたいです。",
+          early_reader_5_6:
+            "今日のことは、ずっとずっと覚えていたいです。こんな日が、また来るといいな。",
+          early_elementary_7_8:
+            "今日のことは、ずっと覚えていたいです。大切な思い出が、また一つ増えました。",
+          general_child: "今日のことは、ずっと覚えていたいです。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Peaceful golden hour shot of a child looking back warmly at the wonderful day they had, a serene smile on their face, sunset light painting everything gold, small compass motif glowing like a keepsake, soft watercolor picture book style, treasured memory mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "また{storyRequest}へ行こうね。{parentMessage}",
+          baby_toddler: "またいこうね！たのしかった！{parentMessage}",
+          preschool_3_4: "また{storyRequest}へ行こうね。{parentMessage}",
+          early_reader_5_6:
+            "また{storyRequest}へ行こうね。次はもっといろんなことを見つけよう。{parentMessage}",
+          early_elementary_7_8:
+            "また{storyRequest}へ行こうね。大好きな家族と一緒なら、どこへ行っても楽しいです。{parentMessage}",
+          general_child: "また{storyRequest}へ行こうね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Quiet gentle ending shot of the child and family arriving home together, warm house lights glowing, the child giving a happy wave goodbye to the day, compass motif softly glowing like a treasured keepsake, soft evening light, soft watercolor picture book style, warm homecoming ending mood, rich but not cluttered",
+        }),
+      ],
+    },
+  },
+
+  "blank-dream-job": {
+    name: "○○になりたい！",
+    description: "なりたいものを一言入れるだけ。夢を持つよろこびの絵本。",
+    icon: "🌈",
+    categoryGroupId: "blank-templates",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName", "storyRequest"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["dream", "job", "imagination", "blank"],
+    creationMode: "fixed_template",
+    isBlankTemplate: true,
+    blankLabel: "なりたいものは何ですか？",
+    blankExample: "例：ケーキやさん、でんしゃのうんてんし、うちゅうひこうし、まほうつかい",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "夢のおしごとを絵本にしたイメージ",
+    visualDirection:
+      "Bright imaginative picture-book mood celebrating a child's dream of who they want to become — full of wonder, possibility, and gentle encouragement.",
+    order: 116,
+    active: true,
+    systemPrompt: "穴埋めテンプレートを使って、夢のおしごと絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}は {storyRequest}になりたい",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a dreaming young child looking up at a bright rainbow sky with stars, imagining their bright future, rainbow motifs arching across the cover, a glowing dream bubble above their head full of wonder and possibility, warm inspiring light, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
+      ),
+      titleSpreadTextTemplate: "ゆめは、おおきくひろがる！",
+      openingNarrationTemplate:
+        "{childName}には、大きな夢があります。それは、{storyRequest}になること！",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は、{storyRequest}になりたいと思っています。",
+          baby_toddler: "{storyRequest}！{childName}、なる！",
+          preschool_3_4:
+            "{childName}は、{storyRequest}になりたいと思っています。",
+          early_reader_5_6:
+            "{childName}には大きな夢があります。それは、{storyRequest}になること！",
+          early_elementary_7_8:
+            "{childName}の夢は、{storyRequest}になることです。考えるだけでわくわくします。",
+          general_child:
+            "{childName}は、{storyRequest}になりたいと思っています。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Wide establishing shot of a young child looking up at a bright rainbow-filled sky with wonder and big dreams in their eyes, a dream bubble above their head glowing with possibility, rainbow motifs arching overhead, warm inspiring light, soft watercolor picture book style, big dreaming mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "もし{storyRequest}になったら、どんなことをするだろう？想像するだけでわくわくします。",
+          baby_toddler: "{storyRequest}！どんなかな？わくわく！",
+          preschool_3_4:
+            "もし{storyRequest}になったら、どんなことをするだろう？想像するだけでわくわくします。",
+          early_reader_5_6:
+            "もし{storyRequest}になったら、どんな一日を過ごすんだろう？想像するだけでわくわくします。",
+          early_elementary_7_8:
+            "{storyRequest}になったら、どんなことができるだろう？{childName}はどんどん想像を広げます。",
+          general_child:
+            "もし{storyRequest}になったら、どんなことをするだろう？想像するだけでわくわくします。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Daydream discovery shot of a child lost in beautiful imagination, eyes half-closed with a dreamy smile, a glowing dream bubble showing a bright future above their head, rainbow motifs floating around, soft warm light, soft watercolor picture book style, dreamy imagination mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "「ぜったいになるぞ！」{childName}はきめました。",
+          baby_toddler: "なるぞ！がんばる！ぜったい！",
+          preschool_3_4:
+            "「ぜったいになるぞ！」{childName}はきめました。",
+          early_reader_5_6:
+            "「ぜったいになるぞ！」{childName}はしっかりきめました。夢を持つ心が、力になります。",
+          early_elementary_7_8:
+            "「ぜったいになるぞ！」{childName}は心に誓いました。夢に向かって、歩き始めます。",
+          general_child:
+            "「ぜったいになるぞ！」{childName}はきめました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Determined close-up of a child with a resolved, inspired expression — eyes bright with conviction and excitement, fist lightly raised in determination, rainbow motifs glowing brightly around them, warm golden inspiring light, soft watercolor picture book style, firm gentle determination mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "夢を持つって、すてきなことです。{parentMessage}",
+          baby_toddler: "ゆめ！すてき！{parentMessage}",
+          preschool_3_4:
+            "夢を持つって、すてきなことです。{parentMessage}",
+          early_reader_5_6:
+            "夢を持つって、すてきなことです。{childName}の夢は、きっとかなうでしょう。{parentMessage}",
+          early_elementary_7_8:
+            "夢を持つって、すてきなことです。大きな夢は、大きな力になります。{parentMessage}",
+          general_child:
+            "夢を持つって、すてきなことです。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Peaceful inspiring ending shot of a child looking up at a bright starry sky or rainbow, a serene and hopeful expression on their face, small rainbow motifs and stars floating gently around them like a blessing from the future, soft warm evening light, soft watercolor picture book style, hopeful tender ending mood, rich but not cluttered",
+        }),
+      ],
+    },
+  },
+
+  "blank-dream-job-8p": {
+    name: "○○になりたい！",
+    description: "なりたいものを一言入れるだけ。夢を持つよろこびの絵本。",
+    icon: "🌈",
+    categoryGroupId: "blank-templates",
+    parentIntent: "自由に想像して、ワクワクしてほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName", "storyRequest"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["dream", "job", "imagination", "blank"],
+    creationMode: "fixed_template",
+    isBlankTemplate: true,
+    blankLabel: "なりたいものは何ですか？",
+    blankExample: "例：ケーキやさん、でんしゃのうんてんし、うちゅうひこうし、まほうつかい",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageAlt: "夢のおしごとを絵本にしたイメージ",
+    visualDirection:
+      "Bright imaginative picture-book mood celebrating a child's dream of who they want to become — full of wonder, possibility, and gentle encouragement.",
+    order: 117,
+    active: true,
+    systemPrompt: "穴埋めテンプレートを使って、夢のおしごと絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}は {storyRequest}になりたい",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a dreaming young child looking up at a bright rainbow sky with stars, imagining their bright future, rainbow motifs arching across the cover, a glowing dream bubble above their head full of wonder and possibility, warm inspiring light, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
+      ),
+      titleSpreadTextTemplate: "ゆめは、おおきくひろがる！",
+      openingNarrationTemplate:
+        "{childName}には、大きな夢があります。それは、{storyRequest}になること！",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は、{storyRequest}になりたいです。ずっとずっと前から。",
+          preschool_3_4:
+            "{childName}は、{storyRequest}になりたいです。ずっとずっと前から。",
+          early_reader_5_6:
+            "{childName}の夢は、{storyRequest}になることです。ずっと前から、心に決めていました。",
+          early_elementary_7_8:
+            "{childName}の夢は、{storyRequest}になることです。小さいころからずっと、ずっと夢見ていました。",
+          general_child:
+            "{childName}は、{storyRequest}になりたいです。ずっとずっと前から。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Wide establishing shot of a young child gazing up dreamily at a sky filled with rainbows and stars, their whole being radiating hope and imagination, a soft dream bubble glowing above their head, rainbow motifs arching overhead, warm inspiring light, soft watercolor picture book style, big dreaming establishing mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "どんな一日を過ごすんだろう？{childName}は想像します。",
+          preschool_3_4:
+            "どんな一日を過ごすんだろう？{childName}は想像します。",
+          early_reader_5_6:
+            "{storyRequest}になったら、どんな一日を過ごすんだろう？{childName}は想像します。",
+          early_elementary_7_8:
+            "{storyRequest}として働く一日を、{childName}は想像します。朝から夜まで、どんなことをするんだろう？",
+          general_child:
+            "どんな一日を過ごすんだろう？{childName}は想像します。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Daydream scene of a child with eyes slightly closed and a dreamy smile, a glowing dream bubble showing an imagined future day, rainbow motifs drifting gently around, soft warm light, soft watercolor picture book style, dreamy imaginative mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "朝起きたら、まず何をするかな。",
+          preschool_3_4: "朝起きたら、まず何をするかな。",
+          early_reader_5_6:
+            "{storyRequest}になったら、朝起きたら何をするかな。{childName}はわくわくしながら考えます。",
+          early_elementary_7_8:
+            "{storyRequest}として働く朝は、きっとわくわくの連続でしょう。{childName}は朝ごとに心が弾みます。",
+          general_child: "朝起きたら、まず何をするかな。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Morning imagination scene of a child stretching and waking up, looking out at a bright new day with dreams in their eyes, rainbow light streaming through a window, soft morning light, soft watercolor picture book style, hopeful morning mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "いろんな人を喜ばせることができるんだ。",
+          preschool_3_4:
+            "いろんな人を喜ばせることができるんだ。",
+          early_reader_5_6:
+            "{storyRequest}になれば、たくさんの人を喜ばせることができます。それが{childName}のいちばんの夢です。",
+          early_elementary_7_8:
+            "{storyRequest}になれば、いろんな人を喜ばせることができる。それが、{childName}の夢の中心にあることです。",
+          general_child:
+            "いろんな人を喜ばせることができるんだ。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Warm close-up of a child imagining bringing joy to others, a big heartfelt smile and glowing expression, small heart motifs and rainbow light floating around, soft watercolor picture book style, warm giving mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "そのためには、たくさん学んで、練習が必要かもしれない。",
+          preschool_3_4:
+            "そのためには、たくさんがんばる必要があるかもしれない。",
+          early_reader_5_6:
+            "夢をかなえるためには、たくさん学んで練習が必要かもしれない。でも{childName}はやる気満々です。",
+          early_elementary_7_8:
+            "夢に向かうには、努力と学びが必要です。でも{childName}には大きなやる気があります。",
+          general_child:
+            "そのためには、たくさん学んで、練習が必要かもしれない。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Determined action scene of a child earnestly practicing and learning something, a look of focused effort on their face, rainbow motif visible in the background encouraging them, warm soft light, soft watercolor picture book style, earnest learning mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "でも{childName}には夢がある。それが、いちばんの力です。",
+          preschool_3_4:
+            "でも{childName}には夢がある。それが、いちばんの力です。",
+          early_reader_5_6:
+            "でも{childName}には夢がある。それが、いちばんの力です。夢が、前に進む力をくれます。",
+          early_elementary_7_8:
+            "でも{childName}には大きな夢がある。夢を持つことが、何よりも大きな力になるのです。",
+          general_child:
+            "でも{childName}には夢がある。それが、いちばんの力です。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Inspiring wide shot of the child standing tall and confident, rainbow light surrounding them like a golden halo, star motifs and rainbow motifs bursting with energy behind them, a shining determined expression, soft watercolor picture book style, powerful inspiring mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "夢のことを考えると、{childName}はいつも笑顔になります。",
+          preschool_3_4:
+            "夢のことを考えると、{childName}はいつも笑顔になります。",
+          early_reader_5_6:
+            "夢のことを考えると、{childName}はいつも笑顔になります。夢って、不思議な力がありますね。",
+          early_elementary_7_8:
+            "夢のことを考えると、{childName}はいつも笑顔になります。それがあるだけで、毎日が輝いています。",
+          general_child:
+            "夢のことを考えると、{childName}はいつも笑顔になります。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Peaceful close-up of a child with a radiant warm smile, softly daydreaming about their future, rainbow light and small stars glowing gently around their face, soft watercolor picture book style, dreamy contented joy mood, rich but not cluttered",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{storyRequest}になる日を夢みながら、今日もがんばろう。{parentMessage}",
+          baby_toddler:
+            "ゆめに むかって、がんばろう！{parentMessage}",
+          preschool_3_4:
+            "{storyRequest}になる日を夢みながら、今日もがんばろう。{parentMessage}",
+          early_reader_5_6:
+            "{storyRequest}になる日を夢みながら、今日もがんばろう。夢は、きっとかなう！{parentMessage}",
+          early_elementary_7_8:
+            "{storyRequest}になる日を夢みながら、今日もがんばろう。{childName}の夢は、かならずかなうと思います。{parentMessage}",
+          general_child:
+            "{storyRequest}になる日を夢みながら、今日もがんばろう。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Peaceful inspiring ending shot of a child looking up at a soft twilight sky filled with gentle stars and rainbow glimmers, a serene hopeful smile on their face, rainbow motifs glowing softly like a promise from the future, soft watercolor picture book style, hopeful tender ending mood, rich but not cluttered",
+        }),
+      ],
+    },
   },
 };
 

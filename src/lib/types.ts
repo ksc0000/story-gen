@@ -646,6 +646,12 @@ export interface TemplateDoc {
   priceTier?: PriceTier;
   storyCostLevel?: StoryCostLevel;
   fixedStory?: FixedStoryTemplate;
+  /** 穴埋めテンプレートフラグ。true のとき storyRequest が埋める変数として使用される */
+  isBlankTemplate?: boolean;
+  /** 穴埋めフィールドのラベル（例："何に挑戦しますか？"） */
+  blankLabel?: string;
+  /** 穴埋めフィールドのプレースホルダー（例："例：じてんしゃ、スイミング"） */
+  blankExample?: string;
   sampleImageUrl?: string;
   sampleImages?: {
     light?: string;
