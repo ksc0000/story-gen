@@ -34,7 +34,7 @@ export function normalizeQualityReviewForm(): QualityReviewForm {
     characterConsistencyScore: "",
     personalizationScore: "",
     safetyScore: "",
-    status: "reviewed",
+    status: "human_reviewed",
     reviewReason: "",
     flaggedIssues: "",
     recommendedFixes: "",
@@ -77,8 +77,10 @@ export function formatQualityScore(value?: number): string {
 
 export function getQualityReviewStatusLabel(status?: QualityReviewStatus): string {
   switch (status) {
-    case "reviewed":
-      return "Reviewed";
+    case "human_reviewed":
+      return "Reviewed (Human)";
+    case "llm_reviewed":
+      return "Reviewed (LLM)";
     case "needs_fix":
       return "Needs fix";
     case "approved":
@@ -94,8 +96,10 @@ export function getQualityReviewStatusBadgeClass(status?: QualityReviewStatus): 
   switch (status) {
     case "approved":
       return "bg-emerald-100 text-emerald-800";
-    case "reviewed":
+    case "human_reviewed":
       return "bg-blue-100 text-blue-800";
+    case "llm_reviewed":
+      return "bg-violet-100 text-violet-800";
     case "needs_fix":
       return "bg-rose-100 text-rose-800";
     case "not_reviewed":
@@ -162,8 +166,15 @@ export function buildQualityReviewPayload(input: {
     overallScore,
     status: input.form.status,
     reviewReason: input.form.reviewReason.trim(),
-    flaggedIssues: splitTextareaLines(input.form.flaggedIssues),
-    recommendedFixes: splitTextareaLines(input.form.recommendedFixes),
+    flaggedIssues: splitTextareaLines(input.form.flaggedIssues).map((message) => ({
+      severity: "low" as const,
+      area: "story" as const,
+      message,
+    })),
+    recommendedFixes: splitTextareaLines(input.form.recommendedFixes).map((reason) => ({
+      action: "human_review_required" as const,
+      reason,
+    })),
     rubricVersion: QUALITY_RUBRIC_VERSION,
     createdAt: input.serverTimestamp,
     createdAtMs: input.now,
