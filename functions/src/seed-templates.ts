@@ -510,7 +510,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     name: "はじめてのたんじょうび",
     description: "はじめての誕生日の思い出を、やさしく残せる固定テンプレート",
     icon: "🎂",
-    categoryGroupId: "memories",
+    categoryGroupId: "seasonal-events",
     subcategoryId: "first-birthday",
     parentIntent: "この瞬間を残したい",
     recommendedAgeMin: 1,
@@ -521,7 +521,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fixed-first-birthday.webp",
+    sampleImageUrl: "/images/templates/seasonal.webp",
     sampleImageAlt: "家族で誕生日をお祝いする子どものやさしい絵本イメージ",
     visualDirection:
       "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling.",
@@ -599,7 +599,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     name: "はじめてのたんじょうび（8ページ）",
     description: "はじめての誕生日を、準備からお祝いの余韻までゆっくり描く8ページ版です。",
     icon: "🎂",
-    categoryGroupId: "memories",
+    categoryGroupId: "seasonal-events",
     subcategoryId: "first-birthday",
     parentIntent: "この瞬間を残したい",
     recommendedAgeMin: 1,
@@ -610,7 +610,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fixed-first-birthday.webp",
+    sampleImageUrl: "/images/templates/seasonal.webp",
     sampleImageAlt: "家族で誕生日をお祝いする子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling over a gentle 8-page rhythm.",
@@ -1406,7 +1406,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fixed-sleepy-moon-adventure.webp",
+    sampleImageUrl: "/images/templates/bedtime.webp",
     sampleImageAlt: "月あかりの部屋で安心して眠る子どもの絵本イメージ",
     visualDirection:
       "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination scenes, and calm reassuring expressions.",
@@ -1415,6 +1415,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、寝る前の安心感をやさしく描く絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}とおつきさまのおやすみぼうけん",
+      previewImageUrl: "/images/templates/fantasy.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a sleepy child in cozy pajamas looking at a bright moon from a bedroom window, soft blanket draped around shoulders, tiny glowing star motif, calm and reassuring bedtime mood, soft watercolor style, rounded child-safe composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "おつきさまと おやすみぼうけん",
@@ -1492,7 +1493,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fixed-sleepy-moon-adventure.webp",
+    sampleImageUrl: "/images/templates/bedtime.webp",
     sampleImageAlt: "月あかりの冒険をゆっくり楽しむ子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination cloud-and-star adventure, and calm reassuring expressions over an 8-page rhythm.",
@@ -1501,6 +1502,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、寝る前のおやすみぼうけんを8ページでやさしく描く絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}とおつきさまのおやすみぼうけん",
+      previewImageUrl: "/images/templates/fantasy.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a sleepy child in cozy pajamas looking at a bright moon from a bedroom window, soft blanket draped around shoulders, tiny glowing star motif, calm and reassuring bedtime mood, soft watercolor style, rounded child-safe composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "おつきさまと おやすみぼうけん",
@@ -1821,7 +1823,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fixed-little-helper.webp",
+    sampleImageUrl: "/images/templates/daily-habits.webp",
     sampleImageAlt: "家族のお手伝いをして笑顔になる子どもの絵本イメージ",
     visualDirection:
       "Warm family home picture-book mood with safe helper tasks, gentle gratitude, and calm everyday confidence-building moments.",
@@ -1830,6 +1832,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、小さなお手伝いの達成感をやさしく描く絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のちいさなおてつだい",
+      previewImageUrl: "/images/templates/emotional-growth.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a smiling child carrying a small basket of folded towels in a cozy family room, warm family members nearby, gentle gratitude mood, recurring tiny heart-spark motif, watercolor storybook style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "ちいさなおてつだい",
