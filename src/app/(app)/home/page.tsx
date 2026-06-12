@@ -195,9 +195,15 @@ export default function HomePage() {
   return (
     <PageTransition className="relative mx-auto max-w-4xl px-4 py-8">
       <div className="relative z-10">
-        <header className="em-header">
-          <div className="em-header__badge">✨ あなたの本棚</div>
-          {activeChild && <p className="em-header__subtitle">主人公: {activeChild.nickname || activeChild.displayName}</p>}
+        <header className="mb-7 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-white/80 px-5 py-2 text-xs font-bold tracking-wide text-purple-900 shadow-sm backdrop-blur-sm">
+            ✨ あなたの本棚
+          </div>
+          {activeChild && (
+            <p className="mt-2 text-sm text-violet-500">
+              主人公: {activeChild.nickname || activeChild.displayName}
+            </p>
+          )}
           <div className="mt-4">
             <Badge variant="outline" className="bg-white/50 backdrop-blur-sm border-purple-200 text-purple-700">
               {remaining >= 3 ? (
@@ -223,7 +229,7 @@ export default function HomePage() {
 
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link href="/create/select-child" className="w-full sm:w-auto">
-            <Button size="lg" className="em-btn-cta text-lg w-full sm:w-auto">
+            <Button size="lg" className="text-lg w-full sm:w-auto">
               新しい絵本を作る
             </Button>
           </Link>
@@ -332,7 +338,7 @@ export default function HomePage() {
             <p className="mt-2 text-sm">{error.message}</p>
           </div>
         ) : books.length === 0 ? (
-          <div className="mt-16 text-center em-fade-up">
+          <div className="mt-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
             <HeroBook3D />
             <p className="mt-4 text-violet-500 font-medium">まだ絵本がありません。最初の一冊を作りましょう！</p>
           </div>
