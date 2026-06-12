@@ -425,7 +425,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/animals.webp",
+    sampleImageUrl: "/images/templates/fixed-first-zoo.webp",
     sampleImageAlt: "家族と動物園を楽しむ子どものやさしい絵本イメージ",
     visualDirection:
       "Gentle family memory picture-book cover with warm daylight, friendly zoo atmosphere, soft smiles, and a keepsake-photo feeling.",
@@ -434,7 +434,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、家族の思い出をやさしく残す絵本です。",
     fixedStory: {
       titleTemplate: "{childName}とはじめてのどうぶつえん",
-      previewImageUrl: "/images/templates/animals.webp",
+      previewImageUrl: "/images/templates/fixed-first-zoo.webp",
       coverImagePromptTemplate:
         withZooImagePromptGuardrail("Picture book cover illustration: a young child standing beside a decorative text-free zoo entrance arch with animal-shaped decorations and zoo paths, with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details", { signText: true }),
       titleSpreadTextTemplate: "{childName}と はじめての どうぶつえん",
@@ -513,7 +513,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/food.webp",
+    sampleImageUrl: "/images/templates/fixed-first-birthday.webp",
     sampleImageAlt: "家族で誕生日をお祝いする子どものやさしい絵本イメージ",
     visualDirection:
       "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling.",
@@ -602,7 +602,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/food.webp",
+    sampleImageUrl: "/images/templates/fixed-first-birthday.webp",
     sampleImageAlt: "家族で誕生日をお祝いする子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling over a gentle 8-page rhythm.",
@@ -753,7 +753,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/animals.webp",
+    sampleImageUrl: "/images/templates/fixed-first-zoo.webp",
     sampleImageAlt: "家族と動物園を楽しむ子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Gentle family memory picture-book cover with warm daylight, friendly zoo atmosphere, soft smiles, and a keepsake-photo feeling over a gentle 8-page rhythm.",
@@ -993,7 +993,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/daily-habits.webp",
+    sampleImageUrl: "/images/templates/fixed-brush-teeth.webp",
     sampleImageAlt: "はみがきをがんばる子どものやさしい絵本イメージ",
     visualDirection:
       "Bright but calm daily-habit picture-book mood with clean bathroom setting, rounded shapes, friendly routine support, and reassuring smiles.",
@@ -1071,7 +1071,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/daily-habits.webp",
+    sampleImageUrl: "/images/templates/fixed-brush-teeth.webp",
     sampleImageAlt: "歯みがきをがんばる子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Bright but calm daily-habit picture-book mood with clean bathroom setting, rounded shapes, friendly routine support, and reassuring smiles over a gentle 8-page rhythm.",
@@ -1222,7 +1222,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-first-christmas.webp",
     sampleImageAlt: "家族でクリスマスを楽しむ子どものやさしい絵本イメージ",
     visualDirection:
       "Warm Christmas picture-book mood with soft lights, family warmth, festive decorations, child-safe wonder, and cozy winter colors.",
@@ -1308,7 +1308,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/emotional-growth.webp",
+    sampleImageUrl: "/images/templates/fixed-sharing-friends.webp",
     sampleImageAlt: "おもちゃをわけっこして笑い合う子どもたちのやさしい絵本イメージ",
     visualDirection:
       "Warm emotional-growth picture-book mood with gentle eye contact, shared toys, supportive smiles, and a small kindness spark motif.",
@@ -1398,7 +1398,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageUrl: "/images/templates/fixed-sleepy-moon-adventure.webp",
     sampleImageAlt: "月あかりの部屋で安心して眠る子どもの絵本イメージ",
     visualDirection:
       "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination scenes, and calm reassuring expressions.",
@@ -1484,7 +1484,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fantasy.webp",
+    sampleImageUrl: "/images/templates/fixed-sleepy-moon-adventure.webp",
     sampleImageAlt: "月あかりの冒険をゆっくり楽しむ子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination cloud-and-star adventure, and calm reassuring expressions over an 8-page rhythm.",
@@ -1720,7 +1720,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-rainy-day-puddle.webp",
     sampleImageAlt: "雨の日の水たまりに映る空を見つめる子どもの絵本イメージ",
     visualDirection:
       "Cozy rainy-day picture-book mood with reflective puddles, soft umbrellas, gentle outdoor light, and warm after-rain comfort.",
@@ -1813,7 +1813,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/emotional-growth.webp",
+    sampleImageUrl: "/images/templates/fixed-little-helper.webp",
     sampleImageAlt: "家族のお手伝いをして笑顔になる子どもの絵本イメージ",
     visualDirection:
       "Warm family home picture-book mood with safe helper tasks, gentle gratitude, and calm everyday confidence-building moments.",

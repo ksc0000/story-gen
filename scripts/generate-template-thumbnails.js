@@ -462,6 +462,72 @@ const THUMBNAILS = [
       "Sunny outdoor path stretching ahead. Bright sky blue and warm yellow, sense of speed and newfound freedom."
     ),
   },
+
+  // ── Old fixed templates that previously shared category images ────────────
+  {
+    id: "fixed-first-zoo",
+    prompt: buildPrompt(
+      "First trip to the zoo picture-book cover. A young child stands at a text-free decorative zoo entrance arch adorned with animal-shaped decorations, looking up with wide excited eyes. " +
+      "Family members walk beside the child along a tree-lined path. Friendly giraffe or elephant visible in the background. " +
+      "Warm golden morning daylight, welcoming zoo atmosphere, small yellow star motif tucked into the arch. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-first-birthday",
+    prompt: buildPrompt(
+      "First birthday celebration picture-book cover. A young child sits in front of a small birthday cake glowing with one candle, family gathered close with warm smiles. " +
+      "Soft indoor light, pastel balloons floating above, tiny ribbon motif woven into the scene. " +
+      "Tender keepsake-photo mood, warm golden tones, joy and love filling the room. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-brush-teeth",
+    prompt: buildPrompt(
+      "Toothbrushing bedtime picture-book cover. A cheerful preschool child with a short dark bob, wearing mint-green pajamas, stands on a small step stool at a bright clean bathroom sink, " +
+      "holding a colorful toothbrush triumphantly and smiling at the mirror. A friendly star motif gleams on the mirror corner. " +
+      "Encouraging hero-moment mood, bright bathroom light, fresh and clean feeling. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-first-christmas",
+    prompt: buildPrompt(
+      "First Christmas picture-book cover. A young child in a cozy living room decorated for Christmas, reaching up toward a sparkling Christmas tree with wide amazed eyes. " +
+      "Family members sit nearby on a sofa smiling warmly. Soft fairy lights drape across the tree, wrapped presents under it, a small golden bell motif hanging on a low branch. " +
+      "Warm winter glow, festive but calm mood. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-sharing-friends",
+    prompt: buildPrompt(
+      "Sharing and kindness picture-book cover. Two children in a bright sunny playroom share a favorite toy with warm smiles, hands gently touching the same object. " +
+      "One child is the generous protagonist, both expressions show joy and pride. Tiny kindness spark motif near their joined hands. " +
+      "Emotional warmth, soft afternoon light through a window. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-sleepy-moon-adventure",
+    prompt: buildPrompt(
+      "Bedtime moon adventure picture-book cover. A sleepy child in cozy star-print pajamas sits on their bed gazing at a bright full moon through a bedroom window, " +
+      "a fluffy blanket draped around their shoulders and a soft plush bunny tucked beside them. Tiny glowing star motifs float gently near the window. " +
+      "Calm and reassuring nighttime mood, soft moonlight washing over the room. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-rainy-day-puddle",
+    prompt: buildPrompt(
+      "Rainy day puddle discovery picture-book cover. A cheerful child in a bright yellow raincoat and red rain boots stands delightedly beside a large shimmering puddle on a garden path, " +
+      "arms spread wide with excitement, soft drizzle and a colorful umbrella nearby. " +
+      "Cozy after-rain mood, glistening reflections, warm home visible through a window in the background. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-little-helper",
+    prompt: buildPrompt(
+      "Little helper picture-book cover. A smiling child carefully carries a small basket of neatly folded towels across a cozy family room, arms slightly outstretched for balance. " +
+      "A family member nearby looks on with a warm grateful smile. Tiny heart-spark motif on the basket handle. " +
+      "Confidence-building helper mood, soft warm daylight, safe everyday home setting. Soft watercolor style, rich but not cluttered."
+    ),
+  },
 ];
 
 // ─── Main ─────────────────────────────────────────────────────────────────────

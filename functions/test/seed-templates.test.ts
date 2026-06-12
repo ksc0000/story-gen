@@ -107,22 +107,31 @@ const TEMPLATE_IMAGE_ASSET_URLS = new Set([
   "/images/templates/food.webp",
   "/images/templates/seasonal.webp",
   "/images/templates/vehicles-robots.webp",
+  // Individual thumbnails for previously shared-image templates
+  "/images/templates/fixed-first-zoo.webp",
+  "/images/templates/fixed-first-birthday.webp",
+  "/images/templates/fixed-brush-teeth.webp",
+  "/images/templates/fixed-first-christmas.webp",
+  "/images/templates/fixed-sharing-friends.webp",
+  "/images/templates/fixed-sleepy-moon-adventure.webp",
+  "/images/templates/fixed-rainy-day-puddle.webp",
+  "/images/templates/fixed-little-helper.webp",
 ]);
 
 const EXPECTED_FIXED_SAMPLE_IMAGES: Record<string, string> = {
-  "fixed-first-zoo": "/images/templates/animals.webp",
-  "fixed-first-birthday": "/images/templates/food.webp",
-  "fixed-first-birthday-8p": "/images/templates/food.webp",
-  "fixed-first-zoo-8p": "/images/templates/animals.webp",
+  "fixed-first-zoo": "/images/templates/fixed-first-zoo.webp",
+  "fixed-first-birthday": "/images/templates/fixed-first-birthday.webp",
+  "fixed-first-birthday-8p": "/images/templates/fixed-first-birthday.webp",
+  "fixed-first-zoo-8p": "/images/templates/fixed-first-zoo.webp",
   "fixed-bedtime-good-day": "/images/templates/bedtime.webp",
-  "fixed-brush-teeth": "/images/templates/daily-habits.webp",
-  "fixed-first-christmas": "/images/templates/seasonal.webp",
-  "fixed-sharing-friends": "/images/templates/emotional-growth.webp",
-  "fixed-sleepy-moon-adventure": "/images/templates/fantasy.webp",
-  "fixed-sleepy-moon-adventure-8p": "/images/templates/fantasy.webp",
+  "fixed-brush-teeth": "/images/templates/fixed-brush-teeth.webp",
+  "fixed-first-christmas": "/images/templates/fixed-first-christmas.webp",
+  "fixed-sharing-friends": "/images/templates/fixed-sharing-friends.webp",
+  "fixed-sleepy-moon-adventure": "/images/templates/fixed-sleepy-moon-adventure.webp",
+  "fixed-sleepy-moon-adventure-8p": "/images/templates/fixed-sleepy-moon-adventure.webp",
   "fixed-cardboard-rocket": "/images/templates/adventure.webp",
-  "fixed-rainy-day-puddle": "/images/templates/seasonal.webp",
-  "fixed-little-helper": "/images/templates/emotional-growth.webp",
+  "fixed-rainy-day-puddle": "/images/templates/fixed-rainy-day-puddle.webp",
+  "fixed-little-helper": "/images/templates/fixed-little-helper.webp",
 };
 
 const ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS = [4, 8, 12] as const;
