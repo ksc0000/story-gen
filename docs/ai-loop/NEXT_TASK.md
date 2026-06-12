@@ -1,37 +1,25 @@
-# Execute Template Smoke Checklist for 6 Fixed Templates
+# Refine `fixed-brush-teeth` Template for `pageVisualRole` Consistency
 
 ## Context
 
-The product roadmap for EhonAI indicates that Phase 3, "Template Mode — Reliability-First 生成," has a critical remaining task: `fixed_template 6テンプレート（既存4 + T2-A追加2）の実生成 smoke checklist 実行`. This task is also listed in the "Now" priority section. While new templates have been added and UI improvements made, verifying the foundational reliability of these initial 6 fixed templates is essential, especially as the product is in Phase 5 (Monetization) with active soft launch cohorts. The `Template Smoke Checklist` document (`docs/TEMPLATE_SMOKE_CHECKLIST.md`) defines the specific templates and criteria for this verification.
+Phase 3 of the product roadmap focuses on enhancing the Template Mode for reliability and quality. The "T3-2 status update" identified critical P1 quality issues for existing templates based on the `TEMPLATE_QUALITY_REVIEW.md` document. Specifically, item T3-2a points to inconsistencies in `pageVisualRole` within the `fixed-brush-teeth` template, which can lead to suboptimal visual storytelling and prompt generation. This task directly addresses this identified quality improvement.
 
 ## Objective
 
-Generate books using the 6 specified fixed templates, meticulously follow the `TEMPLATE_SMOKE_CHECKLIST`, and record the results in `docs/TEMPLATE_SMOKE_RESULTS.md`.
+Improve the `pageVisualRole` definitions within the `fixed-brush-teeth` template to ensure better visual consistency and narrative flow across the book's pages, aligning with the quality review recommendations.
 
 ## Allowed Scope
 
-- `docs/` (for updating `TEMPLATE_SMOKE_RESULTS.md` with findings)
-- `functions/` (for triggering book generation via existing admin tools or scripts for testing purposes)
-- `web/` (for interacting with the administrative or user-facing UI to initiate book generation and observe results)
-- `scripts/` (for creating a temporary diagnostic script to automate the generation of the 6 books, if deemed efficient)
-- `shared/` (if a diagnostic script requires shared types)
+-   `src/common/fixed-templates.ts` (specifically, the `fixed-brush-teeth` template data).
+-   `src/common/story-json.ts` (only if `pageVisualRole` enum needs minor adjustment for the template's context, which is unlikely but allowed).
+-   `src/functions/generate-book.ts` (only for adding a temporary diagnostic log for `pageVisualRole` values during testing, to be removed before PR merge).
+-   Corresponding test files if applicable to the template data structure (unlikely for a simple data change).
 
 ## Forbidden Scope
 
-- Infrastructure changes (e.g., new Firebase projects, Cloud Run configurations)
-- Billing modifications
-- Authentication redesign
-- Secrets management (e.g., adding/modifying API keys)
-- Generated assets (e.g., images, `package-lock.json` unless absolutely necessary for dependency updates related to the task)
-
-## Requirements
-
-- **Documentation First:** Update `docs/TEMPLATE_SMOKE_RESULTS.md` with detailed findings for each template, including book IDs, observed issues, and compliance with the checklist.
-- **Reproducibility:** Clearly state the method used to generate the books (e.g., via admin UI, specific script with commands).
-- **Issue Reporting:** For any discrepancies or failures identified during the smoke test, document them thoroughly within `TEMPLATE_SMOKE_RESULTS.md` and suggest follow-up actions.
-- **Cleanliness:** If a temporary script is created, ensure it's removed or clearly marked as a diagnostic tool upon completion. No permanent code changes to core generation logic are expected as part of this task, unless a critical bug is discovered and requires an immediate fix (which should be reported as a follow-up).
-
-## Output Format
-
-- Summary of findings for each of the 6 templates.
-- A link to the updated
+-   Infrastructure changes (Firebase rules, Cloud Functions deployment config beyond `src/functions`).
+-   Billing or subscription logic.
+-   Authentication redesign.
+-   Secrets management.
+-   Generated assets (e.g., actual template preview images).
+-   
