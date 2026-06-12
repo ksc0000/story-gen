@@ -1,9 +1,9 @@
-# Implement Diagnostic Script for Scheduler Job Verification
+# Audit New Fixed Templates for Preview Image Quality and Uniqueness, and Document a Generation/Update Plan
 
 ## Context
 
-The product roadmap for EhonAI highlights `Phase 1: Reliability First` as nearing completion, but several operational verification steps remain outstanding before full closure. Specifically, confirming the successful execution of critical scheduled jobs like `saveDailySloSnapshot`, `saveWeeklySloSnapshot`, and `cleanupStaleGeneration` with real production data is a remaining task. While general production smoke tests are in progress (Jules #277), a dedicated diagnostic tool would streamline the verification of these specific scheduler jobs, which are crucial for SLO reporting and data hygiene. This task aims to provide a worker agent with an implementable tool to assist in this verification.
+PR #274 recently expanded the fixed templates to 42 entries, and PR #283 refreshed the template selection UI to use an image grid. PR #284 addressed shared image overlap for some older templates. To ensure a high-quality user experience and effective template discoverability, it is crucial that all fixed templates, especially the newly added ones, have distinct, high-quality preview images that accurately represent their content. This task focuses on auditing the current state of these preview images and proposing a clear plan for their improvement.
 
 ## Objective
 
-Develop a standalone diagnostic script that can be run manually to verify the successful execution and output
+Conduct an audit of the 42 fixed templates introduced in PR #274, specifically focusing on their `
