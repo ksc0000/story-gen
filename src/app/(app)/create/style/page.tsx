@@ -127,7 +127,8 @@ function StyleSelectionPageContent() {
   };
 
   const handleCreate = async () => {
-    if (!selected || !user || !template) return;
+    if (!selected || !user) return;
+    if (mode === "fixed_template" && !template) return;
     setCreating(true);
     setCreateError(null);
     try {
@@ -270,7 +271,7 @@ function StyleSelectionPageContent() {
           <Button
             size="lg"
             className="w-full"
-            disabled={!selected || creating || !childName || !template}
+            disabled={!selected || creating || !childName || (mode === "fixed_template" && !template)}
             onClick={handleCreate}
           >
             {creating ? "絵本を作っています..." : "絵本を作る！"}
