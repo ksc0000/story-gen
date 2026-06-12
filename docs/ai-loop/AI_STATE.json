@@ -54,6 +54,7 @@
     "PR #264: feat(companion): 画像生成ローディング表示・連打防止 (merged)",
     "PR #266: fix: 子どもアバター背景を白背景に変更（砂場bleed防止） (merged)",
     "PR #274: feat(templates): 固定テンプレートを42種追加し選択肢を大幅拡充 (merged)",
+    "PR #276: Implement 8-Page Variants for Bedtime and Cardboard Rocket Templates (merged)",
     "PR #278: Record Phase 1 Production Smoke Test Results (merged)",
     "PR #280: Refine fixed-first-birthday Template for Sample Image and Category Alignment (merged)",
     "PR #282: Refine fixed-sleepy-moon-adventure and related templates for taxonomy alignment (merged)",
