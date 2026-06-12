@@ -2,16 +2,25 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import type { TemplateDoc } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
+interface TemplateVariant {
+  id: string;
+  pageCount: number;
+}
 
 interface TemplateDetailDialogProps {
   template: (TemplateDoc & { id: string }) | null;
+  /** All page-count variants of this template, sorted by page count asc */
+  variants?: (TemplateDoc & { id: string })[];
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  /** Called with the confirmed template ID (may be a variant) */
+  onConfirm: (selectedId: string) => void;
 }
 
 function getAgeLabel(template: TemplateDoc): string | null {
@@ -25,10 +34,21 @@ function getAgeLabel(template: TemplateDoc): string | null {
 
 export function TemplateDetailDialog({
   template,
+  variants = [],
   isOpen,
   onClose,
   onConfirm,
 }: TemplateDetailDialogProps) {
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+
+  // Reset variant selection when dialog opens
+  useEffect(() => {
+    if (isOpen && template) {
+      // Default to the template itself (4p primary)
+      setSelectedVariantId(template.id);
+    }
+  }, [isOpen, template]);
+
   // Prevent body scroll when dialog is open
   useEffect(() => {
     if (isOpen) {
@@ -45,7 +65,17 @@ export function TemplateDetailDialog({
 
   const previewImageUrl = template.fixedStory?.previewImageUrl || template.sampleImageUrl;
   const ageLabel = getAgeLabel(template);
-  const pageCount = template.fixedStory?.pages?.length ?? 4;
+
+  // Build variant list (deduplicated, sorted by page count)
+  const variantOptions: TemplateVariant[] = variants.length > 0
+    ? variants.map((v) => ({
+        id: v.id,
+        pageCount: v.fixedStory?.pages?.length ?? 4,
+      }))
+    : [{ id: template.id, pageCount: template.fixedStory?.pages?.length ?? 4 }];
+
+  const hasMultipleVariants = variantOptions.length > 1;
+  const effectiveVariantId = selectedVariantId ?? template.id;
 
   return (
     <AnimatePresence>
@@ -115,27 +145,64 @@ export function TemplateDetailDialog({
                   <p className="mt-2 text-xs leading-relaxed text-violet-400">{template.parentIntent}</p>
                 )}
 
-                {/* Tags */}
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
-                    {pageCount}ページ
-                  </span>
-                  {ageLabel && (
-                    <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                      {ageLabel}
+                {/* Page count selector */}
+                {hasMultipleVariants && (
+                  <div className="mt-4">
+                    <p className="mb-2 text-xs font-medium text-violet-500">ページ数を選ぶ</p>
+                    <div className="flex gap-2">
+                      {variantOptions.map((v) => (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => setSelectedVariantId(v.id)}
+                          className={cn(
+                            "flex-1 rounded-xl border py-2.5 text-sm font-semibold transition-all",
+                            effectiveVariantId === v.id
+                              ? "border-purple-400 bg-purple-50 text-purple-700 ring-2 ring-purple-200"
+                              : "border-violet-100 bg-white text-violet-500 hover:border-purple-300"
+                          )}
+                        >
+                          {v.pageCount}ページ
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tags (show only if single variant) */}
+                {!hasMultipleVariants && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+                      {variantOptions[0]?.pageCount ?? 4}ページ
                     </span>
-                  )}
-                  {template.creationMode === "fixed_template" && (
-                    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                      早い・安定
-                    </span>
-                  )}
-                  {template.priceTier === "ume" && (
-                    <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-700">
-                      軽量
-                    </span>
-                  )}
-                </div>
+                    {ageLabel && (
+                      <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                        {ageLabel}
+                      </span>
+                    )}
+                    {template.creationMode === "fixed_template" && (
+                      <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                        早い・安定
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Tags row (when multiple variants — show age only) */}
+                {hasMultipleVariants && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {ageLabel && (
+                      <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                        {ageLabel}
+                      </span>
+                    )}
+                    {template.creationMode === "fixed_template" && (
+                      <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                        早い・安定
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -145,7 +212,7 @@ export function TemplateDetailDialog({
                 size="lg"
                 className="w-full"
                 onClick={() => {
-                  onConfirm();
+                  onConfirm(effectiveVariantId);
                 }}
               >
                 このテンプレートで作る
