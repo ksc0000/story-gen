@@ -68,7 +68,7 @@ type ReviewStatusFilter = "all" | "completed" | "partial_completed" | "failed";
 type ReviewQualityFilter = "all" | "ok" | "warning" | "failed";
 type ReviewPlanFilter = "all" | ProductPlan;
 type ReviewModelFilter = "all" | ImageModelProfile;
-type ReviewQualityReviewFilter = "all" | "not_reviewed" | "reviewed" | "needs_fix" | "approved";
+type ReviewQualityReviewFilter = "all" | "not_reviewed" | "human_reviewed" | "llm_reviewed" | "needs_fix" | "approved";
 type ReviewQualitySortOrder = "default" | "low_first" | "high_first";
 type ReviewSourceFilter = "all" | "fixed_template" | "smoke";
 
@@ -746,7 +746,7 @@ export default function AdminBookQualityReviewPage() {
   const summaryByQuality = useMemo(() => countByStoryQualityStatus(books), [books]);
   const summaryByModel = useMemo(() => countByImageModelProfile(books), [books]);
   const qualityReviewSummary = useMemo(() => {
-    const counts = { not_reviewed: 0, reviewed: 0, needs_fix: 0, approved: 0 };
+    const counts = { not_reviewed: 0, human_reviewed: 0, llm_reviewed: 0, needs_fix: 0, approved: 0 };
     for (const book of books) {
       const s = book.qualityReviewStatus ?? "not_reviewed";
       if (s in counts) counts[s as keyof typeof counts]++;
@@ -1653,7 +1653,8 @@ export default function AdminBookQualityReviewPage() {
                   >
                     <option value="all">all ({books.length})</option>
                     <option value="not_reviewed">not_reviewed ({qualityReviewSummary.not_reviewed})</option>
-                    <option value="reviewed">reviewed ({qualityReviewSummary.reviewed})</option>
+                    <option value="human_reviewed">human_reviewed ({qualityReviewSummary.human_reviewed})</option>
+                    <option value="llm_reviewed">llm_reviewed ({qualityReviewSummary.llm_reviewed})</option>
                     <option value="needs_fix">needs_fix ({qualityReviewSummary.needs_fix})</option>
                     <option value="approved">approved ({qualityReviewSummary.approved})</option>
                   </select>
@@ -1674,7 +1675,7 @@ export default function AdminBookQualityReviewPage() {
                 <div className="flex items-end gap-4 text-xs text-violet-700">
                   <span>not reviewed: <strong>{qualityReviewSummary.not_reviewed}</strong></span>
                   <span className="font-medium text-rose-600">needs fix: <strong>{qualityReviewSummary.needs_fix}</strong></span>
-                  <span>reviewed: <strong>{qualityReviewSummary.reviewed}</strong></span>
+                  <span>reviewed: <strong>{qualityReviewSummary.human_reviewed + qualityReviewSummary.llm_reviewed}</strong></span>
                   <span className="text-emerald-700">approved: <strong>{qualityReviewSummary.approved}</strong></span>
                 </div>
               </div>

@@ -143,7 +143,7 @@ describe("buildQualityRecommendations", () => {
       characterConsistencyScore: 4,
       personalizationScore: 5,
       safetyScore: 4,
-      qualityReviewStatus: "reviewed",
+      qualityReviewStatus: "human_reviewed",
     });
     const recs = buildQualityRecommendations(book);
     expect(recs.find((r) => r.action === "approve")).toBeUndefined();
