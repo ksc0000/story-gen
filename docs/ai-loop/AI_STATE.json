@@ -61,6 +61,7 @@
     "PR #287: feat: テンプレート詳細ダイアログにページ数セレクターを追加 (merged)",
     "PR #288: feat: AIにおまかせ 新入力フロー (/create/ai-brief) (merged)",
     "PR #289: feat: AIあらすじ提案ステップ（generateStoryPitch + ピッチUI） (merged)",
+    "PR #291: Audit Fixed Templates Previews and Document Plan (merged)",
     "PR #293: feat: 穴埋めテンプレート — ひとことで完成するオリジナル絵本 (merged)",
     "PR #295: feat: AIブリーフにチャット形式Q&Aフローを追加 (merged)",
     "PR #297: ui: 全ページ表示一貫性パス（StepIndicatorバグ修正含む） (merged)",
