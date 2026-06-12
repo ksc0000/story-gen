@@ -49,6 +49,13 @@ export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
           </p>
         </div>
 
+        {/* 穴埋めテンプレート badge */}
+        {template.isBlankTemplate && !selected && (
+          <div className="absolute left-1.5 top-1.5 rounded-full bg-amber-400/90 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white shadow-sm sm:text-[10px]">
+            ✏️ 穴埋め
+          </div>
+        )}
+
         {/* Selected check badge */}
         {selected && (
           <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 shadow-sm sm:h-6 sm:w-6">

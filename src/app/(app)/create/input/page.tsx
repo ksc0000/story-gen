@@ -59,6 +59,7 @@ const TEMPLATE_PREVIEW_PLACEHOLDERS: Record<string, string> = {
   "{familyMembers}": "家族",
   "{season}": "その季節",
   "{parentMessage}": "伝えたいメッセージ",
+  "{storyRequest}": "○○",
 };
 
 const ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS = [4, 8, 12] as const;
@@ -174,6 +175,7 @@ function InputPageContent() {
   }, [creationMode, template, templates]);
 
   const fixedStoryPages = template?.fixedStory?.pages ?? [];
+  const isBlankTemplate = template?.isBlankTemplate ?? false;
   const storyPlaceholder = STORY_REQUEST_PLACEHOLDERS[template?.categoryGroupId ?? ""] ?? "例：うちの子らしい冒険のおはなし";
   const requiredInputs = useMemo(() => template?.requiredInputs ?? [], [template]);
   const optionalInputs = useMemo(() => template?.optionalInputs ?? [], [template]);
@@ -319,6 +321,27 @@ function InputPageContent() {
             </div>
           ) : creationMode === "fixed_template" ? (
             <div className="space-y-4">
+              {/* 穴埋めフィールド（穴埋めテンプレートのみ先頭に表示） */}
+              {isBlankTemplate ? (
+                <div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">✏️ 穴埋め</span>
+                  </div>
+                  <Label htmlFor="storyRequest-blank" className="text-purple-800 font-medium">
+                    {template?.blankLabel ?? "テーマを入れてください"}
+                    <span className="ml-1 text-xs font-normal text-red-500">*必須</span>
+                  </Label>
+                  <Input
+                    id="storyRequest-blank"
+                    value={storyRequest}
+                    onChange={(e) => setStoryRequest(e.target.value)}
+                    placeholder={template?.blankExample ?? "例：入れたいことを書いてください"}
+                    className="mt-1 text-base"
+                    maxLength={50}
+                  />
+                  <p className="mt-1 text-xs text-violet-500">入力した言葉が絵本のタイトルや本文に使われます。</p>
+                </div>
+              ) : null}
               {/* ページプレビュー */}
               {fixedStoryPages.length ? (
                 <div className="rounded-2xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.95)] p-4">

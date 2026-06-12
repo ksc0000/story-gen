@@ -140,6 +140,14 @@ export function TemplateDetailDialog({
                   <p className="mt-2 text-sm leading-relaxed text-violet-600">{template.description}</p>
                 )}
 
+                {/* Blank template hint */}
+                {template.isBlankTemplate && template.blankLabel && (
+                  <div className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+                    <span className="font-medium">入力するのは「{template.blankLabel}」のみ。</span>
+                    <span className="text-amber-600"> {template.blankExample}</span>
+                  </div>
+                )}
+
                 {/* Parent intent */}
                 {template.parentIntent && (
                   <p className="mt-2 text-xs leading-relaxed text-violet-400">{template.parentIntent}</p>
@@ -180,6 +188,11 @@ export function TemplateDetailDialog({
                         {ageLabel}
                       </span>
                     )}
+                    {template.isBlankTemplate && (
+                      <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                        ✏️ 穴埋めテンプレート
+                      </span>
+                    )}
                     {template.creationMode === "fixed_template" && (
                       <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
                         早い・安定
@@ -194,6 +207,11 @@ export function TemplateDetailDialog({
                     {ageLabel && (
                       <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
                         {ageLabel}
+                      </span>
+                    )}
+                    {template.isBlankTemplate && (
+                      <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                        ✏️ 穴埋めテンプレート
                       </span>
                     )}
                     {template.creationMode === "fixed_template" && (
