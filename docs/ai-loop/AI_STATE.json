@@ -68,6 +68,7 @@
     "PR #293: feat: 穴埋めテンプレート — ひとことで完成するオリジナル絵本 (merged)",
     "PR #295: feat: AIブリーフにチャット形式Q&Aフローを追加 (merged)",
     "PR #297: ui: 全ページ表示一貫性パス（StepIndicatorバグ修正含む） (merged)",
+    "PR #298: Define LLM Auto Review JSON Schema (merged)",
     "PR #301: feat: チャットQ&Aフローに「戻る」ナビゲーションを追加 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
