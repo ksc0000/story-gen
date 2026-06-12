@@ -55,6 +55,7 @@
     "PR #266: fix: 子どもアバター背景を白背景に変更（砂場bleed防止） (merged)",
     "PR #274: feat(templates): 固定テンプレートを42種追加し選択肢を大幅拡充 (merged)",
     "PR #283: feat: テンプレート選択UIをシンプルな画像グリッド＋詳細ダイアログに刷新 (merged)",
+    "PR #284: feat: 旧固定テンプレートの共有画像かぶりを解消（個別サムネイル対応） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
