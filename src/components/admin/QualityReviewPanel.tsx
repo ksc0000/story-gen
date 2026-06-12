@@ -34,7 +34,7 @@ const SCORE_FIELDS = [
 ];
 
 const STATUS_OPTIONS: { value: QualityReviewStatus; label: string }[] = [
-  { value: "reviewed", label: "Reviewed" },
+  { value: "human_reviewed", label: "Reviewed" },
   { value: "needs_fix", label: "Needs fix" },
   { value: "approved", label: "Approved" },
 ];
