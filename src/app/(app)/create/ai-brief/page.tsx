@@ -302,19 +302,15 @@ function AiBriefPageContent() {
   const isAllAnswered = summaryReady;
   const minChatStep = childId ? 1 : 0; // childId がある場合 Q1 はスキップ済みで戻れない
 
-  // ── 指定ステップまで戻る ─────────────────────
+  // ── 指定ステップ「以降すべて」クリアして戻る（← 戻るボタン、protagonistType 変更時）
   const handleGoBackTo = (targetStep: number) => {
     if (targetStep < minChatStep) return;
-    // 現在のシーケンスを基に targetStep 以降の回答をクリア
     const seq = buildQuestionSequence(chatAnswers);
     const newAnswers = { ...chatAnswers };
     for (let i = targetStep; i < seq.length; i++) {
       const q = seq[i];
-      if (q.id === "pageCount") {
-        newAnswers.pageCount = undefined;
-      } else {
-        (newAnswers as Record<string, string | number | ProtagonistType | undefined>)[q.id] = undefined;
-      }
+      if (q.id === "pageCount") newAnswers.pageCount = undefined;
+      else (newAnswers as Record<string, string | number | ProtagonistType | undefined>)[q.id] = undefined;
     }
     setChatAnswers(newAnswers);
     setChatStep(targetStep);
@@ -322,6 +318,39 @@ function AiBriefPageContent() {
     setFreeInputValue("");
     setShowFreeInput(false);
     setPitchState({ status: "idle" });
+  };
+
+  // ── 指定ステップの回答だけクリアして戻る（「変更」ボタン）
+  const handleEditStep = (targetStep: number) => {
+    if (targetStep < minChatStep) return;
+    const seq = buildQuestionSequence(chatAnswers);
+    const q = seq[targetStep];
+    if (!q) return;
+    // protagonistType は変更するとシーケンス自体が変わるので以降もリセット
+    if (q.id === "protagonistType") {
+      handleGoBackTo(targetStep);
+      return;
+    }
+    const newAnswers = { ...chatAnswers };
+    if (q.id === "pageCount") newAnswers.pageCount = undefined;
+    else (newAnswers as Record<string, string | number | ProtagonistType | undefined>)[q.id] = undefined;
+    setChatAnswers(newAnswers);
+    setChatStep(targetStep);
+    setSummaryReady(false);
+    setFreeInputValue("");
+    setShowFreeInput(false);
+    setPitchState({ status: "idle" });
+  };
+
+  // ── 次の未回答ステップを探す（単一箇所変更後のスキップ用）
+  const findNextUnansweredStep = (fromStep: number, answers: ChatAnswers): number | null => {
+    const seq = buildQuestionSequence(answers);
+    for (let i = fromStep; i < seq.length; i++) {
+      const q = seq[i];
+      const val = (answers as Record<string, unknown>)[q.id];
+      if (val == null || val === "") return i;
+    }
+    return null; // 全問回答済み
   };
 
   // チャットモード: 名前の解決
@@ -354,13 +383,12 @@ function AiBriefPageContent() {
     setFreeInputValue("");
     setShowFreeInput(false);
 
-    const nextStep = chatStep + 1;
-    const nextSequence = buildQuestionSequence(newAnswers);
-
-    if (nextStep >= nextSequence.length) {
+    // 次の未回答ステップへ（変更モードで後の回答が残っている場合はスキップ）
+    const nextUnanswered = findNextUnansweredStep(chatStep + 1, newAnswers);
+    if (nextUnanswered === null) {
       setSummaryReady(true);
     } else {
-      setChatStep(nextStep);
+      setChatStep(nextUnanswered);
     }
   };
 
@@ -379,13 +407,12 @@ function AiBriefPageContent() {
     setFreeInputValue("");
     setShowFreeInput(false);
 
-    const nextStep = chatStep + 1;
-    const nextSequence = buildQuestionSequence(newAnswers);
-
-    if (nextStep >= nextSequence.length) {
+    // 次の未回答ステップへ（変更モードで後の回答が残っている場合はスキップ）
+    const nextUnanswered = findNextUnansweredStep(chatStep + 1, newAnswers);
+    if (nextUnanswered === null) {
       setSummaryReady(true);
     } else {
-      setChatStep(nextStep);
+      setChatStep(nextUnanswered);
     }
   };
 
@@ -564,13 +591,13 @@ function AiBriefPageContent() {
               displayAnswer = `${rawAnswer}ページ`;
             }
             if (q.id === "protagonistName" && !rawAnswer) return null;
-            const canGoBack = i >= minChatStep && pitchState.status === "idle";
+            const canEdit = i >= minChatStep && pitchState.status === "idle";
             return (
               <ChatHistoryItem
                 key={q.id + i}
                 question={q.text}
                 answer={displayAnswer}
-                onBack={canGoBack ? () => handleGoBackTo(i) : undefined}
+                onBack={canEdit ? () => handleEditStep(i) : undefined}
               />
             );
           })}
