@@ -343,6 +343,18 @@ export interface BookData {
   hasCoverPage?: boolean;
   readingStructureVersion?: ReadingStructureVersion;
   storyQualityReport?: StoryQualityReportData;
+  storyQualityScore?: number;
+  illustrationQualityScore?: number;
+  characterConsistencyScore?: number;
+  personalizationScore?: number;
+  safetyScore?: number;
+  overallQualityScore?: number;
+  qualityReviewStatus?: "not_reviewed" | "human_reviewed" | "llm_reviewed" | "needs_fix";
+  qualityReviewedAtMs?: number;
+  qualityReviewer?: string;
+  qualityReviewReason?: string;
+  qualityFlaggedIssues?: QualityFlaggedIssue[];
+  qualityRecommendedFixes?: QualityRecommendedFix[];
   input: BookInput;
   createdAt: FirebaseFirestore.Timestamp;
   expiresAt: FirebaseFirestore.Timestamp | null;
@@ -538,6 +550,25 @@ export interface StoryQualityReportData {
     actual?: number | string;
     expected?: number | string;
   }>;
+}
+
+export interface QualityFlaggedIssue {
+  severity: "low" | "medium" | "high" | "blocker";
+  area: "story" | "illustration" | "character" | "personalization" | "safety";
+  message: string;
+  pageNumber?: number;
+}
+
+export interface QualityRecommendedFix {
+  action:
+    | "rewrite_story"
+    | "repair_prompt"
+    | "regenerate_page_image"
+    | "fix_character_reference"
+    | "reduce_personal_data"
+    | "human_review_required";
+  reason: string;
+  pageNumber?: number;
 }
 
 export interface GeneratedStory {

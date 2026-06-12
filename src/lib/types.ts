@@ -91,8 +91,32 @@ export type IllustrationStyle =
   | "flat";
 export type PageCount = 4 | 8 | 12;
 export type QualityReviewScore = 1 | 2 | 3 | 4 | 5;
-export type QualityReviewStatus = "not_reviewed" | "reviewed" | "needs_fix" | "approved";
+export type QualityReviewStatus =
+  | "not_reviewed"
+  | "human_reviewed"
+  | "llm_reviewed"
+  | "needs_fix"
+  | "approved";
 export type QualityReviewerType = "human" | "llm";
+
+export interface QualityFlaggedIssue {
+  severity: "low" | "medium" | "high" | "blocker";
+  area: "story" | "illustration" | "character" | "personalization" | "safety";
+  message: string;
+  pageNumber?: number;
+}
+
+export interface QualityRecommendedFix {
+  action:
+    | "rewrite_story"
+    | "repair_prompt"
+    | "regenerate_page_image"
+    | "fix_character_reference"
+    | "reduce_personal_data"
+    | "human_review_required";
+  reason: string;
+  pageNumber?: number;
+}
 
 export type QualityReview = {
   id?: string;
@@ -107,8 +131,8 @@ export type QualityReview = {
   overallScore: number;
   status: QualityReviewStatus;
   reviewReason: string;
-  flaggedIssues: string[];
-  recommendedFixes: string[];
+  flaggedIssues: QualityFlaggedIssue[];
+  recommendedFixes: QualityRecommendedFix[];
   rubricVersion: string;
   createdAt?: Timestamp;
   createdAtMs: number;
@@ -480,6 +504,10 @@ export interface BookDoc {
   qualityReviewedAt?: Timestamp;
   qualityReviewedAtMs?: number;
   qualityReviewerType?: QualityReviewerType;
+  qualityReviewer?: string;
+  qualityReviewReason?: string;
+  qualityFlaggedIssues?: QualityFlaggedIssue[];
+  qualityRecommendedFixes?: QualityRecommendedFix[];
   smokeTestMetadata?: {
     isSmokeTest?: boolean;
     suite?: string;

@@ -323,18 +323,20 @@ NG内容の例:
 - generated image URLs or image descriptions
 - existing admin feedback
 
-### Output JSON schema draft
+### Output JSON schema
+
+The finalized Gemini-compatible JSON schema is defined in [functions/src/lib/auto-review-schema.ts](../functions/src/lib/auto-review-schema.ts).
 
 ```ts
 interface QualityAutoReviewResult {
-  storyQualityScore: number;
-  illustrationQualityScore: number;
-  characterConsistencyScore: number;
-  personalizationScore: number;
-  safetyScore: number;
-  overallQualityScore: number;
-  confidence: number;
-  reviewReason: string;
+  storyQualityScore: number; // 0-100
+  illustrationQualityScore: number; // 0-100
+  characterConsistencyScore: number; // 0-100
+  personalizationScore: number; // 0-100
+  safetyScore: number; // 0-100
+  overallQualityScore: number; // 0-100
+  confidence: number; // 0.0-1.0
+  reviewReason: string; // Summary in Japanese
   flaggedIssues: Array<{
     severity: 'low' | 'medium' | 'high' | 'blocker';
     area: 'story' | 'illustration' | 'character' | 'personalization' | 'safety';
