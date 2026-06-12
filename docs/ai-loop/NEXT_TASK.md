@@ -1,49 +1,37 @@
-# Document and Verify Firestore Indexes and Permissions for Production Reliability
+# Execute Template Smoke Checklist for 6 Fixed Templates
 
 ## Context
 
-The product roadmap explicitly lists "Firestore index / permission 確認（collection group query の composite index、runs subcollection の read 権限）" under Phase 1: Reliability First. Phase 1 is currently in a "production smoke evidence pending" state, indicating that foundational reliability tasks are still being addressed. Correct Firestore index and security rule configuration is critical for the stability, performance, and security of the application, especially for features relying on collection group queries (like `cleanupStaleGeneration`) and administrative access to sensitive data (like `runs` subcollection).
+The product roadmap for EhonAI indicates that Phase 3, "Template Mode — Reliability-First 生成," has a critical remaining task: `fixed_template 6テンプレート（既存4 + T2-A追加2）の実生成 smoke checklist 実行`. This task is also listed in the "Now" priority section. While new templates have been added and UI improvements made, verifying the foundational reliability of these initial 6 fixed templates is essential, especially as the product is in Phase 5 (Monetization) with active soft launch cohorts. The `Template Smoke Checklist` document (`docs/TEMPLATE_SMOKE_CHECKLIST.md`) defines the specific templates and criteria for this verification.
 
 ## Objective
 
-Document the required Firestore composite indexes and security rules, specifically focusing on those necessary for collection group queries and `runs` subcollection read permissions. Subsequently, verify their correct configuration in a development environment to ensure readiness for production.
+Generate books using the 6 specified fixed templates, meticulously follow the `TEMPLATE_SMOKE_CHECKLIST`, and record the results in `docs/TEMPLATE_SMOKE_RESULTS.md`.
 
 ## Allowed Scope
 
-- `firestore.indexes.json` (for documenting required composite indexes)
-- `firestore.rules` (for documenting required security rules)
-- `docs/` directory (create `docs/FIRESTORE_CONFIG_VERIFICATION.md` to host the documentation and verification results)
-- Firebase Console (for manual verification in dev/staging environment)
-- `firebase` CLI (for checking local config and deploying if necessary in follow-up tasks)
+- `docs/` (for updating `TEMPLATE_SMOKE_RESULTS.md` with findings)
+- `functions/` (for triggering book generation via existing admin tools or scripts for testing purposes)
+- `web/` (for interacting with the administrative or user-facing UI to initiate book generation and observe results)
+- `scripts/` (for creating a temporary diagnostic script to automate the generation of the 6 books, if deemed efficient)
+- `shared/` (if a diagnostic script requires shared types)
 
 ## Forbidden Scope
 
-- Modifications to existing application logic, UI components, or core features.
-- Changes to other Firebase services (e.g., Cloud Functions code, Storage rules) unless directly related to Firestore configuration.
-- Deployment to the production environment (this task focuses on documentation and dev/staging verification).
+- Infrastructure changes (e.g., new Firebase projects, Cloud Run configurations)
+- Billing modifications
+- Authentication redesign
+- Secrets management (e.g., adding/modifying API keys)
+- Generated assets (e.g., images, `package-lock.json` unless absolutely necessary for dependency updates related to the task)
 
 ## Requirements
 
-1.  **Create Documentation:**
-    *   Create a new Markdown file: `docs/FIRESTORE_CONFIG_VERIFICATION.md`.
-    *   In this document, clearly define and list:
-        *   **Required Composite Indexes:** Identify all composite indexes necessary for efficient execution of collection group queries (e.g., for `cleanupStaleGeneration` that queries across `generationRuns` subcollections, or any admin UIs that use complex filters). Specify the collection group, the fields, and their order.
-        *   **Required Security Rules:** Document the Firestore security rules that grant appropriate read permissions to the `runs` subcollection (e.g., for administrative access or SLO reporting mechanisms). Ensure these rules follow the principle of least privilege.
-2.  **Verification Steps:**
-    *   Outline a step-by-step process in `docs/FIRESTORE_CONFIG_VERIFICATION.md` for verifying the existence and correctness of these indexes and rules in a development or staging Firebase project. This may involve:
-        *   Checking the "Indexes" section in the Firebase Console.
-        *   Testing rules using the Firebase Rules Playground or the `firebase emulators:start` command.
-        *   Executing example queries (e.g., using `gcloud firestore databases query`) that would rely on these indexes.
-3.  **Perform Verification:**
-    *   Execute the defined verification steps in a designated development environment (e.g., your local Firebase project, or a shared dev/staging project).
-    *   Record the findings in `docs/FIRESTORE_CONFIG_VERIFICATION.md`, noting whether each index/rule is correctly configured, missing, or requires adjustment.
-    *   If discrepancies are found, clearly describe them.
+- **Documentation First:** Update `docs/TEMPLATE_SMOKE_RESULTS.md` with detailed findings for each template, including book IDs, observed issues, and compliance with the checklist.
+- **Reproducibility:** Clearly state the method used to generate the books (e.g., via admin UI, specific script with commands).
+- **Issue Reporting:** For any discrepancies or failures identified during the smoke test, document them thoroughly within `TEMPLATE_SMOKE_RESULTS.md` and suggest follow-up actions.
+- **Cleanliness:** If a temporary script is created, ensure it's removed or clearly marked as a diagnostic tool upon completion. No permanent code changes to core generation logic are expected as part of this task, unless a critical bug is discovered and requires an immediate fix (which should be reported as a follow-up).
 
 ## Output Format
 
--   **Summary:** Briefly describe the documented indexes and rules, and the outcome of the verification in the dev environment.
--   **Changed Files:**
-    -   `docs/FIRESTORE_CONFIG_VERIFICATION.md`
-    -   (Potentially `firestore.indexes.json` or `firestore.rules` if minor documentation-level comments are added, but not for functional changes in this task)
--   **Tests Executed:** Describe the manual verification steps performed.
-    -   Example: "Manually checked Firebase Console for index `[INDEX_NAME]` on collection group `[COLLECTION_GROUP_NAME]` with fields `[FIELD1, FIELD2]`. Verified
+- Summary of findings for each of the 6 templates.
+- A link to the updated
