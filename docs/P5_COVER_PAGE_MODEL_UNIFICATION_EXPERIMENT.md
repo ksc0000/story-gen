@@ -446,8 +446,8 @@ generationOverride?: {
 
 | ゲート | 現状 |
 |---|---|
-| Cohort B テスターへの `p5ModelUnification: "safer_retry"` 適用 | **⏳ PM 承認待ち** |
-| 本番 default への昇格 | 未予定（Cohort B フィードバック確認後に判断）|
+| Cohort B テスターへの `p5ModelUnification: "safer_retry"` 適用 | **✅ 完了** (2026-06-12) |
+| 本番 default への昇格 | **✅ 完了** (P5-4a: `pro_consistent` はデフォルトで有効) |
 | Option B（Strict、内部診断）の実施 | 将来（Cohort B と別枠） |
 
 ---
