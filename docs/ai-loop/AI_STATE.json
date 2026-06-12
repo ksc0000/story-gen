@@ -57,6 +57,7 @@
     "PR #278: Record Phase 1 Production Smoke Test Results (merged)",
     "PR #283: feat: テンプレート選択UIをシンプルな画像グリッド＋詳細ダイアログに刷新 (merged)",
     "PR #284: feat: 旧固定テンプレートの共有画像かぶりを解消（個別サムネイル対応） (merged)",
+    "PR #286: Implement Diagnostic Script for Scheduler Job Verification (merged)",
     "PR #287: feat: テンプレート詳細ダイアログにページ数セレクターを追加 (merged)",
     "PR #288: feat: AIにおまかせ 新入力フロー (/create/ai-brief) (merged)",
     "PR #289: feat: AIあらすじ提案ステップ（generateStoryPitch + ピッチUI） (merged)",
