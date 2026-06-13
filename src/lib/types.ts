@@ -407,6 +407,7 @@ export interface BookDoc {
   theme: string;
   categoryGroupId?: string;
   templateId?: string;
+  sourcePhotos?: string[];
   creationMode?: CreationMode;
   sourcePhotos?: string[];
   priceTier?: PriceTier;
