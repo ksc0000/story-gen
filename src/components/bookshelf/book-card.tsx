@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { AnimatedCard } from "@/components/animated-card";
 import { formatDateSafe } from "@/lib/date-utils";
 import type { BookDoc } from "@/lib/types";
@@ -16,6 +17,13 @@ export function BookCard({ book }: BookCardProps) {
     <Link href={href} className="group relative block">
       <AnimatedCard>
         <Card className="relative overflow-hidden transition-all hover:shadow-md">
+          {book.status === "partial_completed" && (
+            <div className="absolute right-2 top-2 z-20">
+              <Badge variant="outline" className="bg-amber-50/90 text-amber-600 border-amber-200 backdrop-blur-sm">
+                一部未完成
+              </Badge>
+            </div>
+          )}
           <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-violet-50 to-purple-100 flex items-center justify-center">
             {book.coverImageUrl ? (
               <>

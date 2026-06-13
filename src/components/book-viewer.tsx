@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, Loader2 } from "lucide-react";
+import { RefreshCcw, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RegenerateConfirmationDialog } from "@/components/regenerate-confirmation-dialog";
 import type { PageDoc, CoverStatus, ReadingStructureVersion } from "@/lib/types";
@@ -318,16 +318,27 @@ export function BookViewer(props: BookViewerProps) {
                         <span className="text-4xl">🎨</span>
                         <p className="text-sm text-orange-700">この絵は生成できませんでした</p>
                         {onRegeneratePage && (
-                          <button
+                          <Button
+                            size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               onRegeneratePage(item.storyPageIndex);
                             }}
                             disabled={isRegeneratingPage?.(item.storyPageIndex)}
-                            className="rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
+                            className="bg-orange-500 hover:bg-orange-600"
                           >
-                            {isRegeneratingPage?.(item.storyPageIndex) ? "生成中..." : "もう一度生成する"}
-                          </button>
+                            {isRegeneratingPage?.(item.storyPageIndex) ? (
+                              <>
+                                <Loader2 className="mr-2 size-4 animate-spin" />
+                                仕上げ中...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="mr-2 size-4" />
+                                このページを仕上げる
+                              </>
+                            )}
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -393,16 +404,27 @@ export function BookViewer(props: BookViewerProps) {
                         <span className="text-4xl">🎨</span>
                         <p className="text-sm text-orange-700">この絵は生成できませんでした</p>
                         {onRegeneratePage && (
-                          <button
+                          <Button
+                            size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               onRegeneratePage(item.storyPageIndex);
                             }}
                             disabled={isRegeneratingPage?.(item.storyPageIndex)}
-                            className="rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
+                            className="bg-orange-500 hover:bg-orange-600"
                           >
-                            {isRegeneratingPage?.(item.storyPageIndex) ? "生成中..." : "もう一度生成する"}
-                          </button>
+                            {isRegeneratingPage?.(item.storyPageIndex) ? (
+                              <>
+                                <Loader2 className="mr-2 size-3 animate-spin" />
+                                仕上げ中...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="mr-2 size-3" />
+                                このページを仕上げる
+                              </>
+                            )}
+                          </Button>
                         )}
                       </div>
                     </div>
