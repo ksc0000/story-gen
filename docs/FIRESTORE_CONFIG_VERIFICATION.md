@@ -21,6 +21,7 @@ Ensure that Firestore is correctly configured to support application features (l
 | `templates` | `active` (ASC), `order` (ASC) | Active template listing for users. |
 | `categoryGroups` | `active` (ASC), `order` (ASC) | Active category groups for template filtering. |
 | `companions` | `userId` (ASC), `createdAt` (DESC) | User companion list. |
+| `qualityTasks` | `status` (ASC), `createdAtMs` (DESC) | Admin quality task list filtering. |
 
 ## Required Security Rules
 
