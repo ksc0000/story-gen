@@ -140,6 +140,26 @@ const FICTIONAL_NAME_QUESTION: ChatQuestion = {
   textPlaceholder: "例：ルナ、そらくん、ミルク",
 };
 
+// 自由入力ステップ（freeInput）のガイド（Issue #326 を ai-brief へ再スコープ）
+const FREE_INPUT_HINT =
+  "登場人物の性格、好きなもの、伝えたいメッセージ、避けてほしい展開など、自由に書けます。";
+const FREE_INPUT_EXAMPLES: Array<{ label: string; value: string }> = [
+  {
+    label: "誕生日を祝う",
+    value: "もうすぐ誕生日なので、お祝いの気持ちが伝わる温かいお話にしてほしい。",
+  },
+  {
+    label: "入園を応援",
+    value:
+      "春から幼稚園に通うので、新しい場所が楽しみになって勇気が出るようなお話にしてほしい。",
+  },
+  {
+    label: "いつもありがとう",
+    value: "毎日がんばっている子へ、大好きだよという気持ちが伝わるお話にしてほしい。",
+  },
+];
+const FREE_INPUT_MAX_LENGTH = 200;
+
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
@@ -715,8 +735,46 @@ function AiBriefPageContent() {
                   )}
                 </div>
 
-                {/* テキスト入力のみ（Q1b: キャラクター名） */}
-                {currentQuestion.textOnly ? (
+                {/* テキスト入力のみ */}
+                {currentQuestion.textOnly && currentQuestion.id === "freeInput" ? (
+                  /* 自由入力ステップ：ヒント＋例文チップ＋複数行テキスト（Issue #326） */
+                  <div className="space-y-2.5">
+                    <p className="text-xs leading-relaxed text-violet-400">{FREE_INPUT_HINT}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {FREE_INPUT_EXAMPLES.map((ex) => (
+                        <button
+                          key={ex.label}
+                          type="button"
+                          onClick={() => setFreeInputValue(ex.value)}
+                          className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-[11px] font-medium text-violet-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 active:scale-95"
+                        >
+                          ＋ {ex.label}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      autoFocus
+                      value={freeInputValue}
+                      onChange={(e) => setFreeInputValue(e.target.value)}
+                      placeholder={currentQuestion.textPlaceholder ?? "自由に入力してください（空欄で次へ）"}
+                      rows={3}
+                      maxLength={FREE_INPUT_MAX_LENGTH}
+                      className="w-full resize-none rounded-xl border border-violet-200 px-3 py-2.5 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-violet-300">
+                        {freeInputValue.length}/{FREE_INPUT_MAX_LENGTH}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleTextConfirm(currentQuestion.id)}
+                        className="rounded-xl bg-purple-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-600"
+                      >
+                        次へ
+                      </button>
+                    </div>
+                  </div>
+                ) : currentQuestion.textOnly ? (
                   <div className="space-y-2">
                     <input
                       type="text"
@@ -732,11 +790,11 @@ function AiBriefPageContent() {
                     />
                     <button
                       type="button"
-                      disabled={!freeInputValue.trim() && currentQuestion.id !== "freeInput"}
+                      disabled={!freeInputValue.trim()}
                       onClick={() => handleTextConfirm(currentQuestion.id)}
                       className="w-full rounded-xl bg-purple-500 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-600 disabled:opacity-40"
                     >
-                      {currentQuestion.id === "freeInput" ? "次へ" : "次の質問へ →"}
+                      次の質問へ →
                     </button>
                   </div>
                 ) : (
