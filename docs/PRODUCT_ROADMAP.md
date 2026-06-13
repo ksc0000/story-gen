@@ -103,18 +103,20 @@
 
 ### 状態
 
-Phase 1 の実装・可視化・自動化・運用ドキュメントはほぼ完了。現在は production smoke evidence pending。
+**Complete (2026-06-12)**
+
+Phase 1 の実装・可視化・自動化・運用ドキュメントは完了。Production smoke evidence により動作確認済み。
 
 ### 残タスク
 
-- [ ] [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
-- [ ] [Production smoke results](./PRODUCTION_SMOKE_RESULTS.md)
-- [ ] 実データでの Scheduler 実行確認（saveDailySloSnapshot / saveWeeklySloSnapshot / cleanupStaleGeneration）
-- [ ] Firestore index / permission 確認（collection group query の composite index、runs subcollection の read 権限）
+- [x] [Production smoke checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
+- [x] [Production smoke results](./PRODUCTION_SMOKE_RESULTS.md)
+- [x] 実データでの Scheduler 実行確認（saveDailySloSnapshot / saveWeeklySloSnapshot / cleanupStaleGeneration）
+- [x] Firestore index / permission 確認（collection group query の composite index、runs subcollection の read 権限）
 
 ### 完了判定
 
-Phase 1 はまだ Complete にしない。`docs/smoke-results/` に production evidence が揃い、Final Decision が更新されるまで `production smoke evidence pending` とする。
+Phase 1 は 2026-06-12 に Complete と判定。`docs/PRODUCTION_SMOKE_RESULTS.md` にて production evidence を確認済み。
 
 ---
 
