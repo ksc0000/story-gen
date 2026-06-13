@@ -1005,6 +1005,36 @@ export async function processBookGeneration(
       qualityReport: StoryQualityReport;
       rewriteMetadata?: Pick<BookData, "storyTextRewriteUsed" | "storyTextRewriteModel" | "storyTextRewriteAttempts">;
     };
+
+    // Vision: photo_story mode downloads and encodes photos before story generation
+    let base64Photos: Array<{ mimeType: string; data: string }> | undefined = undefined;
+    if (resolvedCreationMode === "photo_story" && bookData.sourcePhotos?.length) {
+      try {
+        base64Photos = await Promise.all(
+          bookData.sourcePhotos.map(async (url) => {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error(`Failed to fetch source photo: ${resp.statusText}`);
+            const buffer = Buffer.from(await resp.arrayBuffer());
+            const mimeType = resp.headers.get("content-type") || "image/jpeg";
+            return { mimeType, data: buffer.toString("base64") };
+          })
+        );
+      } catch (err) {
+        const message = `Vision analysis failed: Photo download error. ${err instanceof Error ? err.message : String(err)}`;
+        logger.error(message, { bookId });
+        await deps.updateBookFailure(bookId, message);
+        await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
+          failureStage: "story_generation",
+          failureProvider: "gemini",
+          failureReason: "unknown",
+          retryable: false,
+          technicalErrorMessage: message,
+        }));
+        await deps.updateBookStatus(bookId, "failed");
+        return;
+      }
+    }
+
     // P4-5: true when a schema repair retry succeeded; stored in Firestore metadata.
     let schemaRepairRetryUsed = false;
     try {
@@ -1026,6 +1056,7 @@ export async function processBookGeneration(
               normalizedBookData,
               mergedInput,
               readingProfile,
+              sourcePhotos: base64Photos,
             });
     } catch (err) {
       // P4-2: Capture story duration for logging before each early-return path.
@@ -1074,6 +1105,7 @@ export async function processBookGeneration(
               normalizedBookData,
               mergedInput,
               readingProfile,
+              sourcePhotos: base64Photos,
             });
             schemaRepairRetryUsed = true;
             // Retry succeeded — do NOT throw; fall through the catch block to continue generation.
@@ -1274,6 +1306,9 @@ export async function processBookGeneration(
 
     const generatePageTask = async (i: number, prevPageImageUrl?: string) => {
       const storyPage = story.pages[i];
+      const sourcePhotoUrl = (storyPage.sourcePhotoIndex !== undefined && bookData.sourcePhotos)
+        ? bookData.sourcePhotos[storyPage.sourcePhotoIndex]
+        : undefined;
       const imagePurpose = getPageImagePurpose(i, normalizedBookData.theme);
       const imageQualityTier = normalizedBookData.imageQualityTier ?? "light";
       const imageModelProfile = resolveImageModelProfile({
@@ -1297,7 +1332,8 @@ export async function processBookGeneration(
             normalizedBookData.childProfileSnapshot,
             story.cast,
             storyPage.appearingCharacterIds,
-            prevPageImageUrl
+            prevPageImageUrl,
+            sourcePhotoUrl
           )
         : [];
       const inputImageUrls = inputImageRefs.map((ref) => ref.url);
@@ -1799,7 +1835,8 @@ function buildInputImageRefs(
   childProfileSnapshot: BookData["childProfileSnapshot"] | undefined,
   cast: GeneratedStory["cast"],
   appearingCharacterIds?: string[],
-  prevPageImageUrl?: string
+  prevPageImageUrl?: string,
+  sourcePhotoUrl?: string
 ): Array<{
   role: InputImageRole;
   characterId?: string;
@@ -1812,6 +1849,12 @@ function buildInputImageRefs(
     url: string;
     source?: InputImageSource;
   }> = [
+    sourcePhotoUrl
+      ? {
+          role: "style_reference" as const, // High priority for photo_story mode consistency
+          url: sourcePhotoUrl,
+        }
+      : undefined,
     childProfileSnapshot?.visualProfile.referenceImageUrl
       ? {
           role: "character_reference",
@@ -1877,7 +1920,7 @@ function buildInputImageRefs(
       ) === index
   );
 
-  return deduped.slice(0, 8);
+  return deduped.slice(0, 2);
 }
 
 function buildInputImageRoles(
@@ -2241,6 +2284,7 @@ async function generateStoryWithQualityGate(params: {
   normalizedBookData: BookData;
   mergedInput: BookInput;
   readingProfile: AgeReadingProfile;
+  sourcePhotos?: Array<{ mimeType: string; data: string }>;
 }): Promise<{
   story: GeneratedStory;
   qualityReport: StoryQualityReport;
@@ -2281,6 +2325,7 @@ async function generateStoryWithQualityGate(params: {
     theme: params.normalizedBookData.theme,
     categoryGroupId: params.template.categoryGroupId,
     storyModelCandidates,
+    sourcePhotos: params.sourcePhotos,
   }), params.normalizedBookData, params.mergedInput);
 
   let qualityReport = validateGeneratedStoryQuality({
@@ -2371,6 +2416,7 @@ async function generateStoryWithQualityGate(params: {
     theme: params.normalizedBookData.theme,
     categoryGroupId: params.template.categoryGroupId,
     storyModelCandidates,
+    sourcePhotos: params.sourcePhotos,
   }), params.normalizedBookData, params.mergedInput);
 
   rewritePassCount = rewriteMetadata?.storyTextRewriteAttempts ?? 0;
