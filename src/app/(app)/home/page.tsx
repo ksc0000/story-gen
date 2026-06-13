@@ -238,6 +238,11 @@ export default function HomePage() {
               子どもプロフィール
             </Button>
           </Link>
+          <Link href="/gallery">
+            <Button size="lg" variant="outline" className="text-base px-6">
+              ギャラリー
+            </Button>
+          </Link>
           {isAdmin ? (
             <>
               <Link href="/admin/book-quality-review/">
