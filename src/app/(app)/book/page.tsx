@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { Share2, Check, Copy, Globe, Sparkles } from "lucide-react";
+import { Share2, Check, Copy, Globe, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookViewer } from "@/components/book-viewer";
 import { BookNextActions } from "@/components/book-next-actions";
@@ -123,6 +123,18 @@ function BookContent() {
     });
   }
 
+  async function handleRegenerateAll() {
+    if (!bookId || failedPages.length === 0) return;
+    for (const page of failedPages) {
+      if (!regeneratingPages.has(page.pageNumber)) {
+        // Use individual await to avoid overloading the function/concurrency if many
+        // but since it's 4-12 pages usually, it's fine.
+        // We call them sequentially or in parallel? Sequential is safer for UI feedback.
+        await handleRegeneratePage(page);
+      }
+    }
+  }
+
   async function handleRegeneratePage(page: PageDoc) {
     if (!bookId || regeneratingPages.has(page.pageNumber)) return;
     setRegeneratingPages((prev) => new Set(prev).add(page.pageNumber));
@@ -198,8 +210,24 @@ function BookContent() {
       </div>
 
       {isPartial && (
-        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          一部のページが完成していません。「このページを仕上げる」ボタンで再試行できます。
+        <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50/50 p-4 sm:flex-row">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-semibold text-amber-900">絵本を完成させましょう</p>
+              <p className="text-sm text-amber-800">一部のページがまだ完成していません。</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            className="w-full bg-amber-500 hover:bg-amber-600 sm:w-auto"
+            onClick={handleRegenerateAll}
+            disabled={regeneratingPages.size > 0}
+          >
+            {regeneratingPages.size > 0 ? "仕上げ中..." : "すべての未完成ページを仕上げる"}
+          </Button>
         </div>
       )}
 
@@ -229,8 +257,21 @@ function BookContent() {
       )}
 
       {(failedPages.length > 0 || generatingPages.length > 0) && (
-        <div className="mt-8 space-y-4">
-          <h2 className="text-lg font-semibold text-purple-900">未完成のページ</h2>
+        <div className="mt-12 space-y-6">
+          <div className="flex items-center justify-between border-b border-purple-100 pb-2">
+            <h2 className="text-xl font-bold text-purple-900">未完成のページ</h2>
+            {failedPages.length > 1 && isOwner && !isDemoMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-amber-200 text-amber-700 hover:bg-amber-50"
+                onClick={handleRegenerateAll}
+                disabled={regeneratingPages.size > 0}
+              >
+                まとめて仕上げる
+              </Button>
+            )}
+          </div>
 
           {generatingPages.map((page) => (
             <div
@@ -255,27 +296,53 @@ function BookContent() {
             return (
               <div
                 key={page.pageNumber}
-                className="flex items-start gap-4 rounded-2xl border border-rose-100 bg-rose-50 p-4"
+                className="group relative flex flex-col gap-4 overflow-hidden rounded-3xl border border-rose-100 bg-white p-5 shadow-sm transition-all hover:shadow-md sm:flex-row sm:items-center"
               >
-                <div className="flex h-16 w-20 shrink-0 items-center justify-center rounded-xl border border-rose-200 bg-white text-xs text-rose-400">
-                  未完成
+                <div className="absolute left-0 top-0 h-full w-1.5 bg-rose-200" />
+                <div className="flex h-20 w-24 shrink-0 items-center justify-center rounded-2xl border-2 border-dashed border-rose-100 bg-rose-50/50 text-xs font-bold text-rose-400 sm:h-24 sm:w-32">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xl">🎨</span>
+                    <span>未完成</span>
+                  </div>
                 </div>
-                <div className="flex-1 space-y-2">
-                  <p className="text-sm font-medium text-purple-900">
-                    ページ {page.pageNumber + 1}
-                  </p>
-                  <p className="text-xs text-violet-600">{page.text?.slice(0, 60)}…</p>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <h3 className="text-base font-bold text-purple-900">
+                      ページ {page.pageNumber + 1}
+                    </h3>
+                    <p className="mt-1 text-sm leading-relaxed text-violet-600">
+                      {page.text}
+                    </p>
+                  </div>
                   {error && (
-                    <p className="text-xs text-rose-600">{error}</p>
+                    <div className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-600">
+                      {error}
+                    </div>
                   )}
                   {isOwner && !isDemoMode && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleRegeneratePage(page)}
-                      disabled={isRegenerating}
-                    >
-                      {isRegenerating ? "仕上げ中..." : "このページを仕上げる"}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => handleRegeneratePage(page)}
+                        disabled={isRegenerating}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        {isRegenerating ? (
+                          <>
+                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                            仕上げ中...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            このページを仕上げる
+                          </>
+                        )}
+                      </Button>
+                      <p className="text-[10px] text-violet-400">
+                        ※数分かかる場合があります
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
