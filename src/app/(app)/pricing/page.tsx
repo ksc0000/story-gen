@@ -101,6 +101,32 @@ export default function PricingPage() {
     }
   }
 
+  const [singlePurchaseLoading, setSinglePurchaseLoading] = useState<string | null>(null);
+
+  async function handleSinglePurchase(purchaseType: "ai_guided" | "photo_story") {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    setSinglePurchaseLoading(purchaseType);
+    setError(null);
+    try {
+      const createSinglePurchaseCheckout = httpsCallable<
+        { purchaseType: string },
+        { url: string }
+      >(functions, "createSinglePurchaseCheckout");
+      const result = await createSinglePurchaseCheckout({ purchaseType });
+      if (result.data.url) {
+        window.location.href = result.data.url;
+      }
+    } catch (e) {
+      console.error(e);
+      setError("決済ページへの遷移に失敗しました。もう一度お試しください。");
+    } finally {
+      setSinglePurchaseLoading(null);
+    }
+  }
+
   return (
     <div className="min-h-screen px-4 py-12">
       <div className="mx-auto max-w-5xl">
@@ -196,6 +222,75 @@ export default function PricingPage() {
               </div>
             );
           })}
+        </div>
+
+        {/* Single Purchase Section */}
+        <div className="mt-16 rounded-2xl border bg-muted/30 p-8">
+          <div className="mb-8 text-center">
+            <h2 className="text-2xl font-bold">特別な1冊を、単品で購入</h2>
+            <p className="mt-2 text-muted-foreground">
+              月額プランに入らず、必要な時だけ1冊ずつ作成できます。
+              {profile?.singleBookCredits ? (
+                <span className="ml-2 inline-block font-bold text-primary">
+                  （現在 {profile.singleBookCredits} クレジット保有中）
+                </span>
+              ) : null}
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-xl border bg-card p-6 shadow-sm">
+              <h3 className="text-lg font-bold">特別な1冊</h3>
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="text-2xl font-bold">¥1,500</span>
+                <span className="text-sm text-muted-foreground">/ 1冊分</span>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                「かんたんカスタム」でこだわりの1冊を。月額プランを超えて作成したい場合にも。
+              </p>
+              <Button
+                className="mt-6 w-full"
+                variant="outline"
+                disabled={!!singlePurchaseLoading}
+                onClick={() => handleSinglePurchase("ai_guided")}
+              >
+                {singlePurchaseLoading === "ai_guided" ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    処理中...
+                  </>
+                ) : (
+                  "単品購入する"
+                )}
+              </Button>
+            </div>
+
+            <div className="rounded-xl border bg-card p-6 shadow-sm">
+              <h3 className="text-lg font-bold">Photo Story 単品</h3>
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="text-2xl font-bold">¥2,000</span>
+                <span className="text-sm text-muted-foreground">/ 1冊分</span>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                お子さんの写真から作る「Photo Story」を1冊分。特別なイベントの思い出に。
+              </p>
+              <Button
+                className="mt-6 w-full"
+                variant="outline"
+                disabled={!!singlePurchaseLoading}
+                onClick={() => handleSinglePurchase("photo_story")}
+              >
+                {singlePurchaseLoading === "photo_story" ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    処理中...
+                  </>
+                ) : (
+                  "単品購入する"
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Premium Benefits Gallery */}

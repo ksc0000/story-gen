@@ -78,6 +78,66 @@ export const createCheckoutSession = onCall(
   }
 );
 
+// ─── createSinglePurchaseCheckout ──────────────────────────────────────────────
+export const createSinglePurchaseCheckout = onCall(
+  {
+    region: "asia-northeast1",
+    secrets: [stripeSecretKey],
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "ログインが必要です");
+    }
+
+    const { purchaseType } = request.data as {
+      purchaseType: "ai_guided" | "photo_story";
+    };
+
+    const priceId =
+      purchaseType === "ai_guided"
+        ? process.env.STRIPE_PRICE_ID_SINGLE_AI_GUIDED
+        : process.env.STRIPE_PRICE_ID_SINGLE_PHOTO_STORY;
+
+    if (!priceId) {
+      throw new HttpsError("invalid-argument", "無効な購入種別または価格設定が見つかりません");
+    }
+
+    const uid = request.auth.uid;
+    const email = request.auth.token.email;
+    const stripe = new Stripe(stripeSecretKey.value());
+    const db = admin.firestore();
+
+    // Get or create Stripe customer
+    const userDoc = await db.collection("users").doc(uid).get();
+    const userData = userDoc.data();
+    let customerId: string | undefined = userData?.stripeCustomerId;
+
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: email ?? undefined,
+        metadata: { firebaseUid: uid },
+      });
+      customerId = customer.id;
+      await db
+        .collection("users")
+        .doc(uid)
+        .set({ stripeCustomerId: customerId }, { merge: true });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: "payment",
+      payment_method_types: ["card"],
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${SITE_URL}/pricing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${SITE_URL}/pricing`,
+      metadata: { uid, purchaseType, kind: "single_purchase" },
+    });
+
+    return { url: session.url };
+  }
+);
+
 // ─── stripeWebhook ────────────────────────────────────────────────────────────
 export const stripeWebhook = onRequest(
   {
@@ -107,6 +167,33 @@ export const stripeWebhook = onRequest(
     switch (event.type) {
       case "checkout.session.completed": {
         const uid: string | undefined = obj.metadata?.uid;
+
+        // Handle single purchase
+        if (obj.metadata?.kind === "single_purchase") {
+          if (!uid) break;
+          const sessionId = obj.id;
+          const sessionRef = db.collection("processedStripeSessions").doc(sessionId);
+
+          try {
+            await db.runTransaction(async (tx) => {
+              const sessionDoc = await tx.get(sessionRef);
+              if (sessionDoc.exists) return;
+
+              tx.update(db.collection("users").doc(uid), {
+                singleBookCredits: admin.firestore.FieldValue.increment(1),
+              });
+              tx.set(sessionRef, {
+                uid,
+                purchaseType: obj.metadata?.purchaseType,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            });
+          } catch (e) {
+            console.error(`Error processing single purchase for session ${sessionId}:`, e);
+          }
+          break;
+        }
+
         const productPlan: string | undefined = obj.metadata?.productPlan;
         if (uid && productPlan) {
           await db.collection("users").doc(uid).set(
