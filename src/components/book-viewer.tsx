@@ -74,17 +74,42 @@ export function buildReadingItems(props: BookViewerProps): ReadingItem[] {
   return items;
 }
 
-const pageFlip: Variants = {
+const bookTransitionVariants: Variants = {
   initial: (direction: number) => ({
     opacity: 0,
-    x: direction > 0 ? 50 : -50,
+    x: direction > 0 ? 100 : -100,
+    rotateY: direction > 0 ? 45 : -45,
+    scale: 0.95,
   }),
-  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] } },
+  animate: {
+    opacity: 1,
+    x: 0,
+    rotateY: 0,
+    scale: 1,
+    transition: {
+      duration: 0.7,
+      ease: [0.32, 0.72, 0, 1],
+    },
+  },
   exit: (direction: number) => ({
     opacity: 0,
-    x: direction > 0 ? -50 : 50,
-    transition: { duration: 0.3 },
+    x: direction > 0 ? -100 : 100,
+    rotateY: direction > 0 ? -45 : 45,
+    scale: 0.95,
+    transition: {
+      duration: 0.5,
+      ease: [0.32, 0.72, 0, 1],
+    },
   }),
+};
+
+const shadowVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 0 },
+  exit: {
+    opacity: 0.08,
+    transition: { duration: 0.3 },
+  },
 };
 
 /** Swipe threshold (px) and velocity threshold (px/s). */
@@ -272,22 +297,28 @@ export function BookViewer(props: BookViewerProps) {
   };
 
   return (
-    <div>
+    <div className="relative overflow-hidden" style={{ perspective: "1200px" }}>
       {/* Desktop: spread view */}
       <div className="hidden md:block">
-        <AnimatePresence mode="wait" custom={directionRef.current}>
+        <AnimatePresence mode="popLayout" custom={directionRef.current}>
           <motion.div
             key={currentPage}
             custom={directionRef.current}
-            variants={pageFlip}
+            variants={bookTransitionVariants}
             initial="initial"
             animate="animate"
             exit="exit"
             {...dragProps}
+            style={{ transformStyle: "preserve-3d" }}
             className={`cursor-grab overflow-hidden rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-white shadow-[0_8px_32px_rgba(167,139,250,0.15)] active:cursor-grabbing ${
               item.kind === "story_page" ? "grid grid-cols-2 gap-0" : ""
             }`}
           >
+            {/* Inner shadow overlay */}
+            <motion.div
+              variants={shadowVariants}
+              className="pointer-events-none absolute inset-0 z-50 bg-black/20"
+            />
             {item.kind === "cover_title_spread" && <CoverSheetDesktop item={item} />}
             {item.kind === "story_page" && (
               <>
@@ -363,17 +394,23 @@ export function BookViewer(props: BookViewerProps) {
       </div>
       {/* Mobile: single page */}
       <div className="md:hidden">
-        <AnimatePresence mode="wait" custom={directionRef.current}>
+        <AnimatePresence mode="popLayout" custom={directionRef.current}>
           <motion.div
             key={currentPage}
             custom={directionRef.current}
-            variants={pageFlip}
+            variants={bookTransitionVariants}
             initial="initial"
             animate="animate"
             exit="exit"
             {...dragProps}
+            style={{ transformStyle: "preserve-3d" }}
             className="cursor-grab overflow-hidden rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-white shadow-[0_8px_32px_rgba(167,139,250,0.15)] active:cursor-grabbing"
           >
+            {/* Inner shadow overlay */}
+            <motion.div
+              variants={shadowVariants}
+              className="pointer-events-none absolute inset-0 z-50 bg-black/20"
+            />
             {item.kind === "cover_title_spread" && <CoverSheetMobile item={item} />}
             {item.kind === "story_page" && (
               <>
