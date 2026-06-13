@@ -3,9 +3,18 @@ import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { runLLMAutoReview } from "./lib/auto-review-llm";
-import type { BookData, PageData, QualityReviewDoc, LLMQualityReviewResult } from "./lib/types";
+import type { BookData, PageData, QualityReviewDoc } from "./lib/types";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
+
+/**
+ * Feature flag (kill switch) for the LLM auto-review prototype.
+ * Disabled by default — set the env var `ENABLE_LLM_AUTO_REVIEW=true` to activate.
+ * This lets us toggle the automatic Gemini review per book completion without redeploying.
+ */
+function isLLMAutoReviewEnabled(): boolean {
+  return process.env.ENABLE_LLM_AUTO_REVIEW === "true";
+}
 
 export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
   {
@@ -16,6 +25,9 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
     timeoutSeconds: 300,
   },
   async (event) => {
+    // Kill switch: skip entirely unless explicitly enabled.
+    if (!isLLMAutoReviewEnabled()) return;
+
     const bookId = event.params.bookId;
     const beforeData = event.data?.before.data() as BookData | undefined;
     const afterData = event.data?.after.data() as BookData | undefined;
@@ -73,7 +85,7 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
       const reviewDoc: QualityReviewDoc = {
         id: reviewId,
         reviewType: "llm_auto_review",
-        createdAt: admin.firestore.Timestamp.now() as any, // Cast for compatibility if needed
+        createdAt: admin.firestore.Timestamp.now(),
         createdAtMs: now,
         result: reviewResult,
         reviewedBy: "system_llm",
