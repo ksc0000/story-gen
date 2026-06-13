@@ -619,7 +619,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     },
   },
   "fixed-first-birthday-8p": {
-    name: "はじめてのたんじょうび（8ページ）",
+    name: "はじめてのたんじょうび",
     description: "はじめての誕生日を、準備からお祝いの余韻までゆっくり描く8ページ版です。",
     icon: "🎂",
     categoryGroupId: "seasonal-events",
@@ -771,7 +771,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     },
   },
   "fixed-first-zoo-8p": {
-    name: "はじめてのどうぶつえん（8ページ）",
+    name: "はじめてのどうぶつえん",
     description: "はじめての動物園を、出発の朝から発見、少し成長した帰り道までゆっくり描く8ページ版です。",
     icon: "🦁",
     categoryGroupId: "memories",
@@ -1089,7 +1089,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     },
   },
   "fixed-bedtime-good-day-8p": {
-    name: "きょうもいい日だったね（8ページ）",
+    name: "きょうもいい日だったね",
     description: "寝る前の一日をゆっくり振り返り、安心して眠りにつく8ページ版です。",
     icon: "🛏️",
     categoryGroupId: "bedtime",
@@ -1240,7 +1240,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     },
   },
   "fixed-brush-teeth-8p": {
-    name: "はじめての歯みがき（8ページ）",
+    name: "はみがきできたよ",
     description: "歯みがきの習慣を、朝の準備からおやすみまでゆっくり描く8ページ版です。",
     icon: "🪥",
     categoryGroupId: "growth-support",
@@ -1654,7 +1654,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     },
   },
   "fixed-sleepy-moon-adventure-8p": {
-    name: "おつきさまと おやすみぼうけん（8ページ）",
+    name: "おつきさまと おやすみぼうけん",
     description: "月あかりの冒険をゆっくり8ページで描く、安心おやすみテンプレートです。",
     icon: "🌙",
     categoryGroupId: "bedtime",
@@ -1891,7 +1891,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     },
   },
   "fixed-cardboard-rocket-8p": {
-    name: "ダンボールロケットでしゅっぱつ（8ページ）",
+    name: "ダンボールロケットでしゅっぱつ",
     description: "ごっこ遊びの想像力をのばす、宇宙への大冒険を楽しむ8ページ版です。",
     icon: "🚀",
     categoryGroupId: "imagination",

@@ -43,7 +43,7 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     generationMode: "reliable_fast",
-    enabled: false,
+    enabled: true,
   },
   standard_paid: {
     productPlan: "standard_paid",

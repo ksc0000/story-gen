@@ -90,7 +90,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     isPaid: true,
-    enabled: false,
+    enabled: true,
   },
   standard_paid: {
     productPlan: "standard_paid",

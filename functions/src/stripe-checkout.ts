@@ -9,6 +9,7 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 const SITE_URL = "https://ehoria.app";
 
 const STRIPE_PRICE_IDS: Record<string, string> = {
+  light_paid: process.env.STRIPE_PRICE_ID_LIGHT ?? "",
   standard_paid: process.env.STRIPE_PRICE_ID_STANDARD ?? "",
   premium_paid: process.env.STRIPE_PRICE_ID_PREMIUM ?? "",
 };
@@ -25,7 +26,7 @@ export const createCheckoutSession = onCall(
     }
 
     const { productPlan } = request.data as {
-      productPlan: "standard_paid" | "premium_paid";
+      productPlan: "light_paid" | "standard_paid" | "premium_paid";
     };
 
     const priceId = STRIPE_PRICE_IDS[productPlan];
