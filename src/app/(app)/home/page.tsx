@@ -311,6 +311,20 @@ export default function HomePage() {
           )}
         </div>
 
+        {/* Feedback widget */}
+        <div className="mt-5">
+          <Link href="/feedback" className="block">
+            <div className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-white/60 px-4 py-3 hover:bg-white/90 hover:border-violet-200 transition-all">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">💬</div>
+              <div>
+                <p className="text-sm font-medium text-purple-800">フィードバックを送る</p>
+                <p className="text-xs text-violet-400">アプリへのご意見・ご要望をお聞かせください</p>
+              </div>
+              <span className="ml-auto text-violet-300 text-lg">→</span>
+            </div>
+          </Link>
+        </div>
+
         {/* Upgrade banner for free plan users */}
         {profile && profile.plan === "free" && (
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50/80 px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
