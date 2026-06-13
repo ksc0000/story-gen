@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,9 @@ import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCategoryGroups } from "@/lib/hooks/use-category-groups";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { PLAN_CONFIGS } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import type { CreationMode } from "@/lib/types";
@@ -36,9 +40,17 @@ const MODE_OPTIONS: Array<{
     description: "テーマを教えると、AIがオリジナルストーリーを作ります。",
     icon: "✨",
   },
+  {
+    mode: "photo_story",
+    label: "写真から作る",
+    description: "3〜5枚の写真から、AIが思い出を絵本に描き直します。",
+    icon: "📸",
+  },
 ];
 
 function ThemeSelectionPageContent() {
+  const { user } = useAuth();
+  const { profile } = useUserProfile(user?.uid);
   const { templates, loading, error } = useTemplates();
   const { categoryGroups, loading: categoryLoading } = useCategoryGroups();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -162,6 +174,12 @@ function ThemeSelectionPageContent() {
     if (companionName) params.set("companionName", companionName);
     if (companionVisualDescription) params.set("companionVisualDescription", companionVisualDescription);
 
+    if (selectedMode === "photo_story") {
+      params.set("mode", selectedMode);
+      router.push(`/create/photo-upload?${params.toString()}`);
+      return;
+    }
+
     if (selectedMode === "guided_ai") {
       // 新フロー: AIにおまかせ → ai-brief 入力ページへ
       params.set("mode", selectedMode);
@@ -191,33 +209,53 @@ function ThemeSelectionPageContent() {
         <div className="flex flex-col gap-3">
         {MODE_OPTIONS.map((option) => {
           const active = selectedMode === option.mode;
+          const currentPlan = profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free");
+          const planConfig = PLAN_CONFIGS[currentPlan];
+          const isAllowed = planConfig?.allowedCreationModes.includes(option.mode);
+
           return (
-            <button
-              key={option.mode}
-              type="button"
-              onClick={() => updateQuery("mode", option.mode)}
-              className={cn(
-                "group relative flex flex-col items-start rounded-2xl border p-4 text-left transition-all",
-                active
-                  ? "border-purple-400 ring-2 ring-purple-200 bg-purple-50 shadow-sm"
-                  : "border-purple-100 bg-white hover:border-purple-300"
-              )}
-            >
-              <div className="flex w-full items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{option.icon}</span>
-                  <div className="text-sm font-bold text-purple-900 md:text-base">{option.label}</div>
-                  {option.recommended && (
-                    <Badge variant="default" className="bg-amber-100 text-amber-700 border-amber-200">
-                      おすすめ ✨
-                    </Badge>
-                  )}
+            <div key={option.mode} className="relative">
+              <button
+                type="button"
+                onClick={() => updateQuery("mode", option.mode)}
+                className={cn(
+                  "group relative flex w-full flex-col items-start rounded-2xl border p-4 text-left transition-all",
+                  active
+                    ? "border-purple-400 ring-2 ring-purple-200 bg-purple-50 shadow-sm"
+                    : "border-purple-100 bg-white hover:border-purple-300"
+                )}
+              >
+                <div className="flex w-full items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{option.icon}</span>
+                    <div className="text-sm font-bold text-purple-900 md:text-base">{option.label}</div>
+                    {option.recommended && (
+                      <Badge variant="default" className="bg-amber-100 text-amber-700 border-amber-200">
+                        おすすめ ✨
+                      </Badge>
+                    )}
+                    {!isAllowed && (
+                      <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                        プレミアムプラン限定
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-1 text-xs leading-relaxed text-violet-500 md:text-sm">
-                {option.description}
-              </div>
-            </button>
+                <div className="mt-1 text-xs leading-relaxed text-violet-500 md:text-sm">
+                  {option.description}
+                </div>
+              </button>
+              {!isAllowed && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <Link
+                    href="/pricing"
+                    className="text-xs font-bold text-purple-600 hover:underline"
+                  >
+                    アップグレード
+                  </Link>
+                </div>
+              )}
+            </div>
           );
         })}
         </div>
@@ -308,6 +346,38 @@ function ThemeSelectionPageContent() {
             ))}
           </StaggerContainer>
         )
+      ) : selectedMode === "photo_story" ? (
+        /* Photo Story: 期待値調整カード */
+        <div className="mt-6 rounded-2xl border border-purple-100 bg-gradient-to-b from-purple-50 to-violet-50 p-6">
+          <div className="text-center">
+            <p className="text-4xl">📸</p>
+            <h2 className="mt-2 text-lg font-bold text-purple-900">
+              写真から作る（Photo Story）
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-violet-600">
+              AIがあなたの写真の「瞬間」をもとに、絵本の世界に描き直します。
+              <br />
+              写真の忠実なコピーではなく、絵本ならではの温かいタッチでお届けします。
+            </p>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              { icon: "🖼️", text: "3〜5枚の写真を\nアップロード" },
+              { icon: "✨", text: "AIがストーリーを\n再構築" },
+              { icon: "🎨", text: "絵本風のイラストで\nお届け" },
+            ].map((item) => (
+              <div
+                key={item.icon}
+                className="rounded-xl bg-white/70 px-2 py-3 text-center"
+              >
+                <p className="text-xl">{item.icon}</p>
+                <p className="mt-1 whitespace-pre-line text-[10px] leading-tight text-violet-600">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : selectedMode === "guided_ai" ? (
         /* AIにおまかせ: 新フロー紹介カード */
         <div className="mt-6 rounded-2xl border border-purple-100 bg-gradient-to-b from-purple-50 to-violet-50 p-6">
@@ -374,14 +444,32 @@ function ThemeSelectionPageContent() {
       {/* 画面下部固定 — iPhone セーフエリア対応 */}
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3">
         <div className="mx-auto max-w-lg">
-          <Button
-            size="lg"
-            className="w-full"
-            disabled={selectedMode === "fixed_template" && !selectedId}
-            onClick={() => handleNext()}
-          >
-            次へ
-          </Button>
+          {(() => {
+            const currentPlan = profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free");
+            const planConfig = PLAN_CONFIGS[currentPlan];
+            const isAllowed = planConfig?.allowedCreationModes.includes(selectedMode);
+
+            if (!isAllowed) {
+              return (
+                <Link href="/pricing" className="block w-full">
+                  <Button size="lg" className="w-full">
+                    アップグレードして作る
+                  </Button>
+                </Link>
+              );
+            }
+
+            return (
+              <Button
+                size="lg"
+                className="w-full"
+                disabled={selectedMode === "fixed_template" && !selectedId}
+                onClick={() => handleNext()}
+              >
+                次へ
+              </Button>
+            );
+          })()}
         </div>
       </div>
 

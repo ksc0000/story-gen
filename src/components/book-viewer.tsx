@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { RefreshCcw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RegenerateConfirmationDialog } from "@/components/regenerate-confirmation-dialog";
 import type { PageDoc, CoverStatus, ReadingStructureVersion } from "@/lib/types";
 import type { Variants } from "framer-motion";
 
@@ -170,6 +172,9 @@ export function BookViewer(props: BookViewerProps) {
   const items = buildReadingItems(props);
 
   const [currentPage, setCurrentPage] = useState(0);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [pageToRegenerate, setPageToRegenerate] = useState<number | null>(null);
+
   /** 1 = forward (next), -1 = backward (prev). Used for animation direction. */
   const directionRef = useRef(1);
   const touchStartXRef = useRef<number | null>(null);
@@ -286,10 +291,27 @@ export function BookViewer(props: BookViewerProps) {
             {item.kind === "cover_title_spread" && <CoverSheetDesktop item={item} />}
             {item.kind === "story_page" && (
               <>
-                <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
+                <div className="relative aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
                   {item.page.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="pointer-events-none h-full w-full object-cover" />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="pointer-events-none h-full w-full object-cover" />
+                      {onRegeneratePage && (
+                        <Button
+                          variant="outline"
+                          size="icon-sm"
+                          className="absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-full bg-white/80 text-violet-500 shadow-sm transition hover:bg-white hover:text-purple-700 active:scale-95 sm:size-10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPageToRegenerate(item.storyPageIndex);
+                            setIsConfirmOpen(true);
+                          }}
+                          disabled={isRegeneratingPage?.(item.storyPageIndex)}
+                        >
+                          <RefreshCcw className="size-4 sm:size-5" />
+                        </Button>
+                      )}
+                    </>
                   ) : (
                     <div className="flex h-full items-center justify-center p-4">
                       <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-orange-300 bg-orange-50/60 p-6 text-center">
@@ -308,6 +330,14 @@ export function BookViewer(props: BookViewerProps) {
                           </button>
                         )}
                       </div>
+                    </div>
+                  )}
+                  {isRegeneratingPage?.(item.storyPageIndex) && (
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-white/60 backdrop-blur-[2px]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 shadow-sm">
+                        <Loader2 className="size-6 animate-spin text-purple-600" />
+                      </div>
+                      <p className="text-xs font-bold text-purple-900">再生成中...</p>
                     </div>
                   )}
                 </div>
@@ -336,10 +366,27 @@ export function BookViewer(props: BookViewerProps) {
             {item.kind === "cover_title_spread" && <CoverSheetMobile item={item} />}
             {item.kind === "story_page" && (
               <>
-                <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
+                <div className="relative aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
                   {item.page.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="pointer-events-none h-full w-full object-cover" />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="pointer-events-none h-full w-full object-cover" />
+                      {onRegeneratePage && (
+                        <Button
+                          variant="outline"
+                          size="icon-xs"
+                          className="absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full bg-white/80 text-violet-500 shadow-sm transition hover:bg-white hover:text-purple-700 active:scale-95"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPageToRegenerate(item.storyPageIndex);
+                            setIsConfirmOpen(true);
+                          }}
+                          disabled={isRegeneratingPage?.(item.storyPageIndex)}
+                        >
+                          <RefreshCcw className="size-3.5" />
+                        </Button>
+                      )}
+                    </>
                   ) : (
                     <div className="flex h-full items-center justify-center p-4">
                       <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-orange-300 bg-orange-50/60 p-6 text-center">
@@ -360,6 +407,14 @@ export function BookViewer(props: BookViewerProps) {
                       </div>
                     </div>
                   )}
+                  {isRegeneratingPage?.(item.storyPageIndex) && (
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-white/60 backdrop-blur-[2px]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-sm">
+                        <Loader2 className="size-5 animate-spin text-purple-600" />
+                      </div>
+                      <p className="text-[10px] font-bold text-purple-900">再生成中...</p>
+                    </div>
+                  )}
                 </div>
                 <div className="p-4">
                   <p className="text-base leading-relaxed text-purple-900">{item.page.text}</p>
@@ -376,6 +431,16 @@ export function BookViewer(props: BookViewerProps) {
         <span className="text-sm text-violet-500">{pageLabel}</span>
         <Button variant="outline" onClick={goNext} disabled={currentPage >= totalPages - 1} className="px-6">次 →</Button>
       </div>
+
+      <RegenerateConfirmationDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={() => {
+          if (pageToRegenerate !== null && onRegeneratePage) {
+            onRegeneratePage(pageToRegenerate);
+          }
+        }}
+      />
     </div>
   );
 }

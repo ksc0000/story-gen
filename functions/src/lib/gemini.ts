@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import type { ResponseSchema } from "@google/generative-ai";
+import type { ResponseSchema, Part } from "@google/generative-ai";
 import { extractJsonFromLLMResponse } from "./llm-json-repair";
 import { STORY_RESPONSE_SCHEMA, STORY_RESPONSE_SCHEMA_MINIMAL } from "./story-response-schema";
 import type {
@@ -704,6 +704,7 @@ export function validateStory(data: unknown): GeneratedStory {
     const rawPageVisualRole = nullToUndefined(pageObj.pageVisualRole);
     const rawAppearingCharacterIds = nullToUndefined(pageObj.appearingCharacterIds);
     const rawFocusCharacterId = nullToUndefined(pageObj.focusCharacterId);
+    const sourcePhotoIndex = nullToUndefined(pageObj.sourcePhotoIndex);
 
     if (compositionHint !== undefined && typeof compositionHint !== "string") {
       throw new Error("Page 'compositionHint' must be a string when provided");
@@ -729,6 +730,10 @@ export function validateStory(data: unknown): GeneratedStory {
       pageIndex: index,
     });
 
+    if (sourcePhotoIndex !== undefined && typeof sourcePhotoIndex !== "number") {
+      throw new Error("Page 'sourcePhotoIndex' must be a number when provided");
+    }
+
     return {
       text: pageObj.text,
       imagePrompt: pageObj.imagePrompt,
@@ -738,6 +743,7 @@ export function validateStory(data: unknown): GeneratedStory {
       pageVisualRole: normalizePageVisualRole(rawPageVisualRole, index, pages.length),
       appearingCharacterIds,
       focusCharacterId,
+      sourcePhotoIndex,
     };
   });
 
@@ -843,13 +849,13 @@ type StoryGenerationConfig = {
 
 async function generateContentWithRetry(params: {
   generateContent: (request: {
-    contents: Array<{ role: "user"; parts: Array<{ text: string }> }>;
-    systemInstruction: { role: "system"; parts: Array<{ text: string }> };
+    contents: Array<{ role: "user"; parts: Array<Part> }>;
+    systemInstruction: { role: "system"; parts: Array<Part> };
     generationConfig: StoryGenerationConfig;
   }) => Promise<{ response: { text: () => string } }>;
   request: {
-    contents: Array<{ role: "user"; parts: Array<{ text: string }> }>;
-    systemInstruction: { role: "system"; parts: Array<{ text: string }> };
+    contents: Array<{ role: "user"; parts: Array<Part> }>;
+    systemInstruction: { role: "system"; parts: Array<Part> };
     generationConfig: StoryGenerationConfig;
   };
   modelName: string;
@@ -891,8 +897,8 @@ async function generateContentWithRetry(params: {
 async function runJsonGeneration(params: {
   client: GoogleGenerativeAI;
   request: {
-    contents: Array<{ role: "user"; parts: Array<{ text: string }> }>;
-    systemInstruction: { role: "system"; parts: Array<{ text: string }> };
+    contents: Array<{ role: "user"; parts: Array<Part> }>;
+    systemInstruction: { role: "system"; parts: Array<Part> };
     generationConfig: StoryGenerationConfig;
   };
   modelCandidates: string[];
@@ -993,25 +999,36 @@ export class GeminiClient implements LLMClient {
     theme?: string;
     categoryGroupId?: string;
     storyModelCandidates?: string[];
+    sourcePhotos?: Array<{ mimeType: string; data: string }>;
   }): Promise<GeneratedStory> {
-    const userParts: string[] = [`主人公の名前: ${params.childName}`];
-    if (params.storyRequest) userParts.push(`今回の絵本で描きたいこと: ${params.storyRequest}`);
-    if (params.childAge !== undefined) userParts.push(`年齢: ${params.childAge}歳`);
-    if (params.favorites) userParts.push(`好きなもの: ${params.favorites}`);
-    if (params.lessonToTeach) userParts.push(`教えたいこと: ${params.lessonToTeach}`);
-    if (params.memoryToRecreate) userParts.push(`再現したい思い出: ${params.memoryToRecreate}`);
-    if (params.characterLook) userParts.push(`主人公の見た目: ${params.characterLook}`);
-    if (params.signatureItem) userParts.push(`毎ページに出したい持ち物・服装: ${params.signatureItem}`);
-    if (params.colorMood) userParts.push(`色や雰囲気: ${params.colorMood}`);
-    if (params.place) userParts.push(`場所: ${params.place}`);
-    if (params.familyMembers) userParts.push(`一緒に登場させたい人: ${params.familyMembers}`);
-    if (params.season) userParts.push(`季節・時期: ${params.season}`);
-    if (params.parentMessage) userParts.push(`最後に伝えたい言葉: ${params.parentMessage}`);
-    if (params.freeInput) userParts.push(`ユーザーからの追加リクエスト: ${params.freeInput}`);
-    userParts.push(`ページ数: ${params.pageCount}ページ`);
+    const userPromptLines: string[] = [`主人公の名前: ${params.childName}`];
+    if (params.storyRequest) userPromptLines.push(`今回の絵本で描きたいこと: ${params.storyRequest}`);
+    if (params.creationMode === "photo_story") {
+      userPromptLines.push("以下の写真は実際の出来事です。各写真の場面・登場人物・感情を読み取り、時系列に沿った温かい絵本ストーリーを作ってください。");
+    }
+    if (params.childAge !== undefined) userPromptLines.push(`年齢: ${params.childAge}歳`);
+    if (params.favorites) userPromptLines.push(`好きなもの: ${params.favorites}`);
+    if (params.lessonToTeach) userPromptLines.push(`教えたいこと: ${params.lessonToTeach}`);
+    if (params.memoryToRecreate) userPromptLines.push(`再現したい思い出: ${params.memoryToRecreate}`);
+    if (params.characterLook) userPromptLines.push(`主人公の見た目: ${params.characterLook}`);
+    if (params.signatureItem) userPromptLines.push(`毎ページに出したい持ち物・服装: ${params.signatureItem}`);
+    if (params.colorMood) userPromptLines.push(`色や雰囲気: ${params.colorMood}`);
+    if (params.place) userPromptLines.push(`場所: ${params.place}`);
+    if (params.familyMembers) userPromptLines.push(`一緒に登場させたい人: ${params.familyMembers}`);
+    if (params.season) userPromptLines.push(`季節・時期: ${params.season}`);
+    if (params.parentMessage) userPromptLines.push(`最後に伝えたい言葉: ${params.parentMessage}`);
+    if (params.freeInput) userPromptLines.push(`ユーザーからの追加リクエスト: ${params.freeInput}`);
+    userPromptLines.push(`ページ数: ${params.pageCount}ページ`);
+
+    const userParts: Part[] = [{ text: userPromptLines.join("\n") }];
+    if (params.sourcePhotos && params.sourcePhotos.length > 0) {
+      params.sourcePhotos.forEach((photo) => {
+        userParts.push({ inlineData: photo });
+      });
+    }
 
     const request = {
-      contents: [{ role: "user" as const, parts: [{ text: userParts.join("\n") }] }],
+      contents: [{ role: "user" as const, parts: userParts }],
       systemInstruction: { role: "system" as const, parts: [{ text: params.systemPrompt }] },
       generationConfig: isResponseSchemaEnabled()
         ? {
