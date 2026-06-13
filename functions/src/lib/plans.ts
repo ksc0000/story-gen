@@ -18,8 +18,18 @@ export type ServerPlanConfig = {
   allowedCreationModes: CreationMode[];
   generationMode: GenerationMode;
   monthlyBookQuota?: number;
+  priceJpy?: number;
   enabled: boolean;
 };
+
+/**
+ * 価格改訂案I: 2026-06 改訂
+ * TODO: 既存契約ユーザーのグランドファザリング（旧価格維持）は Stripe 側で旧 Price ID を維持することで対応。
+ */
+export const SINGLE_PURCHASE_PRICES = {
+  ai_guided: 1500,
+  photo_story: 2000,
+} as const;
 
 export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
   free: {
@@ -55,6 +65,7 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     allowedCreationModes: ["fixed_template", "guided_ai"],
     generationMode: "reliable_fast",
     monthlyBookQuota: 5,
+    priceJpy: 1480,
     enabled: true,
   },
   premium_paid: {
@@ -67,6 +78,7 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
     generationMode: "quality",
     monthlyBookQuota: 10,
+    priceJpy: 2980,
     enabled: true,
   },
 };
