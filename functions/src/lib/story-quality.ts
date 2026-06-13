@@ -476,7 +476,7 @@ function getEffectiveThreshold(ageBand: AgeBand, productPlan?: ProductPlan): Sto
   if (ageBand === "preschool_3_4" || ageBand === "general_child") {
     return {
       ...base,
-      minCharsPerPage: Math.max(base.minCharsPerPage, 70),
+      minCharsPerPage: Math.max(base.minCharsPerPage, 45),
       minSentencesPerPage: Math.max(base.minSentencesPerPage, 3),
     };
   }

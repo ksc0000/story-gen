@@ -102,12 +102,12 @@ This is the correct and already-completed fix for the confirmed root cause. Evid
 - Implementation: commit `e75fc73`, deployed 2026-06-03.
 - Internal smoke test (2026-06-03): `fallbackPages=0`, Step b fired for 5/8 pages, Step c (`klein_fast`) not reached. All 8 pages delivered at `pro_consistent` quality. Result: **PASS**.
 
-**Remaining gate**: Apply `p5ModelUnification: "safer_retry"` override to Cohort B testers (PM approval pending — see `docs/P5_COVER_PAGE_MODEL_UNIFICATION_EXPERIMENT.md` §12.4).
+**Remaining gate**: Apply `p5ModelUnification: "safer_retry"` override to Cohort B testers (COMPLETE — 2026-06-12).
 
 ---
 
 ## Recommended follow-up issues
 
-- **P5-3h**: Apply `p5ModelUnification: "safer_retry"` to Cohort B testers. Create a safe admin script to set `generationOverride.p5ModelUnification = "safer_retry"` on target user Firestore docs. Requires PM approval before execution. Scope: script only, no deploy, no routing change, no production default change.
+- **P5-3h**: Apply `p5ModelUnification: "safer_retry"` to Cohort B testers. **COMPLETE** (2026-06-12).
 - **P5-4a**: After Cohort B feedback confirms Option C reduces cover/page quality gap, promote `safer_retry` as the production default fallback path for `pro_consistent` books.
 - **IMG-002a**: Investigate whether the reference image URL itself (path or content) is the persistent safety trigger, or whether it is session/batch-scoped. This determines whether reference image re-generation or URL rotation would eliminate Step a rejections entirely.

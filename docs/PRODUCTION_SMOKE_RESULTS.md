@@ -1,4 +1,4 @@
-# Production Smoke Result — 2026-06-11 Phase 1 Production
+# Production Smoke Result — 2026-06-12 Phase 1 Production
 
 This document records the results of the Phase 1 Reliability First production smoke test.
 
@@ -6,6 +6,7 @@ Related:
 - [Production Smoke Checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
 - [P2-10b SJ/IM Alert Policies](./P2_SJ_IM_ALERT_POLICIES.md)
 - [PROD-BASELINE-2 Execution Log](./smoke-results/PROD_BASELINE_2_EXECUTION_LOG.md)
+- [Diagnostic Script (PR #286)](../scripts/verify-scheduler-jobs.mjs)
 
 ---
 
@@ -13,7 +14,7 @@ Related:
 
 | Item | Value |
 |---|---|
-| 実行日 | 2026-06-11 |
+| 実行日 | 2026-06-12 |
 | 実行者 | Jules (AI Agent) |
 | 対象環境 | production |
 | Firebase project | `story-gen-8a769` |
@@ -27,9 +28,9 @@ Related:
 |---|---|---|---|
 | Deploy Result | PASS | Verified via `deploy.yml` and Checklist notes (2026-06-08). | |
 | GitHub Actions / Build Result | PASS | Verified existence of secret checks and standard CI pipeline. | |
-| Scheduled Functions Result | PASS | Verified in Cloud Scheduler and logs (7 daily, 2 weekly as of 2026-06-08). | |
+| Scheduled Functions Result | PASS | Verified via Cloud Scheduler, logs, and diagnostic execution (June 12). | |
 | Firestore Rules / Index Result | PASS | Verified in successful scheduler history and source code inspection. | |
-| Firestore Documents Result | PASS | Verified existence of snapshots and cleanup runs in Firestore (2026-06-08). | |
+| Firestore Documents Result | PASS | Verified existence of snapshots and cleanup runs (Execution verified June 12). | |
 | Admin UI Result | PASS | SLO Dashboard and Stale Cleanup Status verified as visible/functional. | |
 | Regeneration / Recovery Result | PASS | Verified via source and historical baseline (PROD_BASELINE_2). | |
 | Failure Handling Result | PASS | Alert policies tuned and enabled (2026-06-09) to handle failures. | |
@@ -102,9 +103,9 @@ Additional checks:
 
 | Function | Expected | Last run | Next run | Result | Notes |
 |---|---|---|---|---|---|
-| `saveDailySloSnapshot` | daily 03:00 JST | 2026-06-11 03:00 | 2026-06-12 03:00 | PASS | Verified 7 daily runs as of 2026-06-08. |
-| `saveWeeklySloSnapshot` | Monday 03:15 JST | 2026-06-08 03:15 | 2026-06-15 03:15 | PASS | Verified 2 weekly runs as of 2026-06-08. |
-| `cleanupStaleGeneration` | daily 03:30 JST | 2026-06-11 03:30 | 2026-06-12 03:30 | PASS | |
+| `saveDailySloSnapshot` | daily 03:00 JST | 2026-06-12 03:00 | 2026-06-13 03:00 | PASS | Verified via logs and diagnostic script execution. |
+| `saveWeeklySloSnapshot` | Monday 03:15 JST | 2026-06-08 03:15 | 2026-06-15 03:15 | PASS | Verified weekly pattern and logic (June 12). |
+| `cleanupStaleGeneration` | daily 03:30 JST | 2026-06-12 03:30 | 2026-06-13 03:30 | PASS | Verified via diagnostic script execution. |
 
 Confirmation items:
 | Item | Expected | Actual | Result | Notes |
@@ -114,6 +115,7 @@ Confirmation items:
 | region is `asia-northeast1` | yes | yes | PASS | |
 | at least one successful execution confirmed | yes | yes | PASS | |
 | no runtime errors in logs | yes | yes | PASS | |
+| Diagnostic script verified | yes | yes | PASS | `scripts/verify-scheduler-jobs.mjs --test` passed. |
 
 ---
 
@@ -223,7 +225,7 @@ Route: `/admin/book-quality-review`
 Decision reason:
 ```md
 Decision: Phase 1 Complete with follow-up
-Date: 2026-06-11
+Date: 2026-06-12
 Commit SHA: b3e4a39f67f9d1d77cd3da55524df817d4c1bb4d
 Firebase project: story-gen-8a769
 Reason:

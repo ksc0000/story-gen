@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { httpsCallable } from "firebase/functions";
 import { Check, Loader2, Sparkles, Star } from "lucide-react";
 import { functions } from "@/lib/firebase";
+import { PLAN_CONFIGS } from "@/lib/plans";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type ProductPlan = "standard_paid" | "premium_paid";
+type ProductPlan = "free" | "standard_paid" | "premium_paid";
 
 interface Plan {
   id: ProductPlan;
@@ -25,14 +26,26 @@ interface Plan {
 
 const PLANS: Plan[] = [
   {
+    id: "free",
+    label: "まずは無料で",
+    price: 0,
+    description: "絵本作りを体験してみたい方向け",
+    features: [
+      "テンプレートから選ぶだけで作れる",
+      "毎月1冊まで",
+      "4ページの絵本",
+      "お子さんの写真・名前を反映",
+    ],
+  },
+  {
     id: "standard_paid",
-    label: "スタンダード",
-    price: 980,
-    description: "思い出や成長を、きれいな絵本として残したい方向け",
+    label: PLAN_CONFIGS.standard_paid.label,
+    price: PLAN_CONFIGS.standard_paid.priceJpy ?? 1480,
+    description: PLAN_CONFIGS.standard_paid.description,
     badge: "おすすめ",
     recommended: true,
     features: [
-      "月5冊まで作成",
+      `月${PLAN_CONFIGS.standard_paid.monthlyBookQuota}冊まで作成`,
       "4・8ページ対応",
       "高品質AI画像生成",
       "テンプレート＆かんたんカスタム",
@@ -41,12 +54,12 @@ const PLANS: Plan[] = [
   },
   {
     id: "premium_paid",
-    label: "プレミアム",
-    price: 1980,
-    description: "特別な思い出やギフト向け。最高品質の絵本を作りたい方に",
+    label: PLAN_CONFIGS.premium_paid.label,
+    price: PLAN_CONFIGS.premium_paid.priceJpy ?? 2980,
+    description: PLAN_CONFIGS.premium_paid.description,
     badge: "高精細",
     features: [
-      "月10冊まで作成",
+      `月${PLAN_CONFIGS.premium_paid.monthlyBookQuota}冊まで作成`,
       "4・8・12ページ対応",
       "高精細AI画像生成（FLUX Kontext）",
       "全作成モード対応（オリジナルも可）",
@@ -90,7 +103,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen px-4 py-12">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-12 text-center">
           <h1 className="app-title mb-3 text-3xl font-bold">プラン選択</h1>
@@ -104,13 +117,8 @@ export default function PricingPage() {
           )}
         </div>
 
-        {/* Free plan reminder */}
-        <div className="mb-6 rounded-xl border border-border/50 bg-muted/30 p-4 text-center text-sm text-muted-foreground">
-          <span className="font-medium">無料プラン</span>は引き続きご利用いただけます（月1冊・テンプレートのみ）
-        </div>
-
         {/* Paid plans */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-3">
           {PLANS.map((plan) => {
             const isCurrentPlan = currentPlan === plan.id;
             const isLoading = loading === plan.id;
@@ -120,7 +128,9 @@ export default function PricingPage() {
                 key={plan.id}
                 className={cn(
                   "relative rounded-2xl border p-6 transition-shadow",
-                  plan.recommended
+                  plan.id === "free"
+                    ? "border-none bg-muted/50"
+                    : plan.recommended
                     ? "border-primary bg-primary/5 shadow-md"
                     : "border-border bg-card"
                 )}
@@ -161,7 +171,11 @@ export default function PricingPage() {
                   className="w-full"
                   variant={plan.recommended ? "default" : "outline"}
                   disabled={isCurrentPlan || isLoading}
-                  onClick={() => handleUpgrade(plan.id)}
+                  onClick={() =>
+                    plan.id === "free"
+                      ? router.push("/create")
+                      : handleUpgrade(plan.id)
+                  }
                 >
                   {isLoading ? (
                     <>
@@ -170,6 +184,8 @@ export default function PricingPage() {
                     </>
                   ) : isCurrentPlan ? (
                     "現在のプラン"
+                  ) : plan.id === "free" ? (
+                    "無料ではじめる"
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />

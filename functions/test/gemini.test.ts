@@ -473,4 +473,46 @@ describe("GeminiClient", () => {
       storyModelCandidates: ["gemini-2.5-flash-lite"],
     })).rejects.toThrow();
   });
+
+  it("sends source photos in photo_story mode", async () => {
+    const story: GeneratedStory = {
+      title: "写真のストーリー",
+      characterBible: "A child from photos",
+      styleBible: "Warm style",
+      pages: [
+        { text: "写真1の場面です。", imagePrompt: "scene 1", sourcePhotoIndex: 0 },
+        { text: "写真2の場面です。", imagePrompt: "scene 2", sourcePhotoIndex: 1 },
+      ],
+    };
+    handlers["gemini-2.5-flash"] = vi
+      .fn()
+      .mockResolvedValue({ response: { text: () => JSON.stringify(story) } });
+
+    const client = new GeminiClient("fake-api-key");
+    const sourcePhotos = [
+      { mimeType: "image/jpeg", data: "base64data1" },
+      { mimeType: "image/png", data: "base64data2" },
+    ];
+
+    const result = await client.generateStory({
+      systemPrompt: "システムプロンプト",
+      childName: "はな",
+      pageCount: 4,
+      style: "watercolor",
+      creationMode: "photo_story",
+      storyModelCandidates: ["gemini-2.5-flash"],
+      sourcePhotos,
+    });
+
+    expect(result.pages[0].sourcePhotoIndex).toBe(0);
+    expect(result.pages[1].sourcePhotoIndex).toBe(1);
+
+    // Verify generateContent was called with correct parts
+    const callArgs = handlers["gemini-2.5-flash"].mock.calls[0][0];
+    const userParts = callArgs.contents[0].parts;
+    expect(userParts).toHaveLength(3); // text + 2 photos
+    expect(userParts[0].text).toContain("以下の写真は実際の出来事です");
+    expect(userParts[1].inlineData).toEqual(sourcePhotos[0]);
+    expect(userParts[2].inlineData).toEqual(sourcePhotos[1]);
+  });
 });

@@ -130,6 +130,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /companions/{companionId} {
+      allow read, write: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
     match /categoryGroups/{groupId} {
       allow read: if isAuthenticated();
       allow write: if false;
