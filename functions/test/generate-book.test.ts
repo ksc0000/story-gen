@@ -945,7 +945,7 @@ describe("processBookGeneration", () => {
     expect(deps.writePage).not.toHaveBeenCalled();
   });
 
-  it("fails closed for unvalidated fixed-template style pairings before generation starts", async () => {
+  it("allows unvalidated fixed-template style pairings via fallback to available", async () => {
     deps.getTemplate.mockResolvedValue(fixedTemplate);
     const unvalidatedBook: BookData = {
       ...baseBookData,
@@ -962,26 +962,13 @@ describe("processBookGeneration", () => {
 
     await processBookGeneration("book-fixed-unvalidated", unvalidatedBook, deps);
 
-    expect(deps.updateBookFailure).toHaveBeenCalledWith(
+    // Should NOT fail with exposure error
+    expect(deps.updateBookFailure).not.toHaveBeenCalledWith(
       "book-fixed-unvalidated",
-      "この絵のタッチは、今はこのテンプレートでは選べません。別のタッチを選んでください。"
+      expect.stringContaining("この絵のタッチは")
     );
-    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
-      "book-fixed-unvalidated",
-      expect.objectContaining({
-        failureStage: "validation",
-        failureProvider: "system",
-        retryable: false,
-        technicalErrorMessage: expect.stringContaining(
-          "style_exposure_blocked: template=fixed-first-zoo-8p style=toy_3d status=internal"
-        ),
-      })
-    );
-    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed-unvalidated", "failed");
-    expect(deps.getUserPlan).not.toHaveBeenCalled();
-    expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
-    expect(deps.imageClient.generateImage).not.toHaveBeenCalled();
-    expect(deps.writePage).not.toHaveBeenCalled();
+    // Should proceed to successful completion (fixed templates don`t hit LLM)
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed-unvalidated", "completed");
   });
 
   it("uses premium model metadata when imageQualityTier is premium", async () => {

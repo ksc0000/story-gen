@@ -2489,7 +2489,7 @@ function buildStoryFromFixedTemplate(
 }
 
 export function buildFixedTemplateReplacements(input: BookInput): Record<string, string> {
-  const fallbackParentMessage = "またひとつ、たいせつな思い出がふえました。";
+  const fallbackParentMessage = "いつもありがとう";
 
   return {
     childName: input.childName,
