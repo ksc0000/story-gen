@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type ProductPlan = "standard_paid" | "premium_paid";
+type ProductPlan = "free" | "standard_paid" | "premium_paid";
 
 interface Plan {
   id: ProductPlan;
@@ -24,6 +24,18 @@ interface Plan {
 }
 
 const PLANS: Plan[] = [
+  {
+    id: "free",
+    label: "まずは無料で",
+    price: 0,
+    description: "絵本作りを体験してみたい方向け",
+    features: [
+      "テンプレートから選ぶだけで作れる",
+      "毎月1冊まで",
+      "4ページの絵本",
+      "お子さんの写真・名前を反映",
+    ],
+  },
   {
     id: "standard_paid",
     label: "スタンダード",
@@ -90,7 +102,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen px-4 py-12">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-12 text-center">
           <h1 className="app-title mb-3 text-3xl font-bold">プラン選択</h1>
@@ -104,13 +116,8 @@ export default function PricingPage() {
           )}
         </div>
 
-        {/* Free plan reminder */}
-        <div className="mb-6 rounded-xl border border-border/50 bg-muted/30 p-4 text-center text-sm text-muted-foreground">
-          <span className="font-medium">無料プラン</span>は引き続きご利用いただけます（月1冊・テンプレートのみ）
-        </div>
-
         {/* Paid plans */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-3">
           {PLANS.map((plan) => {
             const isCurrentPlan = currentPlan === plan.id;
             const isLoading = loading === plan.id;
@@ -120,7 +127,9 @@ export default function PricingPage() {
                 key={plan.id}
                 className={cn(
                   "relative rounded-2xl border p-6 transition-shadow",
-                  plan.recommended
+                  plan.id === "free"
+                    ? "border-none bg-muted/50"
+                    : plan.recommended
                     ? "border-primary bg-primary/5 shadow-md"
                     : "border-border bg-card"
                 )}
@@ -161,7 +170,11 @@ export default function PricingPage() {
                   className="w-full"
                   variant={plan.recommended ? "default" : "outline"}
                   disabled={isCurrentPlan || isLoading}
-                  onClick={() => handleUpgrade(plan.id)}
+                  onClick={() =>
+                    plan.id === "free"
+                      ? router.push("/create")
+                      : handleUpgrade(plan.id)
+                  }
                 >
                   {isLoading ? (
                     <>
@@ -170,6 +183,8 @@ export default function PricingPage() {
                     </>
                   ) : isCurrentPlan ? (
                     "現在のプラン"
+                  ) : plan.id === "free" ? (
+                    "無料ではじめる"
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />
