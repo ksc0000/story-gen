@@ -1,7 +1,9 @@
-# Implement LLM Auto Review Result Persistence
+# Update Roadmap to Declare Phase 1 Complete
 
 ## Context
 
-The product roadmap for Phase 2: Story & Illustration Quality outlines several sub-tasks related to quality management. Specifically, the "LLM auto review prototype" (PR #318) and the "LLM Auto Review JSON Schema" (PR #298) have been completed. This means the system can now generate automated quality scores based on a defined schema.
+The product roadmap for EhonAI (now Ehoria) details several phases of development. Phase 1, "Reliability First," aimed to establish foundational stability, observability, and automated operations. The roadmap currently states that Phase 1 is `production smoke evidence pending` and not yet `Complete`. However, a review of recent commits and the current state indicates that all `残タスク` (remaining tasks) for Phase 1 have been completed:
 
-To enable further analysis, comparison with human reviews (which is a separate design task, #352), and ultimately, quality regression detection, it is crucial to persist these LLM-generated quality review results. The existing `QualityReviewPanel` in the Admin UI handles human review data, and `quality review history` is a desired feature. Storing
+*   `Production smoke checklist` and `Production smoke results` were addressed by `PR #278`.
+*   `実データでの Scheduler 実行確認` was verified by `PR #311`.
+*   `Firestore index / permission 確認`
