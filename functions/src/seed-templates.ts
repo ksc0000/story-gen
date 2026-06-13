@@ -1062,7 +1062,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_elementary_7_8:
             "しゃかしゃか、こしこし。おくばや はのうらも わすれないように、かがみを見ながら ていねいに みがいていきます。",
           general_child: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
-          pageVisualRole: "action",
+          pageVisualRole: "discovery",
           imagePromptTemplate:
             withBrushTeethImagePromptGuardrail("Medium action shot of the child with short dark hair and mint-green pajamas actively brushing teeth with hero-like concentration. The child holds the toothbrush with both small hands, mouth slightly open with gentle white foam. A friendly mirror shows the child's focused, determined expression. Soft bubbles float near the sink. A small shining star motif appears on the toothbrush handle. Clean, bright bathroom setting. Soft watercolor picture book style, dynamic but gentle composition, rich but not cluttered."),
         }),
@@ -1075,7 +1075,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_elementary_7_8:
             "みがきおわると、{childName}は にっこりしました。すこし むずかしくても さいごまでできたことが、自信につながったのです。",
           general_child: "おわったあと、{childName}はちょっぴりうれしそうでした。",
-          pageVisualRole: "payoff",
+          pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
             withBrushTeethImagePromptGuardrail("Close-up of the child's proud, beaming smile after finishing brushing teeth. Sparkling clean teeth visible in a wide grin. The child, in mint-green pajamas, holds up the toothbrush triumphantly like a tiny hero. The mirror behind reflects the happy moment. A small shining star motif glows near the child. Warm encouraging light. Soft watercolor picture book style, celebratory hero-like framing, rich but not cluttered."),
         }),
