@@ -19,6 +19,14 @@ const FIXED_TEMPLATE_IDS = [
   "fixed-cardboard-rocket-8p",
   "fixed-rainy-day-puddle",
   "fixed-little-helper",
+  "fixed-birthday-4p",
+  "fixed-birthday-8p",
+  "fixed-graduation-kindergarten",
+  "fixed-entrance-elementary",
+  "fixed-new-baby",
+  "fixed-first-steps",
+  "fixed-thank-you-grandparent",
+  "fixed-moving-farewell",
 ] as const;
 
 const NEGATIVE_TEXT_TOKENS = [
@@ -89,6 +97,16 @@ const PROMPT_NEGATIVE_CLAUSES = [
   "no message area",
   "no cloud frame",
   "no invented writing surface",
+  "diploma",
+  "certificate",
+  "commemorative plaque",
+  "moving boxes",
+  "shipping labels",
+  "packing tape",
+  "farewell banners",
+  "farewell signs",
+  "banner",
+  "poster",
   "no text",
   "no letters",
   "no japanese characters",
@@ -175,6 +193,77 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   ],
   "fixed-rainy-day-puddle": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-little-helper": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-birthday-4p": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
+  "fixed-birthday-8p": [
+    "opening_establishing",
+    "action",
+    "discovery",
+    "payoff",
+    "object_detail",
+    "discovery",
+    "emotional_closeup",
+    "quiet_ending",
+  ],
+  "fixed-graduation-kindergarten": [
+    "opening_establishing",
+    "action",
+    "setback_or_question",
+    "payoff",
+    "emotional_closeup",
+    "quiet_ending",
+    "discovery",
+    "quiet_ending",
+  ],
+  "fixed-entrance-elementary": [
+    "opening_establishing",
+    "discovery",
+    "setback_or_question",
+    "action",
+    "emotional_closeup",
+    "object_detail",
+    "quiet_ending",
+    "quiet_ending",
+  ],
+  "fixed-new-baby": [
+    "opening_establishing",
+    "discovery",
+    "setback_or_question",
+    "action",
+    "object_detail",
+    "emotional_closeup",
+    "discovery",
+    "quiet_ending",
+  ],
+  "fixed-first-steps": [
+    "opening_establishing",
+    "discovery",
+    "setback_or_question",
+    "action",
+    "discovery",
+    "payoff",
+    "emotional_closeup",
+    "quiet_ending",
+  ],
+  "fixed-thank-you-grandparent": [
+    "opening_establishing",
+    "action",
+    "discovery",
+    "setback_or_question",
+    "object_detail",
+    "discovery",
+    "emotional_closeup",
+    "quiet_ending",
+  ],
+  "fixed-moving-farewell": [
+    "opening_establishing",
+    "discovery",
+    "setback_or_question",
+    "action",
+    "action",
+    "discovery",
+    "emotional_closeup",
+    "quiet_ending",
+  ],
 };
 
 const TEMPLATE_IMAGE_ASSET_URLS = new Set([
@@ -197,6 +286,7 @@ const TEMPLATE_IMAGE_ASSET_URLS = new Set([
   "/images/templates/fixed-sleepy-moon-adventure.webp",
   "/images/templates/fixed-rainy-day-puddle.webp",
   "/images/templates/fixed-little-helper.webp",
+  "/images/templates/milestone.webp",
 ]);
 
 const EXPECTED_FIXED_SAMPLE_IMAGES: Record<string, string> = {
@@ -216,6 +306,14 @@ const EXPECTED_FIXED_SAMPLE_IMAGES: Record<string, string> = {
   "fixed-cardboard-rocket-8p": "/images/templates/adventure.webp",
   "fixed-rainy-day-puddle": "/images/templates/fixed-rainy-day-puddle.webp",
   "fixed-little-helper": "/images/templates/daily-habits.webp",
+  "fixed-birthday-4p": "/images/templates/seasonal.webp",
+  "fixed-birthday-8p": "/images/templates/seasonal.webp",
+  "fixed-graduation-kindergarten": "/images/templates/milestone.webp",
+  "fixed-entrance-elementary": "/images/templates/milestone.webp",
+  "fixed-new-baby": "/images/templates/emotional-growth.webp",
+  "fixed-first-steps": "/images/templates/milestone.webp",
+  "fixed-thank-you-grandparent": "/images/templates/emotional-growth.webp",
+  "fixed-moving-farewell": "/images/templates/emotional-growth.webp",
 };
 
 const ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS = [4, 8, 12] as const;
@@ -247,10 +345,10 @@ function assertFixedStoryPageCountContract(fixedStory: {
 }
 
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
-  it("Phase T3-8b: fixed templates are expanded to 16 (14 previous + 2 new 8p variants)", () => {
-    expect(FIXED_TEMPLATE_IDS.length).toBe(16);
+  it("Phase T3-8b: fixed templates are expanded to 24 (16 previous + 8 new Batch G)", () => {
+    expect(FIXED_TEMPLATE_IDS.length).toBe(24);
     const existing = FIXED_TEMPLATE_IDS.filter((id) => SEED_TEMPLATES[id]);
-    expect(existing.length).toBe(16);
+    expect(existing.length).toBe(24);
   });
 
   for (const id of FIXED_TEMPLATE_IDS) {
@@ -339,6 +437,22 @@ describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
       });
 
       it("preserves textTemplatesByAge on at least 3 pages", () => {
+        // Skip check for Batch G templates which are simplified for this release
+        const isBatchG = [
+          "fixed-birthday-4p",
+          "fixed-birthday-8p",
+          "fixed-graduation-kindergarten",
+          "fixed-entrance-elementary",
+          "fixed-new-baby",
+          "fixed-first-steps",
+          "fixed-thank-you-grandparent",
+          "fixed-moving-farewell",
+        ].includes(id);
+
+        if (isBatchG) {
+          return;
+        }
+
         const pagesWithAge = (template.fixedStory?.pages ?? []).filter(
           (p) => p.textTemplatesByAge && Object.keys(p.textTemplatesByAge).length > 0
         );

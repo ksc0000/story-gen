@@ -120,7 +120,6 @@ type AdminReviewForm = {
 const PRODUCT_PLAN_OPTIONS: Array<{ value: ReviewPlanFilter; label: string }> = [
   { value: "all", label: "all" },
   { value: "free", label: "free" },
-  { value: "light_paid", label: "light_paid" },
   { value: "standard_paid", label: "standard_paid" },
   { value: "premium_paid", label: "premium_paid" },
 ];
@@ -766,7 +765,7 @@ export default function AdminBookQualityReviewPage() {
   );
 
   const sloByPlan = useMemo(() => {
-    const planKeys = ["free", "light_paid", "standard_paid", "premium_paid", "unknown"] as const;
+    const planKeys = ["free", "standard_paid", "premium_paid", "unknown"] as const;
     const result: Record<string, SloMetrics> = {};
     for (const plan of planKeys) {
       const planBooks = books.filter((b) => (b.productPlan ?? "unknown") === plan);
