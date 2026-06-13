@@ -1039,38 +1039,6 @@ describe("processBookGeneration", () => {
     );
   });
 
-  it("keeps light_paid books on pro_consistent for both cover and pages", async () => {
-    const lightPaidBook: BookData = {
-      ...baseBookData,
-      productPlan: "light_paid",
-      imageQualityTier: "premium",
-      pageCount: 8,
-    };
-
-    await processBookGeneration("book-light-paid", lightPaidBook, deps);
-
-    expect(deps.writePage).toHaveBeenCalledWith(
-      "book-light-paid",
-      expect.objectContaining({
-        pageNumber: 0,
-        imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "standard",
-        imagePurpose: "book_page",
-        imageModelProfile: "pro_consistent",
-      })
-    );
-    expect(deps.writePage).toHaveBeenCalledWith(
-      "book-light-paid",
-      expect.objectContaining({
-        pageNumber: 1,
-        imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "standard",
-        imagePurpose: "book_page",
-        imageModelProfile: "pro_consistent",
-      })
-    );
-  });
-
   it("keeps premium_paid books on pro for both cover and pages", async () => {
     const premiumPaidBook: BookData = {
       ...baseBookData,

@@ -8,6 +8,12 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 const SITE_URL = "https://ehoria.app";
 
+/**
+ * Stripe Price IDs
+ * TODO: 既存ユーザーの価格維持（グランドファザリング）が必要な場合は、
+ * ユーザーの既存の subscription に紐づく price ID を維持するか、
+ * ロジックで旧 Price ID を割り当てる検討が必要。
+ */
 const STRIPE_PRICE_IDS: Record<string, string> = {
   standard_paid: process.env.STRIPE_PRICE_ID_STANDARD ?? "",
   premium_paid: process.env.STRIPE_PRICE_ID_PREMIUM ?? "",
