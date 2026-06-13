@@ -73,6 +73,7 @@
     "PR #303: fix: QualityReviewPanel の型エラー修正（reviewed→human_reviewed） (merged)",
     "PR #304: fix: QualityReviewPanel の flaggedIssues 描画を型変更に対応 (merged)",
     "PR #305: fix: QualityReviewStatus 型変更の全ファイル追従 (merged)",
+    "PR #309: Refine fixed-brush-teeth template for pageVisualRole consistency (merged)",
     "PR #311: Verify and Record Production Scheduler Job Execution (merged)",
     "PR #316: Lower quality gate character threshold for premium preschool books (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
