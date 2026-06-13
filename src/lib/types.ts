@@ -410,7 +410,6 @@ export interface BookDoc {
   templateId?: string;
   sourcePhotos?: string[];
   creationMode?: CreationMode;
-  sourcePhotos?: string[];
   priceTier?: PriceTier;
   storyCostLevel?: StoryCostLevel;
   productPlan?: ProductPlan;
