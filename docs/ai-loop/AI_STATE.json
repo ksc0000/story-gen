@@ -90,6 +90,7 @@
     "PR #344: feat: ai-brief 自由入力ステップにヒント・例文UI追加（#326 再スコープ） (merged)",
     "PR #345: feat: テンプレプレビュー画像の紐付け修正＋生成スクリプト完成（#292 下準備） (merged)",
     "PR #347: Implement User-Facing Regeneration Flow for Partially Failed Pages (merged)",
+    "PR #349: Implement Animated Page Transitions in Reader UI (merged)",
     "PR #351: Implement Single Purchase Flow and Credit System (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
