@@ -2044,6 +2044,29 @@ describe("p5ModelUnification safer_retry (P5-3f)", () => {
     const payload = stepBLog![1] as Record<string, unknown>;
     expect(payload["fallbackReasonClass"]).toBe("safety_rejection");
   });
+
+  it("respects p5ModelUnification: safer_retry override even for non-default profiles", async () => {
+    // profile that doesn't have safer_retry enabled by default
+    const customBookData = { ...baseBookData, imageModelProfile: "klein_base" as const };
+    deps.llmClient.generateStory.mockResolvedValueOnce(onePage);
+    deps.imageClient.generateImage.mockRejectedValueOnce(E005_ERROR);
+
+    // p5ModelUnification: "safer_retry" override is passed via deps
+    const saferDeps = { ...deps, p5ModelUnification: "safer_retry" as const };
+    await processBookGeneration("book-override-test", customBookData, saferDeps);
+
+    // Should activate Step b because of the override
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
+    const [, stepBOpts] = deps.imageClient.generateImage.mock.calls[1];
+    expect(stepBOpts.imageModelProfile).toBe("klein_base");
+
+    const stepBLog = logSpy.mock.calls.find(
+      ([msg, payload]) =>
+        msg === "p5_model_unification_retry_active" &&
+        (payload as Record<string, unknown>)?.["step"] === "b"
+    );
+    expect(stepBLog).toBeDefined();
+  });
 });
 
 describe("P5-4a: Promoted safer_retry to production default", () => {
