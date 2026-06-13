@@ -44,6 +44,26 @@ const STORY_REQUEST_PLACEHOLDERS: Record<string, string> = {
   "seasonal-events": "例：クリスマスの日に家族で過ごした思い出",
 };
 
+const ORIGINAL_AI_PLACEHOLDER =
+  "例：「来月お兄ちゃんになる3歳の〇〇くんへ。赤ちゃんが生まれることを楽しみにできるような内容にしてほしい」";
+
+const ORIGINAL_AI_EXAMPLES = [
+  {
+    label: "誕生日おめでとう系",
+    content:
+      "3歳のお誕生日おめでとう。大好きなパトカーがたくさん出てきて、みんなにお祝いされるおはなしにしてほしい。",
+  },
+  {
+    label: "入園・入学応援系",
+    content:
+      "明日から幼稚園に行くのをドキドキしている〇〇くんへ。幼稚園には楽しいことがたくさん待っているよ、という応援するおはなし。",
+  },
+  {
+    label: "日常のありがとう系",
+    content:
+      "いつもお手伝いをしてくれてありがとう。〇〇くんの優しい気持ちで、みんなが笑顔になるようなおはなし。",
+  },
+];
 
 const TEMPLATE_PREVIEW_PLACEHOLDERS: Record<string, string> = {
   "{childName}": "お子さん",
@@ -214,6 +234,7 @@ function InputPageContent() {
   const [keepSignatureItem, setKeepSignatureItem] = useState(true);
   const [selectedCompanionId, setSelectedCompanionId] = useState<string | null>(preselectedCompanionId);
   const [showAdvanced, setShowAdvanced] = useState(!!preselectedCompanionId);
+  const [showHints, setShowHints] = useState(false);
 
   const selectedPlanConfig = PLAN_CONFIGS[productPlan] ?? PLAN_CONFIGS.free;
   const planPageCountOptions = PAGE_COUNT_OPTIONS.filter((option) =>
@@ -305,17 +326,54 @@ function InputPageContent() {
 
           {/* ── メイン入力 ── */}
           {creationMode === "original_ai" ? (
-            <div>
-              <Label htmlFor="storyRequest" className="text-purple-800">{primaryFieldLabel}</Label>
-              <textarea
-                id="storyRequest"
-                value={storyRequest}
-                onChange={(e) => setStoryRequest(e.target.value)}
-                placeholder="自由に書いてOKです。主人公、場所、気持ち、起きてほしいことなどをまとめて書けます。"
-                className="mt-1 min-h-40 w-full rounded-2xl border border-violet-200 bg-background px-3 py-3 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
-                rows={6}
-                maxLength={800}
-              />
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="storyRequest" className="text-purple-800">{primaryFieldLabel}</Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowHints(!showHints)}
+                    className="text-xs font-medium text-purple-600 hover:text-purple-700"
+                  >
+                    {showHints ? "✕ 閉じる" : "💡 書くときのポイント"}
+                  </button>
+                </div>
+
+                {showHints && (
+                  <div className="mt-2 rounded-xl bg-purple-50 p-4 text-xs leading-relaxed text-purple-700">
+                    <p className="font-bold mb-1">💡 こんなことを書くと作りやすいです</p>
+                    <ul className="list-disc pl-4 space-y-1">
+                      <li><strong>誰が主役？</strong>（お子さんの名前・年齢）</li>
+                      <li><strong>どんなテーマ？</strong>（誕生日、入園、日常のできごと、など）</li>
+                      <li><strong>どんな気持ちを伝えたい？</strong>（嬉しい、頑張ってほしい、大好き、など）</li>
+                      <li><strong>何ページ？</strong>（4ページ=短め、8ページ=少し長め）</li>
+                    </ul>
+                  </div>
+                )}
+
+                <textarea
+                  id="storyRequest"
+                  value={storyRequest}
+                  onChange={(e) => setStoryRequest(e.target.value)}
+                  placeholder={ORIGINAL_AI_PLACEHOLDER}
+                  className="mt-1.5 min-h-40 w-full rounded-2xl border border-violet-200 bg-background px-3 py-3 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                  rows={6}
+                  maxLength={800}
+                />
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {ORIGINAL_AI_EXAMPLES.map((example) => (
+                    <button
+                      key={example.label}
+                      type="button"
+                      onClick={() => setStoryRequest(example.content)}
+                      className="rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-medium text-violet-600 transition hover:border-purple-300 hover:bg-violet-50"
+                    >
+                      {example.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : creationMode === "fixed_template" ? (
             <div className="space-y-4">
