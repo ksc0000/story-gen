@@ -1,9 +1,7 @@
-# Update Roadmap to Declare Phase 1 Complete
+# Implement Sample Story Gallery UI
 
 ## Context
 
-The product roadmap for EhonAI (now Ehoria) details several phases of development. Phase 1, "Reliability First," aimed to establish foundational stability, observability, and automated operations. The roadmap currently states that Phase 1 is `production smoke evidence pending` and not yet `Complete`. However, a review of recent commits and the current state indicates that all `残タスク` (remaining tasks) for Phase 1 have been completed:
+The product roadmap outlines Phase 6: User Experience, which aims to make the experience of creating, viewing, modifying, and sharing books easier for users. A key unimplemented task in this phase is the "サンプル絵本ギャラリー" (Sample Book Gallery). This feature will allow users to browse example picture books, demonstrating the product's capabilities and potentially inspiring new creations. This task focuses on implementing the basic UI for this gallery.
 
-*   `Production smoke checklist` and `Production smoke results` were addressed by `PR #278`.
-*   `実データでの Scheduler 実行確認` was verified by `PR #311`.
-*   `Firestore index / permission 確認`
+Many core features, including the Bookshelf UI (PR #343), animated page transitions (PR #349), and a user-facing regeneration flow (PR #347), have recently been completed, laying a strong foundation for enhancing the overall user experience. The Cohort B limited rollout is
