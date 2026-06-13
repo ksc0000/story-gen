@@ -151,6 +151,39 @@ function withCardboardRocket8pImagePromptGuardrail(prompt: string): string {
   return withFixedImagePromptSafety(result);
 }
 
+const GRADUATION_DECOR_NO_TEXT_CLAUSE =
+  "no text, letters, numbers, or symbols on any diploma, certificate, banner, poster, garland, ribbon, or commemorative plaque; all ceremony decorations must be plain or use simple floral/geometric patterns with no readable characters or pseudo-writing";
+
+function withGraduationImagePromptGuardrail(prompt: string): string {
+  let result = prompt;
+  if (!result.includes(GRADUATION_DECOR_NO_TEXT_CLAUSE)) {
+    result = `${result}, ${GRADUATION_DECOR_NO_TEXT_CLAUSE}`;
+  }
+  return withFixedImagePromptSafety(result);
+}
+
+const NEW_BABY_PROP_NO_TEXT_CLAUSE =
+  "no text, letters, or logo-like marks on the crib, bassinet, baby blanket, mobile, diapers, bottles, or nursery wall art; all baby items and furniture must be plain solid color or simple nursery patterns with no readable writing";
+
+function withNewBabyImagePromptGuardrail(prompt: string): string {
+  let result = prompt;
+  if (!result.includes(NEW_BABY_PROP_NO_TEXT_CLAUSE)) {
+    result = `${result}, ${NEW_BABY_PROP_NO_TEXT_CLAUSE}`;
+  }
+  return withFixedImagePromptSafety(result);
+}
+
+const FAREWELL_MOVING_NO_TEXT_CLAUSE =
+  "no text, letters, numbers, or addresses on any moving boxes, shipping labels, packing tape, or farewell banners; all farewell signs and cards must be plain or use simple heart/star motifs with no readable writing or pseudo-script";
+
+function withFarewellImagePromptGuardrail(prompt: string): string {
+  let result = prompt;
+  if (!result.includes(FAREWELL_MOVING_NO_TEXT_CLAUSE)) {
+    result = `${result}, ${FAREWELL_MOVING_NO_TEXT_CLAUSE}`;
+  }
+  return withFixedImagePromptSafety(result);
+}
+
 function buildAgeSpecificPage(params: {
   textTemplate: string;
   imagePromptTemplate: string;
@@ -524,6 +557,563 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
             withZooImagePromptGuardrail("Setting: quiet zoo path at sunset leaving the zoo. Back-view wide shot of the child and family walking away from the zoo toward a golden-hour sunset. A gentle tree-lined path stretches ahead. The child holds a parent's hand, looking slightly back with a content smile. A small yellow star motif glows softly in the evening sky or on a nearby lantern. Warm amber and soft pink sunset tones. Soft watercolor picture book style, peaceful farewell composition, rich but not cluttered."),
+        }),
+      ],
+    },
+  },
+  "fixed-birthday-4p": {
+    name: "はっぴーばーすでー",
+    description: "お誕生日おめでとう！大切な1日を、ぎゅっと4ページに凝縮した記念絵本",
+    icon: "🎂",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "birthday",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["birthday", "gift", "celebration"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageAlt: "誕生日をお祝いする幸せな家族の絵本イメージ",
+    visualDirection: "Warm joyful birthday atmosphere, colorful balloons, a delicious cake, and family smiles.",
+    order: 118,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、誕生日の思い出を4ページで残す絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はっぴーばーすでー",
+      coverImagePromptTemplate: withBirthdayImagePromptGuardrail("Picture book cover: A happy child with a birthday cake and colorful balloons, warm family celebration, joyful and festive, soft watercolor style, rich but not cluttered."),
+      titleSpreadTextTemplate: "おたんじょうび おめでとう！",
+      openingNarrationTemplate: "きょうは {childName}の とくべつな日。みんなで お祝いしましょう！",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}、おたんじょうびおめでとう！おへやが かざりつけで きらきらしています。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Wide shot: A cozy room decorated with colorful balloons and streamers for a birthday party. The child stands in the center, looking excited. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "大きなケーキに、ろうそくを ともしましょう。{childName}の 目も きらきら かがやきます。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Medium shot: The child looking at a beautiful birthday cake with glowing candles. The light reflects in the child's eyes. Family members are smiling in the background. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "みんなの「おめでとう！」が、あたたかい ひかりのように {childName}を つつみます。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Close-up: The child's beaming face, full of joy and happiness, surrounded by family members' warm hands and smiles. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ひとつ 大きくなった {childName}。これからも、ずっと だいすきだよ。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Wide shot: The child hugging a family member or a favorite gift, peacefully happy at the end of the party. Warm evening glow. Soft watercolor style."),
+        }),
+      ],
+    },
+  },
+  "fixed-birthday-8p": {
+    name: "はっぴーばーすでー（ロング）",
+    description: "朝から夜まで、誕生日の1日をじっくり描く8ページの贅沢な記念絵本",
+    icon: "🎂",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "birthday",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["birthday", "gift", "celebration", "8-page"],
+    creationMode: "fixed_template",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageAlt: "誕生日の1日をじっくり描いた絵本イメージ",
+    visualDirection: "Warm detailed birthday story, from morning excitement to evening afterglow, soft watercolor style.",
+    order: 119,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、誕生日の思い出を8ページでゆっくり残す絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はっぴーばーすでー",
+      coverImagePromptTemplate: withBirthdayImagePromptGuardrail("Picture book cover: A happy child celebrating their birthday, surrounded by love and festive decorations, soft watercolor style, rich but not cluttered."),
+      titleSpreadTextTemplate: "とくべつな 1にちが はじまるよ",
+      openingNarrationTemplate: "あさの ひかりの なかで、{childName}は めを さましました。きょうは、まちにまった おたんじょうび！",
+      pageCount: 8,
+      layoutVariant: "8_page",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "あさ、まどから おひさまが「おめでとう」って いっているみたい。{childName}は わくわくして おきました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Wide shot: The child waking up in bed with a big smile, morning sun streaming through the window. Festive decorations are already visible in the room. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おへやを みんなで かざりつけ。ふうせんが ぷかぷか、おはなが きらきら。",
+          pageVisualRole: "action",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Action shot: The child and family members putting up balloons and colorful decorations in the living room. Lively and happy atmosphere. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おたんじょうびの プレゼント！ なにが入っているのかな？ {childName}は ドキドキしながら あけました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Discovery shot: The child opening a beautifully wrapped gift box. A look of anticipation and excitement on their face. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "わあ、だいすきな おもちゃ！ {childName}は うれしくて、ぎゅっと だきしめました。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Medium shot: The child holding their new gift with a huge, happy smile. Pure joy and satisfaction. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おひるごはんは、{childName}の だいこうぶつ！ みんなで たべると、もっと おいしいね。",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Medium shot: A festive lunch table with the child's favorite food. The child is eating happily with family. Bright and warm atmosphere. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "そして、大きなケーキの とうじょうです！ ろうそくの ひが、みんなの えがおを てらします。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Discovery shot: The family gathered around a birthday cake with lit candles. The child is preparing to blow them out. Warm candlelight. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ふーっと ひを けしたら、みんなで「おめでとう！」。{childName}は とっても しあわせな きもちです。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Close-up: The child's delighted face just after blowing out the candles, surrounded by clapping and smiling family. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "よる、おふとんの なかで 思いだします。たのしかったね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Back-view wide shot: The child looking out at the night sky or leaning on a parent, feeling content and loved at the end of the day. Soft moonlight. Soft watercolor style."),
+        }),
+      ],
+    },
+  },
+  "fixed-graduation-kindergarten": {
+    name: "ようちえん そつえんおめでとう",
+    description: "幼稚園・保育園の卒園記念に。園での思い出と、成長した姿を刻む絵本",
+    icon: "🎓",
+    categoryGroupId: "memories",
+    subcategoryId: "graduation",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 5,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["graduation", "kindergarten", "nursery", "milestone"],
+    creationMode: "fixed_template",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "卒園式で誇らしげに立つ子どもの絵本イメージ",
+    visualDirection: "Bright spring graduation atmosphere, cherry blossoms, a sense of accomplishment and new beginnings.",
+    order: 120,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、幼稚園・保育園の卒園記念絵本を8ページで作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の そつえん おめでとう",
+      coverImagePromptTemplate: withGraduationImagePromptGuardrail("Picture book cover: A child in a formal graduation outfit (kindergarten/nursery), holding a plain diploma tube, cherry blossoms in the background, proud and hopeful expression, soft watercolor style, rich but not cluttered."),
+      titleSpreadTextTemplate: "ようちえん、たのしかったね",
+      openingNarrationTemplate: "はるの かぜが ふく日。{childName}は 今日、ようちえんを そつえんします。",
+      pageCount: 8,
+      layoutVariant: "8_page",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "はじめて 門を くぐった日のこと、おぼえているかな？ {childName}は、こんなに 大きくなりました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Establishing wide shot: The child standing at the kindergarten gate on a sunny spring morning, wearing a graduation ribbon. Cherry blossoms are blooming. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "どろんこ遊びに、かけっこ、おえかき。おともだちと いっしょに、たくさん 笑ったね。",
+          pageVisualRole: "action",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Action shot: A montage or a lively scene of the child playing with friends in the kindergarten playground. Joyful energy. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "なみだが出た日も あったけれど、みんながいたから 大丈夫。やさしい 心が そだちました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Medium shot: A teacher or a friend gently comforting the child or sharing a quiet moment. Reassuring and warm. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "そつえんしき。ぴしっと まっすぐ立って、しょうじょを もらいます。{childName}、とっても かっこいいよ！",
+          pageVisualRole: "payoff",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Wide shot: The child receiving a plain, unmarked diploma tube on a stage during the ceremony. Proud posture and focused expression. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "せんせい、ありがとう。おともだち、ありがとう。たくさんの「ありがとう」が おへやに ひろがります。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Close-up: The child saying thank you with a sincere smile, eyes slightly misty. Emotional warmth. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "だいすきな 園舎とも、今日でおわかれ。でも、思い出は ずっと こころのなかに あります。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Wide shot: The child looking back at the kindergarten building with a nostalgic but happy smile. Cherry blossoms are fluttering. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "さあ、あたらしい 世界へ しゅっぱつ！ {childName}なら、どこまでも 行けるよ。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Wide shot: The child taking a bold step forward toward a bright, open horizon with a look of hope and excitement. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ずっと おうえんしているよ。そつえん、本当におめでとう。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Back-view wide shot: The child walking hand-in-hand with a family member toward the future. Warm spring light. Soft watercolor style."),
+        }),
+      ],
+    },
+  },
+  "fixed-entrance-elementary": {
+    name: "しょうがっこう いっちゃうんだね",
+    description: "ピカピカの1年生！小学校入学のドキドキとワクワクを詰め込んだ8ページの記念絵本",
+    icon: "🎒",
+    categoryGroupId: "memories",
+    subcategoryId: "elementary-school",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 6,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["entrance", "elementary", "school", "randoseru", "milestone"],
+    creationMode: "fixed_template",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "ランドセルを背負って小学校へ行く子どもの絵本イメージ",
+    visualDirection: "Bright energetic spring school entrance atmosphere, randoseru, cherry blossoms, and new friends.",
+    order: 121,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、小学校入学の記念絵本を8ページで作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の しょうがっこう にゅうがく",
+      coverImagePromptTemplate: withGraduationImagePromptGuardrail("Picture book cover: A child wearing a new school uniform and a shiny randoseru backpack, standing at an elementary school gate with cherry blossoms, proud and excited, soft watercolor style, rich but not cluttered."),
+      titleSpreadTextTemplate: "ピカピカの 1ねんせい！",
+      openingNarrationTemplate: "さくらの 花が さく日。{childName}は 今日から、しょうがっこうの 1ねんせいです。",
+      pageCount: 8,
+      layoutVariant: "8_page",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "あたらしい ランドセル。せなかに ぴったり。{childName}は うれしくて、何度も かがみを みました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Establishing wide shot: The child at home, wearing a new randoseru for the first time, looking at their reflection in a mirror with a proud smile. Soft morning light. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "しょうがっこうの 門を くぐります。大きな建物、広い校庭。すべてが 新しく 見えます。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Wide shot: The child standing at the elementary school gate, looking up at the large school building. A mix of awe and excitement. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "にゅうがくしき。ちょっと 緊張するけれど、背すじを のばして 座りました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Medium shot: The child sitting in a chair during the entrance ceremony, looking a bit nervous but determined. Other children and parents are visible. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「1ねんせいに なった人！」 せんせいの 声に、{childName}は 元気に 手を あげました。",
+          pageVisualRole: "action",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Action shot: The child raising a hand energetically in the classroom. Bright and lively atmosphere. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "あたらしい おともだち。なまえを よんで、にっこり。「いっしょに あそぼうね！」",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Close-up: The child smiling at a new friend. Friendly and welcoming eyes. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ピカピカの 教科書に、あたらしい 筆箱。これから どんなことを 学ぶのかな？",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Medium shot: The child looking at new school supplies (textbooks, pencil case) on their desk. Eyes full of curiosity. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "帰り道、ランドセルが ちょっぴり 重いけれど、{childName}の 足取りは 軽やかです。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Wide shot: The child walking home from school with the randoseru on their back. Cherry blossoms are fluttering. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "たのしい 毎日が はじまるよ。にゅうがく おめでとう！ {parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Back-view wide shot: The child skipping or walking happily toward home. Warm afternoon light. Soft watercolor style."),
+        }),
+      ],
+    },
+  },
+  "fixed-new-baby": {
+    name: "あかちゃん きたよ",
+    description: "待望の新しい家族。お兄ちゃん・お姉ちゃんになった喜びと戸惑い、愛おしさを描く8ページ絵本",
+    icon: "👶",
+    categoryGroupId: "memories",
+    subcategoryId: "family-growth",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["new-baby", "sibling", "family", "love", "milestone"],
+    creationMode: "fixed_template",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/emotional-growth.webp",
+    sampleImageAlt: "赤ちゃんと初めて対面する子どもの絵本イメージ",
+    visualDirection: "Warm tender nursery atmosphere, soft pastels, tiny baby details, and deep sibling affection.",
+    order: 122,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、新しい赤ちゃんを迎えたお兄ちゃん・お姉ちゃんの物語を8ページで作ります。",
+    fixedStory: {
+      titleTemplate: "あかちゃんが きたよ！ {childName}と 小さな いのち",
+      coverImagePromptTemplate: withNewBabyImagePromptGuardrail("Picture book cover: An older child looking tenderly at a new baby in a cradle, warm nursery setting, soft pastel colors, feeling of love and protection, soft watercolor style, rich but not cluttered."),
+      titleSpreadTextTemplate: "おうちに あかちゃんが やってきた",
+      openingNarrationTemplate: "ある日、{childName}の おうちに、とっても 小さな お客さまが やってきました。",
+      pageCount: 8,
+      layoutVariant: "8_page",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "あかちゃん。ちいさくて、ふわふわで。{childName}は びっくりして 見つめました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate: withNewBabyImagePromptGuardrail("Establishing wide shot: The child standing by a cradle, looking at the sleeping baby with wide eyes. Soft warm nursery light. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おててが こんなに ちいさいよ。{childName}が そっと ふれると、ぎゅっと にぎってくれました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withNewBabyImagePromptGuardrail("Discovery shot: Close-up of the baby's tiny hand grasping the older child's finger. Emotional and sweet. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "あかちゃんが 泣きだしました。どうしたのかな？ {childName}は ちょっぴり 困ってしまいました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate: withNewBabyImagePromptGuardrail("Medium shot: The child looking a bit concerned or puzzled as the baby cries. A family member is nearby to help. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「よしよし」って してあげよう。{childName}が やさしく なでると、あかちゃんは 泣きやみました。",
+          pageVisualRole: "action",
+          imagePromptTemplate: withNewBabyImagePromptGuardrail("Action shot: The child gently stroking the baby's head or cheek. A sense of growing care. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ミルクを のんだり、ねんねしたり。あかちゃんの ことを見ていると、{childName}も やさしい きもちになります。",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate: withNewBabyImagePromptGuardrail("Medium shot: The child watching from a little distance as the baby sleeps peacefully. Quiet and warm atmosphere. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "今日から {childName}は おにいちゃん（おねえちゃん）です。なんだか ちょっぴり 誇らしい きもち。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withNewBabyImagePromptGuardrail("Close-up: The child's face with a soft, proud smile, looking at the baby. Developing sibling bond. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "いっしょに 遊んだり、お散歩したり。これから たのしいことが たくさん 待っているよ。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withNewBabyImagePromptGuardrail("Wide shot: The child imagining playing with the baby in the future (e.g., holding hands, running in a park). Dreamy and hopeful. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "あかちゃん、よろしくね。いっしょに 大きくなろうね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withNewBabyImagePromptGuardrail("Wide shot: The child sitting next to the cradle or a family member holding the baby, all in a warm family circle. Peaceful ending. Soft watercolor style."),
+        }),
+      ],
+    },
+  },
+  "fixed-first-steps": {
+    name: "はじめての○○",
+    description: "「はじめて」の挑戦を応援し、達成の喜びを分かち合う8ページ。あらゆる成長の瞬間に。",
+    icon: "🌟",
+    categoryGroupId: "memories",
+    subcategoryId: "first-experience",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName", "storyRequest"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["first-time", "challenge", "growth", "milestone"],
+    creationMode: "fixed_template",
+    isBlankTemplate: true,
+    blankLabel: "何に挑戦しましたか？",
+    blankExample: "例：あんよ、おつかい、さかあがり、ピアノ",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageAlt: "何かに挑戦し、達成した子どもの絵本イメージ",
+    visualDirection: "Bright encouraging atmosphere, focus on determination, effort, and triumphant joy.",
+    order: 123,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、子どもの「はじめての挑戦」を8ページで描く応援絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}の はじめての {storyRequest}",
+      coverImagePromptTemplate: withFixedImagePromptSafety("Picture book cover: A child with a look of determination and courage, about to start a new challenge, bright and inspiring atmosphere, soft watercolor style, rich but not cluttered."),
+      titleSpreadTextTemplate: "はじめての ちょうせん！",
+      openingNarrationTemplate: "きょうは {childName}にとって、わすれられない日。はじめての {storyRequest}に 挑戦します。",
+      pageCount: 8,
+      layoutVariant: "8_page",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、はじめての{storyRequest}に 挑戦することになりました。ドキドキ、わくわく！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate: withFixedImagePromptSafety("Wide shot: The child standing at the start of a challenge, eyes bright with anticipation and a bit of nervousness. Clear, bright outdoor or indoor setting. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「できるかな？」 じっと 見つめて、深く いきを 吸いました。{childName}は、一歩 踏み出します。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withFixedImagePromptSafety("Medium shot: The child taking a deep breath or making a focused gesture to start. Tense but brave expression. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "思ったよりも むずかしい！ 転びそうになったり、止まりそうになったり。{childName}の 顔が 真剣です。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate: withFixedImagePromptSafety("Action shot: The child struggling a bit with the challenge, showing effort and concentration. Dynamic but safe. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「もう一回！」 {childName}は あきらめません。何度も何度も、いっしょうけんめい 繰り返します。",
+          pageVisualRole: "action",
+          imagePromptTemplate: withFixedImagePromptSafety("Action shot: The child repeating the effort with renewed determination. Inspiring energy. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "まわりの みんなも おうえんしています。「がんばれ、{childName}！ あと少しだよ！」",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withFixedImagePromptSafety("Wide shot: Family members or friends watching and cheering for the child. Warm supportive atmosphere. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "そのとき、ふっと 身体が 動きました。あ、できた！ コツを つかんだ しゅんかんです。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate: withFixedImagePromptSafety("Action shot: The exact moment of success. The child's posture is balanced and successful. A spark of realization in their eyes. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "やった！ できた！ {childName}の 顔に、世界で いちばん 輝く えがおが 咲きました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withFixedImagePromptSafety("Close-up: The child's face radiant with triumph and joy. Pure achievement. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "はじめて できた日の きもち、ずっと 忘れないでね。本当におめでとう！ {parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withFixedImagePromptSafety("Wide shot: The child looking satisfied and proud, perhaps with a small reward or a hug. Peaceful and happy ending. Soft watercolor style."),
+        }),
+      ],
+    },
+  },
+  "fixed-thank-you-grandparent": {
+    name: "いつもありがとう",
+    description: "おじいちゃん・おばあちゃんへの感謝を込めて。大好きな気持ちを届けるギフト絵本",
+    icon: "👵",
+    categoryGroupId: "memories",
+    subcategoryId: "gift",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 10,
+    requiredInputs: ["childName", "familyMembers"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["grandparent", "gift", "thank-you", "love"],
+    creationMode: "fixed_template",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/emotional-growth.webp",
+    sampleImageAlt: "おじいちゃん・おばあちゃんと仲良く過ごす子どもの絵本イメージ",
+    visualDirection: "Warm nostalgic atmosphere, gentle golden light, and deep intergenerational love.",
+    order: 124,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、おじいちゃん・おばあちゃんへの感謝を伝える8ページの絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}から いつもありがとう",
+      coverImagePromptTemplate: withFixedImagePromptSafety("Picture book cover: A child and an elderly couple (grandparents) spending a warm moment together, perhaps reading or gardening, peaceful and loving atmosphere, soft watercolor style, rich but not cluttered."),
+      titleSpreadTextTemplate: "だいすきな おじいちゃん おばあちゃんへ",
+      openingNarrationTemplate: "{childName}は、おじいちゃんと おばあちゃんが 大好きです。今日は 感謝の きもちを 伝えます。",
+      pageCount: 8,
+      layoutVariant: "8_page",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "いつも やさしく 笑ってくれる 二人の えがお。{childName}は その えがおが 大好きです。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate: withFixedImagePromptSafety("Establishing wide shot: The child and grandparents together in a cozy living room or a sunny garden. Everyone is smiling. Warm, soft light. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "いっしょに お散歩に 行ったり、お花を 見たり。二人と すごす 時間は、とくべつな 宝物です。",
+          pageVisualRole: "action",
+          imagePromptTemplate: withFixedImagePromptSafety("Action shot: The child and grandparents walking together on a peaceful path or looking at flowers. Gentle movement. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おもしろい お話を 聞かせてくれたり、いっしょに 遊んでくれたり。{childName}は いつも わくわくします。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withFixedImagePromptSafety("Medium shot: Grandparents showing the child an old photo album or a toy. The child's eyes are full of curiosity. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ちょっと 転んで 泣いちゃったとき、やさしく 抱きしめてくれましたね。{childName}は すぐに 元気に なれました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate: withFixedImagePromptSafety("Medium shot: A grandparent gently comforting the child. Tender and reassuring. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "いっしょに 食べる ごはんは、せかいいち おいしい！ おじいちゃん、おばあちゃん、いつも ありがとう。",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate: withFixedImagePromptSafety("Medium shot: The child and grandparents eating together at a table. Happy and warm atmosphere. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}が 描いた え。 二人に 見せると、とっても 喜んでくれましたね。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withFixedImagePromptSafety("Medium shot: The child showing a drawing to grandparents. Grandparents are reacting with great joy. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "これからも、ずっと 元気で いてね。いっしょに たくさん 思い出を つくろうね。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withFixedImagePromptSafety("Close-up: The child's sincere face, looking at grandparents with love. Emotional connection. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "だいすきだよ！ ずっとずっと、ありがとう。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withFixedImagePromptSafety("Wide shot: The child and grandparents sitting together, perhaps watching a sunset. Peaceful and affectionate ending. Soft watercolor style."),
+        }),
+      ],
+    },
+  },
+  "fixed-moving-farewell": {
+    name: "またあおうね",
+    description: "引っ越しや転園でのさようなら。離れても変わらない友情と、新しい一歩を支える8ページ絵本",
+    icon: "👋",
+    categoryGroupId: "emotional-growth",
+    subcategoryId: "farewell",
+    parentIntent: "優しい子に育ってほしい。自信を持ってほしい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["farewell", "moving", "friendship", "courage", "emotional-growth"],
+    creationMode: "fixed_template",
+    priceTier: "take",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/emotional-growth.webp",
+    sampleImageAlt: "お友達とさよならをする子どもの絵本イメージ",
+    visualDirection: "Bittersweet but hopeful atmosphere, soft spring or autumn light, and strong bonds of friendship.",
+    order: 125,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、お友達との別れと新しい出会いを描く8ページの物語を作ります。",
+    fixedStory: {
+      titleTemplate: "また あおうね、ずっと ともだち",
+      coverImagePromptTemplate: withFarewellImagePromptGuardrail("Picture book cover: Two children (the protagonist and a best friend) holding hands or waving, with a few plain moving boxes in the background, bittersweet but hopeful expression, soft watercolor style, rich but not cluttered."),
+      titleSpreadTextTemplate: "はなれても、ずっと ともだち",
+      openingNarrationTemplate: "{childName}は、お引越しをすることになりました。お友達と お別れするのは、ちょっぴり さびしいけれど…",
+      pageCount: 8,
+      layoutVariant: "8_page",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate: "おへやの おもちゃを 箱に つめます。がらんとした お部屋を 見て、{childName}は しんみりしました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate: withFarewellImagePromptGuardrail("Establishing wide shot: The child in a partially empty room with plain moving boxes. A look of quiet sadness or reflection. Soft light. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "だいすきな お友達に、おわかれを 言いに行きました。いっしょに 遊んだ 公園、わすれないよ。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withFarewellImagePromptGuardrail("Wide shot: The child and a friend standing in their favorite playground or park. A sense of nostalgia. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「さびしいな…」 思わず なみだが こぼれそう。でも お友達が、ぎゅっと 手を にぎってくれました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate: withFarewellImagePromptGuardrail("Medium shot: Two children holding hands, looking at each other with bittersweet expressions. Reassuring friendship. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「また あおうね！」「ずっと ともだちだよ！」 二人は 指切りを しました。",
+          pageVisualRole: "action",
+          imagePromptTemplate: withFarewellImagePromptGuardrail("Medium shot: Two children making a pinky promise (yubikiri). A strong bond of friendship. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "あたらしい お家へ 出発の日。くるまの まどから 手を ふります。さようなら、また会う日まで！",
+          pageVisualRole: "action",
+          imagePromptTemplate: withFarewellImagePromptGuardrail("Wide shot: The child waving from a car window or at the front door. Family members are around. Hopeful farewell. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "あたらしい 街。あたらしい お家。 ちょっぴり ドキドキするけれど、{childName}は 前を 向きます。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate: withFarewellImagePromptGuardrail("Wide shot: The child standing in front of a new house or a new park, looking around with curiosity. Bright light. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "はなれていても、空は つながっているよ。だいすきな お友達のことを 思いだすと、勇気が わいてきます。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withFarewellImagePromptGuardrail("Close-up: The child looking up at the sky with a gentle, brave smile. A look of inner strength. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "あたらしい お友達も できるかな。さあ、一歩 踏み出そう！ {parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withFarewellImagePromptGuardrail("Wide shot: The child taking a step forward on a new path, with a bright horizon ahead. Hopeful and positive ending. Soft watercolor style."),
         }),
       ],
     },

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { httpsCallable } from "firebase/functions";
 import { Check, Loader2, Sparkles, Star } from "lucide-react";
 import { functions } from "@/lib/firebase";
+import { PLAN_CONFIGS } from "@/lib/plans";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { Button } from "@/components/ui/button";
@@ -38,13 +39,13 @@ const PLANS: Plan[] = [
   },
   {
     id: "standard_paid",
-    label: "スタンダード",
-    price: 980,
-    description: "思い出や成長を、きれいな絵本として残したい方向け",
+    label: PLAN_CONFIGS.standard_paid.label,
+    price: PLAN_CONFIGS.standard_paid.priceJpy ?? 1480,
+    description: PLAN_CONFIGS.standard_paid.description,
     badge: "おすすめ",
     recommended: true,
     features: [
-      "月5冊まで作成",
+      `月${PLAN_CONFIGS.standard_paid.monthlyBookQuota}冊まで作成`,
       "4・8ページ対応",
       "高品質AI画像生成",
       "テンプレート＆かんたんカスタム",
@@ -53,12 +54,12 @@ const PLANS: Plan[] = [
   },
   {
     id: "premium_paid",
-    label: "プレミアム",
-    price: 1980,
-    description: "特別な思い出やギフト向け。最高品質の絵本を作りたい方に",
+    label: PLAN_CONFIGS.premium_paid.label,
+    price: PLAN_CONFIGS.premium_paid.priceJpy ?? 2980,
+    description: PLAN_CONFIGS.premium_paid.description,
     badge: "高精細",
     features: [
-      "月10冊まで作成",
+      `月${PLAN_CONFIGS.premium_paid.monthlyBookQuota}冊まで作成`,
       "4・8・12ページ対応",
       "高精細AI画像生成（FLUX Kontext）",
       "全作成モード対応（オリジナルも可）",
