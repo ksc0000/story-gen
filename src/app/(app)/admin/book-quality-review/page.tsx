@@ -1024,6 +1024,7 @@ export default function AdminBookQualityReviewPage() {
       const reviewRef = doc(collection(db, "books", selectedBook.id, "qualityReviews"));
       const bookRef = doc(db, "books", selectedBook.id);
       const reviewPayload = buildQualityReviewPayload({
+        reviewId: reviewRef.id,
         form: qualityReviewForm,
         bookId: selectedBook.id,
         reviewerId: user.uid,
@@ -1033,6 +1034,7 @@ export default function AdminBookQualityReviewPage() {
       const summaryPayload = buildQualitySummaryPayload({
         reviewId: reviewRef.id,
         form: qualityReviewForm,
+        reviewerId: user.uid,
         now,
         serverTimestamp: serverTimestamp() as unknown as Timestamp,
       });

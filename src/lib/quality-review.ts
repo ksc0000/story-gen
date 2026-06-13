@@ -134,12 +134,13 @@ export function validateQualityReviewForm(form: QualityReviewForm): string | nul
 }
 
 export function buildQualityReviewPayload(input: {
+  reviewId: string;
   form: QualityReviewForm;
   bookId: string;
   reviewerId: string;
   now: number;
   serverTimestamp: Timestamp;
-}): Omit<QualityReview, "id"> {
+}): QualityReview {
   const storyScore = parseQualityScore(input.form.storyScore)!;
   const illustrationScore = parseQualityScore(input.form.illustrationScore)!;
   const characterConsistencyScore = parseQualityScore(input.form.characterConsistencyScore)!;
@@ -155,6 +156,7 @@ export function buildQualityReviewPayload(input: {
   });
 
   return {
+    id: input.reviewId,
     bookId: input.bookId,
     reviewerType: "human" as QualityReviewerType,
     reviewerId: input.reviewerId,
@@ -186,6 +188,7 @@ export function buildQualityReviewPayload(input: {
 export function buildQualitySummaryPayload(input: {
   reviewId: string;
   form: QualityReviewForm;
+  reviewerId?: string;
   now: number;
   serverTimestamp: Timestamp;
 }): Record<string, unknown> {
@@ -215,6 +218,7 @@ export function buildQualitySummaryPayload(input: {
     qualityReviewedAt: input.serverTimestamp,
     qualityReviewedAtMs: input.now,
     qualityReviewerType: "human" as QualityReviewerType,
+    qualityReviewer: input.reviewerId,
   };
 }
 

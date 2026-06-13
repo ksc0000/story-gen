@@ -91,6 +91,13 @@ export type IllustrationStyle =
   | "watercolor"
   | "flat";
 export type PageCount = 4 | 8 | 12;
+export type QualityReviewStatus =
+  | "not_reviewed"
+  | "human_reviewed"
+  | "llm_reviewed"
+  | "needs_fix"
+  | "approved";
+export type QualityReviewerType = "human" | "llm";
 
 export type IllustrationStyleProfile = {
   id: IllustrationStyle;
@@ -351,8 +358,9 @@ export interface BookData {
   personalizationScore?: number;
   safetyScore?: number;
   overallQualityScore?: number;
-  qualityReviewStatus?: "not_reviewed" | "human_reviewed" | "llm_reviewed" | "needs_fix";
+  qualityReviewStatus?: QualityReviewStatus;
   qualityReviewedAtMs?: number;
+  qualityReviewerType?: QualityReviewerType;
   qualityReviewer?: string;
   qualityReviewReason?: string;
   qualityFlaggedIssues?: QualityFlaggedIssue[];
@@ -588,13 +596,27 @@ export interface LLMQualityReviewResult {
   recommendedFixes: QualityRecommendedFix[];
 }
 
-export interface QualityReviewDoc {
+export interface QualityReview {
   id: string;
-  reviewType: "llm_auto_review" | "human_review";
+  bookId: string;
+  reviewerType: QualityReviewerType;
+  reviewerId: string;
+  storyScore: number;
+  illustrationScore: number;
+  characterConsistencyScore: number;
+  personalizationScore: number;
+  safetyScore: number;
+  overallScore: number;
+  status: QualityReviewStatus;
+  reviewReason: string;
+  flaggedIssues: QualityFlaggedIssue[];
+  recommendedFixes: QualityRecommendedFix[];
+  rubricVersion: string;
+  llmAutoReviewResult?: LLMQualityReviewResult;
   createdAt: FirebaseFirestore.Timestamp;
   createdAtMs: number;
-  result: LLMQualityReviewResult;
-  reviewedBy: string;
+  updatedAt?: FirebaseFirestore.Timestamp;
+  updatedAtMs?: number;
 }
 
 export interface GeneratedStory {
