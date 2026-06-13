@@ -8,7 +8,7 @@ export type CoverStatus = "not_started" | "generating" | "completed" | "failed";
 export type ReadingStructureVersion = "v1_pages_only" | "v2_cover_title_story";
 export type GenerationMode = "reliable_fast" | "quality";
 export type GenerationReliabilityStatus = "ok" | "partial" | "failed";
-export type CreationMode = "fixed_template" | "guided_ai" | "original_ai";
+export type CreationMode = "fixed_template" | "guided_ai" | "original_ai" | "photo_story";
 export type PriceTier = "ume" | "take" | "matsu";
 export type StoryCostLevel = "none" | "low" | "standard";
 export type ProductPlan = "free" | "light_paid" | "standard_paid" | "premium_paid";
@@ -407,6 +407,7 @@ export interface BookDoc {
   theme: string;
   categoryGroupId?: string;
   templateId?: string;
+  sourcePhotos?: string[];
   creationMode?: CreationMode;
   priceTier?: PriceTier;
   storyCostLevel?: StoryCostLevel;
