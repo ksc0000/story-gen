@@ -596,6 +596,8 @@ export interface GenerationDeps {
   ) => Promise<void>;
   getUserMonthlyCount: (userId: string) => Promise<number>;
   incrementMonthlyCount: (userId: string) => Promise<void>;
+  getUserSingleBookCredits: (userId: string) => Promise<number>;
+  consumeSingleBookCredit: (userId: string) => Promise<void>;
   /**
    * P5-3c: Gated experiment mode for page image generation.
    * "simplified_scene" = cover-style short prompt without character bible.
@@ -969,25 +971,35 @@ export async function processBookGeneration(
       ...createGenerationStartedPatch(),
     });
 
-    // Step 3: Check quota (skip in development)
+    // Step 3: Check quota and credits (skip in development)
+    let quotaExceeded = false;
+    let hasSingleBookCredits = false;
+
     if (process.env.NODE_ENV !== "development") {
       const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
-      if (!canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount })) {
-        const message =
-          userPlan === "premium"
-            ? "今月の生成回数に達しました。来月またご利用ください。"
-            : "今月の無料生成回数に達しました。来月またお試しください。";
-        console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount})`);
-        await deps.updateBookFailure(bookId, message);
-        await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
-          failureStage: "validation",
-          failureProvider: "system",
-          failureReason: "unknown",
-          retryable: false,
-          technicalErrorMessage: `Monthly quota exceeded: ${monthlyCount}`,
-        }));
-        await deps.updateBookStatus(bookId, "failed");
-        return;
+      quotaExceeded = !canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });
+
+      if (quotaExceeded) {
+        const singleCredits = await deps.getUserSingleBookCredits(bookData.userId);
+        hasSingleBookCredits = singleCredits > 0;
+
+        if (!hasSingleBookCredits) {
+          const message =
+            userPlan === "premium"
+              ? "今月の生成回数に達しました。来月またご利用ください。"
+              : "今月の無料生成回数に達しました。来月またお試しください。";
+          console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount}) and has no credits`);
+          await deps.updateBookFailure(bookId, message);
+          await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
+            failureStage: "validation",
+            failureProvider: "system",
+            failureReason: "unknown",
+            retryable: false,
+            technicalErrorMessage: `Monthly quota exceeded: ${monthlyCount} and no single credits`,
+          }));
+          await deps.updateBookStatus(bookId, "failed");
+          return;
+        }
       }
     }
 
@@ -1714,7 +1726,24 @@ export async function processBookGeneration(
     await deps.updateBookStatus(bookId, bookStatus);
 
     if (bookStatus !== "failed") {
-      await deps.incrementMonthlyCount(bookData.userId);
+      // Consumption logic: Prefer monthly quota, then single credits
+      if (process.env.NODE_ENV !== "development") {
+        const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
+        if (canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount })) {
+          await deps.incrementMonthlyCount(bookData.userId);
+        } else {
+          const singleCredits = await deps.getUserSingleBookCredits(bookData.userId);
+          if (singleCredits > 0) {
+            await deps.consumeSingleBookCredit(bookData.userId);
+          } else {
+            // This should ideally not happen if Step 3 passed, but as a safety:
+            await deps.incrementMonthlyCount(bookData.userId);
+          }
+        }
+      } else {
+        // In dev, just increment monthly
+        await deps.incrementMonthlyCount(bookData.userId);
+      }
     }
 
     console.log(`Book ${bookId} generation ${bookStatus}: ${imageSuccessCount}/${totalPages} pages succeeded`);
@@ -2893,6 +2922,18 @@ export const generateBook = onDocumentCreated(
         const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
         const countRef = db.collection("users").doc(userId).collection("usage").doc(yearMonth);
         await countRef.set({ count: admin.firestore.FieldValue.increment(1) }, { merge: true });
+      },
+
+      getUserSingleBookCredits: async (userId: string) => {
+        const userDoc = await db.collection("users").doc(userId).get();
+        return userDoc.data()?.singleBookCredits || 0;
+      },
+
+      consumeSingleBookCredit: async (userId: string) => {
+        const userRef = db.collection("users").doc(userId);
+        await userRef.update({
+          singleBookCredits: admin.firestore.FieldValue.increment(-1),
+        });
       },
 
       // P5-3c: Gated experiment flag — only set when the user's Firestore doc has
