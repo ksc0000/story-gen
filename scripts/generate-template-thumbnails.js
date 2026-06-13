@@ -528,6 +528,74 @@ const THUMBNAILS = [
       "Confidence-building helper mood, soft warm daylight, safe everyday home setting. Soft watercolor style, rich but not cluttered."
     ),
   },
+
+  // ── Remaining templates still using shared category images (2026-06) ────────
+  // 8-page variants reuse their 4-page sibling's image via wiring; only base prompts here.
+  {
+    id: "fixed-birthday-4p",
+    prompt: buildPrompt(
+      "Happy birthday picture-book cover. A beaming child stands beside a delicious birthday cake glowing with candles, colorful balloons and streamers filling a warm festive room, smiling family just behind. " +
+      "A small star motif tucked among the decorations. Joyful celebratory mood, warm golden party light. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-bedtime-good-day",
+    prompt: buildPrompt(
+      "Calm 'what a good day' bedtime picture-book cover. A content child snuggles under a cozy blanket in bed, eyes softly closing, a gentle smile of a day well spent, warm lamp glow and a plush toy nearby. " +
+      "Tiny floating dream motifs of the day's happy moments above the bed. Muted warm blues, peaceful reassuring nighttime mood. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-cardboard-rocket",
+    prompt: buildPrompt(
+      "Cardboard rocket pretend-play picture-book cover. An imaginative child sits inside a hand-made cardboard rocket decorated with a big crayon star, arms raised mid-blast-off, a cozy living room transforming into a starry imaginary space around them. " +
+      "Soft drawn stars and planets float in the air. Warm browns with magical blue accents, playful imaginative wonder. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+
+  // Batch G: ギフト (PR #337)
+  {
+    id: "fixed-graduation-kindergarten",
+    prompt: buildPrompt(
+      "Kindergarten graduation picture-book cover. A proud child in a tiny graduation cap holds a small rolled certificate with both hands, standing under cherry blossom trees in full bloom, the kindergarten building softly behind. " +
+      "Petals drift gently, warm spring morning light. Soft pink and cream palette, accomplished tender new-beginning mood. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-entrance-elementary",
+    prompt: buildPrompt(
+      "Elementary school entrance picture-book cover. An excited child wearing a bright red randoseru backpack and a yellow safety hat stands tall at a school gate under blooming cherry blossoms, new friends waving nearby. " +
+      "Spring green and cherry-blossom pink, energetic hopeful first-grader mood. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-new-baby",
+    prompt: buildPrompt(
+      "New baby sibling picture-book cover. A gentle older child leans tenderly over a tiny sleeping newborn wrapped in a soft blanket, face full of loving wonder, a pastel nursery mobile turning softly above. " +
+      "Cream and lavender palette, warm tender sibling-love mood. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-first-steps",
+    prompt: buildPrompt(
+      "First challenge picture-book cover. A determined child takes a triumphant brave step forward with arms out and a joyful proud expression, a warm encouraging glow and tiny gold star motifs around them. " +
+      "Bright uplifting palette, focus on effort and the joy of achievement. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-thank-you-grandparent",
+    prompt: buildPrompt(
+      "Thank-you-to-grandparents picture-book cover. A child warmly hugs a smiling grandmother and grandfather in a cozy sunlit room, a small hand-drawn heart card held out, gentle nostalgic golden light around them. " +
+      "Warm amber and cream palette, deep intergenerational love and gratitude. Soft watercolor style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-moving-farewell",
+    prompt: buildPrompt(
+      "Farewell-to-a-friend picture-book cover. Two children share a warm goodbye hug beneath a soft spring or autumn sky, one with a small moving box nearby, a gentle rainbow or trail of petals connecting them. " +
+      "Bittersweet but hopeful mood, soft warm light, strong bond of lasting friendship. Soft watercolor style, rich but not cluttered."
+    ),
+  },
 ];
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
