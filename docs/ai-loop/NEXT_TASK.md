@@ -1,14 +1,7 @@
-# Implement User Feedback Submission UI
+# Implement LLM Auto Review Result Persistence
 
 ## Context
 
-The product is currently in Phase 5 (Monetization/Soft Launch), with Cohort B testers providing real-world usage. Gathering direct user feedback is a "売り物化前 必須" requirement as outlined in Phase 6: User Experience. This task aims to fulfill this crucial requirement, enabling users to easily provide feedback directly from the application, which is vital for product iteration and quality validation during this critical phase.
+The product roadmap for Phase 2: Story & Illustration Quality outlines several sub-tasks related to quality management. Specifically, the "LLM auto review prototype" (PR #318) and the "LLM Auto Review JSON Schema" (PR #298) have been completed. This means the system can now generate automated quality scores based on a defined schema.
 
-## Objective
-
-Implement a user-facing UI and backend mechanism to allow users to submit text feedback. This feedback should be securely saved to a dedicated Firestore collection.
-
-## Allowed Scope
-
--   `functions/src/` (for a new Cloud Function to handle feedback submission, or modification of existing ones)
--   
+To enable further analysis, comparison with human reviews (which is a separate design task, #352), and ultimately, quality regression detection, it is crucial to persist these LLM-generated quality review results. The existing `QualityReviewPanel` in the Admin UI handles human review data, and `quality review history` is a desired feature. Storing
