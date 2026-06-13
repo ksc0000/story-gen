@@ -7748,6 +7748,7 @@ async function seed(): Promise<void> {
 export const seedTemplates = onCall(
   {
     region: "asia-northeast1",
+    consumeAppCheckToken: true,
   },
   async () => {
     await seed();

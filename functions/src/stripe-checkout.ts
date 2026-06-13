@@ -23,6 +23,7 @@ const STRIPE_PRICE_IDS: Record<string, string> = {
 export const createCheckoutSession = onCall(
   {
     region: "asia-northeast1",
+    consumeAppCheckToken: true,
     secrets: [stripeSecretKey],
   },
   async (request) => {
@@ -82,6 +83,7 @@ export const createCheckoutSession = onCall(
 export const createSinglePurchaseCheckout = onCall(
   {
     region: "asia-northeast1",
+    consumeAppCheckToken: true,
     secrets: [stripeSecretKey],
   },
   async (request) => {

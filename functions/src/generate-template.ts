@@ -127,6 +127,7 @@ Guidelines:
 export const generateTemplate = onCall(
   {
     region: "asia-northeast1",
+    consumeAppCheckToken: true,
     secrets: [geminiApiKey],
     timeoutSeconds: 300,
     memory: "512MiB",
