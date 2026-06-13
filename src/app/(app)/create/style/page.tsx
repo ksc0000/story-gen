@@ -8,6 +8,7 @@ import { StepIndicator } from "@/components/step-indicator";
 import { StylePicker } from "@/components/style-picker";
 import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
@@ -33,6 +34,7 @@ function StyleSelectionPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { profile } = useUserProfile(user?.uid);
   const { children } = useChildren(user?.uid);
   const { templates } = useTemplates();
   const [selected, setSelected] = useState<IllustrationStyle | null>("soft_watercolor");
@@ -261,6 +263,12 @@ function StyleSelectionPageContent() {
           <SummaryItem label="スタイル" value={selected ? getIllustrationStyleProfile(selected).name : "未選択"} />
           {companionName ? <SummaryItem label="相棒" value={companionName} /> : null}
         </div>
+        {profile?.singleBookCredits ? (
+          <div className="mt-4 rounded-2xl bg-amber-50 p-3 text-xs text-amber-700">
+            <p className="font-semibold">💡 保有中の単品クレジットを1つ使用して作成します</p>
+            <p className="mt-0.5">月間の作成上限に達していても、このまま作成を完了できます。</p>
+          </div>
+        ) : null}
       </div>
       {createError ? (
         <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">

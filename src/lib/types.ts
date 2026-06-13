@@ -224,6 +224,7 @@ export interface UserDoc {
   productPlan?: ProductPlan;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string | null;
+  singleBookCredits?: number;
   activeChildId?: string | null;
   createdAt: Timestamp;
   monthlyGenerationCount: number;
