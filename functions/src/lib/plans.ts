@@ -44,17 +44,6 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     monthlyBookQuota: 1,
     enabled: true,
   },
-  light_paid: {
-    productPlan: "light_paid",
-    allowedPageCounts: [4, 8],
-    defaultPageCount: 4,
-    imageQualityTier: "standard",
-    imageModelProfile: "pro_consistent",
-    characterConsistencyMode: "all_pages",
-    allowedCreationModes: ["fixed_template", "guided_ai"],
-    generationMode: "reliable_fast",
-    enabled: false,
-  },
   standard_paid: {
     productPlan: "standard_paid",
     allowedPageCounts: [4, 8],

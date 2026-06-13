@@ -87,22 +87,6 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     isPaid: false,
     enabled: true,
   },
-  light_paid: {
-    productPlan: "light_paid",
-    label: "ライト",
-    shortLabel: "ライト",
-    description:
-      "ページ数やテーマを少し広げて、手軽に作りたい方向け。画質と作りやすさのバランスを重視します。",
-    badgeLabels: ["有料", "高速", "手軽"],
-    allowedPageCounts: [4, 8],
-    defaultPageCount: 4,
-    imageQualityTier: "standard",
-    imageModelProfile: "pro_consistent",
-    characterConsistencyMode: "all_pages",
-    allowedCreationModes: ["fixed_template", "guided_ai"],
-    isPaid: true,
-    enabled: false,
-  },
   standard_paid: {
     productPlan: "standard_paid",
     label: "スタンダード",
