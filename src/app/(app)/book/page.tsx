@@ -213,7 +213,7 @@ function BookContent() {
           readingStructureVersion={book.readingStructureVersion}
           titleSpreadText={book.titleSpreadText}
           openingNarration={book.openingNarration}
-          onRegeneratePage={isOwner && !isDemoMode ? (index) => handleRegeneratePage(viewablePages[index]) : undefined}
+        onRegeneratePage={isOwner && !isDemoMode && (book.status === "completed" || book.status === "partial_completed") ? (index) => handleRegeneratePage(viewablePages[index]) : undefined}
           isRegeneratingPage={(index) => regeneratingPages.has(viewablePages[index].pageNumber)}
         />
       </div>

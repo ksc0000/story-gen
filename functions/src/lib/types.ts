@@ -7,10 +7,10 @@ export type ReadingStructureVersion = "v1_pages_only" | "v2_cover_title_story";
 export type PageStatus = "pending" | "generating" | "completed" | "image_failed" | "fallback_completed" | "failed";
 export type GenerationMode = "reliable_fast" | "quality";
 export type GenerationReliabilityStatus = "ok" | "partial" | "failed";
-export type CreationMode = "fixed_template" | "guided_ai" | "original_ai";
+export type CreationMode = "fixed_template" | "guided_ai" | "original_ai" | "photo_story";
 export type PriceTier = "ume" | "take" | "matsu";
 export type StoryCostLevel = "none" | "low" | "standard";
-export type ProductPlan = "free" | "light_paid" | "standard_paid" | "premium_paid";
+export type ProductPlan = "free" | "standard_paid" | "premium_paid";
 export type ImageQualityTier = "light" | "standard" | "premium";
 export type CharacterConsistencyMode = "cover_only" | "key_pages" | "all_pages";
 export type BackgroundMode = "story_flexible" | "profile_default" | "fixed";
@@ -133,6 +133,7 @@ export interface BookInput {
   season?: string;
   parentMessage?: string;
   storyRequest?: string;
+  freeInput?: string;
   /** 相棒キャラクター */
   companionId?: string;
   companionName?: string;
@@ -284,6 +285,7 @@ export interface BookData {
   categoryGroupId?: string;
   templateId?: string;
   creationMode?: CreationMode;
+  sourcePhotos?: string[];
   priceTier?: PriceTier;
   storyCostLevel?: StoryCostLevel;
   productPlan?: ProductPlan;
@@ -413,6 +415,7 @@ export interface PageData {
   fallbackFromModelProfile?: ImageModelProfile;
   imageFailureReason?: string;
   imageRetryable?: boolean;
+  sourcePhotoIndex?: number;
   replicateModel?: string;
   imageRegenerationStartedAt?: FirebaseFirestore.Timestamp;
   imageRegenerationStartedAtMs?: number;
@@ -507,6 +510,7 @@ export interface GeneratedStoryPage {
   pageVisualRole?: PageVisualRole;
   appearingCharacterIds?: string[];
   focusCharacterId?: string;
+  sourcePhotoIndex?: number;
 }
 
 export interface StoryCharacter {
@@ -627,6 +631,7 @@ export interface LLMClient {
     season?: string;
     parentMessage?: string;
     storyRequest?: string;
+    freeInput?: string;
     pageCount: PageCount;
     style: IllustrationStyle;
     productPlan?: ProductPlan;
@@ -634,6 +639,7 @@ export interface LLMClient {
     theme?: string;
     categoryGroupId?: string;
     storyModelCandidates?: string[];
+    sourcePhotos?: Array<{ mimeType: string; data: string }>;
   }): Promise<GeneratedStory>;
   rewriteStoryText?(params: {
     story: GeneratedStory;

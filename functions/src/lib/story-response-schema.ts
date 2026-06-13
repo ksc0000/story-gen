@@ -105,6 +105,7 @@ const PAGE_SCHEMA = {
       nullable: true,
     },
     focusCharacterId: { type: "string" as const, nullable: true },
+    sourcePhotoIndex: { type: "number" as const, nullable: true },
   },
   required: ["text", "imagePrompt"] as const,
 };

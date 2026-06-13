@@ -68,6 +68,7 @@ function StyleSelectionPageContent() {
   const familyMembers = searchParams.get("familyMembers");
   const place = searchParams.get("place");
   const parentMessage = searchParams.get("parentMessage");
+  const freeInput = searchParams.get("freeInput");
   const outfitMode = (searchParams.get("outfitMode") ?? "profile_default") as OutfitMode;
   const customOutfit = searchParams.get("customOutfit");
   const keepSignatureItem = searchParams.get("keepSignatureItem") !== "false";
@@ -127,7 +128,8 @@ function StyleSelectionPageContent() {
   };
 
   const handleCreate = async () => {
-    if (!selected || !user || !template) return;
+    if (!selected || !user) return;
+    if (mode === "fixed_template" && !template) return;
     setCreating(true);
     setCreateError(null);
     try {
@@ -173,10 +175,10 @@ function StyleSelectionPageContent() {
           title: "",
           theme,
           templateId: theme,
-          categoryGroupId: template.categoryGroupId ?? "favorite-worlds",
-          creationMode: template.creationMode ?? "guided_ai",
-          priceTier: template.priceTier ?? "take",
-          storyCostLevel: template.storyCostLevel ?? "standard",
+          categoryGroupId: template?.categoryGroupId ?? "favorite-worlds",
+          creationMode: template?.creationMode ?? "guided_ai",
+          priceTier: template?.priceTier ?? "take",
+          storyCostLevel: template?.storyCostLevel ?? "standard",
           productPlan: selectedPlanConfig.productPlan,
           imageQualityTier: selectedPlanConfig.imageQualityTier,
           imageModelProfile: selectedPlanConfig.imageModelProfile,
@@ -202,6 +204,7 @@ function StyleSelectionPageContent() {
             ...(familyMembers ? { familyMembers } : {}),
             ...(place ? { place } : {}),
             ...(parentMessage ? { parentMessage } : {}),
+            ...(freeInput ? { freeInput } : {}),
             ...(companionId ? { companionId } : {}),
             ...(companionName ? { companionName } : {}),
             ...(companionVisualDescription ? { companionVisualDescription } : {}),
@@ -222,7 +225,7 @@ function StyleSelectionPageContent() {
         imageQualityTier: selectedPlanConfig.imageQualityTier,
         pageCount,
         creationMode: mode,
-        templateId: template.id,
+        templateId: template?.id || theme || "ai_custom",
       });
 
       router.push(`/generating?id=${bookId}`);
@@ -270,7 +273,7 @@ function StyleSelectionPageContent() {
           <Button
             size="lg"
             className="w-full"
-            disabled={!selected || creating || !childName || !template}
+            disabled={!selected || creating || !childName || (mode === "fixed_template" && !template)}
             onClick={handleCreate}
           >
             {creating ? "絵本を作っています..." : "絵本を作る！"}

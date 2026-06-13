@@ -243,8 +243,8 @@ describe("STORY_RESPONSE_SCHEMA serialization", () => {
   it("page property count is stable", () => {
     const pagePropKeys = Object.keys(STORY_RESPONSE_SCHEMA.properties.pages.items.properties);
     // text, imagePrompt, compositionHint, visualMotifUsage, hiddenDetail,
-    // pageVisualRole, appearingCharacterIds, focusCharacterId = 8
-    expect(pagePropKeys.length).toBe(8);
+    // pageVisualRole, appearingCharacterIds, focusCharacterId, sourcePhotoIndex = 9
+    expect(pagePropKeys.length).toBe(9);
   });
 });
 

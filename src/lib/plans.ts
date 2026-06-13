@@ -20,15 +20,27 @@ export type PlanConfig = {
   characterConsistencyMode: CharacterConsistencyMode;
   allowedCreationModes: CreationMode[];
   monthlyBookQuota?: number;
+  priceJpy?: number;
   isPaid: boolean;
   enabled: boolean;
   sampleCtaLabel?: string;
 };
 
+/**
+ * 価格改訂案I: 2026-06 改訂
+ * TODO: 既存契約ユーザーのグランドファザリング（旧価格維持）は Stripe 側で旧 Price ID を維持することで対応。
+ * 新規契約には本定数および新しい Stripe Price ID を適用する。
+ */
+export const SINGLE_PURCHASE_PRICES = {
+  ai_guided: 1500,
+  photo_story: 2000,
+} as const;
+
 export const CREATION_MODE_LABELS: Record<CreationMode, string> = {
   fixed_template: "テンプレート",
   guided_ai: "かんたんカスタム",
   original_ai: "オリジナル",
+  photo_story: "写真からつくる",
 };
 
 export const CHARACTER_CONSISTENCY_LABELS: Record<
@@ -76,22 +88,6 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     isPaid: false,
     enabled: true,
   },
-  light_paid: {
-    productPlan: "light_paid",
-    label: "ライト",
-    shortLabel: "ライト",
-    description:
-      "ページ数やテーマを少し広げて、手軽に作りたい方向け。画質と作りやすさのバランスを重視します。",
-    badgeLabels: ["有料", "高速", "手軽"],
-    allowedPageCounts: [4, 8],
-    defaultPageCount: 4,
-    imageQualityTier: "standard",
-    imageModelProfile: "pro_consistent",
-    characterConsistencyMode: "all_pages",
-    allowedCreationModes: ["fixed_template", "guided_ai"],
-    isPaid: true,
-    enabled: false,
-  },
   standard_paid: {
     productPlan: "standard_paid",
     label: "スタンダード",
@@ -106,6 +102,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     monthlyBookQuota: 5,
+    priceJpy: 1480,
     isPaid: true,
     enabled: true,
   },
@@ -121,8 +118,9 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     imageQualityTier: "premium",
     imageModelProfile: "kontext_max",
     characterConsistencyMode: "all_pages",
-    allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
+    allowedCreationModes: ["fixed_template", "guided_ai", "original_ai", "photo_story"],
     monthlyBookQuota: 10,
+    priceJpy: 2980,
     isPaid: true,
     enabled: true,
     sampleCtaLabel: "高品質サンプルを見る",

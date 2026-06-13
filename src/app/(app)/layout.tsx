@@ -45,6 +45,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <span>Ehoria</span>
           </Link>
           <div className="flex items-center gap-3">
+            <Link href="/bookshelf" className="text-sm font-semibold text-violet-500 transition hover:text-purple-700">
+              本棚
+            </Link>
             <Link href="/children" className="hidden text-sm font-semibold text-violet-500 transition hover:text-purple-700 sm:inline">
               子ども
             </Link>
