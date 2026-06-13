@@ -1,7 +1,13 @@
-# Implement Sample Story Gallery UI
+# Implement Firebase App Check Enforcement
 
 ## Context
 
-The product roadmap outlines Phase 6: User Experience, which aims to make the experience of creating, viewing, modifying, and sharing books easier for users. A key unimplemented task in this phase is the "サンプル絵本ギャラリー" (Sample Book Gallery). This feature will allow users to browse example picture books, demonstrating the product's capabilities and potentially inspiring new creations. This task focuses on implementing the basic UI for this gallery.
+The product roadmap indicates that Firebase App Check is "計画策定済み、enforcement 未実施" (plan formulated, enforcement not yet implemented). Firebase App Check helps protect backend resources (Firestore, Cloud Functions) from abuse, ensuring only trusted clients can access them. Given the completion of core generation reliability (Phase 4 closure) and the ongoing limited rollout (Phase 5 Cohort B), strengthening the application's security and reliability infrastructure is a logical next step to prevent potential abuse and ensure stability.
 
-Many core features, including the Bookshelf UI (PR #343), animated page transitions (PR #349), and a user-facing regeneration flow (PR #347), have recently been completed, laying a strong foundation for enhancing the overall user experience. The Cohort B limited rollout is
+## Objective
+
+Implement enforcement for Firebase App Check across all relevant Firebase services (Firestore, Cloud Functions) to verify incoming requests originate from legitimate instances of the application.
+
+## Allowed Scope
+
+-   `firebase/`: Add App Check configuration to Firebase project settings
