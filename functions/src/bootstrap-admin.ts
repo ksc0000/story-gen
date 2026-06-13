@@ -19,6 +19,7 @@ export function isEmailAllowedForAdmin(email: string | undefined, allowedEmails:
 export const bootstrapAdmin = onCall(
   {
     region: "asia-northeast1",
+    consumeAppCheckToken: true,
   },
   async (request) => {
     if (!request.auth) {

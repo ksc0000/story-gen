@@ -76,6 +76,7 @@ export function normalizeTestImageModelsRequest(data: TestImageModelsRequest): {
 export const testImageModels = onCall(
   {
     region: "asia-northeast1",
+    consumeAppCheckToken: true,
     secrets: [replicateApiToken, openaiApiKey],
     memory: "1GiB",
     timeoutSeconds: 300,

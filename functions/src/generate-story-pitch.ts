@@ -106,6 +106,7 @@ function validateInput(data: GenerateStoryPitchInput): void {
 export const generateStoryPitch = onCall(
   {
     region: "asia-northeast1",
+    consumeAppCheckToken: true,
     timeoutSeconds: 30,
     secrets: [geminiApiKey],
   },
