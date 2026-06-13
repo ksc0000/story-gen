@@ -21,3 +21,4 @@ export { generateTemplate } from "./generate-template";
 export { onCompanionImageJobCreated } from "./generate-companion-image";
 export { generateStoryPitch } from "./generate-story-pitch";
 export { onBookCompletion_triggerLLMAutoReview } from "./auto-review";
+export { submitAppFeedback } from "./submit-app-feedback";
