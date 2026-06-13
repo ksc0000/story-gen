@@ -575,6 +575,28 @@ export interface QualityRecommendedFix {
   pageNumber?: number;
 }
 
+export interface LLMQualityReviewResult {
+  storyQualityScore: number;
+  illustrationQualityScore: number;
+  characterConsistencyScore: number;
+  personalizationScore: number;
+  safetyScore: number;
+  overallQualityScore: number;
+  confidence: number;
+  reviewReason: string;
+  flaggedIssues: QualityFlaggedIssue[];
+  recommendedFixes: QualityRecommendedFix[];
+}
+
+export interface QualityReviewDoc {
+  id: string;
+  reviewType: "llm_auto_review" | "human_review";
+  createdAt: FirebaseFirestore.Timestamp;
+  createdAtMs: number;
+  result: LLMQualityReviewResult;
+  reviewedBy: string;
+}
+
 export interface GeneratedStory {
   title: string;
   characterBible: string;
