@@ -223,7 +223,7 @@ function StyleSelectionPageContent() {
         imageQualityTier: selectedPlanConfig.imageQualityTier,
         pageCount,
         creationMode: mode,
-        templateId: template?.id ?? theme,
+        templateId: template?.id || theme,
       });
 
       router.push(`/generating?id=${bookId}`);

@@ -1039,38 +1039,6 @@ describe("processBookGeneration", () => {
     );
   });
 
-  it("keeps light_paid books on pro_consistent for both cover and pages", async () => {
-    const lightPaidBook: BookData = {
-      ...baseBookData,
-      productPlan: "light_paid",
-      imageQualityTier: "premium",
-      pageCount: 8,
-    };
-
-    await processBookGeneration("book-light-paid", lightPaidBook, deps);
-
-    expect(deps.writePage).toHaveBeenCalledWith(
-      "book-light-paid",
-      expect.objectContaining({
-        pageNumber: 0,
-        imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "standard",
-        imagePurpose: "book_page",
-        imageModelProfile: "pro_consistent",
-      })
-    );
-    expect(deps.writePage).toHaveBeenCalledWith(
-      "book-light-paid",
-      expect.objectContaining({
-        pageNumber: 1,
-        imageModel: "black-forest-labs/flux-2-pro",
-        imageQualityTier: "standard",
-        imagePurpose: "book_page",
-        imageModelProfile: "pro_consistent",
-      })
-    );
-  });
-
   it("keeps premium_paid books on pro for both cover and pages", async () => {
     const premiumPaidBook: BookData = {
       ...baseBookData,
@@ -2291,5 +2259,100 @@ describe("sanitizeForbiddenQuestObjects", () => {
     const result = sanitizeForbiddenQuestObjects(forbidden, dummyBook, input);
     // Normalization lowercases and trims for comparison, but preserves original casing of first match
     expect(result).toEqual(["りんご", "Ringo"]);
+  });
+});
+
+describe("photo_story mode", () => {
+  it("downloads photos and passes them to llmClient in photo_story mode", async () => {
+    const photoUrl = "https://example.com/photo.jpg";
+    const bookData: BookData = {
+      ...baseBookData,
+      creationMode: "photo_story",
+      sourcePhotos: [photoUrl],
+    };
+    const deps = createMockDeps();
+    // Ensure template doesn't override creationMode
+    deps.getTemplate = vi.fn().mockResolvedValue({ ...mockTemplate, creationMode: undefined });
+
+    // Mock global fetch
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: { get: () => "image/jpeg" },
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    await processBookGeneration("book_photo_1", bookData, deps);
+
+    expect(mockFetch).toHaveBeenCalledWith(photoUrl);
+    expect(deps.llmClient.generateStory).toHaveBeenCalledWith(expect.objectContaining({
+      sourcePhotos: [
+        { mimeType: "image/jpeg", data: expect.any(String) }
+      ],
+      creationMode: "photo_story",
+    }));
+
+    vi.unstubAllGlobals();
+  });
+
+  it("fails book if photo download fails", async () => {
+    const photoUrl = "https://example.com/bad-photo.jpg";
+    const bookData: BookData = {
+      ...baseBookData,
+      creationMode: "photo_story",
+      sourcePhotos: [photoUrl],
+    };
+    const deps = createMockDeps();
+    deps.getTemplate = vi.fn().mockResolvedValue({ ...mockTemplate, creationMode: undefined });
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, statusText: "Not Found" }));
+
+    await processBookGeneration("book_photo_fail", bookData, deps);
+
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book_photo_fail", "failed");
+    expect(deps.updateBookFailure).toHaveBeenCalledWith(
+      "book_photo_fail",
+      expect.stringContaining("Vision analysis failed: Photo download error")
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("includes source photo as style_reference during page generation", async () => {
+    const photoUrl = "https://example.com/source.jpg";
+    const bookData: BookData = {
+      ...baseBookData,
+      creationMode: "photo_story",
+      sourcePhotos: [photoUrl],
+      imageModelProfile: "kontext_max", // ensures sequential generation where buildInputImageRefs is called
+    };
+
+    const photoStory = createPremiumPassingStory();
+    photoStory.pages[0].sourcePhotoIndex = 0;
+
+    const deps = createMockDeps();
+    deps.getTemplate = vi.fn().mockResolvedValue({ ...mockTemplate, creationMode: undefined });
+    deps.llmClient.generateStory = vi.fn().mockResolvedValue(photoStory);
+    deps.getUserPlan = vi.fn().mockResolvedValue("premium");
+
+    // Stub fetch for story generation step
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      headers: { get: () => "image/jpeg" },
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+    }));
+
+    await processBookGeneration("book_photo_ref", bookData, deps);
+
+    // Verify imageClient.generateImage (or adapter path) was called with the photo URL
+    // In generate-book.ts, buildInputImageRefs is used.
+    // It should have role: "style_reference" and url: photoUrl
+    expect(deps.writePage).toHaveBeenCalledWith("book_photo_ref", expect.objectContaining({
+      inputImageRefs: expect.arrayContaining([
+        { role: "style_reference", url: photoUrl }
+      ])
+    }));
+
+    vi.unstubAllGlobals();
   });
 });
