@@ -125,6 +125,7 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
       logger.info(`Successfully saved LLM auto review for book ${bookId}`, { bookId, reviewId });
 
       // Also update BookDoc summary fields (optional but recommended in prototype)
+      // T6-352: Normalize Gemini 0-100 scores to 1-5 scale for BookDoc summary fields
       await db.collection("books").doc(bookId).update({
         latestQualityReviewId: reviewId,
         qualityReviewStatus: "llm_reviewed",
