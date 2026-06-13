@@ -37,6 +37,7 @@ describe("BookCard", () => {
     userId: "user-1",
     title: "Test Book",
     status: "completed",
+    progress: 100,
     coverImageUrl: "https://example.com/cover.jpg",
     createdAt: Timestamp.fromDate(new Date("2024-01-01")),
     theme: "adventure",
