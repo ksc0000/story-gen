@@ -19,6 +19,48 @@ export type QualityReviewForm = {
   characterConsistencyScore: string;
   personalizationScore: string;
   safetyScore: string;
+
+  // Granular Story
+  story_childPersonalization: string;
+  story_storyCoherence: string;
+  story_ageAppropriateness: string;
+  story_emotionalSatisfaction: string;
+  story_pageLengthBalance: string;
+  story_characterConsistency: string;
+  story_endingSatisfaction: string;
+
+  // Granular Illustration
+  illust_promptCompleteness: string;
+  illust_visualConsistency: string;
+  illust_characterConsistency: string;
+  illust_sceneRelevance: string;
+  illust_styleConsistency: string;
+  illust_artifactAvoidance: string;
+
+  // Granular Character Consistency
+  char_visualBibleReflected: string;
+  char_characterIdConsistency: string;
+  char_appearingCharacterConsistency: string;
+  char_focusCharacterConsistency: string;
+  char_pageLevelCharacterLinkage: string;
+  char_outfitHairstyleConsistency: string;
+  char_colorPaletteConsistency: string;
+
+  // Granular Personalization
+  pers_childProfileUsage: string;
+  pers_nameNicknameUsage: string;
+  pers_favoriteThings: string;
+  pers_familyContext: string;
+  pers_memoryEventContext: string;
+  pers_overPersonalizationRisk: string;
+
+  // Granular Safety
+  safe_ageAppropriateVocabulary: string;
+  safe_notTooScary: string;
+  safe_dangerAvoidance: string;
+  safe_familyFriendlyPeace: string;
+  safe_privacyConsideration: string;
+
   status: QualityReviewStatus;
   reviewReason: string;
   flaggedIssues: string;
@@ -34,6 +76,48 @@ export function normalizeQualityReviewForm(): QualityReviewForm {
     characterConsistencyScore: "",
     personalizationScore: "",
     safetyScore: "",
+
+    // Granular Story
+    story_childPersonalization: "",
+    story_storyCoherence: "",
+    story_ageAppropriateness: "",
+    story_emotionalSatisfaction: "",
+    story_pageLengthBalance: "",
+    story_characterConsistency: "",
+    story_endingSatisfaction: "",
+
+    // Granular Illustration
+    illust_promptCompleteness: "",
+    illust_visualConsistency: "",
+    illust_characterConsistency: "",
+    illust_sceneRelevance: "",
+    illust_styleConsistency: "",
+    illust_artifactAvoidance: "",
+
+    // Granular Character Consistency
+    char_visualBibleReflected: "",
+    char_characterIdConsistency: "",
+    char_appearingCharacterConsistency: "",
+    char_focusCharacterConsistency: "",
+    char_pageLevelCharacterLinkage: "",
+    char_outfitHairstyleConsistency: "",
+    char_colorPaletteConsistency: "",
+
+    // Granular Personalization
+    pers_childProfileUsage: "",
+    pers_nameNicknameUsage: "",
+    pers_favoriteThings: "",
+    pers_familyContext: "",
+    pers_memoryEventContext: "",
+    pers_overPersonalizationRisk: "",
+
+    // Granular Safety
+    safe_ageAppropriateVocabulary: "",
+    safe_notTooScary: "",
+    safe_dangerAvoidance: "",
+    safe_familyFriendlyPeace: "",
+    safe_privacyConsideration: "",
+
     status: "human_reviewed",
     reviewReason: "",
     flaggedIssues: "",
@@ -62,6 +146,78 @@ export function calculateOverallQualityScore(scores: {
     scores.safetyScore;
   return Math.round((sum / 5) * 10) / 10;
 }
+
+/**
+ * Calculate a 0-100 category score from 1-5 axis scores using weights.
+ * @param axisScores Map of axis key to 1-5 score
+ * @param weights Map of axis key to point weight (total should be 100)
+ */
+export function calculateCategoryScoreFromAxes(
+  axisScores: Record<string, QualityReviewScore | null>,
+  weights: Record<string, number>
+): number {
+  let totalPoints = 0;
+  let totalWeight = 0;
+
+  for (const [key, weight] of Object.entries(weights)) {
+    const score = axisScores[key];
+    if (score == null) continue;
+    // Map 1-5 to 20%-100% of the weight
+    const points = (score / 5) * weight;
+    totalPoints += points;
+    totalWeight += weight;
+  }
+
+  if (totalWeight === 0) return 0;
+  // Scale back to 100 if only some axes were scored
+  return Math.round((totalPoints / totalWeight) * 100);
+}
+
+export const STORY_AXIS_WEIGHTS = {
+  childPersonalization: 20,
+  storyCoherence: 20,
+  ageAppropriateness: 15,
+  emotionalSatisfaction: 15,
+  pageLengthBalance: 10,
+  characterConsistency: 10,
+  endingSatisfaction: 10,
+};
+
+export const ILLUSTRATION_AXIS_WEIGHTS = {
+  promptCompleteness: 20,
+  visualConsistency: 20,
+  characterConsistency: 20,
+  sceneRelevance: 15,
+  styleConsistency: 15,
+  artifactAvoidance: 10,
+};
+
+export const CHARACTER_AXIS_WEIGHTS = {
+  visualBibleReflected: 15,
+  characterIdConsistency: 10,
+  appearingCharacterConsistency: 15,
+  focusCharacterConsistency: 15,
+  pageLevelCharacterLinkage: 15,
+  outfitHairstyleConsistency: 15,
+  colorPaletteConsistency: 15,
+};
+
+export const PERSONALIZATION_AXIS_WEIGHTS = {
+  childProfileUsage: 20,
+  nameNicknameUsage: 15,
+  favoriteThings: 20,
+  familyContext: 15,
+  memoryEventContext: 20,
+  overPersonalizationRisk: 10,
+};
+
+export const SAFETY_AXIS_WEIGHTS = {
+  ageAppropriateVocabulary: 20,
+  notTooScary: 20,
+  dangerAvoidance: 20,
+  familyFriendlyPeace: 20,
+  privacyConsideration: 20,
+};
 
 export function splitTextareaLines(value: string): string[] {
   return value
@@ -154,7 +310,7 @@ export function buildQualityReviewPayload(input: {
     safetyScore,
   });
 
-  return {
+  const payload: Omit<QualityReview, "id"> = {
     bookId: input.bookId,
     reviewerType: "human" as QualityReviewerType,
     reviewerId: input.reviewerId,
@@ -181,6 +337,70 @@ export function buildQualityReviewPayload(input: {
     updatedAt: input.serverTimestamp,
     updatedAtMs: input.now,
   };
+
+  // Add granular axes if available
+  const storyAxes = {
+    childPersonalization: parseQualityScore(input.form.story_childPersonalization),
+    storyCoherence: parseQualityScore(input.form.story_storyCoherence),
+    ageAppropriateness: parseQualityScore(input.form.story_ageAppropriateness),
+    emotionalSatisfaction: parseQualityScore(input.form.story_emotionalSatisfaction),
+    pageLengthBalance: parseQualityScore(input.form.story_pageLengthBalance),
+    characterConsistency: parseQualityScore(input.form.story_characterConsistency),
+    endingSatisfaction: parseQualityScore(input.form.story_endingSatisfaction),
+  };
+  if (Object.values(storyAxes).every((v) => v !== null)) {
+    payload.storyAxes = storyAxes as any;
+  }
+
+  const illustrationAxes = {
+    promptCompleteness: parseQualityScore(input.form.illust_promptCompleteness),
+    visualConsistency: parseQualityScore(input.form.illust_visualConsistency),
+    characterConsistency: parseQualityScore(input.form.illust_characterConsistency),
+    sceneRelevance: parseQualityScore(input.form.illust_sceneRelevance),
+    styleConsistency: parseQualityScore(input.form.illust_styleConsistency),
+    artifactAvoidance: parseQualityScore(input.form.illust_artifactAvoidance),
+  };
+  if (Object.values(illustrationAxes).every((v) => v !== null)) {
+    payload.illustrationAxes = illustrationAxes as any;
+  }
+
+  const characterAxes = {
+    visualBibleReflected: parseQualityScore(input.form.char_visualBibleReflected),
+    characterIdConsistency: parseQualityScore(input.form.char_characterIdConsistency),
+    appearingCharacterConsistency: parseQualityScore(input.form.char_appearingCharacterConsistency),
+    focusCharacterConsistency: parseQualityScore(input.form.char_focusCharacterConsistency),
+    pageLevelCharacterLinkage: parseQualityScore(input.form.char_pageLevelCharacterLinkage),
+    outfitHairstyleConsistency: parseQualityScore(input.form.char_outfitHairstyleConsistency),
+    colorPaletteConsistency: parseQualityScore(input.form.char_colorPaletteConsistency),
+  };
+  if (Object.values(characterAxes).every((v) => v !== null)) {
+    payload.characterAxes = characterAxes as any;
+  }
+
+  const personalizationAxes = {
+    childProfileUsage: parseQualityScore(input.form.pers_childProfileUsage),
+    nameNicknameUsage: parseQualityScore(input.form.pers_nameNicknameUsage),
+    favoriteThings: parseQualityScore(input.form.pers_favoriteThings),
+    familyContext: parseQualityScore(input.form.pers_familyContext),
+    memoryEventContext: parseQualityScore(input.form.pers_memoryEventContext),
+    overPersonalizationRisk: parseQualityScore(input.form.pers_overPersonalizationRisk),
+  };
+  if (Object.values(personalizationAxes).every((v) => v !== null)) {
+    payload.personalizationAxes = personalizationAxes as any;
+  }
+
+  const safetyAxes = {
+    ageAppropriateVocabulary: parseQualityScore(input.form.safe_ageAppropriateVocabulary),
+    notTooScary: parseQualityScore(input.form.safe_notTooScary),
+    dangerAvoidance: parseQualityScore(input.form.safe_dangerAvoidance),
+    familyFriendlyPeace: parseQualityScore(input.form.safe_familyFriendlyPeace),
+    privacyConsideration: parseQualityScore(input.form.safe_privacyConsideration),
+  };
+  if (Object.values(safetyAxes).every((v) => v !== null)) {
+    payload.safetyAxes = safetyAxes as any;
+  }
+
+  return payload;
 }
 
 export function buildQualitySummaryPayload(input: {
@@ -203,7 +423,7 @@ export function buildQualitySummaryPayload(input: {
     safetyScore,
   });
 
-  return {
+  const payload: Record<string, unknown> = {
     latestQualityReviewId: input.reviewId,
     qualityReviewStatus: input.form.status,
     storyQualityScore: storyScore,
@@ -216,6 +436,60 @@ export function buildQualitySummaryPayload(input: {
     qualityReviewedAtMs: input.now,
     qualityReviewerType: "human" as QualityReviewerType,
   };
+
+  // Add granular axes if available
+  const storyAxes = {
+    childPersonalization: parseQualityScore(input.form.story_childPersonalization),
+    storyCoherence: parseQualityScore(input.form.story_storyCoherence),
+    ageAppropriateness: parseQualityScore(input.form.story_ageAppropriateness),
+    emotionalSatisfaction: parseQualityScore(input.form.story_emotionalSatisfaction),
+    pageLengthBalance: parseQualityScore(input.form.story_pageLengthBalance),
+    characterConsistency: parseQualityScore(input.form.story_characterConsistency),
+    endingSatisfaction: parseQualityScore(input.form.story_endingSatisfaction),
+  };
+  if (Object.values(storyAxes).every((v) => v !== null)) payload.storyAxes = storyAxes;
+
+  const illustrationAxes = {
+    promptCompleteness: parseQualityScore(input.form.illust_promptCompleteness),
+    visualConsistency: parseQualityScore(input.form.illust_visualConsistency),
+    characterConsistency: parseQualityScore(input.form.illust_characterConsistency),
+    sceneRelevance: parseQualityScore(input.form.illust_sceneRelevance),
+    styleConsistency: parseQualityScore(input.form.illust_styleConsistency),
+    artifactAvoidance: parseQualityScore(input.form.illust_artifactAvoidance),
+  };
+  if (Object.values(illustrationAxes).every((v) => v !== null)) payload.illustrationAxes = illustrationAxes;
+
+  const characterAxes = {
+    visualBibleReflected: parseQualityScore(input.form.char_visualBibleReflected),
+    characterIdConsistency: parseQualityScore(input.form.char_characterIdConsistency),
+    appearingCharacterConsistency: parseQualityScore(input.form.char_appearingCharacterConsistency),
+    focusCharacterConsistency: parseQualityScore(input.form.char_focusCharacterConsistency),
+    pageLevelCharacterLinkage: parseQualityScore(input.form.char_pageLevelCharacterLinkage),
+    outfitHairstyleConsistency: parseQualityScore(input.form.char_outfitHairstyleConsistency),
+    colorPaletteConsistency: parseQualityScore(input.form.char_colorPaletteConsistency),
+  };
+  if (Object.values(characterAxes).every((v) => v !== null)) payload.characterAxes = characterAxes;
+
+  const personalizationAxes = {
+    childProfileUsage: parseQualityScore(input.form.pers_childProfileUsage),
+    nameNicknameUsage: parseQualityScore(input.form.pers_nameNicknameUsage),
+    favoriteThings: parseQualityScore(input.form.pers_favoriteThings),
+    familyContext: parseQualityScore(input.form.pers_familyContext),
+    memoryEventContext: parseQualityScore(input.form.pers_memoryEventContext),
+    overPersonalizationRisk: parseQualityScore(input.form.pers_overPersonalizationRisk),
+  };
+  if (Object.values(personalizationAxes).every((v) => v !== null)) payload.personalizationAxes = personalizationAxes;
+
+  const safetyAxes = {
+    ageAppropriateVocabulary: parseQualityScore(input.form.safe_ageAppropriateVocabulary),
+    notTooScary: parseQualityScore(input.form.safe_notTooScary),
+    dangerAvoidance: parseQualityScore(input.form.safe_dangerAvoidance),
+    familyFriendlyPeace: parseQualityScore(input.form.safe_familyFriendlyPeace),
+    privacyConsideration: parseQualityScore(input.form.safe_privacyConsideration),
+  };
+  if (Object.values(safetyAxes).every((v) => v !== null)) payload.safetyAxes = safetyAxes;
+
+  return payload;
 }
 
 /* ------------------------------------------------------------------ */
