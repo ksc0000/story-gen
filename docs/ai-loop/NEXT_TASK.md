@@ -1,9 +1,11 @@
-# Implement User-Facing Regeneration Flow for Partially Failed Pages
+# Implement Animated Page Transitions in Reader UI
 
 ## Context
 
-The product roadmap explicitly states under "MVP販売開始の候補基準" that `partial_completed` books are acceptable, but "失敗ページ再生成導線がユーザーに見える必要がある" (a user-facing regeneration flow for failed pages must be visible to the user). The backend functionality for `page image regeneration` is already implemented. This task focuses on connecting that backend capability to the frontend user experience, addressing a critical reliability and UX gap for user-generated books. This aligns with Phase 1 (Reliability First) and Phase 6 (User Experience).
+The product roadmap for Phase 6: User Experience lists "animated page transition" as a "売り物化前 必須" item. With Cohort B (limited production rollout) currently in progress, users are now successfully generating and consuming books. The core generation process has achieved a baseline stability. To further enhance the reading experience and align with modern UX expectations, implementing smooth page transitions is a logical and high-impact next step. The current reader UI utilizes swipe/slide navigation (`PR #185`, Step G) but can be improved with more engaging visual feedback during page turns.
 
 ## Objective
 
-Develop the user interface and frontend logic to allow users to trigger regeneration for individual failed pages within a `partial_completed` book, improving the
+Implement an animated page transition effect for the book reader UI to provide a smoother and more engaging experience when navigating between pages.
+
+## Allowed Scope
