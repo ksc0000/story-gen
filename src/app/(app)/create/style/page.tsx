@@ -68,6 +68,7 @@ function StyleSelectionPageContent() {
   const familyMembers = searchParams.get("familyMembers");
   const place = searchParams.get("place");
   const parentMessage = searchParams.get("parentMessage");
+  const freeInput = searchParams.get("freeInput");
   const outfitMode = (searchParams.get("outfitMode") ?? "profile_default") as OutfitMode;
   const customOutfit = searchParams.get("customOutfit");
   const keepSignatureItem = searchParams.get("keepSignatureItem") !== "false";
@@ -203,6 +204,7 @@ function StyleSelectionPageContent() {
             ...(familyMembers ? { familyMembers } : {}),
             ...(place ? { place } : {}),
             ...(parentMessage ? { parentMessage } : {}),
+            ...(freeInput ? { freeInput } : {}),
             ...(companionId ? { companionId } : {}),
             ...(companionName ? { companionName } : {}),
             ...(companionVisualDescription ? { companionVisualDescription } : {}),
@@ -223,7 +225,7 @@ function StyleSelectionPageContent() {
         imageQualityTier: selectedPlanConfig.imageQualityTier,
         pageCount,
         creationMode: mode,
-        templateId: template?.id || theme,
+        templateId: template?.id || theme || "ai_custom",
       });
 
       router.push(`/generating?id=${bookId}`);

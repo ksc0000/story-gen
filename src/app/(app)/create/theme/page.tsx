@@ -41,12 +41,6 @@ const MODE_OPTIONS: Array<{
     icon: "✨",
   },
   {
-    mode: "original_ai",
-    label: "自由に作る",
-    description: "詳しく指示して、思い通りの絵本に。",
-    icon: "✍️",
-  },
-  {
     mode: "photo_story",
     label: "写真から作る",
     description: "3〜5枚の写真から、AIが思い出を絵本に描き直します。",

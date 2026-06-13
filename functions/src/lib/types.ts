@@ -133,6 +133,7 @@ export interface BookInput {
   season?: string;
   parentMessage?: string;
   storyRequest?: string;
+  freeInput?: string;
   /** 相棒キャラクター */
   companionId?: string;
   companionName?: string;
@@ -608,6 +609,7 @@ export interface LLMClient {
     season?: string;
     parentMessage?: string;
     storyRequest?: string;
+    freeInput?: string;
     pageCount: PageCount;
     style: IllustrationStyle;
     productPlan?: ProductPlan;

@@ -249,6 +249,7 @@ export interface BookInput {
   season?: string;
   parentMessage?: string;
   storyRequest?: string;
+  freeInput?: string;
   /** 相棒キャラクター */
   companionId?: string;
   companionName?: string;
@@ -409,7 +410,6 @@ export interface BookDoc {
   templateId?: string;
   sourcePhotos?: string[];
   creationMode?: CreationMode;
-  sourcePhotos?: string[];
   priceTier?: PriceTier;
   storyCostLevel?: StoryCostLevel;
   productPlan?: ProductPlan;
