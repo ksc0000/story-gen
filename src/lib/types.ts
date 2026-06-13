@@ -249,6 +249,7 @@ export interface BookInput {
   season?: string;
   parentMessage?: string;
   storyRequest?: string;
+  freeInput?: string;
   /** 相棒キャラクター */
   companionId?: string;
   companionName?: string;

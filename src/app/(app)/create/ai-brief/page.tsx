@@ -31,6 +31,7 @@ type ChatAnswers = {
   place?: string;
   message?: string;
   pageCount?: number;
+  freeInput?: string;
 };
 
 type PitchState =
@@ -124,6 +125,12 @@ const QUESTIONS: ChatQuestion[] = [
       { emoji: "📚", label: "8ページ（読み応えあり）", value: "8" },
     ],
   },
+  {
+    id: "freeInput",
+    text: "他に伝えたいことはありますか？",
+    textOnly: true,
+    textPlaceholder: "自由に入力してください（空欄で次へ）",
+  },
 ];
 
 const FICTIONAL_NAME_QUESTION: ChatQuestion = {
@@ -144,6 +151,7 @@ function buildStoryBriefFromAnswers(answers: ChatAnswers, name: string): string 
     answers.mood && `雰囲気：${answers.mood}`,
     answers.place && `場所：${answers.place}`,
     answers.message && `伝えたいこと：${answers.message}`,
+    answers.freeInput && `追加リクエスト：${answers.freeInput}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -394,7 +402,7 @@ function AiBriefPageContent() {
 
   // ── テキスト入力確定ハンドラ ───────────────
   const handleTextConfirm = (questionId: string) => {
-    if (!freeInputValue.trim()) return;
+    if (!freeInputValue.trim() && questionId !== "freeInput") return;
     const newAnswers = { ...chatAnswers };
 
     if (questionId === "protagonistName") {
@@ -509,6 +517,8 @@ function AiBriefPageContent() {
     params.set("mode", modeParam);
     params.set("pageCount", String(effectivePageCount));
     params.set("storyRequest", enrichedRequest);
+    const effectiveFreeInput = inputMode === "chat" ? chatAnswers.freeInput : undefined;
+    if (effectiveFreeInput) params.set("freeInput", effectiveFreeInput);
 
     if (effectivePType === "child") {
       if (childId) params.set("childId", childId);
@@ -722,11 +732,11 @@ function AiBriefPageContent() {
                     />
                     <button
                       type="button"
-                      disabled={!freeInputValue.trim()}
+                      disabled={!freeInputValue.trim() && currentQuestion.id !== "freeInput"}
                       onClick={() => handleTextConfirm(currentQuestion.id)}
                       className="w-full rounded-xl bg-purple-500 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-600 disabled:opacity-40"
                     >
-                      次の質問へ →
+                      {currentQuestion.id === "freeInput" ? "次へ" : "次の質問へ →"}
                     </button>
                   </div>
                 ) : (

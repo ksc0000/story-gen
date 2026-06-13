@@ -985,6 +985,7 @@ export class GeminiClient implements LLMClient {
     season?: string;
     parentMessage?: string;
     storyRequest?: string;
+    freeInput?: string;
     pageCount: PageCount;
     style: IllustrationStyle;
     productPlan?: ProductPlan;
@@ -1006,6 +1007,7 @@ export class GeminiClient implements LLMClient {
     if (params.familyMembers) userParts.push(`一緒に登場させたい人: ${params.familyMembers}`);
     if (params.season) userParts.push(`季節・時期: ${params.season}`);
     if (params.parentMessage) userParts.push(`最後に伝えたい言葉: ${params.parentMessage}`);
+    if (params.freeInput) userParts.push(`ユーザーからの追加リクエスト: ${params.freeInput}`);
     userParts.push(`ページ数: ${params.pageCount}ページ`);
 
     const request = {

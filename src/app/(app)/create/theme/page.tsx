@@ -36,12 +36,6 @@ const MODE_OPTIONS: Array<{
     description: "テーマを教えると、AIがオリジナルストーリーを作ります。",
     icon: "✨",
   },
-  {
-    mode: "original_ai",
-    label: "自由に作る",
-    description: "詳しく指示して、思い通りの絵本に。",
-    icon: "✍️",
-  },
 ];
 
 function ThemeSelectionPageContent() {
