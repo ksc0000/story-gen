@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { isDemoMode } from "@/lib/demo";
 
 export function useAdminClaim() {
   const { user, loading } = useAuth();
@@ -22,6 +23,10 @@ export function useAdminClaim() {
       setAdminError(null);
 
       try {
+        if (isDemoMode) {
+          setIsAdmin(true);
+          return true;
+        }
         if (forceRefresh) {
           await user.getIdToken(true);
         }
