@@ -20,10 +20,21 @@ export type PlanConfig = {
   characterConsistencyMode: CharacterConsistencyMode;
   allowedCreationModes: CreationMode[];
   monthlyBookQuota?: number;
+  priceJpy?: number;
   isPaid: boolean;
   enabled: boolean;
   sampleCtaLabel?: string;
 };
+
+/**
+ * 価格改訂案I: 2026-06 改訂
+ * TODO: 既存契約ユーザーのグランドファザリング（旧価格維持）は Stripe 側で旧 Price ID を維持することで対応。
+ * 新規契約には本定数および新しい Stripe Price ID を適用する。
+ */
+export const SINGLE_PURCHASE_PRICES = {
+  ai_guided: 1500,
+  photo_story: 2000,
+} as const;
 
 export const CREATION_MODE_LABELS: Record<CreationMode, string> = {
   fixed_template: "テンプレート",
@@ -90,6 +101,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     monthlyBookQuota: 5,
+    priceJpy: 1480,
     isPaid: true,
     enabled: true,
   },
@@ -107,6 +119,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
     monthlyBookQuota: 10,
+    priceJpy: 2980,
     isPaid: true,
     enabled: true,
     sampleCtaLabel: "高品質サンプルを見る",
