@@ -78,6 +78,7 @@
     "PR #311: Verify and Record Production Scheduler Job Execution (merged)",
     "PR #316: Lower quality gate character threshold for premium preschool books (merged)",
     "PR #334: Remove light_paid plan from codebase (merged)",
+    "PR #335: feat: 料金ページに無料プランカードを追加 (merged)",
     "PR #337: feat: add Batch G gift templates (8 new templates) (merged)",
     "PR #338: 料金改訂（案I）の実装：standard ¥1,480 / premium ¥2,980 および単品購入定数定義 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
