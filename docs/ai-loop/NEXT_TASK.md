@@ -1,26 +1,14 @@
-# Design LLM Auto Review vs. Human Review Comparison Methodology
+# Implement User Feedback Submission UI
 
 ## Context
 
-The product roadmap for Phase 2: Story & Illustration Quality emphasizes robust quality management. We have successfully implemented the LLM auto review prototype (PR #318) and defined its JSON schema (PR #298). Concurrently, human quality review mechanisms, including UI, score saving, and history tracking, are in place. The next strategic step is to leverage both data sources to gain deeper insights into product quality, identify areas for improvement in both AI generation and review processes, and enable proactive quality regression detection.
+The product is currently in Phase 5 (Monetization/Soft Launch), with Cohort B testers providing real-world usage. Gathering direct user feedback is a "売り物化前 必須" requirement as outlined in Phase 6: User Experience. This task aims to fulfill this crucial requirement, enabling users to easily provide feedback directly from the application, which is vital for product iteration and quality validation during this critical phase.
 
 ## Objective
 
-Create a design document outlining a comprehensive methodology for comparing LLM-generated quality reviews with human-generated quality reviews. This document will serve as a foundational plan for developing tools and processes to analyze quality discrepancies and drive continuous improvement.
+Implement a user-facing UI and backend mechanism to allow users to submit text feedback. This feedback should be securely saved to a dedicated Firestore collection.
 
 ## Allowed Scope
 
-- `docs/`: Create a new Markdown document (e.g., `docs/LLM_HUMAN_REVIEW_COMPARISON_DESIGN.md`).
-- Analyze existing Firestore data structures related to `qualityReviews` and `book_outcomes` (e.g., `BookQualityReview` type, `StoryOutcome` fields) to understand available data points for comparison. No modifications to these structures are allowed in this task.
-
-## Forbidden Scope
-
-- No code changes outside of the `docs/` directory.
-- No modifications to Firestore schemas or data.
-- No changes to infrastructure, billing, authentication, or secrets.
-- No generation of any assets.
-- No implementation of the comparison logic or UI itself; this task is purely design.
-
-## Requirements
-
-- **Define Comparison Dimensions:** Identify and describe the key metrics, score categories, or specific issues that will be compared between LLM and human reviews (e.g., overall story score, character consistency score, presence of flagged issues like "off-topic
+-   `functions/src/` (for a new Cloud Function to handle feedback submission, or modification of existing ones)
+-   
