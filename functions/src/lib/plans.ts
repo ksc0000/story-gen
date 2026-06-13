@@ -64,7 +64,7 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     imageQualityTier: "premium",
     imageModelProfile: "kontext_max",
     characterConsistencyMode: "all_pages",
-    allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
+    allowedCreationModes: ["fixed_template", "guided_ai", "original_ai", "photo_story"],
     generationMode: "quality",
     monthlyBookQuota: 10,
     enabled: true,

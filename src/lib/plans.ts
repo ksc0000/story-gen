@@ -29,6 +29,7 @@ export const CREATION_MODE_LABELS: Record<CreationMode, string> = {
   fixed_template: "テンプレート",
   guided_ai: "かんたんカスタム",
   original_ai: "オリジナル",
+  photo_story: "写真からつくる",
 };
 
 export const CHARACTER_CONSISTENCY_LABELS: Record<
@@ -121,7 +122,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     imageQualityTier: "premium",
     imageModelProfile: "kontext_max",
     characterConsistencyMode: "all_pages",
-    allowedCreationModes: ["fixed_template", "guided_ai", "original_ai"],
+    allowedCreationModes: ["fixed_template", "guided_ai", "original_ai", "photo_story"],
     monthlyBookQuota: 10,
     isPaid: true,
     enabled: true,

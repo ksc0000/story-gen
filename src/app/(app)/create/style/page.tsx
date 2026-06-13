@@ -174,10 +174,10 @@ function StyleSelectionPageContent() {
           title: "",
           theme,
           templateId: theme,
-          categoryGroupId: template.categoryGroupId ?? "favorite-worlds",
-          creationMode: template.creationMode ?? "guided_ai",
-          priceTier: template.priceTier ?? "take",
-          storyCostLevel: template.storyCostLevel ?? "standard",
+          categoryGroupId: template?.categoryGroupId ?? "favorite-worlds",
+          creationMode: template?.creationMode ?? "guided_ai",
+          priceTier: template?.priceTier ?? "take",
+          storyCostLevel: template?.storyCostLevel ?? "standard",
           productPlan: selectedPlanConfig.productPlan,
           imageQualityTier: selectedPlanConfig.imageQualityTier,
           imageModelProfile: selectedPlanConfig.imageModelProfile,
@@ -223,7 +223,7 @@ function StyleSelectionPageContent() {
         imageQualityTier: selectedPlanConfig.imageQualityTier,
         pageCount,
         creationMode: mode,
-        templateId: template.id,
+        templateId: template?.id,
       });
 
       router.push(`/generating?id=${bookId}`);
