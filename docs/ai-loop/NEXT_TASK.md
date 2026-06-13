@@ -1,13 +1,11 @@
-# Implement Firebase App Check Enforcement
+# Implement Persistence for Granular Human Quality Review Scores
 
 ## Context
 
-The product roadmap indicates that Firebase App Check is "計画策定済み、enforcement 未実施" (plan formulated, enforcement not yet implemented). Firebase App Check helps protect backend resources (Firestore, Cloud Functions) from abuse, ensuring only trusted clients can access them. Given the completion of core generation reliability (Phase 4 closure) and the ongoing limited rollout (Phase 5 Cohort B), strengthening the application's security and reliability infrastructure is a logical next step to prevent potential abuse and ensure stability.
+The EhonAI product roadmap outlines the need for detailed quality metrics in Phase 2: Story & Illustration Quality. While an overall "manual quality score" is currently saved, the roadmap explicitly lists "Story Quality Score rubric 導入", "Illustration Quality Score rubric 導入", "Character Consistency / Personalization / Safety score 導入", and "axis-level quality metrics 保存" as remaining tasks under Phase 2.
+
+Implementing the persistence of these granular, axis-level scores is crucial for enabling robust quality analysis, tracking regressions, and facilitating the comparison between human and LLM-generated reviews (as planned by open task #352: "Design LLM Auto Review vs. Human Review Comparison Methodology"). This task focuses on preparing the data layer for human reviews.
 
 ## Objective
 
-Implement enforcement for Firebase App Check across all relevant Firebase services (Firestore, Cloud Functions) to verify incoming requests originate from legitimate instances of the application.
-
-## Allowed Scope
-
--   `firebase/`: Add App Check configuration to Firebase project settings
+Enhance the manual quality review process in
