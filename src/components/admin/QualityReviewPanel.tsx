@@ -190,6 +190,9 @@ export function QualityReviewPanel({
                     >
                       {getQualityReviewStatusLabel(review.status)}
                     </Badge>
+                    <span className="text-xs font-medium text-violet-600">
+                      {review.reviewerType === "llm" ? "🤖 AI" : `👤 ${review.reviewerId.slice(0, 8)}`}
+                    </span>
                     <span className="text-xs text-violet-500">
                       overall: {formatQualityScore(review.overallScore)}
                     </span>
