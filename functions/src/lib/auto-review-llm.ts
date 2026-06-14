@@ -107,7 +107,9 @@ export async function runLLMAutoReview(params: {
     "reviewReason",
     "flaggedIssues",
     "recommendedFixes",
-    "characterAxes",
+    // NOTE: characterAxes is intentionally NOT required here. The response schema is
+    // advisory (not enforced by Gemini), so the model may omit it; treating it as
+    // optional keeps the overall review from failing when the axes are missing.
   ];
 
   for (const field of requiredFields) {

@@ -3,7 +3,13 @@ import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { runLLMAutoReview } from "./lib/auto-review-llm";
-import type { BookData, PageData, QualityReview } from "./lib/types";
+import type {
+  BookData,
+  CharacterConsistencyAxes,
+  PageData,
+  QualityReview,
+  QualityReviewScore,
+} from "./lib/types";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
@@ -91,16 +97,25 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
       const safetyScore = Math.round((reviewResult.safetyScore / 20) * 10) / 10;
       const overallScore = Math.round((reviewResult.overallQualityScore / 20) * 10) / 10;
 
-      // Normalize characterAxes (0-100 to 1-5)
-      const characterAxes = {
-        visualBibleReflected: Math.round((reviewResult.characterAxes.visualBibleReflected / 20) * 10) / 10,
-        characterIdConsistency: Math.round((reviewResult.characterAxes.characterIdConsistency / 20) * 10) / 10,
-        appearingCharacterConsistency: Math.round((reviewResult.characterAxes.appearingCharacterConsistency / 20) * 10) / 10,
-        focusCharacterConsistency: Math.round((reviewResult.characterAxes.focusCharacterConsistency / 20) * 10) / 10,
-        pageLevelCharacterLinkage: Math.round((reviewResult.characterAxes.pageLevelCharacterLinkage / 20) * 10) / 10,
-        outfitHairstyleConsistency: Math.round((reviewResult.characterAxes.outfitHairstyleConsistency / 20) * 10) / 10,
-        colorPaletteConsistency: Math.round((reviewResult.characterAxes.colorPaletteConsistency / 20) * 10) / 10,
-      } as any; // Cast to any or appropriate type if needed, but it matches CharacterConsistencyAxes
+      // Normalize characterAxes from the LLM's 0-100 scale to the 1-5 integer scale
+      // used by human granular reviews (CharacterConsistencyAxes / QualityReviewScore),
+      // so the Admin "View Granular" breakdown renders consistently for AI and human reviews.
+      // Optional: the response schema is advisory (not enforced by Gemini), so the model
+      // may omit characterAxes — guard against undefined to keep the review from failing.
+      const toReviewScore = (value: number): QualityReviewScore =>
+        Math.min(5, Math.max(1, Math.round(value / 20))) as QualityReviewScore;
+      const rawCharacterAxes = reviewResult.characterAxes;
+      const characterAxes: CharacterConsistencyAxes | undefined = rawCharacterAxes
+        ? {
+            visualBibleReflected: toReviewScore(rawCharacterAxes.visualBibleReflected),
+            characterIdConsistency: toReviewScore(rawCharacterAxes.characterIdConsistency),
+            appearingCharacterConsistency: toReviewScore(rawCharacterAxes.appearingCharacterConsistency),
+            focusCharacterConsistency: toReviewScore(rawCharacterAxes.focusCharacterConsistency),
+            pageLevelCharacterLinkage: toReviewScore(rawCharacterAxes.pageLevelCharacterLinkage),
+            outfitHairstyleConsistency: toReviewScore(rawCharacterAxes.outfitHairstyleConsistency),
+            colorPaletteConsistency: toReviewScore(rawCharacterAxes.colorPaletteConsistency),
+          }
+        : undefined;
 
       const reviewDoc: QualityReview = {
         id: reviewId,
@@ -119,7 +134,7 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         recommendedFixes: reviewResult.recommendedFixes,
         rubricVersion: "llm-auto-v2",
         llmAutoReviewResult: reviewResult,
-        characterAxes,
+        ...(characterAxes ? { characterAxes } : {}),
         createdAt: admin.firestore.Timestamp.now(),
         createdAtMs: now,
         updatedAt: admin.firestore.Timestamp.now(),
@@ -153,7 +168,7 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         qualityReviewReason: reviewResult.reviewReason,
         qualityFlaggedIssues: reviewResult.flaggedIssues,
         qualityRecommendedFixes: reviewResult.recommendedFixes,
-        characterAxes,
+        ...(characterAxes ? { characterAxes } : {}),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAtMs: now,
       });
