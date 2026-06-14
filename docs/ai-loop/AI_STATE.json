@@ -104,6 +104,7 @@
     "PR #375: Unify image model: Free/Standard → flux-2-pro (merged)",
     "PR #377: Derive plan from subscription on create page (remove plan selector) (merged)",
     "PR #378: Generate Single-Purchase Books with flux-kontext-max (merged)",
+    "PR #380: Implement LLM Auto Review for Character Consistency (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
