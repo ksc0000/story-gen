@@ -176,4 +176,20 @@ describe("computeSloMetrics", () => {
     expect(result.imageP90Ms).toBeGreaterThan(result.imageP50Ms);
     expect(result.imageP95Ms).toBeGreaterThanOrEqual(result.imageP90Ms);
   });
+
+  it("computes estimated costs", () => {
+    const books = [
+      { id: "book1", status: "completed" as const, hasCoverPage: true, coverStatus: "completed", coverImageModelProfile: "pro_consistent" },
+    ];
+    const pagesMap = new Map();
+    pagesMap.set("book1", [
+      { status: "completed" as const, imageModel: "black-forest-labs/flux-2-pro" },
+    ]);
+
+    const metrics = computeSloMetrics(books, pagesMap);
+
+    // 1 page ($0.05) + 1 cover ($0.05) = $0.10
+    expect(metrics.totalEstimatedCostUsd).toBeCloseTo(0.1);
+    expect(metrics.avgCostPerBookUsd).toBeCloseTo(0.1);
+  });
 });
