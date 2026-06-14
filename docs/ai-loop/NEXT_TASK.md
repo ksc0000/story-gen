@@ -1,13 +1,11 @@
-# Implement Prompt Completeness Checker with Diagnostic Logging
+# Display Granular Human Quality Review Scores in Admin UI
 
 ## Context
 
-Phase 2 of the product roadmap, "Story & Illustration Quality," lists "prompt completeness checker" as an unaddressed task under "含めるタスク." This task aims to improve the quality and consistency of generated images by ensuring that the AI's image prompts adequately capture essential story elements defined in the `StoryPage` and `BookDoc`. Recent work on LLM auto-review and quality score persistence provides a solid foundation for integrating such diagnostic tools.
+Granular human quality review scores (Story, Illustration, Character Consistency, Personalization, and Safety) are now persisted in Firestore following the merge of PR #365 "Implement Persistence for Granular Human Quality Review Scores". The current Admin Quality Review UI displays an overall quality score and flagged issues but does not yet show these newly available detailed breakdown scores. To facilitate more comprehensive quality analysis and review, these granular scores need to be prominently displayed within the administrative interface.
 
 ## Objective
 
-Develop a utility function to assess the completeness of generated image prompts against key story and visual elements (`pageVisualRole`, `visualMotif`, `hiddenDetail`, etc.). The function will return structured diagnostic information, which should then be logged to provide insights into prompt quality, aiding in future prompt engineering and automated regeneration decisions.
+Enhance the Admin Quality Review UI to prominently display the newly persisted granular human quality review scores for each book. This will allow administrators and quality reviewers to see a detailed breakdown of quality aspects, supporting better decision-making for quality improvement.
 
 ## Allowed Scope
-
--   `functions/
