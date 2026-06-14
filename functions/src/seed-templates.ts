@@ -2748,7 +2748,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、小さなお手伝いの達成感をやさしく描く絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のちいさなおてつだい",
-      previewImageUrl: "/images/templates/emotional-growth.webp",
+      previewImageUrl: "/images/templates/fixed-little-helper.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a smiling child carrying a small basket of folded towels in a cozy family room, warm family members nearby, gentle gratitude mood, recurring tiny heart-spark motif, watercolor storybook style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "ちいさなおてつだい",

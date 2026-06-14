@@ -81,7 +81,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     allowedPageCounts: [4],
     defaultPageCount: 4,
     imageQualityTier: "light",
-    imageModelProfile: "openai_mini",
+    // 画質統一方針 (2026-06): Free/Standard は flux-2-pro。差別化は冊数・ページ数・モード。
+    imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
     monthlyBookQuota: 1,
@@ -98,7 +99,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     allowedPageCounts: [4, 8],
     defaultPageCount: 8,
     imageQualityTier: "standard",
-    imageModelProfile: "openai_standard",
+    // 画質統一方針 (2026-06): Standard も Free と同じ flux-2-pro。差別化は冊数・ページ数・AIモード。
+    imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     monthlyBookQuota: 5,
