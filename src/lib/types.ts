@@ -90,7 +90,7 @@ export type IllustrationStyle =
   | "watercolor"
   | "flat";
 export type PageCount = 4 | 8 | 12;
-export type QualityReviewScore = 1 | 2 | 3 | 4 | 5;
+export type QualityReviewScore = number;
 export type QualityReviewStatus =
   | "not_reviewed"
   | "human_reviewed"
@@ -119,25 +119,26 @@ export interface QualityRecommendedFix {
 }
 
 export type QualityReview = {
-  id?: string;
+  id: string;
   bookId: string;
   reviewerType: QualityReviewerType;
   reviewerId: string;
-  storyScore: QualityReviewScore;
-  illustrationScore: QualityReviewScore;
-  characterConsistencyScore: QualityReviewScore;
-  personalizationScore: QualityReviewScore;
-  safetyScore: QualityReviewScore;
+  storyScore: number;
+  illustrationScore: number;
+  characterConsistencyScore: number;
+  personalizationScore: number;
+  safetyScore: number;
   overallScore: number;
   status: QualityReviewStatus;
   reviewReason: string;
   flaggedIssues: QualityFlaggedIssue[];
   recommendedFixes: QualityRecommendedFix[];
   rubricVersion: string;
+  llmAutoReviewResult?: import("./story").LLMQualityReviewResult;
   createdAt?: Timestamp;
   createdAtMs: number;
   updatedAt?: Timestamp;
-  updatedAtMs: number;
+  updatedAtMs?: number;
 };
 
 export type QualityTaskStatus =

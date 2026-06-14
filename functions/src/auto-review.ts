@@ -3,7 +3,7 @@ import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { runLLMAutoReview } from "./lib/auto-review-llm";
-import type { BookData, PageData, QualityReviewDoc } from "./lib/types";
+import type { BookData, PageData, QualityReview } from "./lib/types";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
@@ -46,7 +46,7 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
       .collection("books")
       .doc(bookId)
       .collection("qualityReviews")
-      .where("reviewType", "==", "llm_auto_review")
+      .where("reviewerType", "==", "llm")
       .limit(1)
       .get();
 
@@ -82,13 +82,36 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
       // Prepare review document
       const now = Date.now();
       const reviewId = `llm_auto_review_${now}`;
-      const reviewDoc: QualityReviewDoc = {
+
+      // Normalize scores from 0-100 to 1-5 scale (Human reviewer scale)
+      const storyScore = Math.round((reviewResult.storyQualityScore / 20) * 10) / 10;
+      const illustrationScore = Math.round((reviewResult.illustrationQualityScore / 20) * 10) / 10;
+      const characterScore = Math.round((reviewResult.characterConsistencyScore / 20) * 10) / 10;
+      const personalizationScore = Math.round((reviewResult.personalizationScore / 20) * 10) / 10;
+      const safetyScore = Math.round((reviewResult.safetyScore / 20) * 10) / 10;
+      const overallScore = Math.round((reviewResult.overallQualityScore / 20) * 10) / 10;
+
+      const reviewDoc: QualityReview = {
         id: reviewId,
-        reviewType: "llm_auto_review",
+        bookId,
+        reviewerType: "llm",
+        reviewerId: "system_llm",
+        storyScore,
+        illustrationScore,
+        characterConsistencyScore: characterScore,
+        personalizationScore,
+        safetyScore,
+        overallScore,
+        status: "llm_reviewed",
+        reviewReason: reviewResult.reviewReason,
+        flaggedIssues: reviewResult.flaggedIssues,
+        recommendedFixes: reviewResult.recommendedFixes,
+        rubricVersion: "llm-auto-v1",
+        llmAutoReviewResult: reviewResult,
         createdAt: admin.firestore.Timestamp.now(),
         createdAtMs: now,
-        result: reviewResult,
-        reviewedBy: "system_llm",
+        updatedAt: admin.firestore.Timestamp.now(),
+        updatedAtMs: now,
       };
 
       // Save to Firestore
@@ -103,14 +126,16 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
 
       // Also update BookDoc summary fields (optional but recommended in prototype)
       await db.collection("books").doc(bookId).update({
+        latestQualityReviewId: reviewId,
         qualityReviewStatus: "llm_reviewed",
-        storyQualityScore: reviewResult.storyQualityScore,
-        illustrationQualityScore: reviewResult.illustrationQualityScore,
-        characterConsistencyScore: reviewResult.characterConsistencyScore,
-        personalizationScore: reviewResult.personalizationScore,
-        safetyScore: reviewResult.safetyScore,
-        overallQualityScore: reviewResult.overallQualityScore,
+        storyQualityScore: storyScore,
+        illustrationQualityScore: illustrationScore,
+        characterConsistencyScore: characterScore,
+        personalizationScore,
+        safetyScore,
+        overallQualityScore: overallScore,
         qualityReviewedAtMs: now,
+        qualityReviewerType: "llm",
         qualityReviewer: "system_llm",
         qualityReviewReason: reviewResult.reviewReason,
         qualityFlaggedIssues: reviewResult.flaggedIssues,
