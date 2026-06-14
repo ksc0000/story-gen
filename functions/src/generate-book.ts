@@ -57,6 +57,7 @@ import {
   countSentences,
   type StoryQualityReport,
 } from "./lib/story-quality";
+import { analyzePromptCompleteness } from "./lib/prompt-analyzer";
 import { removeUndefinedDeep } from "./lib/firestore-sanitize";
 import { getIllustrationStyleProfile } from "./lib/illustration-styles";
 import { generateCoverImageWithFallback } from "./controllers/imageGeneration";
@@ -66,6 +67,7 @@ import {
 } from "./lib/style-exposure";
 import {
   logGenerationEvent,
+  logPromptAnalysis,
   categorizeError,
   classifyError,
   classifyStoryJsonFailure,
@@ -1296,6 +1298,37 @@ export async function processBookGeneration(
 
     // Step 7: Update book title
     await deps.updateBookTitle(bookId, story.title);
+
+    // Step 7b: Run prompt completeness checker and log diagnostics
+    try {
+      const diagnostic = analyzePromptCompleteness(story);
+      logPromptAnalysis({
+        eventName: "prompt_analysis",
+        bookId,
+        templateId: resolvedTemplateId,
+        averageCompletenessScore: diagnostic.averageCompletenessScore,
+        pagesWithMissingCharacters: diagnostic.pages.filter((p) =>
+          p.characterPresence.some((cp) => !cp.present)
+        ).length,
+        pagesWithMissingMotifs: diagnostic.pages.filter((p) =>
+          p.visualMotifPresent === false
+        ).length,
+        pagesWithMissingHiddenDetails: diagnostic.pages.filter((p) =>
+          p.hiddenDetailPresent === false
+        ).length,
+        pagesWithMissingVisualRoles: diagnostic.pages.filter((p) =>
+          !p.visualRolePresent
+        ).length,
+        pagesWithMissingCompositionHints: diagnostic.pages.filter((p) =>
+          !p.compositionHintPresent
+        ).length,
+      });
+    } catch (analysisErr) {
+      logger.warn("Prompt completeness analysis failed", {
+        bookId,
+        error: analysisErr instanceof Error ? analysisErr.message : String(analysisErr),
+      });
+    }
 
     // P5-3c: Log cover/page generation profile comparison for diagnostic purposes (PII-safe).
     // Captures the key structural difference between cover (legacy path, no ref images)
