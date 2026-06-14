@@ -240,11 +240,33 @@ export interface PageImageFailedEvent {
   errorCode: ErrorCode;
 }
 
+/**
+ * Fired when prompt completeness analysis is performed for a book.
+ * Summarizes how well the generated prompts capture intended story elements.
+ */
+export interface PromptAnalysisEvent {
+  eventName: "prompt_analysis";
+  bookId: string;
+  templateId?: string;
+  averageCompletenessScore: number;
+  /** Number of pages where at least one appearing character was missing from the prompt. */
+  pagesWithMissingCharacters: number;
+  /** Number of pages where the visual motif (if applicable) was missing from the prompt. */
+  pagesWithMissingMotifs: number;
+  /** Number of pages where the hidden detail (if applicable) was missing from the prompt. */
+  pagesWithMissingHiddenDetails: number;
+  /** Number of pages where the page visual role keywords were missing from the prompt. */
+  pagesWithMissingVisualRoles: number;
+  /** Number of pages where the composition hint was missing from the prompt. */
+  pagesWithMissingCompositionHints: number;
+}
+
 export type GenerationEvent =
   | GenerationStartedEvent
   | BookOutcomeEvent
   | BookEarlyFailedEvent
-  | PageImageFailedEvent;
+  | PageImageFailedEvent
+  | PromptAnalysisEvent;
 
 // -------------------------------------------------------------------------
 // Error categorization
@@ -524,4 +546,11 @@ export function resolveProviderFromProfile(profile: ImageModelProfile): ImagePro
  */
 export function logGenerationEvent(event: GenerationEvent): void {
   logger.info("generation_event", event);
+}
+
+/**
+ * Specifically log prompt analysis diagnostics.
+ */
+export function logPromptAnalysis(event: PromptAnalysisEvent): void {
+  logGenerationEvent(event);
 }
