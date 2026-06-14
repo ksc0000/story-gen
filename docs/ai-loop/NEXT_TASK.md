@@ -1,9 +1,9 @@
-# Implement LLM Auto Review for Character Consistency
+# Implement Image Generation Usage Monitoring Dashboard
 
 ## Context
 
-Phase 2 focuses on Story & Illustration Quality. The foundation for LLM auto-review has been laid with the prototype (PR #318), result persistence (PR #357), and display in the Admin UI (PR #368). Granular human quality review scores, including `characterConsistencyScore`, are also persisted (PR #365) and displayed (PR #372). The roadmap explicitly lists "character consistency diagnostics" as a remaining task under Phase 2. This task will leverage the existing LLM auto-review framework to generate specific diagnostics for character consistency.
+The product is currently in Phase 5 (Monetization) with a limited rollout (`Cohort B`) in progress. As we move towards broader availability and potential A/B testing of image generation providers, it is crucial to have clear visibility into the usage patterns and resource consumption of different image models. While `ImageProvider` abstraction and `imageModel` tracking are in place, there is currently no dedicated dashboard to visualize usage by model. This task addresses the "P4-cost: provider コスト比較ダッシュボード (`imageModel` フィールド活用)" follow-up item identified from the P3 closure, providing foundational metrics for cost optimization and provider comparison.
 
 ## Objective
 
-Implement a new LLM auto-review type focused on character consistency, generate consistency scores or feedback for each page, persist
+Create a Cloud Monitoring dashboard panel that displays image generation usage, specifically
