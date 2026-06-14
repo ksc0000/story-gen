@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { processBookGeneration } from "../src/generate-book";
-import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
+import type { BookData, TemplateData } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
   name: "test", description: "test", icon: "🎂", order: 1,
@@ -34,8 +34,12 @@ function createMockDeps() {
     updateBookStoryGenerationMetadata: vi.fn().mockResolvedValue(undefined),
     getUserMonthlyCount: vi.fn().mockResolvedValue(0),
     incrementMonthlyCount: vi.fn().mockResolvedValue(undefined),
-    getUserSingleBookCredits: vi.fn().mockResolvedValue(0),
-    consumeSingleBookCredit: vi.fn().mockResolvedValue(undefined),
+    getUserCredits: vi.fn().mockResolvedValue({
+      singleBookCredits: 0,
+      aiGuidedCredits: 0,
+      photoStoryCredits: 0,
+    }),
+    consumeCredit: vi.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -59,21 +63,29 @@ describe("processBookGeneration quota and credits", () => {
     await processBookGeneration("book1", baseBookData, deps);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book1", "completed");
     expect(deps.incrementMonthlyCount).toHaveBeenCalled();
-    expect(deps.consumeSingleBookCredit).not.toHaveBeenCalled();
+    expect(deps.consumeCredit).not.toHaveBeenCalled();
   });
 
   it("allows generation when monthly quota exceeded but has single book credits", async () => {
     deps.getUserMonthlyCount.mockResolvedValue(3); // Free limit is 3
-    deps.getUserSingleBookCredits.mockResolvedValue(1);
+    deps.getUserCredits.mockResolvedValue({
+      singleBookCredits: 1,
+      aiGuidedCredits: 0,
+      photoStoryCredits: 0,
+    });
     await processBookGeneration("book2", baseBookData, deps);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book2", "completed");
-    expect(deps.consumeSingleBookCredit).toHaveBeenCalled();
+    expect(deps.consumeCredit).toHaveBeenCalledWith("user123", "legacy");
     expect(deps.incrementMonthlyCount).not.toHaveBeenCalled();
   });
 
   it("rejects generation when both monthly quota and single book credits are exhausted", async () => {
     deps.getUserMonthlyCount.mockResolvedValue(3);
-    deps.getUserSingleBookCredits.mockResolvedValue(0);
+    deps.getUserCredits.mockResolvedValue({
+      singleBookCredits: 0,
+      aiGuidedCredits: 0,
+      photoStoryCredits: 0,
+    });
     await processBookGeneration("book3", baseBookData, deps);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book3", "failed");
     expect(deps.updateBookFailure).toHaveBeenCalledWith("book3", expect.stringContaining("今月の無料生成回数に達しました"));
@@ -82,10 +94,14 @@ describe("processBookGeneration quota and credits", () => {
 
   it("prioritizes monthly quota over single book credits", async () => {
     deps.getUserMonthlyCount.mockResolvedValue(0);
-    deps.getUserSingleBookCredits.mockResolvedValue(1);
+    deps.getUserCredits.mockResolvedValue({
+      singleBookCredits: 1,
+      aiGuidedCredits: 0,
+      photoStoryCredits: 0,
+    });
     await processBookGeneration("book4", baseBookData, deps);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book4", "completed");
     expect(deps.incrementMonthlyCount).toHaveBeenCalled();
-    expect(deps.consumeSingleBookCredit).not.toHaveBeenCalled();
+    expect(deps.consumeCredit).not.toHaveBeenCalled();
   });
 });

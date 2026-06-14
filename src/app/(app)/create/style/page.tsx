@@ -141,6 +141,20 @@ function StyleSelectionPageContent() {
       const selectedStyleProfile = getIllustrationStyleProfile(selected);
       let bookId: string;
 
+      // クレジット消費の判定
+      const credits = profile?.singlePurchaseCredits;
+      const legacyCredits = profile?.singleBookCredits || 0;
+      const hasAiGuidedCredit = (credits?.ai_guided || 0) > 0;
+      const hasPhotoStoryCredit = (credits?.photo_story || 0) > 0;
+
+      // photo_storyモードならphoto_storyクレジットを、それ以外ならai_guidedクレジットを優先。
+      // どちらもなければlegacyクレジットを確認。
+      const purchaseTypeToUse = mode === "photo_story"
+        ? (hasPhotoStoryCredit ? "photo_story" : (hasAiGuidedCredit ? "ai_guided" : (legacyCredits > 0 ? "legacy" : null)))
+        : (hasAiGuidedCredit ? "ai_guided" : (hasPhotoStoryCredit ? "photo_story" : (legacyCredits > 0 ? "legacy" : null)));
+
+      const useSinglePurchase = purchaseTypeToUse !== null;
+
       if (isDemoMode) {
         bookId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
         const demoBook: DemoBook = {
@@ -179,6 +193,8 @@ function StyleSelectionPageContent() {
           templateId: theme,
           categoryGroupId: template?.categoryGroupId ?? "favorite-worlds",
           creationMode: template?.creationMode ?? "guided_ai",
+          isSinglePurchase: useSinglePurchase,
+          singlePurchaseType: (useSinglePurchase && purchaseTypeToUse !== "legacy") ? purchaseTypeToUse : mode === "photo_story" ? "photo_story" : "ai_guided",
           priceTier: template?.priceTier ?? "take",
           storyCostLevel: template?.storyCostLevel ?? "standard",
           productPlan: selectedPlanConfig.productPlan,
@@ -263,7 +279,7 @@ function StyleSelectionPageContent() {
           <SummaryItem label="スタイル" value={selected ? getIllustrationStyleProfile(selected).name : "未選択"} />
           {companionName ? <SummaryItem label="相棒" value={companionName} /> : null}
         </div>
-        {profile?.singleBookCredits ? (
+        {(profile?.singleBookCredits || (profile?.singlePurchaseCredits?.ai_guided || 0) > 0 || (profile?.singlePurchaseCredits?.photo_story || 0) > 0) ? (
           <div className="mt-4 rounded-2xl bg-amber-50 p-3 text-xs text-amber-700">
             <p className="font-semibold">💡 保有中の単品クレジットを1つ使用して作成します</p>
             <p className="mt-0.5">月間の作成上限に達していても、このまま作成を完了できます。</p>

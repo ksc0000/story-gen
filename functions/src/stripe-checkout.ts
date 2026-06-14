@@ -179,9 +179,14 @@ export const stripeWebhook = onRequest(
               const sessionDoc = await tx.get(sessionRef);
               if (sessionDoc.exists) return;
 
-              tx.update(db.collection("users").doc(uid), {
+              const purchaseType = obj.metadata?.purchaseType as "ai_guided" | "photo_story" | undefined;
+              const updateData: any = {
                 singleBookCredits: admin.firestore.FieldValue.increment(1),
-              });
+              };
+              if (purchaseType) {
+                updateData[`singlePurchaseCredits.${purchaseType}`] = admin.firestore.FieldValue.increment(1);
+              }
+              tx.update(db.collection("users").doc(uid), updateData);
               tx.set(sessionRef, {
                 uid,
                 purchaseType: obj.metadata?.purchaseType,

@@ -278,6 +278,10 @@ export interface UserDoc {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string | null;
   singleBookCredits?: number;
+  singlePurchaseCredits?: {
+    ai_guided?: number;
+    photo_story?: number;
+  };
   activeChildId?: string | null;
   createdAt: Timestamp;
   monthlyGenerationCount: number;
@@ -464,6 +468,8 @@ export interface BookDoc {
   templateId?: string;
   sourcePhotos?: string[];
   creationMode?: CreationMode;
+  isSinglePurchase?: boolean;
+  singlePurchaseType?: "ai_guided" | "photo_story";
   priceTier?: PriceTier;
   storyCostLevel?: StoryCostLevel;
   productPlan?: ProductPlan;

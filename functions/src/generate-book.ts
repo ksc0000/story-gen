@@ -598,8 +598,12 @@ export interface GenerationDeps {
   ) => Promise<void>;
   getUserMonthlyCount: (userId: string) => Promise<number>;
   incrementMonthlyCount: (userId: string) => Promise<void>;
-  getUserSingleBookCredits: (userId: string) => Promise<number>;
-  consumeSingleBookCredit: (userId: string) => Promise<void>;
+  getUserCredits: (userId: string) => Promise<{
+    singleBookCredits: number;
+    aiGuidedCredits: number;
+    photoStoryCredits: number;
+  }>;
+  consumeCredit: (userId: string, type: "ai_guided" | "photo_story" | "legacy") => Promise<void>;
   /**
    * P5-3c: Gated experiment mode for page image generation.
    * "simplified_scene" = cover-style short prompt without character bible.
@@ -969,6 +973,7 @@ export async function processBookGeneration(
       ...(normalizedBookData.imageModelProfile
         ? { imageModelProfile: normalizedBookData.imageModelProfile }
         : {}),
+      imageQualityTier: normalizedBookData.imageQualityTier,
       generationMode,
       ...createGenerationStartedPatch(),
     });
@@ -981,9 +986,11 @@ export async function processBookGeneration(
       const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
       quotaExceeded = !canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });
 
-      if (quotaExceeded) {
-        const singleCredits = await deps.getUserSingleBookCredits(bookData.userId);
-        hasSingleBookCredits = singleCredits > 0;
+      if (quotaExceeded || normalizedBookData.isSinglePurchase) {
+        const credits = await deps.getUserCredits(bookData.userId);
+        const purchaseType = normalizedBookData.singlePurchaseType || (normalizedBookData.creationMode === "photo_story" ? "photo_story" : "ai_guided");
+        const hasSpecificCredit = purchaseType === "photo_story" ? (credits.photoStoryCredits > 0) : (credits.aiGuidedCredits > 0);
+        hasSingleBookCredits = hasSpecificCredit || credits.singleBookCredits > 0;
 
         if (!hasSingleBookCredits) {
           const message =
@@ -1762,12 +1769,22 @@ export async function processBookGeneration(
       // Consumption logic: Prefer monthly quota, then single credits
       if (process.env.NODE_ENV !== "development") {
         const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
-        if (canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount })) {
+        const canUseMonthly = canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });
+
+        if (canUseMonthly && !normalizedBookData.isSinglePurchase) {
           await deps.incrementMonthlyCount(bookData.userId);
         } else {
-          const singleCredits = await deps.getUserSingleBookCredits(bookData.userId);
-          if (singleCredits > 0) {
-            await deps.consumeSingleBookCredit(bookData.userId);
+          const credits = await deps.getUserCredits(bookData.userId);
+          const purchaseType = normalizedBookData.singlePurchaseType || (normalizedBookData.creationMode === "photo_story" ? "photo_story" : "ai_guided");
+          const hasSpecificCredit = purchaseType === "photo_story" ? (credits.photoStoryCredits > 0) : (credits.aiGuidedCredits > 0);
+
+          if (hasSpecificCredit) {
+            await deps.consumeCredit(bookData.userId, purchaseType);
+          } else if (credits.singleBookCredits > 0) {
+            await deps.consumeCredit(bookData.userId, "legacy");
+          } else if (canUseMonthly) {
+            // fallback to monthly if somehow isSinglePurchase was set but no credits found
+            await deps.incrementMonthlyCount(bookData.userId);
           } else {
             // This should ideally not happen if Step 3 passed, but as a safety:
             await deps.incrementMonthlyCount(bookData.userId);
@@ -1871,21 +1888,22 @@ function normalizeBookForGeneration(
         ? bookData.pageCount
         : normalizedPlanConfig.defaultPageCount;
 
+  const isSinglePurchase = bookData.isSinglePurchase === true;
+
   return {
     ...bookData,
     creationMode,
     productPlan: normalizedPlan,
-    imageQualityTier: normalizedPlanConfig.imageQualityTier,
+    imageQualityTier: isSinglePurchase ? "premium" : normalizedPlanConfig.imageQualityTier,
     characterConsistencyMode:
       bookData.characterConsistencyMode ?? normalizedPlanConfig.characterConsistencyMode,
     imageModelProfile:
-      // Explicit imageModelProfile on the book document always takes priority over plan default.
-      // This allows smoke/diagnostic overrides (e.g. flux11_pro_candidate) without requiring
-      // a premium user account. If not set on the book, the plan config default applies.
-      bookData.imageModelProfile ?? normalizedPlanConfig.imageModelProfile,
+      isSinglePurchase
+        ? "kontext_max"
+        : (bookData.imageModelProfile ?? normalizedPlanConfig.imageModelProfile),
     scenePolicy: resolveScenePolicy(bookData, template),
     pageCount: normalizedPageCount,
-    generationMode: normalizedPlanConfig.generationMode,
+    generationMode: isSinglePurchase ? "quality" : normalizedPlanConfig.generationMode,
   };
 }
 
@@ -2957,16 +2975,29 @@ export const generateBook = onDocumentCreated(
         await countRef.set({ count: admin.firestore.FieldValue.increment(1) }, { merge: true });
       },
 
-      getUserSingleBookCredits: async (userId: string) => {
+      getUserCredits: async (userId: string) => {
         const userDoc = await db.collection("users").doc(userId).get();
-        return userDoc.data()?.singleBookCredits || 0;
+        const data = userDoc.data();
+        return {
+          singleBookCredits: data?.singleBookCredits || 0,
+          aiGuidedCredits: data?.singlePurchaseCredits?.ai_guided || 0,
+          photoStoryCredits: data?.singlePurchaseCredits?.photo_story || 0,
+        };
       },
 
-      consumeSingleBookCredit: async (userId: string) => {
+      consumeCredit: async (userId: string, type: "ai_guided" | "photo_story" | "legacy") => {
         const userRef = db.collection("users").doc(userId);
-        await userRef.update({
-          singleBookCredits: admin.firestore.FieldValue.increment(-1),
-        });
+        if (type === "legacy") {
+          await userRef.update({
+            singleBookCredits: admin.firestore.FieldValue.increment(-1),
+          });
+        } else {
+          // Keep singleBookCredits (total count) in sync when consuming typed credit
+          await userRef.update({
+            [`singlePurchaseCredits.${type}`]: admin.firestore.FieldValue.increment(-1),
+            singleBookCredits: admin.firestore.FieldValue.increment(-1),
+          });
+        }
       },
 
       // P5-3c: Gated experiment flag — only set when the user's Firestore doc has
