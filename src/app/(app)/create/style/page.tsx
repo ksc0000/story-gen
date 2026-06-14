@@ -51,7 +51,8 @@ function StyleSelectionPageContent() {
   const mode = (searchParams.get("mode") ?? template?.creationMode ?? "guided_ai") as
     | "fixed_template"
     | "guided_ai"
-    | "original_ai";
+    | "original_ai"
+    | "photo_story";
   const productPlanParam = (searchParams.get("productPlan") as ProductPlan | null)
     ?? getDefaultProductPlanForCreationMode(mode);
   const selectedPlanConfig = PLAN_CONFIGS[productPlanParam] ?? PLAN_CONFIGS.free;

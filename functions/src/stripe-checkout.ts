@@ -180,7 +180,7 @@ export const stripeWebhook = onRequest(
               if (sessionDoc.exists) return;
 
               const purchaseType = obj.metadata?.purchaseType as "ai_guided" | "photo_story" | undefined;
-              const updateData: any = {
+              const updateData: Record<string, admin.firestore.FieldValue> = {
                 singleBookCredits: admin.firestore.FieldValue.increment(1),
               };
               if (purchaseType) {
