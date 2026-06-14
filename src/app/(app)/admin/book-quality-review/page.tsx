@@ -500,6 +500,25 @@ export default function AdminBookQualityReviewPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
+
+    if (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true") {
+      const demoBooks = [
+        {
+          id: "demo-book-1",
+          title: "Demo Book",
+          status: "completed",
+          productPlan: "premium_paid",
+          creationMode: "guided_ai",
+          createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown as import("firebase/firestore").Timestamp,
+          overallQualityScore: 4.5,
+          qualityReviewStatus: "not_reviewed",
+        } as BookWithId,
+      ];
+      setBooks(demoBooks);
+      setBooksLoading(false);
+      return;
+    }
+
     const booksQuery = query(collection(db, "books"), orderBy("createdAt", "desc"), limit(sloSampleSize));
     const unsubscribe = onSnapshot(
       booksQuery,

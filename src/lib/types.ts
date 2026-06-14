@@ -90,7 +90,54 @@ export type IllustrationStyle =
   | "watercolor"
   | "flat";
 export type PageCount = 4 | 8 | 12;
-export type QualityReviewScore = number;
+export type QualityReviewScore = 1 | 2 | 3 | 4 | 5;
+
+export interface StoryQualityAxes {
+  childPersonalization: QualityReviewScore;
+  storyCoherence: QualityReviewScore;
+  ageAppropriateness: QualityReviewScore;
+  emotionalSatisfaction: QualityReviewScore;
+  pageLengthBalance: QualityReviewScore;
+  characterConsistency: QualityReviewScore;
+  endingSatisfaction: QualityReviewScore;
+}
+
+export interface IllustrationQualityAxes {
+  promptCompleteness: QualityReviewScore;
+  visualConsistency: QualityReviewScore;
+  characterConsistency: QualityReviewScore;
+  sceneRelevance: QualityReviewScore;
+  styleConsistency: QualityReviewScore;
+  artifactAvoidance: QualityReviewScore;
+}
+
+export interface CharacterConsistencyAxes {
+  visualBibleReflected: QualityReviewScore;
+  characterIdConsistency: QualityReviewScore;
+  appearingCharacterConsistency: QualityReviewScore;
+  focusCharacterConsistency: QualityReviewScore;
+  pageLevelCharacterLinkage: QualityReviewScore;
+  outfitHairstyleConsistency: QualityReviewScore;
+  colorPaletteConsistency: QualityReviewScore;
+}
+
+export interface PersonalizationAxes {
+  childProfileUsage: QualityReviewScore;
+  nameNicknameUsage: QualityReviewScore;
+  favoriteThings: QualityReviewScore;
+  familyContext: QualityReviewScore;
+  memoryEventContext: QualityReviewScore;
+  overPersonalizationRisk: QualityReviewScore;
+}
+
+export interface SafetyAxes {
+  ageAppropriateVocabulary: QualityReviewScore;
+  notTooScary: QualityReviewScore;
+  dangerAvoidance: QualityReviewScore;
+  familyFriendlyPeace: QualityReviewScore;
+  privacyConsideration: QualityReviewScore;
+}
+
 export type QualityReviewStatus =
   | "not_reviewed"
   | "human_reviewed"
@@ -133,6 +180,11 @@ export type QualityReview = {
   reviewReason: string;
   flaggedIssues: QualityFlaggedIssue[];
   recommendedFixes: QualityRecommendedFix[];
+  storyAxes?: StoryQualityAxes;
+  illustrationAxes?: IllustrationQualityAxes;
+  characterAxes?: CharacterConsistencyAxes;
+  personalizationAxes?: PersonalizationAxes;
+  safetyAxes?: SafetyAxes;
   rubricVersion: string;
   llmAutoReviewResult?: import("./story").LLMQualityReviewResult;
   createdAt?: Timestamp;
@@ -512,6 +564,11 @@ export interface BookDoc {
   qualityReviewReason?: string;
   qualityFlaggedIssues?: QualityFlaggedIssue[];
   qualityRecommendedFixes?: QualityRecommendedFix[];
+  storyAxes?: StoryQualityAxes;
+  illustrationAxes?: IllustrationQualityAxes;
+  characterAxes?: CharacterConsistencyAxes;
+  personalizationAxes?: PersonalizationAxes;
+  safetyAxes?: SafetyAxes;
   smokeTestMetadata?: {
     isSmokeTest?: boolean;
     suite?: string;
