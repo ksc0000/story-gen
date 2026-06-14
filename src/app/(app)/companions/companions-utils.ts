@@ -50,12 +50,38 @@ export const SIZE_OPTIONS: { value: "small" | "medium" | "large"; label: string;
   { value: "large", label: "大きい", en: "large" },
 ];
 
+/** 体の模様（単一選択）。en が空文字のものは説明に含めない（＝無地）。 */
+export const PATTERN_OPTIONS: { value: string; label: string; emoji: string; en: string }[] = [
+  { value: "plain", label: "むじ", emoji: "⬜", en: "" },
+  { value: "spotted", label: "水玉", emoji: "🔵", en: "with playful round polka-dot spots" },
+  { value: "striped", label: "しま", emoji: "🦓", en: "with soft stripes" },
+  { value: "patched", label: "ぶち", emoji: "🐄", en: "with patches of two-tone color" },
+  { value: "star", label: "星", emoji: "⭐", en: "with little star-shaped markings" },
+  { value: "heart", label: "ハート", emoji: "💖", en: "with small heart-shaped markings" },
+  { value: "swirl", label: "うずまき", emoji: "🌀", en: "with gentle swirl patterns" },
+  { value: "gradient", label: "グラデ", emoji: "🌈", en: "with a soft gradient-colored coat" },
+];
+
+/** 身につけるアクセサリ（複数選択・最大2つ）。 */
+export const ACCESSORY_OPTIONS: { value: string; label: string; emoji: string; en: string }[] = [
+  { value: "ribbon", label: "リボン", emoji: "🎀", en: "a cute ribbon" },
+  { value: "hat", label: "ぼうし", emoji: "🎩", en: "a little hat" },
+  { value: "scarf", label: "マフラー", emoji: "🧣", en: "a cozy scarf" },
+  { value: "glasses", label: "めがね", emoji: "👓", en: "round glasses" },
+  { value: "backpack", label: "リュック", emoji: "🎒", en: "a tiny backpack" },
+  { value: "cape", label: "マント", emoji: "🦸", en: "a small flowing cape" },
+  { value: "flower", label: "おはな", emoji: "🌸", en: "a flower accessory" },
+  { value: "bell", label: "すず", emoji: "🔔", en: "a jingling bell collar" },
+];
+
 export function buildVisualDescription(params: {
   species: CompanionSpecies;
   personalities: string[];
   ability: string;
   color: string;
   size: "small" | "medium" | "large";
+  pattern?: string;
+  accessories?: string[];
 }): string {
   const sizeEn = SIZE_OPTIONS.find((o) => o.value === params.size)?.en || "medium-sized";
   const colorEn = COLOR_OPTIONS.find((o) => o.value === params.color)?.en || "colorful";
@@ -65,11 +91,26 @@ export function buildVisualDescription(params: {
     .filter(Boolean)
     .join(" and ");
   const abilityEn = ABILITY_OPTIONS.find((o) => o.value === params.ability)?.en || "some special talents";
+  const patternEn = params.pattern
+    ? PATTERN_OPTIONS.find((o) => o.value === params.pattern)?.en || ""
+    : "";
+  const accessoriesEn = (params.accessories ?? [])
+    .map((a) => ACCESSORY_OPTIONS.find((o) => o.value === a)?.en)
+    .filter(Boolean)
+    .join(" and ");
 
+  const patternPart = patternEn; // already phrased as "with ..."
+  const accessoryPart = accessoriesEn ? `wearing ${accessoriesEn}` : "";
   const personalityPart = personalitiesEn ? `with a ${personalitiesEn} personality` : "";
   const abilityPart = abilityEn ? `who has ${abilityEn}` : "";
 
-  const parts = [`A ${sizeEn}, ${colorEn} ${speciesEn}`, personalityPart, abilityPart].filter(Boolean);
+  const parts = [
+    `A ${sizeEn}, ${colorEn} ${speciesEn}`,
+    patternPart,
+    accessoryPart,
+    personalityPart,
+    abilityPart,
+  ].filter(Boolean);
 
   return parts.join(" ").replace(/\s+/g, " ").trim() + ".";
 }

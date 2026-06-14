@@ -10,6 +10,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/components/step-indicator";
 import { PageTransition } from "@/components/page-transition";
+import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { db, storage } from "@/lib/firebase";
 import { PLAN_CONFIGS } from "@/lib/plans";
@@ -147,6 +148,7 @@ function PhotoUploadPageContent() {
 
   return (
     <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
+      <BackButton className="mb-3" />
       <StepIndicator currentStep={2} />
       <h1 className="mt-6 text-center text-xl font-bold text-purple-900">写真をアップロード</h1>
       <p className="mt-2 text-center text-sm text-violet-500">

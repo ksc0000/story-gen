@@ -35,6 +35,34 @@ describe("companions-utils", () => {
         });
         expect(desc).toBe("A medium-sized, gray robot who has some special talents.");
       });
+
+    it("should include pattern and accessories when provided", () => {
+      const desc = buildVisualDescription({
+        species: "cat",
+        personalities: ["gentle"],
+        ability: "",
+        color: "white",
+        size: "small",
+        pattern: "spotted",
+        accessories: ["ribbon", "glasses"],
+      });
+      expect(desc).toBe(
+        "A small, white cat with playful round polka-dot spots wearing a cute ribbon and round glasses with a gentle personality who has some special talents."
+      );
+    });
+
+    it("should omit pattern when 'plain' (no markings)", () => {
+      const desc = buildVisualDescription({
+        species: "bear",
+        personalities: [],
+        ability: "",
+        color: "brown",
+        size: "large",
+        pattern: "plain",
+        accessories: [],
+      });
+      expect(desc).toBe("A large, brown bear who has some special talents.");
+    });
   });
 
   describe("getSpeciesEmoji", () => {

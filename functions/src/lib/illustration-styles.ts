@@ -30,10 +30,11 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
     name: "クレヨンで描いた絵本",
     previewImageUrl: "/images/styles/crayon.webp",
     styleBible:
-      "Crayon storybook style, warm hand-drawn strokes, waxy texture, playful childlike marks, colorful but gentle page design.",
+      "Crayon storybook style, thick waxy crayon strokes with visible grainy crayon texture, bold chunky childlike outlines, uneven hand-pressed coloring with paper tooth showing through, warm hand-drawn marks, colorful but gentle page design.",
     negativeStyleRules: [
       "Do not add readable text, signs, labels, posters, banners, logos, or watermarks.",
       "Do not make the lines too mechanical or vector-clean.",
+      "Do not render it as soft watercolor, smooth digital painting, or airbrushed gradients.",
     ],
     usePreviewAsReference: false,
   },
@@ -114,7 +115,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
     name: "カラフルポップ",
     previewImageUrl: "/images/styles/colorful_pop.webp",
     styleBible:
-      "Colorful pop picture book style, vivid joyful colors, friendly rounded forms, playful graphic energy, clear child-safe staging.",
+      "Colorful pop picture book style, highly saturated vivid bold colors, punchy bright high-contrast palette, friendly rounded forms, playful graphic energy, clear child-safe staging.",
     negativeStyleRules: [
       "Do not add readable text, signs, labels, posters, banners, logos, or watermarks.",
       "Do not make the page cluttered or overstimulating.",
