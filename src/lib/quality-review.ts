@@ -1,6 +1,9 @@
 import type {
   BookDoc,
+  CharacterConsistencyAxes,
+  IllustrationQualityAxes,
   PageDoc,
+  PersonalizationAxes,
   QualityReview,
   QualityReviewScore,
   QualityReviewStatus,
@@ -8,6 +11,8 @@ import type {
   QualityTaskChecklistItem,
   QualityTaskDoc,
   QualityTaskIntent,
+  SafetyAxes,
+  StoryQualityAxes,
   Timestamp,
 } from "@/lib/types";
 
