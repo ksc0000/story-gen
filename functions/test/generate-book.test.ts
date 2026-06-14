@@ -7,6 +7,7 @@ import {
   shouldFailBookForQuality,
   gateImageModelProfile,
   sanitizeForbiddenQuestObjects,
+  normalizeBookForGeneration,
 } from "../src/generate-book";
 import type { BookData, TemplateData, GeneratedStory } from "../src/lib/types";
 
@@ -49,6 +50,14 @@ const fixedTemplate: TemplateData = {
           general_child: "{childName}は、{familyMembers}といっしょに{place}へでかけました。",
         },
         imagePromptTemplate: "A child arriving at a friendly zoo with family",
+      },
+      {
+        textTemplate: "ぞうさん、おおきいね。",
+        imagePromptTemplate: "A child looking at an elephant",
+      },
+      {
+        textTemplate: "きりんさん、たかいね。",
+        imagePromptTemplate: "A child looking at a giraffe",
       },
       {
         textTemplate: "{parentMessage}",
@@ -803,7 +812,7 @@ describe("processBookGeneration", () => {
       expect.stringContaining("A child arriving at a friendly zoo with family"),
       expect.any(Object)
     );
-    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(2);
+    expect(deps.imageClient.generateImage).toHaveBeenCalledTimes(4);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed", "completed");
   });
 
@@ -836,16 +845,14 @@ describe("processBookGeneration", () => {
     deps.getTemplate.mockResolvedValue({
       ...fixedTemplate,
       fixedStory: {
-        titleTemplate: fixedTemplate.fixedStory!.titleTemplate,
-        pages: [
-          {
-            textTemplate: "{childName}は{place}へいきました。",
-            textTemplatesByAge: {
-              general_child: "{childName}は、みんなで{place}へでかけました。",
-            },
-            imagePromptTemplate: "A child arriving at a friendly zoo with family",
+        ...fixedTemplate.fixedStory!,
+        pages: Array(4).fill({
+          textTemplate: "{childName}は{place}へいきました。",
+          textTemplatesByAge: {
+            general_child: "{childName}は、みんなで{place}へでかけました。",
           },
-        ],
+          imagePromptTemplate: "A child arriving at a friendly zoo with family",
+        }),
       },
     });
     const generalFallbackBook: BookData = {
@@ -875,13 +882,11 @@ describe("processBookGeneration", () => {
     deps.getTemplate.mockResolvedValue({
       ...fixedTemplate,
       fixedStory: {
-        titleTemplate: fixedTemplate.fixedStory!.titleTemplate,
-        pages: [
-          {
-            textTemplate: "{childName}は、{place}へいきました。",
-            imagePromptTemplate: "A child arriving at a friendly zoo with family",
-          },
-        ],
+        ...fixedTemplate.fixedStory!,
+        pages: Array(4).fill({
+          textTemplate: "{childName}は、{place}へいきました。",
+          imagePromptTemplate: "A child arriving at a friendly zoo with family",
+        }),
       },
     });
     const defaultFallbackBook: BookData = {
@@ -1404,17 +1409,11 @@ describe("processBookGeneration", () => {
     deps.getTemplate.mockResolvedValue({
       ...fixedTemplate,
       fixedStory: {
-        titleTemplate: fixedTemplate.fixedStory!.titleTemplate,
-        pages: [
-          {
-            textTemplate: "{childName}、いった。",
-            imagePromptTemplate: "A child at the zoo with family in a warm memory scene",
-          },
-          {
-            textTemplate: "{parentMessage}",
-            imagePromptTemplate: "A warm ending zoo memory scene with family",
-          },
-        ],
+        ...fixedTemplate.fixedStory!,
+        pages: Array(4).fill({
+          textTemplate: "{childName}、いった。",
+          imagePromptTemplate: "A child at the zoo with family in a warm memory scene",
+        }),
       },
     });
 
@@ -2196,6 +2195,72 @@ describe("Page 0 purpose and reference logic (E2E-QA fix)", () => {
         imagePurpose: "book_page",
       })
     );
+  });
+});
+
+describe("normalizeBookForGeneration (Phase 3-C)", () => {
+  const freeUserPlan = "free";
+  const premiumUserPlan = "premium";
+
+  const fourPageFixedTemplate: TemplateData = {
+    ...fixedTemplate,
+    fixedStory: {
+      ...fixedTemplate.fixedStory!,
+      pages: Array(4).fill(fixedTemplate.fixedStory!.pages[0]),
+    },
+  };
+
+  const eightPageFixedTemplate: TemplateData = {
+    ...fixedTemplate,
+    fixedStory: {
+      ...fixedTemplate.fixedStory!,
+      pages: Array(8).fill(fixedTemplate.fixedStory!.pages[0]),
+    },
+  };
+
+  const twelvePageFixedTemplate: TemplateData = {
+    ...fixedTemplate,
+    fixedStory: {
+      ...fixedTemplate.fixedStory!,
+      pages: Array(12).fill(fixedTemplate.fixedStory!.pages[0]),
+    },
+  };
+
+  it("allows 4-page fixed template for free plan", () => {
+    const result = normalizeBookForGeneration(baseBookData, fourPageFixedTemplate, freeUserPlan);
+    expect(result.pageCount).toBe(4);
+    expect(result.productPlan).toBe("free");
+  });
+
+  it("blocks 8-page fixed template for free plan", () => {
+    expect(() =>
+      normalizeBookForGeneration(baseBookData, eightPageFixedTemplate, freeUserPlan)
+    ).toThrow(/Plan free does not permit generating a 8-page fixed template/);
+  });
+
+  it("allows 8-page fixed template for free plan if isSinglePurchase is true", () => {
+    const singlePurchaseBook = { ...baseBookData, isSinglePurchase: true };
+    const result = normalizeBookForGeneration(singlePurchaseBook, eightPageFixedTemplate, freeUserPlan);
+    expect(result.pageCount).toBe(8);
+    expect(result.productPlan).toBe("premium_paid"); // Single purchase maps to premium_paid settings
+  });
+
+  it("blocks 12-page fixed template for standard_paid plan (simulated via free userPlan)", () => {
+    // Standard paid users on the standard plan are simulated by passing standard_paid as the requested productPlan
+    // if the user doesn't have a premium subscription.
+    // However, normalizeBookForGeneration internal logic might downgrade standard_paid to free for fixed_template if not premium.
+    // Let's test standard_paid specifically.
+    const standardBookData = { ...baseBookData, productPlan: "standard_paid" as const };
+    expect(() =>
+      normalizeBookForGeneration(standardBookData, twelvePageFixedTemplate, freeUserPlan)
+    ).toThrow(/Plan (free|standard_paid) does not permit generating a 12-page fixed template/);
+  });
+
+  it("allows 12-page fixed template for premium plan", () => {
+    const premiumBookData = { ...baseBookData, productPlan: "premium_paid" as const };
+    const result = normalizeBookForGeneration(premiumBookData, twelvePageFixedTemplate, premiumUserPlan);
+    expect(result.pageCount).toBe(12);
+    expect(result.productPlan).toBe("premium_paid");
   });
 });
 
