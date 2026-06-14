@@ -21,6 +21,7 @@ describe("AUTO_REVIEW_RESPONSE_SCHEMA", () => {
       "reviewReason",
       "flaggedIssues",
       "recommendedFixes",
+      "characterAxes",
     ];
     expect(AUTO_REVIEW_RESPONSE_SCHEMA.required).toEqual(expect.arrayContaining(requiredFields));
     expect(AUTO_REVIEW_RESPONSE_SCHEMA.required.length).toBe(requiredFields.length);
@@ -92,6 +93,26 @@ describe("AUTO_REVIEW_RESPONSE_SCHEMA", () => {
     const fixPage = AUTO_REVIEW_RESPONSE_SCHEMA.properties.recommendedFixes.items.properties.pageNumber;
     expect(fixPage.type).toBe("number");
     expect(fixPage.nullable).toBe(true);
+  });
+
+  it("has characterAxes as an object with required sub-fields", () => {
+    const axes = AUTO_REVIEW_RESPONSE_SCHEMA.properties.characterAxes;
+    expect(axes.type).toBe("object");
+    const requiredAxes = [
+      "visualBibleReflected",
+      "characterIdConsistency",
+      "appearingCharacterConsistency",
+      "focusCharacterConsistency",
+      "pageLevelCharacterLinkage",
+      "outfitHairstyleConsistency",
+      "colorPaletteConsistency",
+    ];
+    expect(axes.required).toEqual(expect.arrayContaining(requiredAxes));
+    expect(axes.required.length).toBe(requiredAxes.length);
+
+    for (const field of requiredAxes) {
+      expect(axes.properties[field].type).toBe("number");
+    }
   });
 });
 

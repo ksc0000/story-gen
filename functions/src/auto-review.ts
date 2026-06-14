@@ -91,6 +91,17 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
       const safetyScore = Math.round((reviewResult.safetyScore / 20) * 10) / 10;
       const overallScore = Math.round((reviewResult.overallQualityScore / 20) * 10) / 10;
 
+      // Normalize characterAxes (0-100 to 1-5)
+      const characterAxes = {
+        visualBibleReflected: Math.round((reviewResult.characterAxes.visualBibleReflected / 20) * 10) / 10,
+        characterIdConsistency: Math.round((reviewResult.characterAxes.characterIdConsistency / 20) * 10) / 10,
+        appearingCharacterConsistency: Math.round((reviewResult.characterAxes.appearingCharacterConsistency / 20) * 10) / 10,
+        focusCharacterConsistency: Math.round((reviewResult.characterAxes.focusCharacterConsistency / 20) * 10) / 10,
+        pageLevelCharacterLinkage: Math.round((reviewResult.characterAxes.pageLevelCharacterLinkage / 20) * 10) / 10,
+        outfitHairstyleConsistency: Math.round((reviewResult.characterAxes.outfitHairstyleConsistency / 20) * 10) / 10,
+        colorPaletteConsistency: Math.round((reviewResult.characterAxes.colorPaletteConsistency / 20) * 10) / 10,
+      } as any; // Cast to any or appropriate type if needed, but it matches CharacterConsistencyAxes
+
       const reviewDoc: QualityReview = {
         id: reviewId,
         bookId,
@@ -106,8 +117,9 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         reviewReason: reviewResult.reviewReason,
         flaggedIssues: reviewResult.flaggedIssues,
         recommendedFixes: reviewResult.recommendedFixes,
-        rubricVersion: "llm-auto-v1",
+        rubricVersion: "llm-auto-v2",
         llmAutoReviewResult: reviewResult,
+        characterAxes,
         createdAt: admin.firestore.Timestamp.now(),
         createdAtMs: now,
         updatedAt: admin.firestore.Timestamp.now(),
@@ -141,6 +153,7 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         qualityReviewReason: reviewResult.reviewReason,
         qualityFlaggedIssues: reviewResult.flaggedIssues,
         qualityRecommendedFixes: reviewResult.recommendedFixes,
+        characterAxes,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAtMs: now,
       });
