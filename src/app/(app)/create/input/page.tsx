@@ -17,7 +17,6 @@ import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
 import {
   getCompatiblePlanConfigs,
   getDefaultProductPlanForCreationMode,
-  IMAGE_QUALITY_LABELS,
   PLAN_CONFIGS,
 } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
@@ -452,7 +451,7 @@ function InputPageContent() {
               {/* プラン */}
               {visiblePlans.length > 1 && (
                 <div>
-                  <Label className="text-purple-800">プラン・画質</Label>
+                  <Label className="text-purple-800">プラン</Label>
                   <div className="mt-2 grid gap-2">
                     {visiblePlans.map((plan) => {
                       const locked = !plan.enabled && !allowUpcomingPlans;
@@ -486,7 +485,7 @@ function InputPageContent() {
                             ) : null}
                           </div>
                           <p className="mt-1 text-xs leading-relaxed text-violet-500">
-                            {IMAGE_QUALITY_LABELS[plan.imageQualityTier].label} ・ {plan.allowedPageCounts.join("/")}p
+                            {plan.allowedPageCounts.join("/")}ページ{plan.monthlyBookQuota ? ` ・ 月${plan.monthlyBookQuota}冊` : ""}
                           </p>
                         </button>
                       );
