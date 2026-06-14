@@ -168,6 +168,7 @@ export function QualityReviewPanel({
   onSave,
 }: QualityReviewPanelProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedHistory, setExpandedHistory] = useState<Set<string>>(new Set());
 
   const latestLLMReview = qualityReviews.find((r) => r.reviewerType === "llm");
 
@@ -180,6 +181,15 @@ export function QualityReviewPanel({
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleHistoryExpansion = (id: string) => {
+    setExpandedHistory((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -415,38 +425,111 @@ export function QualityReviewPanel({
             <p className="text-sm text-violet-500">No quality reviews yet</p>
           ) : (
             <div className="space-y-3">
-              {qualityReviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="rounded-xl border border-violet-100 bg-white p-4 text-sm"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge
-                      className={getQualityReviewStatusBadgeClass(review.status)}
-                      variant="secondary"
-                    >
-                      {getQualityReviewStatusLabel(review.status)}
-                    </Badge>
-                    <span className="text-xs font-medium text-violet-600">
-                      {review.reviewerType === "llm" ? "🤖 AI" : `👤 ${review.reviewerId.slice(0, 8)}`}
-                    </span>
-                    <span className="text-xs text-violet-500">
-                      overall: {formatQualityScore(review.overallScore)}
-                    </span>
-                    <span className="text-xs text-violet-400">
-                      {review.createdAtMs
-                        ? new Date(review.createdAtMs).toLocaleString("ja-JP")
-                        : "—"}
-                    </span>
-                  </div>
-                  <div className="mt-2 grid gap-1 text-xs text-violet-700 sm:grid-cols-3">
-                    <p>Story: {review.storyScore} {review.storyAxes && <span className="text-[10px] opacity-60">(granular ✓)</span>}</p>
-                    <p>Illustration: {review.illustrationScore} {review.illustrationAxes && <span className="text-[10px] opacity-60">(granular ✓)</span>}</p>
-                    <p>Character: {review.characterConsistencyScore} {review.characterAxes && <span className="text-[10px] opacity-60">(granular ✓)</span>}</p>
-                    <p>Personalization: {review.personalizationScore} {review.personalizationAxes && <span className="text-[10px] opacity-60">(granular ✓)</span>}</p>
-                    <p>Safety: {review.safetyScore} {review.safetyAxes && <span className="text-[10px] opacity-60">(granular ✓)</span>}</p>
-                  </div>
-                  {review.reviewReason && (
+              {qualityReviews.map((review) => {
+                const isExpanded = expandedHistory.has(review.id);
+                const hasAnyGranular = !!(
+                  review.storyAxes ||
+                  review.illustrationAxes ||
+                  review.characterAxes ||
+                  review.personalizationAxes ||
+                  review.safetyAxes
+                );
+
+                return (
+                  <div
+                    key={review.id}
+                    className="rounded-xl border border-violet-100 bg-white p-4 text-sm"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge
+                          className={getQualityReviewStatusBadgeClass(review.status)}
+                          variant="secondary"
+                        >
+                          {getQualityReviewStatusLabel(review.status)}
+                        </Badge>
+                        <span className="text-xs font-medium text-violet-600">
+                          {review.reviewerType === "llm" ? "🤖 AI" : `👤 ${review.reviewerId.slice(0, 8)}`}
+                        </span>
+                        <span className="text-xs text-violet-500">
+                          overall: {formatQualityScore(review.overallScore)}
+                        </span>
+                        <span className="text-xs text-violet-400">
+                          {review.createdAtMs
+                            ? new Date(review.createdAtMs).toLocaleString("ja-JP")
+                            : "—"}
+                        </span>
+                      </div>
+                      {hasAnyGranular && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-violet-500 hover:bg-violet-50"
+                          onClick={() => toggleHistoryExpansion(review.id)}
+                        >
+                          {isExpanded ? (
+                            <span className="flex items-center gap-1">
+                              <ChevronUp size={14} /> Hide Granular
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1">
+                              <ChevronDown size={14} /> View Granular
+                            </span>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="mt-2 grid gap-1 text-xs text-violet-700 sm:grid-cols-3">
+                      <p>Story: {review.storyScore} {review.storyAxes && <span className="text-[10px] opacity-60">(granular ✓)</span>}</p>
+                      <p>Illustration: {review.illustrationScore} {review.illustrationAxes && <span className="text-[10px] opacity-60">(granular ✓)</span>}</p>
+                      <p>Character: {review.characterConsistencyScore} {review.characterAxes && <span className="text-[10px] opacity-60">(granular ✓)</span>}</p>
+                      <p>Personalization: {review.personalizationScore} {review.personalizationAxes && <span className="text-[10px] opacity-60">(granular ✓)</span>}</p>
+                      <p>Safety: {review.safetyScore} {review.safetyAxes && <span className="text-[10px] opacity-60">(granular ✓)</span>}</p>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="mt-4 space-y-4 rounded-lg bg-violet-50/50 p-3">
+                        {CATEGORY_FIELDS.map((cat) => {
+                          // Get the axes object from the review
+                          // storyScore -> storyAxes, illustrationScore -> illustrationAxes, etc.
+                          // special case: characterConsistencyScore -> characterAxes
+                          const axesObjKey =
+                            cat.key === "characterConsistencyScore"
+                              ? "characterAxes"
+                              : (cat.key.replace("Score", "Axes") as keyof typeof review);
+                          const axesData = review[axesObjKey] as Record<string, number> | undefined;
+
+                          if (!axesData) return null;
+
+                          return (
+                            <div key={cat.key} className="space-y-1.5">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-violet-500">
+                                {cat.label} breakdown
+                              </p>
+                              <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+                                {cat.axes.map((axis) => {
+                                  const propName = axis.key.split("_")[1];
+                                  const axisScore = axesData[propName];
+                                  if (axisScore === undefined) return null;
+
+                                  return (
+                                    <div
+                                      key={axis.key}
+                                      className="flex items-center justify-between gap-2 border-b border-violet-100/50 pb-1"
+                                    >
+                                      <span className="text-[11px] text-violet-600">{axis.label}</span>
+                                      <span className="font-semibold text-violet-800">{axisScore}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {review.reviewReason && (
                     <p className="mt-2 text-xs text-violet-600">{review.reviewReason}</p>
                   )}
                   {review.flaggedIssues.length > 0 && (
@@ -460,7 +543,8 @@ export function QualityReviewPanel({
                     </div>
                   )}
                 </div>
-              ))}
+              );
+            })}
             </div>
           )}
         </div>
