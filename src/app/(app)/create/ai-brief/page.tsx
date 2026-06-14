@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/components/step-indicator";
 import { PageTransition } from "@/components/page-transition";
+import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { trackAnalyticsEvent } from "@/lib/analytics";
@@ -573,6 +574,7 @@ function AiBriefPageContent() {
   // ── render ────────────────────────────────────
   return (
     <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
+      <BackButton className="mb-3" />
       <StepIndicator currentStep={2} />
 
       <div className="mt-6 text-center">

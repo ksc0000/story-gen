@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageTransition } from "@/components/page-transition";
+import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { childProfileToSummary } from "@/lib/child-profile";
@@ -15,6 +16,7 @@ export default function ChildrenPage() {
 
   return (
     <PageTransition className="mx-auto max-w-4xl px-4 py-8">
+      <BackButton className="mb-4" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-purple-900">子どもプロフィール</h1>

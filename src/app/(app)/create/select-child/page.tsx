@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/page-transition";
+import { BackButton } from "@/components/back-button";
 import { StepIndicator } from "@/components/step-indicator";
 import { AvatarNudgeBanner } from "@/components/avatar-nudge-banner";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -34,6 +35,7 @@ function SelectChildContent() {
 
   return (
     <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
+      <BackButton className="mb-3" />
       <StepIndicator currentStep={1} />
 
       <div className="mt-6 text-center">
@@ -55,7 +57,7 @@ function SelectChildContent() {
           </Link>
         </div>
       ) : (
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-2">
           {children.map((child) => (
             <button
               key={child.id}
@@ -80,12 +82,12 @@ function SelectChildContent() {
                     className="aspect-[4/3] w-full rounded-t-2xl object-cover"
                   />
                 ) : (
-                  <div className="flex aspect-[4/3] w-full items-center justify-center rounded-t-2xl bg-violet-50 text-5xl">
+                  <div className="flex aspect-[4/3] w-full items-center justify-center rounded-t-2xl bg-violet-50 text-4xl sm:text-5xl">
                     👶
                   </div>
                 )}
-                <div className="p-4">
-                  <p className="font-bold text-purple-900">
+                <div className="p-3 sm:p-4">
+                  <p className="text-sm font-bold text-purple-900 sm:text-base">
                     {child.nickname || child.displayName}
                   </p>
                   <p className="text-xs text-violet-400">
@@ -93,7 +95,7 @@ function SelectChildContent() {
                     {child.age ? ` / ${child.age}歳` : ""}
                   </p>
                   {childProfileToSummary(child) ? (
-                    <p className="mt-2 text-xs leading-relaxed text-violet-500">
+                    <p className="mt-2 hidden text-xs leading-relaxed text-violet-500 sm:block">
                       {childProfileToSummary(child)}
                     </p>
                   ) : null}

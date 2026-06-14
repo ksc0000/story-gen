@@ -4,9 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { DreamyBackground } from "@/components/dreamy-background";
+import { AppNav } from "@/components/app-nav";
 import { useAuth } from "@/lib/hooks/use-auth";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -32,8 +31,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="app-shell">
       <DreamyBackground />
       <header className="app-header">
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-          <Link href="/home" className="app-brand flex items-center gap-2 text-lg font-bold">
+        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between gap-2 px-4">
+          <Link href="/home" className="app-brand flex shrink-0 items-center gap-2 text-lg font-bold">
             <Image
               src="/logo/ehoria-logo-256.png"
               alt=""
@@ -44,31 +43,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             />
             <span>Ehoria</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/bookshelf" className="text-sm font-semibold text-violet-500 transition hover:text-purple-700">
-              本棚
-            </Link>
-            <Link href="/gallery" className="text-sm font-semibold text-violet-500 transition hover:text-purple-700">
-              ギャラリー
-            </Link>
-            <Link href="/children" className="hidden text-sm font-semibold text-violet-500 transition hover:text-purple-700 sm:inline">
-              子ども
-            </Link>
-            <Link href="/companions" className="hidden text-sm font-semibold text-violet-500 transition hover:text-purple-700 sm:inline">
-              相棒
-            </Link>
-            <Link href="/pricing" className="hidden text-sm font-semibold text-amber-600 transition hover:text-amber-700 sm:inline">
-              プラン
-            </Link>
-            <Link href="/feedback" className="hidden text-sm font-semibold text-violet-500 transition hover:text-purple-700 sm:inline">
-              ご意見
-            </Link>
-            <ThemeToggle />
-            <span className="app-user text-sm">{user.displayName}</span>
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              ログアウト
-            </Button>
-          </div>
+          <AppNav userName={user.displayName} onSignOut={signOut} />
         </div>
       </header>
       {/* relative z-[1]: ensures main content stacks above DreamyBackground

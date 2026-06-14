@@ -9,6 +9,7 @@ import { StepIndicator } from "@/components/step-indicator";
 import { ThemeCard } from "@/components/theme-card";
 import { TemplateDetailDialog } from "@/components/template-detail-dialog";
 import { PageTransition } from "@/components/page-transition";
+import { BackButton } from "@/components/back-button";
 import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
 import { useTemplates } from "@/lib/hooks/use-templates";
@@ -196,6 +197,7 @@ function ThemeSelectionPageContent() {
 
   return (
     <PageTransition className="mx-auto max-w-6xl px-4 py-4 pb-28 md:py-8 md:pb-32">
+      <BackButton className="mb-3" />
       <StepIndicator currentStep={1} />
 
       <div className="mt-6 space-y-4">

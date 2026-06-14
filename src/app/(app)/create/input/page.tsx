@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StepIndicator } from "@/components/step-indicator";
 import { PageTransition } from "@/components/page-transition";
+import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
@@ -257,6 +258,7 @@ function InputPageContent() {
 
   return (
     <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
+      <BackButton className="mb-3" />
       <StepIndicator currentStep={2} />
       <h1 className="mt-6 text-center text-xl font-bold text-purple-900">内容を入力してください</h1>
 

@@ -16,14 +16,35 @@ import {
   ABILITY_OPTIONS,
   COLOR_OPTIONS,
   SIZE_OPTIONS,
+  PATTERN_OPTIONS,
+  ACCESSORY_OPTIONS,
   buildVisualDescription,
 } from "../companions-utils";
 import { cn } from "@/lib/utils";
 import { Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { CompanionSpecies } from "@/lib/types";
 
-type Step = "species" | "personality" | "ability" | "color" | "size" | "name" | "confirm";
-const STEPS: Step[] = ["species", "personality", "ability", "color", "size", "name", "confirm"];
+type Step =
+  | "species"
+  | "personality"
+  | "ability"
+  | "color"
+  | "pattern"
+  | "accessory"
+  | "size"
+  | "name"
+  | "confirm";
+const STEPS: Step[] = [
+  "species",
+  "personality",
+  "ability",
+  "color",
+  "pattern",
+  "accessory",
+  "size",
+  "name",
+  "confirm",
+];
 
 export default function CreateCompanionPage() {
   const router = useRouter();
@@ -35,6 +56,8 @@ export default function CreateCompanionPage() {
   const [personalities, setPersonalities] = useState<string[]>([]);
   const [ability, setAbility] = useState("");
   const [color, setColor] = useState("");
+  const [pattern, setPattern] = useState("");
+  const [accessories, setAccessories] = useState<string[]>([]);
   const [size, setSize] = useState<"small" | "medium" | "large" | "">("");
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,10 +70,12 @@ export default function CreateCompanionPage() {
     if (step === "personality") return personalities.length > 0;
     if (step === "ability") return !!ability;
     if (step === "color") return !!color;
+    if (step === "pattern") return !!pattern;
+    if (step === "accessory") return true; // アクセサリは任意（なしでもOK）
     if (step === "size") return !!size;
     if (step === "name") return name.trim().length > 0;
     return true;
-  }, [step, species, personalities, ability, color, size, name]);
+  }, [step, species, personalities, ability, color, pattern, size, name]);
 
   const handleNext = () => {
     const nextStep = STEPS[currentStepIndex + 1];
@@ -71,6 +96,14 @@ export default function CreateCompanionPage() {
     }
   };
 
+  const toggleAccessory = (val: string) => {
+    if (accessories.includes(val)) {
+      setAccessories(accessories.filter((a) => a !== val));
+    } else if (accessories.length < 2) {
+      setAccessories([...accessories, val]);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!species || !size || !user) return;
     setIsSubmitting(true);
@@ -81,6 +114,8 @@ export default function CreateCompanionPage() {
         ability,
         color,
         size: size as "small" | "medium" | "large",
+        pattern,
+        accessories,
       });
 
       const companionId = await addCompanion({
@@ -147,12 +182,15 @@ export default function CreateCompanionPage() {
             {step === "personality" && "どんな性格かな？"}
             {step === "ability" && "とくいなことは？"}
             {step === "color" && "何色かな？"}
+            {step === "pattern" && "もようはどんなかな？"}
+            {step === "accessory" && "なにかつけてみる？"}
             {step === "size" && "大きさはどのくらい？"}
             {step === "name" && "名前をつけよう！"}
             {step === "confirm" && "これで決まり！"}
           </CardTitle>
           <CardDescription>
             {step === "personality" && "最大2つまで選べます。"}
+            {step === "accessory" && "最大2つまで選べます。つけなくてもOK！"}
             {step === "name" && "呼びやすい名前をつけてあげてね。"}
           </CardDescription>
         </CardHeader>
@@ -255,6 +293,49 @@ export default function CreateCompanionPage() {
             </div>
           )}
 
+          {step === "pattern" && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {PATTERN_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setPattern(opt.value)}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3 transition-all",
+                    pattern === opt.value
+                      ? "border-purple-500 bg-purple-50"
+                      : "border-transparent bg-violet-50/50 hover:bg-violet-50"
+                  )}
+                >
+                  <span className="text-3xl leading-none">{opt.emoji}</span>
+                  <span className="text-xs font-medium text-purple-900">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {step === "accessory" && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {ACCESSORY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => toggleAccessory(opt.value)}
+                  className={cn(
+                    "relative flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3 transition-all",
+                    accessories.includes(opt.value)
+                      ? "border-purple-500 bg-purple-50"
+                      : "border-transparent bg-violet-50/50 hover:bg-violet-50"
+                  )}
+                >
+                  <span className="text-3xl leading-none">{opt.emoji}</span>
+                  <span className="text-xs font-medium text-purple-900">{opt.label}</span>
+                  {accessories.includes(opt.value) && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-white text-xs">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
           {step === "size" && (
             <div className="grid grid-cols-1 gap-3">
               {SIZE_OPTIONS.map((opt) => (
@@ -350,6 +431,20 @@ export default function CreateCompanionPage() {
                   <div className="text-xs font-semibold text-violet-300">大きさ</div>
                   <div className="mt-1 text-sm font-medium text-purple-700">
                     {SIZE_OPTIONS.find(o => o.value === size)?.label}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-violet-100 p-4">
+                  <div className="text-xs font-semibold text-violet-300">もよう</div>
+                  <div className="mt-1 text-sm font-medium text-purple-700">
+                    {PATTERN_OPTIONS.find(o => o.value === pattern)?.label ?? "むじ"}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-violet-100 p-4">
+                  <div className="text-xs font-semibold text-violet-300">アクセサリ</div>
+                  <div className="mt-1 text-sm font-medium text-purple-700">
+                    {accessories.length > 0
+                      ? accessories.map(a => ACCESSORY_OPTIONS.find(o => o.value === a)?.label).filter(Boolean).join(" / ")
+                      : "なし"}
                   </div>
                 </div>
               </div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/components/step-indicator";
 import { StylePicker } from "@/components/style-picker";
 import { PageTransition } from "@/components/page-transition";
+import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
@@ -258,6 +259,7 @@ function StyleSelectionPageContent() {
 
   return (
     <PageTransition className="mx-auto max-w-5xl px-4 pb-28 pt-8">
+      <BackButton className="mb-3" />
       <StepIndicator currentStep={3} />
       <h1 className="mt-6 text-center text-xl font-bold text-purple-900">絵のタッチを選んでね</h1>
       <p className="mt-2 text-center text-sm text-violet-500">

@@ -76,7 +76,7 @@ export function StylePicker({ selected, onSelect, styles }: StylePickerProps) {
         <AnimatedCard
           key={s.id}
           onClick={() => onSelect(s.id)}
-          className="w-[72vw] max-w-[260px] flex-none snap-center sm:w-auto sm:max-w-none"
+          className="w-[44vw] max-w-[180px] flex-none snap-center sm:w-auto sm:max-w-none"
         >
           <Card className={`h-full cursor-pointer overflow-hidden transition ${selected === s.id ? "ring-2 ring-purple-500 border-purple-400 shadow-lg" : "shadow-sm sm:shadow-none"}`}>
             <CardContent className="flex h-full flex-col p-0 text-center">
@@ -85,7 +85,7 @@ export function StylePicker({ selected, onSelect, styles }: StylePickerProps) {
                   src={s.previewImageUrl}
                   alt={`${s.name}のサンプル画像`}
                   fill
-                  sizes="(min-width: 1024px) 180px, (min-width: 640px) 45vw, 72vw"
+                  sizes="(min-width: 1024px) 180px, (min-width: 640px) 45vw, 44vw"
                   className="object-cover transition duration-300 hover:scale-105"
                 />
                 {selected === s.id && (
