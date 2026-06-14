@@ -48,6 +48,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Link href="/bookshelf" className="text-sm font-semibold text-violet-500 transition hover:text-purple-700">
               本棚
             </Link>
+            <Link href="/gallery" className="text-sm font-semibold text-violet-500 transition hover:text-purple-700">
+              ギャラリー
+            </Link>
             <Link href="/children" className="hidden text-sm font-semibold text-violet-500 transition hover:text-purple-700 sm:inline">
               子ども
             </Link>
