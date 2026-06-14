@@ -2796,10 +2796,10 @@ export const generateBook = onDocumentCreated(
     secrets: [geminiApiKey, replicateApiToken, openaiApiKey],
     region: "asia-northeast1",
     memory: "1GiB",
-    // 画像タイムアウトを 360s に引き上げたため、複数ページ生成中に関数自体が
-    // 先に切れて本が途中失敗しないよう上限の 3600s に拡張（2026-06）。
-    // 通常は数分で完了し、ハング時のみこの上限まで到達する。
-    timeoutSeconds: 3600,
+    // Firestore トリガー関数の timeoutSeconds はプラットフォーム上限が 540s
+    // （3600s は HTTP 関数のみ）。画像タイムアウトは 360s に引き上げ済みで、
+    // 通常画像は数十秒で完了するため複数ページでも 540s 内に収まる。
+    timeoutSeconds: 540,
   },
   async (event) => {
     const bookId = event.params.bookId;
