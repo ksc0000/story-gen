@@ -17,10 +17,21 @@ export function buildAutoReviewPrompt(book: BookData, pages: PageData[]): string
     storyGoal: book.storyGoal,
     mainQuestObject: book.mainQuestObject,
     forbiddenQuestObjects: book.forbiddenQuestObjects,
+    characterBible: book.characterBible,
+    cast: book.storyCast?.map((c) => ({
+      characterId: c.characterId,
+      displayName: c.displayName,
+      role: c.role,
+      visualBible: c.visualBible,
+      signatureItems: c.signatureItems,
+      colorPalette: c.colorPalette,
+    })),
     pages: pages.map((p) => ({
       pageNumber: p.pageNumber + 1,
       text: p.text,
       imagePrompt: p.imagePrompt,
+      appearingCharacterIds: p.appearingCharacterIds,
+      focusCharacterId: p.focusCharacterId,
     })),
   };
 
@@ -30,7 +41,11 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
 ## Evaluation Criteria
 1. **Story Quality (0-100)**: Evaluate story structure, pacing, coherence, and emotional engagement. Is the story appropriate for children?
 2. **Illustration Quality (0-100)**: Evaluate the descriptive quality of the image prompts. Are they vivid and appropriate for the scene?
-3. **Character Consistency (0-100)**: Evaluate the potential for character consistency based on descriptions and prompts across pages.
+3. **Character Consistency (0-100)**: Evaluate character consistency across pages. Use the "characterBible" and "cast" definitions as the ground truth. Check if:
+    - Character descriptions (visualBible) are consistently reflected in page imagePrompts.
+    - Clothing, hairstyles, and color palettes remain stable across pages for the same characterId.
+    - The correct characterIds are listed in "appearingCharacterIds" based on the page text and prompt.
+    - "focusCharacterId" is appropriately chosen and consistent.
 4. **Personalization Depth (0-100)**: Evaluate how well the story might incorporate child-specific elements (if any are apparent).
 5. **Safety & Age Appropriateness (0-100)**: Check for any inappropriate content, violence, or themes unsuitable for young children.
 
@@ -45,6 +60,7 @@ Important:
 - Provide all scores as integers between 0 and 100.
 - "reviewReason", "flaggedIssues[].message", and "recommendedFixes[].reason" must be in Japanese.
 - If you find no issues, return an empty array for "flaggedIssues" and "recommendedFixes".
+- "characterAxes" is MANDATORY and must contain scores for all 7 consistency sub-axes.
 - Return ONLY the JSON object.
 `;
 }
@@ -91,6 +107,9 @@ export async function runLLMAutoReview(params: {
     "reviewReason",
     "flaggedIssues",
     "recommendedFixes",
+    // NOTE: characterAxes is intentionally NOT required here. The response schema is
+    // advisory (not enforced by Gemini), so the model may omit it; treating it as
+    // optional keeps the overall review from failing when the axes are missing.
   ];
 
   for (const field of requiredFields) {

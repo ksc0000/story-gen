@@ -682,6 +682,11 @@ export interface QualityReview {
   recommendedFixes: QualityRecommendedFix[];
   rubricVersion: string;
   llmAutoReviewResult?: LLMQualityReviewResult;
+  storyAxes?: StoryQualityAxes;
+  illustrationAxes?: IllustrationQualityAxes;
+  characterAxes?: CharacterConsistencyAxes;
+  personalizationAxes?: PersonalizationAxes;
+  safetyAxes?: SafetyAxes;
   createdAt: FirebaseFirestore.Timestamp;
   createdAtMs: number;
   updatedAt?: FirebaseFirestore.Timestamp;

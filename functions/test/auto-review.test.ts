@@ -10,6 +10,15 @@ describe("LLM Auto Review Prompt Construction", () => {
       storyGoal: "To find the treasure",
       mainQuestObject: "treasure map",
       forbiddenQuestObjects: ["bomb", "knife"],
+      characterBible: "The protagonist is a brave boy.",
+      storyCast: [
+        {
+          characterId: "child_protagonist",
+          displayName: "Hero",
+          role: "protagonist",
+          visualBible: "A boy with a red hat.",
+        },
+      ],
     };
 
     const mockPages: Partial<PageData>[] = [
@@ -17,11 +26,15 @@ describe("LLM Auto Review Prompt Construction", () => {
         pageNumber: 0,
         text: "Once upon a time...",
         imagePrompt: "A beautiful forest",
+        appearingCharacterIds: ["child_protagonist"],
+        focusCharacterId: "child_protagonist",
       },
       {
         pageNumber: 1,
         text: "He found a map.",
         imagePrompt: "A child holding a map",
+        appearingCharacterIds: ["child_protagonist"],
+        focusCharacterId: "child_protagonist",
       },
     ];
 
@@ -36,6 +49,11 @@ describe("LLM Auto Review Prompt Construction", () => {
     expect(prompt).toContain("A beautiful forest");
     expect(prompt).toContain("He found a map.");
     expect(prompt).toContain("A child holding a map");
-    expect(prompt).toContain("storyQualityScore");
+    expect(prompt).toContain("The protagonist is a brave boy.");
+    expect(prompt).toContain("Hero");
+    expect(prompt).toContain("A boy with a red hat.");
+    expect(prompt).toContain("appearingCharacterIds");
+    expect(prompt).toContain("focusCharacterId");
+    expect(prompt).toContain("characterAxes");
   });
 });

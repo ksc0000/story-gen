@@ -3,7 +3,13 @@ import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { runLLMAutoReview } from "./lib/auto-review-llm";
-import type { BookData, PageData, QualityReview } from "./lib/types";
+import type {
+  BookData,
+  CharacterConsistencyAxes,
+  PageData,
+  QualityReview,
+  QualityReviewScore,
+} from "./lib/types";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
@@ -91,6 +97,26 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
       const safetyScore = Math.round((reviewResult.safetyScore / 20) * 10) / 10;
       const overallScore = Math.round((reviewResult.overallQualityScore / 20) * 10) / 10;
 
+      // Normalize characterAxes from the LLM's 0-100 scale to the 1-5 integer scale
+      // used by human granular reviews (CharacterConsistencyAxes / QualityReviewScore),
+      // so the Admin "View Granular" breakdown renders consistently for AI and human reviews.
+      // Optional: the response schema is advisory (not enforced by Gemini), so the model
+      // may omit characterAxes — guard against undefined to keep the review from failing.
+      const toReviewScore = (value: number): QualityReviewScore =>
+        Math.min(5, Math.max(1, Math.round(value / 20))) as QualityReviewScore;
+      const rawCharacterAxes = reviewResult.characterAxes;
+      const characterAxes: CharacterConsistencyAxes | undefined = rawCharacterAxes
+        ? {
+            visualBibleReflected: toReviewScore(rawCharacterAxes.visualBibleReflected),
+            characterIdConsistency: toReviewScore(rawCharacterAxes.characterIdConsistency),
+            appearingCharacterConsistency: toReviewScore(rawCharacterAxes.appearingCharacterConsistency),
+            focusCharacterConsistency: toReviewScore(rawCharacterAxes.focusCharacterConsistency),
+            pageLevelCharacterLinkage: toReviewScore(rawCharacterAxes.pageLevelCharacterLinkage),
+            outfitHairstyleConsistency: toReviewScore(rawCharacterAxes.outfitHairstyleConsistency),
+            colorPaletteConsistency: toReviewScore(rawCharacterAxes.colorPaletteConsistency),
+          }
+        : undefined;
+
       const reviewDoc: QualityReview = {
         id: reviewId,
         bookId,
@@ -106,8 +132,9 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         reviewReason: reviewResult.reviewReason,
         flaggedIssues: reviewResult.flaggedIssues,
         recommendedFixes: reviewResult.recommendedFixes,
-        rubricVersion: "llm-auto-v1",
+        rubricVersion: "llm-auto-v2",
         llmAutoReviewResult: reviewResult,
+        ...(characterAxes ? { characterAxes } : {}),
         createdAt: admin.firestore.Timestamp.now(),
         createdAtMs: now,
         updatedAt: admin.firestore.Timestamp.now(),
@@ -141,6 +168,7 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         qualityReviewReason: reviewResult.reviewReason,
         qualityFlaggedIssues: reviewResult.flaggedIssues,
         qualityRecommendedFixes: reviewResult.recommendedFixes,
+        ...(characterAxes ? { characterAxes } : {}),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAtMs: now,
       });

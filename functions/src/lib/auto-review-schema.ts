@@ -80,6 +80,49 @@ const RECOMMENDED_FIX_SCHEMA = {
   required: ["action", "reason"] as const,
 };
 
+const CHARACTER_CONSISTENCY_AXES_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    visualBibleReflected: {
+      type: "number" as const,
+      description: "Score for how well character descriptions (visualBible) are reflected in prompts (0-100)",
+    },
+    characterIdConsistency: {
+      type: "number" as const,
+      description: "Score for consistency of character IDs and names across pages (0-100)",
+    },
+    appearingCharacterConsistency: {
+      type: "number" as const,
+      description: "Score for whether the correct characters appear as intended by story cast (0-100)",
+    },
+    focusCharacterConsistency: {
+      type: "number" as const,
+      description: "Score for consistency of focus character selection (0-100)",
+    },
+    pageLevelCharacterLinkage: {
+      type: "number" as const,
+      description: "Score for logical linkage of character actions between pages (0-100)",
+    },
+    outfitHairstyleConsistency: {
+      type: "number" as const,
+      description: "Score for consistency in clothing and hair descriptions (0-100)",
+    },
+    colorPaletteConsistency: {
+      type: "number" as const,
+      description: "Score for consistency in character-specific color palettes (0-100)",
+    },
+  },
+  required: [
+    "visualBibleReflected",
+    "characterIdConsistency",
+    "appearingCharacterConsistency",
+    "focusCharacterConsistency",
+    "pageLevelCharacterLinkage",
+    "outfitHairstyleConsistency",
+    "colorPaletteConsistency",
+  ] as const,
+};
+
 // ---------------------------------------------------------------------------
 // Root schema
 // ---------------------------------------------------------------------------
@@ -132,6 +175,7 @@ export const AUTO_REVIEW_RESPONSE_SCHEMA = {
       items: RECOMMENDED_FIX_SCHEMA,
       description: "Actionable recommendations for quality improvement",
     },
+    characterAxes: CHARACTER_CONSISTENCY_AXES_SCHEMA,
   },
   required: [
     "storyQualityScore",
@@ -144,5 +188,6 @@ export const AUTO_REVIEW_RESPONSE_SCHEMA = {
     "reviewReason",
     "flaggedIssues",
     "recommendedFixes",
+    "characterAxes",
   ] as const,
 };
