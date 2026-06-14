@@ -350,7 +350,7 @@ export function buildQualityReviewPayload(input: {
     endingSatisfaction: parseQualityScore(input.form.story_endingSatisfaction),
   };
   if (Object.values(storyAxes).every((v) => v !== null)) {
-    payload.storyAxes = storyAxes as StoryQualityAxes;
+    payload.storyAxes = storyAxes as unknown as StoryQualityAxes;
   }
 
   const illustrationAxes = {
@@ -362,7 +362,7 @@ export function buildQualityReviewPayload(input: {
     artifactAvoidance: parseQualityScore(input.form.illust_artifactAvoidance),
   };
   if (Object.values(illustrationAxes).every((v) => v !== null)) {
-    payload.illustrationAxes = illustrationAxes as IllustrationQualityAxes;
+    payload.illustrationAxes = illustrationAxes as unknown as IllustrationQualityAxes;
   }
 
   const characterAxes = {
@@ -375,7 +375,7 @@ export function buildQualityReviewPayload(input: {
     colorPaletteConsistency: parseQualityScore(input.form.char_colorPaletteConsistency),
   };
   if (Object.values(characterAxes).every((v) => v !== null)) {
-    payload.characterAxes = characterAxes as CharacterConsistencyAxes;
+    payload.characterAxes = characterAxes as unknown as CharacterConsistencyAxes;
   }
 
   const personalizationAxes = {
@@ -387,7 +387,7 @@ export function buildQualityReviewPayload(input: {
     overPersonalizationRisk: parseQualityScore(input.form.pers_overPersonalizationRisk),
   };
   if (Object.values(personalizationAxes).every((v) => v !== null)) {
-    payload.personalizationAxes = personalizationAxes as PersonalizationAxes;
+    payload.personalizationAxes = personalizationAxes as unknown as PersonalizationAxes;
   }
 
   const safetyAxes = {
@@ -398,7 +398,7 @@ export function buildQualityReviewPayload(input: {
     privacyConsideration: parseQualityScore(input.form.safe_privacyConsideration),
   };
   if (Object.values(safetyAxes).every((v) => v !== null)) {
-    payload.safetyAxes = safetyAxes as SafetyAxes;
+    payload.safetyAxes = safetyAxes as unknown as SafetyAxes;
   }
 
   return { id: input.reviewId, ...payload };
