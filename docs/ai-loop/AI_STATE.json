@@ -107,6 +107,7 @@
     "PR #380: Implement LLM Auto Review for Character Consistency (merged)",
     "PR #381: スマホUX改善: 設定メニュー・戻る導線・なかよしキャラ拡張・カード縮小・スタイル検証 (merged)",
     "PR #383: Fix: スマホ設定メニューがヘッダー内にクリップされる不具合 (merged)",
+    "PR #384: 画像生成タイムアウトを3倍(120s→360s)に: フォールバックによる画質ばらつきを抑制 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
