@@ -660,6 +660,16 @@ export interface BookFeedbackDoc {
   updatedAtMs?: number;
 }
 
+export interface AppFeedbackDoc {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  text: string;
+  userAgent?: string;
+  createdAt: Timestamp;
+  createdAtMs: number;
+}
+
 export interface TemplateDoc {
   name: string;
   description: string;

@@ -378,6 +378,16 @@ export interface BookData {
   public?: boolean;
 }
 
+export interface AppFeedbackDoc {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  text: string;
+  userAgent?: string;
+  createdAt: FirebaseFirestore.Timestamp;
+  createdAtMs: number;
+}
+
 export interface PageData {
   pageNumber: number;
   text: string;

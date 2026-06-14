@@ -57,6 +57,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Link href="/pricing" className="hidden text-sm font-semibold text-amber-600 transition hover:text-amber-700 sm:inline">
               プラン
             </Link>
+            <Link href="/feedback" className="hidden text-sm font-semibold text-violet-500 transition hover:text-purple-700 sm:inline">
+              ご意見
+            </Link>
             <ThemeToggle />
             <span className="app-user text-sm">{user.displayName}</span>
             <Button variant="ghost" size="sm" onClick={signOut}>
