@@ -339,7 +339,7 @@ describe("buildImagePrompt", () => {
   });
   it("appends crayon style keywords", () => {
     expect(buildImagePrompt("A birthday scene", "crayon")).toContain("Crayon storybook style");
-    expect(buildImagePrompt("A birthday scene", "crayon")).toContain("warm hand-drawn strokes");
+    expect(buildImagePrompt("A birthday scene", "crayon")).toContain("waxy crayon strokes");
   });
   it("uses the style bible for style control instead of mentioning preview references", () => {
     const result = buildImagePrompt("A birthday scene", "toy_3d");

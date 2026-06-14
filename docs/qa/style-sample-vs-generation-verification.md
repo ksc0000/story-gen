@@ -38,12 +38,18 @@
 **総評: 10 中 8 が「◎ 強い一致」、2 が許容範囲。**
 flux-2-pro はサンプルの絵柄を概ね忠実に再現しており、**現状のサンプル画像は実生成の代表として妥当**。
 
-## 改善候補（任意）
-1. **crayon**: `styleBible` に「thick waxy crayon strokes, visible crayon grain, bold childlike outlines」等を
-   追記してワックス質感を強める余地あり。
-2. **colorful_pop**: 「highly saturated, vivid bold colors」を強調すると彩度がサンプルに寄る。
+## 改善（適用済み・再検証済み 2026-06-15）
+検証結果を受けて 2 スタイルの `styleBible` を強化し、同条件で再生成して改善を確認した
+（`src/lib/illustration-styles.ts` と `functions/src/lib/illustration-styles.ts` の両方を更新）。
 
-いずれも軽微で、現状のままでもユーザーの期待と大きく乖離しない。
+1. **crayon**: 「thick waxy crayon strokes / visible grainy texture / bold chunky childlike outlines /
+   paper tooth showing through」を追記。否定ルールに「soft watercolor・smooth digital painting・
+   airbrushed gradients にしない」を追加。
+   → 再生成で**ワックスの粒状感・太い輪郭が明確に再現**され、旧版の水彩寄りドリフトが解消（`gen_crayon_v2.png`）。
+2. **colorful_pop**: 「highly saturated vivid bold colors / punchy bright high-contrast palette」を追記。
+   → 再生成で**彩度・コントラストが向上**し、サンプルのポップ感に接近（`gen_colorful_pop_v2.png`）。
+
+比較画像: `/tmp/style-verification/cmp3_crayon.png`, `cmp3_colorful_pop.png`（左: サンプル / 中: 旧 / 右: 新）。
 
 ## 再現方法
 スクリプト: `/tmp/style-verify.mjs`（一時ファイル・未コミット）。
