@@ -33,6 +33,14 @@ type QualityReviewPanelProps = {
   onSave: () => void;
 };
 
+const LLM_CATEGORY_FIELDS = [
+  { key: "storyScore" as const, label: "Story" },
+  { key: "illustrationScore" as const, label: "Illustration" },
+  { key: "characterConsistencyScore" as const, label: "Character" },
+  { key: "personalizationScore" as const, label: "Personalization" },
+  { key: "safetyScore" as const, label: "Safety" },
+];
+
 const CATEGORY_FIELDS = [
   {
     key: "storyScore" as const,
@@ -161,6 +169,8 @@ export function QualityReviewPanel({
 }: QualityReviewPanelProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
+  const latestLLMReview = qualityReviews.find((r) => r.reviewerType === "llm");
+
   const handleFieldChange = (key: keyof QualityReviewForm, value: string) => {
     onFormChange({ ...form, [key]: value });
   };
@@ -184,6 +194,61 @@ export function QualityReviewPanel({
     <Card>
       <CardContent className="space-y-6 p-6">
         <h3 className="text-lg font-semibold text-purple-900">Quality Review (Phase 2)</h3>
+
+        {/* LLM Auto Review Result (Read-only) */}
+        {latestLLMReview && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                🤖 LLM Auto Review Result
+                <Badge variant="outline" className="bg-white text-slate-600 border-slate-200 text-[10px]">
+                  Latest
+                </Badge>
+              </h4>
+              <span className="text-xs text-slate-500">
+                {latestLLMReview.createdAtMs
+                  ? new Date(latestLLMReview.createdAtMs).toLocaleString("ja-JP")
+                  : "—"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+              <div className="rounded-lg border border-slate-200 bg-white p-2 text-center">
+                <p className="text-[10px] text-slate-500">Overall</p>
+                <p className="text-lg font-bold text-slate-800">{formatQualityScore(latestLLMReview.overallScore)}</p>
+              </div>
+              {LLM_CATEGORY_FIELDS.map((cat) => (
+                <div key={cat.key} className="rounded-lg border border-slate-200 bg-white p-2 text-center">
+                  <p className="text-[10px] text-slate-500">{cat.label}</p>
+                  <p className="text-sm font-semibold text-slate-700">{latestLLMReview[cat.key as keyof QualityReviewWithId] as number}</p>
+                </div>
+              ))}
+            </div>
+
+            {latestLLMReview.reviewReason && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Review Reason</p>
+                <p className="text-xs text-slate-700 leading-relaxed">{latestLLMReview.reviewReason}</p>
+              </div>
+            )}
+
+            {latestLLMReview.flaggedIssues.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold text-rose-600 uppercase tracking-wider">Flagged Issues</p>
+                <ul className="space-y-1">
+                  {latestLLMReview.flaggedIssues.map((issue, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs text-rose-700">
+                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-rose-400" />
+                      <span>
+                        <span className="font-semibold">[{issue.severity}]</span> {issue.message}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Score inputs */}
         <div className="space-y-4">
