@@ -7,7 +7,7 @@ if (getApps().length === 0) initializeApp();
 const db = getFirestore();
 
 const FIXED_IMAGE_PROMPT_STANDARD_SUFFIX =
-  "no readable writing anywhere, no signage, no storefront signs, no text-like marks, no text, no letters, no Japanese characters, no logo, no watermark";
+  "no readable writing anywhere, no signage, no storefront signs, no labels, no posters, no banners, no text-like marks, no text, no letters, no Japanese characters, no logo, no watermark";
 
 const FIXED_IMAGE_PROMPT_REF_ISOLATION_SUFFIX =
   "use the reference image ONLY for the child character's face, hairstyle, outfit, age, and body proportions; do NOT copy the reference image background, location, pose, sandbox, playground, lighting, camera angle, or composition; place the child naturally into the scene described here, NOT a sandbox, NOT a playground";
@@ -44,13 +44,13 @@ const ZOO_CHARACTER_ANCHOR_CLAUSE =
   "keep the same child across all pages: same outfit color and style, same round face proportions, same age impression around {childAge} years old, and consistent gentle picture-book facial features; preserve hairstyle and face between pages";
 
 const ZOO_NO_SIGN_TEXT_CLAUSE =
-  "all background signs, boards, and notices are plain-colored shapes with no glyphs or letters, no readable text of any kind";
+  "all background signs, boards, posters, banners, and notices are plain-colored shapes with no glyphs or letters, no readable text of any kind";
 
 const ZOO_NO_CLOTHING_TEXT_CLAUSE =
   "clothing and wearable accessories have no visible print, logo, badge text, letters, numbers, mascot word marks, slogan graphics, patches, or readable marks of any kind";
 
 const ZOO_NO_PRINTED_SURFACES_CLAUSE =
-  "zoo scene structures stay natural and unmarked: no entrance signs, no zoo name boards, no map boards, no ticket boards, no information panels, no directional markers, no exit markers, no facility placards, no enclosure labels, no warning notices, no posted notices, no hanging banners, and no printed gate or building surfaces";
+  "zoo scene structures stay natural and unmarked: no entrance signs, no zoo name boards, no map boards, no ticket boards, no information panels, no directional markers, no exit markers, no facility placards, no enclosure labels, no labels, no posters, no warning notices, no posted notices, no hanging banners, and no printed gate or building surfaces";
 
 function withZooImagePromptGuardrail(
   prompt: string,
@@ -76,7 +76,7 @@ const BIRTHDAY_8P_CHARACTER_ANCHOR_CLAUSE =
   "keep the same child across all 8 pages: same face, same age impression, same hair color and length, same clothing style and palette, do not change the child's age, outfit, or facial features between pages";
 
 const BIRTHDAY_8P_DECOR_NO_TEXT_CLAUSE =
-  "no text, letters, numbers, symbols, or readable marks on any balloon surface, ribbon, garland, streamer, cake, candle, tableware edge, plate trim, keepsake, or gift-like object, all party decor surfaces must be plain color or simple pattern only with no pseudo-writing, no tag-like ornamentation, and no emblem-like detail";
+  "no text, letters, numbers, symbols, or readable marks on any balloon surface, ribbon, garland, streamer, cake, candle, labels, posters, banners, tableware edge, plate trim, keepsake, or gift-like object, all party decor surfaces must be plain color or simple pattern only with no pseudo-writing, no tag-like ornamentation, and no emblem-like detail";
 
 /**
  * Birthday-8p template-local prompt guardrail wrapper.
@@ -108,7 +108,7 @@ const SLEEPY_MOON_8P_ENDING_NO_BUBBLE_CLAUSE =
   "final bedtime scene is visual-only, no speech bubble, no thought cloud, no dream caption area, no writing in the air, stars only as scattered tiny glowing points and one gentle curved wisp, never arranged symbols";
 
 const SLEEPY_MOON_8P_ROOM_PROP_NO_PRINT_CLAUSE =
-  "background bedroom props stay plain and simplified, no readable book covers, no spine writing, no paper items with visible writing, no nursery cards, no word-bearing wall art, no packaging graphics, shelf objects stay plain and non-readable";
+  "background bedroom props stay plain and simplified, no readable book covers, no spine writing, no labels, no posters, no banners, no paper items with visible writing, no nursery cards, no word-bearing wall art, no packaging graphics, shelf objects stay plain and non-readable";
 
 function withSleepyMoon8pImagePromptGuardrail(prompt: string): string {
   let result = prompt;
@@ -152,7 +152,7 @@ function withCardboardRocket8pImagePromptGuardrail(prompt: string): string {
 }
 
 const GRADUATION_DECOR_NO_TEXT_CLAUSE =
-  "no text, letters, numbers, or symbols on any diploma, certificate, banner, poster, garland, ribbon, or commemorative plaque; all ceremony decorations must be plain or use simple floral/geometric patterns with no readable characters or pseudo-writing";
+  "no text, letters, numbers, or symbols on any diploma, certificate, banner, poster, labels, posters, banners, garland, ribbon, or commemorative plaque; all ceremony decorations must be plain or use simple floral/geometric patterns with no readable characters or pseudo-writing";
 
 function withGraduationImagePromptGuardrail(prompt: string): string {
   let result = prompt;
@@ -174,7 +174,7 @@ function withNewBabyImagePromptGuardrail(prompt: string): string {
 }
 
 const FAREWELL_MOVING_NO_TEXT_CLAUSE =
-  "no text, letters, numbers, or addresses on any moving boxes, shipping labels, packing tape, or farewell banners; all farewell signs and cards must be plain or use simple heart/star motifs with no readable writing or pseudo-script";
+  "no text, letters, numbers, or addresses on any moving boxes, shipping labels, labels, posters, banners, packing tape, or farewell banners; all farewell signs and cards must be plain or use simple heart/star motifs with no readable writing or pseudo-script";
 
 function withFarewellImagePromptGuardrail(prompt: string): string {
   let result = prompt;

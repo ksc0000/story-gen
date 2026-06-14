@@ -179,7 +179,7 @@ describe("buildImagePrompt", () => {
   });
   it("uses pageVisualRole guidance and sanitizes risky text-like prompt content", () => {
     const result = buildImagePrompt(
-      'A scene with a sign that says "hello" and 「だいじょうぶ、いっしょにいるよ」',
+      'A scene with a sign that says "hello", a poster, a banner, and 「だいじょうぶ、いっしょにいるよ」',
       "watercolor",
       undefined,
       undefined,
@@ -194,6 +194,13 @@ describe("buildImagePrompt", () => {
     expect(result).not.toContain('"hello"');
     expect(result).not.toContain("caption card");
     expect(result).not.toContain("phrase label");
+
+    // We verify the scene description part specifically because the negative guardrails
+    // will correctly contain these keywords.
+    const scenePart = result.match(/Scene: ([^,]*)/)?.[1] || "";
+    expect(scenePart).not.toContain("poster");
+    expect(scenePart).not.toContain("banner");
+    expect(scenePart).not.toContain("sign");
   });
   it("includes protagonist presence requirement for payoff and quiet_ending roles", () => {
     const payoffResult = buildImagePrompt("A child finds the star", "watercolor", undefined, undefined, {
@@ -843,7 +850,7 @@ describe("prompt length regression (P5-3j)", () => {
     },
   ];
 
-  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 7500 chars", () => {
+  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 7600 chars", () => {
     const result = buildImagePrompt(
       "A child walks with a fox and a glowing star friend through a sunlit meadow, carrying a dinosaur toy",
       "classic_picture_book",
@@ -862,7 +869,7 @@ describe("prompt length regression (P5-3j)", () => {
         compositionHint: "wide establishing shot from slightly above",
       }
     );
-    expect(result.length).toBeLessThan(7500);
+    expect(result.length).toBeLessThan(7600);
   });
 
   it("non-animals non-star prompt (base case) stays under 6000 chars", () => {

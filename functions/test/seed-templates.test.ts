@@ -38,7 +38,7 @@ const NEGATIVE_TEXT_TOKENS = [
 ];
 
 const FIXED_IMAGE_PROMPT_STANDARD_SUFFIX =
-  "no readable writing anywhere, no signage, no storefront signs, no text-like marks";
+  "no readable writing anywhere, no signage, no storefront signs, no labels, no posters, no banners, no text-like marks";
 const FIXED_IMAGE_PROMPT_REF_ISOLATION_SUFFIX =
   "use the reference image ONLY for the child character's face, hairstyle, outfit, age, and body proportions; do NOT copy the reference image background, location, pose, sandbox, playground, lighting, camera angle, or composition; place the child naturally into the scene described here";
 const JAPANESE_SCRIPT_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/;
@@ -656,7 +656,7 @@ describe("fixed-first-zoo-8p — prompt hardening", () => {
     const guardedPageIndexes = [1, 2, 4, 6, 7];
     for (const index of guardedPageIndexes) {
       const prompt = pages[index]?.imagePromptTemplate.toLowerCase() ?? "";
-      expect(prompt).toContain("all background signs, boards, and notices are plain-colored shapes");
+      expect(prompt).toContain("all background signs, boards, posters, banners, and notices are plain-colored shapes");
       expect(prompt).toContain("no entrance signs");
       expect(prompt).toContain("no zoo name boards");
       expect(prompt).toContain("no map boards");
