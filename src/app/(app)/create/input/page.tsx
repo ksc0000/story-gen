@@ -9,17 +9,12 @@ import { Label } from "@/components/ui/label";
 import { StepIndicator } from "@/components/step-indicator";
 import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
+import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
 import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
-import {
-  getCompatiblePlanConfigs,
-  getDefaultProductPlanForCreationMode,
-  PLAN_CONFIGS,
-} from "@/lib/plans";
-import { trackAnalyticsEvent } from "@/lib/analytics";
+import { PLAN_CONFIGS } from "@/lib/plans";
 import type {
   CreationMode,
   FixedStoryPageTemplate,
@@ -158,7 +153,7 @@ function InputPageContent() {
   const preselectedCompanionId = searchParams.get("companionId");
   const router = useRouter();
   const { user } = useAuth();
-  const { isAdmin } = useAdminClaim();
+  const { profile } = useUserProfile(user?.uid);
   const { children, loading: childrenLoading } = useChildren(user?.uid);
   const { companions, loading: companionsLoading } = useCompanions(user?.uid);
   const { templates } = useTemplates();
@@ -177,21 +172,10 @@ function InputPageContent() {
   const storyPlaceholder = STORY_REQUEST_PLACEHOLDERS[template?.categoryGroupId ?? ""] ?? "例：うちの子らしい冒険のおはなし";
   const requiredInputs = useMemo(() => template?.requiredInputs ?? [], [template]);
   const optionalInputs = useMemo(() => template?.optionalInputs ?? [], [template]);
-  const compatiblePlans = useMemo(
-    () => getCompatiblePlanConfigs(creationMode),
-    [creationMode]
-  );
-  const allowUpcomingPlans = isAdmin || process.env.NODE_ENV === "development";
-  const visiblePlans = useMemo(
-    () => compatiblePlans.filter((plan) => plan.enabled || allowUpcomingPlans),
-    [compatiblePlans, allowUpcomingPlans]
-  );
-  const defaultProductPlan = useMemo(() => {
-    const fallback = getDefaultProductPlanForCreationMode(creationMode);
-    return compatiblePlans.find((plan) => plan.productPlan === fallback)?.productPlan
-      ?? compatiblePlans[0]?.productPlan
-      ?? fallback;
-  }, [compatiblePlans, creationMode]);
+  // プランはユーザーの契約（サブスク）で確定する。作成時に選ばせない。
+  // 作成モードのエンタイトルメントは theme ページで既にゲート済み（プレミアム限定／アップグレード導線）。
+  const productPlan: ProductPlan =
+    profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free");
 
   const [pageCount, setPageCount] = useState<number>(8);
 
@@ -201,7 +185,6 @@ function InputPageContent() {
       setPageCount(getFixedTemplatePageCount(template));
     }
   }, [template, creationMode]);
-  const [productPlan, setProductPlan] = useState<ProductPlan>(defaultProductPlan);
   const [storyRequest, setStoryRequest] = useState("");
   const [lessonToTeach, setLessonToTeach] = useState("");
   const [memoryToRecreate, setMemoryToRecreate] = useState("");
@@ -229,12 +212,6 @@ function InputPageContent() {
   });
   const canProceed = Boolean(childId && child && theme) && (creationMode !== "fixed_template" || missingTemplateFields.length === 0);
 
-
-  useEffect(() => {
-    if (!compatiblePlans.some((plan) => plan.productPlan === productPlan)) {
-      setProductPlan(defaultProductPlan);
-    }
-  }, [compatiblePlans, defaultProductPlan, productPlan]);
 
   useEffect(() => {
     if (creationMode === "fixed_template") return;
@@ -448,51 +425,6 @@ function InputPageContent() {
                 </div>
               )}
 
-              {/* プラン */}
-              {visiblePlans.length > 1 && (
-                <div>
-                  <Label className="text-purple-800">プラン</Label>
-                  <div className="mt-2 grid gap-2">
-                    {visiblePlans.map((plan) => {
-                      const locked = !plan.enabled && !allowUpcomingPlans;
-                      const selectedPlan = productPlan === plan.productPlan;
-                      return (
-                        <button
-                          key={plan.productPlan}
-                          type="button"
-                          onClick={() => {
-                            if (locked) return;
-                            setProductPlan(plan.productPlan);
-                            trackAnalyticsEvent("select_product_plan", {
-                              productPlan: plan.productPlan,
-                              imageQualityTier: plan.imageQualityTier,
-                              creationMode,
-                            });
-                          }}
-                          className={`rounded-2xl border p-3 text-left text-sm transition ${
-                            selectedPlan
-                              ? "border-purple-400 bg-white shadow-sm"
-                              : "border-violet-100 bg-white/80"
-                          } ${locked ? "cursor-not-allowed opacity-65" : "hover:border-purple-300"}`}
-                        >
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-semibold text-purple-900">{plan.label}</span>
-                            {plan.badgeLabels.map((badge) => (
-                              <span key={`${plan.productPlan}-${badge}`} className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-medium text-violet-700">{badge}</span>
-                            ))}
-                            {!plan.enabled ? (
-                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">準備中</span>
-                            ) : null}
-                          </div>
-                          <p className="mt-1 text-xs leading-relaxed text-violet-500">
-                            {plan.allowedPageCounts.join("/")}ページ{plan.monthlyBookQuota ? ` ・ 月${plan.monthlyBookQuota}冊` : ""}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
 
               {/* 服装 */}
               <div>
