@@ -339,6 +339,8 @@ export interface BookData {
   categoryGroupId?: string;
   templateId?: string;
   creationMode?: CreationMode;
+  isSinglePurchase?: boolean;
+  singlePurchaseType?: "ai_guided" | "photo_story";
   sourcePhotos?: string[];
   priceTier?: PriceTier;
   storyCostLevel?: StoryCostLevel;
