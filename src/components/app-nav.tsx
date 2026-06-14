@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, LogOut } from "lucide-react";
@@ -26,7 +27,13 @@ export function AppNav({
   onSignOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+
+  // Portal target (document.body) is only available after mount on the client.
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close the mobile menu whenever the route changes.
   useEffect(() => {
@@ -78,16 +85,23 @@ export function AppNav({
         {open ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Mobile sheet */}
-      {open ? (
+      {/* Mobile sheet — rendered via portal to <body> so it escapes the
+          app-header's `backdrop-filter`, which would otherwise act as the
+          containing block for position:fixed and clip the overlay to the
+          header height. */}
+      {mounted && open
+        ? createPortal(
         <div className="fixed inset-0 z-50 sm:hidden" role="dialog" aria-modal="true">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
-          {/* Panel */}
-          <div className="absolute right-0 top-0 flex h-full w-72 max-w-[80%] flex-col gap-1 overflow-y-auto bg-[var(--em-glass-bg,rgba(255,255,255,0.95))] p-4 shadow-2xl backdrop-blur-xl">
+          {/* Panel — opaque so the page behind never shows through */}
+          <div
+            style={{ backgroundColor: "#ffffff" }}
+            className="absolute right-0 top-0 flex h-full w-72 max-w-[80%] flex-col gap-1 overflow-y-auto p-4 shadow-2xl"
+          >
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-bold text-violet-600">メニュー</span>
               <button
@@ -139,8 +153,10 @@ export function AppNav({
               <LogOut size={18} /> ログアウト
             </button>
           </div>
-        </div>
-      ) : null}
+        </div>,
+            document.body
+          )
+        : null}
     </>
   );
 }
