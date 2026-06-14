@@ -173,7 +173,7 @@ function sanitizeImagePromptText(value: string): string {
   return value
     .replace(/[「『][^」』]*[」』]/g, "")
     .replace(/"[^"]*"/g, "")
-    .replace(/\b(repeated phrase|phrase|text|letters?|caption|speech bubbles?|labels?|signboards?|signage|written|writing|title on|words?|quotes?)\b/gi, "")
+    .replace(/\b(repeated phrase|phrase|text|letters?|caption|speech bubbles?|labels?|posters?|banners?|signboards?|signage|signs?|storefront signs?|written|writing|title on|words?|quotes?)\b/gi, "")
     // L3: imagination-specific text-risk token replacements (T6-32)
     .replace(/\bstar charts?\b/gi, "night sky")
     .replace(/\btreasure maps?\b/gi, "illustrated landscape")
@@ -274,7 +274,7 @@ function buildScenePolicyGuidance(
     "The setting may vary across pages when it improves the picture book.",
     "Keep the setting coherent with the storyGoal, page text, and previous pages.",
     "Do not add unrelated objects that distract from the story.",
-    "Do not add readable text, signs, labels, logos, brand marks, numbers, watermarks, or random symbols.",
+    "Do not add readable text, signs, labels, posters, banners, logos, brand marks, numbers, watermarks, or random symbols.",
     "Do not add dangerous objects, traffic, roads, vehicles, or adult-only items unless explicitly required and child-safe.",
     "If playground equipment, furniture, buildings, or animals appear, they must be natural for the scene and must support the story.",
     "Hidden details are allowed only as subtle visual discoveries and must never become the story goal.",
@@ -283,7 +283,7 @@ function buildScenePolicyGuidance(
 
 function buildSharedPrintedSurfaceNoTextGuidance(): string {
   return [
-    "Printed-surface guardrail: keep books, book covers, book spines, labels, posters, framed prints, packaging, cards, storage bins, toy boxes, and shelf props plain, unlabeled, and non-readable.",
+    "Printed-surface guardrail: keep books, book covers, book spines, labels, posters, banners, framed prints, packaging, cards, storage bins, toy boxes, and shelf props plain, unlabeled, and non-readable.",
     "Do not add readable titles, spine writing, pseudo-writing, glyph-like marks, decorative letters, numbers, logo-like marks, or watermark-like printed details on background objects.",
   ].join(" ");
 }
@@ -291,7 +291,7 @@ function buildSharedPrintedSurfaceNoTextGuidance(): string {
 function buildBedtimeRoomPropNoTextGuidance(): string {
   return [
     "Bedtime room-prop guardrail: bedroom bookshelf objects, nursery cards, framed wall art, toy bins, storage containers, packaging, and paper items must stay visual-only, plain, and non-readable.",
-    "Do not show readable book titles, spine writing, shelf labels, container labels, printed posters, word art, or printed packaging graphics anywhere in the bedroom scene.",
+    "Do not show readable book titles, spine writing, shelf labels, container labels, printed posters, printed banners, word art, or printed packaging graphics anywhere in the bedroom scene.",
   ].join(" ");
 }
 
