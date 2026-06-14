@@ -99,6 +99,7 @@
     "PR #365: Implement Persistence for Granular Human Quality Review Scores (merged)",
     "PR #368: Display LLM Auto Review Results in Admin Quality Review UI (merged)",
     "PR #370: Implement Prompt Completeness Checker with Diagnostic Logging (merged)",
+    "PR #372: Display Granular Human Quality Review Scores in Admin UI (merged)",
     "PR #374: Refine Image Prompts to Suppress Text and Signage Artifacts (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
