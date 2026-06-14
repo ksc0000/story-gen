@@ -12,7 +12,8 @@ import {
 import type { PageData, BookData, ImageModelProfile, PageStatus, GenerationReliabilityStatus } from "./lib/types";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
-const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
+// フォールバック発火までの画像生成タイムアウト。既定 120s → 360s（3倍, 2026-06）。
+const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "360000");
 const STORAGE_BUCKET = "story-gen-8a769.firebasestorage.app";
 
 export function buildRegenerationSuccessPatch(params: {
@@ -62,7 +63,8 @@ interface RegeneratePageImageResponse {
 }
 
 export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<RegeneratePageImageResponse>>(
-  { secrets: [replicateApiToken], consumeAppCheckToken: true },
+  // 画像タイムアウト 360s + フォールバックを関数側で切らないよう timeoutSeconds を拡張（2026-06）。
+  { secrets: [replicateApiToken], consumeAppCheckToken: true, timeoutSeconds: 540 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "ログインが必要です。");

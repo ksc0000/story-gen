@@ -84,7 +84,10 @@ import {
 import { PROFILE_PROVIDER_MAP } from "./lib/image-provider";
 import { createImageAdapter, resolveImageProviderId } from "./lib/image-adapter-factory";
 
-const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
+// 画像生成のタイムアウト（フォールバック発火までの時間）。
+// 既定 120s だと flux-2-pro が間に合わず klein_fast へフォールバックして画質が
+// ばらつくため、3倍の 360s に引き上げ（2026-06）。env で上書き可能。
+const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "360000");
 const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCURRENCY ?? "2")));
 
 // P3-15: USE_REPLICATE_ADAPTER and USE_OPENAI_ADAPTER feature flags removed.
@@ -2793,7 +2796,10 @@ export const generateBook = onDocumentCreated(
     secrets: [geminiApiKey, replicateApiToken, openaiApiKey],
     region: "asia-northeast1",
     memory: "1GiB",
-    timeoutSeconds: 540,
+    // 画像タイムアウトを 360s に引き上げたため、複数ページ生成中に関数自体が
+    // 先に切れて本が途中失敗しないよう上限の 3600s に拡張（2026-06）。
+    // 通常は数分で完了し、ハング時のみこの上限まで到達する。
+    timeoutSeconds: 3600,
   },
   async (event) => {
     const bookId = event.params.bookId;

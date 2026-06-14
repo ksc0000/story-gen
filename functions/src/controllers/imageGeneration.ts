@@ -22,7 +22,8 @@ import {
   CoverImageUploadFn,
 } from "../lib/image-storage-uploader";
 
-const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "120000");
+// フォールバック発火までの画像生成タイムアウト（カバー画像）。既定 120s → 360s（3倍, 2026-06）。
+const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "360000");
 
 export interface CoverImageResult {
   success: boolean;

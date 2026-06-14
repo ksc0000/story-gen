@@ -96,7 +96,8 @@ interface RegenerateCoverImageResponse {
 }
 
 export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<RegenerateCoverImageResponse>>(
-  { secrets: [replicateApiToken], consumeAppCheckToken: true },
+  // 画像タイムアウト 360s + フォールバックを関数側で切らないよう timeoutSeconds を拡張（2026-06）。
+  { secrets: [replicateApiToken], consumeAppCheckToken: true, timeoutSeconds: 540 },
   async (request) => {
     /* ---------- Auth ---------- */
     if (!request.auth) {
