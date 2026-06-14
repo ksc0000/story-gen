@@ -625,6 +625,7 @@ interface PageImageResult {
   imageUrl: string;
   imageBuffer?: Buffer;
   usedProfile: ImageModelProfile;
+  imageModel: string;
   primaryProfile: ImageModelProfile;
   fallbackUsed: boolean;
   attemptCount: number;
@@ -686,6 +687,7 @@ async function generatePageImageWithFallback(params: {
   const base: Omit<PageImageResult, "success" | "imageUrl" | "imageBuffer"> = {
     pageIndex,
     usedProfile: primaryProfile,
+    imageModel: "",
     primaryProfile,
     fallbackUsed: false,
     attemptCount: 0,
@@ -758,15 +760,35 @@ async function generatePageImageWithFallback(params: {
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+          const durationMs = Date.now() - startMs;
+          const currentImageModel = resolveReplicateModel({
+            purpose: params.imagePurpose,
+            imageQualityTier: params.imageQualityTier,
+            imageModelProfile: profile,
+          });
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: params.pageIndex,
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: "replicate",
+            durationMs,
+            attemptCount: totalAttempts,
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           return {
             ...base,
             success: true,
             imageUrl: adapterResult.imageUrl,
             usedProfile: profile,
+            imageModel: currentImageModel,
             fallbackUsed: profile !== primaryProfile,
             attemptCount: totalAttempts,
             timeoutCount,
-            durationMs: Date.now() - startMs,
+            durationMs,
           };
         }
         // P3-15: Adapter path for OpenAI profiles.
@@ -791,15 +813,31 @@ async function generatePageImageWithFallback(params: {
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+          const durationMs = Date.now() - startMs;
+          const currentImageModel = resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: params.pageIndex,
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: "openai",
+            durationMs,
+            attemptCount: totalAttempts,
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           return {
             ...base,
             success: true,
             imageUrl: adapterResult.imageUrl,
             usedProfile: profile,
+            imageModel: currentImageModel,
             fallbackUsed: profile !== primaryProfile,
             attemptCount: totalAttempts,
             timeoutCount,
-            durationMs: Date.now() - startMs,
+            durationMs,
           };
         }
         // Legacy imageClient path — reached only when adapter tokens are absent
@@ -814,16 +852,39 @@ async function generatePageImageWithFallback(params: {
           }),
           IMAGE_GENERATION_TIMEOUT_MS
         );
+        const durationMs = Date.now() - startMs;
+        const currentProvider = resolveProviderFromProfile(profile);
+        const currentImageModel = currentProvider === "replicate"
+          ? resolveReplicateModel({
+              purpose: params.imagePurpose,
+              imageQualityTier: params.imageQualityTier,
+              imageModelProfile: profile,
+            })
+          : resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
+
+        logGenerationEvent({
+          eventName: "page_image_succeeded",
+          bookId: params.bookId,
+          pageIndex: params.pageIndex,
+          imageModelProfile: profile,
+          imageModel: currentImageModel,
+          provider: currentProvider,
+          durationMs,
+          attemptCount: totalAttempts,
+          fallbackUsed: profile !== primaryProfile,
+        });
+
         return {
           ...base,
           success: true,
           imageUrl: "",
           imageBuffer: buffer,
           usedProfile: profile,
+          imageModel: currentImageModel,
           fallbackUsed: profile !== primaryProfile,
           attemptCount: totalAttempts,
           timeoutCount,
-          durationMs: Date.now() - startMs,
+          durationMs,
         };
       } catch (err) {
         if (err instanceof ImageTimeoutError) {
@@ -1528,9 +1589,9 @@ export async function processBookGeneration(
         textSentenceCount: countSentences(storyPage.text),
         textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
         status: pageStatus as PageData["status"],
-        imageModel: imageResult.usedProfile === "openai_image_candidate"
+        imageModel: imageResult.imageModel || (imageResult.usedProfile === "openai_image_candidate"
           ? resolveOpenAIModelLabel(finalInputImageUrls.length > 0)
-          : imageModel,
+          : imageModel),
         imageQualityTier,
         imagePurpose,
         inputImageRoles,
@@ -2180,12 +2241,29 @@ async function ensureRecurringCharacterReferences(params: {
               IMAGE_GENERATION_TIMEOUT_MS
             );
 
+            logGenerationEvent({
+              eventName: "page_image_succeeded",
+              bookId: params.bookId,
+              pageIndex: -100 - index, // Conventional negative index for character references
+              imageModelProfile: profile,
+              imageModel: result.modelLabel || resolveReplicateModel({
+                purpose: imagePurpose,
+                imageQualityTier: params.normalizedBookData.imageQualityTier,
+                imageModelProfile: profile,
+              }),
+              provider: pid as "replicate" | "openai",
+              durationMs: result.durationMs,
+              attemptCount: (profile === primaryProfile ? attempt + 1 : 2 + attempt + 1), // best effort attempt count
+              fallbackUsed: profile !== primaryProfile,
+            });
+
             url = result.imageUrl;
             success = true;
             break search_loop;
           }
 
           // Legacy path fallback (primarily for test environments without adapter tokens)
+          const refStartMs = Date.now();
           const buffer = await withImageTimeout(
             params.deps.imageClient.generateImage(referencePrompt, {
               purpose: imagePurpose,
@@ -2195,6 +2273,28 @@ async function ensureRecurringCharacterReferences(params: {
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+          const durationMs = Date.now() - refStartMs;
+          const currentProvider = resolveProviderFromProfile(profile);
+          const currentImageModel = currentProvider === "replicate"
+            ? resolveReplicateModel({
+                purpose: imagePurpose,
+                imageQualityTier: params.normalizedBookData.imageQualityTier,
+                imageModelProfile: profile,
+              })
+            : resolveOpenAIModelLabel(false);
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: -100 - index,
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: currentProvider,
+            durationMs,
+            attemptCount: (profile === primaryProfile ? attempt + 1 : 2 + attempt + 1),
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           url = await params.deps.uploadImage(params.bookId, -100 - index, buffer);
           success = true;
           break search_loop;

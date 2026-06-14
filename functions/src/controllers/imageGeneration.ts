@@ -12,7 +12,13 @@ import {
 import {
   withImageTimeout,
   ImageTimeoutError,
+  resolveReplicateModel,
 } from "../lib/replicate";
+import { resolveOpenAIModelLabel } from "../lib/openai-image";
+import {
+  logGenerationEvent,
+  resolveProviderFromProfile,
+} from "../lib/generation-event-logger";
 import {
   createImageAdapter,
   resolveImageProviderId,
@@ -30,6 +36,7 @@ export interface CoverImageResult {
   imageUrl?: string;
   imageBuffer?: Buffer;
   usedProfile?: ImageModelProfile;
+  imageModel?: string;
   primaryProfile?: ImageModelProfile;
   fallbackUsed: boolean;
   attemptCount: number;
@@ -96,15 +103,37 @@ export async function generateCoverImageWithFallback(params: {
             IMAGE_GENERATION_TIMEOUT_MS
           );
 
+          const durationMs = Date.now() - startMs;
+          const currentImageModel = pid === "replicate"
+            ? resolveReplicateModel({
+                purpose: "book_cover",
+                imageQualityTier: params.imageQualityTier,
+                imageModelProfile: profile,
+              })
+            : resolveOpenAIModelLabel((params.inputImageUrls ?? []).length > 0);
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: -1, // -1 for cover
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: pid as "replicate" | "openai",
+            durationMs,
+            attemptCount: totalAttempts,
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           return {
             success: true,
             coverStatus: "completed",
             imageUrl: result.imageUrl,
             usedProfile: profile,
+            imageModel: currentImageModel,
             primaryProfile,
             fallbackUsed: profile !== primaryProfile,
             attemptCount: totalAttempts,
-            durationMs: Date.now() - startMs,
+            durationMs,
           };
         }
 
@@ -119,15 +148,39 @@ export async function generateCoverImageWithFallback(params: {
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+
+          const durationMs = Date.now() - startMs;
+          const currentProvider = resolveProviderFromProfile(profile);
+          const currentImageModel = currentProvider === "replicate"
+            ? resolveReplicateModel({
+                purpose: "book_cover",
+                imageQualityTier: params.imageQualityTier,
+                imageModelProfile: profile,
+              })
+            : resolveOpenAIModelLabel((params.inputImageUrls ?? []).length > 0);
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: -1, // -1 for cover
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: currentProvider,
+            durationMs,
+            attemptCount: totalAttempts,
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           return {
             success: true,
             coverStatus: "completed",
             imageBuffer: buffer,
             usedProfile: profile,
+            imageModel: currentImageModel,
             primaryProfile,
             fallbackUsed: profile !== primaryProfile,
             attemptCount: totalAttempts,
-            durationMs: Date.now() - startMs,
+            durationMs,
           };
         }
 

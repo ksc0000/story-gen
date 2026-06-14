@@ -8,7 +8,13 @@ import {
   resolveImageFallbackProfiles,
   withImageTimeout,
   ImageTimeoutError,
+  resolveReplicateModel,
 } from "./lib/replicate";
+import {
+  logGenerationEvent,
+  resolveProviderFromProfile,
+} from "./lib/generation-event-logger";
+import { resolveOpenAIModelLabel } from "./lib/openai-image";
 import type { PageData, BookData, ImageModelProfile, PageStatus, GenerationReliabilityStatus } from "./lib/types";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
@@ -143,6 +149,29 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
           usedProfile = profile;
           fallbackUsed = profile !== primaryProfile;
           success = true;
+
+          const durationMs = Date.now() - startMs;
+          const currentProvider = resolveProviderFromProfile(profile);
+          const currentImageModel = currentProvider === "replicate"
+            ? resolveReplicateModel({
+                purpose: pageData.imagePurpose,
+                imageQualityTier: pageData.imageQualityTier,
+                imageModelProfile: profile,
+              })
+            : resolveOpenAIModelLabel(inputImageUrls.length > 0);
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId,
+            pageIndex: pageData.pageNumber,
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: currentProvider,
+            durationMs,
+            attemptCount,
+            fallbackUsed,
+          });
+
           break outer;
         } catch (err) {
           if (err instanceof ImageTimeoutError) {
