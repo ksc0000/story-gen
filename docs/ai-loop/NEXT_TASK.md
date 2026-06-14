@@ -1,11 +1,9 @@
-# Implement Persistence for Granular Human Quality Review Scores
+# Refine `fixed-little-helper` Template Sample Image and Category
 
 ## Context
 
-The EhonAI product roadmap outlines the need for detailed quality metrics in Phase 2: Story & Illustration Quality. While an overall "manual quality score" is currently saved, the roadmap explicitly lists "Story Quality Score rubric 導入", "Illustration Quality Score rubric 導入", "Character Consistency / Personalization / Safety score 導入", and "axis-level quality metrics 保存" as remaining tasks under Phase 2.
-
-Implementing the persistence of these granular, axis-level scores is crucial for enabling robust quality analysis, tracking regressions, and facilitating the comparison between human and LLM-generated reviews (as planned by open task #352: "Design LLM Auto Review vs. Human Review Comparison Methodology"). This task focuses on preparing the data layer for human reviews.
+Phase 3 of the roadmap focuses on strengthening Template Mode, including quality improvements for existing templates. The `TEMPLATE_QUALITY_REVIEW.md` document (referenced in the roadmap's `T3-2` status update) identified a P1 quality issue for the `fixed-little-helper` template related to its `sampleImage` duplication or `category` misalignment. This task addresses this specific, high-priority quality item. Prior PRs (`#280`, `#282`, `#309`) have already tackled similar template refinement tasks.
 
 ## Objective
 
-Enhance the manual quality review process in
+Update the `fixed-little-helper` template entry to resolve the identified `sampleImage` duplication or `category`
