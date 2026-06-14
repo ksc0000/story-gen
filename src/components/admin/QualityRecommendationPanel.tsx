@@ -97,15 +97,29 @@ export function QualityRecommendationPanel({ book, onIntentAction }: QualityReco
               {isExpanded && (
                 <div className="border-t border-current/10 px-3 py-2">
                   <p className="text-xs opacity-70">{RECOMMENDATION_INTENT_DESCRIPTIONS[intent]}</p>
-                  {onIntentAction && (
-                    <button
-                      type="button"
-                      onClick={() => onIntentAction(intent, book)}
-                      className={`mt-2 rounded border px-3 py-1 text-xs font-semibold ${INTENT_BUTTON_CLASSES[rec.severity]}`}
-                    >
-                      確認を開始 →
-                    </button>
-                  )}
+                  <div className="flex gap-2">
+                    {onIntentAction && (
+                      <button
+                        type="button"
+                        onClick={() => onIntentAction(intent, book)}
+                        className={`mt-2 rounded border px-3 py-1 text-xs font-semibold ${INTENT_BUTTON_CLASSES[rec.severity]}`}
+                      >
+                        確認を開始 →
+                      </button>
+                    )}
+                    {intent === "review_character_consistency" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const el = document.getElementById("character-diagnostics");
+                          if (el) el.scrollIntoView({ behavior: "smooth" });
+                        }}
+                        className="mt-2 rounded border border-indigo-300 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                      >
+                        診断パネルへ ↓
+                      </button>
+                    )}
+                  </div>
                   {!onIntentAction && (
                     <p className="mt-1 text-[10px] italic opacity-50">（アクション実行は今後実装予定）</p>
                   )}

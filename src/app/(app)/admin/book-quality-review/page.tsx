@@ -43,6 +43,7 @@ import type {
   Timestamp,
 } from "@/lib/types";
 import { QualityReviewPanel } from "@/components/admin/QualityReviewPanel";
+import { CharacterConsistencyDiagnostics } from "@/components/admin/CharacterConsistencyDiagnostics";
 import { QualityRecommendationPanel, QualityRecommendationBadge } from "@/components/admin/QualityRecommendationPanel";
 import { RecommendationTaskDraftPanel } from "@/components/admin/RecommendationTaskDraftPanel";
 import { QualityTasksPanel } from "@/components/admin/QualityTasksPanel";
@@ -511,14 +512,13 @@ export default function AdminBookQualityReviewPage() {
           creationMode: "guided_ai",
           createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown as import("firebase/firestore").Timestamp,
           overallQualityScore: 4.5,
-          qualityReviewStatus: "not_reviewed",
+          qualityReviewStatus: "llm_reviewed",
+          characterConsistencyScore: 4,
+          storyCast: [
+            { characterId: "char1", displayName: "Test Character", role: "protagonist", visualBible: "A small blue robot" }
+          ]
         } as BookWithId,
       ];
-
-      // Add a dummy LLM review in demo mode if possible
-      // Actually, since QualityReviewPanel fetches it from Firestore,
-      // we need to mock that too or just rely on the tests.
-      // But the tests already passed.
       setBooks(demoBooks);
       setBooksLoading(false);
       return;
@@ -546,12 +546,12 @@ export default function AdminBookQualityReviewPage() {
     return () => unsubscribe();
   }, [isAdmin, sloSampleSize]);
 
-  // Stable key for the set of loaded book IDs – avoids reloading pages
-  // when only book fields (status, scores) change via onSnapshot.
+// // Stable key for the set of loaded book IDs – avoids reloading pages
+//    when only book fields (status, scores) change via onSnapshot.
   const bookIdsKey = useMemo(() => books.map((b) => b.id).join(","), [books]);
 
-  // Batch-load pages for all loaded books (one-time getDocs per book).
-  // ~50 books × ~4 pages = ~200 docs – bounded and admin-only.
+// Batch-load pages for all loaded books (one-time getDocs per book).
+// ~50 books × ~4 pages = ~200 docs – bounded and admin-only.
   useEffect(() => {
     const ids = bookIdsKey.split(",").filter(Boolean);
     if (!isAdmin || ids.length === 0) {
@@ -656,8 +656,49 @@ export default function AdminBookQualityReviewPage() {
     setQualityReviewMessage(null);
   }, [selectedBook]);
 
-  // Quality reviews subscription
+   Quality reviews subscription
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true") {
+      setQualityReviews([
+        {
+          id: "demo-qr-1",
+          reviewerType: "llm",
+          reviewerId: "system_llm",
+          characterConsistencyScore: 4,
+          overallScore: 4.5,
+          status: "llm_reviewed",
+          reviewReason: "Test review reason",
+          flaggedIssues: [{ area: "character", severity: "medium", message: "Demo character issue" }],
+          characterAxes: {
+            visualBibleReflected: 4,
+            characterIdConsistency: 5,
+            appearingCharacterConsistency: 4,
+            focusCharacterConsistency: 3,
+            pageLevelCharacterLinkage: 5,
+            outfitHairstyleConsistency: 4,
+            colorPaletteConsistency: 4,
+          }
+        } as any
+      ]);
+      setQualityReviewsLoading(false);
+      return;
+    }
+    if (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true") {
+      setPages([
+        {
+          id: "demo-page-1",
+          pageNumber: 0,
+          text: "Test page 1 text",
+          imagePrompt: "Test character appearing in a room",
+          status: "completed",
+          appearingCharacterIds: ["char1"],
+          focusCharacterId: "char1",
+          usedCharacterReference: true,
+        } as any
+      ]);
+      setPagesLoading(false);
+      return;
+    }
     if (!selectedBookId || !isAdmin) {
       setQualityReviews([]);
       setQualityReviewsLoading(false);
@@ -691,6 +732,47 @@ export default function AdminBookQualityReviewPage() {
   }, [selectedBookId, isAdmin]);
 
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true") {
+      setQualityReviews([
+        {
+          id: "demo-qr-1",
+          reviewerType: "llm",
+          reviewerId: "system_llm",
+          characterConsistencyScore: 4,
+          overallScore: 4.5,
+          status: "llm_reviewed",
+          reviewReason: "Test review reason",
+          flaggedIssues: [{ area: "character", severity: "medium", message: "Demo character issue" }],
+          characterAxes: {
+            visualBibleReflected: 4,
+            characterIdConsistency: 5,
+            appearingCharacterConsistency: 4,
+            focusCharacterConsistency: 3,
+            pageLevelCharacterLinkage: 5,
+            outfitHairstyleConsistency: 4,
+            colorPaletteConsistency: 4,
+          }
+        } as any
+      ]);
+      setQualityReviewsLoading(false);
+      return;
+    }
+    if (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true") {
+      setPages([
+        {
+          id: "demo-page-1",
+          pageNumber: 0,
+          text: "Test page 1 text",
+          imagePrompt: "Test character appearing in a room",
+          status: "completed",
+          appearingCharacterIds: ["char1"],
+          focusCharacterId: "char1",
+          usedCharacterReference: true,
+        } as any
+      ]);
+      setPagesLoading(false);
+      return;
+    }
     if (!selectedBookId || !isAdmin) {
       setPages([]);
       setFeedbacks([]);
@@ -723,6 +805,47 @@ export default function AdminBookQualityReviewPage() {
   }, [isAdmin, selectedBookId]);
 
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true") {
+      setQualityReviews([
+        {
+          id: "demo-qr-1",
+          reviewerType: "llm",
+          reviewerId: "system_llm",
+          characterConsistencyScore: 4,
+          overallScore: 4.5,
+          status: "llm_reviewed",
+          reviewReason: "Test review reason",
+          flaggedIssues: [{ area: "character", severity: "medium", message: "Demo character issue" }],
+          characterAxes: {
+            visualBibleReflected: 4,
+            characterIdConsistency: 5,
+            appearingCharacterConsistency: 4,
+            focusCharacterConsistency: 3,
+            pageLevelCharacterLinkage: 5,
+            outfitHairstyleConsistency: 4,
+            colorPaletteConsistency: 4,
+          }
+        } as any
+      ]);
+      setQualityReviewsLoading(false);
+      return;
+    }
+    if (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true") {
+      setPages([
+        {
+          id: "demo-page-1",
+          pageNumber: 0,
+          text: "Test page 1 text",
+          imagePrompt: "Test character appearing in a room",
+          status: "completed",
+          appearingCharacterIds: ["char1"],
+          focusCharacterId: "char1",
+          usedCharacterReference: true,
+        } as any
+      ]);
+      setPagesLoading(false);
+      return;
+    }
     if (!selectedBookId || !isAdmin) {
       setFeedbacks([]);
       return;
@@ -846,7 +969,7 @@ export default function AdminBookQualityReviewPage() {
     }
   };
 
-  // Load snapshot history on mount (admin only)
+   Load snapshot history on mount (admin only)
   useEffect(() => {
     if (!isAdmin) return;
     fetchSnapshotHistory();
@@ -871,7 +994,7 @@ export default function AdminBookQualityReviewPage() {
       });
       setSnapshotMessage("SLO snapshot を保存しました");
       window.setTimeout(() => setSnapshotMessage(null), 3000);
-      // Refresh history
+       Refresh history
       await fetchSnapshotHistory();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "保存に失敗しました";
@@ -1007,7 +1130,7 @@ export default function AdminBookQualityReviewPage() {
     setIntentMessage(null);
     const description = RECOMMENDATION_INTENT_DESCRIPTIONS[intent];
 
-    // Toggle: clicking the same intent again clears highlighting
+     Toggle: clicking the same intent again clears highlighting
     if (activeIntent === intent) {
       setActiveIntent(null);
       setIntentMessage(null);
@@ -1016,9 +1139,9 @@ export default function AdminBookQualityReviewPage() {
 
     setActiveIntent(intent);
 
-    // Scroll to draft panel area (below recommendation panel)
-    // so the user sees the task draft + save button immediately.
-    // Highlighted sections are marked with ring-2 ring-amber-300.
+     Scroll to draft panel area (below recommendation panel)
+     so the user sees the task draft + save button immediately.
+     Highlighted sections are marked with ring-2 ring-amber-300.
     setTimeout(() => {
       const el = document.getElementById("task-draft-area");
       if (el) {
@@ -1069,7 +1192,7 @@ export default function AdminBookQualityReviewPage() {
       setQualityReviewMessage("Quality review を保存しました");
       setQualityReviewForm(normalizeQualityReviewForm());
 
-      // Auto-next: when filter is "not_reviewed", jump to next unreviewed book
+       Auto-next: when filter is "not_reviewed", jump to next unreviewed book
       if (qualityReviewFilter === "not_reviewed") {
         const next = findNextUnreviewed(selectedBook.id);
         if (next) {
@@ -2190,7 +2313,7 @@ export default function AdminBookQualityReviewPage() {
                                     <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
                                       <div className="space-y-3">
                                         {page.imageUrl ? (
-                                          // eslint-disable-next-line @next/next/no-img-element
+                                           eslint-disable-next-line @next/next/no-img-element
                                           <img
                                             src={page.imageUrl}
                                             alt={`page ${page.pageNumber + 1}`}
@@ -2405,6 +2528,12 @@ export default function AdminBookQualityReviewPage() {
                       <QualityRecommendationPanel
                         book={selectedBook}
                         onIntentAction={(intent) => handleIntentAction(intent)}
+                      />
+
+                      <CharacterConsistencyDiagnostics
+                        book={selectedBook}
+                        pages={pages}
+                        qualityReviews={qualityReviews}
                       />
                       <div id="task-draft-area">
                       {intentMessage && (
