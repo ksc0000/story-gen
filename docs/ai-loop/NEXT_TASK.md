@@ -1,11 +1,9 @@
-# Implement PDF Output Feature Design Document
+# Improve Cover Page Illustration Quality
 
 ## Context
 
-The EhonAI product roadmap lists "PDF出力" as a currently unimplemented feature. While several core features and reliability improvements have been completed (Phase 1, Phase 4), and significant UX enhancements are in place (Phase 6), user experience around output formats is still limited. A PDF output feature will allow users to download their created picture books for offline viewing, printing, or sharing outside of the web application, thereby enhancing the product's utility and value proposition, particularly in the context of Phase 5 (Monetization) and potential print orders.
-
-This task specifically focuses on the design document, aligning with the "docs-first" constraint and setting the stage for future implementation.
+The product roadmap for Phase 2: Story & Illustration Quality includes "cover page illustration quality 改善" as a key task. `generateCoverImage()` has been refactored to use the `ImageProvider` adapter (PR#241), and `coverImagePrompt` generation is in place (Step C/D of Cover Page / Reading Structure). With Cohort B soft launch underway, ensuring the visual quality of the cover page, which is the first impression for users, is critical. This task focuses on leveraging existing tools and prompt engineering to elevate cover illustration quality.
 
 ## Objective
 
-Create a comprehensive design document for
+Enhance the aesthetic quality and consistency of generated cover page illustrations by refining the `coverImagePrompt` generation logic and associated `styleBible` configurations. The goal
