@@ -50,6 +50,10 @@ function getGeneratingSummary(book: BookDoc, completedPages: number, totalPages:
   };
 }
 
+function isQuotaExceeded(book: BookDoc): boolean {
+  return book.failureStage === "validation" && book.failureProvider === "system";
+}
+
 function getFailureMessage(book: BookDoc): string {
   if (book.failureStage === "story_generation" && book.failureProvider === "gemini" && book.retryable) {
     return "現在、ストーリー生成AIが混み合っています。少し時間をおいて、同じ内容で再作成できます。";
@@ -65,6 +69,10 @@ function getFailureMessage(book: BookDoc): string {
 
   if (book.failureStage === "image_generation" && book.failureProvider === "replicate") {
     return "画像生成AIの処理に時間がかかっています。少し時間をおいて再試行してください。";
+  }
+
+  if (isQuotaExceeded(book)) {
+    return book.errorMessage ?? "今月の生成回数に達しました。プランをアップグレードすると続けて作成できます。";
   }
 
   if (book.failureStage === "validation") {
@@ -209,7 +217,11 @@ function GeneratingContent() {
         </p>
       ) : null}
       <div className="mt-6 flex justify-center gap-3">
-        <Link href="/create/theme"><Button>もう一度試す</Button></Link>
+        {isQuotaExceeded(book) ? (
+          <Link href="/pricing"><Button>プランをアップグレード</Button></Link>
+        ) : (
+          <Link href="/create/theme"><Button>もう一度試す</Button></Link>
+        )}
         <Link href="/home"><Button variant="outline">本棚に戻る</Button></Link>
       </div>
     </PageTransition>
