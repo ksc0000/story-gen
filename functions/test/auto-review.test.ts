@@ -6,6 +6,10 @@ describe("LLM Auto Review Prompt Construction", () => {
   it("should construct a valid prompt with book and page data", () => {
     const mockBook: Partial<BookData> = {
       title: "Test Book",
+      input: {
+        childName: "Test Child",
+        childAge: 5,
+      },
       theme: "adventure",
       storyGoal: "To find the treasure",
       mainQuestObject: "treasure map",
