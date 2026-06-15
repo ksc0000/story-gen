@@ -21,7 +21,7 @@ describe("admin-cost-metrics", () => {
     pageCount: 4,
     status: "completed",
     progress: 100,
-    createdAt: { seconds: 0, nanoseconds: 0 } as any,
+    createdAt: { seconds: 0, nanoseconds: 0 } as unknown as BookDoc["createdAt"],
     input: { childName: "test" },
     ...overrides,
   });
@@ -48,7 +48,7 @@ describe("admin-cost-metrics", () => {
     it("should identify openai", () => {
       expect(getProviderId(mockPage({ imageModel: "openai/gpt-4o" }))).toBe("openai");
       expect(getProviderId(mockPage({ imageModelProfile: "openai_mini" }))).toBe("openai");
-      expect(getProviderId(mockPage({ imageModelProfile: "openai_image_candidate" as any }))).toBe("openai");
+      expect(getProviderId(mockPage({ imageModelProfile: "openai_image_candidate" as PageDoc["imageModelProfile"] }))).toBe("openai");
     });
 
     it("should identify replicate", () => {

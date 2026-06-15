@@ -77,8 +77,8 @@ export function getProviderId(page: PageDoc): string {
   if (page.replicateModel || page.imageModel?.startsWith("black-forest-labs")) {
     return "replicate";
   }
-  // Guess based on profile if needed
-  if (page.imageModelProfile === "openai_image_candidate") return "openai";
+  // Any "openai*" profile (incl. the openai_image_candidate) is already caught
+  // above via startsWith("openai"); everything else defaults to replicate.
   return "replicate"; // Default provider
 }
 
@@ -147,7 +147,10 @@ export function computeProviderCostMetrics(
     // Add cover cost if applicable
     if (book.hasCoverPage && book.coverStatus === "completed") {
       // Estimate cover cost (usually premium/pro)
-      const coverCost = book.coverImageModelProfile === "openai_image_candidate" ? 0.042 : 0.05;
+      // Cast to string: the openai_image_candidate profile can appear in stored
+      // data even though it's outside the frontend ImageModelProfile union.
+      const coverCost =
+        (book.coverImageModelProfile as string | undefined) === "openai_image_candidate" ? 0.042 : 0.05;
       const provider = book.coverImageModelProfile?.startsWith("openai") ? "openai" : "replicate";
       const model = book.coverImageModelProfile || "cover_pro";
 
