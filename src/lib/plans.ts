@@ -125,7 +125,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai", "photo_story"],
     monthlyBookQuota: 10,
-    maxCompanions: 10,
+    // プランページ表記が「無制限」のため、実質上限なしの高い値にする。
+    maxCompanions: 9999,
     priceJpy: 2980,
     isPaid: true,
     enabled: true,
