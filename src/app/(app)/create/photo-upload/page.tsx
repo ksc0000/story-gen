@@ -4,7 +4,7 @@ import { Suspense, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Plus, Trash2, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { trackAnalyticsEvent } from "@/lib/analytics";
 
 function PhotoUploadPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [hasConsented, setHasConsented] = useState(false);
@@ -104,6 +105,9 @@ function PhotoUploadPageContent() {
       const expiresAt = Timestamp.fromMillis(now.toMillis() + 30 * 24 * 60 * 60 * 1000);
       const createdAtMs = Date.now();
       const planConfig = PLAN_CONFIGS.premium_paid;
+      const companionId = searchParams.get("companionId") || undefined;
+      const companionName = searchParams.get("companionName") || undefined;
+      const companionVisualDescription = searchParams.get("companionVisualDescription") || undefined;
 
       const bookPayload = {
         userId: user.uid,
@@ -121,6 +125,9 @@ function PhotoUploadPageContent() {
         progress: 0,
         input: {
           childName: "主人公", // Placeholder
+          companionId,
+          companionName,
+          companionVisualDescription,
         },
         createdAt: serverTimestamp(),
         createdAtMs,

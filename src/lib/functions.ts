@@ -138,6 +138,8 @@ export interface GenerateStoryPitchInput {
   pageCount: number;
   protagonistType: "child" | "fictional";
   refinementRequest?: string;
+  companionName?: string;
+  companionVisualDescription?: string;
 }
 
 export async function generateStoryPitchCallable(

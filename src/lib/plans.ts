@@ -20,6 +20,7 @@ export type PlanConfig = {
   characterConsistencyMode: CharacterConsistencyMode;
   allowedCreationModes: CreationMode[];
   monthlyBookQuota?: number;
+  maxCompanions: number;
   priceJpy?: number;
   isPaid: boolean;
   enabled: boolean;
@@ -87,6 +88,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
     monthlyBookQuota: 1,
+    maxCompanions: 2,
     isPaid: false,
     enabled: true,
     maxChildren: 1,
@@ -106,6 +108,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     monthlyBookQuota: 5,
+    maxCompanions: 5,
     priceJpy: 1480,
     isPaid: true,
     enabled: true,
@@ -125,6 +128,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai", "photo_story"],
     monthlyBookQuota: 10,
+    // プランページ表記が「無制限」のため、実質上限なしの高い値にする。
+    maxCompanions: 9999,
     priceJpy: 2980,
     isPaid: true,
     enabled: true,

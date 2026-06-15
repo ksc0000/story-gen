@@ -409,13 +409,91 @@ function normalizeStoryForBook(
     normalizeStoryCastWithChildProfile(story, bookData.childProfileSnapshot)
   );
 
+  const withCompanion = normalizeStoryWithCompanion(withNormalizedCast, mergedInput);
+
   return {
-    ...withNormalizedCast,
+    ...withCompanion,
     forbiddenQuestObjects: sanitizeForbiddenQuestObjects(
-      withNormalizedCast.forbiddenQuestObjects,
+      withCompanion.forbiddenQuestObjects,
       bookData,
       mergedInput
     ),
+  };
+}
+
+/**
+ * Ensures the companion character is correctly registered in the cast and appears
+ * in at least 50% of the pages.
+ */
+export function normalizeStoryWithCompanion(
+  story: GeneratedStory,
+  mergedInput: BookInput
+): GeneratedStory {
+  const { companionId, companionName, companionVisualDescription } = mergedInput;
+  if (!companionId || !companionName || !companionVisualDescription) {
+    return story;
+  }
+
+  const companionCharacterId = "companion_character";
+  const companionNameLower = companionName.toLowerCase();
+
+  // 1. Check if companion is already in cast
+  const existingCompanion = story.cast?.find(
+    (c) =>
+      c.characterId === companionCharacterId ||
+      c.displayName.toLowerCase().includes(companionNameLower) ||
+      companionNameLower.includes(c.displayName.toLowerCase())
+  );
+
+  let updatedCast = story.cast ? [...story.cast] : [];
+  let effectiveCompanionId = companionCharacterId;
+
+  if (existingCompanion) {
+    effectiveCompanionId = existingCompanion.characterId;
+    // Ensure the visualBible is consistent with the selected companion's description
+    if (!existingCompanion.visualBible || existingCompanion.visualBible.length < 20) {
+      existingCompanion.visualBible = companionVisualDescription;
+    }
+  } else {
+    updatedCast.push({
+      characterId: companionCharacterId,
+      displayName: companionName,
+      role: "buddy" as StoryCharacterRole,
+      characterKind: "magical_creature" as StoryCharacterKind,
+      visualBible: companionVisualDescription,
+      nonHuman: true,
+      noHumanFace: true,
+      noHumanBody: true,
+    });
+  }
+
+  // 2. Ensure presence in >= 50% of pages
+  const totalPages = story.pages.length;
+  const targetCount = Math.ceil(totalPages * 0.5);
+  const appearingIndices = story.pages
+    .map((p, i) => (p.appearingCharacterIds?.includes(effectiveCompanionId) ? i : -1))
+    .filter((i) => i !== -1);
+
+  let currentCount = appearingIndices.length;
+  const updatedPages = story.pages.map((page, index) => {
+    const isPresent = page.appearingCharacterIds?.includes(effectiveCompanionId);
+    if (isPresent) return page;
+
+    // If we still need more appearances, add to this page (prefer even pages)
+    if (currentCount < targetCount && index % 2 === 0) {
+      currentCount++;
+      return {
+        ...page,
+        appearingCharacterIds: [...(page.appearingCharacterIds || []), effectiveCompanionId],
+      };
+    }
+    return page;
+  });
+
+  return {
+    ...story,
+    cast: updatedCast,
+    pages: updatedPages,
   };
 }
 
@@ -2714,15 +2792,50 @@ function buildStoryFromFixedTemplate(
   readingProfile: { ageBand: AgeBand }
 ): GeneratedStory {
   const replacements = buildFixedTemplateReplacements(mergedInput);
-  const pages = fixedStory.pages.map((page) => ({
-    text: applyTemplateReplacements(
+
+  const companionId = mergedInput.companionId;
+  const companionName = mergedInput.companionName;
+  const companionVisual = mergedInput.companionVisualDescription;
+
+  const hasCompanion = Boolean(companionId && companionName && companionVisual);
+  const companionCharacterId = "companion_character";
+
+  const pages = fixedStory.pages.map((page, index) => {
+    const text = applyTemplateReplacements(
       page.textTemplatesByAge?.[readingProfile.ageBand]
         ?? page.textTemplatesByAge?.general_child
         ?? page.textTemplate,
       replacements
-    ),
-    imagePrompt: applyTemplateReplacements(page.imagePromptTemplate, replacements),
-  }));
+    );
+    const imagePrompt = applyTemplateReplacements(page.imagePromptTemplate, replacements);
+
+    // 相棒がいる場合、1ページおき（0, 2, 4...）に登場させる（半数以上）
+    const appearingCharacterIds = ["child_protagonist"];
+    if (hasCompanion && index % 2 === 0) {
+      appearingCharacterIds.push(companionCharacterId);
+    }
+
+    return {
+      text,
+      imagePrompt,
+      pageVisualRole: page.pageVisualRole,
+      appearingCharacterIds,
+    };
+  });
+
+  const cast: StoryCharacter[] = [];
+  if (hasCompanion) {
+    cast.push({
+      characterId: companionCharacterId,
+      displayName: companionName!,
+      role: "buddy",
+      characterKind: "magical_creature",
+      visualBible: companionVisual!,
+      nonHuman: true,
+      noHumanFace: true,
+      noHumanBody: true,
+    });
+  }
 
   return {
     title: applyTemplateReplacements(fixedStory.titleTemplate, replacements),
@@ -2739,6 +2852,7 @@ function buildStoryFromFixedTemplate(
     styleBible: buildFixedStyleBible(bookData, template),
     narrativeDevice: undefined,
     pages,
+    cast: cast.length > 0 ? cast : undefined,
   };
 }
 
