@@ -175,24 +175,11 @@ function ThemeSelectionPageContent() {
     if (companionName) params.set("companionName", companionName);
     if (companionVisualDescription) params.set("companionVisualDescription", companionVisualDescription);
 
-    if (selectedMode === "photo_story") {
-      params.set("mode", selectedMode);
-      router.push(`/create/photo-upload?${params.toString()}`);
-      return;
-    }
-
-    if (selectedMode === "guided_ai") {
-      // 新フロー: AIにおまかせ → ai-brief 入力ページへ
-      params.set("mode", selectedMode);
-      if (effectiveId) params.set("theme", effectiveId); // ベーステンプレートID
-      router.push(`/create/ai-brief?${params.toString()}`);
-      return;
-    }
-
-    // fixed_template / original_ai は既存の入力ページへ
-    params.set("theme", effectiveId || "");
     params.set("mode", selectedMode);
-    router.push(`/create/input?${params.toString()}`);
+    if (effectiveId) params.set("theme", effectiveId);
+
+    // 全モード共通で、まず相棒選択へ進む
+    router.push(`/create/select-companion?${params.toString()}`);
   };
 
   return (

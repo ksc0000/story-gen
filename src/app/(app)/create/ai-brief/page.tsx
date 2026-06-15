@@ -482,12 +482,17 @@ function AiBriefPageContent() {
     }
 
     try {
+      const companionName = searchParams.get("companionName") || undefined;
+      const companionVisualDescription = searchParams.get("companionVisualDescription") || undefined;
+
       const pitch = await generateStoryPitchCallable({
         protagonistName: effectiveName,
         storyBrief: brief,
         pageCount: effectivePageCount,
         protagonistType: effectiveProtagonistType,
         refinementRequest: refinementRequest?.trim(),
+        companionName,
+        companionVisualDescription,
       });
 
       trackAnalyticsEvent("submit_ai_brief", {
