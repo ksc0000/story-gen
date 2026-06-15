@@ -50,6 +50,7 @@ function ChildAvatarPageContent() {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [usePhoto, setUsePhoto] = useState(true);
 
   const selectedCandidate = candidates.find((candidate) => candidate.generationId === selectedCandidateId) ?? null;
   const revisionSummary = useMemo(() => buildRevisionSummary(revisionRequest), [revisionRequest]);
@@ -148,10 +149,13 @@ function ChildAvatarPageContent() {
     setError(null);
     try {
       const request = options?.requestOverride ?? revisionRequest;
+      // 写真参照は初回生成（ベース画像を使わないとき）でのみ有効。
+      const shouldUsePhoto = Boolean(child?.photoUrl) && usePhoto && !options?.useBaseGeneration;
       const jobId = await startJob({
         userId: user.uid,
         childId,
         revisionRequest: request,
+        usePhoto: shouldUsePhoto,
         ...(options?.useBaseGeneration && selectedCandidate?.generationId ? { baseGenerationId: selectedCandidate.generationId } : {}),
       });
       setCurrentJobId(jobId);
@@ -224,7 +228,7 @@ function ChildAvatarPageContent() {
         <p className="text-sm font-semibold text-violet-500">キャラクター生成</p>
         <h1 className="mt-2 text-2xl font-bold text-purple-900">{child.nickname || child.displayName}の絵本キャラクター</h1>
         <p className="mt-3 text-sm leading-relaxed text-violet-500">
-          公園の砂場を背景に、絵本本編と同じ画風参照を使って候補を生成します。1人あたり最大{maxAttempts}回まで試せます。
+          絵本本編と同じ画風参照を使って候補を生成します。お子さんの写真を登録している場合は、本人らしさを参考にすることもできます。1人あたり最大{maxAttempts}回まで試せます。
         </p>
         {reason === "profile_updated" ? (
           <p className="mt-2 text-xs text-violet-500">プロフィール変更を反映したキャラクター画像の再生成です。</p>
@@ -256,6 +260,23 @@ function ChildAvatarPageContent() {
         <CardContent className="space-y-5 p-6">
           {error ? (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
+          ) : null}
+
+          {child.photoUrl && candidates.length === 0 && !generating ? (
+            <label className="flex items-start gap-3 rounded-2xl border border-purple-100 bg-purple-50/60 p-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={usePhoto}
+                onChange={(event) => setUsePhoto(event.target.checked)}
+                className="mt-0.5 h-5 w-5 shrink-0 accent-purple-500"
+              />
+              <span className="text-sm text-violet-700">
+                <span className="font-semibold text-purple-900">お子さんの写真を参考にする</span>
+                <span className="mt-1 block text-xs text-violet-500">
+                  登録した写真から髪型や雰囲気などの「本人らしさ」をやさしい絵本タッチに変換して生成します。写真がそのまま絵本に載ることはありません。
+                </span>
+              </span>
+            </label>
           ) : null}
 
           {generating ? (
