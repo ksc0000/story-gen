@@ -1,5 +1,9 @@
-# Refine `fixed-first-birthday` Template for Sample Image and Category Alignment
+# Design Document for User Account and Child Profile Deletion
 
 ## Context
 
-The product roadmap for Phase 3: Template Mode emphasizes "Reliability-First 生成" and includes a sub-phase T3-2: "既存10テンプレート品質磨き込み". A quality review (`TEMPLATE_QUALITY_REVIEW.md`) identified P1-priority items for template refinement. One such item, "fixed-first-birthday / fixed-sleepy-moon-adventure / fixed-little-helper の sampleImage 重複・カテゴリ不一致", was partially addressed by PR #280 and PR #282. However, the roadmap explicitly states that `fixed-first-birthday` needs further refinement for sample image and category alignment (P1 item).
+The product roadmap lists "delete account / delete child profile" under "未実装" (unimplemented) features in section 0. With Phase 5 Monetization currently in progress and Cohort B rollout underway, it is critical to ensure that essential user management and privacy features are addressed. Implementing account and child profile deletion is crucial for user trust, compliance with data privacy regulations (e.g., GDPR, CCPA), and providing a complete user experience. This task focuses on drafting a comprehensive design document to outline the requirements, flows, and technical considerations for these features.
+
+## Objective
+
+Create a detailed design document outlining the user experience, technical implementation, and data handling requirements for user account and child profile deletion. This document will
