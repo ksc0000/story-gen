@@ -328,7 +328,15 @@ import {
   type SloMetrics,
 } from "@/lib/admin-slo-metrics";
 
-import { computeQualityTrend } from "@/lib/admin-quality-trend";
+import { computeQualityTrend, type QualityTrendSummary } from "@/lib/admin-quality-trend";
+
+interface QualitySnapshot extends QualityTrendSummary {
+  id: string;
+  createdAtMs?: number;
+  createdBy?: string;
+  source?: string;
+  window?: string;
+}
 
 function SloCard({
   label,
@@ -475,6 +483,8 @@ export default function AdminBookQualityReviewPage() {
   const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
   const [snapshotHistory, setSnapshotHistory] = useState<SloSnapshot[]>([]);
   const [snapshotHistoryLoading, setSnapshotHistoryLoading] = useState(false);
+  const [qualitySnapshotHistory, setQualitySnapshotHistory] = useState<QualitySnapshot[]>([]);
+  const [qualitySnapshotHistoryLoading, setQualitySnapshotHistoryLoading] = useState(false);
   const [sloSampleSize, setSloSampleSize] = useState<SloSampleSize>(200);
   const [regenHistory, setRegenHistory] = useState<RegenerationHistoryEntry[]>([]);
   const [regenHistoryLoading, setRegenHistoryLoading] = useState(false);
@@ -505,6 +515,41 @@ export default function AdminBookQualityReviewPage() {
     if (!isAdmin) return;
 
     if (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true") {
+      setQualitySnapshotHistory([
+        {
+          id: "demo-q-1",
+          label: "2026-05-11",
+          startMs: Date.now() - 86400000 * 7,
+          totalReviewed: 10,
+          avgOverall: 4.2,
+          avgStory: 4.3,
+          avgIllustration: 4.1,
+          avgCharacterConsistency: 4.2,
+          avgPersonalization: 4.0,
+          avgSafety: 4.5,
+          scoreDistribution: { 1: 0, 2: 0, 3: 0, 4: 8, 5: 2 },
+          buckets: [],
+          regressions: [],
+          source: "scheduled-weekly-quality",
+        },
+        {
+          id: "demo-q-2",
+          label: "2026-05-04",
+          startMs: Date.now() - 86400000 * 14,
+          totalReviewed: 8,
+          avgOverall: 4.5,
+          avgStory: 4.4,
+          avgIllustration: 4.6,
+          avgCharacterConsistency: 4.5,
+          avgPersonalization: 4.3,
+          avgSafety: 4.6,
+          scoreDistribution: { 1: 0, 2: 0, 3: 0, 4: 4, 5: 4 },
+          buckets: [],
+          regressions: [{ axis: "illustration", currentAvg: 4.1, previousAvg: 4.6, dropPct: 10.8 }],
+          source: "scheduled-weekly-quality",
+        }
+      ] as QualitySnapshot[]);
+
       const demoBooks = [
         {
           id: "demo-book-1",
@@ -979,6 +1024,25 @@ export default function AdminBookQualityReviewPage() {
     }
   };
 
+  const fetchQualitySnapshotHistory = async () => {
+    setQualitySnapshotHistoryLoading(true);
+    try {
+      const q = query(
+        collection(db, "adminMetrics", "qualitySnapshots", "items"),
+        orderBy("createdAtMs", "desc"),
+        limit(20),
+      );
+      const snap = await getDocs(q);
+      setQualitySnapshotHistory(
+        snap.docs.map((d) => ({ id: d.id, ...d.data() } as QualitySnapshot)),
+      );
+    } catch (err) {
+      console.error("Failed to fetch quality snapshot history:", err);
+    } finally {
+      setQualitySnapshotHistoryLoading(false);
+    }
+  };
+
   const fetchStaleCleanupStatus = async () => {
     setStaleCleanupLoading(true);
     try {
@@ -1006,6 +1070,7 @@ export default function AdminBookQualityReviewPage() {
   useEffect(() => {
     if (!isAdmin) return;
     fetchSnapshotHistory();
+    fetchQualitySnapshotHistory();
     fetchStaleCleanupStatus();
   }, [isAdmin]);
 
@@ -1554,11 +1619,19 @@ export default function AdminBookQualityReviewPage() {
               <div className="space-y-4 rounded-2xl border border-indigo-200 bg-indigo-50/30 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-base font-semibold text-indigo-900">
-                    Quality Trend
+                    Quality Trend (Current Sample)
                     <span className="ml-2 text-xs font-normal text-indigo-500">
                       {qualityTrend.totalReviewed}冊レビュー済み
                     </span>
                   </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchQualitySnapshotHistory}
+                    disabled={qualitySnapshotHistoryLoading}
+                  >
+                    Refresh History
+                  </Button>
                 </div>
 
                 {qualityTrend.totalReviewed === 0 ? (
@@ -1568,7 +1641,7 @@ export default function AdminBookQualityReviewPage() {
                     {/* Regression Alerts */}
                     {qualityTrend.regressions.length > 0 && (
                       <div className="rounded-lg border border-rose-300 bg-rose-50 p-3">
-                        <p className="mb-1 text-xs font-semibold text-rose-800">⚠️ Regression Detected</p>
+                        <p className="mb-1 text-xs font-semibold text-rose-800">⚠️ Regression Detected (Recent Sample)</p>
                         {qualityTrend.regressions.map((r) => (
                           <p key={r.axis} className="text-xs text-rose-700">
                             <strong>{r.axis}</strong>: {r.previousAvg.toFixed(2)} → {r.currentAvg.toFixed(2)} (−{r.dropPct}%)
@@ -1630,7 +1703,7 @@ export default function AdminBookQualityReviewPage() {
                     {/* Weekly Trend Table */}
                     {qualityTrend.buckets.length > 0 && (
                       <div>
-                        <p className="mb-1 text-xs font-semibold text-indigo-700">Weekly Trend</p>
+                        <p className="mb-1 text-xs font-semibold text-indigo-700">Weekly Trend (Current Sample)</p>
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs">
                             <thead>
@@ -1665,6 +1738,77 @@ export default function AdminBookQualityReviewPage() {
                     )}
                   </>
                 )}
+
+                {/* Quality Snapshot History */}
+                <div className="mt-6 space-y-4 rounded-xl bg-white p-4">
+                  <h4 className="text-sm font-semibold text-indigo-900">Historical Quality Snapshots</h4>
+                  {qualitySnapshotHistoryLoading ? (
+                    <p className="py-4 text-center text-xs text-indigo-400">読み込み中...</p>
+                  ) : qualitySnapshotHistory.length === 0 ? (
+                    <p className="py-4 text-center text-xs text-indigo-400">履歴がありません。毎週月曜日に自動保存されます。</p>
+                  ) : (
+                    <>
+                      {/* Regression Alerts from Snapshots */}
+                      {(() => {
+                        const allRegressions = qualitySnapshotHistory.flatMap(s => s.regressions.map(r => ({ ...r, date: s.label })));
+                        if (allRegressions.length === 0) return null;
+                        return (
+                          <div className="rounded-lg border border-rose-200 bg-rose-50/50 p-3">
+                            <p className="mb-2 text-xs font-semibold text-rose-800">⚠️ Historical Regression Alerts</p>
+                            <div className="space-y-1">
+                              {allRegressions.slice(0, 5).map((r, i) => (
+                                <p key={i} className="text-xs text-rose-700">
+                                  <span className="font-medium">[{r.date}]</span> <strong>{r.axis}</strong>: {r.previousAvg.toFixed(2)} → {r.currentAvg.toFixed(2)} (−{r.dropPct}%)
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="border-b border-indigo-100 text-left text-indigo-600">
+                              <th className="py-2 pr-3">Date</th>
+                              <th className="py-2 pr-3">N</th>
+                              <th className="py-2 pr-3">Overall</th>
+                              <th className="py-2 pr-3">Story</th>
+                              <th className="py-2 pr-3">Illust.</th>
+                              <th className="py-2 pr-3">Char.</th>
+                              <th className="py-2 pr-3">Person.</th>
+                              <th className="py-2 pr-3">Safety</th>
+                              <th className="py-2 pr-3">Alerts</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {qualitySnapshotHistory.map((s) => (
+                              <tr key={s.id} className="border-b border-indigo-50 text-indigo-800 hover:bg-indigo-50/30">
+                                <td className="py-2 pr-3 font-medium">{s.label}</td>
+                                <td className="py-2 pr-3">{s.totalReviewed}</td>
+                                <td className="py-2 pr-3 font-bold">{s.avgOverall.toFixed(2)}</td>
+                                <td className="py-2 pr-3">{s.avgStory.toFixed(2)}</td>
+                                <td className="py-2 pr-3">{s.avgIllustration.toFixed(2)}</td>
+                                <td className="py-2 pr-3">{s.avgCharacterConsistency.toFixed(2)}</td>
+                                <td className="py-2 pr-3">{s.avgPersonalization.toFixed(2)}</td>
+                                <td className="py-2 pr-3">{s.avgSafety.toFixed(2)}</td>
+                                <td className="py-2 pr-3">
+                                  {s.regressions.length > 0 ? (
+                                    <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
+                                      {s.regressions.length} ALERT
+                                    </span>
+                                  ) : (
+                                    <span className="text-emerald-600">✓</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Stale Cleanup Status */}
