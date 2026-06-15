@@ -129,6 +129,7 @@
     "PR #420: Child Profile Management Improvements (merged)",
     "PR #421: chore: remove stray story-gen-description output (merged)",
     "PR #422: feat: admin accounts bypass monthly generation quota for testing (merged)",
+    "PR #423: fix: home page showed free quota (0/1) for Standard plan users (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
