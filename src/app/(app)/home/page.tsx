@@ -166,6 +166,8 @@ export default function HomePage() {
   const quota = PLAN_CONFIGS[productPlan]?.monthlyBookQuota ?? 1;
   const consumed = profile?.monthlyGenerationCount ?? 0;
   const remaining = Math.max(0, quota - consumed);
+  // 管理者・bypassMonthlyLimit 保持者は月次上限なしで生成できるため、有限クォータではなく「無制限」を表示する。
+  const isUnlimited = isAdmin || profile?.generationOverride?.bypassMonthlyLimit === true;
 
   const [selectedStyle, setSelectedStyle] = useState<string>("all");
   const [selectedMode, setSelectedMode] = useState<string>("all");
@@ -244,30 +246,39 @@ export default function HomePage() {
             </p>
           )}
           <div className="mt-4">
-            <Badge
-              variant="outline"
-              className={cn(
-                "bg-white/50 backdrop-blur-sm transition-colors",
-                remaining <= 0
-                  ? "border-red-200 text-red-700 bg-red-50/50"
-                  : remaining === 1
-                  ? "border-orange-200 text-orange-700 bg-orange-50/50"
-                  : "border-purple-200 text-purple-700"
-              )}
-            >
-              今月 {consumed} / {quota} 冊作成済み
-              {remaining <= 1 && (
-                <>
-                  {" "}—{" "}
-                  <Link
-                    href="/pricing"
-                    className="underline ml-1 text-xs opacity-80 hover:opacity-100 transition-opacity"
-                  >
-                    増やしたい方はこちら
-                  </Link>
-                </>
-              )}
-            </Badge>
+            {isUnlimited ? (
+              <Badge
+                variant="outline"
+                className="bg-white/50 backdrop-blur-sm border-purple-200 text-purple-700"
+              >
+                今月 {consumed} 冊作成済み（無制限）
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "bg-white/50 backdrop-blur-sm transition-colors",
+                  remaining <= 0
+                    ? "border-red-200 text-red-700 bg-red-50/50"
+                    : remaining === 1
+                    ? "border-orange-200 text-orange-700 bg-orange-50/50"
+                    : "border-purple-200 text-purple-700"
+                )}
+              >
+                今月 {consumed} / {quota} 冊作成済み
+                {remaining <= 1 && (
+                  <>
+                    {" "}—{" "}
+                    <Link
+                      href="/pricing"
+                      className="underline ml-1 text-xs opacity-80 hover:opacity-100 transition-opacity"
+                    >
+                      増やしたい方はこちら
+                    </Link>
+                  </>
+                )}
+              </Badge>
+            )}
           </div>
         </header>
         {deleteError && (
