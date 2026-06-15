@@ -1854,16 +1854,29 @@ function resolveEnableRecurringCharacterReference(generationMode: string): boole
   return generationMode === "quality";
 }
 
-function normalizeBookForGeneration(
+/**
+ * T3-C: Normalize and validate book generation settings based on user plan and creation mode.
+ * Enforces page count restrictions, especially for fixed templates.
+ * Throws an error if the requested configuration is prohibited by the user's plan.
+ */
+export function normalizeBookForGeneration(
   bookData: BookData,
   template: TemplateData,
   userPlan: "free" | "premium"
 ): BookData {
   const creationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
-  const requestedProductPlan = bookData.productPlan ?? getDefaultProductPlanForCreationMode(creationMode);
+  const isSinglePurchase = bookData.isSinglePurchase === true;
+
+  // 1. Determine the base product plan.
+  // Single purchases always use premium-equivalent settings (T3-B).
+  const requestedProductPlan = isSinglePurchase
+    ? "premium_paid"
+    : (bookData.productPlan ?? getDefaultProductPlanForCreationMode(creationMode));
+
   let normalizedPlan = requestedProductPlan;
 
-  if (!canUseProductPlan({ userPlan, productPlan: requestedProductPlan })) {
+  // 2. Entitlement check (only for non-single-purchase)
+  if (!isSinglePurchase && !canUseProductPlan({ userPlan, productPlan: requestedProductPlan })) {
     if (creationMode === "fixed_template") {
       normalizedPlan = "free";
       console.log(
@@ -1877,21 +1890,34 @@ function normalizeBookForGeneration(
     }
   }
 
+  // 3. Creation mode compatibility check
   const requestedPlanConfig = getPlanConfig(normalizedPlan);
   normalizedPlan =
     requestedPlanConfig.allowedCreationModes.includes(creationMode)
       ? normalizedPlan
       : getDefaultProductPlanForCreationMode(creationMode);
-  const normalizedPlanConfig = getPlanConfig(normalizedPlan);
-  const fixedTemplatePageCount = template.fixedStory?.pages.length;
-  const normalizedPageCount =
-    creationMode === "fixed_template" && isValidPageCount(fixedTemplatePageCount)
-      ? fixedTemplatePageCount
-      : normalizedPlanConfig.allowedPageCounts.includes(bookData.pageCount)
-        ? bookData.pageCount
-        : normalizedPlanConfig.defaultPageCount;
 
-  const isSinglePurchase = bookData.isSinglePurchase === true;
+  const normalizedPlanConfig = getPlanConfig(normalizedPlan);
+
+  // 4. Page count enforcement (Phase 3-C)
+  const fixedTemplatePageCount = template.fixedStory?.pages.length;
+  let normalizedPageCount: BookData["pageCount"];
+
+  if (creationMode === "fixed_template" && fixedTemplatePageCount !== undefined) {
+    // For fixed templates, the template's page count MUST be allowed by the plan.
+    if (!normalizedPlanConfig.allowedPageCounts.includes(fixedTemplatePageCount as BookData["pageCount"])) {
+      // User-facing message (surfaced via updateBookFailure). UI also gates the
+      // page-count selector, so this is a defense-in-depth safety net.
+      throw new Error(
+        `${fixedTemplatePageCount}ページの絵本は現在のプランでは作成できません。上位プランにアップグレードすると作成できます。`
+      );
+    }
+    normalizedPageCount = fixedTemplatePageCount as BookData["pageCount"];
+  } else {
+    normalizedPageCount = normalizedPlanConfig.allowedPageCounts.includes(bookData.pageCount)
+      ? bookData.pageCount
+      : normalizedPlanConfig.defaultPageCount;
+  }
 
   return {
     ...bookData,
@@ -1910,9 +1936,6 @@ function normalizeBookForGeneration(
   };
 }
 
-function isValidPageCount(value: number | undefined): value is BookData["pageCount"] {
-  return value === 4 || value === 8 || value === 12;
-}
 
 function buildInputImageRefs(
   childProfileSnapshot: BookData["childProfileSnapshot"] | undefined,
