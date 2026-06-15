@@ -478,6 +478,11 @@ function ThemeSelectionPageContent() {
       <TemplateDetailDialog
         template={detailTemplateId ? (templates.find((t) => t.id === detailTemplateId) ?? null) : null}
         variants={detailTemplateId ? (templateVariantsMap.get(detailTemplateId.replace(/-8p$/, "")) ?? []) : []}
+        allowedPageCounts={
+          PLAN_CONFIGS[
+            profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free")
+          ]?.allowedPageCounts
+        }
         isOpen={detailTemplateId !== null}
         onClose={() => setDetailTemplateId(null)}
         onConfirm={(confirmedId) => {

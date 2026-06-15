@@ -61,6 +61,8 @@ import {
   getPageHighlightLevel,
   getSectionHighlights,
 } from "@/lib/quality-review";
+import { ProviderCostDashboard } from "@/components/admin/ProviderCostDashboard";
+import { computeProviderCostMetrics } from "@/lib/admin-cost-metrics";
 
 type BookWithId = BookDoc & { id: string };
 type PageWithId = PageDoc & { id: string };
@@ -506,10 +508,13 @@ export default function AdminBookQualityReviewPage() {
       const demoBooks = [
         {
           id: "demo-book-1",
-          title: "Demo Book",
+          title: "Demo Book (Premium)",
           status: "completed",
           productPlan: "premium_paid",
           creationMode: "guided_ai",
+          hasCoverPage: true,
+          coverStatus: "completed",
+          coverImageModelProfile: "pro_consistent",
           createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown as import("firebase/firestore").Timestamp,
           overallQualityScore: 4.5,
           qualityReviewStatus: "llm_reviewed",
@@ -518,9 +523,32 @@ export default function AdminBookQualityReviewPage() {
             { characterId: "char1", displayName: "Test Character", role: "protagonist", visualBible: "A small blue robot" }
           ]
         } as BookWithId,
+        {
+          id: "demo-book-2",
+          title: "Demo Book (Free)",
+          status: "completed",
+          productPlan: "free",
+          creationMode: "fixed_template",
+          createdAt: { seconds: Date.now() / 1000 - 86400, nanoseconds: 0 } as unknown as import("firebase/firestore").Timestamp,
+          overallQualityScore: 3.8,
+          qualityReviewStatus: "human_reviewed",
+        } as BookWithId,
       ];
+
       setBooks(demoBooks);
       setBooksLoading(false);
+
+      // Mock pages for cost dashboard
+      const mockPagesMap = new Map<string, PageWithId[]>();
+      mockPagesMap.set("demo-book-1", [
+        { id: "p1", pageNumber: 0, status: "completed", imageModel: "black-forest-labs/flux-2-pro", imageQualityTier: "premium" } as PageWithId,
+        { id: "p2", pageNumber: 1, status: "completed", imageModel: "black-forest-labs/flux-2-pro", imageQualityTier: "premium" } as PageWithId,
+      ]);
+      mockPagesMap.set("demo-book-2", [
+        { id: "p3", pageNumber: 0, status: "completed", imageModel: "black-forest-labs/flux-2-klein-9b", imageQualityTier: "light" } as PageWithId,
+      ]);
+      setAllPagesMap(mockPagesMap);
+
       return;
     }
 
@@ -909,6 +937,11 @@ export default function AdminBookQualityReviewPage() {
   const sloMetrics = useMemo(
     () => computeSloMetrics(books, allPagesMap),
     [books, allPagesMap],
+  );
+
+  const costMetrics = useMemo(
+    () => computeProviderCostMetrics(books, allPagesMap),
+    [books, allPagesMap]
   );
 
   const sloByPlan = useMemo(() => {
@@ -1507,6 +1540,14 @@ export default function AdminBookQualityReviewPage() {
                     </>
                   )}
                 </div>
+              </div>
+
+              {/* Provider Cost Dashboard */}
+              <div className="space-y-4 rounded-2xl border border-pink-200 bg-pink-50/30 p-4">
+                <h3 className="text-base font-semibold text-pink-900">
+                  Provider Cost Comparison (Estimated)
+                </h3>
+                <ProviderCostDashboard metrics={costMetrics} loading={allPagesLoading} />
               </div>
 
               {/* Quality Trend Dashboard */}

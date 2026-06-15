@@ -2,7 +2,8 @@ import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
 import type { AvatarRevisionRequest, ChildProfileData, IllustrationStyle, AvatarCandidate } from "./types";
 import { getStyleReferenceImagePath } from "./prompt-builder";
-import { ReplicateImageClient } from "./replicate";
+import { ReplicateImageClient, resolveReplicateModel } from "./replicate";
+import { logGenerationEvent } from "./generation-event-logger";
 
 export const MAX_ATTEMPTS_PER_CHILD = 5;
 const PUBLIC_SITE_URL = "https://ehoria.app";
@@ -378,9 +379,24 @@ export async function processAvatarGeneration(params: {
     buildReferenceImageInstruction(referenceImageRoles)
   );
 
+  const avatarStartMs = Date.now();
+  const avatarPurpose = structuredCorrectionText ? "child_avatar_revision" : "child_avatar";
   const imageBuffer = await imageClient.generateImage(prompt, {
-    purpose: structuredCorrectionText ? "child_avatar_revision" : "child_avatar",
+    purpose: avatarPurpose,
     inputImageUrls,
+  });
+  const durationMs = Date.now() - avatarStartMs;
+
+  logGenerationEvent({
+    eventName: "page_image_succeeded",
+    bookId: `avatar-${childId}`, // Conventional ID for avatar generations
+    pageIndex: -200, // Conventional negative index for avatars
+    imageModelProfile: "pro_consistent", // Avatars always use pro_consistent
+    imageModel: resolveReplicateModel({ purpose: avatarPurpose }),
+    provider: "replicate",
+    durationMs,
+    attemptCount: 1,
+    fallbackUsed: false,
   });
   const generationId = db.collection("_").doc().id;
   const imageUrl = await uploadAvatarImage(storage, userId, childId, generationId, imageBuffer);

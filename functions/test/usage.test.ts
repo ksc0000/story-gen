@@ -7,10 +7,7 @@ const mockTemplate: TemplateData = {
   creationMode: "fixed_template", systemPrompt: "test", active: true,
   fixedStory: {
     titleTemplate: "test",
-    pages: [
-      { textTemplate: "page 1", imagePromptTemplate: "prompt 1" },
-      { textTemplate: "page 2", imagePromptTemplate: "prompt 2" },
-    ],
+    pages: Array(4).fill({ textTemplate: "page", imagePromptTemplate: "prompt" }),
   },
 };
 

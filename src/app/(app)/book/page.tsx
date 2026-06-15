@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { Share2, Check, Copy, Globe, Sparkles, Loader2 } from "lucide-react";
+import { Share2, Check, Copy, Globe, Sparkles, Loader2, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookViewer } from "@/components/book-viewer";
 import { BookNextActions } from "@/components/book-next-actions";
@@ -49,6 +49,10 @@ function BookContent() {
   const [regenerationErrors, setRegenerationErrors] = useState<Record<number, string>>({});
   const [isSharing, setIsSharing] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
+  const [titleUpdateError, setTitleUpdateError] = useState<string | null>(null);
   const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
   const isOwner = Boolean(user && book && book.userId === user.uid);
 
@@ -135,6 +139,22 @@ function BookContent() {
     }
   }
 
+  async function handleUpdateTitle() {
+    if (!bookId || !newTitle.trim() || isUpdatingTitle) return;
+    setIsUpdatingTitle(true);
+    setTitleUpdateError(null);
+    try {
+      const updateTitle = httpsCallable(functions, "updateBookTitle");
+      await updateTitle({ bookId, newTitle: newTitle.trim() });
+      setIsEditingTitle(false);
+    } catch (err) {
+      console.error("Failed to update title:", err);
+      setTitleUpdateError(err instanceof Error ? err.message : "タイトルの更新に失敗しました。");
+    } finally {
+      setIsUpdatingTitle(false);
+    }
+  }
+
   async function handleRegeneratePage(page: PageDoc) {
     if (!bookId || regeneratingPages.has(page.pageNumber)) return;
     setRegeneratingPages((prev) => new Set(prev).add(page.pageNumber));
@@ -161,7 +181,68 @@ function BookContent() {
   return (
     <PageTransition className="mx-auto max-w-4xl px-4 py-8">
       <div className="flex flex-col items-center gap-4">
-        <h1 className="text-center text-2xl font-bold text-purple-900">{book.title}</h1>
+        {isEditingTitle ? (
+          <div className="w-full max-w-md space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                className="w-full rounded-lg border border-purple-200 px-4 py-2 text-center text-xl font-bold text-purple-900 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
+                placeholder="新しいタイトル"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleUpdateTitle();
+                  if (e.key === "Escape") setIsEditingTitle(false);
+                }}
+                disabled={isUpdatingTitle}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsEditingTitle(false)}
+                disabled={isUpdatingTitle}
+                className="shrink-0"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            {titleUpdateError && (
+              <p className="text-center text-sm text-rose-500">{titleUpdateError}</p>
+            )}
+            <div className="flex justify-center gap-2">
+              <Button
+                size="sm"
+                onClick={handleUpdateTitle}
+                disabled={isUpdatingTitle || !newTitle.trim()}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {isUpdatingTitle ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "保存"
+                )}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="group relative flex items-center gap-2">
+            <h1 className="text-center text-2xl font-bold text-purple-900">{book.title}</h1>
+            {isOwner && !isDemoMode && (
+              <button
+                onClick={() => {
+                  setNewTitle(book.title);
+                  setIsEditingTitle(true);
+                  setTitleUpdateError(null);
+                }}
+                className="rounded-full p-1 text-violet-400 opacity-0 transition hover:bg-purple-50 hover:text-purple-600 group-hover:opacity-100"
+                title="タイトルを編集"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        )}
         {isOwner && !isDemoMode && (
           <div className="flex items-center gap-2">
             <Button

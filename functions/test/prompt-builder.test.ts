@@ -268,24 +268,44 @@ describe("buildImagePrompt", () => {
     expect(result).not.toContain("small glowing golden spirit child");
     expect(result).not.toContain("Do not redesign recurring characters");
   });
-  it("respects child profile sandbox constraints and strips conflicting playground equipment from the scene", () => {
+  it("strips conflicting scene elements but does NOT inject the avatar prompt's style/background/composition into the page", () => {
+    // Realistic childProfileBasePrompt = the avatar-generation prompt. It carries
+    // avatar-specific style/background/composition directives that must NOT leak
+    // into story pages (they caused per-page style + background inconsistency).
+    const avatarBasePrompt = [
+      "Create a non-photorealistic Japanese storybook illustration of a preschool protagonist.",
+      "Use a clean white background with no scenery, no environmental details, and no location. Do not include playground equipment. Do not include buildings, roads, signs.",
+      "Use a front-facing, eye-level, medium-distance, almost full-body composition.",
+      "Keep the composition simple and repeatable so the character can be reused consistently in future storybook pages.",
+      "Illustration style: soft watercolor, pale hand-painted colors, airy edges, calm picture book finish.",
+      "Name or nickname: はるくん",
+      "Age impression: about 2 years old",
+      "Color mood: やさしいパステル",
+    ].join("\n");
+
     const result = buildImagePrompt(
       "A child near a red slide in a sandbox park scene",
-      "watercolor",
+      "toy_3d",
       "Approved child profile: same child with a blue sky t-shirt.",
       undefined,
       {
-        childProfileBasePrompt:
-          "Background must always be quiet Japanese neighborhood park. Include square sandbox. Do not include playground equipment. Do not include buildings, roads, signs.",
+        childProfileBasePrompt: avatarBasePrompt,
         scenePolicy: {
           backgroundMode: "fixed",
         },
       }
     );
 
-    expect(result).toContain("Respect the child profile background constraints");
-    expect(result).toContain("do not add slides, swings, playground equipment");
+    // Scene-level conflicting element is still stripped from the scene.
     expect(result).not.toContain("red slide");
+    // Character identity is preserved.
+    expect(result).toContain("はるくん");
+    // Avatar-specific style/background/composition directives must NOT leak in.
+    expect(result).not.toContain("soft watercolor");
+    expect(result).not.toContain("Color mood:");
+    expect(result).not.toContain("clean white background");
+    expect(result).not.toContain("almost full-body composition");
+    expect(result).not.toContain("character can be reused consistently");
   });
   it("does not carry fixed background rules into story_flexible prompts", () => {
     const result = buildImagePrompt(
