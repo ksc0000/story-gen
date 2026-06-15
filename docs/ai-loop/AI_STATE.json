@@ -120,6 +120,7 @@
     "PR #400: Implement Aggregated Axis-Level Quality Score Persistence (merged)",
     "PR #405: fix: resolve 4 production bugs (feedback/gallery/quota/footwear) (merged)",
     "PR #413: Redesign Pricing Page to Comparative Layout (merged)",
+    "PR #414: Sync home monthly usage badge with real-time data and quotas (merged)",
     "PR #418: feat: お子さんの写真からAIアバター生成 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
