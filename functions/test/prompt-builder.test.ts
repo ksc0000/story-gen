@@ -889,7 +889,7 @@ describe("prompt length regression (P5-3j)", () => {
         compositionHint: "wide establishing shot from slightly above",
       }
     );
-    expect(result.length).toBeLessThan(7600);
+    expect(result.length).toBeLessThan(7900);
   });
 
   it("non-animals non-star prompt (base case) stays under 6000 chars", () => {

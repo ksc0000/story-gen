@@ -934,6 +934,12 @@ export function buildImagePrompt(
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
     `Scene: ${sanitizedBasePrompt}`,
+    // Child-animal boundary placed immediately after the scene so FLUX weights it early.
+    // Previously placed only at the end of the prompt (in visualContinuityGuard), which
+    // allowed face-feature leakage when two reference images (child + animal) were given.
+    hasAnimalCharacters
+      ? "Child-animal boundary: Keep the child fully human with human features. The animal companion is physically separate — never merge, overlay, or blend the animal's face, fur, or ears onto the child's body."
+      : "",
     consistency,
     castGuidance,
     modelSpecificGuidance,
@@ -1008,7 +1014,8 @@ export function buildVisualContinuityGuard({
     parts.push(
       "Animal character consistency: Each recurring animal keeps the same appearance, size, and expression across pages. Do not redesign, duplicate, or add extra animal companions beyond what the scene requires."
     );
-    // C. Child-animal boundary (compressed P5-3j)
+    // C. Child-animal boundary: also placed early in buildImagePrompt for FLUX weighting.
+    // Kept here as a reinforcing reminder at the end of the prompt.
     parts.push(
       "Child-animal boundary: The child remains a fully human child on every page — no animal features, costume, or body parts. Animals appear only as separate companions beside the child, never merged with the child's body."
     );
