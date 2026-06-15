@@ -226,13 +226,18 @@ function sanitizeSceneAgainstChildConstraints(
 }
 
 /**
- * The child profile base prompt is the avatar-generation prompt and carries its
- * own "Illustration style: ..." and "Color mood: ..." lines (e.g. soft watercolor /
- * pastel). When this prompt is reused as a per-page scene constraint, those lines
- * fight the book's selected styleBible (e.g. toy_3d), so pages render in
- * inconsistent styles. Strip the style/palette directives here — the book's
- * styleBible is the single source of truth for rendering style; the profile prompt
- * should only constrain character identity and background.
+ * The child profile base prompt is the AVATAR-generation prompt. It is designed
+ * to render a clean, reusable character on a plain background, so it carries
+ * avatar-specific directives that are wrong for story pages:
+ *  - "Illustration style: soft watercolor..." / "Color mood: ...pastel" → fight
+ *    the book's selected styleBible, causing per-page style inconsistency.
+ *  - "Use a clean white background...", "front-facing... almost full-body
+ *    composition", reference-image rules, "...so the character can be reused..."
+ *    → leak the avatar's plain/sandbox background and locked framing into pages,
+ *    replacing the actual story scene.
+ *
+ * Strip the style/palette directives so the scene-filtering step doesn't carry
+ * them, while keeping the background-restriction phrases that step relies on.
  */
 function stripStyleDirectivesFromProfilePrompt(childProfileBasePrompt?: string): string | undefined {
   if (!childProfileBasePrompt) return childProfileBasePrompt;
@@ -244,6 +249,37 @@ function stripStyleDirectivesFromProfilePrompt(childProfileBasePrompt?: string):
     })
     .join("\n")
     .trim();
+}
+
+// Identity lines worth keeping when the profile prompt is INJECTED into page
+// scene/background guidance. Everything else (background, composition, framing,
+// reference-image rules, style, palette) is avatar-specific and must be dropped
+// so the book styleBible controls style and the story scene controls background.
+const PROFILE_IDENTITY_LINE_PREFIXES = [
+  "name or nickname:",
+  "age impression:",
+  "gender expression:",
+  "personality:",
+  "favorite things:",
+  "appearance:",
+  "usual outfit:",
+  "signature item:",
+];
+
+/**
+ * Extract ONLY character-identity lines from the avatar prompt for use as page
+ * scene/background guidance. Returns undefined when nothing identity-relevant
+ * remains, so the caller injects no avatar background/composition at all.
+ */
+function extractProfileIdentityForPageScene(childProfileBasePrompt?: string): string | undefined {
+  if (!childProfileBasePrompt) return undefined;
+  const kept = childProfileBasePrompt
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) =>
+      PROFILE_IDENTITY_LINE_PREFIXES.some((prefix) => line.toLowerCase().startsWith(prefix))
+    );
+  return kept.length > 0 ? kept.join(" ") : undefined;
 }
 
 function buildFixedProfileConstraintGuidance(childProfileBasePrompt?: string): string {
@@ -711,6 +747,7 @@ export function buildCoverImagePrompt(
   // Strip the avatar prompt's own style/color directives so they don't override
   // the book's selected styleBible on the cover either.
   const profileScenePrompt = stripStyleDirectivesFromProfilePrompt(options?.childProfileBasePrompt);
+  const profileIdentityForGuidance = extractProfileIdentityForPageScene(options?.childProfileBasePrompt);
   const sanitizedBasePrompt = sanitizeSceneAgainstChildConstraints(
     sanitizeImagePromptText(baseCoverPrompt),
     profileScenePrompt
@@ -723,7 +760,7 @@ export function buildCoverImagePrompt(
   const backgroundGuidance = [
     `Background richness: ${getBackgroundRichnessGuidance(options?.ageBand)}`,
     "Show meaningful surroundings, not just the protagonist.",
-    buildScenePolicyGuidance(undefined, profileScenePrompt),
+    buildScenePolicyGuidance(undefined, profileIdentityForGuidance),
     buildSharedPrintedSurfaceNoTextGuidance(),
     buildCategoryGroupNoTextGuidance(options?.categoryGroupId),
   ].join(" ");
@@ -813,6 +850,10 @@ export function buildImagePrompt(
   // Strip the avatar prompt's own style/color directives so they don't fight the
   // book's selected styleBible (cause of per-page style inconsistency).
   const profileScenePrompt = stripStyleDirectivesFromProfilePrompt(options?.childProfileBasePrompt);
+  // For guidance INJECTED into the page prompt, keep only character identity —
+  // never the avatar's background/composition/style — so the story scene drives
+  // the background and the book styleBible drives the style.
+  const profileIdentityForGuidance = extractProfileIdentityForPageScene(options?.childProfileBasePrompt);
   const sanitizedBasePrompt = sanitizeSceneAgainstChildConstraints(
     sanitizeImagePromptText(basePrompt),
     profileScenePrompt
@@ -832,11 +873,11 @@ export function buildImagePrompt(
     `Background richness: ${getBackgroundRichnessGuidance(ageBand)}`,
     "Show meaningful surroundings, not just the protagonist.",
     "Keep the scene rich but not cluttered.",
-    buildScenePolicyGuidance(scenePolicy, profileScenePrompt),
+    buildScenePolicyGuidance(scenePolicy, profileIdentityForGuidance),
     buildSharedPrintedSurfaceNoTextGuidance(),
     buildCategoryGroupNoTextGuidance(options?.categoryGroupId),
     scenePolicy?.backgroundMode === "fixed"
-      ? buildFixedProfileConstraintGuidance(profileScenePrompt)
+      ? buildFixedProfileConstraintGuidance(profileIdentityForGuidance)
       : "",
   ].join(" ");
 
