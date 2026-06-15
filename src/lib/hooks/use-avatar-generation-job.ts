@@ -65,6 +65,7 @@ export function useAvatarGenerationJob(jobId: string | null) {
       revisionRequest?: AvatarRevisionRequest;
       baseGenerationId?: string;
       variantStyle?: IllustrationStyle;
+      usePhoto?: boolean;
     }) => {
       try {
         const jobData = {
@@ -75,6 +76,7 @@ export function useAvatarGenerationJob(jobId: string | null) {
             revisionRequest: params.revisionRequest || null,
             baseGenerationId: params.baseGenerationId || null,
             variantStyle: params.variantStyle || null,
+            usePhoto: params.usePhoto ?? false,
           },
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
