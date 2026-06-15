@@ -1906,9 +1906,10 @@ export function normalizeBookForGeneration(
   if (creationMode === "fixed_template" && fixedTemplatePageCount !== undefined) {
     // For fixed templates, the template's page count MUST be allowed by the plan.
     if (!normalizedPlanConfig.allowedPageCounts.includes(fixedTemplatePageCount as BookData["pageCount"])) {
+      // User-facing message (surfaced via updateBookFailure). UI also gates the
+      // page-count selector, so this is a defense-in-depth safety net.
       throw new Error(
-        `Plan ${normalizedPlan} does not permit generating a ${fixedTemplatePageCount}-page fixed template. ` +
-        `Allowed: ${normalizedPlanConfig.allowedPageCounts.join(", ")}`
+        `${fixedTemplatePageCount}ページの絵本は現在のプランでは作成できません。上位プランにアップグレードすると作成できます。`
       );
     }
     normalizedPageCount = fixedTemplatePageCount as BookData["pageCount"];

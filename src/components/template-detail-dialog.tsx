@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import type { TemplateDoc } from "@/lib/types";
@@ -17,6 +18,8 @@ interface TemplateDetailDialogProps {
   template: (TemplateDoc & { id: string }) | null;
   /** All page-count variants of this template, sorted by page count asc */
   variants?: (TemplateDoc & { id: string })[];
+  /** Page counts the current plan can generate. Variants outside this are locked. */
+  allowedPageCounts?: number[];
   isOpen: boolean;
   onClose: () => void;
   /** Called with the confirmed template ID (may be a variant) */
@@ -35,11 +38,17 @@ function getAgeLabel(template: TemplateDoc): string | null {
 export function TemplateDetailDialog({
   template,
   variants = [],
+  allowedPageCounts,
   isOpen,
   onClose,
   onConfirm,
 }: TemplateDetailDialogProps) {
+  const router = useRouter();
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+
+  // A page-count variant is locked when the current plan can't generate it.
+  const isPageCountLocked = (pageCount: number) =>
+    Array.isArray(allowedPageCounts) && !allowedPageCounts.includes(pageCount);
 
   // Reset variant selection when dialog opens
   useEffect(() => {
@@ -76,6 +85,10 @@ export function TemplateDetailDialog({
 
   const hasMultipleVariants = variantOptions.length > 1;
   const effectiveVariantId = selectedVariantId ?? template.id;
+  const effectiveVariantPageCount =
+    variantOptions.find((v) => v.id === effectiveVariantId)?.pageCount ??
+    template.fixedStory?.pages?.length ??
+    4;
 
   return (
     <AnimatePresence>
@@ -158,22 +171,42 @@ export function TemplateDetailDialog({
                   <div className="mt-4">
                     <p className="mb-2 text-xs font-medium text-violet-500">ページ数を選ぶ</p>
                     <div className="flex gap-2">
-                      {variantOptions.map((v) => (
-                        <button
-                          key={v.id}
-                          type="button"
-                          onClick={() => setSelectedVariantId(v.id)}
-                          className={cn(
-                            "flex-1 rounded-xl border py-2.5 text-sm font-semibold transition-all",
-                            effectiveVariantId === v.id
-                              ? "border-purple-400 bg-purple-50 text-purple-700 ring-2 ring-purple-200"
-                              : "border-violet-100 bg-white text-violet-500 hover:border-purple-300"
-                          )}
-                        >
-                          {v.pageCount}ページ
-                        </button>
-                      ))}
+                      {variantOptions.map((v) => {
+                        const locked = isPageCountLocked(v.pageCount);
+                        return (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => {
+                              if (locked) {
+                                router.push("/pricing");
+                              } else {
+                                setSelectedVariantId(v.id);
+                              }
+                            }}
+                            aria-disabled={locked}
+                            className={cn(
+                              "relative flex-1 rounded-xl border py-2.5 text-sm font-semibold transition-all",
+                              locked
+                                ? "border-violet-100 bg-violet-50/40 text-violet-300"
+                                : effectiveVariantId === v.id
+                                  ? "border-purple-400 bg-purple-50 text-purple-700 ring-2 ring-purple-200"
+                                  : "border-violet-100 bg-white text-violet-500 hover:border-purple-300"
+                            )}
+                          >
+                            <span className="inline-flex items-center justify-center gap-1">
+                              {locked && <Lock className="h-3 w-3" />}
+                              {v.pageCount}ページ
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
+                    {variantOptions.some((v) => isPageCountLocked(v.pageCount)) && (
+                      <p className="mt-2 text-xs text-amber-600">
+                        🔒 ページ数の多い絵本は上位プランで作成できます。
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -226,15 +259,21 @@ export function TemplateDetailDialog({
 
             {/* Action buttons */}
             <div className="border-t border-violet-100 px-5 pb-[max(16px,env(safe-area-inset-bottom))] pt-3">
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={() => {
-                  onConfirm(effectiveVariantId);
-                }}
-              >
-                このテンプレートで作る
-              </Button>
+              {isPageCountLocked(effectiveVariantPageCount) ? (
+                <Button size="lg" className="w-full" onClick={() => router.push("/pricing")}>
+                  アップグレードして作る
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  className="w-full"
+                  onClick={() => {
+                    onConfirm(effectiveVariantId);
+                  }}
+                >
+                  このテンプレートで作る
+                </Button>
+              )}
               <button
                 type="button"
                 onClick={onClose}

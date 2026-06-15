@@ -2235,7 +2235,7 @@ describe("normalizeBookForGeneration (Phase 3-C)", () => {
   it("blocks 8-page fixed template for free plan", () => {
     expect(() =>
       normalizeBookForGeneration(baseBookData, eightPageFixedTemplate, freeUserPlan)
-    ).toThrow(/Plan free does not permit generating a 8-page fixed template/);
+    ).toThrow(/8ページの絵本は現在のプランでは作成できません/);
   });
 
   it("allows 8-page fixed template for free plan if isSinglePurchase is true", () => {
@@ -2253,7 +2253,7 @@ describe("normalizeBookForGeneration (Phase 3-C)", () => {
     const standardBookData = { ...baseBookData, productPlan: "standard_paid" as const };
     expect(() =>
       normalizeBookForGeneration(standardBookData, twelvePageFixedTemplate, freeUserPlan)
-    ).toThrow(/Plan (free|standard_paid) does not permit generating a 12-page fixed template/);
+    ).toThrow(/12ページの絵本は現在のプランでは作成できません/);
   });
 
   it("allows 12-page fixed template for premium plan", () => {
