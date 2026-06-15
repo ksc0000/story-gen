@@ -24,6 +24,7 @@ export type PlanConfig = {
   priceJpy?: number;
   isPaid: boolean;
   enabled: boolean;
+  maxChildren: number;
   sampleCtaLabel?: string;
 };
 
@@ -90,6 +91,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     maxCompanions: 2,
     isPaid: false,
     enabled: true,
+    maxChildren: 1,
   },
   standard_paid: {
     productPlan: "standard_paid",
@@ -110,6 +112,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     priceJpy: 1480,
     isPaid: true,
     enabled: true,
+    maxChildren: 3,
   },
   premium_paid: {
     productPlan: "premium_paid",
@@ -130,6 +133,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     priceJpy: 2980,
     isPaid: true,
     enabled: true,
+    // プランページ表記が「無制限」のため、実質上限なしの高い値にする。
+    maxChildren: 9999,
     sampleCtaLabel: "高品質サンプルを見る",
   },
 };

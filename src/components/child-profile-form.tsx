@@ -193,16 +193,18 @@ function Field({
   label,
   value,
   onChange,
+  id,
   ...props
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
 } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) {
+  const fieldId = id || label;
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} {...props} />
+      <Label htmlFor={fieldId}>{label}</Label>
+      <Input id={fieldId} value={value} onChange={(event) => onChange(event.target.value)} {...props} />
     </div>
   );
 }
