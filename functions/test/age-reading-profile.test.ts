@@ -40,7 +40,7 @@ describe("getAgeReadingProfile", () => {
 
     expect(toddler.targetSentencesPerPage).toBe("1〜2文");
     expect(toddler.kanjiPolicy).toBe("漢字は一切使わず、すべてひらがなとカタカナのみで記述してください。");
-    expect(preschool.targetCharsPerPage).toBe("80〜130文字程度");
+    expect(preschool.targetCharsPerPage).toBe("100〜150文字程度");
     expect(preschool.kanjiPolicy).toContain("漢字は原則使わず、ほぼすべてひらがな");
     expect(preschool.repetitionPolicy).toContain("意味が進む");
     expect(preschool.narrativeComplexity).toContain("意味の通る");

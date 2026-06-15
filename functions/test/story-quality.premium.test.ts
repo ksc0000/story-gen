@@ -75,12 +75,12 @@ describe("validateGeneratedStoryQuality - Premium Plan Thresholds", () => {
     expect(report.ok).toBe(true);
   });
 
-  it("passes for standard_paid x preschool_3_4 with a story that has > 24 chars", () => {
+  it("passes for standard_paid x preschool_3_4 with a story that has > 40 chars", () => {
     const standardStory = {
       ...baseStory,
       pages: baseStory.pages.map(p => ({
         ...p,
-        text: "ほしを みつけました。きらきら しています。うれしいな。", // 27 chars
+        text: "ほしをみつけました。きらきらとひかっています。うれしくて、おもわずほほえみました。", // 41 chars
       }))
     };
     const report = validateGeneratedStoryQuality({

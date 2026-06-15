@@ -14,7 +14,7 @@ const NAV_LINKS: NavLink[] = [
   { href: "/bookshelf", label: "本棚" },
   { href: "/gallery", label: "ギャラリー" },
   { href: "/children", label: "子ども" },
-  { href: "/companions", label: "相棒" },
+  { href: "/companions", label: "なかよしキャラ" },
   { href: "/how-to-use", label: "使い方ガイド" },
   { href: "/pricing", label: "プラン", accent: true },
   { href: "/feedback", label: "ご意見" },
