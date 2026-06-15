@@ -1,5 +1,11 @@
-# Implement Aggregated Axis-Level Quality Score Persistence on BookDoc
+# Implement PDF Output Feature Design Document
 
 ## Context
 
-The product roadmap for Phase 2, "Story & Illustration Quality," includes "axis-level quality metrics 保存" (saving axis-level quality metrics) as a remaining task under Quality Management. While granular human quality review scores (PR #365) and LLM auto review results (PR #357) are persisted, and the Admin UI displays them (PR #372, PR #368), these are stored in subcollections. To effectively enable "Quality Trend Dashboard / Regression Detection" (marked as done, but requires underlying aggregated data) and "human review と LLM review の比較分析," we need a mechanism to store summary or aggregated axis-level scores directly on the `Book
+The EhonAI product roadmap lists "PDF出力" as a currently unimplemented feature. While several core features and reliability improvements have been completed (Phase 1, Phase 4), and significant UX enhancements are in place (Phase 6), user experience around output formats is still limited. A PDF output feature will allow users to download their created picture books for offline viewing, printing, or sharing outside of the web application, thereby enhancing the product's utility and value proposition, particularly in the context of Phase 5 (Monetization) and potential print orders.
+
+This task specifically focuses on the design document, aligning with the "docs-first" constraint and setting the stage for future implementation.
+
+## Objective
+
+Create a comprehensive design document for
