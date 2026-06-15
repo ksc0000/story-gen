@@ -21,7 +21,7 @@ import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { cn } from "@/lib/utils";
-import { PLAN_CONFIGS } from "@/lib/plans";
+import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
 import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
 import { ILLUSTRATION_STYLE_PROFILES } from "@/lib/illustration-styles";
@@ -162,7 +162,7 @@ export default function HomePage() {
   const { isAdmin } = useAdminClaim();
   const { companions, loading: companionsLoading } = useCompanions(user?.uid);
 
-  const productPlan = profile?.productPlan || "free";
+  const productPlan = resolveProductPlan(profile);
   const quota = PLAN_CONFIGS[productPlan]?.monthlyBookQuota ?? 1;
   const consumed = profile?.monthlyGenerationCount ?? 0;
   const remaining = Math.max(0, quota - consumed);

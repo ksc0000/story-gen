@@ -5,6 +5,7 @@ import type {
   ImageQualityTier,
   PageCount,
   ProductPlan,
+  UserPlan,
 } from "@/lib/types";
 
 export type PlanConfig = {
@@ -177,4 +178,15 @@ export function getDefaultProductPlanForCreationMode(creationMode: CreationMode)
 
 export function getPlanDisplayLabel(productPlan: ProductPlan): string {
   return PLAN_CONFIGS[productPlan]?.label ?? PLAN_CONFIGS.free.label;
+}
+
+/**
+ * ユーザープロフィールから有効な productPlan を解決する。
+ * productPlan が未設定の場合は legacy `plan` フィールドにフォールバックする
+ * （`plan === "premium"` は standard_paid 相当として扱う）。
+ */
+export function resolveProductPlan(
+  profile?: { productPlan?: ProductPlan; plan?: UserPlan } | null
+): ProductPlan {
+  return profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free");
 }

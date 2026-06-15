@@ -16,7 +16,7 @@ import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCategoryGroups } from "@/lib/hooks/use-category-groups";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
-import { PLAN_CONFIGS } from "@/lib/plans";
+import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import type { CreationMode } from "@/lib/types";
@@ -198,7 +198,7 @@ function ThemeSelectionPageContent() {
         <div className="flex flex-col gap-3">
         {MODE_OPTIONS.map((option) => {
           const active = selectedMode === option.mode;
-          const currentPlan = profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free");
+          const currentPlan = resolveProductPlan(profile);
           const planConfig = PLAN_CONFIGS[currentPlan];
           const isAllowed = planConfig?.allowedCreationModes.includes(option.mode);
 
@@ -434,7 +434,7 @@ function ThemeSelectionPageContent() {
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3">
         <div className="mx-auto max-w-lg">
           {(() => {
-            const currentPlan = profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free");
+            const currentPlan = resolveProductPlan(profile);
             const planConfig = PLAN_CONFIGS[currentPlan];
             const isAllowed = planConfig?.allowedCreationModes.includes(selectedMode);
 
@@ -467,7 +467,7 @@ function ThemeSelectionPageContent() {
         variants={detailTemplateId ? (templateVariantsMap.get(detailTemplateId.replace(/-8p$/, "")) ?? []) : []}
         allowedPageCounts={
           PLAN_CONFIGS[
-            profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free")
+            resolveProductPlan(profile)
           ]?.allowedPageCounts
         }
         isOpen={detailTemplateId !== null}

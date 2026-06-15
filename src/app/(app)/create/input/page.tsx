@@ -15,7 +15,7 @@ import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
 import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
-import { PLAN_CONFIGS } from "@/lib/plans";
+import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import type {
   CreationMode,
   FixedStoryPageTemplate,
@@ -176,7 +176,7 @@ function InputPageContent() {
   // プランはユーザーの契約（サブスク）で確定する。作成時に選ばせない。
   // 作成モードのエンタイトルメントは theme ページで既にゲート済み（プレミアム限定／アップグレード導線）。
   const productPlan: ProductPlan =
-    profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free");
+    resolveProductPlan(profile);
 
   const [pageCount, setPageCount] = useState<number>(8);
 

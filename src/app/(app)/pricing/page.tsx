@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { httpsCallable } from "firebase/functions";
 import { Check, Loader2, Sparkles, Star } from "lucide-react";
 import { functions } from "@/lib/firebase";
-import { PLAN_CONFIGS } from "@/lib/plans";
+import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { Button } from "@/components/ui/button";
@@ -79,7 +79,7 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<ProductPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const currentPlan = (profile?.productPlan as ProductPlan) ?? (profile?.plan === "premium" ? "standard_paid" : "free");
+  const currentPlan = resolveProductPlan(profile);
 
   async function handleUpgrade(productPlan: ProductPlan) {
     if (!user) {
