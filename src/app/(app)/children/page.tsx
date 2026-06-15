@@ -108,7 +108,7 @@ export default function ChildrenPage() {
                   <Link href={`/children/edit?childId=${child.id}`}>
                     <Button variant="outline" size="sm">編集</Button>
                   </Link>
-                  <Link href={`/children/${child.id}/avatar`}>
+                  <Link href={`/onboarding/child/avatar?childId=${child.id}`}>
                     <Button variant="outline" size="sm">キャラ再生成</Button>
                   </Link>
                   <Button

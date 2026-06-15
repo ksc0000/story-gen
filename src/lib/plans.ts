@@ -133,7 +133,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     priceJpy: 2980,
     isPaid: true,
     enabled: true,
-    maxChildren: 10,
+    // プランページ表記が「無制限」のため、実質上限なしの高い値にする。
+    maxChildren: 9999,
     sampleCtaLabel: "高品質サンプルを見る",
   },
 };
