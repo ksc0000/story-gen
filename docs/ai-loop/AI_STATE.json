@@ -109,6 +109,7 @@
     "PR #383: Fix: スマホ設定メニューがヘッダー内にクリップされる不具合 (merged)",
     "PR #384: 画像生成タイムアウトを3倍(120s→360s)に: フォールバックによる画質ばらつきを抑制 (merged)",
     "PR #385: Fix: generateBook timeoutSeconds を 540s に修正（Firestoreトリガー上限） (merged)",
+    "PR #386: Implement Image Generation Usage Monitoring Dashboard (merged)",
     "PR #390: Define Quality Review Rubrics (Story, Illustration, Character, Personalization, Safety) (merged)",
     "PR #392: プラン別ページ数制限（UIロック＋日本語メッセージ込み） (merged)",
     "PR #396: Implement User-Editable Book Title (merged)",
