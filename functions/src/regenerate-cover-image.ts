@@ -220,6 +220,11 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
       serverTimestamp: admin.firestore.FieldValue.serverTimestamp(),
       nowMs: Date.now(),
     });
+
+    // Logging for cover regeneration success (if not already logged in generateCoverImageWithFallback)
+    // Note: generateCoverImageWithFallback already logs page_image_succeeded.
+    // However, if we want to distinguish regeneration, we could add a label or log again.
+    // For now, generateCoverImageWithFallback's log is sufficient for usage tracking.
     await bookRef.update(successPatch);
 
     logger.info("Cover image regenerated", {

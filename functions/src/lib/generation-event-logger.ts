@@ -215,6 +215,26 @@ export interface BookEarlyFailedEvent {
 }
 
 /**
+ * Fired when a single page image (or cover) is successfully generated.
+ * Used for usage monitoring and provider cost comparison.
+ */
+export interface PageImageSucceededEvent {
+  eventName: "page_image_succeeded";
+  bookId: string;
+  /** 0-indexed for pages. -1 is conventionally used for book cover. */
+  pageIndex: number;
+  /** The final tried profile that succeeded. */
+  imageModelProfile: ImageModelProfile;
+  /** The actual model string used (e.g. "black-forest-labs/flux-2-pro"). */
+  imageModel: string;
+  provider: ImageProvider;
+  durationMs: number;
+  attemptCount: number;
+  /** True when a fallback profile was attempted and succeeded. */
+  fallbackUsed: boolean;
+}
+
+/**
  * Fired when all fallback profiles are exhausted for a single page image.
  * Does NOT include the prompt text.
  */
@@ -265,6 +285,7 @@ export type GenerationEvent =
   | GenerationStartedEvent
   | BookOutcomeEvent
   | BookEarlyFailedEvent
+  | PageImageSucceededEvent
   | PageImageFailedEvent
   | PromptAnalysisEvent;
 
