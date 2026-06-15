@@ -112,6 +112,7 @@
     "PR #386: Implement Image Generation Usage Monitoring Dashboard (merged)",
     "PR #390: Define Quality Review Rubrics (Story, Illustration, Character, Personalization, Safety) (merged)",
     "PR #392: プラン別ページ数制限（UIロック＋日本語メッセージ込み） (merged)",
+    "PR #394: Implement Provider Cost Comparison Dashboard in Admin UI (merged)",
     "PR #396: Implement User-Editable Book Title (merged)",
     "PR #397: Fix: 絵本のページごとにスタイル・背景がバラバラになる不具合 (merged)",
     "PR #398: スタイル選択サンプルを本番パイプライン(flux-2-pro+styleBible)で作り直し (merged)",
