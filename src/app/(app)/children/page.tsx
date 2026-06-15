@@ -4,15 +4,44 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Trash2 } from "lucide-react";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
+import { doc, deleteDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
+import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { childProfileToSummary } from "@/lib/child-profile";
+import { PLAN_CONFIGS } from "@/lib/plans";
+import { useState } from "react";
 
 export default function ChildrenPage() {
   const { user } = useAuth();
-  const { children, loading, error } = useChildren(user?.uid);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { profile, loading: loadingProfile } = useUserProfile(user?.uid);
+  const { children, loading: loadingChildren, error } = useChildren(user?.uid);
+
+  const loading = loadingProfile || loadingChildren;
+
+  const planConfig = PLAN_CONFIGS[profile?.productPlan || "free"];
+  const isLimitReached = children.length >= planConfig.maxChildren;
+
+  const handleDelete = async (childId: string, name: string) => {
+    if (!user) return;
+    const confirmed = window.confirm(`本当に${name}さんのプロフィールを削除しますか？\nこの操作は取り消せません。`);
+    if (!confirmed) return;
+
+    setDeletingId(childId);
+    try {
+      await deleteDoc(doc(db, "users", user.uid, "children", childId));
+    } catch (err) {
+      console.error("Failed to delete child profile:", err);
+      alert("削除に失敗しました。もう一度お試しください。");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <PageTransition className="mx-auto max-w-4xl px-4 py-8">
@@ -22,9 +51,18 @@ export default function ChildrenPage() {
           <h1 className="text-2xl font-bold text-purple-900">子どもプロフィール</h1>
           <p className="mt-2 text-sm text-violet-500">絵本の主人公になるお子さんの情報を管理します。</p>
         </div>
-        <Link href="/onboarding/child">
-          <Button>子どもを追加</Button>
-        </Link>
+        <div className="flex flex-col items-end gap-2">
+          {isLimitReached ? (
+            <div className="flex flex-col items-end gap-1">
+              <Button disabled variant="outline">子どもを追加</Button>
+              <p className="text-xs text-violet-400">プランをアップグレードすると追加できます</p>
+            </div>
+          ) : (
+            <Link href="/onboarding/child">
+              <Button>子どもを追加</Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -36,8 +74,11 @@ export default function ChildrenPage() {
           <CardContent className="p-8 text-center">
             <p className="text-violet-500">まだ子どもプロフィールがありません。</p>
             <Link href="/onboarding/child" className="mt-4 inline-block">
-              <Button>最初のプロフィールを登録</Button>
+              <Button disabled={isLimitReached}>最初のプロフィールを登録</Button>
             </Link>
+            {isLimitReached && (
+              <p className="mt-2 text-xs text-violet-400">プランをアップグレードすると追加できます</p>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -67,9 +108,18 @@ export default function ChildrenPage() {
                   <Link href={`/children/edit?childId=${child.id}`}>
                     <Button variant="outline" size="sm">編集</Button>
                   </Link>
-                  <Link href={`/onboarding/child/avatar?childId=${child.id}`}>
+                  <Link href={`/children/${child.id}/avatar`}>
                     <Button variant="outline" size="sm">キャラ再生成</Button>
                   </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto text-violet-400 hover:bg-red-50 hover:text-red-500"
+                    onClick={() => handleDelete(child.id, child.nickname || child.displayName)}
+                    disabled={deletingId === child.id}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>

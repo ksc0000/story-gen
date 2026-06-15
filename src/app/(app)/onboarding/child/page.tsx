@@ -4,7 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2 } from "lucide-react";
 import { PageTransition } from "@/components/page-transition";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ChildProfileForm, type ChildProfileFormValues } from "@/components/child-profile-form";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { db, storage } from "@/lib/firebase";
@@ -15,6 +19,8 @@ export default function ChildOnboardingPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [registeredChildId, setRegisteredChildId] = useState<string | null>(null);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const { startJob } = useAvatarGenerationJob(null);
 
   const handleSubmit = async (values: ChildProfileFormValues) => {
@@ -38,10 +44,11 @@ export default function ChildOnboardingPage() {
           userId: user.uid,
           childId: childRef.id,
         });
+        setActiveJobId(jobId);
 
-        router.replace(`/onboarding/child/avatar?childId=${childRef.id}&jobId=${jobId}`);
+        setRegisteredChildId(childRef.id);
       } else {
-        router.replace("/home");
+        setRegisteredChildId(childRef.id);
       }
     } finally {
       setSaving(false);
@@ -57,7 +64,57 @@ export default function ChildOnboardingPage() {
           一度登録すると、毎回名前や見た目を入力しなくても、その子らしい絵本を作りやすくなります。
         </p>
       </div>
-      <ChildProfileForm submitLabel="登録して本棚へ" saving={saving} onSubmit={handleSubmit} />
+      <ChildProfileForm submitLabel="登録" saving={saving} onSubmit={handleSubmit} />
+
+      <AnimatePresence>
+        {registeredChildId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl bg-white p-8 shadow-2xl"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-50 text-green-500">
+                  <CheckCircle2 className="size-10" />
+                </div>
+                <h2 className="text-xl font-bold text-purple-900">子どものプロフィールを登録しました！</h2>
+                <p className="mt-3 text-sm leading-relaxed text-violet-500">
+                  このまま子どものAIイラスト生成に進みますか？
+                </p>
+
+                <div className="mt-8 flex w-full flex-col gap-3">
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    onClick={() => {
+                      const url = `/onboarding/child/avatar?childId=${registeredChildId}${activeJobId ? `&jobId=${activeJobId}` : ""}`;
+                      router.push(url);
+                    }}
+                  >
+                    AIイラスト生成に進む
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => router.push("/home")}
+                  >
+                    本棚に戻る
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </PageTransition>
   );
 }
