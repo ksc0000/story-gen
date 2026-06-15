@@ -119,6 +119,7 @@
     "PR #398: スタイル選択サンプルを本番パイプライン(flux-2-pro+styleBible)で作り直し (merged)",
     "PR #400: Implement Aggregated Axis-Level Quality Score Persistence (merged)",
     "PR #405: fix: resolve 4 production bugs (feedback/gallery/quota/footwear) (merged)",
+    "PR #413: Redesign Pricing Page to Comparative Layout (merged)",
     "PR #418: feat: お子さんの写真からAIアバター生成 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
