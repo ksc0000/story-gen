@@ -684,7 +684,7 @@ export default function AdminBookQualityReviewPage() {
     setQualityReviewMessage(null);
   }, [selectedBook]);
 
-   Quality reviews subscription
+  // Quality reviews subscription
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_EHORIA_DEMO_MODE === "true") {
       setQualityReviews([
@@ -706,7 +706,7 @@ export default function AdminBookQualityReviewPage() {
             outfitHairstyleConsistency: 4,
             colorPaletteConsistency: 4,
           }
-        } as any
+        } as unknown as QualityReviewWithId
       ]);
       setQualityReviewsLoading(false);
       return;
@@ -722,7 +722,7 @@ export default function AdminBookQualityReviewPage() {
           appearingCharacterIds: ["char1"],
           focusCharacterId: "char1",
           usedCharacterReference: true,
-        } as any
+        } as unknown as PageWithId
       ]);
       setPagesLoading(false);
       return;
@@ -780,7 +780,7 @@ export default function AdminBookQualityReviewPage() {
             outfitHairstyleConsistency: 4,
             colorPaletteConsistency: 4,
           }
-        } as any
+        } as unknown as QualityReviewWithId
       ]);
       setQualityReviewsLoading(false);
       return;
@@ -796,7 +796,7 @@ export default function AdminBookQualityReviewPage() {
           appearingCharacterIds: ["char1"],
           focusCharacterId: "char1",
           usedCharacterReference: true,
-        } as any
+        } as unknown as PageWithId
       ]);
       setPagesLoading(false);
       return;
@@ -853,7 +853,7 @@ export default function AdminBookQualityReviewPage() {
             outfitHairstyleConsistency: 4,
             colorPaletteConsistency: 4,
           }
-        } as any
+        } as unknown as QualityReviewWithId
       ]);
       setQualityReviewsLoading(false);
       return;
@@ -869,7 +869,7 @@ export default function AdminBookQualityReviewPage() {
           appearingCharacterIds: ["char1"],
           focusCharacterId: "char1",
           usedCharacterReference: true,
-        } as any
+        } as unknown as PageWithId
       ]);
       setPagesLoading(false);
       return;
@@ -1002,7 +1002,7 @@ export default function AdminBookQualityReviewPage() {
     }
   };
 
-   Load snapshot history on mount (admin only)
+  // Load snapshot history on mount (admin only)
   useEffect(() => {
     if (!isAdmin) return;
     fetchSnapshotHistory();
@@ -1027,7 +1027,7 @@ export default function AdminBookQualityReviewPage() {
       });
       setSnapshotMessage("SLO snapshot を保存しました");
       window.setTimeout(() => setSnapshotMessage(null), 3000);
-       Refresh history
+      // Refresh history
       await fetchSnapshotHistory();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "保存に失敗しました";
@@ -1163,7 +1163,7 @@ export default function AdminBookQualityReviewPage() {
     setIntentMessage(null);
     const description = RECOMMENDATION_INTENT_DESCRIPTIONS[intent];
 
-     Toggle: clicking the same intent again clears highlighting
+     // Toggle: clicking the same intent again clears highlighting
     if (activeIntent === intent) {
       setActiveIntent(null);
       setIntentMessage(null);
@@ -1172,9 +1172,9 @@ export default function AdminBookQualityReviewPage() {
 
     setActiveIntent(intent);
 
-     Scroll to draft panel area (below recommendation panel)
-     so the user sees the task draft + save button immediately.
-     Highlighted sections are marked with ring-2 ring-amber-300.
+    // Scroll to draft panel area (below recommendation panel)
+    // so the user sees the task draft + save button immediately.
+    // Highlighted sections are marked with ring-2 ring-amber-300.
     setTimeout(() => {
       const el = document.getElementById("task-draft-area");
       if (el) {
@@ -1225,7 +1225,7 @@ export default function AdminBookQualityReviewPage() {
       setQualityReviewMessage("Quality review を保存しました");
       setQualityReviewForm(normalizeQualityReviewForm());
 
-       Auto-next: when filter is "not_reviewed", jump to next unreviewed book
+       // Auto-next: when filter is "not_reviewed", jump to next unreviewed book
       if (qualityReviewFilter === "not_reviewed") {
         const next = findNextUnreviewed(selectedBook.id);
         if (next) {
@@ -2354,7 +2354,7 @@ export default function AdminBookQualityReviewPage() {
                                     <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
                                       <div className="space-y-3">
                                         {page.imageUrl ? (
-                                           eslint-disable-next-line @next/next/no-img-element
+                                          // eslint-disable-next-line @next/next/no-img-element
                                           <img
                                             src={page.imageUrl}
                                             alt={`page ${page.pageNumber + 1}`}

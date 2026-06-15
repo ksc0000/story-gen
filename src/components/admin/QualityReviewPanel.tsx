@@ -255,7 +255,7 @@ export function QualityReviewPanel({
                     { key: "outfitHairstyleConsistency", label: "Outfit/Hair" },
                     { key: "colorPaletteConsistency", label: "Palette" },
                   ].map((axis) => {
-                    const score = (latestLLMReview.characterAxes as any)[axis.key];
+                    const score = (latestLLMReview.characterAxes as unknown as Record<string, number>)[axis.key];
                     return (
                       <div key={axis.key} className="flex flex-col">
                         <span className="text-[9px] text-slate-500 leading-tight">{axis.label}</span>

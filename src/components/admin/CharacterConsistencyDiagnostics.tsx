@@ -69,8 +69,8 @@ export function CharacterConsistencyDiagnostics({
         {charAxes && (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {Object.entries(AXIS_LABELS).map(([key, label]) => {
-              const score = (charAxes as any)[key]; // This is 1-5
-              const weight = (CHARACTER_AXIS_WEIGHTS as any)[key];
+              const score = (charAxes as unknown as Record<string, number>)[key]; // This is 1-5
+              const weight = (CHARACTER_AXIS_WEIGHTS as Record<string, number>)[key];
               // Map 1-5 to 0-100 for visualization if needed, but let's show 1-5
               return (
                 <div key={key} className="rounded-lg border border-indigo-100 bg-white p-3 space-y-1">
@@ -99,7 +99,7 @@ export function CharacterConsistencyDiagnostics({
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-indigo-900 flex items-center gap-2">
             Character Presence Matrix
-            <Info size={14} className="text-indigo-400" title="Checks if characters appearing in text are mentioned in the prompt" />
+            <Info size={14} className="text-indigo-400" aria-label="Checks if characters appearing in text are mentioned in the prompt" />
           </h4>
           <div className="overflow-x-auto rounded-xl border border-indigo-50">
             <table className="w-full text-sm">
@@ -130,15 +130,15 @@ export function CharacterConsistencyDiagnostics({
                             {isExpected ? (
                               <div className="flex items-center gap-1">
                                 {inPrompt ? (
-                                  <CheckCircle2 size={16} className="text-emerald-500" title="Present in prompt" />
+                                  <CheckCircle2 size={16} className="text-emerald-500" aria-label="Present in prompt" />
                                 ) : (
-                                  <XCircle size={16} className="text-rose-500" title="Missing from prompt!" />
+                                  <XCircle size={16} className="text-rose-500" aria-label="Missing from prompt!" />
                                 )}
                                 {isFocus && <Badge className="h-4 px-1 text-[8px] bg-indigo-600">Focus</Badge>}
                               </div>
                             ) : (
                               inPrompt ? (
-                                <AlertCircle size={16} className="text-amber-400" title="In prompt but not in appearing list" />
+                                <AlertCircle size={16} className="text-amber-400" aria-label="In prompt but not in appearing list" />
                               ) : (
                                 <span className="text-slate-200">—</span>
                               )
