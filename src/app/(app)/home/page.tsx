@@ -21,7 +21,7 @@ import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { cn } from "@/lib/utils";
-import { FREE_MONTHLY_BOOK_LIMIT } from "@/lib/usage";
+import { PLAN_CONFIGS } from "@/lib/plans";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
 import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
 import { ILLUSTRATION_STYLE_PROFILES } from "@/lib/illustration-styles";
@@ -161,7 +161,11 @@ export default function HomePage() {
   const { children, loading: childrenLoading, activeChild } = useChildren(user?.uid);
   const { isAdmin } = useAdminClaim();
   const { companions, loading: companionsLoading } = useCompanions(user?.uid);
-  const remaining = FREE_MONTHLY_BOOK_LIMIT - (profile?.monthlyGenerationCount ?? 0);
+
+  const productPlan = profile?.productPlan || "free";
+  const quota = PLAN_CONFIGS[productPlan]?.monthlyBookQuota ?? 1;
+  const consumed = profile?.monthlyGenerationCount ?? 0;
+  const remaining = Math.max(0, quota - consumed);
 
   const [selectedStyle, setSelectedStyle] = useState<string>("all");
   const [selectedMode, setSelectedMode] = useState<string>("all");
@@ -240,18 +244,28 @@ export default function HomePage() {
             </p>
           )}
           <div className="mt-4">
-            <Badge variant="outline" className="bg-white/50 backdrop-blur-sm border-purple-200 text-purple-700">
-              {remaining >= 3 ? (
-                `今月あと${remaining}冊作れます ✨`
-              ) : remaining > 0 ? (
+            <Badge
+              variant="outline"
+              className={cn(
+                "bg-white/50 backdrop-blur-sm transition-colors",
+                remaining <= 0
+                  ? "border-red-200 text-red-700 bg-red-50/50"
+                  : remaining === 1
+                  ? "border-orange-200 text-orange-700 bg-orange-50/50"
+                  : "border-purple-200 text-purple-700"
+              )}
+            >
+              今月 {consumed} / {quota} 冊作成済み
+              {remaining <= 1 && (
                 <>
-                  今月あと{remaining}冊 —{" "}
-                  <Link href="/pricing" className="underline ml-1 text-xs opacity-80 hover:opacity-100 transition-opacity">
-                    プレミアムならもっと作れます
+                  {" "}—{" "}
+                  <Link
+                    href="/pricing"
+                    className="underline ml-1 text-xs opacity-80 hover:opacity-100 transition-opacity"
+                  >
+                    増やしたい方はこちら
                   </Link>
                 </>
-              ) : (
-                `今月あと${Math.max(0, remaining)}冊作れます`
               )}
             </Badge>
           </div>

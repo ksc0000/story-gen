@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>story-gen / EhonAI 説明書</title>
+<style>
+  :root {
+    --bg: #1b1d23;
+    --panel: #242730;
+    --text: #e6e6e6;
+    --muted: #9aa0ac;
+    --accent: #7aa2f7;
+    --border: #3a3f4b;
+    --code-bg: #15171c;
+    --warn-bg: #3a2f1e;
+    --warn-border: #b8893a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
+  h1 { font-size: 1.8em; border-bottom: 2px solid var(--accent); padding-bottom: 12px; }
+  h2 {
+    font-size: 1.35em;
+    margin-top: 2.2em;
+    padding: 6px 12px;
+    background: var(--panel);
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+  }
+  h3 { color: var(--accent); margin-top: 1.6em; }
+  .meta {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    color: var(--muted);
+    font-size: 0.92em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: var(--panel); color: var(--accent); }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  code {
+    background: var(--code-bg);
+    color: #c3e88d;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 0.88em;
+    line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  ul, ol { padding-left: 1.5em; }
+  li { margin: 0.3em 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .note {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 1em 0;
+  }
+  .note strong { color: #e0b35c; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+  .toc {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 24px;
+  }
+  .toc a { display: inline-block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>story-gen / EhonAI 説明書</h1>
+<p class="meta">
+自動生成日: 2026-06-15（定期実行タスクによる更新）<br>
+解析対象 commit: <code>1ebade32fe33864dba2dc00032b53537e5058dda</code>（ローカル main、ネットワーク制限のため origin への fetch は失敗。詳細は <code>update-log.md</code> 参照）
+</p>
+
+<div class="toc">
+<strong>目次</strong><br>
+<a href="#s1">1. 概要</a> /
+<a href="#s2">2. プロダクトの目的</a> /
+<a href="#s3">3. 主な機能</a> /
+<a href="#s4">4. 技術スタック</a> /
+<a href="#s5">5. ディレクトリ構成</a> /
+<a href="#s6">6. フロントエンド構成</a> /
+<a href="#s7">7. Firebase / Backend 構成</a> /
+<a href="#s8">8. AI画像生成・テンプレート生成の構成</a> /
+<a href="#s9">9. 開発・検証コマンド</a> /
+<a href="#s10">10. デプロイ手順</a> /
+<a href="#s11">11. 現在の開発状況</a> /
+<a href="#s12">12. 直近の重要なコミットまたは変更点</a> /
+<a href="#s13">13. 未完了タスク・注意点</a> /
+<a href="#s14">14. 次にやるべきこと</a> /
+<a href="#s15">15. 参照した主要ファイル</a>
+</div>
+
+<h2 id="s1">1. 概要</h2>
+<p>story-gen（プロダクト名: <strong>Ehoria</strong> / 旧名 EhoNAI）は、子ども一人ひとりに合わせたオリジナル絵本を AI で生成する Web アプリケーション。Next.js 15（静的エクスポート）をフロントエンドとし、Firebase（Hosting / Cloud Functions / Firestore / Storage）をバックエンドに、ストーリー生成に Google Gemini、挿絵生成に Replicate（FLUX系モデル）/ OpenAI 画像モデルを利用する。</p>
+<p>
+リポジトリ: <a href="https://github.com/ksc0000/story-gen">https://github.com/ksc0000/story-gen</a><br>
+解析時点のブランチ: <code>main</code>
+</p>
+
+<h2 id="s2">2. プロダクトの目的</h2>
+<p><code>docs/PRODUCT_ROADMAP.md</code> および <code>product-brief-20260416-120000.md</code> によれば、目的は「子どもの名前・年齢・性格・好きなものなどの情報をもとに、AIが世界に一冊だけのオリジナル絵本（テキスト＋挿絵）を自動生成し、Webで読める形で届けること」。</p>
+<p>主な利用シーンとして:</p>
+<ul>
+  <li>親が子どものプロフィール（名前・年齢・性格・好きなもの等）を登録</li>
+  <li>テンプレート選択・AIおまかせ・自由入力のいずれかで絵本のテーマを決定</li>
+  <li>4/8/12ページの絵本をAIが自動生成</li>
+  <li>生成後はWeb上のビューアでページめくり形式で読める</li>
+</ul>
+<p>マネタイズ方向性として <code>free</code> / <code>standard_paid</code> / <code>premium_paid</code> の3プラン体系と、単品購入（クレジット制）が <code>docs/PRODUCT_ROADMAP.md</code> Phase 5（Monetization）として位置づけられている。</p>
+
+<h2 id="s3">3. 主な機能</h2>
+<p><code>docs/PRODUCT_ROADMAP.md</code>「0. 現在の到達点」に基づく実装済み機能（要約）:</p>
+<ul>
+  <li>3種類の作成モード: <code>fixed_template</code>（テンプレートベース）/ <code>guided_ai</code>（アンケート+自由入力）/ <code>original_ai</code>（フリー入力フル生成）
+    <br>※ <code>docs/ai-loop/AI_STATE.json</code> の PR #342 により、AIモードは <code>guided_ai</code> に統合（オプションで自由入力可）</li>
+  <li>4/8/12ページの絵本生成（テンプレートは8/12ページバリアントあり）</li>
+  <li>Gemini によるストーリーJSON一括生成（1冊分をまとめて生成）</li>
+  <li><code>storyQualityReport</code>（品質ゲート）・<code>premium</code> story rewrite pass（本文磨き直し）</li>
+  <li><code>styleBible</code> によるイラストスタイル一貫性制御（イラストスタイルは <code>functions/src/lib/illustration-styles.ts</code> に12種定義: soft_watercolor / fluffy_pastel / crayon / flat_illustration / anime_storybook / classic_picture_book / toy_3d / paper_collage / pencil_sketch / colorful_pop / watercolor / flat）</li>
+  <li>recurring character reference（キャラクター一貫性のための参照画像生成、premium/qualityモード）</li>
+  <li>画像生成タイムアウト＋フォールバック（<code>pro_consistent</code> → <code>klein_fast</code>、現在360秒）</li>
+  <li><code>partial_completed</code> ステータス（一部ページ失敗でも全体failedにしない）＋ ユーザー向けページ再生成導線</li>
+  <li>子どもプロフィール（写真アップロード対応）、アバター非同期生成</li>
+  <li>「なかよし」コンパニオンキャラクター作成・絵本への統合（PR #246, #247, #251 等）</li>
+  <li>本棚UI（作成済み絵本一覧、PR #343）、サンプル絵本ギャラリー（PR #361）</li>
+  <li>共有URL（公開読み取り専用ビュー、Issue #68 / PR #204）</li>
+  <li>Stripe Checkout によるサブスクリプション課金、単品購入＋クレジット制（PR #351）</li>
+  <li>フィードバック送信UI（PR #355）</li>
+  <li>Admin機能: Quality Review UI（Story/Illustration/Character/Personalization/Safetyスコア、ルーブリック定義済み）、SLOダッシュボード、画像生成使用状況モニタリング（PR #386）、プロバイダーコスト比較ダッシュボード（PR #394）、キャラクター一貫性診断UI（PR #388）、テンプレート生成UI</li>
+</ul>
+<p>未実装（roadmap上）: PDF出力、音声読み聞かせ、印刷注文、provider比較A/Bテスト、delete account/child profile、admin operation audit log、APIレベルrate limit、Replicate webhook管理 など。</p>
+
+<h2 id="s4">4. 技術スタック</h2>
+<p><code>package.json</code> より:</p>
+<ul>
+  <li>フレームワーク: Next.js <code>^15.1.6</code>（静的エクスポート <code>next build</code>）、React <code>^18.3.1</code></li>
+  <li>UI: <code>@base-ui/react</code>, <code>shadcn ^4.3.0</code>, <code>tailwindcss ^3.4.14</code>, <code>tailwind-merge</code>, <code>tw-animate-css</code>, <code>lucide-react</code>, <code>framer-motion</code>, <code>lottie-react</code></li>
+  <li>バックエンド/インフラ: <code>firebase ^12.12.0</code>（Hosting / Cloud Functions / Firestore / Storage）</li>
+  <li>AI: Gemini（<code>@google/generative-ai</code>、functions側）、Replicate（FLUX系）、OpenAI 画像API</li>
+  <li>テスト: Vitest <code>^2.1.9</code>、<code>@testing-library/react</code>, <code>jsdom</code></li>
+  <li>Lint: ESLint <code>^9.17.0</code> + <code>eslint-config-next</code>, <code>typescript-eslint</code></li>
+  <li>言語: TypeScript <code>^5.7.2</code></li>
+</ul>
+<p>Cloud Functions側 (<code>functions/package.json</code>) の <code>engines.node</code> は <strong>20</strong>。ローカルルートは Node 24（Next.js側は問題なし、<code>functions/</code>作業時は <code>nvm use</code> でNode 20に切替が必要、<code>CLAUDE.md</code>/<code>AGENTS.md</code>に明記）。</p>
+
+<h2 id="s5">5. ディレクトリ構成</h2>
+<pre><code>story-gen/
+├── src/
+│   ├── app/
+│   │   ├── (app)/                       # 認証済みルート
+│   │   │   ├── home/                    # ダッシュボード
+│   │   │   ├── book/                    # 絵本ビューア
+│   │   │   ├── bookshelf/               # 本棚UI
+│   │   │   ├── gallery/                 # サンプル絵本ギャラリー
+│   │   │   ├── generating/              # 生成進捗UI
+│   │   │   ├── children/ , children/edit
+│   │   │   ├── companions/ , companions/create , companions/profile
+│   │   │   ├── create/                  # 作成フロー
+│   │   │   │   ├── ai-brief/ , input/ , photo-upload/
+│   │   │   │   ├── select-child/ , style/ , theme/
+│   │   │   ├── feedback/
+│   │   │   ├── pricing/ , pricing/success
+│   │   │   ├── onboarding/ , onboarding/child
+│   │   │   └── admin/
+│   │   │       ├── book-quality-review/
+│   │   │       ├── image-model-tests/
+│   │   │       ├── login/
+│   │   │       └── template-generator/
+│   │   ├── (auth)/login/
+│   │   ├── share/                       # 公開共有ビュー
+│   │   └── fonts/
+│   ├── components/
+│   ├── lib/
+│   └── __tests__/                       # 17項目
+├── functions/src/
+│   ├── generate-book.ts                 # メイン生成オーケストレーター (Firestoreトリガー)
+│   ├── generate-child-character.ts
+│   ├── generate-avatar-job.ts
+│   ├── generate-companion-image.ts
+│   ├── generate-story-pitch.ts
+│   ├── generate-template.ts
+│   ├── regenerate-page-image.ts
+│   ├── regenerate-cover-image.ts
+│   ├── update-book-title.ts
+│   ├── delete-book.ts
+│   ├── auto-review.ts
+│   ├── bootstrap-admin.ts
+│   ├── cleanup-expired.ts
+│   ├── cleanup-stale-generation.ts
+│   ├── reset-monthly-quota.ts
+│   ├── save-daily-slo-snapshot.ts / save-weekly-slo-snapshot.ts
+│   ├── seed-templates.ts
+│   ├── stripe-checkout.ts
+│   ├── submit-app-feedback.ts
+│   ├── test-image-models.ts
+│   ├── config/ , controllers/ , prompts/ , templates/
+│   └── lib/
+│       ├── gemini.ts                    # Gemini APIクライアント
+│       ├── prompt-builder.ts            # Geminiシステムプロンプト構築
+│       ├── prompt-analyzer.ts
+│       ├── replicate.ts / replicate-image-adapter.ts
+│       ├── openai-image.ts / openai-image-adapter.ts
+│       ├── image-adapter-factory.ts
+│       ├── image-provider.ts            # プロバイダー抽象化 (P3-15)
+│       ├── image-model-policy.ts
+│       ├── image-storage-uploader.ts
+│       ├── story-quality.ts             # ストーリー品質ゲート
+│       ├── story-response-schema.ts
+│       ├── illustration-styles.ts       # 12スタイル定義
+│       ├── age-reading-profile.ts
+│       ├── avatar-generation.ts
+│       ├── content-filter.ts
+│       ├── entitlements.ts
+│       ├── plans.ts                     # プラン定義 (free/standard_paid/premium_paid)
+│       ├── usage.ts
+│       ├── slo-metrics.ts / slo-snapshot.ts
+│       ├── stale-detection.ts
+│       ├── style-exposure.ts
+│       ├── llm-json-repair.ts
+│       ├── auto-review-llm.ts / auto-review-schema.ts
+│       ├── generation-event-logger.ts
+│       ├── provider-error-classifier.ts
+│       ├── firestore-sanitize.ts
+│       └── types.ts
+├── functions/test/                      # 60ファイル（Vitest, Node環境）
+├── docs/                                 # 設計ドキュメント・ランブック（60ファイル以上）
+│   ├── ai-loop/                          # AI Loop運用（AI_STATE.json, NEXT_TASK.md 等）
+│   ├── qa/ , reliability/ , smoke-results/ , template-smoke-results/ , superpowers/
+├── scripts/                              # スモークテスト・運用スクリプト
+├── firestore.rules / firestore.indexes.json / storage.rules
+└── firebase.json
+</code></pre>
+
+<h2 id="s6">6. フロントエンド構成</h2>
+<ul>
+  <li>Next.js 15 の App Router（<code>src/app</code>）構成。<code>(app)</code> グループは認証済みルート、<code>(auth)</code> グループはログイン。</li>
+  <li>作成フローは <code>create/select-child → create/input または create/ai-brief → create/style → create/theme</code> の多段ステップ（PR #224, #295, #301 等でUX改善が継続的に実施）。</li>
+  <li>生成中は <code>generating/</code> で進捗表示。</li>
+  <li>完成した絵本は <code>book/</code> でページめくり形式（Framer Motion <code>drag="x"</code> によるスワイプ対応、PR #349）。</li>
+  <li><code>bookshelf/</code> で作成済み絵本一覧、<code>gallery/</code> でサンプル絵本ギャラリー。</li>
+  <li><code>companions/</code> で「なかよし」キャラクター（companion）の作成・プロフィール管理。</li>
+  <li><code>share/</code> は公開読み取り専用の絵本共有ビュー（Issue #68）。</li>
+  <li><code>admin/</code> 配下に管理者向けダッシュボード群（品質レビュー、画像モデルテスト、テンプレート生成、ログイン）。</li>
+  <li>UIライブラリは shadcn/ui ベース＋Tailwind CSS、アニメーションは Framer Motion / lottie-react。</li>
+</ul>
+
+<h2 id="s7">7. Firebase / Backend 構成</h2>
+<table>
+<tr><th>サービス</th><th>設定</th></tr>
+<tr><td>Hosting</td><td><code>out/</code>（Next.js静的エクスポート） → SPA rewrite <code>/index.html</code></td></tr>
+<tr><td>Functions</td><td>Node 20、<code>functions/</code>、Firestoreトリガー中心</td></tr>
+<tr><td>Firestore</td><td><code>firestore.rules</code> + <code>firestore.indexes.json</code></td></tr>
+<tr><td>Storage</td><td><code>storage.rules</code></td></tr>
+</table>
+
+<h3>Composite Indexes（<code>firestore.indexes.json</code>、CLAUDE.md記載）</h3>
+<ol>
+  <li><code>books</code>: <code>userId</code> ASC + <code>createdAt</code> DESC</li>
+  <li><code>templates</code>: <code>active</code> ASC + <code>order</code> ASC</li>
+  <li><code>categoryGroups</code>: <code>active</code> ASC + <code>order</code> ASC</li>
+</ol>
+
+<h3>スケジュール実行（functions）</h3>
+<ul>
+  <li><code>save-daily-slo-snapshot.ts</code> / <code>save-weekly-slo-snapshot.ts</code>: SLOスナップショット（Daily 03:00 JST / Weekly Mon 03:15 JST）</li>
+  <li><code>cleanup-stale-generation.ts</code>: stale generation cleanup（Daily 03:30 JST）</li>
+  <li><code>reset-monthly-quota.ts</code>: 月次クォータリセット</li>
+  <li><code>cleanup-expired.ts</code>: 期限切れデータクリーンアップ</li>
+</ul>
+
+<h3>課金</h3>
+<p><code>stripe-checkout.ts</code>: Stripe Checkoutによるサブスクリプション課金、単品購入・クレジット制（PR #351）</p>
+
+<h2 id="s8">8. AI画像生成・テンプレート生成の構成</h2>
+<h3>生成パイプライン（CLAUDE.md より）</h3>
+<pre><code>books/{id} create (Firestoreトリガー: generate-book.ts)
+  ↓
+コンテンツフィルター → プラン確認 → Gemini ストーリーJSON生成
+  ↓
+カバー画像生成 (Replicate / OpenAI)
+  ↓
+ページ画像生成 x 4/8/12 (並列, IMAGE_CONCURRENCY=2)
+  ↓
+Firestore保存
+</code></pre>
+
+<h3>Gemini</h3>
+<ul>
+  <li>ライブラリ: <code>@google/generative-ai</code></li>
+  <li>モデル: <code>gemini-2.5-flash-lite</code>（第1候補）→ <code>gemini-2.5-flash</code> → <code>gemini-2.0-flash</code>（フォールバック）</li>
+  <li>リトライ: 3回、指数バックオフ（1s + 500msジッター）</li>
+</ul>
+<div class="note">
+<strong>注意:</strong> <code>ENABLE_RESPONSE_SCHEMA</code>（Gemini structured output）は本番非推奨。Phase 4（P4-1〜P4-17）で検証した結果、<code>docs/PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md</code> にてロールアウト断念が決定済み。代わりにプロンプト強化 + <code>validateStory()</code> + parse diagnosticsで対応。
+</div>
+
+<h3>画像生成（Replicate / FLUX / OpenAI）</h3>
+<table>
+<tr><th>プロファイル</th><th>モデル</th></tr>
+<tr><td><code>klein_fast</code></td><td>flux-2-klein-9b</td></tr>
+<tr><td><code>klein_base</code></td><td>flux-2-klein-9b-base</td></tr>
+<tr><td><code>pro_consistent</code></td><td>flux-2-pro</td></tr>
+<tr><td><code>flux_kontext_pro</code></td><td>flux-kontext-pro</td></tr>
+<tr><td><code>flux11_pro_candidate</code></td><td>flux-1.1-pro（候補）</td></tr>
+<tr><td><code>openai_image_candidate</code></td><td>DALL-E 3（候補）</td></tr>
+</table>
+<ul>
+  <li>タイムアウト: <code>IMAGE_GENERATION_TIMEOUT_MS</code>（PR #384により120s→360sへ3倍化、デフォルト変更済み）</li>
+  <li>フォールバック: <code>pro_consistent</code> → <code>klein_fast</code></li>
+  <li><code>partial_completed</code> ステータス: 一部ページ失敗でも完了扱い（個別再生成可、PR #347でユーザー向け再生成導線実装）</li>
+  <li>画像プロバイダーは <code>image-provider.ts</code> / <code>image-adapter-factory.ts</code> で抽象化（P3-15, PR #241/#250で各経路をアダプター化）</li>
+</ul>
+
+<h3>キャラクター一貫性</h3>
+<ul>
+  <li>モード: <code>cover_only</code> / <code>key_pages</code> / <code>all_pages</code></li>
+  <li>カバー・各ページでキャラクタービジュアルビブル＋参照画像（<code>character_reference</code>, <code>style_reference</code>）を使用</li>
+  <li>実験フラグ <code>generationOverride.p5PageExperiment = "simplified_scene"</code>: カバーと同形式の短いプロンプト（キャラクタービブルなし、参照画像なし）</li>
+  <li>Admin Character Consistency Diagnostics UI（PR #388）でキャラ一貫性スコアを可視化</li>
+</ul>
+
+<h3>Feature Flags（環境変数、CLAUDE.md）</h3>
+<table>
+<tr><th>変数</th><th>説明</th></tr>
+<tr><td><code>IMAGE_CONCURRENCY</code></td><td>並列画像生成数（デフォルト2）</td></tr>
+<tr><td><code>IMAGE_GENERATION_TIMEOUT_MS</code></td><td>画像生成タイムアウト（デフォルト120000、PR #384で360000相当に変更）</td></tr>
+<tr><td><code>ENABLE_SCHEMA_REPAIR_RETRY</code></td><td>JSONスキーマ修復リトライ実験</td></tr>
+<tr><td><code>ENABLE_RESPONSE_SCHEMA</code></td><td>Gemini structured output（本番非推奨、断念決定済み）</td></tr>
+<tr><td><code>ENABLE_KLEIN_BASE</code></td><td>klein_baseモデル有効化</td></tr>
+<tr><td><code>RESPONSE_SCHEMA_MODE</code></td><td><code>minimal</code>等のスキーマ変形</td></tr>
+</table>
+
+<h2 id="s9">9. 開発・検証コマンド</h2>
+<pre><code># 開発サーバー
+npm run dev
+
+# ビルド
+npm run build          # Next.js static export
+npm run build:clean    # clean → build
+
+# テスト
+npm test                          # src/ + functions/ 両方
+npm run test:watch
+npm run test:generation-guards    # candidate gate + event logger 統合テスト
+npm run test:slo-report
+
+# Lint
+npm run lint
+
+# 品質ゲート一式
+npm run check:phase2   # guard:hygiene + report:generation-slo:self-test + test:slo-report + test:generation-guards
+
+# スモークテスト
+npm run smoke:create-template-books
+npm run smoke:create-nonfixed-book
+npm run smoke:monitor
+npm run smoke:inspect
+npm run smoke:verify-images
+npm run e2e:visual-verify
+npm run report:generation-slo
+</code></pre>
+<p>functions単体テスト:</p>
+<pre><code>cd functions && npm test</code></pre>
+<p>Firebase Emulator:</p>
+<pre><code>firebase emulators:start
+# ポート: Auth=9099, Firestore=8080, Functions=5001, Hosting=5000, Storage=9199, UI=4000</code></pre>
+
+<h2 id="s10">10. デプロイ手順</h2>
+<pre><code>npm run deploy:hosting   # build:clean → firebase deploy --only hosting</code></pre>
+<div class="note">
+<strong>安全ルール:</strong> 本番影響操作（<code>firebase deploy</code>、<code>firestore.rules</code>/<code>firestore.indexes.json</code>変更）は必ずユーザー承認後に実行（CLAUDE.md / AGENTS.md 記載）。<code>main</code>への直接コミットは禁止。feature ブランチ経由（PRベース、AI Loopによる自動運用が <code>docs/ai-loop/</code> に記録されている）。
+</div>
+
+<h2 id="s11">11. 現在の開発状況</h2>
+<p><code>docs/ai-loop/AI_STATE.json</code>（<code>current_phase: "5"</code>）および <code>docs/PRODUCT_ROADMAP.md</code> より:</p>
+<ul>
+  <li><strong>Phase 1（Reliability First）</strong>: Complete（2026-06-12）。Production smoke evidence確認済み（<code>docs/PRODUCTION_SMOKE_RESULTS.md</code>）。</li>
+  <li><strong>Phase 2（Story & Illustration Quality）</strong>: Admin Quality Review UI、manual quality score保存、quality review history、filter/sort、batch review workflow、Quality Trend Dashboard、Rewrite/Regeneration Recommendation 等が「done」。</li>
+  <li><strong>Phase 3（Template Mode）</strong>: P3-15s（ページ生成のProvider抽象化）COMPLETE。カバー画像・キャラ参照は P4 で追跡。</li>
+  <li><strong>Phase 4（Gemini JSON Hardening）</strong>: P4-1〜P4-17 すべてCOMPLETE。クローズ済み（<code>docs/PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md</code>）。responseSchemaは本番導入しない方針確定。</li>
+  <li><strong>Phase 5（Monetization / 本番トラフィック）</strong>: ソフトローンチ計画（P5-1）完了、Cohort A/B実行（PR #256等）、SJ/IMアラートポリシー有効化（P2-10b-enable, 2026-06-09 COMPLETE）。</li>
+  <li><strong>Phase 6（User Experience）</strong>: 本棚UI・絵本閲覧UI・swipeナビゲーション・cover/title spread・opening narration は実装済み。animated page transition、失敗ページ再生成導線（ユーザー向け）、作成履歴表示、feedback送信UIは roadmap上「一部 [ ]」表記だが、<code>completed_tasks</code>一覧ではPR #347（再生成フロー）, #349（page transition）, #355（feedback UI）が merged 済みと記録されており、roadmap側の更新が追従していない可能性がある（要確認）。</li>
+</ul>
+<p>直近の <code>completed_tasks</code>（<code>AI_STATE.json</code>末尾、新しい順）:</p>
+<ul>
+  <li>PR #398: スタイル選択サンプルを本番パイプライン(flux-2-pro+styleBible)で作り直し</li>
+  <li>PR #397: 絵本のページごとにスタイル・背景がバラバラになる不具合修正</li>
+  <li>PR #396: User-Editable Book Title</li>
+  <li>PR #394: Provider Cost Comparison Dashboard (Admin UI)</li>
+  <li>PR #392: プラン別ページ数制限（UIロック＋日本語メッセージ込み）</li>
+  <li>PR #390: Quality Review Rubrics定義（Story/Illustration/Character/Personalization/Safety）</li>
+  <li>PR #388: Admin UI for Character Consistency Diagnostics</li>
+</ul>
+<p><code>failed_tasks</code> / <code>in_progress_tasks</code> はいずれも空（2026-06-15時点）。</p>
+
+<h2 id="s12">12. 直近の重要なコミットまたは変更点</h2>
+<p><code>git log --oneline -15</code>（ローカルmain、HEAD = <code>1ebade32</code>）:</p>
+<pre><code>1ebade32 chore(ai-loop): mark PR #388 completed in AI_STATE
+04debacd Implement Admin UI for Character Consistency Diagnostics (#388)
+60d3b596 chore(ai-loop): mark PR #394 completed in AI_STATE
+def91a8f Implement Provider Cost Comparison Dashboard in Admin UI (#394)
+aa71405d chore(ai-loop): mark PR #386 completed in AI_STATE
+a6ffc0d5 Implement Image Generation Usage Monitoring Dashboard (#386)
+a66f0af7 chore(ai-loop): mark PR #390 completed in AI_STATE
+e6ee5fd9 docs: define detailed 1-5 quality review rubrics (#390)
+25689832 docs: update NEXT_TASK.md via AI Loop Controller
+0d91424a chore(ai-loop): mark PR #392 completed in AI_STATE
+58cc10d1 プラン別ページ数制限（UIロック＋日本語メッセージ込み） (#392)
+03350d8e chore(ai-loop): mark PR #396 completed in AI_STATE
+1429689f feat: Implement user-editable book title (#396)
+08f099ee docs: update NEXT_TASK.md via AI Loop Controller
+defb7aaa chore(ai-loop): mark PR #398 completed in AI_STATE
+</code></pre>
+<p>開発は「AI Loop Controller」による自動PR生成 → mark completed in AI_STATE のサイクルで運用されている（<code>docs/ai-loop/AI_AGENT_LOOP_DESIGN.md</code>参照）。</p>
+
+<h2 id="s13">13. 未完了タスク・注意点</h2>
+<ul>
+  <li><strong>ネットワーク制限</strong>: 本タスクの実行環境からは <code>github.com</code> へのアクセスがプロキシで <code>403</code> 拒否され、<code>git fetch origin</code> が失敗した。このため本ドキュメントはローカルmain（HEAD <code>1ebade32</code>）の内容に基づいており、origin/mainの最新状態とは異なる可能性がある。詳細は <code>update-log.md</code> を参照。</li>
+  <li><strong>未コミットの未追跡ファイル</strong>（リポジトリ作業ツリー、本タスクでは変更せず）:
+    <ul>
+      <li><code>docs/qa/image-quality-test-procedure.md</code></li>
+      <li><code>scripts/generate-species-preview-images.js</code></li>
+      <li><code>story-gen-description/</code>（本ドキュメント自体を含む出力フォルダ。過去の定期実行が本来の出力先ではなくリポジトリ直下に書き込んだもの）</li>
+    </ul>
+  </li>
+  <li><code>docs/ai-loop/NEXT_TASK.md</code> には現在「Implement PDF Output Feature Design Document」が記載されているが、本文は冒頭のみで詳細未確認（roadmap上もPDF出力は未実装項目）。</li>
+  <li><code>docs/PRODUCT_ROADMAP.md</code> Phase 6セクションの <code>[ ]</code>/<code>[x]</code> 表記が、<code>AI_STATE.json</code>の<code>completed_tasks</code>（PR #347, #349, #355等）と一部食い違っている可能性があり、roadmap文書の更新漏れの疑いがある（リポジトリ上の事実としてはAI_STATE側がより新しい）。</li>
+  <li>Phase 5（Monetization）セクションは roadmap上「(既存内容維持)」のみの記載で詳細が省略されている。</li>
+</ul>
+
+<h2 id="s14">14. 次にやるべきこと</h2>
+<p><code>docs/ai-loop/NEXT_TASK.md</code> の冒頭に基づくと、次タスクは <strong>PDF出力機能の設計ドキュメント作成</strong>（"Implement PDF Output Feature Design Document"）。docs-first制約に基づき、まず設計ドキュメントを作成するフェーズ。</p>
+<p>その他、roadmap上で優先度が高いとされていた項目（"Now"セクション）:</p>
+<ul>
+  <li>IMG-002 verification（fixed_template 6本での背景リーク再発有無の継続確認）</li>
+  <li>REF-001（neutral character reference image / identity-only reference strategy設計）</li>
+  <li>Phase T2-C: テンプレート9〜10追加（learning + favorite-worlds）</li>
+</ul>
+<p>加えて、本タスク運用上の確認事項:</p>
+<ul>
+  <li>実行環境からのgithub.comアクセス制限の解消（次回pull成功のため）</li>
+  <li>出力先パス（<code>/Users/shunsuke/Documents/story-gen-description/</code>）へのアクセス権限確認</li>
+</ul>
+
+<h2 id="s15">15. 参照した主要ファイル</h2>
+<ul>
+  <li><code>CLAUDE.md</code>, <code>AGENTS.md</code></li>
+  <li><code>package.json</code>, <code>functions/package.json</code></li>
+  <li><code>docs/PRODUCT_ROADMAP.md</code></li>
+  <li><code>docs/ai-loop/AI_STATE.json</code>, <code>docs/ai-loop/NEXT_TASK.md</code></li>
+  <li><code>docs/PHASE4_GEMINI_JSON_HARDENING_CLOSURE.md</code>（参照のみ、内容詳細は本文中で要約）</li>
+  <li><code>functions/src/lib/illustration-styles.ts</code></li>
+  <li><code>functions/src/lib/plans.ts</code></li>
+  <li><code>functions/src/lib/image-model-policy.ts</code></li>
+  <li><code>src/app</code> ディレクトリ構成（find結果）</li>
+  <li><code>functions/src</code> および <code>functions/src/lib</code> ディレクトリ構成</li>
+  <li><code>git log</code>（直近15件）, <code>git status</code></li>
+</ul>
+
+</div>
+</body>
+</html>

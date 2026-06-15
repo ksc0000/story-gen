@@ -10,8 +10,10 @@ describe("companions-utils", () => {
         ability: "fly",
         color: "orange",
         size: "small",
+        bodyType: "slim",
+        colorDepth: "light",
       });
-      expect(desc).toBe("A small, orange fox with a energetic personality who has the ability to fly.");
+      expect(desc).toBe("A small, slim, light-toned, orange fox with a energetic personality who has the ability to fly.");
     });
 
     it("should build a correct description for a large dragon with multiple personalities", () => {
@@ -21,8 +23,10 @@ describe("companions-utils", () => {
         ability: "magic",
         color: "purple",
         size: "large",
+        bodyType: "chubby",
+        colorDepth: "deep",
       });
-      expect(desc).toBe("A large, purple dragon with a brave and gentle personality who has the ability to use magic.");
+      expect(desc).toBe("A large, chubby, deeply-colored, purple dragon with a brave and gentle personality who has the ability to use magic.");
     });
 
     it("should handle missing personalities or abilities gracefully", () => {
