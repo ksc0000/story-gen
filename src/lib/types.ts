@@ -815,6 +815,8 @@ export interface CompanionData {
   personality: string[];
   specialAbility: string;
   colorMain: string;
+  bodyType: string;
+  colorDepth: string;
   size: "small" | "medium" | "large";
   visualDescription: string;
   generatedImageUrl?: string;

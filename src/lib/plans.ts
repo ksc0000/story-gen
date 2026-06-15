@@ -20,6 +20,7 @@ export type PlanConfig = {
   characterConsistencyMode: CharacterConsistencyMode;
   allowedCreationModes: CreationMode[];
   monthlyBookQuota?: number;
+  maxCompanions: number;
   priceJpy?: number;
   isPaid: boolean;
   enabled: boolean;
@@ -86,6 +87,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
     monthlyBookQuota: 1,
+    maxCompanions: 2,
     isPaid: false,
     enabled: true,
   },
@@ -104,6 +106,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     monthlyBookQuota: 5,
+    maxCompanions: 5,
     priceJpy: 1480,
     isPaid: true,
     enabled: true,
@@ -122,6 +125,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai", "photo_story"],
     monthlyBookQuota: 10,
+    maxCompanions: 10,
     priceJpy: 2980,
     isPaid: true,
     enabled: true,
