@@ -21,7 +21,11 @@ describe("AUTO_REVIEW_RESPONSE_SCHEMA", () => {
       "reviewReason",
       "flaggedIssues",
       "recommendedFixes",
+      "storyAxes",
+      "illustrationAxes",
       "characterAxes",
+      "personalizationAxes",
+      "safetyAxes",
     ];
     expect(AUTO_REVIEW_RESPONSE_SCHEMA.required).toEqual(expect.arrayContaining(requiredFields));
     expect(AUTO_REVIEW_RESPONSE_SCHEMA.required.length).toBe(requiredFields.length);
@@ -95,6 +99,43 @@ describe("AUTO_REVIEW_RESPONSE_SCHEMA", () => {
     expect(fixPage.nullable).toBe(true);
   });
 
+  it("has storyAxes as an object with required sub-fields", () => {
+    const axes = AUTO_REVIEW_RESPONSE_SCHEMA.properties.storyAxes;
+    expect(axes.type).toBe("object");
+    const requiredAxes = [
+      "childPersonalization",
+      "storyCoherence",
+      "ageAppropriateness",
+      "emotionalSatisfaction",
+      "pageLengthBalance",
+      "characterConsistency",
+      "endingSatisfaction",
+    ];
+    expect(axes.required).toEqual(expect.arrayContaining(requiredAxes));
+    expect(axes.required.length).toBe(requiredAxes.length);
+    for (const field of requiredAxes) {
+      expect(axes.properties[field].type).toBe("number");
+    }
+  });
+
+  it("has illustrationAxes as an object with required sub-fields", () => {
+    const axes = AUTO_REVIEW_RESPONSE_SCHEMA.properties.illustrationAxes;
+    expect(axes.type).toBe("object");
+    const requiredAxes = [
+      "promptCompleteness",
+      "visualConsistency",
+      "characterConsistency",
+      "sceneRelevance",
+      "styleConsistency",
+      "artifactAvoidance",
+    ];
+    expect(axes.required).toEqual(expect.arrayContaining(requiredAxes));
+    expect(axes.required.length).toBe(requiredAxes.length);
+    for (const field of requiredAxes) {
+      expect(axes.properties[field].type).toBe("number");
+    }
+  });
+
   it("has characterAxes as an object with required sub-fields", () => {
     const axes = AUTO_REVIEW_RESPONSE_SCHEMA.properties.characterAxes;
     expect(axes.type).toBe("object");
@@ -110,6 +151,41 @@ describe("AUTO_REVIEW_RESPONSE_SCHEMA", () => {
     expect(axes.required).toEqual(expect.arrayContaining(requiredAxes));
     expect(axes.required.length).toBe(requiredAxes.length);
 
+    for (const field of requiredAxes) {
+      expect(axes.properties[field].type).toBe("number");
+    }
+  });
+
+  it("has personalizationAxes as an object with required sub-fields", () => {
+    const axes = AUTO_REVIEW_RESPONSE_SCHEMA.properties.personalizationAxes;
+    expect(axes.type).toBe("object");
+    const requiredAxes = [
+      "childProfileUsage",
+      "nameNicknameUsage",
+      "favoriteThings",
+      "familyContext",
+      "memoryEventContext",
+      "overPersonalizationRisk",
+    ];
+    expect(axes.required).toEqual(expect.arrayContaining(requiredAxes));
+    expect(axes.required.length).toBe(requiredAxes.length);
+    for (const field of requiredAxes) {
+      expect(axes.properties[field].type).toBe("number");
+    }
+  });
+
+  it("has safetyAxes as an object with required sub-fields", () => {
+    const axes = AUTO_REVIEW_RESPONSE_SCHEMA.properties.safetyAxes;
+    expect(axes.type).toBe("object");
+    const requiredAxes = [
+      "ageAppropriateVocabulary",
+      "notTooScary",
+      "dangerAvoidance",
+      "familyFriendlyPeace",
+      "privacyConsideration",
+    ];
+    expect(axes.required).toEqual(expect.arrayContaining(requiredAxes));
+    expect(axes.required.length).toBe(requiredAxes.length);
     for (const field of requiredAxes) {
       expect(axes.properties[field].type).toBe("number");
     }

@@ -80,6 +80,48 @@ const RECOMMENDED_FIX_SCHEMA = {
   required: ["action", "reason"] as const,
 };
 
+const STORY_AXES_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    childPersonalization: { type: "number" as const, description: "Child personalization (0-100)" },
+    storyCoherence: { type: "number" as const, description: "Story coherence and pacing (0-100)" },
+    ageAppropriateness: { type: "number" as const, description: "Age appropriateness of language and themes (0-100)" },
+    emotionalSatisfaction: { type: "number" as const, description: "Emotional engagement and satisfaction (0-100)" },
+    pageLengthBalance: { type: "number" as const, description: "Balance of text length across pages (0-100)" },
+    characterConsistency: { type: "number" as const, description: "Consistency of character personalities (0-100)" },
+    endingSatisfaction: { type: "number" as const, description: "Satisfaction and closure of the ending (0-100)" },
+  },
+  required: [
+    "childPersonalization",
+    "storyCoherence",
+    "ageAppropriateness",
+    "emotionalSatisfaction",
+    "pageLengthBalance",
+    "characterConsistency",
+    "endingSatisfaction",
+  ] as const,
+};
+
+const ILLUSTRATION_AXES_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    promptCompleteness: { type: "number" as const, description: "Prompt completeness and detail (0-100)" },
+    visualConsistency: { type: "number" as const, description: "Visual style consistency (0-100)" },
+    characterConsistency: { type: "number" as const, description: "Visual character consistency (0-100)" },
+    sceneRelevance: { type: "number" as const, description: "Relevance of prompts to page text (0-100)" },
+    styleConsistency: { type: "number" as const, description: "Consistency with the chosen art style (0-100)" },
+    artifactAvoidance: { type: "number" as const, description: "Avoidance of visual artifacts and unwanted text (0-100)" },
+  },
+  required: [
+    "promptCompleteness",
+    "visualConsistency",
+    "characterConsistency",
+    "sceneRelevance",
+    "styleConsistency",
+    "artifactAvoidance",
+  ] as const,
+};
+
 const CHARACTER_CONSISTENCY_AXES_SCHEMA = {
   type: "object" as const,
   properties: {
@@ -120,6 +162,44 @@ const CHARACTER_CONSISTENCY_AXES_SCHEMA = {
     "pageLevelCharacterLinkage",
     "outfitHairstyleConsistency",
     "colorPaletteConsistency",
+  ] as const,
+};
+
+const PERSONALIZATION_AXES_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    childProfileUsage: { type: "number" as const, description: "Usage of child profile traits (0-100)" },
+    nameNicknameUsage: { type: "number" as const, description: "Natural usage of name/nickname (0-100)" },
+    favoriteThings: { type: "number" as const, description: "Integration of favorite things (0-100)" },
+    familyContext: { type: "number" as const, description: "Appropriate family context (0-100)" },
+    memoryEventContext: { type: "number" as const, description: "Integration of specific memories (0-100)" },
+    overPersonalizationRisk: { type: "number" as const, description: "Avoidance of over-personalization/PII risks (0-100)" },
+  },
+  required: [
+    "childProfileUsage",
+    "nameNicknameUsage",
+    "favoriteThings",
+    "familyContext",
+    "memoryEventContext",
+    "overPersonalizationRisk",
+  ] as const,
+};
+
+const SAFETY_AXES_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    ageAppropriateVocabulary: { type: "number" as const, description: "Age-appropriate vocabulary (0-100)" },
+    notTooScary: { type: "number" as const, description: "Avoidance of overly scary themes (0-100)" },
+    dangerAvoidance: { type: "number" as const, description: "Avoidance of encouraging dangerous behavior (0-100)" },
+    familyFriendlyPeace: { type: "number" as const, description: "Overall family-friendly and peaceful tone (0-100)" },
+    privacyConsideration: { type: "number" as const, description: "Privacy and PII considerations (0-100)" },
+  },
+  required: [
+    "ageAppropriateVocabulary",
+    "notTooScary",
+    "dangerAvoidance",
+    "familyFriendlyPeace",
+    "privacyConsideration",
   ] as const,
 };
 
@@ -175,7 +255,11 @@ export const AUTO_REVIEW_RESPONSE_SCHEMA = {
       items: RECOMMENDED_FIX_SCHEMA,
       description: "Actionable recommendations for quality improvement",
     },
+    storyAxes: STORY_AXES_SCHEMA,
+    illustrationAxes: ILLUSTRATION_AXES_SCHEMA,
     characterAxes: CHARACTER_CONSISTENCY_AXES_SCHEMA,
+    personalizationAxes: PERSONALIZATION_AXES_SCHEMA,
+    safetyAxes: SAFETY_AXES_SCHEMA,
   },
   required: [
     "storyQualityScore",
@@ -188,6 +272,10 @@ export const AUTO_REVIEW_RESPONSE_SCHEMA = {
     "reviewReason",
     "flaggedIssues",
     "recommendedFixes",
+    "storyAxes",
+    "illustrationAxes",
     "characterAxes",
+    "personalizationAxes",
+    "safetyAxes",
   ] as const,
 };
