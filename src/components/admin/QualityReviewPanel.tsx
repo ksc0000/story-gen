@@ -242,6 +242,33 @@ export function QualityReviewPanel({
               </div>
             )}
 
+            {latestLLMReview.characterAxes && (
+              <div className="space-y-2 rounded-lg border border-indigo-100 bg-indigo-50/30 p-3">
+                <p className="text-[10px] font-semibold text-indigo-500 uppercase tracking-wider">Character Consistency Breakdown</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+                  {[
+                    { key: "visualBibleReflected", label: "Visual Bible" },
+                    { key: "characterIdConsistency", label: "Char ID" },
+                    { key: "appearingCharacterConsistency", label: "Appearing" },
+                    { key: "focusCharacterConsistency", label: "Focus" },
+                    { key: "pageLevelCharacterLinkage", label: "Linkage" },
+                    { key: "outfitHairstyleConsistency", label: "Outfit/Hair" },
+                    { key: "colorPaletteConsistency", label: "Palette" },
+                  ].map((axis) => {
+                    const score = (latestLLMReview.characterAxes as unknown as Record<string, number>)[axis.key];
+                    return (
+                      <div key={axis.key} className="flex flex-col">
+                        <span className="text-[9px] text-slate-500 leading-tight">{axis.label}</span>
+                        <span className={`text-xs font-bold ${score >= 4 ? "text-emerald-600" : score >= 3 ? "text-amber-600" : "text-rose-600"}`}>
+                          {score ?? "—"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {latestLLMReview.flaggedIssues.length > 0 && (
               <div className="space-y-1">
                 <p className="text-[10px] font-semibold text-rose-600 uppercase tracking-wider">Flagged Issues</p>

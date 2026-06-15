@@ -628,6 +628,7 @@ interface PageImageResult {
   imageUrl: string;
   imageBuffer?: Buffer;
   usedProfile: ImageModelProfile;
+  imageModel: string;
   primaryProfile: ImageModelProfile;
   fallbackUsed: boolean;
   attemptCount: number;
@@ -689,6 +690,7 @@ async function generatePageImageWithFallback(params: {
   const base: Omit<PageImageResult, "success" | "imageUrl" | "imageBuffer"> = {
     pageIndex,
     usedProfile: primaryProfile,
+    imageModel: "",
     primaryProfile,
     fallbackUsed: false,
     attemptCount: 0,
@@ -761,15 +763,35 @@ async function generatePageImageWithFallback(params: {
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+          const durationMs = Date.now() - startMs;
+          const currentImageModel = resolveReplicateModel({
+            purpose: params.imagePurpose,
+            imageQualityTier: params.imageQualityTier,
+            imageModelProfile: profile,
+          });
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: params.pageIndex,
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: "replicate",
+            durationMs,
+            attemptCount: totalAttempts,
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           return {
             ...base,
             success: true,
             imageUrl: adapterResult.imageUrl,
             usedProfile: profile,
+            imageModel: currentImageModel,
             fallbackUsed: profile !== primaryProfile,
             attemptCount: totalAttempts,
             timeoutCount,
-            durationMs: Date.now() - startMs,
+            durationMs,
           };
         }
         // P3-15: Adapter path for OpenAI profiles.
@@ -794,15 +816,31 @@ async function generatePageImageWithFallback(params: {
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+          const durationMs = Date.now() - startMs;
+          const currentImageModel = resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: params.pageIndex,
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: "openai",
+            durationMs,
+            attemptCount: totalAttempts,
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           return {
             ...base,
             success: true,
             imageUrl: adapterResult.imageUrl,
             usedProfile: profile,
+            imageModel: currentImageModel,
             fallbackUsed: profile !== primaryProfile,
             attemptCount: totalAttempts,
             timeoutCount,
-            durationMs: Date.now() - startMs,
+            durationMs,
           };
         }
         // Legacy imageClient path — reached only when adapter tokens are absent
@@ -817,16 +855,39 @@ async function generatePageImageWithFallback(params: {
           }),
           IMAGE_GENERATION_TIMEOUT_MS
         );
+        const durationMs = Date.now() - startMs;
+        const currentProvider = resolveProviderFromProfile(profile);
+        const currentImageModel = currentProvider === "replicate"
+          ? resolveReplicateModel({
+              purpose: params.imagePurpose,
+              imageQualityTier: params.imageQualityTier,
+              imageModelProfile: profile,
+            })
+          : resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
+
+        logGenerationEvent({
+          eventName: "page_image_succeeded",
+          bookId: params.bookId,
+          pageIndex: params.pageIndex,
+          imageModelProfile: profile,
+          imageModel: currentImageModel,
+          provider: currentProvider,
+          durationMs,
+          attemptCount: totalAttempts,
+          fallbackUsed: profile !== primaryProfile,
+        });
+
         return {
           ...base,
           success: true,
           imageUrl: "",
           imageBuffer: buffer,
           usedProfile: profile,
+          imageModel: currentImageModel,
           fallbackUsed: profile !== primaryProfile,
           attemptCount: totalAttempts,
           timeoutCount,
-          durationMs: Date.now() - startMs,
+          durationMs,
         };
       } catch (err) {
         if (err instanceof ImageTimeoutError) {
@@ -1531,9 +1592,9 @@ export async function processBookGeneration(
         textSentenceCount: countSentences(storyPage.text),
         textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
         status: pageStatus as PageData["status"],
-        imageModel: imageResult.usedProfile === "openai_image_candidate"
+        imageModel: imageResult.imageModel || (imageResult.usedProfile === "openai_image_candidate"
           ? resolveOpenAIModelLabel(finalInputImageUrls.length > 0)
-          : imageModel,
+          : imageModel),
         imageQualityTier,
         imagePurpose,
         inputImageRoles,
@@ -1854,16 +1915,29 @@ function resolveEnableRecurringCharacterReference(generationMode: string): boole
   return generationMode === "quality";
 }
 
-function normalizeBookForGeneration(
+/**
+ * T3-C: Normalize and validate book generation settings based on user plan and creation mode.
+ * Enforces page count restrictions, especially for fixed templates.
+ * Throws an error if the requested configuration is prohibited by the user's plan.
+ */
+export function normalizeBookForGeneration(
   bookData: BookData,
   template: TemplateData,
   userPlan: "free" | "premium"
 ): BookData {
   const creationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
-  const requestedProductPlan = bookData.productPlan ?? getDefaultProductPlanForCreationMode(creationMode);
+  const isSinglePurchase = bookData.isSinglePurchase === true;
+
+  // 1. Determine the base product plan.
+  // Single purchases always use premium-equivalent settings (T3-B).
+  const requestedProductPlan = isSinglePurchase
+    ? "premium_paid"
+    : (bookData.productPlan ?? getDefaultProductPlanForCreationMode(creationMode));
+
   let normalizedPlan = requestedProductPlan;
 
-  if (!canUseProductPlan({ userPlan, productPlan: requestedProductPlan })) {
+  // 2. Entitlement check (only for non-single-purchase)
+  if (!isSinglePurchase && !canUseProductPlan({ userPlan, productPlan: requestedProductPlan })) {
     if (creationMode === "fixed_template") {
       normalizedPlan = "free";
       console.log(
@@ -1877,21 +1951,34 @@ function normalizeBookForGeneration(
     }
   }
 
+  // 3. Creation mode compatibility check
   const requestedPlanConfig = getPlanConfig(normalizedPlan);
   normalizedPlan =
     requestedPlanConfig.allowedCreationModes.includes(creationMode)
       ? normalizedPlan
       : getDefaultProductPlanForCreationMode(creationMode);
-  const normalizedPlanConfig = getPlanConfig(normalizedPlan);
-  const fixedTemplatePageCount = template.fixedStory?.pages.length;
-  const normalizedPageCount =
-    creationMode === "fixed_template" && isValidPageCount(fixedTemplatePageCount)
-      ? fixedTemplatePageCount
-      : normalizedPlanConfig.allowedPageCounts.includes(bookData.pageCount)
-        ? bookData.pageCount
-        : normalizedPlanConfig.defaultPageCount;
 
-  const isSinglePurchase = bookData.isSinglePurchase === true;
+  const normalizedPlanConfig = getPlanConfig(normalizedPlan);
+
+  // 4. Page count enforcement (Phase 3-C)
+  const fixedTemplatePageCount = template.fixedStory?.pages.length;
+  let normalizedPageCount: BookData["pageCount"];
+
+  if (creationMode === "fixed_template" && fixedTemplatePageCount !== undefined) {
+    // For fixed templates, the template's page count MUST be allowed by the plan.
+    if (!normalizedPlanConfig.allowedPageCounts.includes(fixedTemplatePageCount as BookData["pageCount"])) {
+      // User-facing message (surfaced via updateBookFailure). UI also gates the
+      // page-count selector, so this is a defense-in-depth safety net.
+      throw new Error(
+        `${fixedTemplatePageCount}ページの絵本は現在のプランでは作成できません。上位プランにアップグレードすると作成できます。`
+      );
+    }
+    normalizedPageCount = fixedTemplatePageCount as BookData["pageCount"];
+  } else {
+    normalizedPageCount = normalizedPlanConfig.allowedPageCounts.includes(bookData.pageCount)
+      ? bookData.pageCount
+      : normalizedPlanConfig.defaultPageCount;
+  }
 
   return {
     ...bookData,
@@ -1910,9 +1997,6 @@ function normalizeBookForGeneration(
   };
 }
 
-function isValidPageCount(value: number | undefined): value is BookData["pageCount"] {
-  return value === 4 || value === 8 || value === 12;
-}
 
 function buildInputImageRefs(
   childProfileSnapshot: BookData["childProfileSnapshot"] | undefined,
@@ -2183,12 +2267,29 @@ async function ensureRecurringCharacterReferences(params: {
               IMAGE_GENERATION_TIMEOUT_MS
             );
 
+            logGenerationEvent({
+              eventName: "page_image_succeeded",
+              bookId: params.bookId,
+              pageIndex: -100 - index, // Conventional negative index for character references
+              imageModelProfile: profile,
+              imageModel: result.modelLabel || resolveReplicateModel({
+                purpose: imagePurpose,
+                imageQualityTier: params.normalizedBookData.imageQualityTier,
+                imageModelProfile: profile,
+              }),
+              provider: pid as "replicate" | "openai",
+              durationMs: result.durationMs ?? 0,
+              attemptCount: (profile === primaryProfile ? attempt + 1 : 2 + attempt + 1), // best effort attempt count
+              fallbackUsed: profile !== primaryProfile,
+            });
+
             url = result.imageUrl;
             success = true;
             break search_loop;
           }
 
           // Legacy path fallback (primarily for test environments without adapter tokens)
+          const refStartMs = Date.now();
           const buffer = await withImageTimeout(
             params.deps.imageClient.generateImage(referencePrompt, {
               purpose: imagePurpose,
@@ -2198,6 +2299,28 @@ async function ensureRecurringCharacterReferences(params: {
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+          const durationMs = Date.now() - refStartMs;
+          const currentProvider = resolveProviderFromProfile(profile);
+          const currentImageModel = currentProvider === "replicate"
+            ? resolveReplicateModel({
+                purpose: imagePurpose,
+                imageQualityTier: params.normalizedBookData.imageQualityTier,
+                imageModelProfile: profile,
+              })
+            : resolveOpenAIModelLabel(false);
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: -100 - index,
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: currentProvider,
+            durationMs,
+            attemptCount: (profile === primaryProfile ? attempt + 1 : 2 + attempt + 1),
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           url = await params.deps.uploadImage(params.bookId, -100 - index, buffer);
           success = true;
           break search_loop;

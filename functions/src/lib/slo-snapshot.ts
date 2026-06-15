@@ -148,10 +148,16 @@ export async function saveSloSnapshot(
     };
   }
 
-  const books = booksSnap.docs.map((d) => ({
-    id: d.id,
-    status: (d.data() as BookData).status,
-  }));
+  const books = booksSnap.docs.map((d) => {
+    const data = d.data() as BookData;
+    return {
+      id: d.id,
+      status: data.status,
+      hasCoverPage: data.hasCoverPage,
+      coverStatus: data.coverStatus,
+      coverImageModelProfile: data.coverImageModelProfile,
+    };
+  });
 
   // 2. Batch-load pages for all books concurrently
   const pagesMap = new Map<
@@ -160,6 +166,10 @@ export async function saveSloSnapshot(
       Pick<
         PageData,
         | "status"
+        | "imageModel"
+        | "imageModelProfile"
+        | "replicateModel"
+        | "imageQualityTier"
         | "imageDurationMs"
         | "imageTimeoutCount"
         | "imageFallbackUsed"
@@ -186,6 +196,10 @@ export async function saveSloSnapshot(
             const data = d.data() as PageData;
             return {
               status: data.status,
+              imageModel: data.imageModel,
+              imageModelProfile: data.imageModelProfile,
+              replicateModel: data.replicateModel,
+              imageQualityTier: data.imageQualityTier,
               imageDurationMs: data.imageDurationMs,
               imageTimeoutCount: data.imageTimeoutCount,
               imageFallbackUsed: data.imageFallbackUsed,
