@@ -10,12 +10,6 @@ import { GenerationProgress } from "@/components/generation-progress";
 import { FloatingParticles } from "@/components/floating-particles";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
-import {
-  CHARACTER_CONSISTENCY_LABELS,
-  CREATION_MODE_LABELS,
-  getPlanDisplayLabel,
-  IMAGE_QUALITY_LABELS,
-} from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import type { BookDoc, PageDoc } from "@/lib/types";
 
@@ -33,17 +27,19 @@ function getProgressStep(progress: number, pages: PageDoc[]) {
 }
 
 function getGeneratingSummary(book: BookDoc, completedPages: number, totalPages: number, pages: PageDoc[]) {
-  const productPlan = getPlanDisplayLabel(book.productPlan ?? "free");
-  const quality = IMAGE_QUALITY_LABELS[book.imageQualityTier ?? "light"];
-  const consistency =
-    CHARACTER_CONSISTENCY_LABELS[book.characterConsistencyMode ?? "cover_only"];
-  const creationMode = CREATION_MODE_LABELS[book.creationMode ?? "guided_ai"];
+  const heroName =
+    book.childProfileSnapshot?.nickname ||
+    book.childProfileSnapshot?.displayName ||
+    book.input?.childName ||
+    "おこさま";
+  const styleName = book.selectedStyleName;
+  const companionName = book.input?.companionName;
 
   return {
-    productPlan,
-    quality,
-    consistency,
-    creationMode,
+    heroName,
+    styleName,
+    companionName,
+    title: book.title?.trim() || null,
     completedPages,
     totalPages,
     step: getProgressStep(book.progress ?? 0, pages),
@@ -242,7 +238,12 @@ function GeneratingContent() {
               >
                 <Image src="/images/illustrations/generating.webp" alt="生成中" width={120} height={90} className="mx-auto rounded-xl" />
               </motion.div>
-              <h1 className="mt-3 text-xl font-bold text-purple-900">絵本を作っています</h1>
+              <h1 className="mt-3 text-xl font-bold text-purple-900">
+                {summary.heroName}の絵本を作っています
+              </h1>
+              {summary.title ? (
+                <p className="mt-1 text-base font-semibold text-purple-700">「{summary.title}」</p>
+              ) : null}
               <p className="mt-1 text-sm text-violet-500">{summary.step}</p>
               <TriviaRotation />
               {hasLongWait ? (
@@ -250,18 +251,18 @@ function GeneratingContent() {
               ) : null}
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <SummaryCard label="プラン" value={summary.productPlan} />
+              <SummaryCard label="主人公" value={summary.heroName} />
+              {summary.companionName ? (
+                <SummaryCard label="いっしょに登場" value={summary.companionName} />
+              ) : null}
+              {summary.styleName ? (
+                <SummaryCard label="絵のタッチ" value={summary.styleName} />
+              ) : null}
               <SummaryCard label="ページ数" value={`${book.pageCount}ページ`} />
-              <SummaryCard
-                label="画質"
-                value={`${summary.quality.label} / ${summary.quality.description}`}
-              />
-              <SummaryCard label="作成モード" value={summary.creationMode} />
               <SummaryCard
                 label="進み具合"
                 value={`${summary.completedPages} / ${summary.totalPages} ページ`}
               />
-              <SummaryCard label="仕上がり方針" value={summary.consistency.label} />
             </div>
             <div className="mt-6"><GenerationProgress book={book} pages={pages} /></div>
             <p className="mt-4 text-center text-sm text-violet-500">
