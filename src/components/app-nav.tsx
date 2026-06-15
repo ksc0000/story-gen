@@ -15,6 +15,7 @@ const NAV_LINKS: NavLink[] = [
   { href: "/gallery", label: "ギャラリー" },
   { href: "/children", label: "子ども" },
   { href: "/companions", label: "相棒" },
+  { href: "/how-to-use", label: "使い方ガイド" },
   { href: "/pricing", label: "プラン", accent: true },
   { href: "/feedback", label: "ご意見" },
 ];
@@ -53,8 +54,8 @@ export function AppNav({
   return (
     <>
       {/* Desktop: inline links (sm and up) */}
-      <nav className="hidden items-center gap-3 sm:flex">
-        {NAV_LINKS.map((link) => (
+      <nav className="hidden items-center gap-5 sm:flex">
+        {NAV_LINKS.slice(0, 4).map((link) => (
           <Link
             key={link.href}
             href={link.href}
@@ -67,31 +68,26 @@ export function AppNav({
             {link.label}
           </Link>
         ))}
-        <ThemeToggle />
-        {userName ? <span className="app-user text-sm">{userName}</span> : null}
-        <Button variant="ghost" size="sm" onClick={onSignOut}>
-          ログアウト
-        </Button>
       </nav>
 
-      {/* Mobile: single settings/menu button (below sm) */}
+      {/* Settings/Menu button (always visible) */}
       <button
         type="button"
         aria-label="メニューを開く"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-violet-200/60 bg-white/60 text-violet-600 backdrop-blur transition hover:bg-white/80 sm:hidden"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-violet-200/60 bg-white/60 text-violet-600 backdrop-blur transition hover:bg-white/80"
       >
         {open ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Mobile sheet — rendered via portal to <body> so it escapes the
+      {/* Menu sheet — rendered via portal to <body> so it escapes the
           app-header's `backdrop-filter`, which would otherwise act as the
           containing block for position:fixed and clip the overlay to the
           header height. */}
       {mounted && open
         ? createPortal(
-        <div className="fixed inset-0 z-50 sm:hidden" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
