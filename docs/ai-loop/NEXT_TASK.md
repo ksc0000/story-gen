@@ -1,9 +1,5 @@
-# Design Document for User Account and Child Profile Deletion
+# Implement Quality Regression Detection in Admin UI
 
 ## Context
 
-The product roadmap lists "delete account / delete child profile" under "未実装" (unimplemented) features in section 0. With Phase 5 Monetization currently in progress and Cohort B rollout underway, it is critical to ensure that essential user management and privacy features are addressed. Implementing account and child profile deletion is crucial for user trust, compliance with data privacy regulations (e.g., GDPR, CCPA), and providing a complete user experience. This task focuses on drafting a comprehensive design document to outline the requirements, flows, and technical considerations for these features.
-
-## Objective
-
-Create a detailed design document outlining the user experience, technical implementation, and data handling requirements for user account and child profile deletion. This document will
+The product roadmap for Phase 2, "Story & Illustration Quality," aims to make generated results "acceptable picture books for sale." While quality metrics, manual review, and LLM auto-review capabilities have been implemented, the ability to detect quality regressions over time is crucial for continuous improvement. The roadmap explicitly lists "Quality Trend Dashboard / Regression Detection" as a completed item under initial tasks for Phase 2, and "quality regression detection" as a general task to include. However, looking at the `completed_tasks` list, `PR #XXX` for "Quality Trend Dashboard / Regression Detection" is not explicitly mentioned, suggesting the *dashboard* part might be implemented, but the *detection* mechanism itself or its specific display might not be
