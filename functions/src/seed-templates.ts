@@ -1122,9 +1122,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     name: "はじめてのたんじょうび",
     description: "はじめての誕生日の思い出を、やさしく残せる固定テンプレート",
     icon: "🎂",
-    categoryGroupId: "seasonal-events",
+    categoryGroupId: "memories",
     subcategoryId: "first-birthday",
-    parentIntent: "季節の体験を特別な思い出にしたい",
+    parentIntent: "この瞬間を残したい",
     recommendedAgeMin: 1,
     recommendedAgeMax: 6,
     requiredInputs: ["childName", "familyMembers"],
@@ -1142,7 +1142,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、はじめての誕生日の思い出をやさしく残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のはじめてのたんじょうび",
-      previewImageUrl: "/images/templates/seasonal.webp",
+      previewImageUrl: "/images/templates/fixed-first-birthday.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
@@ -1212,9 +1212,9 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     name: "はじめてのたんじょうび（8ページ）",
     description: "はじめての誕生日を、準備からお祝いの余韻までゆっくり描く8ページ版です。",
     icon: "🎂",
-    categoryGroupId: "seasonal-events",
+    categoryGroupId: "memories",
     subcategoryId: "first-birthday",
-    parentIntent: "季節の体験を特別な思い出にしたい",
+    parentIntent: "この瞬間を残したい",
     recommendedAgeMin: 1,
     recommendedAgeMax: 6,
     requiredInputs: ["childName", "familyMembers"],
@@ -1232,7 +1232,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、はじめての誕生日の思い出を8ページでゆっくり残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のはじめてのたんじょうび",
-      previewImageUrl: "/images/templates/seasonal.webp",
+      previewImageUrl: "/images/templates/fixed-first-birthday.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
@@ -2180,7 +2180,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、寝る前の安心感をやさしく描く絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}とおつきさまのおやすみぼうけん",
-      previewImageUrl: "/images/templates/fantasy.webp",
+      previewImageUrl: "/images/templates/fixed-sleepy-moon-adventure.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a sleepy child in cozy pajamas looking at a bright moon from a bedroom window, soft blanket draped around shoulders, tiny glowing star motif, calm and reassuring bedtime mood, soft watercolor style, rounded child-safe composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "おつきさまと おやすみぼうけん",
@@ -2267,7 +2267,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、寝る前のおやすみぼうけんを8ページでやさしく描く絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}とおつきさまのおやすみぼうけん",
-      previewImageUrl: "/images/templates/fantasy.webp",
+      previewImageUrl: "/images/templates/fixed-sleepy-moon-adventure.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a sleepy child in cozy pajamas looking at a bright moon from a bedroom window, soft blanket draped around shoulders, tiny glowing star motif, calm and reassuring bedtime mood, soft watercolor style, rounded child-safe composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "おつきさまと おやすみぼうけん",
