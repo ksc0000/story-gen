@@ -21,6 +21,9 @@ export interface GenerateStoryPitchInput {
   protagonistType: "child" | "fictional";
   /** 「もう少し変えたい」で使う修正要望（省略可）*/
   refinementRequest?: string;
+  /** 相棒キャラクターの情報 */
+  companionName?: string;
+  companionVisualDescription?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -40,7 +43,15 @@ function buildPitchSystemPrompt(): string {
 }
 
 function buildPitchUserPrompt(input: GenerateStoryPitchInput): string {
-  const { protagonistName, storyBrief, pageCount, protagonistType, refinementRequest } = input;
+  const {
+    protagonistName,
+    storyBrief,
+    pageCount,
+    protagonistType,
+    refinementRequest,
+    companionName,
+    companionVisualDescription,
+  } = input;
   const protagonistDesc =
     protagonistType === "child"
       ? `${protagonistName}（実在の子どもを主人公にした絵本）`
@@ -48,9 +59,12 @@ function buildPitchUserPrompt(input: GenerateStoryPitchInput): string {
 
   const lines = [
     `主人公: ${protagonistDesc}`,
+    companionName && companionVisualDescription
+      ? `相棒キャラクター: ${companionName}（${companionVisualDescription}）。必ず物語に登場させ、主人公と一緒に活動させてください。`
+      : "",
     `ページ数: ${pageCount}ページ`,
     `アイデア: ${storyBrief}`,
-  ];
+  ].filter(Boolean);
 
   if (refinementRequest?.trim()) {
     lines.push(`\n修正要望: ${refinementRequest.trim()}`);

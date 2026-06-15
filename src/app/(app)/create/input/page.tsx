@@ -156,7 +156,7 @@ function InputPageContent() {
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
   const { children, loading: childrenLoading } = useChildren(user?.uid);
-  const { companions, loading: companionsLoading } = useCompanions(user?.uid);
+  const { companions } = useCompanions(user?.uid);
   const { templates } = useTemplates();
   const child = children.find((item) => item.id === childId) ?? null;
   const template = templates.find((item) => item.id === theme);
@@ -195,8 +195,7 @@ function InputPageContent() {
   const [outfitMode, setOutfitMode] = useState<OutfitMode>("profile_default");
   const [customOutfit, setCustomOutfit] = useState("");
   const [keepSignatureItem, setKeepSignatureItem] = useState(true);
-  const [selectedCompanionId, setSelectedCompanionId] = useState<string | null>(preselectedCompanionId);
-  const [showAdvanced, setShowAdvanced] = useState(!!preselectedCompanionId);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const selectedPlanConfig = PLAN_CONFIGS[productPlan] ?? PLAN_CONFIGS.free;
   const planPageCountOptions = PAGE_COUNT_OPTIONS.filter((option) =>
@@ -240,12 +239,14 @@ function InputPageContent() {
     if (place) params.set("place", place);
     if (parentMessage) params.set("parentMessage", parentMessage);
     if (customOutfit) params.set("customOutfit", customOutfit);
-    const selectedCompanion = companions.find((c) => c.id === selectedCompanionId);
-    if (selectedCompanion) {
-      params.set("companionId", selectedCompanion.id);
-      params.set("companionName", selectedCompanion.name);
-      params.set("companionVisualDescription", selectedCompanion.visualDescription);
-    }
+
+    const companionId = searchParams.get("companionId");
+    const companionName = searchParams.get("companionName");
+    const companionVisualDescription = searchParams.get("companionVisualDescription");
+    if (companionId) params.set("companionId", companionId);
+    if (companionName) params.set("companionName", companionName);
+    if (companionVisualDescription) params.set("companionVisualDescription", companionVisualDescription);
+
     router.push(`/create/style?${params.toString()}`);
   };
 
@@ -461,52 +462,6 @@ function InputPageContent() {
                 固定アイテムをできるだけ出す
               </label>
 
-              {/* 相棒キャラクター */}
-              <div>
-                <Label className="text-purple-800">相棒を登場させる</Label>
-                {companionsLoading ? (
-                  <p className="mt-2 text-xs text-violet-400">読み込み中...</p>
-                ) : companions.length === 0 ? (
-                  <p className="mt-2 text-xs text-violet-400">
-                    まだ相棒がいません。
-                    <Link href="/companions/create" className="ml-1 text-violet-500 underline">作成する →</Link>
-                  </p>
-                ) : (
-                  <div className="mt-2 space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCompanionId(null)}
-                      className={`w-full rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
-                        selectedCompanionId === null
-                          ? "border-purple-400 bg-purple-50 text-purple-700"
-                          : "border-violet-100 text-violet-500"
-                      }`}
-                    >
-                      なし
-                    </button>
-                    {companions.map((companion) => (
-                      <button
-                        key={companion.id}
-                        type="button"
-                        onClick={() => setSelectedCompanionId(companion.id)}
-                        className={`w-full rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
-                          selectedCompanionId === companion.id
-                            ? "border-purple-400 bg-purple-50 text-purple-700"
-                            : "border-violet-100 text-violet-500"
-                        }`}
-                      >
-                        <span className="mr-2">{getSpeciesEmoji(companion.species)}</span>
-                        <span className="font-medium">{companion.name}</span>
-                        {companion.generatedImageUrl ? (
-                          <span className="ml-2 text-xs text-emerald-500">✓ 絵あり（一貫性UP）</span>
-                        ) : (
-                          <span className="ml-2 text-xs text-violet-400">絵なし</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               {/* guided/original 用の追加フィールド */}
               {creationMode !== "fixed_template" ? (
