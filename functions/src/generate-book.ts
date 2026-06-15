@@ -2252,7 +2252,7 @@ async function ensureRecurringCharacterReferences(params: {
                 imageModelProfile: profile,
               }),
               provider: pid as "replicate" | "openai",
-              durationMs: result.durationMs,
+              durationMs: result.durationMs ?? 0,
               attemptCount: (profile === primaryProfile ? attempt + 1 : 2 + attempt + 1), // best effort attempt count
               fallbackUsed: profile !== primaryProfile,
             });

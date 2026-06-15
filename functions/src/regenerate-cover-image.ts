@@ -7,9 +7,6 @@ import { buildCoverImagePrompt, buildFinalCharacterBible } from "./lib/prompt-bu
 import { getAgeReadingProfile } from "./lib/age-reading-profile";
 import type { ImageModelProfile, CoverStatus, BookData } from "./lib/types";
 import { generateCoverImageWithFallback } from "./controllers/imageGeneration";
-import { logGenerationEvent, resolveProviderFromProfile } from "./lib/generation-event-logger";
-import { resolveReplicateModel } from "./lib/replicate";
-import { resolveOpenAIModelLabel } from "./lib/openai-image";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 const STORAGE_BUCKET = "story-gen-8a769.firebasestorage.app";
