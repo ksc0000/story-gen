@@ -7,10 +7,17 @@ import type { BookStatus, PageStatus } from "./types";
 interface BookLike {
   id: string;
   status: BookStatus;
+  hasCoverPage?: boolean;
+  coverStatus?: string;
+  coverImageModelProfile?: string;
 }
 
 interface PageLike {
   status: PageStatus;
+  imageModel?: string;
+  imageModelProfile?: string;
+  replicateModel?: string;
+  imageQualityTier?: string;
   imageDurationMs?: number;
   imageTimeoutCount?: number;
   imageFallbackUsed?: boolean;
@@ -42,6 +49,8 @@ export interface SloMetrics {
   regenerationCount: number;
   regenerationSuccessCount: number;
   regenerationSuccessRate: number;
+  totalEstimatedCostUsd?: number;
+  avgCostPerBookUsd?: number;
 }
 
 export const EMPTY_SLO: SloMetrics = {
@@ -64,6 +73,8 @@ export const EMPTY_SLO: SloMetrics = {
   regenerationCount: 0,
   regenerationSuccessCount: 0,
   regenerationSuccessRate: 0,
+  totalEstimatedCostUsd: 0,
+  avgCostPerBookUsd: 0,
 };
 
 /* ------------------------------------------------------------------ */
@@ -77,6 +88,49 @@ export function computePercentile(sorted: number[], p: number): number {
   const hi = Math.ceil(i);
   if (lo === hi) return sorted[lo];
   return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo);
+}
+
+/**
+ * Estimated cost per image generation in USD.
+ * Mirrors src/lib/admin-cost-metrics.ts.
+ */
+const ESTIMATED_COST_PER_IMAGE: Record<string, number> = {
+  "black-forest-labs/flux-2-pro": 0.05,
+  "black-forest-labs/flux-2-klein-9b": 0.025,
+  "black-forest-labs/flux-2-klein-9b-base": 0.025,
+  "black-forest-labs/flux-kontext-pro": 0.05,
+  "black-forest-labs/flux-kontext-max": 0.05,
+  "black-forest-labs/flux-1.1-pro": 0.04,
+  "black-forest-labs/flux-schnell": 0.003,
+  "openai/gpt-image-1-mini": 0.011,
+  "openai/gpt-image-1": 0.042,
+  "openai/gpt-4o": 0.042,
+  "dall-e-3": 0.04,
+};
+
+function getEstimatedImageCost(page: PageLike): number {
+  if (page.imageModel && ESTIMATED_COST_PER_IMAGE[page.imageModel]) {
+    return ESTIMATED_COST_PER_IMAGE[page.imageModel];
+  }
+  if (page.replicateModel && ESTIMATED_COST_PER_IMAGE[page.replicateModel]) {
+    return ESTIMATED_COST_PER_IMAGE[page.replicateModel];
+  }
+  if (page.imageModelProfile) {
+    const profileCosts: Record<string, number> = {
+      klein_fast: 0.025,
+      klein_base: 0.025,
+      pro_consistent: 0.05,
+      kontext_reference: 0.05,
+      kontext_max: 0.05,
+      openai_mini: 0.011,
+      openai_standard: 0.042,
+      flux11_pro_candidate: 0.04,
+      openai_image_candidate: 0.042,
+    };
+    if (profileCosts[page.imageModelProfile]) return profileCosts[page.imageModelProfile];
+  }
+  if (page.imageQualityTier === "premium") return 0.05;
+  return 0.025;
 }
 
 /**
@@ -149,6 +203,17 @@ export function computeSloMetrics(
   const regenerationSuccessRate =
     regenerationCount > 0 ? (regenerationSuccessCount / regenerationCount) * 100 : 0;
 
+  let totalEstimatedCostUsd = 0;
+  for (const page of allPages) {
+    totalEstimatedCostUsd += getEstimatedImageCost(page);
+  }
+  for (const book of terminalBooks) {
+    if (book.hasCoverPage && book.coverStatus === "completed") {
+      totalEstimatedCostUsd += book.coverImageModelProfile === "openai_image_candidate" ? 0.042 : 0.05;
+    }
+  }
+  const avgCostPerBookUsd = totalBooks > 0 ? totalEstimatedCostUsd / totalBooks : 0;
+
   return {
     totalBooks,
     completedBooks,
@@ -169,5 +234,7 @@ export function computeSloMetrics(
     regenerationCount,
     regenerationSuccessCount,
     regenerationSuccessRate,
+    totalEstimatedCostUsd,
+    avgCostPerBookUsd,
   };
 }
