@@ -397,6 +397,7 @@ export interface ChildAvatarGenerationJob {
     revisionRequest?: AvatarRevisionRequest;
     baseGenerationId?: string;
     variantStyle?: IllustrationStyle;
+    usePhoto?: boolean;
   };
   result?: {
     batchId: string;
