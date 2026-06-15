@@ -678,6 +678,8 @@ export interface GenerationDeps {
     data: Record<string, unknown>
   ) => Promise<void>;
   getUserMonthlyCount: (userId: string) => Promise<number>;
+  /** 管理者（admin カスタムクレーム保持者）かどうか。テスト生成のため月次上限を回避する。 */
+  isUserAdmin: (userId: string) => Promise<boolean>;
   incrementMonthlyCount: (userId: string) => Promise<void>;
   getUserCredits: (userId: string) => Promise<{
     singleBookCredits: number;
@@ -1107,6 +1109,7 @@ export async function processBookGeneration(
       }
     }
     const userPlan = await deps.getUserPlan(bookData.userId);
+    const isAdminUser = await deps.isUserAdmin(bookData.userId);
     const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
     const readingProfile = getAgeReadingProfile(mergedInput.childAge);
     const generationMode = normalizedBookData.generationMode ?? "reliable_fast";
@@ -1126,7 +1129,7 @@ export async function processBookGeneration(
 
     if (process.env.NODE_ENV !== "development") {
       const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
-      quotaExceeded = !canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });
+      quotaExceeded = !canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount, isAdmin: isAdminUser });
 
       if (quotaExceeded || normalizedBookData.isSinglePurchase) {
         const credits = await deps.getUserCredits(bookData.userId);
@@ -1908,8 +1911,10 @@ export async function processBookGeneration(
     await deps.updateBookStatus(bookId, bookStatus);
 
     if (bookStatus !== "failed") {
-      // Consumption logic: Prefer monthly quota, then single credits
-      if (process.env.NODE_ENV !== "development") {
+      // Consumption logic: Prefer monthly quota, then single credits.
+      if (isAdminUser) {
+        // 管理者のテスト生成は月次カウント・クレジットを一切消費しない。
+      } else if (process.env.NODE_ENV !== "development") {
         const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
         const canUseMonthly = canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });
 
@@ -3209,6 +3214,16 @@ export const generateBook = onDocumentCreated(
         const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
         const countDoc = await db.collection("users").doc(userId).collection("usage").doc(yearMonth).get();
         return countDoc.exists ? (countDoc.data()?.count || 0) : 0;
+      },
+
+      isUserAdmin: async (userId: string) => {
+        try {
+          const userRecord = await admin.auth().getUser(userId);
+          return userRecord.customClaims?.admin === true;
+        } catch (err) {
+          console.error(`Failed to resolve admin claim for ${userId}:`, err);
+          return false;
+        }
       },
 
       incrementMonthlyCount: async (userId: string) => {

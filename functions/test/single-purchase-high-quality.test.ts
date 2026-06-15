@@ -60,6 +60,8 @@ describe("processBookGeneration - Single Purchase High Quality", () => {
       updateBookStoryQualityReport: vi.fn(),
       updateBookStoryGenerationMetadata: vi.fn(),
       getUserMonthlyCount: vi.fn().mockResolvedValue(0),
+      isUserAdmin: vi.fn().mockResolvedValue(false),
+
       incrementMonthlyCount: vi.fn(),
       getUserCredits: vi.fn().mockResolvedValue({
         singleBookCredits: 0,
