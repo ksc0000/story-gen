@@ -253,6 +253,8 @@ export interface ChildProfileData {
   personality: ChildPersonalityProfile;
   visualProfile: ChildVisualProfile;
   generationSettings: ChildGenerationSettings;
+  /** ユーザーがアップロードしたお子さんの写真。アバター生成の本人らしさ参照に使う */
+  photoUrl?: string;
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;
   active: boolean;
@@ -298,6 +300,8 @@ export interface ChildAvatarGenerationJob {
     revisionRequest?: AvatarRevisionRequest;
     baseGenerationId?: string;
     variantStyle?: IllustrationStyle;
+    /** お子さんの写真を本人らしさの参照画像として使うかどうか */
+    usePhoto?: boolean;
   };
   result?: {
     batchId: string;

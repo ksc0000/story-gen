@@ -13,7 +13,7 @@ export const AVATAR_VARIANTS: Array<{ style: IllustrationStyle; label: string }>
   { style: "flat_illustration", label: "シンプルフラット" },
 ];
 
-export type ReferenceImageRole = "base_generation" | "approved_child" | "style_reference";
+export type ReferenceImageRole = "child_photo" | "base_generation" | "approved_child" | "style_reference";
 
 export type ReferenceImageDescriptor = {
   role: ReferenceImageRole;
@@ -153,11 +153,19 @@ export function fixedSandboxBackgroundPrompt(): string {
 }
 
 export function buildReferenceImageRoles(params: {
+  childPhotoUrl?: string;
   baseGenerationImageUrl?: string;
   approvedImageUrl?: string;
   styleReferenceImageUrl?: string;
 }): ReferenceImageDescriptor[] {
   const descriptors: ReferenceImageDescriptor[] = [];
+
+  if (params.childPhotoUrl) {
+    descriptors.push({
+      role: "child_photo",
+      url: params.childPhotoUrl,
+    });
+  }
 
   if (params.baseGenerationImageUrl) {
     descriptors.push({
@@ -198,6 +206,12 @@ export function buildReferenceImageInstruction(referenceImageRoles: ReferenceIma
 
   referenceImageRoles.forEach((descriptor, index) => {
     const imageNumber = index + 1;
+
+    if (descriptor.role === "child_photo") {
+      lines.push(
+        `Reference image ${imageNumber}: this is a real photo of the child, provided only as a soft likeness hint. Do NOT reproduce the photo realistically. Transform it into a gentle, non-photorealistic Japanese picture book character. Borrow only general traits such as approximate hairstyle, hair color, and overall warm impression. Do not copy the exact face, skin texture, background, clothing, or any identifying detail from the photo. The result must look clearly fictional, illustrated, and child-safe, never like a photograph or a realistic likeness of a specific real person.`
+      );
+    }
 
     if (descriptor.role === "base_generation") {
       lines.push(
@@ -322,6 +336,7 @@ export async function processAvatarGeneration(params: {
     revisionRequest?: AvatarRevisionRequest;
     baseGenerationId?: string;
     variantStyle?: IllustrationStyle;
+    usePhoto?: boolean;
   };
 }): Promise<{
   batchId: string;
@@ -365,7 +380,11 @@ export async function processAvatarGeneration(params: {
   const candidates: AvatarCandidate[] = [];
 
   const styleReferenceImageUrl = toPublicUrl(getStyleReferenceImagePath(selectedVariant.style));
+  // 写真参照は初回生成（ベース画像なし）でのみ本人らしさのヒントとして使う。
+  // 修正生成では承認済み／ベース画像を優先し、写真は混ぜない（顔がぶれるのを防ぐ）。
+  const childPhotoUrl = request.usePhoto && !baseGenerationImageUrl ? child.photoUrl : undefined;
   const referenceImageRoles = buildReferenceImageRoles({
+    childPhotoUrl,
     baseGenerationImageUrl,
     approvedImageUrl: child.visualProfile?.approvedImageUrl,
     styleReferenceImageUrl,
