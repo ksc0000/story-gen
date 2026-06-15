@@ -18,6 +18,7 @@ import { resolveOpenAIModelLabel } from "../lib/openai-image";
 import {
   logGenerationEvent,
   resolveProviderFromProfile,
+  classifyFallbackReasonClass,
 } from "../lib/generation-event-logger";
 import {
   createImageAdapter,
@@ -59,6 +60,15 @@ export async function generateCoverImageWithFallback(params: {
   openaiApiKey?: string;
   imageClient?: ImageClient;
   uploadCoverImage?: CoverImageUploadFn;
+  /**
+   * P5-3f: Option C Step b config for cover.
+   * When provided and Step a fails on the primary profile, retry with this prompt and
+   * inputImageUrls=[] before falling back to klein_fast (Step c).
+   */
+  stepBConfig?: {
+    prompt: string;
+    inputImageUrls: string[];
+  };
 }): Promise<CoverImageResult> {
   const primaryProfile = resolveImageModelProfile({
     purpose: "book_cover",
@@ -74,6 +84,30 @@ export async function generateCoverImageWithFallback(params: {
     const maxRetries = 2;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       totalAttempts++;
+
+      // P5-3f: Option C Step b — on the primary profile's second attempt (attempt === 1),
+      // use the simplified prompt with no reference images to bypass safety rejections.
+      const useStepBParams =
+        params.stepBConfig != null &&
+        profile === primaryProfile &&
+        attempt === 1;
+
+      const effectivePrompt = useStepBParams ? params.stepBConfig!.prompt : params.coverImagePrompt;
+      const effectiveInputImageUrls = useStepBParams ? params.stepBConfig!.inputImageUrls : params.inputImageUrls;
+
+      if (useStepBParams) {
+        logger.info("p5_model_unification_retry_active", {
+          bookId: params.bookId,
+          pageIndex: -1, // -1 for cover
+          step: "b",
+          originalProfile: primaryProfile,
+          retryProfile: profile,
+          inputReferenceCount: (params.inputImageUrls ?? []).length,
+          retryInputReferenceCount: 0,
+          fallbackReasonClass: classifyFallbackReasonClass(lastFailureReason),
+        });
+      }
+
       try {
         const pid = resolveImageProviderId(profile);
         const hasToken = pid === "replicate" ? !!params.replicateApiToken : !!params.openaiApiKey;
@@ -94,9 +128,9 @@ export async function generateCoverImageWithFallback(params: {
 
           const result = await withImageTimeout(
             adapter.generateImage({
-              prompt: params.coverImagePrompt,
+              prompt: effectivePrompt,
               imageModelProfile: profile,
-              inputImageUrls: params.inputImageUrls,
+              inputImageUrls: effectiveInputImageUrls,
               metadata: {
                 bookId: params.bookId,
               },
@@ -111,7 +145,7 @@ export async function generateCoverImageWithFallback(params: {
                 imageQualityTier: params.imageQualityTier,
                 imageModelProfile: profile,
               })
-            : resolveOpenAIModelLabel((params.inputImageUrls ?? []).length > 0);
+            : resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
 
           logGenerationEvent({
             eventName: "page_image_succeeded",
@@ -141,11 +175,11 @@ export async function generateCoverImageWithFallback(params: {
         // Legacy path fallback (primarily for test environments without adapter tokens)
         if (params.imageClient) {
           const buffer = await withImageTimeout(
-            params.imageClient.generateImage(params.coverImagePrompt, {
+            params.imageClient.generateImage(effectivePrompt, {
               purpose: "book_cover",
               imageQualityTier: params.imageQualityTier,
               imageModelProfile: profile,
-              inputImageUrls: params.inputImageUrls,
+              inputImageUrls: effectiveInputImageUrls,
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
@@ -158,7 +192,7 @@ export async function generateCoverImageWithFallback(params: {
                 imageQualityTier: params.imageQualityTier,
                 imageModelProfile: profile,
               })
-            : resolveOpenAIModelLabel((params.inputImageUrls ?? []).length > 0);
+            : resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
 
           logGenerationEvent({
             eventName: "page_image_succeeded",

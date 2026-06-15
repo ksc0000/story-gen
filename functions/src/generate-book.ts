@@ -68,6 +68,7 @@ import {
 import {
   logGenerationEvent,
   logPromptAnalysis,
+  classifyFallbackReasonClass,
   categorizeError,
   classifyError,
   classifyStoryJsonFailure,
@@ -639,24 +640,6 @@ interface PageImageResult {
 }
 
 
-/**
- * P5-3f: Classify why Step a failed so the diagnostic log can report the cause category.
- * Returns one of "safety_rejection" (E005/flagged), "timeout", or "other".
- * Never logs raw error text — only the classified string is emitted.
- */
-function classifyFallbackReasonClass(
-  failureReason: string | undefined
-): "safety_rejection" | "timeout" | "other" {
-  if (!failureReason) return "other";
-  const lower = failureReason.toLowerCase();
-  if (lower.includes("e005") || lower.includes("flagged") || lower.includes("sensitive")) {
-    return "safety_rejection";
-  }
-  if (failureReason === "image_timeout" || lower.includes("timeout")) {
-    return "timeout";
-  }
-  return "other";
-}
 
 async function generatePageImageWithFallback(params: {
   prompt: string;
@@ -1693,6 +1676,15 @@ export async function processBookGeneration(
         )
       : undefined;
 
+    const coverStepBConfig =
+      coverImagePrompt &&
+      (isSaferRetryEnabled(normalizedBookData.imageModelProfile || "klein_fast") || deps.p5ModelUnification === "safer_retry")
+        ? {
+            prompt: buildP5SimplifiedPagePrompt(baseCoverPrompt, normalizedBookData.style, { hasAnimalCharacters: normalizedBookData.theme === "animals" }),
+            inputImageUrls: [] as string[],
+          }
+        : undefined;
+
     let coverMetadata: Record<string, unknown> | undefined;
     if (coverImagePrompt && deps.uploadCoverImage) {
       try {
@@ -1714,6 +1706,7 @@ export async function processBookGeneration(
           openaiApiKey: deps.openaiApiKey,
           imageClient: deps.imageClient,
           uploadCoverImage: deps.uploadCoverImage,
+          stepBConfig: coverStepBConfig,
         });
 
         if (coverResult.success) {

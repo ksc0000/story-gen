@@ -575,3 +575,22 @@ export function logGenerationEvent(event: GenerationEvent): void {
 export function logPromptAnalysis(event: PromptAnalysisEvent): void {
   logGenerationEvent(event);
 }
+
+/**
+ * Classify a failure reason string into a coarse category for "Safer Retry" logging.
+ * Returns one of "safety_rejection" (E005/flagged), "timeout", or "other".
+ * Never logs raw error text — only the classified string is emitted.
+ */
+export function classifyFallbackReasonClass(
+  failureReason: string | undefined
+): "safety_rejection" | "timeout" | "other" {
+  if (!failureReason) return "other";
+  const lower = failureReason.toLowerCase();
+  if (lower.includes("e005") || lower.includes("flagged") || lower.includes("sensitive")) {
+    return "safety_rejection";
+  }
+  if (failureReason === "image_timeout" || lower.includes("timeout")) {
+    return "timeout";
+  }
+  return "other";
+}

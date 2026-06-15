@@ -3,8 +3,13 @@ import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 import { randomUUID } from "crypto";
-import { buildCoverImagePrompt, buildFinalCharacterBible } from "./lib/prompt-builder";
+import {
+  buildCoverImagePrompt,
+  buildFinalCharacterBible,
+  buildP5SimplifiedPagePrompt,
+} from "./lib/prompt-builder";
 import { getAgeReadingProfile } from "./lib/age-reading-profile";
+import { isSaferRetryEnabled } from "./lib/image-model-policy";
 import type { ImageModelProfile, CoverStatus, BookData } from "./lib/types";
 import { generateCoverImageWithFallback } from "./controllers/imageGeneration";
 
@@ -175,6 +180,15 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
         return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
       };
 
+      const coverStepBConfig = isSaferRetryEnabled(bookData.imageModelProfile || "klein_fast")
+        ? {
+            prompt: buildP5SimplifiedPagePrompt(bookData.coverImagePrompt || "", bookData.style, {
+              hasAnimalCharacters: bookData.theme === "animals",
+            }),
+            inputImageUrls: [] as string[],
+          }
+        : undefined;
+
       coverResult = await generateCoverImageWithFallback({
         coverImagePrompt: fullCoverPrompt,
         bookId,
@@ -182,6 +196,7 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
         imageModelProfile: bookData.imageModelProfile,
         replicateApiToken: replicateApiToken.value(),
         uploadCoverImage,
+        stepBConfig: coverStepBConfig,
       });
     } catch (err) {
       logger.error("Cover regeneration unexpected error", {
