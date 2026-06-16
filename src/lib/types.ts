@@ -92,6 +92,73 @@ export type IllustrationStyle =
 export type PageCount = 4 | 8 | 12;
 export type QualityReviewScore = 1 | 2 | 3 | 4 | 5;
 
+export type CharacterRole =
+  | "hero"
+  | "buddy"
+  | "guide"
+  | "guardian"
+  | "comic_relief";
+
+export type ProtagonistType =
+  | "child"
+  | "original_character"
+  | "child_with_original_character"
+  | "family_or_pet";
+
+export interface OriginalCharacterSnapshot {
+  name: string;
+  species: string;
+  role: CharacterRole;
+  personalityTraits: string[];
+  specialPower: string;
+  weaknessOrQuirk?: string;
+  visualProfile: {
+    characterBible: string;
+    approvedImageUrl?: string;
+    basePrompt: string;
+    mainColor: string;
+    accentColor?: string;
+  };
+}
+
+export interface OriginalCharacterDoc {
+  userId: string;
+  childId?: string | null;
+
+  name: string;
+  species: string;
+  role: CharacterRole;
+  personalityTraits: string[];
+  specialPower: string;
+  weaknessOrQuirk?: string;
+
+  visualProfile: {
+    bodyShape: string;
+    mainColor: string;
+    accentColor?: string;
+    faceFeatures: string;
+    outfitOrItem?: string;
+    texture?: string;
+    sizeFeeling: string;
+    characterBible: string;
+    approvedImageUrl?: string;
+    referenceImageUrl?: string;
+    basePrompt: string;
+    negativePrompt?: string;
+    version: number;
+  };
+
+  storyUsage: {
+    suitableThemes: string[];
+    avoidThemes: string[];
+    defaultRoleInStory: string;
+  };
+
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  active: boolean;
+}
+
 export interface StoryQualityAxes {
   childPersonalization: QualityReviewScore;
   storyCoherence: QualityReviewScore;
@@ -593,6 +660,9 @@ export interface BookDoc {
   expiresAt: Timestamp | null;
   public?: boolean;
   seriesId?: string;
+  protagonistType?: ProtagonistType;
+  originalCharacterId?: string | null;
+  originalCharacterSnapshot?: OriginalCharacterSnapshot;
 }
 
 export interface SeriesDoc {

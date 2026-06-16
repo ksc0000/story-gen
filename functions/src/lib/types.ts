@@ -93,6 +93,73 @@ export type IllustrationStyle =
 export type PageCount = 4 | 8 | 12;
 export type QualityReviewScore = 1 | 2 | 3 | 4 | 5;
 
+export type CharacterRole =
+  | "hero"
+  | "buddy"
+  | "guide"
+  | "guardian"
+  | "comic_relief";
+
+export type ProtagonistType =
+  | "child"
+  | "original_character"
+  | "child_with_original_character"
+  | "family_or_pet";
+
+export interface OriginalCharacterSnapshot {
+  name: string;
+  species: string;
+  role: CharacterRole;
+  personalityTraits: string[];
+  specialPower: string;
+  weaknessOrQuirk?: string;
+  visualProfile: {
+    characterBible: string;
+    approvedImageUrl?: string;
+    basePrompt: string;
+    mainColor: string;
+    accentColor?: string;
+  };
+}
+
+export interface OriginalCharacterData {
+  userId: string;
+  childId?: string | null;
+
+  name: string;
+  species: string;
+  role: CharacterRole;
+  personalityTraits: string[];
+  specialPower: string;
+  weaknessOrQuirk?: string;
+
+  visualProfile: {
+    bodyShape: string;
+    mainColor: string;
+    accentColor?: string;
+    faceFeatures: string;
+    outfitOrItem?: string;
+    texture?: string;
+    sizeFeeling: string;
+    characterBible: string;
+    approvedImageUrl?: string;
+    referenceImageUrl?: string;
+    basePrompt: string;
+    negativePrompt?: string;
+    version: number;
+  };
+
+  storyUsage: {
+    suitableThemes: string[];
+    avoidThemes: string[];
+    defaultRoleInStory: string;
+  };
+
+  createdAt: FirebaseFirestore.Timestamp;
+  updatedAt: FirebaseFirestore.Timestamp;
+  active: boolean;
+}
+
 export interface StoryQualityAxes {
   childPersonalization: QualityReviewScore;
   storyCoherence: QualityReviewScore;
@@ -426,6 +493,9 @@ export interface BookData {
   input: BookInput;
   createdAt: FirebaseFirestore.Timestamp;
   expiresAt: FirebaseFirestore.Timestamp | null;
+  protagonistType?: ProtagonistType;
+  originalCharacterId?: string | null;
+  originalCharacterSnapshot?: OriginalCharacterSnapshot;
   generationMode?: GenerationMode;
   generationDurationMs?: number;
   averageImageDurationMs?: number;
