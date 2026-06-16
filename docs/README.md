@@ -13,6 +13,13 @@ EhonAI / story-gen の設計メモと運用資料の入口です。
   - オリジナル相棒キャラクター機能の拡張案
   - `users/{userId}/children/{childId}` と `users/{userId}/originalCharacters/{characterId}` を前提にした設計
 
+## 機能設計
+
+- [COVER_PAGE_GENERATION_DESIGN.md](./COVER_PAGE_GENERATION_DESIGN.md)
+  - 表紙・タイトルページ・導入ナレーションの設計
+- [PDF_OUTPUT_DESIGN.md](./PDF_OUTPUT_DESIGN.md)
+  - PDF出力機能（Puppeteer / Cloud Functions）の設計
+
 ## 商品化ロードマップ
 
 - [PRODUCT_ROADMAP.md](./PRODUCT_ROADMAP.md)
