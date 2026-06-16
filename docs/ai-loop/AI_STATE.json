@@ -136,6 +136,7 @@
     "PR #428: fix: companions now appear in fixed-template book images (merged)",
     "PR #430: Implement Script for Human vs. LLM Auto Review Score Comparison (merged)",
     "PR #431: fix: reduce animal face leakage and night scene style drift (merged)",
+    "PR #440: Design Document for User Account and Child Profile Deletion (merged)",
     "PR #443: fix: companion UI cleanup, terminology unification, and text length increase (merged)",
     "PR #445: fix: enforce registered companion appearance over Gemini hallucination (merged)",
     "PR #447: fix: anchor recurring character face geometry to the reference (merged)",
