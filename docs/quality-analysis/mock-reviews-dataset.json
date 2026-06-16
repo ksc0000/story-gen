@@ -1,0 +1,118 @@
+[
+  {
+    "bookId": "book-01-agreement-good",
+    "human": {
+      "storyScore": 5, "illustrationScore": 5, "characterConsistencyScore": 4, "personalizationScore": 5, "safetyScore": 5, "overallScore": 4.8,
+      "flaggedIssues": []
+    },
+    "llm": {
+      "storyScore": 5, "illustrationScore": 5, "characterConsistencyScore": 4, "personalizationScore": 5, "safetyScore": 5, "overallScore": 4.8,
+      "flaggedIssues": []
+    }
+  },
+  {
+    "bookId": "book-02-llm-lenient-story",
+    "human": {
+      "storyScore": 2, "illustrationScore": 4, "characterConsistencyScore": 4, "personalizationScore": 4, "safetyScore": 5, "overallScore": 3.4,
+      "flaggedIssues": [{ "area": "story", "message": "Plot is non-sensical for a 5-year old." }]
+    },
+    "llm": {
+      "storyScore": 4, "illustrationScore": 4, "characterConsistencyScore": 4, "personalizationScore": 4, "safetyScore": 5, "overallScore": 4.2,
+      "flaggedIssues": []
+    }
+  },
+  {
+    "bookId": "book-03-llm-harsh-illustration",
+    "human": {
+      "storyScore": 4, "illustrationScore": 4, "characterConsistencyScore": 4, "personalizationScore": 4, "safetyScore": 5, "overallScore": 4.0,
+      "flaggedIssues": []
+    },
+    "llm": {
+      "storyScore": 4, "illustrationScore": 2, "characterConsistencyScore": 3, "personalizationScore": 4, "safetyScore": 5, "overallScore": 3.6,
+      "flaggedIssues": [{ "area": "illustration", "message": "Minor distortion in background characters." }]
+    }
+  },
+  {
+    "bookId": "book-04-char-drift-missed",
+    "human": {
+      "storyScore": 4, "illustrationScore": 4, "characterConsistencyScore": 2, "personalizationScore": 4, "safetyScore": 5, "overallScore": 3.6,
+      "flaggedIssues": [{ "area": "character", "message": "Main character changes hair color from blonde to brown in page 3." }]
+    },
+    "llm": {
+      "storyScore": 4, "illustrationScore": 4, "characterConsistencyScore": 4, "personalizationScore": 4, "safetyScore": 5, "overallScore": 4.2,
+      "flaggedIssues": []
+    }
+  },
+  {
+    "bookId": "book-05-safety-agreement",
+    "human": {
+      "storyScore": 3, "illustrationScore": 3, "characterConsistencyScore": 3, "personalizationScore": 3, "safetyScore": 1, "overallScore": 2.6,
+      "flaggedIssues": [{ "area": "safety", "message": "Shows dangerous activity without supervision." }]
+    },
+    "llm": {
+      "storyScore": 3, "illustrationScore": 3, "characterConsistencyScore": 3, "personalizationScore": 3, "safetyScore": 1, "overallScore": 2.6,
+      "flaggedIssues": [{ "area": "safety", "message": "Potential safety violation: child climbing tall ladder alone." }]
+    }
+  },
+  {
+    "bookId": "book-06-personalization-mismatch",
+    "human": {
+      "storyScore": 4, "illustrationScore": 4, "characterConsistencyScore": 4, "personalizationScore": 5, "safetyScore": 5, "overallScore": 4.4,
+      "flaggedIssues": []
+    },
+    "llm": {
+      "storyScore": 4, "illustrationScore": 4, "characterConsistencyScore": 4, "personalizationScore": 3, "safetyScore": 5, "overallScore": 4.0,
+      "flaggedIssues": [{ "area": "personalization", "message": "Child's favorite toy 'Teddy' mentioned but not visually distinct." }]
+    }
+  },
+  {
+    "bookId": "book-07-agreement-average",
+    "human": {
+      "storyScore": 3, "illustrationScore": 3, "characterConsistencyScore": 3, "personalizationScore": 3, "safetyScore": 5, "overallScore": 3.4,
+      "flaggedIssues": []
+    },
+    "llm": {
+      "storyScore": 3, "illustrationScore": 3, "characterConsistencyScore": 3, "personalizationScore": 3, "safetyScore": 5, "overallScore": 3.4,
+      "flaggedIssues": []
+    }
+  },
+  {
+    "bookId": "book-08-llm-missed-semantic",
+    "human": {
+      "storyScore": 2, "illustrationScore": 4, "characterConsistencyScore": 4, "personalizationScore": 4, "safetyScore": 5, "overallScore": 3.8,
+      "flaggedIssues": [{ "area": "story", "message": "Insufficient semantic content for age 5 (missing location and emotion)." }]
+    },
+    "llm": {
+      "storyScore": 4, "illustrationScore": 4, "characterConsistencyScore": 4, "personalizationScore": 4, "safetyScore": 5, "overallScore": 4.2,
+      "flaggedIssues": []
+    }
+  },
+  {
+    "bookId": "book-09-llm-hallucinated-issue",
+    "human": {
+      "storyScore": 5, "illustrationScore": 5, "characterConsistencyScore": 5, "personalizationScore": 5, "safetyScore": 5, "overallScore": 5.0,
+      "flaggedIssues": []
+    },
+    "llm": {
+      "storyScore": 5, "illustrationScore": 5, "characterConsistencyScore": 5, "personalizationScore": 5, "safetyScore": 5, "overallScore": 5.0,
+      "flaggedIssues": [{ "area": "character", "message": "Character hat size varies slightly (hallucination)" }]
+    }
+  },
+  {
+    "bookId": "book-10-consistent-low",
+    "human": {
+      "storyScore": 2, "illustrationScore": 2, "characterConsistencyScore": 2, "personalizationScore": 2, "safetyScore": 5, "overallScore": 2.6,
+      "flaggedIssues": [
+        { "area": "story", "message": "Boring." },
+        { "area": "illustration", "message": "Low quality." }
+      ]
+    },
+    "llm": {
+      "storyScore": 2, "illustrationScore": 2, "characterConsistencyScore": 2, "personalizationScore": 2, "safetyScore": 5, "overallScore": 2.6,
+      "flaggedIssues": [
+        { "area": "story", "message": "Repetitive narrative." },
+        { "area": "illustration", "message": "Artifacts detected." }
+      ]
+    }
+  }
+]
