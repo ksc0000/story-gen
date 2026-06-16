@@ -1,9 +1,11 @@
-# Implement `TemplateData` Fields for Page Count and Variant Management
+# Implement Backend Logic for User and Child Profile Deletion
 
 ## Context
 
-The product roadmap outlines the need to support 8-page and potentially 12-page story templates, along with variants of existing templates (Phase 3: Template Mode - T3-A). While some 8-page templates have been implemented and `PlanConfig` updated, the underlying `TemplateData` in Firestore still needs to be extended to fully support `availablePageCounts`, `variantOf`, and `variantLabel`. This is a foundational step for improving the template selection UI and enabling users to choose different page counts or template variations.
+The product roadmap outlines "delete account / delete child profile" as an unimplemented feature. A design document (`PR #440: Design Document for User Account and Child Profile Deletion (merged)`) has already been created and merged, detailing the approach for this critical user management and compliance feature.
+
+Currently, Phase 5 (Monetization) is in progress with Cohort B rollout, focusing on core functionality and user experience. Implementing foundational user management features like deletion is a necessary step towards a fully compliant and user-friendly product.
 
 ## Objective
 
-Extend the `FixedStoryTemplate` (and corresponding `TemplateData` Firestore structure) to include `availablePageCounts`, `variantOf`, and `variantLabel
+Implement the backend logic for securely deleting a user account and their associated child profiles, adhering to the specifications outlined in the `docs/USER_ACCOUNT_DELETION_
