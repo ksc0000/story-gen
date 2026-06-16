@@ -1,35 +1,9 @@
-# Analyze Human vs. LLM Auto Review Score Discrepancies
+# Implement `TemplateData` Fields for Page Count and Variant Management
 
 ## Context
 
-The product roadmap for Phase 2: Story & Illustration Quality includes "human review と LLM review の比較分析" as a key quality management task. `PR #430` recently implemented a script for comparing human and LLM auto review scores. With both human review persistence (`PR #365`, `PR #372`) and LLM auto review persistence (`PR #357`, `PR #368`, `PR #380`, `PR #427`) now in place, the next logical step is to execute this analysis to understand the current state of our quality assessment systems. This analysis will inform future refinements of LLM prompts or human review rubrics.
+The product roadmap outlines the need to support 8-page and potentially 12-page story templates, along with variants of existing templates (Phase 3: Template Mode - T3-A). While some 8-page templates have been implemented and `PlanConfig` updated, the underlying `TemplateData` in Firestore still needs to be extended to fully support `availablePageCounts`, `variantOf`, and `variantLabel`. This is a foundational step for improving the template selection UI and enabling users to choose different page counts or template variations.
 
 ## Objective
 
-Run the existing comparison script between human and LLM auto review scores, analyze the results to identify patterns, agreements, and discrepancies, and document the findings in a comprehensive report. This will provide actionable insights for improving the accuracy and alignment of our quality evaluation processes.
-
-## Allowed Scope
-
--   `functions/src/` (for potentially running or slightly modifying the analysis script)
--   `docs/` (for creating the analysis report and any related documentation)
--   `admin/` (if a very simple, immediate visualization is deemed necessary, but prefer a docs report first)
-
-## Forbidden Scope
-
--   Infrastructure changes (e.g., CI/CD, deployment pipelines)
--   Billing or subscription logic changes
--   Authentication or user management redesign
--   Secrets management changes
--   Changes to generated assets or core LLM generation logic (beyond analysis)
-
-## Requirements
-
--   Execute the comparison script (implemented in `PR #430`) using a sufficient dataset of books that have both human and LLM auto reviews.
--   Analyze the output to identify:
-    -   Overall correlation (or lack thereof) between human and LLM scores across all quality axes (Story, Illustration, Character, Personalization, Safety).
-    -   Specific categories or types of issues where LLM and human reviews consistently agree or disagree.
-    -   Examples of books where the LLM review was significantly different from the human review, and hypothesize potential reasons.
-    -   The distribution of discrepancies (e.g., is LLM always harsher/lenient?).
--   Generate a new Markdown document under `docs/quality-analysis/` (e.g., `docs/quality-analysis/human-llm-comparison-report-YYYYMMDD.md`) detailing the methodology, findings, and actionable recommendations.
--   The report should suggest concrete next steps for either refining LLM auto-review prompts or clarifying human review rubrics.
--
+Extend the `FixedStoryTemplate` (and corresponding `TemplateData` Firestore structure) to include `availablePageCounts`, `variantOf`, and `variantLabel
