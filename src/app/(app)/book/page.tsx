@@ -193,7 +193,7 @@ function BookContent() {
                 placeholder="新しいタイトル"
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleUpdateTitle();
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) handleUpdateTitle();
                   if (e.key === "Escape") setIsEditingTitle(false);
                 }}
                 disabled={isUpdatingTitle}
