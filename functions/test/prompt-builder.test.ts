@@ -245,6 +245,9 @@ describe("buildImagePrompt", () => {
     expect(result).toContain("Do not redesign recurring characters");
     expect(result).toContain("tiny purple top hat");
     expect(result).not.toContain("small blue bird");
+    // #446: face-geometry consistency clause must anchor recurring characters
+    // to the reference so face shape/proportions do not drift between pages.
+    expect(result).toContain("face shape and proportions consistent with the reference");
   });
   it("does NOT include cast descriptions when appearingCharacterIds is undefined (regression guard)", () => {
     const result = buildImagePrompt(
