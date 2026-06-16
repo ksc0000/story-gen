@@ -156,3 +156,8 @@ export function getPersonalityLabels(personalities: string[]): string[] {
     .map((p) => PERSONALITY_OPTIONS.find((o) => o.value === p)?.label)
     .filter((l): l is string => !!l);
 }
+
+export function getAbilityLabel(ability: string | undefined): string {
+  if (!ability) return "ひみつ";
+  return ABILITY_OPTIONS.find((o) => o.value === ability)?.label ?? ability;
+}

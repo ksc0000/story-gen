@@ -1,9 +1,15 @@
 import { createRequire } from "module";
-const require = createRequire(import.meta.url);
+import { fileURLToPath } from "url";
+import { readFileSync, existsSync } from "fs";
+import { resolve, dirname } from "path";
+
+// firebase-admin is installed in functions/node_modules, not the repo root.
+// Resolve it from functions/package.json (same pattern as the smoke scripts) so
+// this script runs from the repo root.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(resolve(__dirname, "../../functions/package.json"));
 const { initializeApp, cert, getApps } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
-import { readFileSync, existsSync } from "fs";
-import { resolve } from "path";
 
 /**
  * compare-human-llm-reviews.mjs

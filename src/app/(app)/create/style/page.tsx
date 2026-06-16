@@ -280,7 +280,7 @@ function StyleSelectionPageContent() {
           <SummaryItem label="テーマ" value={template?.name ?? "未設定"} />
           <SummaryItem label="ページ数" value={`${pageCount}ページ`} />
           <SummaryItem label="スタイル" value={selected ? getIllustrationStyleProfile(selected).name : "未選択"} />
-          {companionName ? <SummaryItem label="相棒" value={companionName} /> : null}
+          {companionName ? <SummaryItem label="なかよしキャラ" value={companionName} /> : null}
         </div>
         {(profile?.singleBookCredits || (profile?.singlePurchaseCredits?.ai_guided || 0) > 0 || (profile?.singlePurchaseCredits?.photo_story || 0) > 0) ? (
           <div className="mt-4 rounded-2xl bg-amber-50 p-3 text-xs text-amber-700">

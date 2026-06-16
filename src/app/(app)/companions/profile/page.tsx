@@ -14,6 +14,7 @@ import {
   getSpeciesEmoji,
   getSpeciesLabel,
   getPersonalityLabels,
+  getAbilityLabel,
   SIZE_OPTIONS,
   COLOR_OPTIONS,
 } from "../companions-utils";
@@ -210,7 +211,7 @@ function CompanionProfileContent() {
       {companion.specialAbility && (
         <div className="mt-5 rounded-2xl bg-gradient-to-br from-purple-50 to-violet-50 px-4 py-3 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-violet-400">とくいなこと</p>
-          <p className="mt-1 text-base font-medium text-purple-800">{companion.specialAbility}</p>
+          <p className="mt-1 text-base font-medium text-purple-800">{getAbilityLabel(companion.specialAbility)}</p>
         </div>
       )}
 

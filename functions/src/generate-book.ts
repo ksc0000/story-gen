@@ -68,6 +68,7 @@ import {
 import {
   logGenerationEvent,
   logPromptAnalysis,
+  classifyFallbackReasonClass,
   categorizeError,
   classifyError,
   classifyStoryJsonFailure,
@@ -450,10 +451,15 @@ export function normalizeStoryWithCompanion(
 
   if (existingCompanion) {
     effectiveCompanionId = existingCompanion.characterId;
-    // Ensure the visualBible is consistent with the selected companion's description
-    if (!existingCompanion.visualBible || existingCompanion.visualBible.length < 20) {
-      existingCompanion.visualBible = companionVisualDescription;
-    }
+    // The user-registered companion description (and its reference illustration)
+    // is the source of truth for color and species. Gemini frequently hallucinates
+    // a generic appearance — e.g. inventing an orange fox for a companion registered
+    // as gray — and that hallucinated text then fights the gray reference image,
+    // making the companion drift in color/species across pages. Enforce the
+    // registered description and drop the model-invented colorPalette so the only
+    // color signal in the prompt matches the reference illustration.
+    existingCompanion.visualBible = companionVisualDescription;
+    existingCompanion.colorPalette = undefined;
   } else {
     updatedCast.push({
       characterId: companionCharacterId,
@@ -719,24 +725,6 @@ interface PageImageResult {
 }
 
 
-/**
- * P5-3f: Classify why Step a failed so the diagnostic log can report the cause category.
- * Returns one of "safety_rejection" (E005/flagged), "timeout", or "other".
- * Never logs raw error text — only the classified string is emitted.
- */
-function classifyFallbackReasonClass(
-  failureReason: string | undefined
-): "safety_rejection" | "timeout" | "other" {
-  if (!failureReason) return "other";
-  const lower = failureReason.toLowerCase();
-  if (lower.includes("e005") || lower.includes("flagged") || lower.includes("sensitive")) {
-    return "safety_rejection";
-  }
-  if (failureReason === "image_timeout" || lower.includes("timeout")) {
-    return "timeout";
-  }
-  return "other";
-}
 
 async function generatePageImageWithFallback(params: {
   prompt: string;
@@ -1774,6 +1762,15 @@ export async function processBookGeneration(
         )
       : undefined;
 
+    const coverStepBConfig =
+      coverImagePrompt &&
+      (isSaferRetryEnabled(normalizedBookData.imageModelProfile || "klein_fast") || deps.p5ModelUnification === "safer_retry")
+        ? {
+            prompt: buildP5SimplifiedPagePrompt(baseCoverPrompt ?? "", normalizedBookData.style, { hasAnimalCharacters: normalizedBookData.theme === "animals" }),
+            inputImageUrls: [] as string[],
+          }
+        : undefined;
+
     let coverMetadata: Record<string, unknown> | undefined;
     if (coverImagePrompt && deps.uploadCoverImage) {
       try {
@@ -1795,6 +1792,7 @@ export async function processBookGeneration(
           openaiApiKey: deps.openaiApiKey,
           imageClient: deps.imageClient,
           uploadCoverImage: deps.uploadCoverImage,
+          stepBConfig: coverStepBConfig,
         });
 
         if (coverResult.success) {
