@@ -1,11 +1,9 @@
-# Implement User-Initiated Page Regeneration
+# Implement CRUD for Original Characters
 
 ## Context
 
-The product roadmap outlines various user experience improvements in Phase 6. While a user-facing regeneration flow for *partially failed* pages has been implemented (PR #347), a general "regenerate this page" feature (even if a page initially succeeded but the user is not satisfied) is still listed as a "推奨" (recommended) item under Phase 6. This enhancement empowers users with more control over their book's quality.
+The product roadmap (Section 0, "一部実装済み") explicitly states that `originalCharacters` have their type definitions and Firestore structure designed, but "本格CRUD未実装" (full CRUD not implemented). This refers to a feature allowing users to define and manage their own custom characters (beyond their child's avatar or pre-defined companions) for use in story generation. This is crucial for expanding the personalization capabilities, especially for the `original_ai` mode.
 
-Additionally, the Cohort B limited rollout is currently ongoing, and improving user satisfaction and control over generated content is a high priority. Enabling users to easily re-roll a page directly from the reader UI will contribute to higher perceived quality and personalization.
+Many foundational elements, such as core story generation, character consistency, image generation, and user/admin UIs, are already in place. Integrating custom `originalCharacters` will leverage these existing systems.
 
-## Objective
-
-Implement a user-facing "regener
+The current `Current State` shows extensive work on companion characters and child avatars, but
