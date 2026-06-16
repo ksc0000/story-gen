@@ -2300,6 +2300,13 @@ describe("normalizeBookForGeneration (Phase 3-C)", () => {
     expect(result.productPlan).toBe("premium_paid"); // Single purchase maps to premium_paid settings
   });
 
+  it("allows 8-page fixed template for standard_paid productPlan with premium userPlan", () => {
+    const standardBookData = { ...baseBookData, productPlan: "standard_paid" as const };
+    const result = normalizeBookForGeneration(standardBookData, eightPageFixedTemplate, premiumUserPlan);
+    expect(result.pageCount).toBe(8);
+    expect(result.productPlan).toBe("standard_paid");
+  });
+
   it("blocks 12-page fixed template for standard_paid plan (simulated via free userPlan)", () => {
     // Standard paid users on the standard plan are simulated by passing standard_paid as the requested productPlan
     // if the user doesn't have a premium subscription.
