@@ -789,7 +789,7 @@ function AiBriefPageContent() {
                       value={freeInputValue}
                       onChange={(e) => setFreeInputValue(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") handleTextConfirm(currentQuestion.id);
+                        if (e.key === "Enter" && !e.nativeEvent.isComposing) handleTextConfirm(currentQuestion.id);
                       }}
                       placeholder={currentQuestion.textPlaceholder ?? "入力してください"}
                       className="w-full rounded-xl border border-violet-200 px-3 py-2.5 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
@@ -845,7 +845,7 @@ function AiBriefPageContent() {
                                 value={freeInputValue}
                                 onChange={(e) => setFreeInputValue(e.target.value)}
                                 onKeyDown={(e) => {
-                                  if (e.key === "Enter") handleTextConfirm(currentQuestion.id);
+                                  if (e.key === "Enter" && !e.nativeEvent.isComposing) handleTextConfirm(currentQuestion.id);
                                 }}
                                 placeholder="自由に入力してください"
                                 className="w-full rounded-xl border border-violet-200 px-3 py-2.5 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
