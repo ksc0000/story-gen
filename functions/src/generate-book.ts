@@ -68,6 +68,7 @@ import {
 import {
   logGenerationEvent,
   logPromptAnalysis,
+  classifyFallbackReasonClass,
   categorizeError,
   classifyError,
   classifyStoryJsonFailure,
@@ -409,13 +410,96 @@ function normalizeStoryForBook(
     normalizeStoryCastWithChildProfile(story, bookData.childProfileSnapshot)
   );
 
+  const withCompanion = normalizeStoryWithCompanion(withNormalizedCast, mergedInput);
+
   return {
-    ...withNormalizedCast,
+    ...withCompanion,
     forbiddenQuestObjects: sanitizeForbiddenQuestObjects(
-      withNormalizedCast.forbiddenQuestObjects,
+      withCompanion.forbiddenQuestObjects,
       bookData,
       mergedInput
     ),
+  };
+}
+
+/**
+ * Ensures the companion character is correctly registered in the cast and appears
+ * in at least 50% of the pages.
+ */
+export function normalizeStoryWithCompanion(
+  story: GeneratedStory,
+  mergedInput: BookInput
+): GeneratedStory {
+  const { companionId, companionName, companionVisualDescription } = mergedInput;
+  if (!companionId || !companionName || !companionVisualDescription) {
+    return story;
+  }
+
+  const companionCharacterId = "companion_character";
+  const companionNameLower = companionName.toLowerCase();
+
+  // 1. Check if companion is already in cast
+  const existingCompanion = story.cast?.find(
+    (c) =>
+      c.characterId === companionCharacterId ||
+      c.displayName.toLowerCase().includes(companionNameLower) ||
+      companionNameLower.includes(c.displayName.toLowerCase())
+  );
+
+  let updatedCast = story.cast ? [...story.cast] : [];
+  let effectiveCompanionId = companionCharacterId;
+
+  if (existingCompanion) {
+    effectiveCompanionId = existingCompanion.characterId;
+    // The user-registered companion description (and its reference illustration)
+    // is the source of truth for color and species. Gemini frequently hallucinates
+    // a generic appearance — e.g. inventing an orange fox for a companion registered
+    // as gray — and that hallucinated text then fights the gray reference image,
+    // making the companion drift in color/species across pages. Enforce the
+    // registered description and drop the model-invented colorPalette so the only
+    // color signal in the prompt matches the reference illustration.
+    existingCompanion.visualBible = companionVisualDescription;
+    existingCompanion.colorPalette = undefined;
+  } else {
+    updatedCast.push({
+      characterId: companionCharacterId,
+      displayName: companionName,
+      role: "buddy" as StoryCharacterRole,
+      characterKind: "magical_creature" as StoryCharacterKind,
+      visualBible: companionVisualDescription,
+      nonHuman: true,
+      noHumanFace: true,
+      noHumanBody: true,
+    });
+  }
+
+  // 2. Ensure presence in >= 50% of pages
+  const totalPages = story.pages.length;
+  const targetCount = Math.ceil(totalPages * 0.5);
+  const appearingIndices = story.pages
+    .map((p, i) => (p.appearingCharacterIds?.includes(effectiveCompanionId) ? i : -1))
+    .filter((i) => i !== -1);
+
+  let currentCount = appearingIndices.length;
+  const updatedPages = story.pages.map((page, index) => {
+    const isPresent = page.appearingCharacterIds?.includes(effectiveCompanionId);
+    if (isPresent) return page;
+
+    // If we still need more appearances, add to this page (prefer even pages)
+    if (currentCount < targetCount && index % 2 === 0) {
+      currentCount++;
+      return {
+        ...page,
+        appearingCharacterIds: [...(page.appearingCharacterIds || []), effectiveCompanionId],
+      };
+    }
+    return page;
+  });
+
+  return {
+    ...story,
+    cast: updatedCast,
+    pages: updatedPages,
   };
 }
 
@@ -600,6 +684,8 @@ export interface GenerationDeps {
     data: Record<string, unknown>
   ) => Promise<void>;
   getUserMonthlyCount: (userId: string) => Promise<number>;
+  /** 管理者（admin カスタムクレーム保持者）かどうか。テスト生成のため月次上限を回避する。 */
+  isUserAdmin: (userId: string) => Promise<boolean>;
   incrementMonthlyCount: (userId: string) => Promise<void>;
   getUserCredits: (userId: string) => Promise<{
     singleBookCredits: number;
@@ -628,6 +714,7 @@ interface PageImageResult {
   imageUrl: string;
   imageBuffer?: Buffer;
   usedProfile: ImageModelProfile;
+  imageModel: string;
   primaryProfile: ImageModelProfile;
   fallbackUsed: boolean;
   attemptCount: number;
@@ -638,24 +725,6 @@ interface PageImageResult {
 }
 
 
-/**
- * P5-3f: Classify why Step a failed so the diagnostic log can report the cause category.
- * Returns one of "safety_rejection" (E005/flagged), "timeout", or "other".
- * Never logs raw error text — only the classified string is emitted.
- */
-function classifyFallbackReasonClass(
-  failureReason: string | undefined
-): "safety_rejection" | "timeout" | "other" {
-  if (!failureReason) return "other";
-  const lower = failureReason.toLowerCase();
-  if (lower.includes("e005") || lower.includes("flagged") || lower.includes("sensitive")) {
-    return "safety_rejection";
-  }
-  if (failureReason === "image_timeout" || lower.includes("timeout")) {
-    return "timeout";
-  }
-  return "other";
-}
 
 async function generatePageImageWithFallback(params: {
   prompt: string;
@@ -689,6 +758,7 @@ async function generatePageImageWithFallback(params: {
   const base: Omit<PageImageResult, "success" | "imageUrl" | "imageBuffer"> = {
     pageIndex,
     usedProfile: primaryProfile,
+    imageModel: "",
     primaryProfile,
     fallbackUsed: false,
     attemptCount: 0,
@@ -761,15 +831,35 @@ async function generatePageImageWithFallback(params: {
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+          const durationMs = Date.now() - startMs;
+          const currentImageModel = resolveReplicateModel({
+            purpose: params.imagePurpose,
+            imageQualityTier: params.imageQualityTier,
+            imageModelProfile: profile,
+          });
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: params.pageIndex,
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: "replicate",
+            durationMs,
+            attemptCount: totalAttempts,
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           return {
             ...base,
             success: true,
             imageUrl: adapterResult.imageUrl,
             usedProfile: profile,
+            imageModel: currentImageModel,
             fallbackUsed: profile !== primaryProfile,
             attemptCount: totalAttempts,
             timeoutCount,
-            durationMs: Date.now() - startMs,
+            durationMs,
           };
         }
         // P3-15: Adapter path for OpenAI profiles.
@@ -794,15 +884,31 @@ async function generatePageImageWithFallback(params: {
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+          const durationMs = Date.now() - startMs;
+          const currentImageModel = resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: params.pageIndex,
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: "openai",
+            durationMs,
+            attemptCount: totalAttempts,
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           return {
             ...base,
             success: true,
             imageUrl: adapterResult.imageUrl,
             usedProfile: profile,
+            imageModel: currentImageModel,
             fallbackUsed: profile !== primaryProfile,
             attemptCount: totalAttempts,
             timeoutCount,
-            durationMs: Date.now() - startMs,
+            durationMs,
           };
         }
         // Legacy imageClient path — reached only when adapter tokens are absent
@@ -817,16 +923,39 @@ async function generatePageImageWithFallback(params: {
           }),
           IMAGE_GENERATION_TIMEOUT_MS
         );
+        const durationMs = Date.now() - startMs;
+        const currentProvider = resolveProviderFromProfile(profile);
+        const currentImageModel = currentProvider === "replicate"
+          ? resolveReplicateModel({
+              purpose: params.imagePurpose,
+              imageQualityTier: params.imageQualityTier,
+              imageModelProfile: profile,
+            })
+          : resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
+
+        logGenerationEvent({
+          eventName: "page_image_succeeded",
+          bookId: params.bookId,
+          pageIndex: params.pageIndex,
+          imageModelProfile: profile,
+          imageModel: currentImageModel,
+          provider: currentProvider,
+          durationMs,
+          attemptCount: totalAttempts,
+          fallbackUsed: profile !== primaryProfile,
+        });
+
         return {
           ...base,
           success: true,
           imageUrl: "",
           imageBuffer: buffer,
           usedProfile: profile,
+          imageModel: currentImageModel,
           fallbackUsed: profile !== primaryProfile,
           attemptCount: totalAttempts,
           timeoutCount,
-          durationMs: Date.now() - startMs,
+          durationMs,
         };
       } catch (err) {
         if (err instanceof ImageTimeoutError) {
@@ -968,6 +1097,7 @@ export async function processBookGeneration(
       }
     }
     const userPlan = await deps.getUserPlan(bookData.userId);
+    const isAdminUser = await deps.isUserAdmin(bookData.userId);
     const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
     const readingProfile = getAgeReadingProfile(mergedInput.childAge);
     const generationMode = normalizedBookData.generationMode ?? "reliable_fast";
@@ -987,7 +1117,7 @@ export async function processBookGeneration(
 
     if (process.env.NODE_ENV !== "development") {
       const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
-      quotaExceeded = !canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });
+      quotaExceeded = !canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount, isAdmin: isAdminUser });
 
       if (quotaExceeded || normalizedBookData.isSinglePurchase) {
         const credits = await deps.getUserCredits(bookData.userId);
@@ -1531,9 +1661,9 @@ export async function processBookGeneration(
         textSentenceCount: countSentences(storyPage.text),
         textQualityWarnings: collectPageTextQualityWarnings(qualityReport, i),
         status: pageStatus as PageData["status"],
-        imageModel: imageResult.usedProfile === "openai_image_candidate"
+        imageModel: imageResult.imageModel || (imageResult.usedProfile === "openai_image_candidate"
           ? resolveOpenAIModelLabel(finalInputImageUrls.length > 0)
-          : imageModel,
+          : imageModel),
         imageQualityTier,
         imagePurpose,
         inputImageRoles,
@@ -1632,6 +1762,15 @@ export async function processBookGeneration(
         )
       : undefined;
 
+    const coverStepBConfig =
+      coverImagePrompt &&
+      (isSaferRetryEnabled(normalizedBookData.imageModelProfile || "klein_fast") || deps.p5ModelUnification === "safer_retry")
+        ? {
+            prompt: buildP5SimplifiedPagePrompt(baseCoverPrompt ?? "", normalizedBookData.style, { hasAnimalCharacters: normalizedBookData.theme === "animals" }),
+            inputImageUrls: [] as string[],
+          }
+        : undefined;
+
     let coverMetadata: Record<string, unknown> | undefined;
     if (coverImagePrompt && deps.uploadCoverImage) {
       try {
@@ -1653,6 +1792,7 @@ export async function processBookGeneration(
           openaiApiKey: deps.openaiApiKey,
           imageClient: deps.imageClient,
           uploadCoverImage: deps.uploadCoverImage,
+          stepBConfig: coverStepBConfig,
         });
 
         if (coverResult.success) {
@@ -1769,8 +1909,10 @@ export async function processBookGeneration(
     await deps.updateBookStatus(bookId, bookStatus);
 
     if (bookStatus !== "failed") {
-      // Consumption logic: Prefer monthly quota, then single credits
-      if (process.env.NODE_ENV !== "development") {
+      // Consumption logic: Prefer monthly quota, then single credits.
+      if (isAdminUser) {
+        // 管理者のテスト生成は月次カウント・クレジットを一切消費しない。
+      } else if (process.env.NODE_ENV !== "development") {
         const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
         const canUseMonthly = canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });
 
@@ -1937,7 +2079,7 @@ export function normalizeBookForGeneration(
 }
 
 
-function buildInputImageRefs(
+export function buildInputImageRefs(
   childProfileSnapshot: BookData["childProfileSnapshot"] | undefined,
   cast: GeneratedStory["cast"],
   appearingCharacterIds?: string[],
@@ -2026,7 +2168,27 @@ function buildInputImageRefs(
       ) === index
   );
 
-  return deduped.slice(0, 2);
+  // 参照画像は最大2枚。子ども参照だけで2枠を使い切ると相棒の参照が押し出され、
+  // 相棒が絵に描かれなくなる。そのため「主人公以外（相棒）」の参照が1枚は入るよう優先選択する。
+  type Ref = (typeof deduped)[number];
+  const prioritized: Ref[] = [];
+  const pushUnique = (ref: Ref | undefined) => {
+    if (ref && !prioritized.includes(ref)) prioritized.push(ref);
+  };
+
+  // photo_story の元写真（style_reference）は顔の一貫性に必須なので最優先で残す。
+  pushUnique(deduped.find((ref) => ref.role === "style_reference"));
+  // 主人公の参照を1枚。
+  pushUnique(deduped.find((ref) => ref.characterId === "child_protagonist"));
+  // 相棒など主人公以外のキャラ参照を1枚。
+  pushUnique(deduped.find((ref) => ref.characterId && ref.characterId !== "child_protagonist"));
+  // 余った枠を元の優先順で埋める（相棒がいない通常の絵本は従来どおり子ども参照2枚になる）。
+  for (const ref of deduped) {
+    if (prioritized.length >= 2) break;
+    pushUnique(ref);
+  }
+
+  return prioritized.slice(0, 2);
 }
 
 function buildInputImageRoles(
@@ -2206,12 +2368,29 @@ async function ensureRecurringCharacterReferences(params: {
               IMAGE_GENERATION_TIMEOUT_MS
             );
 
+            logGenerationEvent({
+              eventName: "page_image_succeeded",
+              bookId: params.bookId,
+              pageIndex: -100 - index, // Conventional negative index for character references
+              imageModelProfile: profile,
+              imageModel: result.modelLabel || resolveReplicateModel({
+                purpose: imagePurpose,
+                imageQualityTier: params.normalizedBookData.imageQualityTier,
+                imageModelProfile: profile,
+              }),
+              provider: pid as "replicate" | "openai",
+              durationMs: result.durationMs ?? 0,
+              attemptCount: (profile === primaryProfile ? attempt + 1 : 2 + attempt + 1), // best effort attempt count
+              fallbackUsed: profile !== primaryProfile,
+            });
+
             url = result.imageUrl;
             success = true;
             break search_loop;
           }
 
           // Legacy path fallback (primarily for test environments without adapter tokens)
+          const refStartMs = Date.now();
           const buffer = await withImageTimeout(
             params.deps.imageClient.generateImage(referencePrompt, {
               purpose: imagePurpose,
@@ -2221,6 +2400,28 @@ async function ensureRecurringCharacterReferences(params: {
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+          const durationMs = Date.now() - refStartMs;
+          const currentProvider = resolveProviderFromProfile(profile);
+          const currentImageModel = currentProvider === "replicate"
+            ? resolveReplicateModel({
+                purpose: imagePurpose,
+                imageQualityTier: params.normalizedBookData.imageQualityTier,
+                imageModelProfile: profile,
+              })
+            : resolveOpenAIModelLabel(false);
+
+          logGenerationEvent({
+            eventName: "page_image_succeeded",
+            bookId: params.bookId,
+            pageIndex: -100 - index,
+            imageModelProfile: profile,
+            imageModel: currentImageModel,
+            provider: currentProvider,
+            durationMs,
+            attemptCount: (profile === primaryProfile ? attempt + 1 : 2 + attempt + 1),
+            fallbackUsed: profile !== primaryProfile,
+          });
+
           url = await params.deps.uploadImage(params.bookId, -100 - index, buffer);
           success = true;
           break search_loop;
@@ -2614,15 +2815,54 @@ function buildStoryFromFixedTemplate(
   readingProfile: { ageBand: AgeBand }
 ): GeneratedStory {
   const replacements = buildFixedTemplateReplacements(mergedInput);
-  const pages = fixedStory.pages.map((page) => ({
-    text: applyTemplateReplacements(
+
+  const companionId = mergedInput.companionId;
+  const companionName = mergedInput.companionName;
+  const companionVisual = mergedInput.companionVisualDescription;
+
+  const hasCompanion = Boolean(companionId && companionName && companionVisual);
+  const companionCharacterId = "companion_character";
+
+  const pages = fixedStory.pages.map((page, index) => {
+    const text = applyTemplateReplacements(
       page.textTemplatesByAge?.[readingProfile.ageBand]
         ?? page.textTemplatesByAge?.general_child
         ?? page.textTemplate,
       replacements
-    ),
-    imagePrompt: applyTemplateReplacements(page.imagePromptTemplate, replacements),
-  }));
+    );
+    const baseImagePrompt = applyTemplateReplacements(page.imagePromptTemplate, replacements);
+
+    // 相棒がいる場合、1ページおき（0, 2, 4...）に登場させる（半数以上）
+    const appearingCharacterIds = ["child_protagonist"];
+    let imagePrompt = baseImagePrompt;
+    if (hasCompanion && index % 2 === 0) {
+      appearingCharacterIds.push(companionCharacterId);
+      // 固定テンプレートの Scene 記述は相棒に触れないため、相棒を能動的にシーンへ配置する指示を加える。
+      // （cast の一貫性ガイダンスだけでは「補足」扱いになり描かれにくいため、Scene レベルで明示する）
+      imagePrompt = `${baseImagePrompt} Also clearly present in this scene: ${companionName} (${companionVisual}), a friendly companion staying close beside the child and joining the moment naturally. Draw ${companionName} as a visible part of the scene, not in the background.`;
+    }
+
+    return {
+      text,
+      imagePrompt,
+      pageVisualRole: page.pageVisualRole,
+      appearingCharacterIds,
+    };
+  });
+
+  const cast: StoryCharacter[] = [];
+  if (hasCompanion) {
+    cast.push({
+      characterId: companionCharacterId,
+      displayName: companionName!,
+      role: "buddy",
+      characterKind: "magical_creature",
+      visualBible: companionVisual!,
+      nonHuman: true,
+      noHumanFace: true,
+      noHumanBody: true,
+    });
+  }
 
   return {
     title: applyTemplateReplacements(fixedStory.titleTemplate, replacements),
@@ -2639,6 +2879,7 @@ function buildStoryFromFixedTemplate(
     styleBible: buildFixedStyleBible(bookData, template),
     narrativeDevice: undefined,
     pages,
+    cast: cast.length > 0 ? cast : undefined,
   };
 }
 
@@ -2995,6 +3236,16 @@ export const generateBook = onDocumentCreated(
         const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
         const countDoc = await db.collection("users").doc(userId).collection("usage").doc(yearMonth).get();
         return countDoc.exists ? (countDoc.data()?.count || 0) : 0;
+      },
+
+      isUserAdmin: async (userId: string) => {
+        try {
+          const userRecord = await admin.auth().getUser(userId);
+          return userRecord.customClaims?.admin === true;
+        } catch (err) {
+          console.error(`Failed to resolve admin claim for ${userId}:`, err);
+          return false;
+        }
       },
 
       incrementMonthlyCount: async (userId: string) => {

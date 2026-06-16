@@ -5,68 +5,72 @@ import { useRouter } from "next/navigation";
 import { httpsCallable } from "firebase/functions";
 import { Check, Loader2, Sparkles, Star } from "lucide-react";
 import { functions } from "@/lib/firebase";
-import { PLAN_CONFIGS } from "@/lib/plans";
+import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import type { ProductPlan } from "@/lib/types";
 
-type ProductPlan = "free" | "standard_paid" | "premium_paid";
-
-interface Plan {
+interface PlanDisplay {
   id: ProductPlan;
   label: string;
   price: number;
   description: string;
-  features: string[];
-  badge?: string;
   recommended?: boolean;
+  quota: string;
+  companions: string;
+  children: string;
+  quality: string;
 }
 
-const PLANS: Plan[] = [
+const PLAN_ORDER: Record<ProductPlan, number> = {
+  free: 0,
+  standard_paid: 1,
+  premium_paid: 2,
+};
+
+const DISPLAY_PLANS: PlanDisplay[] = [
   {
     id: "free",
-    label: "まずは無料で",
+    label: "無料プラン",
     price: 0,
-    description: "絵本作りを体験してみたい方向け",
-    features: [
-      "テンプレートから選ぶだけで作れる",
-      "毎月1冊まで",
-      "4ページの絵本",
-      "お子さんの写真・名前を反映",
-    ],
+    description: "まずは体験してみたい方に",
+    quota: `${PLAN_CONFIGS.free.monthlyBookQuota}冊`,
+    companions: "2体",
+    children: "1人",
+    quality: "標準",
   },
   {
     id: "standard_paid",
     label: PLAN_CONFIGS.standard_paid.label,
     price: PLAN_CONFIGS.standard_paid.priceJpy ?? 1480,
-    description: PLAN_CONFIGS.standard_paid.description,
-    badge: "おすすめ",
+    description: "一番人気のスタンダードなプラン",
     recommended: true,
-    features: [
-      `月${PLAN_CONFIGS.standard_paid.monthlyBookQuota}冊まで作成`,
-      "4・8ページ対応",
-      "高品質AI画像生成",
-      "テンプレート＆かんたんカスタム",
-      "キャラクター一貫性",
-    ],
+    quota: `${PLAN_CONFIGS.standard_paid.monthlyBookQuota}冊`,
+    companions: "5体",
+    children: "3人",
+    quality: "高画質",
   },
   {
     id: "premium_paid",
     label: PLAN_CONFIGS.premium_paid.label,
     price: PLAN_CONFIGS.premium_paid.priceJpy ?? 2980,
-    description: PLAN_CONFIGS.premium_paid.description,
-    badge: "高精細",
-    features: [
-      `月${PLAN_CONFIGS.premium_paid.monthlyBookQuota}冊まで作成`,
-      "4・8・12ページ対応",
-      "高精細AI画像生成（FLUX Kontext）",
-      "全作成モード対応（オリジナルも可）",
-      "キャラクター一貫性",
-    ],
+    description: "最高の品質でこだわりたい方に",
+    quota: `${PLAN_CONFIGS.premium_paid.monthlyBookQuota}冊`,
+    companions: "無制限",
+    children: "無制限",
+    quality: "最高画質",
   },
 ];
+
+const COMPARISON_ITEMS = [
+  { label: "月間作成冊数", key: "quota" },
+  { label: "なかよしキャラ登録数", key: "companions" },
+  { label: "子どもプロフィール", key: "children" },
+  { label: "画質", key: "quality" },
+] as const;
 
 export default function PricingPage() {
   const { user } = useAuth();
@@ -75,7 +79,7 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<ProductPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const currentPlan = profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free");
+  const currentPlan = resolveProductPlan(profile);
 
   async function handleUpgrade(productPlan: ProductPlan) {
     if (!user) {
@@ -128,110 +132,147 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-12">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen px-4 py-12 bg-slate-50/50">
+      <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-12 text-center">
-          <h1 className="app-title mb-3 text-3xl font-bold">プラン選択</h1>
-          <p className="app-subtitle text-base">
-            お子さんの思い出を、AIが美しい絵本に変えます
+          <h1 className="text-3xl font-bold mb-4">プランを選んで、思い出をカタチに</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            お子さんの成長や大切な思い出を、AIの力で世界に一つの絵本にします。
+            用途に合わせて最適なプランをお選びください。
           </p>
-          {profile?.plan === "premium" && (
-            <Badge className="mt-3 bg-amber-500/20 text-amber-700">
-              現在: {currentPlan === "premium_paid" ? "プレミアム" : "スタンダード"}プランご利用中
-            </Badge>
-          )}
         </div>
 
-        {/* Paid plans */}
-        <div className="grid gap-6 md:grid-cols-3">
-          {PLANS.map((plan) => {
+        {/* Comparison Table / Cards */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {DISPLAY_PLANS.map((plan) => {
             const isCurrentPlan = currentPlan === plan.id;
             const isLoading = loading === plan.id;
+            const isHigherPlan = PLAN_ORDER[plan.id] > PLAN_ORDER[currentPlan];
 
             return (
               <div
                 key={plan.id}
                 className={cn(
-                  "relative rounded-2xl border p-6 transition-shadow",
-                  plan.id === "free"
-                    ? "border-none bg-muted/50"
-                    : plan.recommended
-                    ? "border-primary bg-primary/5 shadow-md"
-                    : "border-border bg-card"
+                  "relative flex flex-col rounded-3xl border bg-white p-8 transition-all duration-200",
+                  plan.recommended
+                    ? "border-violet-500 shadow-xl shadow-violet-100 scale-105 z-10"
+                    : "border-slate-200 shadow-sm hover:shadow-md"
                 )}
               >
                 {plan.recommended && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground px-3 py-1 text-xs">
-                      <Star className="mr-1 h-3 w-3 fill-current" />
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-violet-600 hover:bg-violet-600 text-white px-4 py-1.5 rounded-full shadow-lg border-none flex items-center gap-1.5 font-bold tracking-wider">
+                      <Star className="h-4 w-4 fill-current" />
                       おすすめ
                     </Badge>
                   </div>
                 )}
 
-                <div className="mb-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold">{plan.label}</h2>
-                    {plan.badge && !plan.recommended && (
-                      <Badge variant="secondary">{plan.badge}</Badge>
+                <div className="mb-8 text-center">
+                  <h2 className="text-xl font-bold mb-2">{plan.label}</h2>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-4xl font-extrabold tracking-tight">
+                      {plan.price === 0 ? "無料" : `¥${plan.price.toLocaleString()}`}
+                    </span>
+                    {plan.price > 0 && (
+                      <span className="text-muted-foreground font-medium">/月</span>
                     )}
                   </div>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-3xl font-bold">¥{plan.price.toLocaleString()}</span>
-                    <span className="text-sm text-muted-foreground">/月</span>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                    {plan.description}
+                  </p>
                 </div>
 
-                <ul className="mb-6 space-y-2">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <span>{feature}</span>
-                    </li>
+                {/* Comparison Items */}
+                <div className="flex-1 space-y-4 mb-8">
+                  {COMPARISON_ITEMS.map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0"
+                    >
+                      <span className="text-sm font-medium text-slate-600">{item.label}</span>
+                      <span className="text-sm font-bold text-slate-900">
+                        {plan[item.key as keyof typeof plan]}
+                      </span>
+                    </div>
                   ))}
-                </ul>
 
-                <Button
-                  className="w-full"
-                  variant={plan.recommended ? "default" : "outline"}
-                  disabled={isCurrentPlan || isLoading}
-                  onClick={() =>
-                    plan.id === "free"
-                      ? router.push("/create")
-                      : handleUpgrade(plan.id)
-                  }
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      処理中...
-                    </>
-                  ) : isCurrentPlan ? (
-                    "現在のプラン"
+                  {/* Additional features based on plan */}
+                  <div className="pt-4 space-y-3">
+                    <div className="flex items-start gap-2.5 text-sm">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+                      <span className="text-slate-600">
+                        {plan.id === "free" ? "4ページ対応" :
+                         plan.id === "standard_paid" ? "4・8ページ対応" : "4・8・12ページ対応"}
+                      </span>
+                    </div>
+                    {plan.id !== "free" && (
+                      <div className="flex items-start gap-2.5 text-sm">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+                        <span className="text-slate-600">キャラクター一貫性維持</span>
+                      </div>
+                    )}
+                    {plan.id === "premium_paid" && (
+                      <div className="flex items-start gap-2.5 text-sm">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+                        <span className="text-slate-600 text-left">すべての作成モードに対応</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-6">
+                  {isCurrentPlan ? (
+                    <Button className="w-full h-12 rounded-xl" variant="secondary" disabled>
+                      現在のプラン
+                    </Button>
+                  ) : isHigherPlan ? (
+                    <Button
+                      className={cn(
+                        "w-full h-12 rounded-xl font-bold text-base transition-all duration-200",
+                        plan.recommended
+                          ? "bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-200"
+                          : "bg-white border-2 border-slate-200 hover:border-violet-200 hover:bg-slate-50 text-slate-900"
+                      )}
+                      disabled={isLoading}
+                      onClick={() => handleUpgrade(plan.id)}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          アップグレード
+                        </>
+                      )}
+                    </Button>
                   ) : plan.id === "free" ? (
-                    "無料ではじめる"
+                     <Button
+                        className="w-full h-12 rounded-xl text-slate-600 hover:text-slate-900"
+                        variant="ghost"
+                        onClick={() => router.push("/create")}
+                     >
+                        無料ではじめる
+                     </Button>
                   ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      このプランにアップグレード
-                    </>
+                    <div className="h-12" /> // Empty space for lower plans
                   )}
-                </Button>
+                </div>
               </div>
             );
           })}
         </div>
 
         {/* Single Purchase Section */}
-        <div className="mt-16 rounded-2xl border bg-muted/30 p-8">
-          <div className="mb-8 text-center">
-            <h2 className="text-2xl font-bold">特別な1冊を、単品で購入</h2>
-            <p className="mt-2 text-muted-foreground">
-              月額プランに入らず、必要な時だけ1冊ずつ作成できます。
+        <div className="mt-24 rounded-[2rem] border-2 border-dashed border-slate-200 p-10 bg-white/50">
+          <div className="mb-10 text-center">
+            <Badge variant="outline" className="mb-4 border-slate-300 text-slate-500">単品購入オプション</Badge>
+            <h2 className="text-2xl font-bold mb-3">特別な1冊を、必要な時だけ</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              月額プランに加入せず、特定のモードで1冊ずつ作成できます。
               {profile?.singleBookCredits ? (
-                <span className="ml-2 inline-block font-bold text-primary">
+                <span className="ml-1 inline-block font-bold text-violet-600">
                   （現在 {profile.singleBookCredits} クレジット保有中）
                 </span>
               ) : null}
@@ -239,52 +280,44 @@ export default function PricingPage() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-xl border bg-card p-6 shadow-sm">
-              <h3 className="text-lg font-bold">特別な1冊</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-2xl font-bold">¥1,500</span>
-                <span className="text-sm text-muted-foreground">/ 1冊分</span>
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold">特別な1冊（かんたんカスタム）</h3>
+                <span className="text-xl font-bold text-slate-900">¥1,500</span>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                「かんたんカスタム」でこだわりの1冊を。月額プランを超えて作成したい場合にも。
+              <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                「かんたんカスタム」でこだわりの1冊を。月額プランの上限を超えて作りたい場合にも便利です。
               </p>
               <Button
-                className="mt-6 w-full"
+                className="w-full h-12 rounded-xl"
                 variant="outline"
                 disabled={!!singlePurchaseLoading}
                 onClick={() => handleSinglePurchase("ai_guided")}
               >
                 {singlePurchaseLoading === "ai_guided" ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    処理中...
-                  </>
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   "単品購入する"
                 )}
               </Button>
             </div>
 
-            <div className="rounded-xl border bg-card p-6 shadow-sm">
-              <h3 className="text-lg font-bold">Photo Story 単品</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-2xl font-bold">¥2,000</span>
-                <span className="text-sm text-muted-foreground">/ 1冊分</span>
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold">Photo Story 単品</h3>
+                <span className="text-xl font-bold text-slate-900">¥2,000</span>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                お子さんの写真から作る「Photo Story」を1冊分。特別なイベントの思い出に。
+              <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                お手持ちの写真からAIが物語を紡ぐ「Photo Story」を1冊分。イベントの思い出に。
               </p>
               <Button
-                className="mt-6 w-full"
+                className="w-full h-12 rounded-xl"
                 variant="outline"
                 disabled={!!singlePurchaseLoading}
                 onClick={() => handleSinglePurchase("photo_story")}
               >
                 {singlePurchaseLoading === "photo_story" ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    処理中...
-                  </>
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   "単品購入する"
                 )}
@@ -293,52 +326,20 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Premium Benefits Gallery */}
-        <div className="mt-16">
-          <h2 className="mb-8 text-center text-2xl font-bold">プレミアムでできること</h2>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="rounded-2xl border bg-card p-6 shadow-sm">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-2xl">
-                📚
-              </div>
-              <h3 className="mb-2 font-bold">12ページの長編絵本</h3>
-              <p className="text-sm text-muted-foreground">
-                物語の深みが増す、ボリュームたっぷりの12ページ構成で、より豊かな読書体験を。
-              </p>
-            </div>
-            <div className="rounded-2xl border bg-card p-6 shadow-sm">
-              <div className="mb-4 aspect-video overflow-hidden rounded-xl bg-muted">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/samples/adventure_premium.webp"
-                  alt="高品質イラスト例"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <h3 className="mb-2 font-bold">高品質イラスト</h3>
-              <p className="text-sm text-muted-foreground">
-                FLUXエンジンによる、細部まで描き込まれた美しく鮮やかな挿絵が物語を彩ります。
-              </p>
-            </div>
-            <div className="rounded-2xl border bg-card p-6 shadow-sm">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-2xl">
-                👤
-              </div>
-              <h3 className="mb-2 font-bold">キャラクター一貫性</h3>
-              <p className="text-sm text-muted-foreground">
-                全ページを通して、主人公の見た目や服装をしっかり維持。没入感を高めます。
-              </p>
-            </div>
-          </div>
-        </div>
-
         {error && (
-          <p className="mt-4 text-center text-sm text-destructive">{error}</p>
+          <div className="mt-8 p-4 rounded-xl bg-destructive/10 text-destructive text-center text-sm font-medium">
+            {error}
+          </div>
         )}
 
-        <p className="mt-8 text-center text-xs text-muted-foreground">
-          いつでもキャンセル可能です。Stripe の安全な決済を使用しています。
-        </p>
+        <div className="mt-12 text-center space-y-4">
+          <p className="text-xs text-muted-foreground">
+            いつでもプランの変更やキャンセルが可能です。決済は Stripe を通じて安全に行われます。
+          </p>
+          <div className="flex justify-center gap-8">
+            {/* Trust badges or links could go here */}
+          </div>
+        </div>
       </div>
     </div>
   );

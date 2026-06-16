@@ -397,6 +397,7 @@ export interface ChildAvatarGenerationJob {
     revisionRequest?: AvatarRevisionRequest;
     baseGenerationId?: string;
     variantStyle?: IllustrationStyle;
+    usePhoto?: boolean;
   };
   result?: {
     batchId: string;
@@ -815,6 +816,8 @@ export interface CompanionData {
   personality: string[];
   specialAbility: string;
   colorMain: string;
+  bodyType: string;
+  colorDepth: string;
   size: "small" | "medium" | "large";
   visualDescription: string;
   generatedImageUrl?: string;

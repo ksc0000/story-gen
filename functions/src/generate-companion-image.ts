@@ -2,8 +2,9 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
-import { ReplicateImageClient } from "./lib/replicate";
+import { ReplicateImageClient, resolveReplicateModel } from "./lib/replicate";
 import { normalizeSensitiveError } from "./lib/avatar-generation";
+import { logGenerationEvent } from "./lib/generation-event-logger";
 import type { CompanionImageJob, CompanionData } from "./lib/types";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
@@ -62,9 +63,26 @@ export const onCompanionImageJobCreated = onDocumentCreated(
       const prompt = buildCompanionPrompt(companion);
       const imageClient = new ReplicateImageClient(replicateApiToken.value());
 
+      const companionStartMs = Date.now();
       const imageBuffer = await imageClient.generateImage(prompt, {
         purpose: "book_page",
         imageModelProfile: "pro_consistent",
+      });
+      const durationMs = Date.now() - companionStartMs;
+
+      logGenerationEvent({
+        eventName: "page_image_succeeded",
+        bookId: `companion-${jobData.companionId}`,
+        pageIndex: -300, // Conventional negative index for companions
+        imageModelProfile: "pro_consistent",
+        imageModel: resolveReplicateModel({
+          purpose: "book_page",
+          imageModelProfile: "pro_consistent",
+        }),
+        provider: "replicate",
+        durationMs,
+        attemptCount: 1,
+        fallbackUsed: false,
       });
 
       const generationId = randomUUID();

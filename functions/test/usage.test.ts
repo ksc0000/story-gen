@@ -30,6 +30,8 @@ function createMockDeps() {
     updateBookStoryQualityReport: vi.fn().mockResolvedValue(undefined),
     updateBookStoryGenerationMetadata: vi.fn().mockResolvedValue(undefined),
     getUserMonthlyCount: vi.fn().mockResolvedValue(0),
+    isUserAdmin: vi.fn().mockResolvedValue(false),
+
     incrementMonthlyCount: vi.fn().mockResolvedValue(undefined),
     getUserCredits: vi.fn().mockResolvedValue({
       singleBookCredits: 0,
@@ -99,6 +101,21 @@ describe("processBookGeneration quota and credits", () => {
     await processBookGeneration("book4", baseBookData, deps);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book4", "completed");
     expect(deps.incrementMonthlyCount).toHaveBeenCalled();
+    expect(deps.consumeCredit).not.toHaveBeenCalled();
+  });
+
+  it("allows admin to generate even when quota exhausted and no credits", async () => {
+    deps.getUserMonthlyCount.mockResolvedValue(99); // way over the free limit
+    deps.getUserCredits.mockResolvedValue({
+      singleBookCredits: 0,
+      aiGuidedCredits: 0,
+      photoStoryCredits: 0,
+    });
+    deps.isUserAdmin.mockResolvedValue(true);
+    await processBookGeneration("book5", baseBookData, deps);
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book5", "completed");
+    // 管理者のテスト生成は使用数・クレジットを一切消費しない
+    expect(deps.incrementMonthlyCount).not.toHaveBeenCalled();
     expect(deps.consumeCredit).not.toHaveBeenCalled();
   });
 });

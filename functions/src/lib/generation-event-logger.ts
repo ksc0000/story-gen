@@ -215,6 +215,26 @@ export interface BookEarlyFailedEvent {
 }
 
 /**
+ * Fired when a single page image (or cover) is successfully generated.
+ * Used for usage monitoring and provider cost comparison.
+ */
+export interface PageImageSucceededEvent {
+  eventName: "page_image_succeeded";
+  bookId: string;
+  /** 0-indexed for pages. -1 is conventionally used for book cover. */
+  pageIndex: number;
+  /** The final tried profile that succeeded. */
+  imageModelProfile: ImageModelProfile;
+  /** The actual model string used (e.g. "black-forest-labs/flux-2-pro"). */
+  imageModel: string;
+  provider: ImageProvider;
+  durationMs: number;
+  attemptCount: number;
+  /** True when a fallback profile was attempted and succeeded. */
+  fallbackUsed: boolean;
+}
+
+/**
  * Fired when all fallback profiles are exhausted for a single page image.
  * Does NOT include the prompt text.
  */
@@ -265,6 +285,7 @@ export type GenerationEvent =
   | GenerationStartedEvent
   | BookOutcomeEvent
   | BookEarlyFailedEvent
+  | PageImageSucceededEvent
   | PageImageFailedEvent
   | PromptAnalysisEvent;
 
@@ -553,4 +574,23 @@ export function logGenerationEvent(event: GenerationEvent): void {
  */
 export function logPromptAnalysis(event: PromptAnalysisEvent): void {
   logGenerationEvent(event);
+}
+
+/**
+ * Classify a failure reason string into a coarse category for "Safer Retry" logging.
+ * Returns one of "safety_rejection" (E005/flagged), "timeout", or "other".
+ * Never logs raw error text — only the classified string is emitted.
+ */
+export function classifyFallbackReasonClass(
+  failureReason: string | undefined
+): "safety_rejection" | "timeout" | "other" {
+  if (!failureReason) return "other";
+  const lower = failureReason.toLowerCase();
+  if (lower.includes("e005") || lower.includes("flagged") || lower.includes("sensitive")) {
+    return "safety_rejection";
+  }
+  if (failureReason === "image_timeout" || lower.includes("timeout")) {
+    return "timeout";
+  }
+  return "other";
 }

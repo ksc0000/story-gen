@@ -1,11 +1,7 @@
-# Implement PDF Output Feature Design Document
+# Update PlanConfig to allow 8-Page Fixed Templates for Standard Plan
 
 ## Context
 
-The EhonAI product roadmap lists "PDF出力" as a currently unimplemented feature. While several core features and reliability improvements have been completed (Phase 1, Phase 4), and significant UX enhancements are in place (Phase 6), user experience around output formats is still limited. A PDF output feature will allow users to download their created picture books for offline viewing, printing, or sharing outside of the web application, thereby enhancing the product's utility and value proposition, particularly in the context of Phase 5 (Monetization) and potential print orders.
+The product roadmap for Phase 3, "Template Mode — Reliability-First 生成," outlines the expansion of fixed templates to include 8-page variants. While 8-page templates have been created for specific stories (e.g., Bedtime, Cardboard Rocket) and the UI supports page count selection, the `PlanConfig` still needs to be updated to explicitly allow `standard_paid` users to generate these 8-page fixed templates. The `light_paid` plan mentioned in the original roadmap has been removed, so this task will target the `standard_paid` plan. This is a crucial step to enable monetization of longer fixed templates for paying users.
 
-This task specifically focuses on the design document, aligning with the "docs-first" constraint and setting the stage for future implementation.
-
-## Objective
-
-Create a comprehensive design document for
+This task is a direct follow

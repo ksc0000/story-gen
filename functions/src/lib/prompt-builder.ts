@@ -469,6 +469,7 @@ ${ageReadingGuidance}
 - ページごとに wide shot / medium shot / close-up / detail shot / bird's-eye view などの視点を変えてください。
 - ときには背景、物、家族、友だち、動物、サブキャラクターが絵の主役になっても構いません。
 - imagePrompt には、そのページで何を一番見せたいかを明確に含めてください。
+- 屋内シーン（家の中、お風呂、寝室、リビングなど）では主人公は裸足または靴下を着用させ、屋外シーン（公園、庭、道路など）では靴を着用させてください。状況に合わない靴（屋内で土足など）は禁止です。
 - imagePrompt では "wide establishing shot of...", "small child seen from behind...", "focus on the sandbox toys in the foreground...", "family members in the background...", "bird's-eye view of the park...", "close-up of tiny hands holding..." のように、視点や焦点が伝わる表現を歓迎します。
 - Important: pages[].text is for the readable story text shown by the app. pages[].imagePrompt is only for generating a wordless illustration. Never ask the image model to render the story text, repeated phrase, labels, signs, books with readable titles, speech bubbles, captions, or any written characters inside the image.
 - Fantasy and imagination imagePrompt rules: do not describe spell books with visible titles or open text pages, scrolls with written content, rune stones or glyph carvings, magical inscriptions, star charts with symbol annotations or constellation name labels, treasure maps with text labels or compass direction marks, or any object whose surface would contain glyphs, symbols, or marks resembling writing. Fantasy objects (orbs, wands, crystals, rockets, glowing portals, planets, cloud formations) are allowed when they are purely visual with no text-like surface markings. A spell book may appear as a plain mysterious closed volume. A map may appear as an unlabeled visual landscape. Stars may appear as light points without name labels. A compass may appear as a round decorative object with no visible letters.
@@ -505,6 +506,7 @@ ${ageReadingGuidance}
 - 良い例:
 ${GOOD_TEXT_EXAMPLE}
 - 主要な登場人物は cast に定義してください。
+- ユーザーから指定された「相棒」キャラクターは、必ず cast に追加し、物語の中で重要な役割を与えてください。
 - 子ども主人公以外に、相棒、魔法キャラ、動物キャラ、第三者キャラが出る場合は必ず cast に入れてください。
 - 子ども主人公以外に、2ページ以上登場する存在は必ず cast に入れてください。
 - 「ほしのこ」「魔法の友だち」「star-child」「star-creature」「動物」「相棒」は必ず cast に入れてください。
@@ -723,6 +725,7 @@ function buildCastGuidance(
         .join(" ")
     ),
     "Do not redesign recurring characters. Do not merge characters. Do not turn one character into another.",
+    "Keep each recurring character's face shape and proportions consistent with the reference across pages; vary only pose, expression, and camera angle.",
     "If a recurring character appears from behind, far away, or partially visible, preserve silhouette and signature items.",
   ]
     .filter(Boolean)
@@ -757,6 +760,12 @@ export function buildCoverImagePrompt(
   const castIds = options.cast?.map((c) => c.characterId);
   const castGuidance = buildCastGuidance(options?.cast, castIds);
 
+  const coverCompositionGuidance = [
+    "Book cover composition: single striking focal point, iconic masterpiece framing, eye-catching and vibrant, masterpiece quality.",
+    "The protagonist should be clearly visible and ideally centered or placed according to the rule of thirds for maximum impact.",
+    "Ensure a clean and balanced layout suitable for a book cover.",
+  ].join(" ");
+
   const backgroundGuidance = [
     `Background richness: ${getBackgroundRichnessGuidance(options?.ageBand)}`,
     "Show meaningful surroundings, not just the protagonist.",
@@ -786,8 +795,10 @@ export function buildCoverImagePrompt(
     hasAnimalCharactersInCast(options?.cast ?? []);
   const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters });
 
+  // P5-fix: reordered to prioritize composition, style, and scene first (following buildImagePrompt success pattern).
   return [
-    "Book cover: single striking scene, text-free, no letters, no logos, no watermarks",
+    "Book cover: text-free, no letters, no logos, no watermarks",
+    coverCompositionGuidance,
     `Illustration style: ${styleProfile.styleBible}`,
     styleBible ? `Story-specific style consistency: ${styleBible}` : "",
     styleProfile.negativeStyleRules?.length
@@ -932,6 +943,12 @@ export function buildImagePrompt(
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
     `Scene: ${sanitizedBasePrompt}`,
+    // Child-animal boundary placed immediately after the scene so FLUX weights it early.
+    // Previously placed only at the end of the prompt (in visualContinuityGuard), which
+    // allowed face-feature leakage when two reference images (child + animal) were given.
+    hasAnimalCharacters
+      ? "Child-animal boundary: Keep the child fully human with human features. The animal companion is physically separate — never merge, overlay, or blend the animal's face, fur, or ears onto the child's body."
+      : "",
     consistency,
     castGuidance,
     modelSpecificGuidance,
@@ -1006,7 +1023,8 @@ export function buildVisualContinuityGuard({
     parts.push(
       "Animal character consistency: Each recurring animal keeps the same appearance, size, and expression across pages. Do not redesign, duplicate, or add extra animal companions beyond what the scene requires."
     );
-    // C. Child-animal boundary (compressed P5-3j)
+    // C. Child-animal boundary: also placed early in buildImagePrompt for FLUX weighting.
+    // Kept here as a reinforcing reminder at the end of the prompt.
     parts.push(
       "Child-animal boundary: The child remains a fully human child on every page — no animal features, costume, or body parts. Animals appear only as separate companions beside the child, never merged with the child's body."
     );

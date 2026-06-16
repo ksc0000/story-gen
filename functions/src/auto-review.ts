@@ -6,9 +6,13 @@ import { runLLMAutoReview } from "./lib/auto-review-llm";
 import type {
   BookData,
   CharacterConsistencyAxes,
+  IllustrationQualityAxes,
   PageData,
+  PersonalizationAxes,
   QualityReview,
   QualityReviewScore,
+  SafetyAxes,
+  StoryQualityAxes,
 } from "./lib/types";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
@@ -104,6 +108,36 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
       // may omit characterAxes — guard against undefined to keep the review from failing.
       const toReviewScore = (value: number): QualityReviewScore =>
         Math.min(5, Math.max(1, Math.round(value / 20))) as QualityReviewScore;
+
+      // Normalize granular axes from the LLM's 0-100 scale to the 1-5 integer scale
+      // used by human granular reviews, so the Admin "View Granular" breakdown
+      // renders consistently for AI and human reviews.
+
+      const rawStoryAxes = reviewResult.storyAxes;
+      const storyAxes: StoryQualityAxes | undefined = rawStoryAxes
+        ? {
+            childPersonalization: toReviewScore(rawStoryAxes.childPersonalization),
+            storyCoherence: toReviewScore(rawStoryAxes.storyCoherence),
+            ageAppropriateness: toReviewScore(rawStoryAxes.ageAppropriateness),
+            emotionalSatisfaction: toReviewScore(rawStoryAxes.emotionalSatisfaction),
+            pageLengthBalance: toReviewScore(rawStoryAxes.pageLengthBalance),
+            characterConsistency: toReviewScore(rawStoryAxes.characterConsistency),
+            endingSatisfaction: toReviewScore(rawStoryAxes.endingSatisfaction),
+          }
+        : undefined;
+
+      const rawIllustrationAxes = reviewResult.illustrationAxes;
+      const illustrationAxes: IllustrationQualityAxes | undefined = rawIllustrationAxes
+        ? {
+            promptCompleteness: toReviewScore(rawIllustrationAxes.promptCompleteness),
+            visualConsistency: toReviewScore(rawIllustrationAxes.visualConsistency),
+            characterConsistency: toReviewScore(rawIllustrationAxes.characterConsistency),
+            sceneRelevance: toReviewScore(rawIllustrationAxes.sceneRelevance),
+            styleConsistency: toReviewScore(rawIllustrationAxes.styleConsistency),
+            artifactAvoidance: toReviewScore(rawIllustrationAxes.artifactAvoidance),
+          }
+        : undefined;
+
       const rawCharacterAxes = reviewResult.characterAxes;
       const characterAxes: CharacterConsistencyAxes | undefined = rawCharacterAxes
         ? {
@@ -114,6 +148,29 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
             pageLevelCharacterLinkage: toReviewScore(rawCharacterAxes.pageLevelCharacterLinkage),
             outfitHairstyleConsistency: toReviewScore(rawCharacterAxes.outfitHairstyleConsistency),
             colorPaletteConsistency: toReviewScore(rawCharacterAxes.colorPaletteConsistency),
+          }
+        : undefined;
+
+      const rawPersonalizationAxes = reviewResult.personalizationAxes;
+      const personalizationAxes: PersonalizationAxes | undefined = rawPersonalizationAxes
+        ? {
+            childProfileUsage: toReviewScore(rawPersonalizationAxes.childProfileUsage),
+            nameNicknameUsage: toReviewScore(rawPersonalizationAxes.nameNicknameUsage),
+            favoriteThings: toReviewScore(rawPersonalizationAxes.favoriteThings),
+            familyContext: toReviewScore(rawPersonalizationAxes.familyContext),
+            memoryEventContext: toReviewScore(rawPersonalizationAxes.memoryEventContext),
+            overPersonalizationRisk: toReviewScore(rawPersonalizationAxes.overPersonalizationRisk),
+          }
+        : undefined;
+
+      const rawSafetyAxes = reviewResult.safetyAxes;
+      const safetyAxes: SafetyAxes | undefined = rawSafetyAxes
+        ? {
+            ageAppropriateVocabulary: toReviewScore(rawSafetyAxes.ageAppropriateVocabulary),
+            notTooScary: toReviewScore(rawSafetyAxes.notTooScary),
+            dangerAvoidance: toReviewScore(rawSafetyAxes.dangerAvoidance),
+            familyFriendlyPeace: toReviewScore(rawSafetyAxes.familyFriendlyPeace),
+            privacyConsideration: toReviewScore(rawSafetyAxes.privacyConsideration),
           }
         : undefined;
 
@@ -134,7 +191,11 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         recommendedFixes: reviewResult.recommendedFixes,
         rubricVersion: "llm-auto-v2",
         llmAutoReviewResult: reviewResult,
+        ...(storyAxes ? { storyAxes } : {}),
+        ...(illustrationAxes ? { illustrationAxes } : {}),
         ...(characterAxes ? { characterAxes } : {}),
+        ...(personalizationAxes ? { personalizationAxes } : {}),
+        ...(safetyAxes ? { safetyAxes } : {}),
         createdAt: admin.firestore.Timestamp.now(),
         createdAtMs: now,
         updatedAt: admin.firestore.Timestamp.now(),
@@ -168,7 +229,11 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         qualityReviewReason: reviewResult.reviewReason,
         qualityFlaggedIssues: reviewResult.flaggedIssues,
         qualityRecommendedFixes: reviewResult.recommendedFixes,
+        ...(storyAxes ? { storyAxes } : {}),
+        ...(illustrationAxes ? { illustrationAxes } : {}),
         ...(characterAxes ? { characterAxes } : {}),
+        ...(personalizationAxes ? { personalizationAxes } : {}),
+        ...(safetyAxes ? { safetyAxes } : {}),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAtMs: now,
       });

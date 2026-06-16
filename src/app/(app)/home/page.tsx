@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { httpsCallable } from "firebase/functions";
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
@@ -21,9 +21,26 @@ import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { cn } from "@/lib/utils";
-import { FREE_MONTHLY_BOOK_LIMIT } from "@/lib/usage";
+import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
 import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
+import { ILLUSTRATION_STYLE_PROFILES } from "@/lib/illustration-styles";
+
+const CREATION_MODE_LABELS: Record<string, string> = {
+  all: "すべてのモード",
+  fixed_template: "テンプレート",
+  guided_ai: "AI対話",
+  original_ai: "かんたんAI",
+  photo_story: "写真から作成",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  all: "すべての状態",
+  completed: "完成",
+  partial_completed: "一部未完成",
+  failed: "失敗",
+  generating: "生成中",
+};
 
 /**
  * Internal AlertDialog components to comply with file constraints.
@@ -144,7 +161,31 @@ export default function HomePage() {
   const { children, loading: childrenLoading, activeChild } = useChildren(user?.uid);
   const { isAdmin } = useAdminClaim();
   const { companions, loading: companionsLoading } = useCompanions(user?.uid);
-  const remaining = FREE_MONTHLY_BOOK_LIMIT - (profile?.monthlyGenerationCount ?? 0);
+
+  const productPlan = resolveProductPlan(profile);
+  const quota = PLAN_CONFIGS[productPlan]?.monthlyBookQuota ?? 1;
+  const consumed = profile?.monthlyGenerationCount ?? 0;
+  const remaining = Math.max(0, quota - consumed);
+  // 管理者・bypassMonthlyLimit 保持者は月次上限なしで生成できるため、有限クォータではなく「無制限」を表示する。
+  const isUnlimited = isAdmin || profile?.generationOverride?.bypassMonthlyLimit === true;
+
+  const [selectedStyle, setSelectedStyle] = useState<string>("all");
+  const [selectedMode, setSelectedMode] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+
+  const uniqueStyles = useMemo(() => {
+    const stylesInBooks = Array.from(new Set(books.map((b) => b.style))).filter(Boolean);
+    return ILLUSTRATION_STYLE_PROFILES.filter((p) => stylesInBooks.includes(p.id));
+  }, [books]);
+
+  const filteredBooks = useMemo(() => {
+    return books.filter((book) => {
+      const matchStyle = selectedStyle === "all" || book.style === selectedStyle;
+      const matchMode = selectedMode === "all" || book.creationMode === selectedMode;
+      const matchStatus = selectedStatus === "all" || book.status === selectedStatus;
+      return matchStyle && matchMode && matchStatus;
+    });
+  }, [books, selectedStyle, selectedMode, selectedStatus]);
 
   useEffect(() => {
     if (!childrenLoading && children.length === 0) {
@@ -205,20 +246,39 @@ export default function HomePage() {
             </p>
           )}
           <div className="mt-4">
-            <Badge variant="outline" className="bg-white/50 backdrop-blur-sm border-purple-200 text-purple-700">
-              {remaining >= 3 ? (
-                `今月あと${remaining}冊作れます ✨`
-              ) : remaining > 0 ? (
-                <>
-                  今月あと{remaining}冊 —{" "}
-                  <Link href="/pricing" className="underline ml-1 text-xs opacity-80 hover:opacity-100 transition-opacity">
-                    プレミアムならもっと作れます
-                  </Link>
-                </>
-              ) : (
-                `今月あと${Math.max(0, remaining)}冊作れます`
-              )}
-            </Badge>
+            {isUnlimited ? (
+              <Badge
+                variant="outline"
+                className="bg-white/50 backdrop-blur-sm border-purple-200 text-purple-700"
+              >
+                今月 {consumed} 冊作成済み（無制限）
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "bg-white/50 backdrop-blur-sm transition-colors",
+                  remaining <= 0
+                    ? "border-red-200 text-red-700 bg-red-50/50"
+                    : remaining === 1
+                    ? "border-orange-200 text-orange-700 bg-orange-50/50"
+                    : "border-purple-200 text-purple-700"
+                )}
+              >
+                今月 {consumed} / {quota} 冊作成済み
+                {remaining <= 1 && (
+                  <>
+                    {" "}—{" "}
+                    <Link
+                      href="/pricing"
+                      className="underline ml-1 text-xs opacity-80 hover:opacity-100 transition-opacity"
+                    >
+                      増やしたい方はこちら
+                    </Link>
+                  </>
+                )}
+              </Badge>
+            )}
           </div>
         </header>
         {deleteError && (
@@ -362,17 +422,99 @@ export default function HomePage() {
             <p className="mt-4 text-violet-500 font-medium">まだ絵本がありません。最初の一冊を作りましょう！</p>
           </div>
         ) : (
-          <StaggerContainer className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {books.map((book) => (
-              <StaggerItem key={book.id}>
-                <BookCard
-                  book={book}
-                  onDelete={book.userId === user?.uid ? () => handleDeleteBook(book.id, book.title || "") : undefined}
-                  isDeleting={deletingId === book.id}
-                />
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+          <div className="mt-8">
+            <div className="mb-6 flex flex-wrap gap-3 items-end justify-center sm:justify-start">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-violet-400 uppercase tracking-wider ml-1">スタイル</label>
+                <select
+                  value={selectedStyle}
+                  onChange={(e) => setSelectedStyle(e.target.value)}
+                  className="block w-full rounded-xl border border-violet-100 bg-white/80 px-3 py-2 text-xs text-purple-900 shadow-sm backdrop-blur-sm focus:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500/10"
+                >
+                  <option value="all">すべてのスタイル</option>
+                  {uniqueStyles.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-violet-400 uppercase tracking-wider ml-1">作成モード</label>
+                <select
+                  value={selectedMode}
+                  onChange={(e) => setSelectedMode(e.target.value)}
+                  className="block w-full rounded-xl border border-violet-100 bg-white/80 px-3 py-2 text-xs text-purple-900 shadow-sm backdrop-blur-sm focus:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500/10"
+                >
+                  {Object.entries(CREATION_MODE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-violet-400 uppercase tracking-wider ml-1">ステータス</label>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="block w-full rounded-xl border border-violet-100 bg-white/80 px-3 py-2 text-xs text-purple-900 shadow-sm backdrop-blur-sm focus:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500/10"
+                >
+                  {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {(selectedStyle !== "all" || selectedMode !== "all" || selectedStatus !== "all") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedStyle("all");
+                    setSelectedMode("all");
+                    setSelectedStatus("all");
+                  }}
+                  className="h-9 px-2 text-xs text-violet-400 hover:text-violet-600"
+                >
+                  リセット
+                </Button>
+              )}
+            </div>
+
+            {filteredBooks.length === 0 ? (
+              <div className="mt-12 py-12 text-center">
+                <p className="text-violet-400">該当する絵本が見つかりませんでした</p>
+                <Button
+                  variant="link"
+                  onClick={() => {
+                    setSelectedStyle("all");
+                    setSelectedMode("all");
+                    setSelectedStatus("all");
+                  }}
+                  className="mt-2 text-purple-600"
+                >
+                  フィルタをリセット
+                </Button>
+              </div>
+            ) : (
+              <StaggerContainer className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                {filteredBooks.map((book) => (
+                  <StaggerItem key={book.id}>
+                    <BookCard
+                      book={book}
+                      onDelete={book.userId === user?.uid ? () => handleDeleteBook(book.id, book.title || "") : undefined}
+                      isDeleting={deletingId === book.id}
+                    />
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            )}
+          </div>
         )}
       </div>
 

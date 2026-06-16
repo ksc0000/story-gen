@@ -49,6 +49,15 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
 4. **Personalization Depth (0-100)**: Evaluate how well the story might incorporate child-specific elements (if any are apparent).
 5. **Safety & Age Appropriateness (0-100)**: Check for any inappropriate content, violence, or themes unsuitable for young children.
 
+## Axis-Level Evaluation (0-100 for each)
+You must also provide granular scores for the following axes:
+
+- **Story Axes**: childPersonalization, storyCoherence, ageAppropriateness, emotionalSatisfaction, pageLengthBalance, characterConsistency, endingSatisfaction.
+- **Illustration Axes**: promptCompleteness, visualConsistency, characterConsistency, sceneRelevance, styleConsistency, artifactAvoidance.
+- **Character Axes**: visualBibleReflected, characterIdConsistency, appearingCharacterConsistency, focusCharacterConsistency, pageLevelCharacterLinkage, outfitHairstyleConsistency, colorPaletteConsistency.
+- **Personalization Axes**: childProfileUsage, nameNicknameUsage, favoriteThings, familyContext, memoryEventContext, overPersonalizationRisk.
+- **Safety Axes**: ageAppropriateVocabulary, notTooScary, dangerAvoidance, familyFriendlyPeace, privacyConsideration.
+
 ## Input Data
 ${JSON.stringify(storyContext, null, 2)}
 
@@ -60,7 +69,7 @@ Important:
 - Provide all scores as integers between 0 and 100.
 - "reviewReason", "flaggedIssues[].message", and "recommendedFixes[].reason" must be in Japanese.
 - If you find no issues, return an empty array for "flaggedIssues" and "recommendedFixes".
-- "characterAxes" is MANDATORY and must contain scores for all 7 consistency sub-axes.
+- All axis objects (storyAxes, illustrationAxes, characterAxes, personalizationAxes, safetyAxes) are MANDATORY and must contain scores for all their respective sub-axes.
 - Return ONLY the JSON object.
 `;
 }
@@ -107,8 +116,8 @@ export async function runLLMAutoReview(params: {
     "reviewReason",
     "flaggedIssues",
     "recommendedFixes",
-    // NOTE: characterAxes is intentionally NOT required here. The response schema is
-    // advisory (not enforced by Gemini), so the model may omit it; treating it as
+    // NOTE: Specific axis objects are intentionally NOT required here. The response schema is
+    // advisory (not enforced by Gemini), so the model may omit them; treating them as
     // optional keeps the overall review from failing when the axes are missing.
   ];
 

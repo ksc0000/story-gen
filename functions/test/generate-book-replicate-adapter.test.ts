@@ -110,7 +110,7 @@ const mockStory: GeneratedStory = {
   },
   pages: [
     {
-      text: "はなこは星を探して歩きました。空はとても青く、風がやさしく吹いていました。",
+      text: "はなこは星をさがして、ゆっくりと歩きました。空はとても青く、風がやさしく吹いていました。きっとどこかにあるはず。",
       imagePrompt: "A child walking in a bright meadow looking for a star with soft watercolor style",
       pageVisualRole: "opening_establishing",
       compositionHint: "wide establishing shot",
@@ -119,7 +119,7 @@ const mockStory: GeneratedStory = {
       focusCharacterId: "child_protagonist",
     },
     {
-      text: "ついに星を見つけました。それはキラキラと光って、とてもきれいでした。",
+      text: "ついに星を見つけました。それはキラキラと光って、とてもきれいでした。はなこはうれしくて、ほしをそっとだきしめました。",
       imagePrompt: "A child finding a glowing star in the meadow with warm watercolor light",
       pageVisualRole: "quiet_ending",
       compositionHint: "close-up shot",
@@ -173,6 +173,8 @@ function createMockDeps(overrides: { replicateApiToken?: string } = {}) {
     updateBookStoryQualityReport: vi.fn().mockResolvedValue(undefined),
     updateBookStoryGenerationMetadata: vi.fn().mockResolvedValue(undefined),
     getUserMonthlyCount: vi.fn().mockResolvedValue(0),
+    isUserAdmin: vi.fn().mockResolvedValue(false),
+
     incrementMonthlyCount: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
