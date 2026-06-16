@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { AUTO_REVIEW_RESPONSE_SCHEMA } from "./auto-review-schema";
 import { extractJsonFromLLMResponse } from "./llm-json-repair";
+import { getAgeReadingProfile } from "./age-reading-profile";
 import type { BookData, PageData, LLMQualityReviewResult } from "./types";
 
 const SAFETY_SETTINGS = [
@@ -11,6 +12,10 @@ const SAFETY_SETTINGS = [
 ];
 
 export function buildAutoReviewPrompt(book: BookData, pages: PageData[]): string {
+  const ageProfile = getAgeReadingProfile(book.input.childAge);
+  const ageBand = ageProfile.ageBand;
+  const isAge3Plus = ageBand !== "baby_toddler";
+
   const storyContext = {
     title: book.title,
     theme: book.theme,
@@ -48,6 +53,14 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
     - "focusCharacterId" is appropriately chosen and consistent.
 4. **Personalization Depth (0-100)**: Evaluate how well the story might incorporate child-specific elements (if any are apparent).
 5. **Safety & Age Appropriateness (0-100)**: Check for any inappropriate content, violence, or themes unsuitable for young children.
+6. **Semantic Content (Age 3+ Diagnostic)**:
+    For books targeted at ages 3 and above (current age band: ${ageBand}), evaluate each page's story text for "semantic richness".
+    Identify which of these four elements are present:
+    - **場所 (Location)**: Setting or environment description.
+    - **行動 (Action)**: Specific character movements or activities.
+    - **気持ち (Emotion)**: Internal states or feelings.
+    - **発見 (Discovery)**: Realizations or noticing something new.
+    ${isAge3Plus ? "Each page SHOULD contain at least TWO of these elements." : "This is diagnostic only for this age group."}
 
 ## Axis-Level Evaluation (0-100 for each)
 You must also provide granular scores for the following axes:
@@ -70,6 +83,8 @@ Important:
 - "reviewReason", "flaggedIssues[].message", and "recommendedFixes[].reason" must be in Japanese.
 - If you find no issues, return an empty array for "flaggedIssues" and "recommendedFixes".
 - All axis objects (storyAxes, illustrationAxes, characterAxes, personalizationAxes, safetyAxes) are MANDATORY and must contain scores for all their respective sub-axes.
+- For each page, fill "pageAssessments" with semantic content detection results.
+- If a page in an age 3+ book (ageBand != 'baby_toddler') has fewer than 2 semantic elements, add a flaggedIssue with issueType "insufficient_semantic_content" and message "ページに十分な意味内容（場所・行動・気持ち・発見のうち2つ以上）がありません。".
 - Return ONLY the JSON object.
 `;
 }
