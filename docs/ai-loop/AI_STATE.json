@@ -141,6 +141,7 @@
     "PR #443: fix: companion UI cleanup, terminology unification, and text length increase (merged)",
     "PR #445: fix: enforce registered companion appearance over Gemini hallucination (merged)",
     "PR #447: fix: anchor recurring character face geometry to the reference (merged)",
+    "PR #449: Update PlanConfig to allow 8-Page Fixed Templates for Standard Plan (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
