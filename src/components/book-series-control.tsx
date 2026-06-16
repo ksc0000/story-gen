@@ -115,7 +115,7 @@ export function BookSeriesControl({ bookId, userId, seriesId }: BookSeriesContro
               placeholder="新しいシリーズ名"
               disabled={isSaving}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleCreateAndAssign();
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) handleCreateAndAssign();
               }}
               className="w-full rounded-lg border border-purple-200 px-2 py-1.5 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
             />
