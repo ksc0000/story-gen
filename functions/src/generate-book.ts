@@ -68,6 +68,7 @@ import {
 import {
   logGenerationEvent,
   logPromptAnalysis,
+  classifyFallbackReasonClass,
   categorizeError,
   classifyError,
   classifyStoryJsonFailure,
@@ -450,10 +451,15 @@ export function normalizeStoryWithCompanion(
 
   if (existingCompanion) {
     effectiveCompanionId = existingCompanion.characterId;
-    // Ensure the visualBible is consistent with the selected companion's description
-    if (!existingCompanion.visualBible || existingCompanion.visualBible.length < 20) {
-      existingCompanion.visualBible = companionVisualDescription;
-    }
+    // The user-registered companion description (and its reference illustration)
+    // is the source of truth for color and species. Gemini frequently hallucinates
+    // a generic appearance — e.g. inventing an orange fox for a companion registered
+    // as gray — and that hallucinated text then fights the gray reference image,
+    // making the companion drift in color/species across pages. Enforce the
+    // registered description and drop the model-invented colorPalette so the only
+    // color signal in the prompt matches the reference illustration.
+    existingCompanion.visualBible = companionVisualDescription;
+    existingCompanion.colorPalette = undefined;
   } else {
     updatedCast.push({
       characterId: companionCharacterId,
@@ -719,24 +725,6 @@ interface PageImageResult {
 }
 
 
-/**
- * P5-3f: Classify why Step a failed so the diagnostic log can report the cause category.
- * Returns one of "safety_rejection" (E005/flagged), "timeout", or "other".
- * Never logs raw error text — only the classified string is emitted.
- */
-function classifyFallbackReasonClass(
-  failureReason: string | undefined
-): "safety_rejection" | "timeout" | "other" {
-  if (!failureReason) return "other";
-  const lower = failureReason.toLowerCase();
-  if (lower.includes("e005") || lower.includes("flagged") || lower.includes("sensitive")) {
-    return "safety_rejection";
-  }
-  if (failureReason === "image_timeout" || lower.includes("timeout")) {
-    return "timeout";
-  }
-  return "other";
-}
 
 async function generatePageImageWithFallback(params: {
   prompt: string;
@@ -1774,6 +1762,15 @@ export async function processBookGeneration(
         )
       : undefined;
 
+    const coverStepBConfig =
+      coverImagePrompt &&
+      (isSaferRetryEnabled(normalizedBookData.imageModelProfile || "klein_fast") || deps.p5ModelUnification === "safer_retry")
+        ? {
+            prompt: buildP5SimplifiedPagePrompt(baseCoverPrompt ?? "", normalizedBookData.style, { hasAnimalCharacters: normalizedBookData.theme === "animals" }),
+            inputImageUrls: [] as string[],
+          }
+        : undefined;
+
     let coverMetadata: Record<string, unknown> | undefined;
     if (coverImagePrompt && deps.uploadCoverImage) {
       try {
@@ -1795,6 +1792,7 @@ export async function processBookGeneration(
           openaiApiKey: deps.openaiApiKey,
           imageClient: deps.imageClient,
           uploadCoverImage: deps.uploadCoverImage,
+          stepBConfig: coverStepBConfig,
         });
 
         if (coverResult.success) {
@@ -2081,7 +2079,7 @@ export function normalizeBookForGeneration(
 }
 
 
-function buildInputImageRefs(
+export function buildInputImageRefs(
   childProfileSnapshot: BookData["childProfileSnapshot"] | undefined,
   cast: GeneratedStory["cast"],
   appearingCharacterIds?: string[],
@@ -2170,7 +2168,27 @@ function buildInputImageRefs(
       ) === index
   );
 
-  return deduped.slice(0, 2);
+  // 参照画像は最大2枚。子ども参照だけで2枠を使い切ると相棒の参照が押し出され、
+  // 相棒が絵に描かれなくなる。そのため「主人公以外（相棒）」の参照が1枚は入るよう優先選択する。
+  type Ref = (typeof deduped)[number];
+  const prioritized: Ref[] = [];
+  const pushUnique = (ref: Ref | undefined) => {
+    if (ref && !prioritized.includes(ref)) prioritized.push(ref);
+  };
+
+  // photo_story の元写真（style_reference）は顔の一貫性に必須なので最優先で残す。
+  pushUnique(deduped.find((ref) => ref.role === "style_reference"));
+  // 主人公の参照を1枚。
+  pushUnique(deduped.find((ref) => ref.characterId === "child_protagonist"));
+  // 相棒など主人公以外のキャラ参照を1枚。
+  pushUnique(deduped.find((ref) => ref.characterId && ref.characterId !== "child_protagonist"));
+  // 余った枠を元の優先順で埋める（相棒がいない通常の絵本は従来どおり子ども参照2枚になる）。
+  for (const ref of deduped) {
+    if (prioritized.length >= 2) break;
+    pushUnique(ref);
+  }
+
+  return prioritized.slice(0, 2);
 }
 
 function buildInputImageRoles(
@@ -2812,12 +2830,16 @@ function buildStoryFromFixedTemplate(
         ?? page.textTemplate,
       replacements
     );
-    const imagePrompt = applyTemplateReplacements(page.imagePromptTemplate, replacements);
+    const baseImagePrompt = applyTemplateReplacements(page.imagePromptTemplate, replacements);
 
     // 相棒がいる場合、1ページおき（0, 2, 4...）に登場させる（半数以上）
     const appearingCharacterIds = ["child_protagonist"];
+    let imagePrompt = baseImagePrompt;
     if (hasCompanion && index % 2 === 0) {
       appearingCharacterIds.push(companionCharacterId);
+      // 固定テンプレートの Scene 記述は相棒に触れないため、相棒を能動的にシーンへ配置する指示を加える。
+      // （cast の一貫性ガイダンスだけでは「補足」扱いになり描かれにくいため、Scene レベルで明示する）
+      imagePrompt = `${baseImagePrompt} Also clearly present in this scene: ${companionName} (${companionVisual}), a friendly companion staying close beside the child and joining the moment naturally. Draw ${companionName} as a visible part of the scene, not in the background.`;
     }
 
     return {

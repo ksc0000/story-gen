@@ -49,11 +49,11 @@ export default function HowToUsePage() {
       linkText: "絵本を作る"
     },
     {
-      title: "3. 相棒（コンパニオン）を登場させる",
-      description: "お子さんと一緒に物語に登場する、動物や妖精などの「相棒」を作ることができます。一度作れば、どの絵本にも呼び出せます。",
+      title: "3. なかよしキャラを登場させる",
+      description: "お子さんと一緒に物語に登場する、動物や妖精などの「なかよしキャラ」を作ることができます。一度作れば、どの絵本にも呼び出せます。",
       icon: <PawPrint className="h-6 w-6 text-green-500" />,
       link: "/companions",
-      linkText: "相棒を作る"
+      linkText: "なかよしキャラを作る"
     },
     {
       title: "4. 作った絵本を見る・共有する",

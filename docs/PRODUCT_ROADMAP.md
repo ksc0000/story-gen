@@ -62,7 +62,7 @@
 - ~~provider abstraction（ImageProvider インターフェース）~~ → **P3-15s COMPLETE（ページ生成）**: `docs/PHASE3_IMAGE_PROVIDER_CLOSURE.md` | 残余スコープ: カバー画像・キャラ参照（P4 追跡）
 - provider 比較・A/B テスト
 - Stripe 決済
-- PDF 出力
+- [PDF 出力](./PDF_OUTPUT_DESIGN.md) (Design Draft)
 - 共有URL
 - 音声読み聞かせ
 - 印刷注文

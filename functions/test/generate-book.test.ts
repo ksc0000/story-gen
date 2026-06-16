@@ -3,6 +3,7 @@ import * as logger from "firebase-functions/logger";
 import {
   processBookGeneration,
   shouldUseCharacterReferenceForPage,
+  classifyFallbackReasonClass,
   normalizeStoryCastWithChildProfile,
   shouldFailBookForQuality,
   gateImageModelProfile,
@@ -1665,7 +1666,8 @@ describe("cover image generation", () => {
     // Verify cast visual description presence
     expect(coverPrompt).toContain("small glowing golden creature with a tiny purple top hat");
     // Verify cover specific guidance
-    expect(coverPrompt).toContain("Book cover: single striking scene, text-free, no letters, no logos, no watermarks");
+    expect(coverPrompt).toContain("Book cover: text-free, no letters, no logos, no watermarks");
+    expect(coverPrompt).toContain("Book cover composition:");
 
     // Also verify page 0 prompt for comparison
     const page0Call = deps.imageClient.generateImage.mock.calls.find(
@@ -2198,6 +2200,57 @@ describe("Page 0 purpose and reference logic (E2E-QA fix)", () => {
       })
     );
   });
+
+  it("passes coverStepBConfig to generateCoverImageWithFallback when pro_consistent is used", async () => {
+    deps.uploadCoverImage = vi.fn().mockResolvedValue("https://storage.example.com/cover.png");
+    // Default baseBookData uses pro_consistent
+    // Use a story with coverImagePrompt to trigger cover generation
+    const bookWithCover = { ...baseBookData, coverImagePrompt: "A cover" };
+    await processBookGeneration("book-cover-stepb", bookWithCover, deps);
+
+    // Filter calls by purpose
+    const coverCall = deps.imageClient.generateImage.mock.calls.find(
+      ([, opts]) => opts.purpose === "book_cover"
+    );
+
+    expect(coverCall).toBeDefined();
+    // Since we are in a test env without tokens, generateCoverImageWithFallback calls imageClient.generateImage.
+    // In our implementation, Step B retry happens inside generateCoverImageWithFallback,
+    // which then calls imageClient.generateImage if Step A fails.
+    // However, in this success case, Step A succeeds, so Step B is not reached for imageClient.
+    // To verify that processBookGeneration is indeed passing stepBConfig to the controller,
+    // we would ideally mock the controller, but here it's an internal function.
+    // Instead, we can verify that the controller was called with stepBConfig if we had a spy on it.
+    // Given the current test structure, let's trigger a Step A failure to see Step B in action.
+
+    deps.imageClient.generateImage.mockImplementation(async (prompt, options) => {
+      if (options?.purpose === "book_cover" && prompt.includes("Book cover:")) {
+        // Step A (full prompt) fails
+        throw new Error("Prediction failed: (E005)");
+      }
+      return mockImageBuffer;
+    });
+
+    await processBookGeneration("book-cover-stepb-retry", bookWithCover, deps);
+
+    const coverCalls = deps.imageClient.generateImage.mock.calls.filter(
+      ([, opts]) => opts.purpose === "book_cover"
+    );
+
+    // In this test run, it seems there were 3 calls.
+    // 1 from the previous test expectation "book-cover-stepb" (which also used purpose: book_cover)
+    // plus 2 from "book-cover-stepb-retry".
+    // We should clear the mock or check the last 2.
+    const lastTwoCoverCalls = coverCalls.slice(-2);
+
+    // Should have 2 cover calls for this specific run: Step A (failed) and Step B (retried)
+    expect(lastTwoCoverCalls.length).toBe(2);
+    expect(lastTwoCoverCalls[0][0]).toContain("Book cover:");
+    expect(lastTwoCoverCalls[0][0]).toContain("Character consistency"); // Step A
+    expect(lastTwoCoverCalls[1][0]).toContain("Illustration style:");
+    expect(lastTwoCoverCalls[1][0]).not.toContain("Character consistency"); // Step B (simplified)
+    expect(lastTwoCoverCalls[1][1].inputImageUrls).toEqual([]); // Step B clears refs
+  });
 });
 
 describe("normalizeBookForGeneration (Phase 3-C)", () => {
@@ -2245,6 +2298,13 @@ describe("normalizeBookForGeneration (Phase 3-C)", () => {
     const result = normalizeBookForGeneration(singlePurchaseBook, eightPageFixedTemplate, freeUserPlan);
     expect(result.pageCount).toBe(8);
     expect(result.productPlan).toBe("premium_paid"); // Single purchase maps to premium_paid settings
+  });
+
+  it("allows 8-page fixed template for standard_paid productPlan with premium userPlan", () => {
+    const standardBookData = { ...baseBookData, productPlan: "standard_paid" as const };
+    const result = normalizeBookForGeneration(standardBookData, eightPageFixedTemplate, premiumUserPlan);
+    expect(result.pageCount).toBe(8);
+    expect(result.productPlan).toBe("standard_paid");
   });
 
   it("blocks 12-page fixed template for standard_paid plan (simulated via free userPlan)", () => {

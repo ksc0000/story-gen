@@ -725,6 +725,7 @@ function buildCastGuidance(
         .join(" ")
     ),
     "Do not redesign recurring characters. Do not merge characters. Do not turn one character into another.",
+    "Keep each recurring character's face shape and proportions consistent with the reference across pages; vary only pose, expression, and camera angle.",
     "If a recurring character appears from behind, far away, or partially visible, preserve silhouette and signature items.",
   ]
     .filter(Boolean)
@@ -759,6 +760,12 @@ export function buildCoverImagePrompt(
   const castIds = options.cast?.map((c) => c.characterId);
   const castGuidance = buildCastGuidance(options?.cast, castIds);
 
+  const coverCompositionGuidance = [
+    "Book cover composition: single striking focal point, iconic masterpiece framing, eye-catching and vibrant, masterpiece quality.",
+    "The protagonist should be clearly visible and ideally centered or placed according to the rule of thirds for maximum impact.",
+    "Ensure a clean and balanced layout suitable for a book cover.",
+  ].join(" ");
+
   const backgroundGuidance = [
     `Background richness: ${getBackgroundRichnessGuidance(options?.ageBand)}`,
     "Show meaningful surroundings, not just the protagonist.",
@@ -788,8 +795,10 @@ export function buildCoverImagePrompt(
     hasAnimalCharactersInCast(options?.cast ?? []);
   const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters });
 
+  // P5-fix: reordered to prioritize composition, style, and scene first (following buildImagePrompt success pattern).
   return [
-    "Book cover: single striking scene, text-free, no letters, no logos, no watermarks",
+    "Book cover: text-free, no letters, no logos, no watermarks",
+    coverCompositionGuidance,
     `Illustration style: ${styleProfile.styleBible}`,
     styleBible ? `Story-specific style consistency: ${styleBible}` : "",
     styleProfile.negativeStyleRules?.length
@@ -934,6 +943,12 @@ export function buildImagePrompt(
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
     `Scene: ${sanitizedBasePrompt}`,
+    // Child-animal boundary placed immediately after the scene so FLUX weights it early.
+    // Previously placed only at the end of the prompt (in visualContinuityGuard), which
+    // allowed face-feature leakage when two reference images (child + animal) were given.
+    hasAnimalCharacters
+      ? "Child-animal boundary: Keep the child fully human with human features. The animal companion is physically separate — never merge, overlay, or blend the animal's face, fur, or ears onto the child's body."
+      : "",
     consistency,
     castGuidance,
     modelSpecificGuidance,
@@ -1008,7 +1023,8 @@ export function buildVisualContinuityGuard({
     parts.push(
       "Animal character consistency: Each recurring animal keeps the same appearance, size, and expression across pages. Do not redesign, duplicate, or add extra animal companions beyond what the scene requires."
     );
-    // C. Child-animal boundary (compressed P5-3j)
+    // C. Child-animal boundary: also placed early in buildImagePrompt for FLUX weighting.
+    // Kept here as a reinforcing reminder at the end of the prompt.
     parts.push(
       "Child-animal boundary: The child remains a fully human child on every page — no animal features, costume, or body parts. Animals appear only as separate companions beside the child, never merged with the child's body."
     );
