@@ -100,7 +100,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     shortLabel: "おすすめ",
     description:
       "思い出や成長を、よりきれいな絵本として残したい方向け。画質と作りやすさのバランスが良いおすすめプランです。",
-    badgeLabels: ["おすすめ", "高品質", "思い出向き"],
+    badgeLabels: ["おすすめ", "高品質", "4・8ページ"],
     allowedPageCounts: [4, 8],
     defaultPageCount: 8,
     imageQualityTier: "standard",
@@ -121,7 +121,7 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     shortLabel: "高精細",
     description:
       "特別な思い出やギフト向け。お子さんらしさや絵本全体の仕上がりを重視して作ります。",
-    badgeLabels: ["高精細", "ギフト向き", "特別な1冊"],
+    badgeLabels: ["高精細", "4・8・12ページ", "特別な1冊"],
     allowedPageCounts: [4, 8, 12],
     defaultPageCount: 8,
     imageQualityTier: "premium",
