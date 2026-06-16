@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSensitiveError, selectAvatarVariant } from "../src/generate-child-character";
+import { normalizeSensitiveError, selectAvatarVariant } from "../src/lib/avatar-generation";
 
 describe("selectAvatarVariant", () => {
   it("defaults to soft_watercolor when variantStyle is omitted", () => {
