@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
+import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
 import type { TemplateData } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
@@ -245,6 +245,9 @@ describe("buildImagePrompt", () => {
     expect(result).toContain("Do not redesign recurring characters");
     expect(result).toContain("tiny purple top hat");
     expect(result).not.toContain("small blue bird");
+    // #446: face-geometry consistency clause must anchor recurring characters
+    // to the reference so face shape/proportions do not drift between pages.
+    expect(result).toContain("face shape and proportions consistent with the reference");
   });
   it("does NOT include cast descriptions when appearingCharacterIds is undefined (regression guard)", () => {
     const result = buildImagePrompt(
@@ -358,13 +361,13 @@ describe("buildImagePrompt", () => {
     expect(buildImagePrompt("A birthday scene", "flat")).toContain("bright clean colors");
   });
   it("appends crayon style keywords", () => {
-    expect(buildImagePrompt("A birthday scene", "crayon")).toContain("Crayon storybook style");
+    expect(buildImagePrompt("A birthday scene", "crayon")).toContain("crayon storybook masterpiece");
     expect(buildImagePrompt("A birthday scene", "crayon")).toContain("waxy crayon strokes");
   });
   it("uses the style bible for style control instead of mentioning preview references", () => {
     const result = buildImagePrompt("A birthday scene", "toy_3d");
     expect(result).toContain("Illustration style:");
-    expect(result).toContain("Rounded 3D toy storybook style");
+    expect(result).toContain("rounded 3D toy storybook masterpiece");
     expect(result).not.toContain("reference image");
   });
   it("adds shared printed-surface no-text guidance for non-fixed prompts", () => {
@@ -450,6 +453,42 @@ describe("buildImagePrompt", () => {
   it("returns a style reference image path", () => {
     expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.webp");
   });
+
+  describe("buildCoverImagePrompt", () => {
+    it("includes cover-specific masterpiece and composition guidance", () => {
+      const result = buildCoverImagePrompt("A child and a dragon", "watercolor", "child bible", "style bible", {});
+      expect(result).toContain("Book cover:");
+      expect(result).toContain("Book cover composition:");
+      expect(result).toContain("striking focal point");
+      expect(result).toContain("iconic masterpiece framing");
+      expect(result).toContain("masterpiece quality");
+    });
+
+    it("prioritizes composition and style at the beginning", () => {
+      const result = buildCoverImagePrompt("A child and a dragon", "watercolor", "child bible", "style bible", {});
+      // Use a more robust check that doesn't rely on splitting by comma, as segments themselves contain commas
+      expect(result.indexOf("Book cover:")).toBeLessThan(result.indexOf("Book cover composition:"));
+      expect(result.indexOf("Book cover composition:")).toBeLessThan(result.indexOf("Illustration style:"));
+    });
+
+    it("includes scene description after style and composition", () => {
+      const result = buildCoverImagePrompt("A child and a dragon", "watercolor", "child bible", "style bible", {});
+      expect(result).toContain("Scene: A child and a dragon");
+      const sceneIndex = result.indexOf("Scene:");
+      const compIndex = result.indexOf("Book cover composition:");
+      const styleIndex = result.indexOf("Illustration style:");
+      expect(compIndex).toBeLessThan(sceneIndex);
+      expect(styleIndex).toBeLessThan(sceneIndex);
+    });
+
+    it("sanitizes text from baseCoverPrompt", () => {
+      const result = buildCoverImagePrompt('A scene with a sign that says "Happy Birthday!"', "watercolor", "child bible", "style bible", {});
+      const scenePart = result.match(/Scene: ([^,]*)/)?.[1] || "";
+      expect(scenePart).not.toContain("Happy Birthday!");
+      expect(scenePart).not.toContain("sign");
+    });
+  });
+
   describe("L3 imagination regex sanitizer (T6-32)", () => {
     it("replaces 'star chart' with 'night sky' in compositionHint", () => {
       const result = buildImagePrompt(
@@ -870,7 +909,7 @@ describe("prompt length regression (P5-3j)", () => {
     },
   ];
 
-  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 7600 chars", () => {
+  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 8100 chars", () => {
     const result = buildImagePrompt(
       "A child walks with a fox and a glowing star friend through a sunlit meadow, carrying a dinosaur toy",
       "classic_picture_book",
@@ -889,7 +928,7 @@ describe("prompt length regression (P5-3j)", () => {
         compositionHint: "wide establishing shot from slightly above",
       }
     );
-    expect(result.length).toBeLessThan(7900);
+    expect(result.length).toBeLessThan(8100);
   });
 
   it("non-animals non-star prompt (base case) stays under 6000 chars", () => {

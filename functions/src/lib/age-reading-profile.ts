@@ -21,7 +21,7 @@ const AGE_READING_PROFILES: Record<AgeBand, AgeReadingProfile> = {
   baby_toddler: {
     ageBand: "baby_toddler",
     label: "0〜2歳",
-    targetCharsPerPage: "8〜20文字程度",
+    targetCharsPerPage: "15〜35文字程度",
     targetSentencesPerPage: "1〜2文",
     sentenceCountPerPage: "1〜2文",
     vocabularyLevel: "音、色、もの、動きなど、感覚的で短い言葉",
@@ -37,7 +37,7 @@ const AGE_READING_PROFILES: Record<AgeBand, AgeReadingProfile> = {
   preschool_3_4: {
     ageBand: "preschool_3_4",
     label: "3〜4歳",
-    targetCharsPerPage: "80〜130文字程度",
+    targetCharsPerPage: "100〜150文字程度",
     targetSentencesPerPage: "3〜4文",
     sentenceCountPerPage: "3〜4文",
     vocabularyLevel: "日常語を中心に、幼児が理解しやすい言葉",
@@ -53,7 +53,7 @@ const AGE_READING_PROFILES: Record<AgeBand, AgeReadingProfile> = {
   early_reader_5_6: {
     ageBand: "early_reader_5_6",
     label: "5〜6歳",
-    targetCharsPerPage: "120〜180文字程度",
+    targetCharsPerPage: "140〜200文字程度",
     targetSentencesPerPage: "4〜6文",
     sentenceCountPerPage: "4〜6文",
     vocabularyLevel: "日常語に加えて、少しだけ新しい言葉を入れる",
@@ -69,7 +69,7 @@ const AGE_READING_PROFILES: Record<AgeBand, AgeReadingProfile> = {
   early_elementary_7_8: {
     ageBand: "early_elementary_7_8",
     label: "7〜8歳",
-    targetCharsPerPage: "160〜240文字程度",
+    targetCharsPerPage: "180〜260文字程度",
     targetSentencesPerPage: "5〜7文",
     sentenceCountPerPage: "5〜7文",
     vocabularyLevel: "小学校低学年が読める語彙。理由や考えを表す言葉も使う",
@@ -85,7 +85,7 @@ const AGE_READING_PROFILES: Record<AgeBand, AgeReadingProfile> = {
   general_child: {
     ageBand: "general_child",
     label: "3〜6歳向けの標準設定",
-    targetCharsPerPage: "45〜90文字程度",
+    targetCharsPerPage: "65〜110文字程度",
     targetSentencesPerPage: "3〜4文",
     sentenceCountPerPage: "3〜4文",
     vocabularyLevel: "日常語を中心に、ときどき少し新しい言葉を入れる",

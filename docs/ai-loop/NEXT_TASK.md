@@ -1,5 +1,7 @@
-# Implement Quality Regression Detection in Admin UI
+# Update PlanConfig to allow 8-Page Fixed Templates for Standard Plan
 
 ## Context
 
-The product roadmap for Phase 2, "Story & Illustration Quality," aims to make generated results "acceptable picture books for sale." While quality metrics, manual review, and LLM auto-review capabilities have been implemented, the ability to detect quality regressions over time is crucial for continuous improvement. The roadmap explicitly lists "Quality Trend Dashboard / Regression Detection" as a completed item under initial tasks for Phase 2, and "quality regression detection" as a general task to include. However, looking at the `completed_tasks` list, `PR #XXX` for "Quality Trend Dashboard / Regression Detection" is not explicitly mentioned, suggesting the *dashboard* part might be implemented, but the *detection* mechanism itself or its specific display might not be
+The product roadmap for Phase 3, "Template Mode — Reliability-First 生成," outlines the expansion of fixed templates to include 8-page variants. While 8-page templates have been created for specific stories (e.g., Bedtime, Cardboard Rocket) and the UI supports page count selection, the `PlanConfig` still needs to be updated to explicitly allow `standard_paid` users to generate these 8-page fixed templates. The `light_paid` plan mentioned in the original roadmap has been removed, so this task will target the `standard_paid` plan. This is a crucial step to enable monetization of longer fixed templates for paying users.
+
+This task is a direct follow

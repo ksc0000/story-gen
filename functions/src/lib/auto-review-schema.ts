@@ -55,6 +55,11 @@ const FLAGGED_ISSUE_SCHEMA = {
       description: "Optional page number (1-indexed) related to the issue",
       nullable: true,
     },
+    issueType: {
+      type: "string" as const,
+      description: "Machine-readable issue code (e.g., 'insufficient_semantic_content')",
+      nullable: true,
+    },
   },
   required: ["severity", "area", "message"] as const,
 };
@@ -203,6 +208,23 @@ const SAFETY_AXES_SCHEMA = {
   ] as const,
 };
 
+const PAGE_ASSESSMENT_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    pageNumber: { type: "number" as const, description: "Page number (1-indexed)" },
+    semanticContentDetectedElements: {
+      type: "array" as const,
+      items: { type: "string" as const },
+      description: "Detected semantic elements: 場所, 行動, 気持ち, 発見",
+    },
+    hasSufficientSemanticContent: {
+      type: "boolean" as const,
+      description: "Whether the page has at least 2 semantic elements",
+    },
+  },
+  required: ["pageNumber", "semanticContentDetectedElements", "hasSufficientSemanticContent"] as const,
+};
+
 // ---------------------------------------------------------------------------
 // Root schema
 // ---------------------------------------------------------------------------
@@ -260,6 +282,11 @@ export const AUTO_REVIEW_RESPONSE_SCHEMA = {
     characterAxes: CHARACTER_CONSISTENCY_AXES_SCHEMA,
     personalizationAxes: PERSONALIZATION_AXES_SCHEMA,
     safetyAxes: SAFETY_AXES_SCHEMA,
+    pageAssessments: {
+      type: "array" as const,
+      items: PAGE_ASSESSMENT_SCHEMA,
+      description: "Per-page semantic content assessment",
+    },
   },
   required: [
     "storyQualityScore",
@@ -277,5 +304,6 @@ export const AUTO_REVIEW_RESPONSE_SCHEMA = {
     "characterAxes",
     "personalizationAxes",
     "safetyAxes",
+    "pageAssessments",
   ] as const,
 };

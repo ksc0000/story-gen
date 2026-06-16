@@ -332,6 +332,10 @@ import { computeQualityTrend, type QualityTrendSummary } from "@/lib/admin-quali
 
 interface QualitySnapshot extends QualityTrendSummary {
   id: string;
+  /** Human-readable date label for the snapshot row (derived from createdAtMs). */
+  label?: string;
+  /** Start of the snapshot window in epoch ms (used for ordering/display). */
+  startMs?: number;
   createdAtMs?: number;
   createdBy?: string;
   source?: string;
@@ -1034,7 +1038,16 @@ export default function AdminBookQualityReviewPage() {
       );
       const snap = await getDocs(q);
       setQualitySnapshotHistory(
-        snap.docs.map((d) => ({ id: d.id, ...d.data() } as QualitySnapshot)),
+        snap.docs.map((d) => {
+          const data = d.data() as Omit<QualitySnapshot, "id">;
+          // Saved snapshots carry createdAtMs but no display label; derive a
+          // YYYY-MM-DD label so the history table shows a real date.
+          const createdAtMs = data.createdAtMs ?? data.startMs;
+          const label =
+            data.label ??
+            (createdAtMs ? new Date(createdAtMs).toISOString().slice(0, 10) : d.id);
+          return { id: d.id, ...data, label, startMs: data.startMs ?? createdAtMs };
+        }),
       );
     } catch (err) {
       console.error("Failed to fetch quality snapshot history:", err);

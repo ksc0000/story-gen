@@ -725,6 +725,7 @@ function buildCastGuidance(
         .join(" ")
     ),
     "Do not redesign recurring characters. Do not merge characters. Do not turn one character into another.",
+    "Keep each recurring character's face shape and proportions consistent with the reference across pages; vary only pose, expression, and camera angle.",
     "If a recurring character appears from behind, far away, or partially visible, preserve silhouette and signature items.",
   ]
     .filter(Boolean)
@@ -759,6 +760,12 @@ export function buildCoverImagePrompt(
   const castIds = options.cast?.map((c) => c.characterId);
   const castGuidance = buildCastGuidance(options?.cast, castIds);
 
+  const coverCompositionGuidance = [
+    "Book cover composition: single striking focal point, iconic masterpiece framing, eye-catching and vibrant, masterpiece quality.",
+    "The protagonist should be clearly visible and ideally centered or placed according to the rule of thirds for maximum impact.",
+    "Ensure a clean and balanced layout suitable for a book cover.",
+  ].join(" ");
+
   const backgroundGuidance = [
     `Background richness: ${getBackgroundRichnessGuidance(options?.ageBand)}`,
     "Show meaningful surroundings, not just the protagonist.",
@@ -788,8 +795,10 @@ export function buildCoverImagePrompt(
     hasAnimalCharactersInCast(options?.cast ?? []);
   const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters });
 
+  // P5-fix: reordered to prioritize composition, style, and scene first (following buildImagePrompt success pattern).
   return [
-    "Book cover: single striking scene, text-free, no letters, no logos, no watermarks",
+    "Book cover: text-free, no letters, no logos, no watermarks",
+    coverCompositionGuidance,
     `Illustration style: ${styleProfile.styleBible}`,
     styleBible ? `Story-specific style consistency: ${styleBible}` : "",
     styleProfile.negativeStyleRules?.length

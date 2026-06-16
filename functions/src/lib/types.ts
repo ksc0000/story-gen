@@ -637,6 +637,7 @@ export interface QualityFlaggedIssue {
   area: "story" | "illustration" | "character" | "personalization" | "safety";
   message: string;
   pageNumber?: number;
+  issueType?: string;
 }
 
 export interface QualityRecommendedFix {
@@ -649,6 +650,12 @@ export interface QualityRecommendedFix {
     | "human_review_required";
   reason: string;
   pageNumber?: number;
+}
+
+export interface PageAssessment {
+  pageNumber: number;
+  semanticContentDetectedElements: string[];
+  hasSufficientSemanticContent: boolean;
 }
 
 export interface LLMQualityReviewResult {
@@ -667,6 +674,7 @@ export interface LLMQualityReviewResult {
   characterAxes?: CharacterConsistencyAxes;
   personalizationAxes?: PersonalizationAxes;
   safetyAxes?: SafetyAxes;
+  pageAssessments?: PageAssessment[];
 }
 
 export interface QualityReview {

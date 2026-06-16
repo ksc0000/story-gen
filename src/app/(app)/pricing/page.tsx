@@ -67,7 +67,7 @@ const DISPLAY_PLANS: PlanDisplay[] = [
 
 const COMPARISON_ITEMS = [
   { label: "月間作成冊数", key: "quota" },
-  { label: "相棒登録数", key: "companions" },
+  { label: "なかよしキャラ登録数", key: "companions" },
   { label: "子どもプロフィール", key: "children" },
   { label: "画質", key: "quality" },
 ] as const;

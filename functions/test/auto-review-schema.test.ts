@@ -26,6 +26,7 @@ describe("AUTO_REVIEW_RESPONSE_SCHEMA", () => {
       "characterAxes",
       "personalizationAxes",
       "safetyAxes",
+      "pageAssessments",
     ];
     expect(AUTO_REVIEW_RESPONSE_SCHEMA.required).toEqual(expect.arrayContaining(requiredFields));
     expect(AUTO_REVIEW_RESPONSE_SCHEMA.required.length).toBe(requiredFields.length);
@@ -189,6 +190,15 @@ describe("AUTO_REVIEW_RESPONSE_SCHEMA", () => {
     for (const field of requiredAxes) {
       expect(axes.properties[field].type).toBe("number");
     }
+  });
+
+  it("has pageAssessments as an array of objects", () => {
+    const assessments = AUTO_REVIEW_RESPONSE_SCHEMA.properties.pageAssessments;
+    expect(assessments.type).toBe("array");
+    expect(assessments.items.type).toBe("object");
+    expect(assessments.items.required).toEqual(
+      expect.arrayContaining(["pageNumber", "semanticContentDetectedElements", "hasSufficientSemanticContent"])
+    );
   });
 });
 

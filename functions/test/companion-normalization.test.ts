@@ -87,6 +87,39 @@ describe("normalizeStoryWithCompanion", () => {
     expect(comp?.visualBible).toBe(mockInput.companionVisualDescription);
   });
 
+  it("overrides a hallucinated long visualBible with the registered description", () => {
+    // Reproduces the gray-fox-rendered-orange bug: Gemini invents a long
+    // "soft orange fur" bible for a companion registered as gray. The registered
+    // description must win so the prompt matches the gray reference image.
+    const grayFoxInput: BookInput = {
+      childName: "はる",
+      companionId: "comp-fox",
+      companionName: "こん",
+      companionVisualDescription: "A small, gray fox with an energetic personality who has the ability to sing beautifully.",
+    };
+    const storyWithHallucinatedCompanion: GeneratedStory = {
+      ...mockStory,
+      cast: [
+        ...mockStory.cast!,
+        {
+          characterId: "fox_kon",
+          displayName: "こん",
+          role: "buddy",
+          characterKind: "animal",
+          visualBible: "Kon is a small, energetic fox with soft orange fur, a white belly, and a fluffy white-tipped tail.",
+          colorPalette: ["soft orange", "creamy white", "soft pink"],
+          silhouette: "small, agile fox with a fluffy tail",
+        },
+      ],
+    };
+    const result = normalizeStoryWithCompanion(storyWithHallucinatedCompanion, grayFoxInput);
+    const comp = result.cast?.find(c => c.characterId === "fox_kon");
+    expect(comp?.visualBible).toBe(grayFoxInput.companionVisualDescription);
+    expect(comp?.visualBible).not.toContain("orange");
+    // The model-invented palette must be dropped so it cannot reintroduce orange.
+    expect(comp?.colorPalette).toBeUndefined();
+  });
+
   it("should do nothing if companion info is missing in input", () => {
     const result = normalizeStoryWithCompanion(mockStory, { childName: "Child" });
     expect(result).toEqual(mockStory);
