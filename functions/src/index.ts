@@ -23,3 +23,4 @@ export { generateStoryPitch } from "./generate-story-pitch";
 export { onBookCompletion_triggerLLMAutoReview } from "./auto-review";
 export { submitAppFeedback } from "./submit-app-feedback";
 export { updateBookTitle } from "./update-book-title";
+export { generateBookPdf } from "./generate-book-pdf";

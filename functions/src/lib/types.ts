@@ -5,6 +5,7 @@ export type BookStatus = "generating" | "completed" | "partial_completed" | "fai
 export type CoverStatus = "not_started" | "generating" | "completed" | "failed";
 export type ReadingStructureVersion = "v1_pages_only" | "v2_cover_title_story";
 export type PageStatus = "pending" | "generating" | "completed" | "image_failed" | "fallback_completed" | "failed";
+export type PdfStatus = "not_started" | "processing" | "completed" | "failed";
 export type GenerationMode = "reliable_fast" | "quality";
 export type GenerationReliabilityStatus = "ok" | "partial" | "failed";
 export type CreationMode = "fixed_template" | "guided_ai" | "original_ai" | "photo_story";
@@ -442,6 +443,10 @@ export interface BookData {
   recoveredAt?: FirebaseFirestore.Timestamp;
   recoveredAtMs?: number;
   public?: boolean;
+  pdfStatus?: PdfStatus;
+  pdfUrl?: string;
+  pdfGeneratedAtMs?: number;
+  pdfError?: string;
 }
 
 export interface AppFeedbackDoc {
