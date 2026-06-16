@@ -725,6 +725,7 @@ function buildCastGuidance(
         .join(" ")
     ),
     "Do not redesign recurring characters. Do not merge characters. Do not turn one character into another.",
+    "Keep each recurring character's face shape and proportions consistent with the reference across pages; vary only pose, expression, and camera angle.",
     "If a recurring character appears from behind, far away, or partially visible, preserve silhouette and signature items.",
   ]
     .filter(Boolean)
