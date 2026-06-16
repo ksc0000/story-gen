@@ -118,6 +118,7 @@
     "PR #397: Fix: 絵本のページごとにスタイル・背景がバラバラになる不具合 (merged)",
     "PR #398: スタイル選択サンプルを本番パイプライン(flux-2-pro+styleBible)で作り直し (merged)",
     "PR #400: Implement Aggregated Axis-Level Quality Score Persistence (merged)",
+    "PR #404: Improve Cover Page Illustration Quality and Implement Safer Retry (merged)",
     "PR #405: fix: resolve 4 production bugs (feedback/gallery/quota/footwear) (merged)",
     "PR #413: Redesign Pricing Page to Comparative Layout (merged)",
     "PR #414: Sync home monthly usage badge with real-time data and quotas (merged)",
