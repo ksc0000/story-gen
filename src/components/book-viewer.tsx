@@ -33,6 +33,8 @@ interface BookViewerProps {
   openingNarration?: string;
   onRegeneratePage?: (index: number) => void;
   isRegeneratingPage?: (index: number) => boolean;
+  onRegenerateCover?: () => void;
+  isRegeneratingCover?: boolean;
 }
 
 /** Build reading items: cover+title spread (single sheet) → story pages (when v2 is active). */
@@ -120,16 +122,46 @@ export const SWIPE_VELOCITY_THRESHOLD = 500;
 /*  Per-item renderers                                                 */
 /* ------------------------------------------------------------------ */
 
-function CoverSheetDesktop({ item }: { item: Extract<ReadingItem, { kind: "cover_title_spread" }> }) {
+function CoverSheetDesktop({
+  item,
+  onRegenerate,
+  isRegenerating,
+}: {
+  item: Extract<ReadingItem, { kind: "cover_title_spread" }>;
+  onRegenerate?: () => void;
+  isRegenerating?: boolean;
+}) {
   return (
     <div className="grid grid-cols-2 gap-0">
-      <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
+      <div className="relative aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.imageUrl}
           alt={`${item.title} - 表紙`}
           className="h-full w-full object-cover"
         />
+        {onRegenerate && (
+          <Button
+            variant="outline"
+            size="icon-sm"
+            className="absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-full bg-white/80 text-violet-500 shadow-sm transition hover:bg-white hover:text-purple-700 active:scale-95 sm:size-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRegenerate();
+            }}
+            disabled={isRegenerating}
+          >
+            <RefreshCcw className="size-4 sm:size-5" />
+          </Button>
+        )}
+        {isRegenerating && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-white/60 backdrop-blur-[2px]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 shadow-sm">
+              <Loader2 className="size-6 animate-spin text-purple-600" />
+            </div>
+            <p className="text-xs font-bold text-purple-900">再生成中...</p>
+          </div>
+        )}
       </div>
       <div className="flex flex-col justify-center bg-gradient-to-br from-[#fdf4ff] via-[#f8fafc] to-[#e0f2fe] p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-500">Cover & Title</p>
@@ -154,16 +186,46 @@ function CoverSheetDesktop({ item }: { item: Extract<ReadingItem, { kind: "cover
   );
 }
 
-function CoverSheetMobile({ item }: { item: Extract<ReadingItem, { kind: "cover_title_spread" }> }) {
+function CoverSheetMobile({
+  item,
+  onRegenerate,
+  isRegenerating,
+}: {
+  item: Extract<ReadingItem, { kind: "cover_title_spread" }>;
+  onRegenerate?: () => void;
+  isRegenerating?: boolean;
+}) {
   return (
     <div className="bg-white">
-      <div className="aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
+      <div className="relative aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.imageUrl}
           alt={`${item.title} - 表紙`}
           className="h-full w-full object-cover"
         />
+        {onRegenerate && (
+          <Button
+            variant="outline"
+            size="icon-xs"
+            className="absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full bg-white/80 text-violet-500 shadow-sm transition hover:bg-white hover:text-purple-700 active:scale-95"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRegenerate();
+            }}
+            disabled={isRegenerating}
+          >
+            <RefreshCcw className="size-3.5" />
+          </Button>
+        )}
+        {isRegenerating && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-white/60 backdrop-blur-[2px]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-sm">
+              <Loader2 className="size-5 animate-spin text-purple-600" />
+            </div>
+            <p className="text-[10px] font-bold text-purple-900">再生成中...</p>
+          </div>
+        )}
       </div>
       <div className="bg-gradient-to-br from-[#fdf4ff] via-[#f8fafc] to-[#e0f2fe] p-4">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-500">Cover & Title</p>
@@ -319,7 +381,20 @@ export function BookViewer(props: BookViewerProps) {
               variants={shadowVariants}
               className="pointer-events-none absolute inset-0 z-50 bg-black/20"
             />
-            {item.kind === "cover_title_spread" && <CoverSheetDesktop item={item} />}
+            {item.kind === "cover_title_spread" && (
+              <CoverSheetDesktop
+                item={item}
+                onRegenerate={
+                  props.onRegenerateCover
+                    ? () => {
+                        setPageToRegenerate(-1);
+                        setIsConfirmOpen(true);
+                      }
+                    : undefined
+                }
+                isRegenerating={props.isRegeneratingCover}
+              />
+            )}
             {item.kind === "story_page" && (
               <>
                 <div className="relative aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
@@ -411,7 +486,20 @@ export function BookViewer(props: BookViewerProps) {
               variants={shadowVariants}
               className="pointer-events-none absolute inset-0 z-50 bg-black/20"
             />
-            {item.kind === "cover_title_spread" && <CoverSheetMobile item={item} />}
+            {item.kind === "cover_title_spread" && (
+              <CoverSheetMobile
+                item={item}
+                onRegenerate={
+                  props.onRegenerateCover
+                    ? () => {
+                        setPageToRegenerate(-1);
+                        setIsConfirmOpen(true);
+                      }
+                    : undefined
+                }
+                isRegenerating={props.isRegeneratingCover}
+              />
+            )}
             {item.kind === "story_page" && (
               <>
                 <div className="relative aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
@@ -495,7 +583,9 @@ export function BookViewer(props: BookViewerProps) {
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={() => {
-          if (pageToRegenerate !== null && onRegeneratePage) {
+          if (pageToRegenerate === -1 && props.onRegenerateCover) {
+            props.onRegenerateCover();
+          } else if (pageToRegenerate !== null && onRegeneratePage) {
             onRegeneratePage(pageToRegenerate);
           }
         }}

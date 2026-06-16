@@ -48,6 +48,8 @@ function BookContent() {
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [regeneratingPages, setRegeneratingPages] = useState<Set<number>>(new Set());
   const [regenerationErrors, setRegenerationErrors] = useState<Record<number, string>>({});
+  const [isRegeneratingCover, setIsRegeneratingCover] = useState(false);
+  const [coverRegenerationError, setCoverRegenerationError] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -168,6 +170,7 @@ function BookContent() {
       const regenerate = httpsCallable(functions, "regeneratePageImage");
       await regenerate({ bookId, pageNumber: page.pageNumber });
     } catch (err) {
+      console.error("Failed to regenerate page:", err);
       const message = err instanceof Error ? err.message : "再生成に失敗しました。";
       setRegenerationErrors((prev) => ({ ...prev, [page.pageNumber]: message }));
     } finally {
@@ -176,6 +179,21 @@ function BookContent() {
         next.delete(page.pageNumber);
         return next;
       });
+    }
+  }
+
+  async function handleRegenerateCover() {
+    if (!bookId || isRegeneratingCover) return;
+    setIsRegeneratingCover(true);
+    setCoverRegenerationError(null);
+    try {
+      const regenerate = httpsCallable(functions, "regenerateCoverImage");
+      await regenerate({ bookId });
+    } catch (err) {
+      console.error("Failed to regenerate cover:", err);
+      setCoverRegenerationError(err instanceof Error ? err.message : "表紙の再生成に失敗しました。");
+    } finally {
+      setIsRegeneratingCover(false);
     }
   }
 
@@ -324,9 +342,22 @@ function BookContent() {
           readingStructureVersion={book.readingStructureVersion}
           titleSpreadText={book.titleSpreadText}
           openingNarration={book.openingNarration}
-        onRegeneratePage={isOwner && !isDemoMode && (book.status === "completed" || book.status === "partial_completed") ? (index) => handleRegeneratePage(viewablePages[index]) : undefined}
+          onRegeneratePage={
+            isOwner && !isDemoMode && (book.status === "completed" || book.status === "partial_completed")
+              ? (index) => handleRegeneratePage(viewablePages[index])
+              : undefined
+          }
           isRegeneratingPage={(index) => regeneratingPages.has(viewablePages[index].pageNumber)}
+          onRegenerateCover={
+            isOwner && !isDemoMode && (book.status === "completed" || book.status === "partial_completed")
+              ? handleRegenerateCover
+              : undefined
+          }
+          isRegeneratingCover={isRegeneratingCover}
         />
+        {coverRegenerationError && (
+          <p className="mt-2 text-center text-sm text-rose-500">{coverRegenerationError}</p>
+        )}
       </div>
 
       {isOwner && (

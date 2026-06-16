@@ -20,7 +20,6 @@ import type { PageData, BookData, ImageModelProfile, PageStatus, GenerationRelia
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 // フォールバック発火までの画像生成タイムアウト。既定 120s → 360s（3倍, 2026-06）。
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "360000");
-const STORAGE_BUCKET = "story-gen-8a769.firebasestorage.app";
 
 export function buildRegenerationSuccessPatch(params: {
   newPageStatus: PageStatus;
@@ -101,8 +100,7 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
     if (!pageSnap.exists) throw new HttpsError("not-found", "ページが見つかりません。");
     const pageData = pageSnap.data() as PageData;
 
-    const allowedStatuses: PageStatus[] = ["image_failed", "fallback_completed"];
-    if (isAdmin) allowedStatuses.push("completed");
+    const allowedStatuses: PageStatus[] = ["image_failed", "fallback_completed", "completed"];
 
     if (!allowedStatuses.includes(pageData.status)) {
       throw new HttpsError(
@@ -234,7 +232,7 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
     }
 
     const storage = admin.storage();
-    const bucket = storage.bucket(STORAGE_BUCKET);
+    const bucket = storage.bucket();
     const filename = `books/${bookId}/page-${pageData.pageNumber}-regen-${Date.now()}.png`;
     const file = bucket.file(filename);
     const downloadToken = randomUUID();
