@@ -9,7 +9,7 @@ import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useCompanions } from "./use-companions-hook";
-import { getSpeciesEmoji, getPersonalityLabels } from "./companions-utils";
+import { getSpeciesEmoji, getPersonalityLabels, getAbilityLabel } from "./companions-utils";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Trash2, Plus } from "lucide-react";
 
@@ -19,7 +19,7 @@ export default function CompanionsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("本当にこの相棒を削除しますか？")) return;
+    if (!window.confirm("本当にこのなかよしキャラを削除しますか？")) return;
 
     setDeletingId(id);
     try {
@@ -37,13 +37,13 @@ export default function CompanionsPage() {
       <BackButton className="mb-4" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-purple-900">相棒キャラクター</h1>
-          <p className="mt-2 text-sm text-violet-500">絵本に登場するオリジナルの相棒を管理します。</p>
+          <h1 className="text-2xl font-bold text-purple-900">なかよしキャラ</h1>
+          <p className="mt-2 text-sm text-violet-500">絵本に登場するオリジナルのなかよしキャラを管理します。</p>
         </div>
         <Link href="/companions/create">
           <Button className="gap-2">
             <Plus className="size-4" />
-            新しい相棒を作る
+            新しいなかよしキャラを作る
           </Button>
         </Link>
       </div>
@@ -62,12 +62,12 @@ export default function CompanionsPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-violet-100 text-3xl">
               🐾
             </div>
-            <p className="text-lg font-medium text-purple-900">まだ相棒がいません</p>
+            <p className="text-lg font-medium text-purple-900">まだなかよしキャラがいません</p>
             <p className="mt-1 text-sm text-violet-500">
-              最初の相棒を作って、物語を賑やかにしましょう！
+              最初のなかよしキャラを作って、物語を賑やかにしましょう！
             </p>
             <Link href="/companions/create" className="mt-6 inline-block">
-              <Button size="lg">相棒を作る</Button>
+              <Button size="lg">なかよしキャラを作る</Button>
             </Link>
           </CardContent>
         </Card>
@@ -121,7 +121,7 @@ export default function CompanionsPage() {
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-violet-600">
                   <span className="font-semibold text-violet-400">とくいなこと:</span>{" "}
-                  {companion.specialAbility || "ひみつ"}
+                  {getAbilityLabel(companion.specialAbility)}
                 </p>
               </CardContent>
             </Card>

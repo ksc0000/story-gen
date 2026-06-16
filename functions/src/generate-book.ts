@@ -410,13 +410,96 @@ function normalizeStoryForBook(
     normalizeStoryCastWithChildProfile(story, bookData.childProfileSnapshot)
   );
 
+  const withCompanion = normalizeStoryWithCompanion(withNormalizedCast, mergedInput);
+
   return {
-    ...withNormalizedCast,
+    ...withCompanion,
     forbiddenQuestObjects: sanitizeForbiddenQuestObjects(
-      withNormalizedCast.forbiddenQuestObjects,
+      withCompanion.forbiddenQuestObjects,
       bookData,
       mergedInput
     ),
+  };
+}
+
+/**
+ * Ensures the companion character is correctly registered in the cast and appears
+ * in at least 50% of the pages.
+ */
+export function normalizeStoryWithCompanion(
+  story: GeneratedStory,
+  mergedInput: BookInput
+): GeneratedStory {
+  const { companionId, companionName, companionVisualDescription } = mergedInput;
+  if (!companionId || !companionName || !companionVisualDescription) {
+    return story;
+  }
+
+  const companionCharacterId = "companion_character";
+  const companionNameLower = companionName.toLowerCase();
+
+  // 1. Check if companion is already in cast
+  const existingCompanion = story.cast?.find(
+    (c) =>
+      c.characterId === companionCharacterId ||
+      c.displayName.toLowerCase().includes(companionNameLower) ||
+      companionNameLower.includes(c.displayName.toLowerCase())
+  );
+
+  let updatedCast = story.cast ? [...story.cast] : [];
+  let effectiveCompanionId = companionCharacterId;
+
+  if (existingCompanion) {
+    effectiveCompanionId = existingCompanion.characterId;
+    // The user-registered companion description (and its reference illustration)
+    // is the source of truth for color and species. Gemini frequently hallucinates
+    // a generic appearance — e.g. inventing an orange fox for a companion registered
+    // as gray — and that hallucinated text then fights the gray reference image,
+    // making the companion drift in color/species across pages. Enforce the
+    // registered description and drop the model-invented colorPalette so the only
+    // color signal in the prompt matches the reference illustration.
+    existingCompanion.visualBible = companionVisualDescription;
+    existingCompanion.colorPalette = undefined;
+  } else {
+    updatedCast.push({
+      characterId: companionCharacterId,
+      displayName: companionName,
+      role: "buddy" as StoryCharacterRole,
+      characterKind: "magical_creature" as StoryCharacterKind,
+      visualBible: companionVisualDescription,
+      nonHuman: true,
+      noHumanFace: true,
+      noHumanBody: true,
+    });
+  }
+
+  // 2. Ensure presence in >= 50% of pages
+  const totalPages = story.pages.length;
+  const targetCount = Math.ceil(totalPages * 0.5);
+  const appearingIndices = story.pages
+    .map((p, i) => (p.appearingCharacterIds?.includes(effectiveCompanionId) ? i : -1))
+    .filter((i) => i !== -1);
+
+  let currentCount = appearingIndices.length;
+  const updatedPages = story.pages.map((page, index) => {
+    const isPresent = page.appearingCharacterIds?.includes(effectiveCompanionId);
+    if (isPresent) return page;
+
+    // If we still need more appearances, add to this page (prefer even pages)
+    if (currentCount < targetCount && index % 2 === 0) {
+      currentCount++;
+      return {
+        ...page,
+        appearingCharacterIds: [...(page.appearingCharacterIds || []), effectiveCompanionId],
+      };
+    }
+    return page;
+  });
+
+  return {
+    ...story,
+    cast: updatedCast,
+    pages: updatedPages,
   };
 }
 
@@ -601,6 +684,8 @@ export interface GenerationDeps {
     data: Record<string, unknown>
   ) => Promise<void>;
   getUserMonthlyCount: (userId: string) => Promise<number>;
+  /** 管理者（admin カスタムクレーム保持者）かどうか。テスト生成のため月次上限を回避する。 */
+  isUserAdmin: (userId: string) => Promise<boolean>;
   incrementMonthlyCount: (userId: string) => Promise<void>;
   getUserCredits: (userId: string) => Promise<{
     singleBookCredits: number;
@@ -1012,6 +1097,7 @@ export async function processBookGeneration(
       }
     }
     const userPlan = await deps.getUserPlan(bookData.userId);
+    const isAdminUser = await deps.isUserAdmin(bookData.userId);
     const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
     const readingProfile = getAgeReadingProfile(mergedInput.childAge);
     const generationMode = normalizedBookData.generationMode ?? "reliable_fast";
@@ -1031,7 +1117,7 @@ export async function processBookGeneration(
 
     if (process.env.NODE_ENV !== "development") {
       const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
-      quotaExceeded = !canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });
+      quotaExceeded = !canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount, isAdmin: isAdminUser });
 
       if (quotaExceeded || normalizedBookData.isSinglePurchase) {
         const credits = await deps.getUserCredits(bookData.userId);
@@ -1680,7 +1766,7 @@ export async function processBookGeneration(
       coverImagePrompt &&
       (isSaferRetryEnabled(normalizedBookData.imageModelProfile || "klein_fast") || deps.p5ModelUnification === "safer_retry")
         ? {
-            prompt: buildP5SimplifiedPagePrompt(baseCoverPrompt, normalizedBookData.style, { hasAnimalCharacters: normalizedBookData.theme === "animals" }),
+            prompt: buildP5SimplifiedPagePrompt(baseCoverPrompt ?? "", normalizedBookData.style, { hasAnimalCharacters: normalizedBookData.theme === "animals" }),
             inputImageUrls: [] as string[],
           }
         : undefined;
@@ -1823,8 +1909,10 @@ export async function processBookGeneration(
     await deps.updateBookStatus(bookId, bookStatus);
 
     if (bookStatus !== "failed") {
-      // Consumption logic: Prefer monthly quota, then single credits
-      if (process.env.NODE_ENV !== "development") {
+      // Consumption logic: Prefer monthly quota, then single credits.
+      if (isAdminUser) {
+        // 管理者のテスト生成は月次カウント・クレジットを一切消費しない。
+      } else if (process.env.NODE_ENV !== "development") {
         const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
         const canUseMonthly = canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });
 
@@ -1991,7 +2079,7 @@ export function normalizeBookForGeneration(
 }
 
 
-function buildInputImageRefs(
+export function buildInputImageRefs(
   childProfileSnapshot: BookData["childProfileSnapshot"] | undefined,
   cast: GeneratedStory["cast"],
   appearingCharacterIds?: string[],
@@ -2080,7 +2168,27 @@ function buildInputImageRefs(
       ) === index
   );
 
-  return deduped.slice(0, 2);
+  // 参照画像は最大2枚。子ども参照だけで2枠を使い切ると相棒の参照が押し出され、
+  // 相棒が絵に描かれなくなる。そのため「主人公以外（相棒）」の参照が1枚は入るよう優先選択する。
+  type Ref = (typeof deduped)[number];
+  const prioritized: Ref[] = [];
+  const pushUnique = (ref: Ref | undefined) => {
+    if (ref && !prioritized.includes(ref)) prioritized.push(ref);
+  };
+
+  // photo_story の元写真（style_reference）は顔の一貫性に必須なので最優先で残す。
+  pushUnique(deduped.find((ref) => ref.role === "style_reference"));
+  // 主人公の参照を1枚。
+  pushUnique(deduped.find((ref) => ref.characterId === "child_protagonist"));
+  // 相棒など主人公以外のキャラ参照を1枚。
+  pushUnique(deduped.find((ref) => ref.characterId && ref.characterId !== "child_protagonist"));
+  // 余った枠を元の優先順で埋める（相棒がいない通常の絵本は従来どおり子ども参照2枚になる）。
+  for (const ref of deduped) {
+    if (prioritized.length >= 2) break;
+    pushUnique(ref);
+  }
+
+  return prioritized.slice(0, 2);
 }
 
 function buildInputImageRoles(
@@ -2707,15 +2815,54 @@ function buildStoryFromFixedTemplate(
   readingProfile: { ageBand: AgeBand }
 ): GeneratedStory {
   const replacements = buildFixedTemplateReplacements(mergedInput);
-  const pages = fixedStory.pages.map((page) => ({
-    text: applyTemplateReplacements(
+
+  const companionId = mergedInput.companionId;
+  const companionName = mergedInput.companionName;
+  const companionVisual = mergedInput.companionVisualDescription;
+
+  const hasCompanion = Boolean(companionId && companionName && companionVisual);
+  const companionCharacterId = "companion_character";
+
+  const pages = fixedStory.pages.map((page, index) => {
+    const text = applyTemplateReplacements(
       page.textTemplatesByAge?.[readingProfile.ageBand]
         ?? page.textTemplatesByAge?.general_child
         ?? page.textTemplate,
       replacements
-    ),
-    imagePrompt: applyTemplateReplacements(page.imagePromptTemplate, replacements),
-  }));
+    );
+    const baseImagePrompt = applyTemplateReplacements(page.imagePromptTemplate, replacements);
+
+    // 相棒がいる場合、1ページおき（0, 2, 4...）に登場させる（半数以上）
+    const appearingCharacterIds = ["child_protagonist"];
+    let imagePrompt = baseImagePrompt;
+    if (hasCompanion && index % 2 === 0) {
+      appearingCharacterIds.push(companionCharacterId);
+      // 固定テンプレートの Scene 記述は相棒に触れないため、相棒を能動的にシーンへ配置する指示を加える。
+      // （cast の一貫性ガイダンスだけでは「補足」扱いになり描かれにくいため、Scene レベルで明示する）
+      imagePrompt = `${baseImagePrompt} Also clearly present in this scene: ${companionName} (${companionVisual}), a friendly companion staying close beside the child and joining the moment naturally. Draw ${companionName} as a visible part of the scene, not in the background.`;
+    }
+
+    return {
+      text,
+      imagePrompt,
+      pageVisualRole: page.pageVisualRole,
+      appearingCharacterIds,
+    };
+  });
+
+  const cast: StoryCharacter[] = [];
+  if (hasCompanion) {
+    cast.push({
+      characterId: companionCharacterId,
+      displayName: companionName!,
+      role: "buddy",
+      characterKind: "magical_creature",
+      visualBible: companionVisual!,
+      nonHuman: true,
+      noHumanFace: true,
+      noHumanBody: true,
+    });
+  }
 
   return {
     title: applyTemplateReplacements(fixedStory.titleTemplate, replacements),
@@ -2732,6 +2879,7 @@ function buildStoryFromFixedTemplate(
     styleBible: buildFixedStyleBible(bookData, template),
     narrativeDevice: undefined,
     pages,
+    cast: cast.length > 0 ? cast : undefined,
   };
 }
 
@@ -3088,6 +3236,16 @@ export const generateBook = onDocumentCreated(
         const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
         const countDoc = await db.collection("users").doc(userId).collection("usage").doc(yearMonth).get();
         return countDoc.exists ? (countDoc.data()?.count || 0) : 0;
+      },
+
+      isUserAdmin: async (userId: string) => {
+        try {
+          const userRecord = await admin.auth().getUser(userId);
+          return userRecord.customClaims?.admin === true;
+        } catch (err) {
+          console.error(`Failed to resolve admin claim for ${userId}:`, err);
+          return false;
+        }
       },
 
       incrementMonthlyCount: async (userId: string) => {

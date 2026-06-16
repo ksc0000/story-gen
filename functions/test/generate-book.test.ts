@@ -186,6 +186,8 @@ function createMockDeps() {
     updateBookStoryQualityReport: vi.fn().mockResolvedValue(undefined),
     updateBookStoryGenerationMetadata: vi.fn().mockResolvedValue(undefined),
     getUserMonthlyCount: vi.fn().mockResolvedValue(0),
+    isUserAdmin: vi.fn().mockResolvedValue(false),
+
     incrementMonthlyCount: vi.fn().mockResolvedValue(undefined),
   };
 }

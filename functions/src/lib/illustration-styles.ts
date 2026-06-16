@@ -47,6 +47,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
     negativeStyleRules: [
       "Do not add readable text, signs, labels, posters, banners, logos, watermarks, or pseudo-writing.",
       "Do not add gritty textures or realistic photographic detail.",
+      "Night and dark scenes must maintain the same bright clean colors — use soft moonlight or gentle ambient glow. Do not darken the palette for night scenes.",
     ],
     usePreviewAsReference: false,
   },
@@ -83,6 +84,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
     negativeStyleRules: [
       "Do not add readable text, signs, labels, posters, banners, logos, watermarks, or pseudo-writing.",
       "Do not make surfaces glossy in a hard commercial CG way.",
+      "Night and dark scenes must keep the same bright child-safe lighting — use soft moonlight, warm indoor glow, or gentle magical light sources. Do not switch to dark, moody, or photorealistic night lighting.",
     ],
     usePreviewAsReference: false,
   },
@@ -119,6 +121,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
     negativeStyleRules: [
       "Do not add readable text, signs, labels, posters, banners, logos, watermarks, or pseudo-writing.",
       "Do not make the page cluttered or overstimulating.",
+      "Night and dark scenes must keep the same vivid saturated colors — use bold moonlight or glowing light sources. Do not mute the palette for night scenes.",
     ],
     usePreviewAsReference: false,
   },

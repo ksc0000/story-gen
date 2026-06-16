@@ -559,7 +559,7 @@ function BookContent() {
                       bookId,
                       productPlan: book.productPlan ?? "free",
                       imageModelProfile: book.imageModelProfile,
-                      storyModel: book.storyModel,
+                      storyModel: book.storyModel ?? null,
                       rating: feedback.rating,
                       childLikenessRating: feedback.childLikenessRating,
                       illustrationRating: feedback.illustrationRating,

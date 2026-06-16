@@ -93,7 +93,9 @@ export async function generateCoverImageWithFallback(params: {
         attempt === 1;
 
       const effectivePrompt = useStepBParams ? params.stepBConfig!.prompt : params.coverImagePrompt;
-      const effectiveInputImageUrls = useStepBParams ? params.stepBConfig!.inputImageUrls : params.inputImageUrls;
+      const effectiveInputImageUrls = useStepBParams
+        ? params.stepBConfig!.inputImageUrls
+        : params.inputImageUrls ?? [];
 
       if (useStepBParams) {
         logger.info("p5_model_unification_retry_active", {

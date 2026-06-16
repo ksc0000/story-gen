@@ -50,6 +50,22 @@ export const SIZE_OPTIONS: { value: "small" | "medium" | "large"; label: string;
   { value: "large", label: "大きい", en: "large" },
 ];
 
+export const BODY_TYPE_OPTIONS: { value: string; label: string; en: string }[] = [
+  { value: "slim", label: "スリム", en: "slim" },
+  { value: "average", label: "ふつう", en: "average-built" },
+  { value: "chubby", label: "まるまる", en: "chubby" },
+  { value: "tall", label: "ひょろっと長い", en: "tall and slender" },
+  { value: "tiny", label: "ちびっこ", en: "tiny and petite" },
+];
+
+export const COLOR_DEPTH_OPTIONS: { value: string; label: string; en: string }[] = [
+  { value: "light", label: "薄い", en: "light-toned" },
+  { value: "medium", label: "ふつう", en: "medium-toned" },
+  { value: "deep", label: "濃い", en: "deeply-colored" },
+  { value: "dark", label: "暗い", en: "dark-toned" },
+  { value: "pastel", label: "パステル", en: "pastel-toned" },
+];
+
 /** 体の模様（単一選択）。en が空文字のものは説明に含めない（＝無地）。 */
 export const PATTERN_OPTIONS: { value: string; label: string; emoji: string; en: string }[] = [
   { value: "plain", label: "むじ", emoji: "⬜", en: "" },
@@ -80,10 +96,18 @@ export function buildVisualDescription(params: {
   ability: string;
   color: string;
   size: "small" | "medium" | "large";
+  bodyType?: string;
+  colorDepth?: string;
   pattern?: string;
   accessories?: string[];
 }): string {
   const sizeEn = SIZE_OPTIONS.find((o) => o.value === params.size)?.en || "medium-sized";
+  const bodyTypeEn = params.bodyType
+    ? BODY_TYPE_OPTIONS.find((o) => o.value === params.bodyType)?.en || ""
+    : "";
+  const colorDepthEn = params.colorDepth
+    ? COLOR_DEPTH_OPTIONS.find((o) => o.value === params.colorDepth)?.en || ""
+    : "";
   const colorEn = COLOR_OPTIONS.find((o) => o.value === params.color)?.en || "colorful";
   const speciesEn = SPECIES_OPTIONS.find((o) => o.value === params.species)?.en || "creature";
   const personalitiesEn = params.personalities
@@ -104,8 +128,12 @@ export function buildVisualDescription(params: {
   const personalityPart = personalitiesEn ? `with a ${personalitiesEn} personality` : "";
   const abilityPart = abilityEn ? `who has ${abilityEn}` : "";
 
+  const appearanceBase = [sizeEn, bodyTypeEn, colorDepthEn, colorEn]
+    .filter(Boolean)
+    .join(", ");
+
   const parts = [
-    `A ${sizeEn}, ${colorEn} ${speciesEn}`,
+    `A ${appearanceBase} ${speciesEn}`,
     patternPart,
     accessoryPart,
     personalityPart,
@@ -127,4 +155,9 @@ export function getPersonalityLabels(personalities: string[]): string[] {
   return personalities
     .map((p) => PERSONALITY_OPTIONS.find((o) => o.value === p)?.label)
     .filter((l): l is string => !!l);
+}
+
+export function getAbilityLabel(ability: string | undefined): string {
+  if (!ability) return "ひみつ";
+  return ABILITY_OPTIONS.find((o) => o.value === ability)?.label ?? ability;
 }

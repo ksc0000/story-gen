@@ -5,6 +5,7 @@ import type {
   ImageQualityTier,
   PageCount,
   ProductPlan,
+  UserPlan,
 } from "@/lib/types";
 
 export type PlanConfig = {
@@ -20,9 +21,11 @@ export type PlanConfig = {
   characterConsistencyMode: CharacterConsistencyMode;
   allowedCreationModes: CreationMode[];
   monthlyBookQuota?: number;
+  maxCompanions: number;
   priceJpy?: number;
   isPaid: boolean;
   enabled: boolean;
+  maxChildren: number;
   sampleCtaLabel?: string;
 };
 
@@ -86,8 +89,10 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
     monthlyBookQuota: 1,
+    maxCompanions: 2,
     isPaid: false,
     enabled: true,
+    maxChildren: 1,
   },
   standard_paid: {
     productPlan: "standard_paid",
@@ -104,9 +109,11 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     monthlyBookQuota: 5,
+    maxCompanions: 5,
     priceJpy: 1480,
     isPaid: true,
     enabled: true,
+    maxChildren: 3,
   },
   premium_paid: {
     productPlan: "premium_paid",
@@ -122,9 +129,13 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai", "photo_story"],
     monthlyBookQuota: 10,
+    // プランページ表記が「無制限」のため、実質上限なしの高い値にする。
+    maxCompanions: 9999,
     priceJpy: 2980,
     isPaid: true,
     enabled: true,
+    // プランページ表記が「無制限」のため、実質上限なしの高い値にする。
+    maxChildren: 9999,
     sampleCtaLabel: "高品質サンプルを見る",
   },
 };
@@ -167,4 +178,15 @@ export function getDefaultProductPlanForCreationMode(creationMode: CreationMode)
 
 export function getPlanDisplayLabel(productPlan: ProductPlan): string {
   return PLAN_CONFIGS[productPlan]?.label ?? PLAN_CONFIGS.free.label;
+}
+
+/**
+ * ユーザープロフィールから有効な productPlan を解決する。
+ * productPlan が未設定の場合は legacy `plan` フィールドにフォールバックする
+ * （`plan === "premium"` は standard_paid 相当として扱う）。
+ */
+export function resolveProductPlan(
+  profile?: { productPlan?: ProductPlan; plan?: UserPlan } | null
+): ProductPlan {
+  return profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free");
 }

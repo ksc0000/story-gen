@@ -35,6 +35,13 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "createdAtMs", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionId": "books",
+      "fields": [
+        { "fieldPath": "public", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

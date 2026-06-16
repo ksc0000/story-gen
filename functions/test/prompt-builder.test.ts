@@ -245,6 +245,9 @@ describe("buildImagePrompt", () => {
     expect(result).toContain("Do not redesign recurring characters");
     expect(result).toContain("tiny purple top hat");
     expect(result).not.toContain("small blue bird");
+    // #446: face-geometry consistency clause must anchor recurring characters
+    // to the reference so face shape/proportions do not drift between pages.
+    expect(result).toContain("face shape and proportions consistent with the reference");
   });
   it("does NOT include cast descriptions when appearingCharacterIds is undefined (regression guard)", () => {
     const result = buildImagePrompt(
@@ -906,7 +909,7 @@ describe("prompt length regression (P5-3j)", () => {
     },
   ];
 
-  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 7700 chars", () => {
+  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 8100 chars", () => {
     const result = buildImagePrompt(
       "A child walks with a fox and a glowing star friend through a sunlit meadow, carrying a dinosaur toy",
       "classic_picture_book",
@@ -925,7 +928,7 @@ describe("prompt length regression (P5-3j)", () => {
         compositionHint: "wide establishing shot from slightly above",
       }
     );
-    expect(result.length).toBeLessThan(7700);
+    expect(result.length).toBeLessThan(8100);
   });
 
   it("non-animals non-star prompt (base case) stays under 6000 chars", () => {

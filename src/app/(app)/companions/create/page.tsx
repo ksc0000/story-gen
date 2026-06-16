@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,12 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { PLAN_CONFIGS } from "@/lib/plans";
 import { useCompanions } from "../use-companions-hook";
 import {
   SPECIES_OPTIONS,
   PERSONALITY_OPTIONS,
   ABILITY_OPTIONS,
   COLOR_OPTIONS,
+  BODY_TYPE_OPTIONS,
+  COLOR_DEPTH_OPTIONS,
   SIZE_OPTIONS,
   PATTERN_OPTIONS,
   ACCESSORY_OPTIONS,
@@ -29,6 +34,8 @@ type Step =
   | "personality"
   | "ability"
   | "color"
+  | "bodyType"
+  | "colorDepth"
   | "pattern"
   | "accessory"
   | "size"
@@ -39,6 +46,8 @@ const STEPS: Step[] = [
   "personality",
   "ability",
   "color",
+  "bodyType",
+  "colorDepth",
   "pattern",
   "accessory",
   "size",
@@ -49,18 +58,28 @@ const STEPS: Step[] = [
 export default function CreateCompanionPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { addCompanion } = useCompanions(user?.uid);
+  const { profile } = useUserProfile(user?.uid);
+  const { companions, addCompanion, loading: companionsLoading } = useCompanions(user?.uid);
 
   const [step, setStep] = useState<Step>("species");
   const [species, setSpecies] = useState<CompanionSpecies | "">("");
   const [personalities, setPersonalities] = useState<string[]>([]);
   const [ability, setAbility] = useState("");
   const [color, setColor] = useState("");
+  const [bodyType, setBodyType] = useState("");
+  const [colorDepth, setColorDepth] = useState("");
   const [pattern, setPattern] = useState("");
   const [accessories, setAccessories] = useState<string[]>([]);
   const [size, setSize] = useState<"small" | "medium" | "large" | "">("");
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const maxCompanions = useMemo(() => {
+    const productPlan = profile?.productPlan || profile?.plan || "free";
+    return PLAN_CONFIGS[productPlan as keyof typeof PLAN_CONFIGS]?.maxCompanions ?? 2;
+  }, [profile]);
+
+  const isLimitReached = companions.length >= maxCompanions;
 
   const currentStepIndex = STEPS.indexOf(step);
   const progress = ((currentStepIndex + 1) / STEPS.length) * 100;
@@ -70,6 +89,8 @@ export default function CreateCompanionPage() {
     if (step === "personality") return personalities.length > 0;
     if (step === "ability") return !!ability;
     if (step === "color") return !!color;
+    if (step === "bodyType") return !!bodyType;
+    if (step === "colorDepth") return !!colorDepth;
     if (step === "pattern") return !!pattern;
     if (step === "accessory") return true; // アクセサリは任意（なしでもOK）
     if (step === "size") return !!size;
@@ -113,6 +134,8 @@ export default function CreateCompanionPage() {
         personalities,
         ability,
         color,
+        bodyType,
+        colorDepth,
         size: size as "small" | "medium" | "large",
         pattern,
         accessories,
@@ -124,6 +147,8 @@ export default function CreateCompanionPage() {
         personality: personalities,
         specialAbility: ABILITY_OPTIONS.find((o) => o.value === ability)?.label || "",
         colorMain: COLOR_OPTIONS.find((o) => o.value === color)?.hex || "#FFFFFF",
+        bodyType,
+        colorDepth,
         size: size as "small" | "medium" | "large",
         visualDescription,
       });
@@ -158,11 +183,49 @@ export default function CreateCompanionPage() {
     }
   };
 
+  if (companionsLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-violet-400" />
+      </div>
+    );
+  }
+
+  if (isLimitReached) {
+    return (
+      <PageTransition className="mx-auto max-w-2xl px-4 py-8">
+        <Card className="border-none shadow-xl shadow-purple-100/50">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-3xl">
+              ⚠️
+            </div>
+            <CardTitle className="text-2xl text-purple-900">作成上限に達しています</CardTitle>
+            <CardDescription className="text-lg">
+              現在のプランでは、なかよしキャラは最大{maxCompanions}体まで作成できます。
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-violet-500">
+              新しいなかよしキャラを作るには、既存のなかよしキャラを削除するか、プランのアップグレードをご検討ください。
+            </p>
+            <div className="mt-8 flex flex-col gap-3">
+              <Link href="/companions">
+                <Button variant="outline" className="w-full">
+                  なかよし一覧に戻る
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </PageTransition>
+    );
+  }
+
   return (
     <PageTransition className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-purple-900">相棒を作る</h1>
+          <h1 className="text-xl font-bold text-purple-900">なかよしキャラを作る</h1>
           <span className="text-sm font-medium text-violet-400">
             ステップ {currentStepIndex + 1} / {STEPS.length}
           </span>
@@ -182,6 +245,8 @@ export default function CreateCompanionPage() {
             {step === "personality" && "どんな性格かな？"}
             {step === "ability" && "とくいなことは？"}
             {step === "color" && "何色かな？"}
+            {step === "bodyType" && "体型はどんなかな？"}
+            {step === "colorDepth" && "色の濃さはどんなかな？"}
             {step === "pattern" && "もようはどんなかな？"}
             {step === "accessory" && "なにかつけてみる？"}
             {step === "size" && "大きさはどのくらい？"}
@@ -226,6 +291,44 @@ export default function CreateCompanionPage() {
                   {species === opt.value && (
                     <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-white text-xs">✓</span>
                   )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {step === "bodyType" && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {BODY_TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setBodyType(opt.value)}
+                  className={cn(
+                    "rounded-2xl border-2 px-4 py-6 text-center transition-all",
+                    bodyType === opt.value
+                      ? "border-purple-500 bg-purple-50 text-purple-900"
+                      : "border-transparent bg-violet-50/50 text-violet-600 hover:bg-violet-50"
+                  )}
+                >
+                  <span className="font-medium">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {step === "colorDepth" && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {COLOR_DEPTH_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setColorDepth(opt.value)}
+                  className={cn(
+                    "rounded-2xl border-2 px-4 py-6 text-center transition-all",
+                    colorDepth === opt.value
+                      ? "border-purple-500 bg-purple-50 text-purple-900"
+                      : "border-transparent bg-violet-50/50 text-violet-600 hover:bg-violet-50"
+                  )}
+                >
+                  <span className="font-medium">{opt.label}</span>
                 </button>
               ))}
             </div>
@@ -428,6 +531,18 @@ export default function CreateCompanionPage() {
                   </div>
                 </div>
                 <div className="rounded-2xl border border-violet-100 p-4">
+                  <div className="text-xs font-semibold text-violet-300">体型</div>
+                  <div className="mt-1 text-sm font-medium text-purple-700">
+                    {BODY_TYPE_OPTIONS.find(o => o.value === bodyType)?.label}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-violet-100 p-4">
+                  <div className="text-xs font-semibold text-violet-300">色の濃さ</div>
+                  <div className="mt-1 text-sm font-medium text-purple-700">
+                    {COLOR_DEPTH_OPTIONS.find(o => o.value === colorDepth)?.label}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-violet-100 p-4">
                   <div className="text-xs font-semibold text-violet-300">大きさ</div>
                   <div className="mt-1 text-sm font-medium text-purple-700">
                     {SIZE_OPTIONS.find(o => o.value === size)?.label}
@@ -465,7 +580,7 @@ export default function CreateCompanionPage() {
                   保存中...
                 </>
               ) : (
-                "相棒を作る！"
+                "なかよしキャラを作る！"
               )}
             </Button>
           ) : (
