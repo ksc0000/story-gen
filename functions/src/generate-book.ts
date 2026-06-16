@@ -450,10 +450,15 @@ export function normalizeStoryWithCompanion(
 
   if (existingCompanion) {
     effectiveCompanionId = existingCompanion.characterId;
-    // Ensure the visualBible is consistent with the selected companion's description
-    if (!existingCompanion.visualBible || existingCompanion.visualBible.length < 20) {
-      existingCompanion.visualBible = companionVisualDescription;
-    }
+    // The user-registered companion description (and its reference illustration)
+    // is the source of truth for color and species. Gemini frequently hallucinates
+    // a generic appearance — e.g. inventing an orange fox for a companion registered
+    // as gray — and that hallucinated text then fights the gray reference image,
+    // making the companion drift in color/species across pages. Enforce the
+    // registered description and drop the model-invented colorPalette so the only
+    // color signal in the prompt matches the reference illustration.
+    existingCompanion.visualBible = companionVisualDescription;
+    existingCompanion.colorPalette = undefined;
   } else {
     updatedCast.push({
       characterId: companionCharacterId,
