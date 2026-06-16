@@ -201,12 +201,12 @@ export default function CreateCompanionPage() {
             </div>
             <CardTitle className="text-2xl text-purple-900">作成上限に達しています</CardTitle>
             <CardDescription className="text-lg">
-              現在のプランでは、相棒は最大{maxCompanions}体まで作成できます。
+              現在のプランでは、なかよしキャラは最大{maxCompanions}体まで作成できます。
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-violet-500">
-              新しい相棒を作るには、既存の相棒を削除するか、プランのアップグレードをご検討ください。
+              新しいなかよしキャラを作るには、既存のなかよしキャラを削除するか、プランのアップグレードをご検討ください。
             </p>
             <div className="mt-8 flex flex-col gap-3">
               <Link href="/companions">
@@ -225,7 +225,7 @@ export default function CreateCompanionPage() {
     <PageTransition className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-purple-900">相棒を作る</h1>
+          <h1 className="text-xl font-bold text-purple-900">なかよしキャラを作る</h1>
           <span className="text-sm font-medium text-violet-400">
             ステップ {currentStepIndex + 1} / {STEPS.length}
           </span>
@@ -580,7 +580,7 @@ export default function CreateCompanionPage() {
                   保存中...
                 </>
               ) : (
-                "相棒を作る！"
+                "なかよしキャラを作る！"
               )}
             </Button>
           ) : (

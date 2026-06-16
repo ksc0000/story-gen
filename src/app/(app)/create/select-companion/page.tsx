@@ -60,9 +60,9 @@ function SelectCompanionContent() {
       <StepIndicator currentStep={1} />
 
       <div className="mt-6 text-center">
-        <h1 className="text-xl font-bold text-purple-900">相棒を登場させますか？</h1>
+        <h1 className="text-xl font-bold text-purple-900">なかよしキャラを登場させますか？</h1>
         <p className="mt-1 text-sm text-violet-500">
-          登録済みの相棒キャラクターを絵本に登場させることができます。
+          登録済みのなかよしキャラを絵本に登場させることができます。
         </p>
       </div>
 
@@ -97,9 +97,9 @@ function SelectCompanionContent() {
           {/* 相棒リスト */}
           {companions.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-violet-200 bg-violet-50 p-6 text-center">
-              <p className="text-xs text-violet-500">登録済みの相棒がいません。</p>
+              <p className="text-xs text-violet-500">登録済みのなかよしキャラがいません。</p>
               <Link href="/companions/create" className="mt-2 inline-block">
-                <Button variant="outline" size="sm">相棒を作成する</Button>
+                <Button variant="outline" size="sm">なかよしキャラを作成する</Button>
               </Link>
             </div>
           ) : (
@@ -140,7 +140,7 @@ function SelectCompanionContent() {
               ))}
               <div className="pt-2 text-center">
                 <Link href="/companions/create" className="text-xs text-violet-400 hover:text-purple-600 hover:underline">
-                  ＋ 新しい相棒を登録する
+                  ＋ 新しいなかよしキャラを登録する
                 </Link>
               </div>
             </div>
