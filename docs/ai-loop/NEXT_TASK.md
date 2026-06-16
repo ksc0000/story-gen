@@ -1,11 +1,13 @@
-# Implement Backend Logic for User and Child Profile Deletion
+# Implement Backend Logic for PDF Output
 
 ## Context
 
-The product roadmap outlines "delete account / delete child profile" as an unimplemented feature. A design document (`PR #440: Design Document for User Account and Child Profile Deletion (merged)`) has already been created and merged, detailing the approach for this critical user management and compliance feature.
-
-Currently, Phase 5 (Monetization) is in progress with Cohort B rollout, focusing on core functionality and user experience. Implementing foundational user management features like deletion is a necessary step towards a fully compliant and user-friendly product.
+The product roadmap has identified PDF output as a desired feature, and a design draft (`docs/PDF_OUTPUT_DESIGN.md`, PR #402) has already been completed. This task focuses on implementing the initial backend logic required to generate a PDF of a completed book, following the existing design. This is a key step towards enabling users to download and print their stories.
 
 ## Objective
 
-Implement the backend logic for securely deleting a user account and their associated child profiles, adhering to the specifications outlined in the `docs/USER_ACCOUNT_DELETION_
+Implement the backend function to generate a PDF for a given `BookDoc`, converting its content (story text and image URLs) into a structured PDF format. This initial implementation will focus on core PDF generation without complex styling or advanced layout features, aiming for a readable output.
+
+## Allowed Scope
+
+- `functions/src/` (for new PDF generation logic
