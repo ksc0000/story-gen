@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StepIndicator } from "@/components/step-indicator";
@@ -12,6 +14,7 @@ import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
 import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
+import { HelpModal, type HelpContent } from "@/components/help-modal";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCategoryGroups } from "@/lib/hooks/use-category-groups";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -49,6 +52,55 @@ const MODE_OPTIONS: Array<{
   },
 ];
 
+const MODE_HELP: Record<CreationMode, HelpContent> = {
+  fixed_template: {
+    emoji: "⚡",
+    title: "できあがり絵本とは？",
+    subtitle: "最短3分で完成。はじめての方に最適です",
+    points: [
+      "プロが作ったストーリーテンプレートから選ぶだけ",
+      "お子さんの名前・思い出を入力すると絵本が完成",
+      "テーマ（誕生日・旅行・季節行事など）が豊富に揃っています",
+      "絵のタッチは自由に選べます",
+    ],
+    note: "💡 まず絵本を試してみたい方はこのモードがおすすめ！",
+  },
+  guided_ai: {
+    emoji: "✨",
+    title: "AIにおまかせとは？",
+    subtitle: "AIがオリジナルのストーリーを生成します",
+    points: [
+      "テーマ・気分・場所など数問に答えるだけでOK",
+      "AIが起承転結のある本格的な物語を作ります",
+      "「子どもが主人公」でも「架空キャラ」でも作れます",
+      "なかよしキャラも一緒に登場させられます",
+    ],
+    note: "⏱ 生成には2〜5分ほどかかります",
+  },
+  photo_story: {
+    emoji: "📸",
+    title: "写真から作るとは？",
+    subtitle: "思い出の写真がそのまま絵本になります",
+    points: [
+      "3〜5枚の写真をアップロードするだけ",
+      "AIが写真の「瞬間」を読み取り、絵本の世界に描き直します",
+      "運動会・旅行・誕生日パーティーなどの思い出に最適",
+      "絵本風のタッチで仕上がるので、まるでプロの作品のよう",
+    ],
+    note: "✨ プレミアムプラン、またはスタンダードプランで利用できます",
+  },
+  original_ai: {
+    emoji: "✍️",
+    title: "フリー入力モードとは？",
+    subtitle: "細かくこだわりたい方向け",
+    points: [
+      "登場人物・場所・伝えたいことを自由に記入",
+      "指定が細かいほど、イメージに近い絵本になります",
+      "オリジナリティの高いストーリーを作りたい方に",
+    ],
+  },
+};
+
 function ThemeSelectionPageContent() {
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
@@ -56,6 +108,7 @@ function ThemeSelectionPageContent() {
   const { categoryGroups, loading: categoryLoading } = useCategoryGroups();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailTemplateId, setDetailTemplateId] = useState<string | null>(null);
+  const [helpMode, setHelpMode] = useState<CreationMode | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const childId = searchParams.get("childId");
@@ -208,14 +261,14 @@ function ThemeSelectionPageContent() {
                 type="button"
                 onClick={() => updateQuery("mode", option.mode)}
                 className={cn(
-                  "group relative flex w-full flex-col items-start rounded-2xl border p-4 text-left transition-all",
+                  "group relative flex w-full flex-col items-start rounded-2xl border p-4 pr-16 text-left transition-all",
                   active
                     ? "border-purple-400 ring-2 ring-purple-200 bg-purple-50 shadow-sm"
                     : "border-purple-100 bg-white hover:border-purple-300"
                 )}
               >
                 <div className="flex w-full items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-lg">{option.icon}</span>
                     <div className="text-sm font-bold text-purple-900 md:text-base">{option.label}</div>
                     {option.recommended && (
@@ -234,8 +287,17 @@ function ThemeSelectionPageContent() {
                   {option.description}
                 </div>
               </button>
+              {/* ? ヘルプボタン */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setHelpMode(option.mode); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-violet-200 bg-white text-violet-400 hover:bg-violet-50 hover:text-violet-600 transition-colors"
+                aria-label={`${option.label}の説明を見る`}
+              >
+                <HelpCircle className="size-4" />
+              </button>
               {!isAllowed && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <div className="absolute right-12 top-1/2 -translate-y-1/2">
                   <Link
                     href="/pricing"
                     className="text-xs font-bold text-purple-600 hover:underline"
@@ -284,6 +346,14 @@ function ThemeSelectionPageContent() {
         </div>
       )}
 
+      <AnimatePresence mode="wait">
+      <motion.div
+        key={selectedMode}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.22, ease: "easeOut" }}
+      >
       {selectedMode === "fixed_template" ? (
         loading || categoryLoading ? (
           <p className="mt-8 text-center text-violet-400">読み込み中...</p>
@@ -429,6 +499,8 @@ function ThemeSelectionPageContent() {
           </div>
         </div>
       )}
+      </motion.div>
+      </AnimatePresence>
 
       {/* 画面下部固定 — iPhone セーフエリア対応 */}
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3">
@@ -461,6 +533,12 @@ function ThemeSelectionPageContent() {
           })()}
         </div>
       </div>
+
+      <HelpModal
+        open={helpMode !== null}
+        onClose={() => setHelpMode(null)}
+        content={helpMode ? MODE_HELP[helpMode] : MODE_HELP.fixed_template}
+      />
 
       <TemplateDetailDialog
         template={detailTemplateId ? (templates.find((t) => t.id === detailTemplateId) ?? null) : null}

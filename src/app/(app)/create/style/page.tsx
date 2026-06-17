@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense, useRef } from "react";
+import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ function StyleSelectionPageContent() {
   const [selected, setSelected] = useState<IllustrationStyle | null>("soft_watercolor");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const hasInteracted = useRef(false);
 
   const theme = searchParams.get("theme") ?? "";
   const childId = searchParams.get("childId");
@@ -272,11 +274,16 @@ function StyleSelectionPageContent() {
       <div className="mt-6">
         <StylePicker
           selected={selected}
-          onSelect={setSelected}
+          onSelect={(s) => { hasInteracted.current = true; setSelected(s); }}
           styles={visibleStyleProfiles}
         />
       </div>
-      <div className="mx-auto mt-6 max-w-3xl rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-5">
+      <motion.div
+        className="mx-auto mt-6 max-w-3xl rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-5"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.3, ease: "easeOut" }}
+      >
         <h2 className="text-base font-semibold text-purple-900">この内容で作ります ✅</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <SummaryItem label="主人公" value={childName || "未設定"} />
@@ -291,7 +298,7 @@ function StyleSelectionPageContent() {
             <p className="mt-0.5">月間の作成上限に達していても、このまま作成を完了できます。</p>
           </div>
         ) : null}
-      </div>
+      </motion.div>
       {createError ? (
         <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <p className="font-semibold">生成を開始できませんでした</p>

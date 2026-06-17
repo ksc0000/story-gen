@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,9 +81,15 @@ function SelectCompanionContent() {
       {companionsLoading ? (
         <p className="mt-10 text-center text-violet-400">読み込み中...</p>
       ) : (
-        <div className="mt-6 space-y-6">
+        <motion.div
+          className="mt-6 space-y-6"
+          initial="hidden"
+          animate="visible"
+          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
+        >
           {/* なしオプション */}
-          <button
+          <motion.button
+            variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.25 } } }}
             type="button"
             onClick={() => setSelection({ type: "none", id: "none" })}
             className={cn(
@@ -97,10 +104,13 @@ function SelectCompanionContent() {
               <p className="font-bold text-purple-900">登場させない</p>
               <p className="text-xs text-violet-400">主人公ひとりの物語にします。</p>
             </div>
-          </button>
+          </motion.button>
 
           {/* 公式プリセット */}
-          <div className="space-y-3">
+          <motion.div
+            className="space-y-3"
+            variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.25 } } }}
+          >
             <h2 className="flex items-center gap-2 text-sm font-bold text-purple-900">
               <span>🐾</span> みんなのなかよしキャラ
               <Badge variant="secondary" className="bg-violet-100 text-violet-600 border-none text-xs">公式</Badge>
@@ -155,11 +165,14 @@ function SelectCompanionContent() {
                 );
               })}
             </div>
-          </div>
+          </motion.div>
 
           {/* マイなかよしキャラ */}
           {companions.length > 0 && (
-            <div className="space-y-3">
+            <motion.div
+              className="space-y-3"
+              variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.25 } } }}
+            >
               <h2 className="text-sm font-bold text-purple-900 flex items-center gap-2">
                 <span>✨</span> マイなかよしキャラ
               </h2>
@@ -200,15 +213,18 @@ function SelectCompanionContent() {
                   </button>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
 
-          <div className="pt-1 text-center">
+          <motion.div
+            className="pt-1 text-center"
+            variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.3 } } }}
+          >
             <Link href="/companions/create" className="text-xs text-violet-400 hover:text-purple-600 hover:underline">
               ＋ 新しいなかよしキャラを作る
             </Link>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3">
