@@ -112,18 +112,18 @@ function isCharacterPresentInPrompt(prompt: string, char: StoryCharacter | undef
 
 function isVisualRolePresent(prompt: string, role: PageVisualRole): boolean {
   const roleKeywords: Record<PageVisualRole, string[]> = {
-    opening_establishing: ["establishing", "wide", "landscape"],
-    discovery: ["discovery", "noticed", "found", "looking"],
-    action: ["action", "movement", "doing", "running", "playing"],
-    emotional_closeup: ["close-up", "closeup", "face", "expression", "emotion"],
-    object_detail: ["detail", "object", "focus on"],
-    setback_or_question: ["uncertain", "wondering", "tension"],
-    payoff: ["payoff", "resolution", "achieved", "success"],
-    quiet_ending: ["ending", "final", "closure", "back view", "warm"],
+    opening_establishing: ["establishing", "wide", "landscape", "cinematic"],
+    discovery: ["discovery", "noticed", "found", "looking", "wonder"],
+    action: ["action", "movement", "doing", "running", "playing", "dynamic", "energy"],
+    emotional_closeup: ["close-up", "closeup", "face", "expression", "emotion", "intimate"],
+    object_detail: ["detail", "object", "focus on", "macro"],
+    setback_or_question: ["uncertain", "wondering", "tension", "doubt", "reflective"],
+    payoff: ["payoff", "resolution", "achieved", "success", "triumphant", "climax"],
+    quiet_ending: ["ending", "final", "closure", "back view", "warm", "peaceful"],
   };
 
   const keywords = roleKeywords[role] || [];
-  return keywords.some((k) => prompt.includes(k));
+  return keywords.some((k) => prompt.includes(k.toLowerCase()));
 }
 
 function calculateScore(pages: PagePromptDiagnostic[]): number {
