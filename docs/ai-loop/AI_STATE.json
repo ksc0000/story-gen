@@ -150,6 +150,7 @@
     "PR #461: fix: don't confirm text input on IME composition Enter (#460) (merged)",
     "PR #464: Implement User-Initiated Page and Cover Regeneration (merged)",
     "PR #468: Audit and Update Fixed Template Previews (merged)",
+    "PR #469: fix: add series cleanup + dead export removal to deleteUserAccount (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
