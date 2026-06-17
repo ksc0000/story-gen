@@ -430,7 +430,7 @@ export function normalizeStoryWithCompanion(
   story: GeneratedStory,
   mergedInput: BookInput
 ): GeneratedStory {
-  const { companionId, companionName, companionVisualDescription } = mergedInput;
+  const { companionName, companionVisualDescription } = mergedInput;
   if (!companionName || !companionVisualDescription) {
     return story;
   }
@@ -2816,7 +2816,6 @@ function buildStoryFromFixedTemplate(
 ): GeneratedStory {
   const replacements = buildFixedTemplateReplacements(mergedInput);
 
-  const companionId = mergedInput.companionId;
   const companionName = mergedInput.companionName;
   const companionVisual = mergedInput.companionVisualDescription;
 
