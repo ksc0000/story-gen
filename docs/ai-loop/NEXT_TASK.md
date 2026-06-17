@@ -1,13 +1,7 @@
-# Implement Frontend UI for PDF Download and Sharing
+# Enhance Story Generation Prompts for Age 3+ Books to Ensure Semantic Richness (Place, Action, Feeling, Discovery)
 
 ## Context
 
-The product roadmap lists "PDF 出力" as an unimplemented feature. A design draft (`docs/PDF_OUTPUT_DESIGN.md`, merged via `PR #402`) has been created, and the backend logic for PDF generation (`#456 [AI Loop] Implement Backend Logic for PDF Output`) is currently an open task.
+The EhonAI product roadmap for Phase 2: Story & Illustration Quality, specifically under "含めるタスク," identifies a need to "3歳以上の意味量確保（場所・行動・気持ち・発見の2つ以上）" (ensure semantic richness for 3+ years old, covering at least two elements of place, action, feeling, or discovery). While LLM auto-review has been enhanced to *detect* semantic content in age 3+ books (PR #427), the story generation prompts themselves require refinement to consistently produce this desired level of richness.
 
-This task focuses on building the user-facing interface to allow users to download or share the generated PDF, once the backend is ready. This is a critical step towards enabling physical product offerings and enhanced sharing capabilities.
-
-## Objective
-
-Implement the frontend UI components that allow a user to:
-1.  See that a PDF version of their book is available.
-2.  Initiate
+The goal is to improve the actual output of the story generation for

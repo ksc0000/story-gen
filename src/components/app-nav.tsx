@@ -18,6 +18,7 @@ const NAV_LINKS: NavLink[] = [
   { href: "/how-to-use", label: "使い方ガイド" },
   { href: "/pricing", label: "プラン", accent: true },
   { href: "/feedback", label: "ご意見" },
+  { href: "/settings", label: "設定" },
 ];
 
 export function AppNav({
