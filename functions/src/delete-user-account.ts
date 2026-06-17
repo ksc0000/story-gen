@@ -63,7 +63,15 @@ export async function processDeleteUserAccount(
       await db.recursiveDelete(bookDoc.ref);
     }
 
-    // 4. Delete all companions owned by the user
+    // 4. Delete all series owned by the user
+    const seriesSnap = await db.collection("series").where("userId", "==", uid).get();
+    if (!seriesSnap.empty) {
+      const seriesBatch = db.batch();
+      seriesSnap.docs.forEach((doc) => seriesBatch.delete(doc.ref));
+      await seriesBatch.commit();
+    }
+
+    // 6. Delete all companions owned by the user
     const companionsSnap = await db.collection("companions").where("userId", "==", uid).get();
     if (!companionsSnap.empty) {
       const companionBatch = db.batch();
@@ -71,7 +79,7 @@ export async function processDeleteUserAccount(
       await companionBatch.commit();
     }
 
-    // 5. Delete all associated jobs
+    // 7. Delete all associated jobs
     const avatarJobsSnap = await db.collection("childAvatarGenerationJobs").where("userId", "==", uid).get();
     const companionJobsSnap = await db.collection("companionImageJobs").where("userId", "==", uid).get();
 
@@ -82,14 +90,14 @@ export async function processDeleteUserAccount(
       await jobBatch.commit();
     }
 
-    // 6. Delete user assets in Cloud Storage
+    // 8. Delete user assets in Cloud Storage
     const bucket = storage.bucket();
     await bucket.deleteFiles({ prefix: `users/${uid}/` });
 
-    // 7. Recursive deletion of the user document and its subcollections (children, usage)
+    // 9. Recursive deletion of the user document and its subcollections (children, usage)
     await db.recursiveDelete(userRef);
 
-    // 8. Delete the Firebase Auth user account
+    // 10. Delete the Firebase Auth user account
     await admin.auth().deleteUser(uid);
 
     return { success: true };
