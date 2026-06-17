@@ -13,7 +13,7 @@ export async function processDeleteUserAccount(
   auth: { uid: string },
   db: admin.firestore.Firestore,
   storage: admin.storage.Storage,
-  stripe: Stripe
+  stripe: InstanceType<typeof Stripe>
 ) {
   const uid = auth.uid;
   const userRef = db.collection("users").doc(uid);
