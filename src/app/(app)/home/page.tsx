@@ -17,6 +17,7 @@ import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useBooks } from "@/lib/hooks/use-books";
+import { useSeries } from "@/lib/hooks/use-series";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
@@ -153,6 +154,7 @@ export default function HomePage() {
   const { user } = useAuth();
   const router = useRouter();
   const { books, loading, error } = useBooks(user?.uid);
+  const { series } = useSeries(user?.uid);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -186,6 +188,31 @@ export default function HomePage() {
       return matchStyle && matchMode && matchStatus;
     });
   }, [books, selectedStyle, selectedMode, selectedStatus]);
+
+  const seriesGroups = useMemo(() => {
+    const validSeriesIds = new Set(series.map((s) => s.id));
+    const bySeriesId = new Map<string, (typeof filteredBooks)>();
+    const ungrouped: typeof filteredBooks = [];
+
+    for (const book of filteredBooks) {
+      if (book.seriesId && validSeriesIds.has(book.seriesId)) {
+        const existing = bySeriesId.get(book.seriesId);
+        if (existing) {
+          existing.push(book);
+        } else {
+          bySeriesId.set(book.seriesId, [book]);
+        }
+      } else {
+        ungrouped.push(book);
+      }
+    }
+
+    const groups = series
+      .map((s) => ({ id: s.id, name: s.name, books: bySeriesId.get(s.id) ?? [] }))
+      .filter((g) => g.books.length > 0);
+
+    return { groups, ungrouped };
+  }, [filteredBooks, series]);
 
   useEffect(() => {
     if (!childrenLoading && children.length === 0) {
@@ -502,17 +529,49 @@ export default function HomePage() {
                 </Button>
               </div>
             ) : (
-              <StaggerContainer className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                {filteredBooks.map((book) => (
-                  <StaggerItem key={book.id}>
-                    <BookCard
-                      book={book}
-                      onDelete={book.userId === user?.uid ? () => handleDeleteBook(book.id, book.title || "") : undefined}
-                      isDeleting={deletingId === book.id}
-                    />
-                  </StaggerItem>
+              <div className="mt-6 space-y-8">
+                {seriesGroups.groups.map((group) => (
+                  <div key={group.id}>
+                    <div className="mb-3 flex items-center gap-2 px-1">
+                      <span className="text-base">📚</span>
+                      <h2 className="text-sm font-bold text-purple-800">{group.name}</h2>
+                      <span className="text-xs text-violet-400">{group.books.length}冊</span>
+                    </div>
+                    <StaggerContainer className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                      {group.books.map((book) => (
+                        <StaggerItem key={book.id}>
+                          <BookCard
+                            book={book}
+                            onDelete={book.userId === user?.uid ? () => handleDeleteBook(book.id, book.title || "") : undefined}
+                            isDeleting={deletingId === book.id}
+                          />
+                        </StaggerItem>
+                      ))}
+                    </StaggerContainer>
+                  </div>
                 ))}
-              </StaggerContainer>
+
+                {seriesGroups.ungrouped.length > 0 && (
+                  <div>
+                    {seriesGroups.groups.length > 0 && (
+                      <div className="mb-3 flex items-center gap-2 px-1">
+                        <h2 className="text-sm font-bold text-purple-800">その他の絵本</h2>
+                      </div>
+                    )}
+                    <StaggerContainer className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                      {seriesGroups.ungrouped.map((book) => (
+                        <StaggerItem key={book.id}>
+                          <BookCard
+                            book={book}
+                            onDelete={book.userId === user?.uid ? () => handleDeleteBook(book.id, book.title || "") : undefined}
+                            isDeleting={deletingId === book.id}
+                          />
+                        </StaggerItem>
+                      ))}
+                    </StaggerContainer>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}

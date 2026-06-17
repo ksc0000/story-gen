@@ -592,6 +592,17 @@ export interface BookDoc {
   createdAt: Timestamp;
   expiresAt: Timestamp | null;
   public?: boolean;
+  seriesId?: string;
+}
+
+export interface SeriesDoc {
+  userId: string;
+  name: string;
+  coverBookId?: string;
+  createdAt: Timestamp;
+  createdAtMs?: number;
+  updatedAt?: Timestamp | null;
+  updatedAtMs?: number;
 }
 
 export interface PageDoc {

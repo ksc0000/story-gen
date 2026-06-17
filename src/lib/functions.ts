@@ -1,6 +1,5 @@
 import type { Functions, HttpsCallable } from "firebase/functions";
 import type {
-  AvatarRevisionRequest,
   IllustrationStyle,
   ImageModelProfile,
   ImagePurpose,
@@ -37,47 +36,6 @@ async function getCallable<RequestData, ResponseData>(
   ]);
 
   return httpsCallable<RequestData, ResponseData>(functions, name);
-}
-
-export async function generateChildCharacterCallable(data: {
-  childId: string;
-  revisionRequest?: AvatarRevisionRequest;
-  baseGenerationId?: string;
-  variantStyle?: IllustrationStyle;
-}): Promise<{
-  batchId: string;
-  attemptNumber: number;
-  maxAttempts: number;
-  remainingAttempts: number;
-  characterBible: string;
-  candidates: Array<{
-    generationId: string;
-    imageUrl: string;
-    style: string;
-    styleLabel: string;
-    prompt: string;
-  }>;
-}> {
-  const callable = await getCallable<
-    { childId: string; revisionRequest?: AvatarRevisionRequest; baseGenerationId?: string; variantStyle?: IllustrationStyle },
-    {
-      batchId: string;
-      attemptNumber: number;
-      maxAttempts: number;
-      remainingAttempts: number;
-      characterBible: string;
-      candidates: Array<{
-        generationId: string;
-        imageUrl: string;
-        style: string;
-        styleLabel: string;
-        prompt: string;
-      }>;
-    }
-  >("generateChildCharacter");
-
-  const result = await callable(data);
-  return result.data;
 }
 
 export type TestImageModelsRequest = {

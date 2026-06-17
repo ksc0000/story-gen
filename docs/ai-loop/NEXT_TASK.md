@@ -1,11 +1,5 @@
-# Implement Backend Logic for User and Child Profile Deletion
+# Audit and Update Fixed Template Previews for 42 Templates
 
 ## Context
 
-The product roadmap outlines "delete account / delete child profile" as an unimplemented feature. A design document (`PR #440: Design Document for User Account and Child Profile Deletion (merged)`) has already been created and merged, detailing the approach for this critical user management and compliance feature.
-
-Currently, Phase 5 (Monetization) is in progress with Cohort B rollout, focusing on core functionality and user experience. Implementing foundational user management features like deletion is a necessary step towards a fully compliant and user-friendly product.
-
-## Objective
-
-Implement the backend logic for securely deleting a user account and their associated child profiles, adhering to the specifications outlined in the `docs/USER_ACCOUNT_DELETION_
+The product roadmap for Phase 3: Template Mode, specifically `T2-D` (テンプレートプレビュー画像の生成・設定) and `T2-E` (テーマ選択 UI のプレビュー画像表示), indicates tasks related to template preview images. While the backend script for generating and linking preview images (PR #345) and the basic UI for displaying them (PR #253) have been implemented, a significant expansion of fixed templates to 42 items (PR #274) has occurred. It is critical to ensure that all 42 templates have appropriate, high-quality, and correctly linked preview images displayed in the Theme Selection UI, aligning with `T2-

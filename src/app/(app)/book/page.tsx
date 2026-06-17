@@ -9,6 +9,7 @@ import { Share2, Check, Copy, Globe, Sparkles, Loader2, Pencil, X } from "lucide
 import { Button } from "@/components/ui/button";
 import { BookViewer } from "@/components/book-viewer";
 import { BookNextActions } from "@/components/book-next-actions";
+import { BookSeriesControl } from "@/components/book-series-control";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -192,7 +193,7 @@ function BookContent() {
                 placeholder="新しいタイトル"
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleUpdateTitle();
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) handleUpdateTitle();
                   if (e.key === "Escape") setIsEditingTitle(false);
                 }}
                 disabled={isUpdatingTitle}
@@ -286,6 +287,7 @@ function BookContent() {
                 )}
               </Button>
             )}
+            {user && <BookSeriesControl bookId={bookId} userId={user.uid} seriesId={book.seriesId} />}
           </div>
         )}
       </div>
