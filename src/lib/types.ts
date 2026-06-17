@@ -600,6 +600,10 @@ export interface BookDoc {
   public?: boolean;
   seriesId?: string;
   protagonistType?: ProtagonistType;
+  pdfStatus?: "not_started" | "processing" | "completed" | "failed";
+  pdfUrl?: string;
+  pdfGeneratedAtMs?: number;
+  pdfError?: string;
 }
 
 export interface SeriesDoc {

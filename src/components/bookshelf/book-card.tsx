@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCard } from "@/components/animated-card";
@@ -52,6 +53,12 @@ export function BookCard({ book }: BookCardProps) {
               <p className="mt-1 text-[10px] text-violet-400">
                 {formatDateSafe(book.createdAt)}
               </p>
+            )}
+            {book.pdfStatus === "completed" && (
+              <Badge variant="outline" className="mt-1 border-purple-100 bg-purple-50/50 text-[9px] text-purple-600 h-4 px-1.5">
+                <FileText className="mr-1 h-2 w-2" />
+                PDF
+              </Badge>
             )}
           </CardContent>
         </Card>

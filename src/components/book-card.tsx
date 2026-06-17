@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,12 @@ export function BookCard({ book, onDelete, isDeleting }: BookCardProps) {
               <p className="text-xs text-violet-400">{formatDateSafe(book.createdAt)}</p>
             )}
             {book.status === "generating" && <Badge variant="secondary" className="mt-1 text-xs">生成中</Badge>}
+            {book.pdfStatus === "completed" && (
+              <Badge variant="outline" className="mt-1 border-purple-100 bg-purple-50/50 text-[10px] text-purple-600">
+                <FileText className="mr-1 h-2.5 w-2.5" />
+                PDF
+              </Badge>
+            )}
           </CardContent>
         </Card>
       </AnimatedCard>

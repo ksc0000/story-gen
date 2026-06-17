@@ -449,6 +449,10 @@ export interface BookData {
   recoveredAt?: FirebaseFirestore.Timestamp;
   recoveredAtMs?: number;
   public?: boolean;
+  pdfStatus?: "not_started" | "processing" | "completed" | "failed";
+  pdfUrl?: string;
+  pdfGeneratedAtMs?: number;
+  pdfError?: string;
 }
 
 export interface AppFeedbackDoc {

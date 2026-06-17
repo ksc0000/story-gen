@@ -56,6 +56,7 @@ function BookContent() {
   const [newTitle, setNewTitle] = useState("");
   const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
   const [titleUpdateError, setTitleUpdateError] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
   const isOwner = Boolean(user && book && book.userId === user.uid);
 
@@ -194,6 +195,20 @@ function BookContent() {
       setCoverRegenerationError(err instanceof Error ? err.message : "表紙の再生成に失敗しました。");
     } finally {
       setIsRegeneratingCover(false);
+    }
+  }
+
+  async function handleGeneratePdf() {
+    if (!bookId || isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    try {
+      const generatePdf = httpsCallable(functions, "generateBookPdf");
+      await generatePdf({ bookId });
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+      window.alert("PDFの作成に失敗しました。しばらく時間をおいて再度お試しください。");
+    } finally {
+      setIsGeneratingPdf(false);
     }
   }
 
@@ -367,6 +382,8 @@ function BookContent() {
           isDemoMode={isDemoMode}
           onToggleShare={handleToggleShare}
           isSharing={isSharing}
+          onGeneratePdf={handleGeneratePdf}
+          isGeneratingPdf={isGeneratingPdf}
         />
       )}
 
