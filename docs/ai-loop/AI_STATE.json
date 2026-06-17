@@ -159,6 +159,7 @@
     "PR #473: feat: なかよしキャラ作成にプリセット10種＋AI作成選択を追加 (merged)",
     "PR #475: feat: なかよしキャラプリセット公式表示 / 上限時アップグレードボタン / プランページ比較表リデザイン (merged)",
     "PR #477: Implement User-Facing UI for Account and Child Profile Deletion (merged)",
+    "PR #479: Implement Frontend UI for PDF Download and Sharing (merged)",
     "PR #481: [AI Loop] Enhance Story Generation Prompts for Age 3+ Semantic Richness (merged)",
     "PR #484: feat: 作成フロー ガイドアニメーション＋?ヘルプボタン追加 (#482 #483) (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
