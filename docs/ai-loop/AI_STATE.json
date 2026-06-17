@@ -157,6 +157,7 @@
     "PR #471: fix: オリジナル相棒システム削除・なかよしキャラに統合 (merged)",
     "PR #473: feat: なかよしキャラ作成にプリセット10種＋AI作成選択を追加 (merged)",
     "PR #475: feat: なかよしキャラプリセット公式表示 / 上限時アップグレードボタン / プランページ比較表リデザイン (merged)",
+    "PR #484: feat: 作成フロー ガイドアニメーション＋?ヘルプボタン追加 (#482 #483) (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
