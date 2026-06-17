@@ -1,14 +1,18 @@
+"use client"
+
+import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { ClickBurst, type Burst } from "@/components/click-burst"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button relative inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-purple-400 to-violet-400 text-white shadow-[0_4px_16px_rgba(167,139,250,0.4)] hover:from-purple-500 hover:to-violet-500 hover:shadow-[0_6px_20px_rgba(167,139,250,0.5)]",
+        default: "bg-gradient-to-r from-purple-400 to-violet-400 text-white shadow-[0_4px_0_rgb(139,92,246),0_8px_16px_rgba(167,139,250,0.4)] hover:from-purple-500 hover:to-violet-500 hover:shadow-[0_4px_0_rgb(124,58,237),0_10px_20px_rgba(167,139,250,0.5)] active:not-aria-[haspopup]:translate-y-[2px] active:shadow-[0_2px_0_rgb(109,40,217),0_4px_8px_rgba(167,139,250,0.3)]",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
@@ -44,14 +48,37 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  onClick,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  const [bursts, setBursts] = React.useState<Burst[]>([])
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (variant === "default") {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const newBurst = { id: Date.now(), x, y }
+
+      setBursts((prev) => [...prev, newBurst])
+      setTimeout(() => {
+        setBursts((prev) => prev.filter((b) => b.id !== newBurst.id))
+      }, 1000)
+    }
+
+    onClick?.(e)
+  }
+
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      onClick={handleClick}
       {...props}
-    />
+    >
+      {props.children}
+      {variant === "default" && <ClickBurst bursts={bursts} />}
+    </ButtonPrimitive>
   )
 }
 

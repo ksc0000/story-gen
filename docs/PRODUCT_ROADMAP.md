@@ -35,44 +35,34 @@
 - quality gate による本文品質検査（薄すぎる本文の再生成）
 - 生成メトリクス保存（`imageDurationMs`, `imageAttemptCount`, `imageFallbackUsed` 等）
 - `IMAGE_CONCURRENCY` / `IMAGE_GENERATION_TIMEOUT_MS` 環境変数
+- SLO メトリクス集計ダッシュボード & 自動スナップショット
+- Stale metadata cleanup
+- Admin Quality Review UI & LLM auto review prototype
+- Stripe 決済 (PR #198)
+- PDF 出力 (PR #457 / #479)
+- 共有URL (PR #204)
+- 本棚UI (PR #343)
+- サンプル絵本ギャラリー (PR #361)
+- swipe / slide page navigation
+- cover page generation & title spread / opening narration flow
+- delete account / delete child profile (PR #454 / #477)
+- プラン別制限 (PR #392)
+- provider abstraction (ImageProvider)
 
 ### 一部実装済み
 
 - 管理者 analytics（レビュー画面あり、SLO ダッシュボード実装済み）
-- `originalCharacters` 設計（型定義・Firestore構造設計済み、本格CRUD未実装）
+- `originalCharacters` 実装（PR #466 / #470）
 - cast の `approvedImageUrl` / `referenceImageUrl` 参照（構造は準備済み、全cast対応は進行中）
-- プラン別制限（`PlanConfig` に `imageModelProfile` 等あり、Stripe課金は未実装）
 - content filter（基本フィルタあり、abuse detection は未実装）
 - Firebase App Check（計画策定済み、enforcement 未実施）
 
 ### 未実装
 
-- ~~SLO メトリクス集計ダッシュボード~~ → 実装済み（admin SLO Dashboard + Snapshot History）
-- ~~SLO 自動スナップショット~~ → 実装済み（Daily 03:00 JST / Weekly Mon 03:15 JST、idempotent）
-- ~~Stale metadata cleanup~~ → 実装済み（Daily 03:30 JST、collection group query + admin UI）
-- ~~Admin Quality Review UI（Story / Illustration / Character / Personalization / Safety score）~~ → 実装済み
-- ~~manual quality score 保存~~ → 実装済み
-- ~~quality review history~~ → 実装済み
-- ~~quality review filter / sort~~ → 実装済み
-- ~~batch review workflow~~ → 実装済み
-- ~~Quality Trend Dashboard / Regression Detection~~ → 実装済み
-- ~~Rewrite / Regeneration Recommendation~~ → 実装済み
-- ~~Recommendation Action Buttons~~ → 実装済み（導線のみ、実行なし）
-- LLM auto review prototype
-- ~~provider abstraction（ImageProvider インターフェース）~~ → **P3-15s COMPLETE（ページ生成）**: `docs/PHASE3_IMAGE_PROVIDER_CLOSURE.md` | 残余スコープ: カバー画像・キャラ参照（P4 追跡）
 - provider 比較・A/B テスト
-- Stripe 決済
-- [PDF 出力](./PDF_OUTPUT_DESIGN.md) (Design Draft)
-- 共有URL
 - 音声読み聞かせ
 - 印刷注文
-- 本棚UI
-- サンプル絵本ギャラリー
-- ~~swipe / slide page navigation~~ → 実装済み（Step G: Framer Motion drag="x"）
-- ~~cover page generation~~ → 実装済み（Step D: coverImagePrompt + Replicate）
-- ~~title spread / opening narration flow~~ → 実装済み（Step B + E: titleSpreadText / openingNarration Reader UI 表示）
 - Template Mode 拡充（cover 対応 + テンプレート 10 本 + 8/12 ページ）
-- delete account / delete child profile
 - admin operation audit log
 - rate limit（API レベル）
 - Replicate webhook / prediction ID 管理
@@ -256,9 +246,9 @@ Phase 1 は 2026-06-12 に Complete と判定。`docs/PRODUCTION_SMOKE_RESULTS.m
 | T2-A | テンプレート 5〜6 追加（memories + emotional-growth） | **done** |
 | T2-B | テンプレート 7〜8 追加（bedtime + imagination） | **done** |
 | T2-C | テンプレート 9〜10 追加（daily-life + growth-support） | **done** |
-| T2-D | テンプレートプレビュー画像の生成・設定 | |
-| T2-E | テーマ選択 UI のプレビュー画像表示 | |
-| T2-F | テンプレート品質のテスト生成・レビュー | |
+| T2-D | テンプレートプレビュー画像の生成・設定 | **done** (PR #345) |
+| T2-E | テーマ選択 UI のプレビュー画像表示 | **done** (PR #253) |
+| T2-F | テンプレート品質のテスト生成・レビュー | **done** (PR #307) |
 
 ### Phase T3: 8/12 ページ + バリアント
 
@@ -328,23 +318,23 @@ T3-4j / T3-4k status update (2026-05-15):
 
 ### 売り物化前 必須
 
-- [ ] 本棚UI（作成済み絵本一覧）
-- [ ] 絵本閲覧UI（ページめくり）
+- [x] 本棚UI（作成済み絵本一覧）
+- [x] 絵本閲覧UI（ページめくり）
 - [x] swipe / slide page navigation
 - [x] cover page / title spread / opening narration
-- [ ] animated page transition
-- [ ] 失敗ページ再生成導線（ユーザー向け）
-- [ ] 作成履歴（作成日表示）
-- [ ] feedback 送信UI
+- [x] animated page transition (PR #349)
+- [x] 失敗ページ再生成導線（ユーザー向け）(PR #347)
+- [x] 作成履歴（作成日表示）
+- [x] feedback 送信UI (PR #355)
 - [x] cover page / title spread 対応
 - [x] opening narration flow
 
 ### 売り物化前 推奨
 
-- [ ] 「このページだけ仕上げる」（partial_completed 時）
-- [ ] 「このページだけ作り直す」（ユーザー起点の再生成）
-- [ ] タイトル編集
-- [ ] サンプル絵本ギャラリー
+- [x] 「このページだけ仕上げる」（partial_completed 時）
+- [x] 「このページだけ作り直す」（ユーザー起点の再生成）(PR #464)
+- [x] タイトル編集 (PR #396)
+- [x] サンプル絵本ギャラリー (PR #361)
 - [ ] read-aloud mode
 
 ---
