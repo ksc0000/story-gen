@@ -411,10 +411,10 @@ function normalizeStoryForBook(
   );
 
   const withCompanion = normalizeStoryWithCompanion(withNormalizedCast, mergedInput);
-    const withOriginalCharacter = normalizeStoryWithOriginalCharacter(withCompanion, bookData);
+  const withOriginalCharacter = normalizeStoryWithOriginalCharacter(withCompanion, bookData);
 
   return {
-      ...withOriginalCharacter,
+    ...withOriginalCharacter,
     forbiddenQuestObjects: sanitizeForbiddenQuestObjects(
       withCompanion.forbiddenQuestObjects,
       bookData,
