@@ -1,7 +1,5 @@
-# Enhance Story Generation Prompts for Age 3+ Books to Ensure Semantic Richness (Place, Action, Feeling, Discovery)
+# Implement 12-Page Variants for Selected Fixed Templates
 
 ## Context
 
-The EhonAI product roadmap for Phase 2: Story & Illustration Quality, specifically under "含めるタスク," identifies a need to "3歳以上の意味量確保（場所・行動・気持ち・発見の2つ以上）" (ensure semantic richness for 3+ years old, covering at least two elements of place, action, feeling, or discovery). While LLM auto-review has been enhanced to *detect* semantic content in age 3+ books (PR #427), the story generation prompts themselves require refinement to consistently produce this desired level of richness.
-
-The goal is to improve the actual output of the story generation for
+The product is in Phase 5 with Cohort B limited rollout in progress. Many foundational features, including the expanded Template Mode and 8-page variants, have been implemented. The roadmap explicitly lists "Template Mode 拡充 (8/12 ページ)" under "未実装" (Not Implemented) in Section 0, and Phase 3's T3 plan covers 8-page variants but not 12-page variants directly. Expanding the page count offers more content depth and value for users. This task focuses on implementing the longer 12-page variants for a few popular fixed templates, which will require updates to `TemplateData` and `FixedStoryTemplate` structure, along with creating
