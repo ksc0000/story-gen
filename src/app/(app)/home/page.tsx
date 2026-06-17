@@ -20,6 +20,7 @@ import { useBooks } from "@/lib/hooks/use-books";
 import { useSeries } from "@/lib/hooks/use-series";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
+import { useOriginalCharacters } from "@/lib/hooks/use-original-characters";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { cn } from "@/lib/utils";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
@@ -163,6 +164,7 @@ export default function HomePage() {
   const { children, loading: childrenLoading, activeChild } = useChildren(user?.uid);
   const { isAdmin } = useAdminClaim();
   const { companions, loading: companionsLoading } = useCompanions(user?.uid);
+  const { characters, loading: charactersLoading } = useOriginalCharacters(user?.uid);
 
   const productPlan = resolveProductPlan(profile);
   const quota = PLAN_CONFIGS[productPlan]?.monthlyBookQuota ?? 1;
@@ -347,6 +349,62 @@ export default function HomePage() {
         </div>
         {isAdmin ? <p className="mt-2 text-sm text-violet-500">管理者向け: Book品質レビューと画像モデル比較を利用できます</p> : null}
 
+        {/* オリジナル相棒 widget */}
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg">✨</span>
+              <span className="text-sm font-semibold text-purple-800">オリジナル相棒</span>
+            </div>
+            <Link href="/original-characters" className="text-xs text-violet-500 hover:underline">
+              すべて見る →
+            </Link>
+          </div>
+          {charactersLoading ? null : characters.length === 0 ? (
+            <Link href="/original-characters/new" className="block">
+              <div className="flex items-center gap-3 rounded-2xl border border-dashed border-purple-200 bg-white/60 px-4 py-3 hover:bg-white/90 hover:border-purple-300 transition-all">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">✨</div>
+                <div>
+                  <p className="text-sm font-medium text-purple-800">ふしぎな相棒をつくろう！</p>
+                  <p className="text-xs text-violet-400">あなただけの特別な相棒キャラクターを作成できます</p>
+                </div>
+                <span className="ml-auto text-violet-300 text-lg">＋</span>
+              </div>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {characters.map((character) => (
+                <Link
+                  key={character.id}
+                  href={`/original-characters/${character.id}`}
+                  className="flex shrink-0 items-center gap-2 rounded-2xl border border-purple-100 bg-white/70 px-3 py-2 hover:bg-white hover:border-purple-200 transition-all"
+                >
+                  {character.visualProfile.approvedImageUrl ? (
+                    <Image
+                      src={character.visualProfile.approvedImageUrl}
+                      alt={character.name}
+                      width={36}
+                      height={36}
+                      className="h-9 w-9 shrink-0 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">
+                      ✨
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-purple-800 whitespace-nowrap">{character.name}</span>
+                </Link>
+              ))}
+              <Link
+                href="/original-characters/new"
+                className="flex shrink-0 h-[52px] w-[52px] items-center justify-center rounded-2xl border border-dashed border-purple-200 bg-white/60 hover:bg-white hover:border-purple-300 transition-all text-violet-400 text-xl"
+              >
+                ＋
+              </Link>
+            </div>
+          )}
+        </div>
+
         {/* なかよしキャラ widget */}
         <div className="mt-5">
           <div className="flex items-center justify-between mb-2 px-1">
@@ -364,7 +422,7 @@ export default function HomePage() {
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">✨</div>
                 <div>
                   <p className="text-sm font-medium text-purple-800">なかよしキャラを作ろう！</p>
-                  <p className="text-xs text-violet-400">絵本に登場するオリジナルのキャラクターを作れます</p>
+                  <p className="text-xs text-violet-400">動物などのなかよしキャラクターをかんたんに作れます</p>
                 </div>
                 <span className="ml-auto text-violet-300 text-lg">＋</span>
               </div>

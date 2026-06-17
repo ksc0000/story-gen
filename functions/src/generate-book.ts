@@ -411,9 +411,10 @@ function normalizeStoryForBook(
   );
 
   const withCompanion = normalizeStoryWithCompanion(withNormalizedCast, mergedInput);
+  const withOriginalCharacter = normalizeStoryWithOriginalCharacter(withCompanion, bookData);
 
   return {
-    ...withCompanion,
+    ...withOriginalCharacter,
     forbiddenQuestObjects: sanitizeForbiddenQuestObjects(
       withCompanion.forbiddenQuestObjects,
       bookData,
@@ -491,6 +492,84 @@ export function normalizeStoryWithCompanion(
       return {
         ...page,
         appearingCharacterIds: [...(page.appearingCharacterIds || []), effectiveCompanionId],
+      };
+    }
+    return page;
+  });
+
+  return {
+    ...story,
+    cast: updatedCast,
+    pages: updatedPages,
+  };
+}
+
+/**
+ * Ensures the original character from snapshot is correctly registered in the cast
+ * and appears in at least 50% of the pages if not already present.
+ */
+export function normalizeStoryWithOriginalCharacter(
+  story: GeneratedStory,
+  bookData: BookData
+): GeneratedStory {
+  const snapshot = bookData.originalCharacterSnapshot;
+  if (!snapshot) {
+    return story;
+  }
+
+  const charId = "original_character";
+  const nameLower = snapshot.name.toLowerCase();
+
+  // 1. Check if character is already in cast
+  const existing = story.cast?.find(
+    (c) =>
+      c.characterId === charId ||
+      c.displayName.toLowerCase().includes(nameLower) ||
+      nameLower.includes(c.displayName.toLowerCase())
+  );
+
+  let updatedCast = story.cast ? [...story.cast] : [];
+  let effectiveId = charId;
+
+  if (existing) {
+    effectiveId = existing.characterId;
+    existing.visualBible = snapshot.visualProfile.characterBible;
+    existing.colorPalette = snapshot.visualProfile.mainColor ? [snapshot.visualProfile.mainColor] : undefined;
+    if (snapshot.visualProfile.accentColor) {
+      existing.colorPalette?.push(snapshot.visualProfile.accentColor);
+    }
+    existing.referenceImageUrl = snapshot.visualProfile.approvedImageUrl;
+  } else {
+    updatedCast.push({
+      characterId: charId,
+      displayName: snapshot.name,
+      role: snapshot.role as StoryCharacterRole,
+      characterKind: "magical_creature" as StoryCharacterKind, // best effort default
+      visualBible: snapshot.visualProfile.characterBible,
+      nonHuman: true, // original characters follow non-human consistency path by default
+      noHumanFace: true,
+      noHumanBody: true,
+      referenceImageUrl: snapshot.visualProfile.approvedImageUrl,
+    });
+  }
+
+  // 2. Ensure presence in >= 50% of pages
+  const totalPages = story.pages.length;
+  const targetCount = Math.ceil(totalPages * 0.5);
+  const appearingIndices = story.pages
+    .map((p, i) => (p.appearingCharacterIds?.includes(effectiveId) ? i : -1))
+    .filter((i) => i !== -1);
+
+  let currentCount = appearingIndices.length;
+  const updatedPages = story.pages.map((page, index) => {
+    const isPresent = page.appearingCharacterIds?.includes(effectiveId);
+    if (isPresent) return page;
+
+    if (currentCount < targetCount && index % 2 === 0) {
+      currentCount++;
+      return {
+        ...page,
+        appearingCharacterIds: [...(page.appearingCharacterIds || []), effectiveId],
       };
     }
     return page;
@@ -1346,6 +1425,9 @@ export async function processBookGeneration(
 
     // Step 6b: Inject companion character reference image (if companion selected)
     story = await injectCompanionCharacterReference({ story, mergedInput });
+
+    // Step 6c: Inject original character reference image (if snapshot present)
+    story = injectOriginalCharacterReference({ story, bookData: normalizedBookData });
 
     const { qualityReport } = storyResult;
     const selectedStyleProfile = getIllustrationStyleProfile(normalizedBookData.style);
@@ -2295,6 +2377,34 @@ async function injectCompanionCharacterReference(params: {
     });
     return story;
   }
+}
+
+/**
+ * Snapshot から original character の参考画像を注入する。
+ */
+export function injectOriginalCharacterReference(params: {
+  story: GeneratedStory;
+  bookData: BookData;
+}): GeneratedStory {
+  const { story, bookData } = params;
+  const snapshot = bookData.originalCharacterSnapshot;
+  if (!snapshot || !snapshot.visualProfile.approvedImageUrl || !story.cast?.length) {
+    return story;
+  }
+
+  const nameLower = snapshot.name.toLowerCase();
+  const updatedCast = story.cast.map((character) => {
+    if (
+      character.characterId === "original_character" ||
+      character.displayName.toLowerCase().includes(nameLower) ||
+      nameLower.includes(character.displayName.toLowerCase())
+    ) {
+      return { ...character, referenceImageUrl: snapshot.visualProfile.approvedImageUrl };
+    }
+    return character;
+  });
+
+  return { ...story, cast: updatedCast };
 }
 
 async function ensureRecurringCharacterReferences(params: {

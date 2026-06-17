@@ -59,6 +59,12 @@ service cloud.firestore {
         }
       }
 
+      match /originalCharacters/{characterId} {
+        allow read: if isAdmin() || isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+
       match /usage/{yearMonth} {
         allow read: if isAdmin() || isOwner(userId);
         allow write: if false;
