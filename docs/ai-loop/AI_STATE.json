@@ -144,6 +144,7 @@
     "PR #445: fix: enforce registered companion appearance over Gemini hallucination (merged)",
     "PR #447: fix: anchor recurring character face geometry to the reference (merged)",
     "PR #449: Update PlanConfig to allow 8-Page Fixed Templates for Standard Plan (merged)",
+    "PR #454: Implement Backend Logic for User and Child Profile Deletion (merged)",
     "PR #455: chore: remove dead synchronous avatar callable (#108) (merged)",
     "PR #458: feat: add book series grouping feature (#435) (merged)",
     "PR #459: fix: don't submit new-series input on IME composition Enter (merged)",
