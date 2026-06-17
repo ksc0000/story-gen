@@ -376,7 +376,7 @@ export default function HomePage() {
               {characters.map((character) => (
                 <Link
                   key={character.id}
-                  href={`/original-characters/${character.id}`}
+                  href={`/original-characters?id=${character.id}`}
                   className="flex shrink-0 items-center gap-2 rounded-2xl border border-purple-100 bg-white/70 px-3 py-2 hover:bg-white hover:border-purple-200 transition-all"
                 >
                   {character.visualProfile.approvedImageUrl ? (

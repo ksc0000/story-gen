@@ -147,7 +147,7 @@ export default function CreateOriginalCharacterPage() {
         active: true,
       });
 
-      router.push(`/original-characters/${characterId}`);
+      router.push(`/original-characters?id=${characterId}`);
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
