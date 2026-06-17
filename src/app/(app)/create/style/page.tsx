@@ -12,7 +12,6 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
-import { useOriginalCharacters } from "@/lib/hooks/use-original-characters";
 import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
@@ -39,7 +38,6 @@ function StyleSelectionPageContent() {
   const { profile } = useUserProfile(user?.uid);
   const { children } = useChildren(user?.uid);
   const { templates } = useTemplates();
-  const { characters } = useOriginalCharacters(user?.uid);
   const [selected, setSelected] = useState<IllustrationStyle | null>("soft_watercolor");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -81,7 +79,6 @@ function StyleSelectionPageContent() {
   const companionId = searchParams.get("companionId");
   const companionName = searchParams.get("companionName");
   const companionVisualDescription = searchParams.get("companionVisualDescription");
-  const originalCharacterId = searchParams.get("originalCharacterId");
   const protagonistType = searchParams.get("protagonistType");
   const visibleStyleProfiles = useMemo(
     () => getStylePickerProfilesForTemplate(template?.id),
@@ -183,23 +180,6 @@ function StyleSelectionPageContent() {
           ? buildChildProfileSnapshot(child)
           : buildLegacyChildProfileSnapshot({ childName });
 
-        const originalCharacter = characters.find(c => c.id === originalCharacterId);
-        const originalCharacterSnapshot = originalCharacter ? {
-          name: originalCharacter.name,
-          species: originalCharacter.species,
-          role: originalCharacter.role,
-          personalityTraits: originalCharacter.personalityTraits,
-          specialPower: originalCharacter.specialPower,
-          weaknessOrQuirk: originalCharacter.weaknessOrQuirk,
-          visualProfile: {
-            characterBible: originalCharacter.visualProfile.characterBible,
-            approvedImageUrl: originalCharacter.visualProfile.approvedImageUrl,
-            basePrompt: originalCharacter.visualProfile.basePrompt,
-            mainColor: originalCharacter.visualProfile.mainColor,
-            accentColor: originalCharacter.visualProfile.accentColor,
-          }
-        } : null;
-
         const characterUsage: CharacterUsage = {
           useRegisteredCharacter: Boolean(child),
           faceSource: "child_profile",
@@ -213,8 +193,6 @@ function StyleSelectionPageContent() {
           childProfileSnapshot,
           characterUsage,
           protagonistType: protagonistType || (childId ? "child" : "original_character"),
-          originalCharacterId: originalCharacterId || null,
-          originalCharacterSnapshot,
           title: "",
           theme,
           templateId: theme,
