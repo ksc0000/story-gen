@@ -14,7 +14,6 @@ import type { ImageModelProfile, CoverStatus, BookData } from "./lib/types";
 import { generateCoverImageWithFallback } from "./controllers/imageGeneration";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
-const STORAGE_BUCKET = "story-gen-8a769.firebasestorage.app";
 
 
 /* ------------------------------------------------------------------ */
@@ -108,10 +107,8 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "ログインが必要です。");
     }
+    const uid = request.auth.uid;
     const isAdmin = request.auth.token?.admin === true;
-    if (!isAdmin) {
-      throw new HttpsError("permission-denied", "Admin 権限が必要です。");
-    }
 
     /* ---------- Input validation ---------- */
     const { bookId } = request.data;
@@ -127,6 +124,10 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
       throw new HttpsError("not-found", "絵本が見つかりません。");
     }
     const bookData = bookSnap.data() as BookData;
+
+    if (!isAdmin && bookData.userId !== uid) {
+      throw new HttpsError("permission-denied", "この操作を実行する権限がありません。");
+    }
     const coverImagePrompt = bookData.coverImagePrompt;
     if (!coverImagePrompt) {
       throw new HttpsError("failed-precondition", "coverImagePrompt が設定されていません。");
@@ -169,7 +170,7 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
 
       const uploadCoverImage = async (_bookId: string, buffer: Buffer): Promise<string> => {
         const storage = admin.storage();
-        const bucket = storage.bucket(STORAGE_BUCKET);
+        const bucket = storage.bucket();
         const filename = `books/${bookId}/cover-regen-${Date.now()}.png`;
         const file = bucket.file(filename);
         const downloadToken = randomUUID();

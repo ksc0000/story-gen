@@ -576,7 +576,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-birthday-4p.webp",
     sampleImageAlt: "誕生日をお祝いする幸せな家族の絵本イメージ",
     visualDirection: "Warm joyful birthday atmosphere, colorful balloons, a delicious cake, and family smiles.",
     order: 118,
@@ -584,6 +584,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、誕生日の思い出を4ページで残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}の はっぴーばーすでー",
+      previewImageUrl: "/images/templates/fixed-birthday-4p.webp",
       coverImagePromptTemplate: withBirthdayImagePromptGuardrail("Picture book cover: A happy child with a birthday cake and colorful balloons, warm family celebration, joyful and festive, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "おたんじょうび おめでとう！",
       openingNarrationTemplate: "きょうは {childName}の とくべつな日。みんなで お祝いしましょう！",
@@ -626,7 +627,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "take",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/seasonal.webp",
+    sampleImageUrl: "/images/templates/fixed-birthday-4p.webp",
     sampleImageAlt: "誕生日の1日をじっくり描いた絵本イメージ",
     visualDirection: "Warm detailed birthday story, from morning excitement to evening afterglow, soft watercolor style.",
     order: 119,
@@ -634,6 +635,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、誕生日の思い出を8ページでゆっくり残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}の はっぴーばーすでー",
+      previewImageUrl: "/images/templates/fixed-birthday-4p.webp",
       coverImagePromptTemplate: withBirthdayImagePromptGuardrail("Picture book cover: A happy child celebrating their birthday, surrounded by love and festive decorations, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "とくべつな 1にちが はじまるよ",
       openingNarrationTemplate: "あさの ひかりの なかで、{childName}は めを さましました。きょうは、まちにまった おたんじょうび！",
@@ -698,7 +700,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "take",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-graduation-kindergarten.webp",
     sampleImageAlt: "卒園式で誇らしげに立つ子どもの絵本イメージ",
     visualDirection: "Bright spring graduation atmosphere, cherry blossoms, a sense of accomplishment and new beginnings.",
     order: 120,
@@ -706,6 +708,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、幼稚園・保育園の卒園記念絵本を8ページで作ります。",
     fixedStory: {
       titleTemplate: "{childName}の そつえん おめでとう",
+      previewImageUrl: "/images/templates/fixed-graduation-kindergarten.webp",
       coverImagePromptTemplate: withGraduationImagePromptGuardrail("Picture book cover: A child in a formal graduation outfit (kindergarten/nursery), holding a plain diploma tube, cherry blossoms in the background, proud and hopeful expression, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "ようちえん、たのしかったね",
       openingNarrationTemplate: "はるの かぜが ふく日。{childName}は 今日、ようちえんを そつえんします。",
@@ -770,7 +773,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "take",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-entrance-elementary.webp",
     sampleImageAlt: "ランドセルを背負って小学校へ行く子どもの絵本イメージ",
     visualDirection: "Bright energetic spring school entrance atmosphere, randoseru, cherry blossoms, and new friends.",
     order: 121,
@@ -778,6 +781,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、小学校入学の記念絵本を8ページで作ります。",
     fixedStory: {
       titleTemplate: "{childName}の しょうがっこう にゅうがく",
+      previewImageUrl: "/images/templates/fixed-entrance-elementary.webp",
       coverImagePromptTemplate: withGraduationImagePromptGuardrail("Picture book cover: A child wearing a new school uniform and a shiny randoseru backpack, standing at an elementary school gate with cherry blossoms, proud and excited, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "ピカピカの 1ねんせい！",
       openingNarrationTemplate: "さくらの 花が さく日。{childName}は 今日から、しょうがっこうの 1ねんせいです。",
@@ -842,7 +846,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "take",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/emotional-growth.webp",
+    sampleImageUrl: "/images/templates/fixed-new-baby.webp",
     sampleImageAlt: "赤ちゃんと初めて対面する子どもの絵本イメージ",
     visualDirection: "Warm tender nursery atmosphere, soft pastels, tiny baby details, and deep sibling affection.",
     order: 122,
@@ -850,6 +854,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、新しい赤ちゃんを迎えたお兄ちゃん・お姉ちゃんの物語を8ページで作ります。",
     fixedStory: {
       titleTemplate: "あかちゃんが きたよ！ {childName}と 小さな いのち",
+      previewImageUrl: "/images/templates/fixed-new-baby.webp",
       coverImagePromptTemplate: withNewBabyImagePromptGuardrail("Picture book cover: An older child looking tenderly at a new baby in a cradle, warm nursery setting, soft pastel colors, feeling of love and protection, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "おうちに あかちゃんが やってきた",
       openingNarrationTemplate: "ある日、{childName}の おうちに、とっても 小さな お客さまが やってきました。",
@@ -917,7 +922,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     blankExample: "例：あんよ、おつかい、さかあがり、ピアノ",
     priceTier: "take",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/milestone.webp",
+    sampleImageUrl: "/images/templates/fixed-first-steps.webp",
     sampleImageAlt: "何かに挑戦し、達成した子どもの絵本イメージ",
     visualDirection: "Bright encouraging atmosphere, focus on determination, effort, and triumphant joy.",
     order: 123,
@@ -925,6 +930,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、子どもの「はじめての挑戦」を8ページで描く応援絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}の はじめての {storyRequest}",
+      previewImageUrl: "/images/templates/fixed-first-steps.webp",
       coverImagePromptTemplate: withFixedImagePromptSafety("Picture book cover: A child with a look of determination and courage, about to start a new challenge, bright and inspiring atmosphere, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "はじめての ちょうせん！",
       openingNarrationTemplate: "きょうは {childName}にとって、わすれられない日。はじめての {storyRequest}に 挑戦します。",
@@ -989,7 +995,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "take",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/emotional-growth.webp",
+    sampleImageUrl: "/images/templates/fixed-thank-you-grandparent.webp",
     sampleImageAlt: "おじいちゃん・おばあちゃんと仲良く過ごす子どもの絵本イメージ",
     visualDirection: "Warm nostalgic atmosphere, gentle golden light, and deep intergenerational love.",
     order: 124,
@@ -997,6 +1003,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、おじいちゃん・おばあちゃんへの感謝を伝える8ページの絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}から いつもありがとう",
+      previewImageUrl: "/images/templates/fixed-thank-you-grandparent.webp",
       coverImagePromptTemplate: withFixedImagePromptSafety("Picture book cover: A child and an elderly couple (grandparents) spending a warm moment together, perhaps reading or gardening, peaceful and loving atmosphere, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "だいすきな おじいちゃん おばあちゃんへ",
       openingNarrationTemplate: "{childName}は、おじいちゃんと おばあちゃんが 大好きです。今日は 感謝の きもちを 伝えます。",
@@ -1061,7 +1068,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "take",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/emotional-growth.webp",
+    sampleImageUrl: "/images/templates/fixed-moving-farewell.webp",
     sampleImageAlt: "お友達とさよならをする子どもの絵本イメージ",
     visualDirection: "Bittersweet but hopeful atmosphere, soft spring or autumn light, and strong bonds of friendship.",
     order: 125,
@@ -1069,6 +1076,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、お友達との別れと新しい出会いを描く8ページの物語を作ります。",
     fixedStory: {
       titleTemplate: "また あおうね、ずっと ともだち",
+      previewImageUrl: "/images/templates/fixed-moving-farewell.webp",
       coverImagePromptTemplate: withFarewellImagePromptGuardrail("Picture book cover: Two children (the protagonist and a best friend) holding hands or waving, with a few plain moving boxes in the background, bittersweet but hopeful expression, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "はなれても、ずっと ともだち",
       openingNarrationTemplate: "{childName}は、お引越しをすることになりました。お友達と お別れするのは、ちょっぴり さびしいけれど…",
@@ -1384,6 +1392,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、はじめての動物園の思い出を8ページでゆっくり残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}とはじめてのどうぶつえん",
+      previewImageUrl: "/images/templates/fixed-first-zoo.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child standing beside a decorative text-free zoo entrance arch with animal-shaped decorations and zoo paths, with family nearby, gentle daylight, warm welcoming atmosphere, soft watercolor style, recurring small yellow star motif tucked into the scene, child-safe and inviting composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark, no storefront signs, NOT a sandbox, NOT a playground"),
       titleSpreadTextTemplate: "{childName}と はじめての どうぶつえん",
@@ -1526,7 +1535,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/bedtime.webp",
+    sampleImageUrl: "/images/templates/fixed-bedtime-good-day.webp",
     sampleImageAlt: "寝る前に安心して眠る子どものやさしい絵本イメージ",
     visualDirection:
       "Cozy sleepy bedtime storybook mood with moonlight, soft blankets, tiny stars, quiet room, and reassuring end-of-day warmth.",
@@ -1534,6 +1543,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、寝る前に安心して眠れる短い絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-bedtime-good-day.webp",
       titleTemplate: "きょうもいい日だったね、{childName}",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child in cozy pajamas in a warm bedroom at dusk, soft moonlight through the window, favorite stuffed toy nearby, recurring small star motif, peaceful sleepy mood, soft watercolor style, child-safe gentle composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
@@ -1623,6 +1633,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、はみがきをやさしく応援する短い絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-brush-teeth.webp",
       titleTemplate: "{childName}のはみがきできたよ",
       coverImagePromptTemplate:
         withBrushTeethImagePromptGuardrail("Picture book cover illustration: a cheerful preschool child with short dark bob hair, wearing mint-green pajamas, holding a colorful toothbrush in a bright clean bathroom, fresh morning or evening light, friendly mirror reflection, recurring shining star motif, encouraging cheerful heroic mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details"),
@@ -1693,7 +1704,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/bedtime.webp",
+    sampleImageUrl: "/images/templates/fixed-bedtime-good-day.webp",
     sampleImageAlt: "寝る前に安心して眠る子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Cozy sleepy bedtime storybook mood with moonlight, soft blankets, tiny stars, quiet room, and reassuring end-of-day warmth over a gentle 8-page rhythm.",
@@ -1702,6 +1713,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、寝る前に安心して眠れる8ページの絵本を作ります。",
     fixedStory: {
       titleTemplate: "きょうもいい日だったね、{childName}",
+      previewImageUrl: "/images/templates/fixed-bedtime-good-day.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child in cozy pajamas in a warm bedroom at dusk, soft moonlight through the window, favorite stuffed toy nearby, recurring small star motif, peaceful sleepy mood, soft watercolor style, child-safe gentle composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "きょうも いい日だったね、{childName}",
@@ -1853,6 +1865,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、歯みがきの習慣を8ページでやさしく応援する絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のはじめての歯みがき",
+      previewImageUrl: "/images/templates/fixed-brush-teeth.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a cheerful preschool child holding a toothbrush in a bright clean bathroom, fresh morning or evening light, friendly mirror reflection, recurring shining star motif, encouraging cheerful mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}の はじめての 歯みがき",
@@ -2003,6 +2016,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、はじめてのクリスマスをやさしく残す絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-christmas.webp",
       titleTemplate: "{childName}のはじめてのクリスマス",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child celebrating Christmas with family in a cozy living room, soft warm fairy lights, decorated Christmas tree, gentle winter glow, recurring small golden bell motif, festive but calm storybook mood, soft watercolor style, child-safe tender composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
@@ -2090,6 +2104,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt:
       "固定テンプレートを使って、わけっこを通してやさしさと自信を育てる短い絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-sharing-friends.webp",
       titleTemplate: "{childName}のわけっこできたね",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: two children sharing toys with warm smiles in a bright playroom, one child is the protagonist, gentle sunlight, recurring tiny kindness spark motif, tender emotional-growth mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
@@ -2409,7 +2424,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/adventure.webp",
+    sampleImageUrl: "/images/templates/fixed-cardboard-rocket.webp",
     sampleImageAlt: "ダンボールロケットで想像の冒険をする子どもの絵本イメージ",
     visualDirection:
       "Warm imaginative playroom mood with cardboard rocket pretend play, symbolic stars and planets, and safe adventurous excitement.",
@@ -2418,6 +2433,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、安心できる想像の宇宙ごっこ絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のダンボールロケットしゅっぱつ",
+      previewImageUrl: "/images/templates/fixed-cardboard-rocket.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child beside a handmade cardboard rocket in a cozy playroom, symbolic stars and planets floating as imagination motifs, tiny comet motif recurring, safe pretend-adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "ダンボールロケットで しゅっぱつ",
@@ -2495,7 +2511,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/adventure.webp",
+    sampleImageUrl: "/images/templates/fixed-cardboard-rocket.webp",
     sampleImageAlt: "ダンボールロケットで想像の冒険をする子どもの絵本イメージ（8ページ版）",
     visualDirection:
       "Warm imaginative playroom mood with cardboard rocket pretend play, symbolic stars and planets, and safe adventurous excitement over a gentle 8-page rhythm.",
@@ -2504,6 +2520,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、安心できる想像の宇宙ごっこ絵本を8ページで作ります。",
     fixedStory: {
       titleTemplate: "{childName}のダンボールロケットしゅっぱつ",
+      previewImageUrl: "/images/templates/fixed-cardboard-rocket.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child beside a handmade cardboard rocket in a cozy playroom, symbolic stars and planets floating as imagination motifs, tiny comet motif recurring, safe pretend-adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "ダンボールロケットで しゅっぱつ",
@@ -2654,6 +2671,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、雨の日でも楽しい発見を見つける絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-rainy-day-puddle.webp",
       titleTemplate: "{childName}とあめの日のみずたまり",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a cheerful child in a bright raincoat standing beside a shimmering puddle on a safe garden path, soft drizzle and gentle umbrella shapes, cozy rainy-day mood, watercolor storybook style, recurring tiny raindrop motif, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
@@ -2841,6 +2859,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、春のお花見さんぽの思い出絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-cherry-blossom.webp",
       titleTemplate: "{childName}の はなみさんぽ",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child walking under a tunnel of blooming cherry blossom trees, pink petals drifting all around, soft warm spring sunlight, a tiny pink petal motif floating near the child, gentle spring park mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -2931,6 +2950,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、ひなまつりのお祝い絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-hinamatsuri.webp",
       titleTemplate: "{childName}の ひなまつり",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing in front of a beautiful tiered Hina doll display, peach blossoms beside it, soft pink and gold hues, a tiny golden diamond motif on the doll's garment, traditional Hinamatsuri celebration mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3021,6 +3041,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、こどもの日のこいのぼり絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-childrens-day.webp",
       titleTemplate: "{childName}と こいのぼり",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing in a sunny yard with colorful koinobori carp streamers flying high above — large black, red, and blue carp banners flapping in the breeze — bright spring sky, a tiny blue fish scale motif on the child's outfit, energetic celebratory mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3111,6 +3132,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、たなばたの願い事絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-tanabata.webp",
       titleTemplate: "{childName}の たなばたの ねがい",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child hanging a colorful wish tanzaku strip on a bamboo branch decorated with streamers and paper decorations, a starry Milky Way sky above, tiny silver star motifs drifting like snow, magical summer night mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3201,6 +3223,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、夏祭りの楽しい夜の思い出絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-summer-festival.webp",
       titleTemplate: "{childName}の なつまつり",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child in a colorful yukata walking through a summer festival at night, rows of glowing red paper lanterns overhead, colorful food stall lights in the background, a tiny red lantern glow motif nearby, lively festive atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3291,6 +3314,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、花火の夜の思い出絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-fireworks.webp",
       titleTemplate: "{childName}の はなびのよる",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child looking up at a magnificent burst of colorful fireworks lighting up the night sky, reflections shimmering in a river below, a tiny star-shaped sparkle motif near the child, magical summer night atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3381,6 +3405,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、ハロウィンのかわいいお菓子集め冒険絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-halloween.webp",
       titleTemplate: "{childName}の ハロウィン ぼうけん",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child in a cute Halloween costume (witch hat and cape or friendly monster) holding a candy bag, standing in front of a glowing carved orange pumpkin jack-o-lantern, friendly bats fluttering above, autumn night with warm orange glow, tiny orange pumpkin motif beside the child, soft watercolor style, rounded child-safe composition, NOT scary, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3471,6 +3496,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、お正月の朝の特別な一日絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-new-year.webp",
       titleTemplate: "{childName}の おしょうがつの あさ",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child in a colorful kimono standing at a torii gate of a shrine on a crisp New Year morning, golden sunrise light streaming over snow-dusted hills, pine and bamboo decorations at the gate, a tiny golden bell motif hanging nearby, peaceful celebratory New Year mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3561,6 +3587,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、はじめての入園の記念日絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-nursery.webp",
       titleTemplate: "{childName}の はじめての にゅうえん",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a small child wearing a bright yellow sun hat standing at the gate of a cheerful nursery school, one hand holding a parent's hand and one hand waving bravely, colorful flowers in the school garden, a tiny yellow hat motif above the gate, tender bittersweet first-day mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3651,6 +3678,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、小学校入学の記念日絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-elementary.webp",
       titleTemplate: "{childName}の しょうがっこう にゅうがく",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a proud child wearing a large red randoseru backpack standing at the entrance of an elementary school with cherry blossoms in full bloom, wearing a crisp new uniform, a tiny red randoseru badge motif on the bag, spring milestone celebration mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3741,6 +3769,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、新しい赤ちゃんが来た記念絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-new-sibling.webp",
       titleTemplate: "{childName}、おにいちゃん・おねえちゃんに なったよ",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: an older child leaning gently over a baby's crib, looking at the new baby with wonder and tender love, a tiny white star motif floating above the crib like a guardian angel, soft nursery pastel colors, warm family bond mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3831,6 +3860,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、はじめての飛行機搭乗記念絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-airplane.webp",
       titleTemplate: "{childName}の はじめての ひこうき",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child looking out of an airplane window at fluffy white clouds below and a brilliant blue sky, tiny white cloud motifs drifting past the window, expression of pure wonder and excitement, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -3921,6 +3951,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、運動会の頑張りを記念した絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-sports-day.webp",
       titleTemplate: "{childName}の うんどうかい",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a determined child running with all their might on a sports day track, red-and-white flags fluttering overhead, cheering crowd blurred in the background, a tiny red-and-white flag motif near the finish line, bright outdoor sports day atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4011,6 +4042,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、発表会・音楽会の記念絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-recital.webp",
       titleTemplate: "{childName}の はっぴょうかい",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a child in a colorful performance costume standing center stage under a warm spotlight, facing a cheering audience, a tiny gold star motif glowing at the top of the stage curtain, proud shining performance moment, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4101,6 +4133,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、{childName}の成長を喜ぶ記念絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-growing-taller.webp",
       titleTemplate: "{childName}、こんなに おおきく なったよ！",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing straight and tall against a colorful height measurement chart on a wall, looking proud at how much they have grown, tiny rainbow star motifs along the measurement marks, warm cozy home atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4191,6 +4224,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、色について楽しく学ぶ絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-learning-colors.webp",
       titleTemplate: "{childName}と いろのふしぎ",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child surrounded by a rainbow of colorful objects — red apples, blue sky, yellow sunflowers, green leaves, purple grapes — all swirling in a playful circular arrangement, a tiny rainbow arc motif above the child, vibrant learning mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4281,6 +4315,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、かずを楽しく学ぶ絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-learning-numbers.webp",
       titleTemplate: "{childName}と かずの たんけん",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child counting colorful round pebbles arranged on a path — the child touches them one by one with a counting finger, tiny round pebble motifs scattered around, playful counting adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4371,6 +4406,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、動物の鳴き声を楽しく学ぶ絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-learning-animals.webp",
       titleTemplate: "{childName}と どうぶつさんの こえ",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child surrounded by friendly cartoon animals — elephant, lion, dog, cat, frog — each with an open mouth making their sound, musical note motifs floating around each animal, playful animal learning mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4461,6 +4497,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、四季を楽しく学ぶ絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-learning-seasons.webp",
       titleTemplate: "{childName}と しきのたび",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child at the center of a circular scene divided into four seasons — spring cherry blossoms top-left, summer sunflowers top-right, autumn red leaves bottom-right, winter snowflakes bottom-left — a tiny glowing sun motif at the center, magical seasonal journey mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4551,6 +4588,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、かたちを楽しく学ぶ絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-learning-shapes.webp",
       titleTemplate: "{childName}の かたちさがし",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child with a magnifying glass searching for shapes in a park — circle sun, square window, triangle roof, diamond kite — each shape highlighted with a rainbow star motif nearby, playful shape-finding adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4641,6 +4679,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、光り輝く魔法の森の大冒険絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-world-magical-forest.webp",
       titleTemplate: "{childName}と まほうの もりのぼうけん",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing at the glowing entrance of an enchanted forest, tiny sparkling light particles (magical dust) floating all around, a small glowing fairy peeking from behind a luminous leaf, soft rainbow light filtering through ancient trees, magical wonder mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4731,6 +4770,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、海の底の神秘的な大冒険絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-world-underwater.webp",
       titleTemplate: "{childName}と うみの そこの ぼうけん",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child in underwater gear surrounded by colorful tropical fish and glowing coral, soft light rays filtering down from above, tiny bubbles rising all around, vibrant yet gentle ocean mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4821,6 +4861,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、恐竜の世界の大冒険絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-world-dinosaurs.webp",
       titleTemplate: "{childName}と きょうりゅうの くに",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing beside a gentle giant brachiosaurus in a lush prehistoric jungle, large fern leaves and colorful flowers framing the scene, a tiny green dinosaur footprint motif on the ground, warm golden light through ancient trees, safe friendly adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -4911,6 +4952,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、甘くてかわいいおかしの国の大冒険絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-world-candy-land.webp",
       titleTemplate: "{childName}と おかしの くにの ぼうけん",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing at a grand candy-cane gate entrance to a colorful candy kingdom, lollipop trees and gumdrop bushes all around, a chocolate river glittering in the background, a small pink candy motif at the gate, sweet dreamy mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5001,6 +5043,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、雲の上のお城の大冒険絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-world-cloud-castle.webp",
       titleTemplate: "{childName}と くもの うえの おしろ",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child walking on fluffy white clouds toward a shimmering cloud castle glowing with soft golden and silver light, a tiny white feather motif drifting nearby, a rainbow bridge arching overhead, dreamy sky adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5091,6 +5134,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、おもちゃたちの秘密のパーティー絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-world-toy-land.webp",
       titleTemplate: "{childName}と おもちゃたちの ひみつのパーティー",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a child peeking into a cozy toy room at night where toys are dancing and celebrating — a teddy bear, building blocks, a toy train, and a matryoshka doll all animated and joyful — warm golden lamp light glowing, tiny wind-up key motifs on the toys, magical night party mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5181,6 +5225,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、トイレトレーニング達成を祝う絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-potty-training.webp",
       titleTemplate: "{childName}、ひとりで トイレ できたよ！",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a proud beaming child standing in a bright bathroom doorway with arms raised in triumph, a cheerful rainbow arching above them, warm encouraging home atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5271,6 +5316,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、自分でお着替えができた絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-getting-dressed.webp",
       titleTemplate: "{childName}、じぶんで おきがえ できたよ！",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a proud child standing in a cozy bedroom wearing a self-chosen colorful outfit, one arm raised in triumph, yellow button motifs scattered around like confetti, warm morning bedroom atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5361,6 +5407,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、野菜を食べることへの挑戦絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-eating-veggies.webp",
       titleTemplate: "{childName}と やさいの ぼうけん",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a brave child holding a fork with a broccoli floret on it, looking at it curiously, bright friendly vegetables dancing around them — broccoli, carrots, peas — green leaf motifs floating cheerfully, encouraging food adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5451,6 +5498,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、朝の支度を自分でできた絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-morning-routine.webp",
       titleTemplate: "{childName}の じぶんで できた あさ",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a bright-eyed child in pajamas standing in a sunny bedroom, arms raised cheerfully at the start of the morning, a glowing sunrise sun motif visible through the window, warm encouraging morning atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5541,6 +5589,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、お箸で食べられた達成感の絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-chopsticks.webp",
       titleTemplate: "{childName}、はしで たべられた！",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a proud child holding chopsticks with a perfect pinch grip, a cute red bean held triumphantly between the tips, warm mealtime atmosphere, cheerful dining table with friendly food characters, red bean motifs scattered like confetti, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5631,6 +5680,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、はじめての友だちができた日の記念絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-friend.webp",
       titleTemplate: "{childName}の はじめての ともだち",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: two small children holding hands in a sunny park, both smiling warmly at each other, heart motifs floating around them like bubbles, tender first friendship mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5721,6 +5771,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、勇気を出して挑戦する絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-being-brave.webp",
       titleTemplate: "{childName}の ゆうき",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a small child standing tall and brave at the edge of something challenging — a dark slide, a stage, a new path — a tiny friendly lion cub by their side as a courage companion, gold star motifs floating around both, warm brave adventure mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5811,6 +5862,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、ごめんなさいが言えた日の感情成長絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-saying-sorry.webp",
       titleTemplate: "{childName}の ごめんなさい",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a child standing face-to-face with a friend, one hand extended in an apology gesture, a soft rainbow beginning to appear behind them both, warm reconciliation mood, gentle and earnest expressions, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5901,6 +5953,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、はじめて雪を触った日の思い出絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-snow.webp",
       titleTemplate: "{childName}の はじめての ゆき",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a small wide-eyed child standing in a snowy garden, both mittened hands stretched out to catch snowflakes, expression of pure magical wonder, soft blue-white snowflake crystal motifs floating all around, magical winter atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -5991,6 +6044,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、秋のもみじ散歩の思い出絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-autumn-leaves.webp",
       titleTemplate: "{childName}の もみじ さんぽ",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a child walking through a magical autumn forest path, holding a beautiful red maple leaf above their head like an umbrella, autumn leaves raining down all around, warm golden red orange palette, red maple leaf motifs swirling like dancers, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -6081,6 +6135,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、虫取り冒険の絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-insect-hunt.webp",
       titleTemplate: "{childName}の むしとり だいぼうけん",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: an excited child holding a green bug cage up to examine a captured insect, surrounded by tall summer grasses and colorful insects, green bug cage motifs scattered around like adventure badges, bright energetic summer nature mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -6171,6 +6226,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、お花畑での散歩絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-flower-garden.webp",
       titleTemplate: "{childName}と おはなばたけ",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a joyful child standing in a magnificent sunflower field, arms spread wide in delight, surrounded by towering sunflowers taller than their head, sunflower motifs glowing like small suns around the child, bright golden garden mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -6261,6 +6317,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、おにぎり作り体験の絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-making-onigiri.webp",
       titleTemplate: "{childName}の おにぎり",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a happy child holding up a self-made triangle onigiri triumphantly, bits of nori seaweed visible on the rice, the kitchen behind warm and cozy, nori seaweed fragment motifs scattered around like confetti, warm family cooking mood, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -6351,6 +6408,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、くだもの狩りの思い出絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-fruit-picking.webp",
       titleTemplate: "{childName}の くだもの がり",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a delighted child reaching up to pick a shiny red apple from an apple tree in a lush orchard, the branch bending down, red apple motifs hanging like ornaments everywhere, bright harvest joy, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -6441,6 +6499,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、はじめてのスイミングの思い出絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-swimming.webp",
       titleTemplate: "{childName}の はじめての スイミング",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a delighted child in swimwear splashing happily in a sparkling pool, blue water bubbles floating all around them like tiny moons, bright summer pool atmosphere, aqua blue palette, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -6531,6 +6590,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "固定テンプレートを使って、自転車に乗れた日の感動絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-bike.webp",
       titleTemplate: "{childName}、じてんしゃ のれた！",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: an exhilarated child riding a bicycle solo with no training wheels, arms slightly out for balance, huge triumphant grin, pinwheel windmill motifs spinning in the wake behind the bike, sense of speed and freedom, bright outdoor atmosphere, soft watercolor style, rounded child-safe composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
@@ -6646,7 +6706,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     blankExample: "例：じてんしゃ、スイミング、かけっこ",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fixed-first-zoo.webp",
+    sampleImageUrl: "/images/templates/fixed-first-steps.webp",
     sampleImageAlt: "初挑戦の体験を絵本にしたイメージ",
     visualDirection:
       "Warm encouraging picture-book mood capturing the universal joy of trying something new for the very first time — nervous excitement turning into triumphant pride.",
@@ -6655,6 +6715,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "穴埋めテンプレートを使って、はじめての挑戦をやさしい絵本にします。",
     fixedStory: {
       titleTemplate: "{childName}の はじめての {storyRequest}",
+      previewImageUrl: "/images/templates/fixed-first-steps.webp",
       coverImagePromptTemplate: withFixedImagePromptSafety(
         "Picture book cover illustration: a joyful young child about to try something exciting for the very first time, wide eyes full of anticipation and courage, small glowing star motifs floating around them, warm golden encouraging light, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
       ),
@@ -6744,7 +6805,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     blankExample: "例：じてんしゃ、スイミング、かけっこ",
     priceTier: "take",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fixed-first-zoo.webp",
+    sampleImageUrl: "/images/templates/fixed-first-steps.webp",
     sampleImageAlt: "初挑戦の体験を絵本にしたイメージ",
     visualDirection:
       "Warm encouraging picture-book mood capturing the universal joy of trying something new for the very first time — nervous excitement turning into triumphant pride.",
@@ -6753,6 +6814,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "穴埋めテンプレートを使って、はじめての挑戦をやさしい絵本にします。",
     fixedStory: {
       titleTemplate: "{childName}の はじめての {storyRequest}",
+      previewImageUrl: "/images/templates/fixed-first-steps.webp",
       coverImagePromptTemplate: withFixedImagePromptSafety(
         "Picture book cover illustration: a joyful young child about to try something exciting for the very first time, wide eyes full of anticipation and courage, small glowing star motifs floating around them, warm golden encouraging light, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
       ),
@@ -6900,6 +6962,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "穴埋めテンプレートを使って、大好きなものへの愛を絵本にします。",
     fixedStory: {
       titleTemplate: "{childName}の だいすきな {storyRequest}",
+      previewImageUrl: "/images/templates/fantasy.webp",
       coverImagePromptTemplate: withFixedImagePromptSafety(
         "Picture book cover illustration: a joyful young child surrounded by their very favorite things, arms spread wide in pure delight, heart motifs and soft sparkles floating everywhere, warm golden glowing light, soft watercolor picture book style, rounded child-safe composition, abundant love and joy mood, rich but not cluttered"
       ),
@@ -7000,6 +7063,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "穴埋めテンプレートを使って、大好きなものへの愛を絵本にします。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fantasy.webp",
       titleTemplate: "{childName}の だいすきな {storyRequest}",
       coverImagePromptTemplate: withFixedImagePromptSafety(
         "Picture book cover illustration: a joyful young child surrounded by their very favorite things, arms spread wide in pure delight, heart motifs and soft sparkles floating everywhere, warm golden glowing light, soft watercolor picture book style, rounded child-safe composition, abundant love and joy mood, rich but not cluttered"
@@ -7156,6 +7220,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "穴埋めテンプレートを使って、おでかけの思い出絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}と {storyRequest}のおでかけ",
+      previewImageUrl: "/images/templates/fixed-first-zoo.webp",
       coverImagePromptTemplate: withFixedImagePromptSafety(
         "Picture book cover illustration: a joyful young child setting off on an exciting outing with family, waving hello to a new adventure, bright excited expression, a sense of warm family togetherness, sunny daylight, small compass or map motifs as recurring elements, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
       ),
@@ -7256,6 +7321,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "穴埋めテンプレートを使って、おでかけの思い出絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-zoo.webp",
       titleTemplate: "{childName}と {storyRequest}のおでかけ",
       coverImagePromptTemplate: withFixedImagePromptSafety(
         "Picture book cover illustration: a joyful young child setting off on an exciting outing with family, waving hello to a new adventure, bright excited expression, a sense of warm family togetherness, sunny daylight, small compass or map motifs as recurring elements, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
@@ -7403,6 +7469,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "穴埋めテンプレートを使って、夢のおしごと絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}は {storyRequest}になりたい",
+      previewImageUrl: "/images/templates/fantasy.webp",
       coverImagePromptTemplate: withFixedImagePromptSafety(
         "Picture book cover illustration: a dreaming young child looking up at a bright rainbow sky with stars, imagining their bright future, rainbow motifs arching across the cover, a glowing dream bubble above their head full of wonder and possibility, warm inspiring light, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
       ),
@@ -7503,6 +7570,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     active: true,
     systemPrompt: "穴埋めテンプレートを使って、夢のおしごと絵本を作ります。",
     fixedStory: {
+      previewImageUrl: "/images/templates/fantasy.webp",
       titleTemplate: "{childName}は {storyRequest}になりたい",
       coverImagePromptTemplate: withFixedImagePromptSafety(
         "Picture book cover illustration: a dreaming young child looking up at a bright rainbow sky with stars, imagining their bright future, rainbow motifs arching across the cover, a glowing dream bubble above their head full of wonder and possibility, warm inspiring light, soft watercolor picture book style, rounded child-safe composition, rich but not cluttered"
