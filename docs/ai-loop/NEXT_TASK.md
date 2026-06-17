@@ -1,5 +1,9 @@
-# Audit and Update Fixed Template Previews for 42 Templates
+# Implement Admin Dashboard Panel for Aggregated Quality Metrics and Human vs. LLM Review Comparison
 
 ## Context
 
-The product roadmap for Phase 3: Template Mode, specifically `T2-D` (テンプレートプレビュー画像の生成・設定) and `T2-E` (テーマ選択 UI のプレビュー画像表示), indicates tasks related to template preview images. While the backend script for generating and linking preview images (PR #345) and the basic UI for displaying them (PR #253) have been implemented, a significant expansion of fixed templates to 42 items (PR #274) has occurred. It is critical to ensure that all 42 templates have appropriate, high-quality, and correctly linked preview images displayed in the Theme Selection UI, aligning with `T2-
+Phase 2 of the roadmap, "Story & Illustration Quality," aims to make generated books "a convincing picture book as a commodity." Key completion criteria for this phase include achieving target average `Story Quality Scores` for `standard_paid` (>= 80) and `premium_paid` (>= 88) books. Additionally, the roadmap explicitly calls for `human review と LLM review の比較分析` (comparison analysis of human vs. LLM reviews).
+
+Currently, the necessary data points exist:
+- Granular human quality review scores are persisted (`PR #365`).
+- LLM auto review results are persisted (`PR #357`)
