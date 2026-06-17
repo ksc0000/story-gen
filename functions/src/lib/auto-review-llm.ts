@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import type { Part } from "@google/generative-ai";
 import { AUTO_REVIEW_RESPONSE_SCHEMA } from "./auto-review-schema";
 import { extractJsonFromLLMResponse } from "./llm-json-repair";
 import { getAgeReadingProfile } from "./age-reading-profile";
@@ -45,7 +46,11 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
 
 ## Evaluation Criteria
 1. **Story Quality (0-100)**: Evaluate story structure, pacing, coherence, and emotional engagement. Is the story appropriate for children?
-2. **Illustration Quality (0-100)**: Evaluate the descriptive quality of the image prompts. Are they vivid and appropriate for the scene?
+2. **Illustration Quality (0-100)**: Evaluate both the descriptive quality of the image prompts AND the actual generated images (if provided).
+    - **Image Prompts**: Are they vivid and appropriate for the scene?
+    - **Visual Artifacts**: Examine images for distorted limbs, unnatural faces, floating objects, or physically impossible structures.
+    - **Text Artifacts**: Check for nonsensical text, gibberish characters, or pseudo-writing on signs, posters, or labels in the background.
+    - **Style Consistency**: Does the visual style remain consistent across all images according to the chosen style profile?
 3. **Character Consistency (0-100)**: Evaluate character consistency across pages. Use the "characterBible" and "cast" definitions as the ground truth. Check if:
     - Character descriptions (visualBible) are consistently reflected in page imagePrompts.
     - Clothing, hairstyles, and color palettes remain stable across pages for the same characterId.
@@ -85,6 +90,7 @@ Important:
 - All axis objects (storyAxes, illustrationAxes, characterAxes, personalizationAxes, safetyAxes) are MANDATORY and must contain scores for all their respective sub-axes.
 - For each page, fill "pageAssessments" with semantic content detection results.
 - If a page in an age 3+ book (ageBand != 'baby_toddler') has fewer than 2 semantic elements, add a flaggedIssue with issueType "insufficient_semantic_content" and message "ページに十分な意味内容（場所・行動・気持ち・発見のうち2つ以上）がありません。".
+- If you detect significant visual artifacts or text issues on a specific page image, add a recommendedFix with action "regenerate_page_image", that pageNumber, and a reason in Japanese.
 - Return ONLY the JSON object.
 `;
 }
@@ -94,8 +100,9 @@ export async function runLLMAutoReview(params: {
   book: BookData;
   pages: PageData[];
   modelName?: string;
+  pageImages?: { pageNumber: number; buffer: Buffer; mimeType: string }[];
 }): Promise<LLMQualityReviewResult> {
-  const { apiKey, book, pages, modelName = "gemini-1.5-flash" } = params;
+  const { apiKey, book, pages, modelName = "gemini-1.5-flash", pageImages } = params;
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: modelName,
@@ -103,9 +110,23 @@ export async function runLLMAutoReview(params: {
   });
 
   const prompt = buildAutoReviewPrompt(book, pages);
+  const parts: Part[] = [{ text: prompt }];
+
+  if (pageImages && pageImages.length > 0) {
+    parts.push({ text: "\n\n## Provided Page Images for Visual Evaluation" });
+    for (const img of pageImages) {
+      parts.push({ text: `\n### Page ${img.pageNumber + 1} Image:` });
+      parts.push({
+        inlineData: {
+          mimeType: img.mimeType,
+          data: img.buffer.toString("base64"),
+        },
+      });
+    }
+  }
 
   const result = await model.generateContent({
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    contents: [{ role: "user", parts }],
     generationConfig: {
       responseMimeType: "application/json",
     },

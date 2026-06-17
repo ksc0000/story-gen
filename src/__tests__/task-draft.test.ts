@@ -110,6 +110,20 @@ describe("buildTaskDraft", () => {
       expect(failedItem!.detail).toBe("なし");
       expect(draft.summary).toContain("0 件");
     });
+
+    it("LLM推奨の再生成ページがある場合はチェックリストに含まれる", () => {
+      const pages = [makePage({ pageNumber: 0 })];
+      const book = makeBook({
+        qualityRecommendedFixes: [
+          { action: "regenerate_page_image", pageNumber: 1, reason: "指が多い" }
+        ]
+      });
+      const draft = buildTaskDraft("review_image_regeneration", book, pages);
+      const aiItem = draft.checklist.find((c) => c.label.includes("AI 推奨"));
+      expect(aiItem).toBeDefined();
+      expect(aiItem!.detail).toContain("page 1: 指が多い");
+      expect(draft.summary).toContain("AI 推奨: 1 件");
+    });
   });
 
   // ---------------------------------------------------------------

@@ -759,17 +759,31 @@ export function buildTaskDraft(
       const failedPages = pages.filter((p) => p.status === "image_failed");
       const fallbackPages = pages.filter((p) => p.status === "fallback_completed" || p.imageFallbackUsed);
       const slowPages = pages.filter((p) => (p.imageDurationMs ?? 0) > IMAGE_DURATION_WARN_MS);
+
+      // T6-LLM: Incorporate LLM-suggested regenerations
+      const llmRegenFixes = (book.qualityRecommendedFixes ?? []).filter(
+        (f) => f.action === "regenerate_page_image" && f.pageNumber != null
+      );
+
       const checklist: TaskDraftItem[] = [
         { label: "image_failed ページ", detail: failedPages.length > 0 ? `page ${failedPages.map((p) => p.pageNumber + 1).join(", ")}` : "なし" },
         { label: "fallback 使用ページ", detail: fallbackPages.length > 0 ? `page ${fallbackPages.map((p) => p.pageNumber + 1).join(", ")}` : "なし" },
         { label: "生成時間 > 120s のページ", detail: slowPages.length > 0 ? `page ${slowPages.map((p) => p.pageNumber + 1).join(", ")}` : "なし" },
         { label: "全体の画像成功率", detail: `${book.imageSuccessCount ?? "—"} / ${book.totalImageCount ?? "—"}` },
       ];
+
+      if (llmRegenFixes.length > 0) {
+        checklist.push({
+          label: "AI 推奨の再生成ページ",
+          detail: llmRegenFixes.map((f) => `page ${f.pageNumber}: ${f.reason}`).join(" / "),
+        });
+      }
+
       return {
         title: "画像再生成 確認タスク",
         intent,
         checklist,
-        summary: `Book ${book.id} の画像品質を確認し、再生成が必要なページを特定する。問題ページ: ${failedPages.length + fallbackPages.length + slowPages.length} 件。`,
+        summary: `Book ${book.id} の画像品質を確認し、再生成が必要なページを特定する。問題ページ: ${failedPages.length + fallbackPages.length + slowPages.length} 件。AI 推奨: ${llmRegenFixes.length} 件。`,
       };
     }
 
