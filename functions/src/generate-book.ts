@@ -431,7 +431,7 @@ export function normalizeStoryWithCompanion(
   mergedInput: BookInput
 ): GeneratedStory {
   const { companionId, companionName, companionVisualDescription } = mergedInput;
-  if (!companionId || !companionName || !companionVisualDescription) {
+  if (!companionName || !companionVisualDescription) {
     return story;
   }
 
@@ -2820,7 +2820,7 @@ function buildStoryFromFixedTemplate(
   const companionName = mergedInput.companionName;
   const companionVisual = mergedInput.companionVisualDescription;
 
-  const hasCompanion = Boolean(companionId && companionName && companionVisual);
+  const hasCompanion = Boolean(companionName && companionVisual);
   const companionCharacterId = "companion_character";
 
   const pages = fixedStory.pages.map((page, index) => {
