@@ -42,6 +42,9 @@ export interface QualityTrendSummary {
   avgSafety: number;
   /** Distribution: count of books per overall rounded score */
   scoreDistribution: Record<1 | 2 | 3 | 4 | 5, number>;
+  /** Per-plan averages for vitals tracking */
+  avgStoryByPlan: Record<string, number>;
+  avgOverallByPlan: Record<string, number>;
   /** Time buckets for trend display */
   buckets: QualityTrendBucket[];
   /** Regression alerts (recent bucket vs previous bucket) */
@@ -201,6 +204,17 @@ export function computeQualityTrend(books: BookWithId[]): QualityTrendSummary {
   const buckets = buildWeeklyBuckets(reviewed);
   const regressions = detectRegressions(buckets);
 
+  // Group by plan
+  const plans = ["free", "standard_paid", "premium_paid"];
+  const avgStoryByPlan: Record<string, number> = {};
+  const avgOverallByPlan: Record<string, number> = {};
+
+  for (const plan of plans) {
+    const planBooks = reviewed.filter((b) => (b.productPlan || "free") === plan);
+    avgStoryByPlan[plan] = avg(planBooks.map((b) => b.storyQualityScore ?? 0));
+    avgOverallByPlan[plan] = avg(planBooks.map((b) => b.overallQualityScore ?? 0));
+  }
+
   return {
     totalReviewed: reviewed.length,
     avgOverall: avg(reviewed.map((b) => b.overallQualityScore ?? 0)),
@@ -210,6 +224,8 @@ export function computeQualityTrend(books: BookWithId[]): QualityTrendSummary {
     avgPersonalization: avg(reviewed.map((b) => b.personalizationScore ?? 0)),
     avgSafety: avg(reviewed.map((b) => b.safetyScore ?? 0)),
     scoreDistribution,
+    avgStoryByPlan,
+    avgOverallByPlan,
     buckets,
     regressions,
   };

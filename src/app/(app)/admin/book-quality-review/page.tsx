@@ -329,6 +329,8 @@ import {
 } from "@/lib/admin-slo-metrics";
 
 import { computeQualityTrend, type QualityTrendSummary } from "@/lib/admin-quality-trend";
+import { computeQualityComparison, type QualityComparisonMetrics } from "@/lib/admin-quality-comparison";
+import { QualityComparisonDashboard } from "@/components/admin/QualityComparisonDashboard";
 
 interface QualitySnapshot extends QualityTrendSummary {
   id: string;
@@ -483,6 +485,8 @@ export default function AdminBookQualityReviewPage() {
   const [coverRegenMessage, setCoverRegenMessage] = useState<string | null>(null);
   const [allPagesMap, setAllPagesMap] = useState<Map<string, PageWithId[]>>(new Map());
   const [allPagesLoading, setAllPagesLoading] = useState(false);
+  const [allReviewsMap, setAllReviewsMap] = useState<Map<string, QualityReviewWithId[]>>(new Map());
+  const [allReviewsLoading, setAllReviewsLoading] = useState(false);
   const [savingSnapshot, setSavingSnapshot] = useState(false);
   const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
   const [snapshotHistory, setSnapshotHistory] = useState<SloSnapshot[]>([]);
@@ -660,6 +664,45 @@ export default function AdminBookQualityReviewPage() {
         if (cancelled) return;
         console.error("Failed to load pages for SLO metrics:", err);
         setAllPagesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, bookIdsKey]);
+
+  // Batch-load qualityReviews for all loaded books.
+  useEffect(() => {
+    const ids = bookIdsKey.split(",").filter(Boolean);
+    if (!isAdmin || ids.length === 0) {
+      setAllReviewsMap(new Map());
+      return;
+    }
+    let cancelled = false;
+    setAllReviewsLoading(true);
+
+    Promise.all(
+      ids.map(async (bookId) => {
+        const snap = await getDocs(collection(db, "books", bookId, "qualityReviews"));
+        return {
+          bookId,
+          reviews: snap.docs.map((d) => ({ id: d.id, ...d.data() } as QualityReviewWithId)),
+        };
+      }),
+    )
+      .then((results) => {
+        if (cancelled) return;
+        const map = new Map<string, QualityReviewWithId[]>();
+        for (const r of results) {
+          map.set(r.bookId, r.reviews);
+        }
+        setAllReviewsMap(map);
+        setAllReviewsLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error("Failed to load reviews for quality comparison:", err);
+        setAllReviewsLoading(false);
       });
 
     return () => {
@@ -982,6 +1025,33 @@ export default function AdminBookQualityReviewPage() {
   );
 
   const qualityTrend = useMemo(() => computeQualityTrend(books), [books]);
+
+  const qualityVitals = useMemo(() => {
+    return {
+      standard: {
+        avgStory: qualityTrend.avgStoryByPlan["standard_paid"] || 0,
+        target: 4.0,
+        pass: (qualityTrend.avgStoryByPlan["standard_paid"] || 0) >= 4.0,
+      },
+      premium: {
+        avgStory: qualityTrend.avgStoryByPlan["premium_paid"] || 0,
+        target: 4.4,
+        pass: (qualityTrend.avgStoryByPlan["premium_paid"] || 0) >= 4.4,
+      },
+    };
+  }, [qualityTrend]);
+
+  const qualityComparison = useMemo(() => {
+    const pairs: { human: QualityReviewWithId; llm: QualityReviewWithId }[] = [];
+    for (const reviews of allReviewsMap.values()) {
+      const human = reviews.find((r) => r.reviewerType === "human");
+      const llm = reviews.find((r) => r.reviewerType === "llm");
+      if (human && llm) {
+        pairs.push({ human, llm });
+      }
+    }
+    return computeQualityComparison(pairs);
+  }, [allReviewsMap]);
 
   const sloMetrics = useMemo(
     () => computeSloMetrics(books, allPagesMap),
@@ -1651,6 +1721,34 @@ export default function AdminBookQualityReviewPage() {
                   <p className="text-sm text-indigo-500">レビューデータがありません</p>
                 ) : (
                   <>
+                    {/* Quality Vitals (Roadmap Targets) */}
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-xl border border-indigo-200 bg-white p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-indigo-500">Standard Story Quality</h4>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${qualityVitals.standard.pass ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                            {qualityVitals.standard.pass ? "TARGET REACHED" : "IN PROGRESS"}
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <p className="text-2xl font-bold text-indigo-900">{qualityVitals.standard.avgStory.toFixed(2)}</p>
+                          <p className="text-xs text-indigo-400">target: {qualityVitals.standard.target.toFixed(1)}</p>
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-indigo-200 bg-white p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-indigo-500">Premium Story Quality</h4>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${qualityVitals.premium.pass ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                            {qualityVitals.premium.pass ? "TARGET REACHED" : "IN PROGRESS"}
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <p className="text-2xl font-bold text-indigo-900">{qualityVitals.premium.avgStory.toFixed(2)}</p>
+                          <p className="text-xs text-indigo-400">target: {qualityVitals.premium.target.toFixed(1)}</p>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Regression Alerts */}
                     {qualityTrend.regressions.length > 0 && (
                       <div className="rounded-lg border border-rose-300 bg-rose-50 p-3">
@@ -1748,6 +1846,17 @@ export default function AdminBookQualityReviewPage() {
                           </table>
                         </div>
                       </div>
+                    )}
+
+                    {/* Human vs. LLM Comparison Dashboard */}
+                    {allReviewsLoading ? (
+                      <p className="text-xs text-indigo-500 py-4 text-center">レビュー比較データを読み込み中...</p>
+                    ) : qualityComparison.matchedPairs > 0 ? (
+                      <QualityComparisonDashboard metrics={qualityComparison} />
+                    ) : (
+                      <p className="text-xs text-indigo-400 py-4 text-center border border-dashed border-indigo-100 rounded-xl">
+                        比較可能なペアがありません（Human と LLM 両方のレビューが必要です）
+                      </p>
                     )}
                   </>
                 )}
