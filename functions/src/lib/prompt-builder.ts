@@ -33,6 +33,7 @@ const VISUAL_STORYTELLING_RULES = [
 const STORY_QUALITY_RULES = [
   "Do not generate overly thin pages.",
   "Each page should contain enough story substance for the target age.",
+  "For age 3 and above, each page must contain at least two of the four semantic elements: Location, Action, Emotion, and Discovery.",
   "Use age-appropriate sentence count on every page.",
   "Include a repeated phrase or visual motif when appropriate.",
   "Include at least one small setup and payoff across the book.",
@@ -47,7 +48,11 @@ const STORY_QUALITY_RULES = [
 const JAPANESE_STORY_TEXT_RULES = [
   "pages[].text は、画像プロンプトではなく、親が読み聞かせる本文です。",
   "3歳以上では、単なる音遊びや擬音の羅列にしないでください。",
-  "すべてのページに「場所」「行動」「気持ち」または「発見」のうち2つ以上を自然に含めてください。",
+  "すべてのページに以下の4つの「意味内容」のうち2つ以上を自然に含めて、読み応えのある内容にしてください。",
+  "- 「場所」(Location): どこで起きているか、周囲の情景",
+  "- 「行動」(Action): キャラクターの具体的な動きや振る舞い",
+  "- 「気持ち」(Emotion): キャラクターの感情や心の声",
+  "- 「発見」(Discovery): 何かに気づいたり、新しいことが起きたりする変化",
   "意味の通らない造語を使わないでください。",
   "「おもしろい こえ」「ふわふわ ふわりん」のような曖昧で説明不足な文を避けてください。",
   "擬音は1ページにつき最大1〜2個までにしてください。",
@@ -486,7 +491,7 @@ ${ageReadingGuidance}
 - Use snake_case exactly.
 - pageVisualRole が opening_establishing のページは、物語世界の第一印象を決める重要なページです。styleBible に定義されたアートスタイル・色調・線質を特に忠実に守り、以降のページとの視覚的統一感の基準点となるよう imagePrompt を組み立ててください。
 - Story quality rules: ${STORY_QUALITY_RULES}
-- 3歳以上では、文字数が少なすぎる「薄いページ」にならないようにしてください。行動、気持ち、場面描写のうち少なくとも2つ以上を自然に含めてください。
+- 3歳以上では、文字数が少なすぎる「薄いページ」にならないようにしてください。すべてのページに「場所」「行動」「気持ち」「発見」のうち少なくとも2つ以上を自然に含めて、意味の詰まった内容にしてください。
 - 5歳以上では、小さな原因と結果、短い会話、場面の具体物を入れてください。
 - 7歳以上では、小さな伏線、最後の回収、理由や気持ちの変化を入れてください。
 - repeatedPhrase が自然な場合は短く覚えやすいものにしてください。
@@ -1069,7 +1074,7 @@ export function appendQualityRetryInstruction(systemPrompt: string, report: Stor
 ## Retry quality correction
 - 前回の出力は年齢別の本文量または絵本品質の最低条件を満たしていません。
 - 各ページで最低文数・最低文字数を満たしてください。
-- 3歳以上では、薄すぎるページを作らないでください。各ページに行動、気持ち、場面描写のうち少なくとも2つ以上を自然に含めてください。
+- 3歳以上では、薄すぎるページを作らないでください。各ページに「場所」「行動」「気持ち」「発見」のうち少なくとも2つ以上を自然に含めてください。
 - compositionHint を各ページに入れてください。
 - narrativeDevice を含めてください。
 - repeatedPhrase または visualMotif を入れてください。
