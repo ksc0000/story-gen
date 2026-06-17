@@ -23,11 +23,15 @@ import {
   SIZE_OPTIONS,
   PATTERN_OPTIONS,
   ACCESSORY_OPTIONS,
+  COMPANION_PRESETS,
+  type CompanionPreset,
   buildVisualDescription,
 } from "../companions-utils";
 import { cn } from "@/lib/utils";
-import { Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
+import { Loader2, ChevronRight, ChevronLeft, Check, Sparkles, Wand2 } from "lucide-react";
 import { CompanionSpecies } from "@/lib/types";
+
+type PageMode = "choose" | "preset-name" | "ai-steps";
 
 type Step =
   | "species"
@@ -61,6 +65,11 @@ export default function CreateCompanionPage() {
   const { profile } = useUserProfile(user?.uid);
   const { companions, addCompanion, loading: companionsLoading } = useCompanions(user?.uid);
 
+  const [pageMode, setPageMode] = useState<PageMode>("choose");
+  const [selectedPreset, setSelectedPreset] = useState<CompanionPreset | null>(null);
+  const [presetName, setPresetName] = useState("");
+
+  // AI steps state
   const [step, setStep] = useState<Step>("species");
   const [species, setSpecies] = useState<CompanionSpecies | "">("");
   const [personalities, setPersonalities] = useState<string[]>([]);
@@ -92,11 +101,11 @@ export default function CreateCompanionPage() {
     if (step === "bodyType") return !!bodyType;
     if (step === "colorDepth") return !!colorDepth;
     if (step === "pattern") return !!pattern;
-    if (step === "accessory") return true; // アクセサリは任意（なしでもOK）
+    if (step === "accessory") return true;
     if (step === "size") return !!size;
     if (step === "name") return name.trim().length > 0;
     return true;
-  }, [step, species, personalities, ability, color, pattern, size, name]);
+  }, [step, species, personalities, ability, color, pattern, size, name, bodyType, colorDepth]);
 
   const handleNext = () => {
     const nextStep = STEPS[currentStepIndex + 1];
@@ -104,9 +113,17 @@ export default function CreateCompanionPage() {
   };
 
   const handleBack = () => {
-    const prevStep = STEPS[currentStepIndex - 1];
-    if (prevStep) setStep(prevStep);
-    else router.back();
+    if (pageMode === "preset-name") {
+      setPageMode("choose");
+      return;
+    }
+    if (pageMode === "ai-steps") {
+      const prevStep = STEPS[currentStepIndex - 1];
+      if (prevStep) setStep(prevStep);
+      else setPageMode("choose");
+      return;
+    }
+    router.back();
   };
 
   const togglePersonality = (val: string) => {
@@ -125,35 +142,45 @@ export default function CreateCompanionPage() {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!species || !size || !user) return;
+  const saveCompanion = async (params: {
+    name: string;
+    species: CompanionSpecies;
+    personality: string[];
+    ability: string;
+    color: string;
+    bodyType: string;
+    colorDepth: string;
+    size: "small" | "medium" | "large";
+    pattern: string;
+    accessories: string[];
+  }) => {
+    if (!user) return;
     setIsSubmitting(true);
     try {
       const visualDescription = buildVisualDescription({
-        species: species as CompanionSpecies,
-        personalities,
-        ability,
-        color,
-        bodyType,
-        colorDepth,
-        size: size as "small" | "medium" | "large",
-        pattern,
-        accessories,
+        species: params.species,
+        personalities: params.personality,
+        ability: params.ability,
+        color: params.color,
+        bodyType: params.bodyType,
+        colorDepth: params.colorDepth,
+        size: params.size,
+        pattern: params.pattern,
+        accessories: params.accessories,
       });
 
       const companionId = await addCompanion({
-        name,
-        species: species as CompanionSpecies,
-        personality: personalities,
-        specialAbility: ABILITY_OPTIONS.find((o) => o.value === ability)?.label || "",
-        colorMain: COLOR_OPTIONS.find((o) => o.value === color)?.hex || "#FFFFFF",
-        bodyType,
-        colorDepth,
-        size: size as "small" | "medium" | "large",
+        name: params.name,
+        species: params.species,
+        personality: params.personality,
+        specialAbility: ABILITY_OPTIONS.find((o) => o.value === params.ability)?.label || "",
+        colorMain: COLOR_OPTIONS.find((o) => o.value === params.color)?.hex || "#FFFFFF",
+        bodyType: params.bodyType,
+        colorDepth: params.colorDepth,
+        size: params.size,
         visualDescription,
       });
 
-      // 作成直後に画像生成ジョブをキック（プロフィール画面でローディングを即表示）
       try {
         const { db } = await import("@/lib/firebase");
         const { collection: col, doc, writeBatch, serverTimestamp: sts } = await import("firebase/firestore");
@@ -166,13 +193,12 @@ export default function CreateCompanionPage() {
           createdAt: sts(),
           updatedAt: sts(),
         });
-        // companion ドキュメントにも即時反映（プロフィール画面でローディング表示）
         batch.update(doc(db, "companions", companionId), {
           imageGenerationStatus: "pending",
         });
         await batch.commit();
       } catch {
-        // 画像生成の失敗は致命的ではない（プロフィール画面で再試行できる）
+        // 画像生成失敗は致命的ではない
       }
 
       router.push(`/companions/profile?id=${companionId}`);
@@ -181,6 +207,39 @@ export default function CreateCompanionPage() {
       alert("保存に失敗しました");
       setIsSubmitting(false);
     }
+  };
+
+  const handlePresetSubmit = async () => {
+    if (!selectedPreset) return;
+    const finalName = presetName.trim() || selectedPreset.defaultName;
+    await saveCompanion({
+      name: finalName,
+      species: selectedPreset.species,
+      personality: selectedPreset.personality,
+      ability: selectedPreset.ability,
+      color: selectedPreset.color,
+      bodyType: selectedPreset.bodyType,
+      colorDepth: selectedPreset.colorDepth,
+      size: selectedPreset.size,
+      pattern: selectedPreset.pattern,
+      accessories: selectedPreset.accessories,
+    });
+  };
+
+  const handleAiSubmit = async () => {
+    if (!species || !size) return;
+    await saveCompanion({
+      name,
+      species: species as CompanionSpecies,
+      personality: personalities,
+      ability,
+      color,
+      bodyType,
+      colorDepth,
+      size: size as "small" | "medium" | "large",
+      pattern,
+      accessories,
+    });
   };
 
   if (companionsLoading) {
@@ -221,6 +280,122 @@ export default function CreateCompanionPage() {
     );
   }
 
+  // ── プリセット選択画面 ──────────────────────────────────────────
+  if (pageMode === "choose") {
+    return (
+      <PageTransition className="mx-auto max-w-2xl px-4 py-8">
+        <div className="mb-6">
+          <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-violet-500 hover:text-purple-700">
+            <ChevronLeft className="size-4" /> 戻る
+          </button>
+          <h1 className="mt-4 text-xl font-bold text-purple-900">なかよしキャラを作る</h1>
+          <p className="mt-1 text-sm text-violet-500">プリセットから選ぶか、自分でカスタム作成できます。</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {COMPANION_PRESETS.map((preset) => {
+            const speciesOpt = SPECIES_OPTIONS.find((o) => o.value === preset.species);
+            return (
+              <button
+                key={preset.id}
+                onClick={() => {
+                  setSelectedPreset(preset);
+                  setPresetName(preset.defaultName);
+                  setPageMode("preset-name");
+                }}
+                className="flex flex-col items-center gap-2 rounded-2xl border-2 border-transparent bg-white p-3 shadow-sm hover:border-purple-300 hover:shadow-md transition-all text-center"
+              >
+                {speciesOpt?.imageUrl ? (
+                  <div className="relative h-16 w-16 overflow-hidden rounded-xl">
+                    <Image src={speciesOpt.imageUrl} alt={speciesOpt.label} fill className="object-cover" unoptimized />
+                  </div>
+                ) : (
+                  <span className="text-4xl leading-none py-1">{speciesOpt?.emoji}</span>
+                )}
+                <div>
+                  <p className="text-sm font-bold text-purple-900">{preset.defaultName}</p>
+                  <p className="text-xs text-violet-400 leading-tight mt-0.5">{preset.tagline}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-6">
+          <button
+            onClick={() => setPageMode("ai-steps")}
+            className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-violet-300 bg-violet-50/60 py-4 text-sm font-semibold text-violet-600 hover:bg-violet-100 hover:border-violet-400 transition-all"
+          >
+            <Wand2 className="size-4" />
+            AIでカスタム作成する
+          </button>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  // ── プリセット名前入力画面 ─────────────────────────────────────
+  if (pageMode === "preset-name" && selectedPreset) {
+    const speciesOpt = SPECIES_OPTIONS.find((o) => o.value === selectedPreset.species);
+    return (
+      <PageTransition className="mx-auto max-w-lg px-4 py-8">
+        <button onClick={handleBack} className="flex items-center gap-1 text-sm text-violet-500 hover:text-purple-700 mb-6">
+          <ChevronLeft className="size-4" /> 戻る
+        </button>
+
+        <Card className="border-none shadow-xl shadow-purple-100/50">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-2 flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl bg-violet-50">
+              {speciesOpt?.imageUrl ? (
+                <div className="relative h-24 w-24">
+                  <Image src={speciesOpt.imageUrl} alt={speciesOpt.label} fill className="object-cover rounded-2xl" unoptimized />
+                </div>
+              ) : (
+                <span className="text-6xl">{speciesOpt?.emoji}</span>
+              )}
+            </div>
+            <CardTitle className="text-xl text-purple-900">{selectedPreset.tagline}</CardTitle>
+            <CardDescription>名前をつけてあげよう！</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="preset-name">なまえ</Label>
+              <Input
+                id="preset-name"
+                placeholder={selectedPreset.defaultName}
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                className="h-14 rounded-2xl border-violet-100 text-lg focus-visible:ring-purple-400"
+                autoFocus
+              />
+            </div>
+
+            <div className="rounded-2xl bg-violet-50 p-4 text-xs text-violet-500 space-y-1">
+              <p className="font-semibold text-violet-600">このキャラクターの特徴</p>
+              <p>性格: {selectedPreset.personality.map(p => PERSONALITY_OPTIONS.find(o => o.value === p)?.label).join(" / ")}</p>
+              <p>とくいなこと: {ABILITY_OPTIONS.find(o => o.value === selectedPreset.ability)?.label}</p>
+              <p>大きさ: {SIZE_OPTIONS.find(o => o.value === selectedPreset.size)?.label}</p>
+            </div>
+
+            <Button
+              onClick={handlePresetSubmit}
+              disabled={isSubmitting || (!presetName.trim() && !selectedPreset.defaultName)}
+              size="lg"
+              className="w-full"
+            >
+              {isSubmitting ? (
+                <><Loader2 className="mr-2 size-4 animate-spin" />作成中...</>
+              ) : (
+                <><Sparkles className="mr-2 size-4" />このなかよしキャラを作る！</>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </PageTransition>
+    );
+  }
+
+  // ── AIカスタム作成（既存ステップフロー）─────────────────────────
   return (
     <PageTransition className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-8">
@@ -276,13 +451,7 @@ export default function CreateCompanionPage() {
                 >
                   {opt.imageUrl ? (
                     <div className="relative h-20 w-20 overflow-hidden rounded-xl">
-                      <Image
-                        src={opt.imageUrl}
-                        alt={opt.label}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
+                      <Image src={opt.imageUrl} alt={opt.label} fill className="object-cover" unoptimized />
                     </div>
                   ) : (
                     <span className="text-4xl leading-none py-2">{opt.emoji}</span>
@@ -386,10 +555,7 @@ export default function CreateCompanionPage() {
                       : "border-transparent bg-violet-50/50 hover:bg-violet-50"
                   )}
                 >
-                  <div
-                    className="size-8 rounded-full border border-violet-100"
-                    style={{ backgroundColor: opt.hex }}
-                  />
+                  <div className="size-8 rounded-full border border-violet-100" style={{ backgroundColor: opt.hex }} />
                   <span className="text-xs font-medium text-purple-900">{opt.label}</span>
                 </button>
               ))}
@@ -573,7 +739,7 @@ export default function CreateCompanionPage() {
             戻る
           </Button>
           {step === "confirm" ? (
-            <Button onClick={handleSubmit} disabled={isSubmitting} size="lg" className="px-8">
+            <Button onClick={handleAiSubmit} disabled={isSubmitting} size="lg" className="px-8">
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />

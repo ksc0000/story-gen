@@ -90,6 +90,164 @@ export const ACCESSORY_OPTIONS: { value: string; label: string; emoji: string; e
   { value: "bell", label: "すず", emoji: "🔔", en: "a jingling bell collar" },
 ];
 
+export interface CompanionPreset {
+  id: string;
+  defaultName: string;
+  tagline: string;
+  species: CompanionSpecies;
+  personality: string[];
+  ability: string;
+  color: string;
+  bodyType: string;
+  colorDepth: string;
+  size: "small" | "medium" | "large";
+  pattern: string;
+  accessories: string[];
+}
+
+export const COMPANION_PRESETS: CompanionPreset[] = [
+  {
+    id: "preset_rabbit",
+    defaultName: "もこ",
+    tagline: "ふわふわのやさしいうさぎ",
+    species: "rabbit",
+    personality: ["gentle", "relaxed"],
+    ability: "magic",
+    color: "white",
+    bodyType: "chubby",
+    colorDepth: "light",
+    size: "small",
+    pattern: "plain",
+    accessories: ["ribbon"],
+  },
+  {
+    id: "preset_cat",
+    defaultName: "クロ",
+    tagline: "クールないたずらねこ",
+    species: "cat",
+    personality: ["mischievous", "energetic"],
+    ability: "run_fast",
+    color: "black",
+    bodyType: "slim",
+    colorDepth: "deep",
+    size: "medium",
+    pattern: "plain",
+    accessories: [],
+  },
+  {
+    id: "preset_dog",
+    defaultName: "ポチ",
+    tagline: "元気いっぱいのわんこ",
+    species: "dog",
+    personality: ["energetic", "brave"],
+    ability: "run_fast",
+    color: "brown",
+    bodyType: "chubby",
+    colorDepth: "medium",
+    size: "medium",
+    pattern: "spotted",
+    accessories: [],
+  },
+  {
+    id: "preset_bear",
+    defaultName: "チョコ",
+    tagline: "のんびりおりょうりくま",
+    species: "bear",
+    personality: ["relaxed", "gentle"],
+    ability: "cook",
+    color: "brown",
+    bodyType: "chubby",
+    colorDepth: "medium",
+    size: "large",
+    pattern: "plain",
+    accessories: ["hat"],
+  },
+  {
+    id: "preset_fox",
+    defaultName: "コン",
+    tagline: "かしこいオレンジきつね",
+    species: "fox",
+    personality: ["knowledgeable", "mischievous"],
+    ability: "magic",
+    color: "orange",
+    bodyType: "slim",
+    colorDepth: "medium",
+    size: "medium",
+    pattern: "striped",
+    accessories: [],
+  },
+  {
+    id: "preset_dragon",
+    defaultName: "ドラ",
+    tagline: "そらをとぶちびドラゴン",
+    species: "dragon",
+    personality: ["brave", "energetic"],
+    ability: "fly",
+    color: "green",
+    bodyType: "average",
+    colorDepth: "medium",
+    size: "medium",
+    pattern: "plain",
+    accessories: [],
+  },
+  {
+    id: "preset_robot",
+    defaultName: "ロボ",
+    tagline: "なんでもしってるロボット",
+    species: "robot",
+    personality: ["knowledgeable", "gentle"],
+    ability: "run_fast",
+    color: "light_blue",
+    bodyType: "slim",
+    colorDepth: "medium",
+    size: "small",
+    pattern: "plain",
+    accessories: ["glasses"],
+  },
+  {
+    id: "preset_fairy",
+    defaultName: "ティン",
+    tagline: "空とぶちいさな妖精",
+    species: "fairy",
+    personality: ["gentle", "energetic"],
+    ability: "fly",
+    color: "pink",
+    bodyType: "tiny",
+    colorDepth: "pastel",
+    size: "small",
+    pattern: "star",
+    accessories: ["flower"],
+  },
+  {
+    id: "preset_unicorn",
+    defaultName: "ヒカル",
+    tagline: "にじいろに光るユニコーン",
+    species: "unicorn",
+    personality: ["gentle", "brave"],
+    ability: "magic",
+    color: "white",
+    bodyType: "slim",
+    colorDepth: "light",
+    size: "large",
+    pattern: "gradient",
+    accessories: [],
+  },
+  {
+    id: "preset_monster",
+    defaultName: "ブルー",
+    tagline: "うたがうまいもふもふモンスター",
+    species: "monster",
+    personality: ["energetic", "gentle"],
+    ability: "sing",
+    color: "light_blue",
+    bodyType: "chubby",
+    colorDepth: "medium",
+    size: "medium",
+    pattern: "plain",
+    accessories: ["bell"],
+  },
+];
+
 export function buildVisualDescription(params: {
   species: CompanionSpecies;
   personalities: string[];
