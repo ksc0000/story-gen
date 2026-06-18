@@ -1,9 +1,5 @@
-# Refine Template Quality: `fixed-little-helper` Sample Image and Category Alignment
+# Decide and Potentially Enable `ENABLE_SCHEMA_REPAIR_RETRY` in Production
 
 ## Context
 
-The product roadmap for Phase 3: Template Mode, specifically "T3-2: 既存10テンプレート品質磨き込み (Existing 10 template quality refinement)," identifies several P1 items. One of these is an issue with the `fixed-little-helper` template concerning its sample image and category alignment. This task aims to address that specific quality refinement. This follows previous work on template quality (e.g., `fixed-brush-teeth` in PR #309, `fixed-first-birthday` in #505, `fixed-sleepy-moon-adventure` in PR #282).
-
-## Objective
-
-Review the `fixed-
+The product roadmap indicates that Phase 4: Gemini JSON Hardening is now closed, with the `responseSchema` rollout having been abandoned. However, the `P4-5` slice implemented a one-shot validation repair retry mechanism, and `P4-6` verified its functionality via live smoke tests. A production baseline (`P5-4`) has been established, and `SJ/IM` alert policies (`P5-5`) are tuned and enabled. The decision to enable the `ENABLE_SCHEMA_REPAIR_RETRY` flag in production is now pending the completion of the production baseline, which has been met. With Cohort B's limited rollout currently in progress,
