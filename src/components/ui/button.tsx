@@ -48,12 +48,11 @@ function Button({
   className,
   variant = "default",
   size = "default",
-  onClick,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   const [bursts, setBursts] = React.useState<Burst[]>([])
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (variant === "default") {
       const rect = e.currentTarget.getBoundingClientRect()
       const x = e.clientX - rect.left
@@ -65,15 +64,13 @@ function Button({
         setBursts((prev) => prev.filter((b) => b.id !== newBurst.id))
       }, 1000)
     }
-
-    onClick?.(e)
   }
 
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      onClick={handleClick}
+      onPointerDown={handlePointerDown}
       {...props}
     >
       {props.children}

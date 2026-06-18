@@ -31,15 +31,21 @@ const AXES = [
 
 const ISSUE_AREAS = ["story", "illustration", "character", "personalization", "safety"];
 
-function calculateMAE(pairs: { human: any; llm: any }[], axis: string): number {
+type ReviewPair = { human: QualityReview; llm: QualityReview };
+
+function getScore(review: QualityReview, axis: string): number {
+  return (review as unknown as Record<string, number>)[axis] ?? 0;
+}
+
+function calculateMAE(pairs: ReviewPair[], axis: string): number {
   if (pairs.length === 0) return 0;
-  const sum = pairs.reduce((acc, p) => acc + Math.abs(p.llm[axis] - p.human[axis]), 0);
+  const sum = pairs.reduce((acc, p) => acc + Math.abs(getScore(p.llm, axis) - getScore(p.human, axis)), 0);
   return sum / pairs.length;
 }
 
-function calculateBias(pairs: { human: any; llm: any }[], axis: string): number {
+function calculateBias(pairs: ReviewPair[], axis: string): number {
   if (pairs.length === 0) return 0;
-  const sum = pairs.reduce((acc, p) => acc + (p.llm[axis] - p.human[axis]), 0);
+  const sum = pairs.reduce((acc, p) => acc + (getScore(p.llm, axis) - getScore(p.human, axis)), 0);
   return sum / pairs.length;
 }
 
