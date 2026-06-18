@@ -1,7 +1,9 @@
-# Refine Template Quality: `fixed-first-birthday` Sample Image
+# Refine Template Quality: `fixed-little-helper` Sample Image and Category Alignment
 
 ## Context
 
-The product is currently in Phase 5 (Monetization), with Cohort B rollout in progress. Continuous improvement of core story and illustration quality, especially for established "Template Mode" books, is crucial for user satisfaction and conversion.
+The product roadmap for Phase 3: Template Mode, specifically "T3-2: 既存10テンプレート品質磨き込み (Existing 10 template quality refinement)," identifies several P1 items. One of these is an issue with the `fixed-little-helper` template concerning its sample image and category alignment. This task aims to address that specific quality refinement. This follows previous work on template quality (e.g., `fixed-brush-teeth` in PR #309, `fixed-first-birthday` in #505, `fixed-sleepy-moon-adventure` in PR #282).
 
-The `T3-2 status update (2026-05-12)` in the roadmap identified specific P1 quality issues for existing templates. One such issue for `fixed-first-birthday` is an inconsistency between its sample image and its intended category/content. Addressing this directly supports the "Phase 2: Story & Illustration Quality" objective by ensuring generated results meet "納得できる絵本" criteria and align with user expectations set by template previews.
+## Objective
+
+Review the `fixed-
