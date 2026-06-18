@@ -105,7 +105,7 @@ The responseSchema code is preserved as dormant/experimental for auditability. 2
 
 ### 3.3 ENABLE_SCHEMA_REPAIR_RETRY
 
-**Remains OFF.** The dev/test baseline (§4) shows high `schema_validation` rates (45%), but this data is not representative of production traffic. The criteria for enabling repair retry (§5.3 in the SLO plan) require a **production baseline** showing persistent `schema_validation > 2%` with dominant recoverable failures. Do not change this flag before that baseline is established.
+**Enabled in Production (2026-06-12).** The production baseline (established 2026-05-23) showed a `schema_validation` rate of 2.9%, exceeding the 2% target. Since failures were predominantly `malformed_json` (recoverable) and latency headroom (p95 64s) was ample, the flag was enabled to improve reliability for Cohort B and beyond.
 
 ### 3.4 Prompts
 
@@ -119,7 +119,7 @@ The responseSchema code is preserved as dormant/experimental for auditability. 2
 |------|-------|------------|
 | `ENABLE_RESPONSE_SCHEMA` | **absent / OFF** | ⚠️ Do NOT enable — causes ~94% generation failure |
 | `RESPONSE_SCHEMA_MODE` | **absent** | No effect unless ENABLE_RESPONSE_SCHEMA=true |
-| `ENABLE_SCHEMA_REPAIR_RETRY` | **absent / OFF** | Keep OFF until production baseline criteria met (see §3.3 and [P4_PERMANENT_STORY_JSON_SLO_PLAN.md §5](P4_PERMANENT_STORY_JSON_SLO_PLAN.md)) |
+| `ENABLE_SCHEMA_REPAIR_RETRY` | **ON** | Enabled 2026-06-12 based on prod baseline (2.9%) |
 
 ---
 

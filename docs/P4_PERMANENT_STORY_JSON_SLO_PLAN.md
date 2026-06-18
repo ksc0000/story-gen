@@ -45,8 +45,8 @@ P4 established a permanent safety stack for Gemini story JSON generation. This d
 |------|--------------|-------|
 | `ENABLE_RESPONSE_SCHEMA` | **absent / OFF** | ⚠️ Do NOT enable — see P4_RESPONSE_SCHEMA_DECISION.md |
 | `RESPONSE_SCHEMA_MODE` | **absent** | Has no effect unless ENABLE_RESPONSE_SCHEMA=true |
-| `ENABLE_SCHEMA_REPAIR_RETRY` | **absent / OFF** | Available for future enablement per §5 |
-| `ENABLE_SCHEMA_REPAIR_RETRY` → criteria | See §5 | Must meet evidence threshold before enabling |
+| `ENABLE_SCHEMA_REPAIR_RETRY` | **ON** | Enabled 2026-06-12 based on prod baseline (2.9%) |
+| `ENABLE_SCHEMA_REPAIR_RETRY` → criteria | Met (2026-06-12) | See §5 and decision note in §7.3 |
 
 ---
 
@@ -431,6 +431,17 @@ Total book_outcome: 35 events (extracted from Cloud Logging)
 - `ENABLE_SCHEMA_REPAIR_RETRY`: **remain OFF** — `schema_validation` rate is near target (2.9% vs 2%); repair retry not yet justified by cost/latency.
 - SJ/IM alert policies: **GO — RECOMMENDED to enable** — production baseline is stable enough to calibrate thresholds.
 - Cohort B Expansion: **OPEN** — `simplified_scene` (Cohort B) performed with 100% completion rate.
+
+#### ENABLE_SCHEMA_REPAIR_RETRY Decision (2026-06-12)
+
+**Decision: GO — ENABLE in Production.**
+
+Rationale:
+- **`schema_validation` rate above target**: The production baseline (2.9%) exceeds the 2% SLO target.
+- **Dominant category is recoverable**: Failures are almost exclusively `malformed_json` (transient LLM parse errors), which are highly likely to recover on retry.
+- **Latency headroom**: p95 story latency (64s) is well within the 120s SLO. Adding a ~60s retry attempt in < 3% of cases will not violate the p99 SLO (target 200s).
+- **Cohort B Readiness**: As Cohort B rollout expands, ensuring maximum reliability for real users is prioritized over the marginal cost of retries.
+- **Cost**: Estimated cost increase is < 3% of total story generation cost, within budget.
 
 ---
 

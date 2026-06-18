@@ -99,7 +99,7 @@ The following items are intentionally inactive until a production baseline is es
 |---|---|---|
 | `ENABLE_RESPONSE_SCHEMA` | OFF / absent | Gemini responseSchema rollout was abandoned (P4 closure). Re-enabling risks regression; JSON extraction path (`extractJsonFromLLMResponse`) is the permanent path. |
 | `RESPONSE_SCHEMA_MODE` | OFF / absent | Same as above — companion flag for `ENABLE_RESPONSE_SCHEMA`. |
-| `ENABLE_SCHEMA_REPAIR_RETRY` | OFF / absent | Decision deferred until production baseline shows schema_validation rate in steady state. Dev/test data (45% rate) is unrepresentative. See `docs/P4_PERMANENT_STORY_JSON_SLO_PLAN.md` §5 for decision criteria. |
+| `ENABLE_SCHEMA_REPAIR_RETRY` | **ON** | Enabled 2026-06-12 based on prod baseline (2.9% vs 2% target). |
 
 ### Alert policies — live but disabled
 
@@ -185,11 +185,12 @@ When the first real production users generate books, follow this checklist in or
 Run the appropriate saved query in Cloud Console Log Explorer (Log Explorer → Saved queries). Use CG/SJ/IM/OUT/LAT query groups as appropriate. See `docs/P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md` for full query definitions.
 
 **Do not** enable SJ/IM alert policies based on first-book anomalies — sample size is too small.  
-**Do not** enable `ENABLE_SCHEMA_REPAIR_RETRY` even if schema_validation failures appear.
+**Confirm** `ENABLE_SCHEMA_REPAIR_RETRY` is active (enabled 2026-06-12). Check `multipleAttemptsCount` in SLO report to verify retry effectiveness.
 
 ### 6.3 Do not do (regardless of observations)
 
-- Do NOT enable `ENABLE_RESPONSE_SCHEMA`, `RESPONSE_SCHEMA_MODE`, or `ENABLE_SCHEMA_REPAIR_RETRY`.
+- Do NOT enable `ENABLE_RESPONSE_SCHEMA` or `RESPONSE_SCHEMA_MODE`.
+- `ENABLE_SCHEMA_REPAIR_RETRY` is now ON (since 2026-06-12).
 - Do NOT enable SJ/IM alert policies (wait for ≥ 30 `book_outcome` events — see §7).
 - Do NOT deploy Firebase Functions or Hosting.
 - Do NOT change prompts, fallback order, or ImageProvider routing.
