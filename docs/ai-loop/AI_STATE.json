@@ -177,6 +177,7 @@
     "PR #507: chore: 単品購入Stripe Price ID追加 + テスト型エラー修正 (merged)",
     "PR #510: feat: 法務ページ(特商法/プライバシー/利用規約)とOGP対応 (merged)",
     "PR #511: feat: 管理者ダッシュボード（経営/システム/生成AI品質の3視点） (merged)",
+    "PR #513: feat: 管理ダッシュボードを円グラフ・折れ線で視覚化 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
