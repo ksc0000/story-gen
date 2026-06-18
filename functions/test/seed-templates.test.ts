@@ -157,7 +157,7 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   ],
   "fixed-first-zoo-8p": [
     "opening_establishing",
-    "opening_establishing",
+    "action",
     "discovery",
     "object_detail",
     "setback_or_question",
@@ -173,7 +173,7 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-sleepy-moon-adventure-8p": [
     "opening_establishing",
     "discovery",
-    "discovery",
+    "object_detail",
     "action",
     "payoff",
     "emotional_closeup",
@@ -184,7 +184,7 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
   "fixed-cardboard-rocket-8p": [
     "opening_establishing",
     "action",
-    "discovery",
+    "action",
     "discovery",
     "payoff",
     "emotional_closeup",
