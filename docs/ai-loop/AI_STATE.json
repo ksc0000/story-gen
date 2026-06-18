@@ -174,6 +174,7 @@
     "PR #502: fix: enable public book sharing (Firestore rules) (merged)",
     "PR #503: feat: なかよしキャラを主人公にする機能 (#436) (merged)",
     "PR #504: fix: 12ページテンプレートのページ数セレクターを正しく表示 (#501) (merged)",
+    "PR #507: chore: 単品購入Stripe Price ID追加 + テスト型エラー修正 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
