@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -67,7 +68,15 @@ export default function LoginPage() {
                 Googleでログイン
               </Button>
               <p className="text-center text-xs text-gray-400">
-                ログインすることで利用規約に同意したものとみなされます
+                ログインすることで
+                <Link href="/legal/terms" className="underline hover:text-purple-500">
+                  利用規約
+                </Link>
+                および
+                <Link href="/legal/privacy" className="underline hover:text-purple-500">
+                  プライバシーポリシー
+                </Link>
+                に同意したものとみなされます
               </p>
             </CardContent>
           </Card>
