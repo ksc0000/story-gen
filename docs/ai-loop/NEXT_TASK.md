@@ -1,5 +1,13 @@
-# Decide and Potentially Enable `ENABLE_SCHEMA_REPAIR_RETRY` in Production
+# Implement Image Regeneration Recommendation in Admin UI
 
 ## Context
 
-The product roadmap indicates that Phase 4: Gemini JSON Hardening is now closed, with the `responseSchema` rollout having been abandoned. However, the `P4-5` slice implemented a one-shot validation repair retry mechanism, and `P4-6` verified its functionality via live smoke tests. A production baseline (`P5-4`) has been established, and `SJ/IM` alert policies (`P5-5`) are tuned and enabled. The decision to enable the `ENABLE_SCHEMA_REPAIR_RETRY` flag in production is now pending the completion of the production baseline, which has been met. With Cohort B's limited rollout currently in progress,
+The product roadmap for Phase 2: Story & Illustration Quality includes "image regeneration recommendation" under its "画像品質" section. While user-facing page regeneration is implemented (PR #347, #464), a recommendation system to proactively identify and suggest page regeneration is still untackled. This feature aligns with improving the overall image quality and streamlining the quality review process for administrators, especially given the current "Cohort B limited rollout" where quality observation is critical.
+
+This task will focus on the administrator's perspective, allowing them to see recommended regenerations based on quality signals.
+
+## Objective
+
+Implement the backend logic and persistence for image regeneration recommendations, and display these recommendations within the existing Admin Quality Review UI.
+
+## Allowed Scope
