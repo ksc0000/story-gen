@@ -1138,6 +1138,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     requiredInputs: ["childName", "familyMembers"],
     optionalInputs: ["parentMessage"],
     themeTags: ["memory", "birthday", "family"],
+    availablePageCounts: [4, 8, 12],
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
@@ -1622,6 +1623,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     requiredInputs: ["childName"],
     optionalInputs: ["parentMessage"],
     themeTags: ["teeth", "habit", "bedtime"],
+    availablePageCounts: [4, 8, 12],
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
@@ -2183,6 +2185,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     requiredInputs: ["childName"],
     optionalInputs: ["parentMessage"],
     themeTags: ["bedtime", "moon", "comfort"],
+    availablePageCounts: [4, 8, 12],
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
@@ -7545,6 +7548,540 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     },
   },
 
+  "fixed-first-birthday-12p": {
+    name: "はじめてのお誕生日（12ページ）",
+    description: "お誕生日の１日を、朝のお目覚めからケーキ、おやすみまでたっぷり描く12ページ版です。",
+    icon: "🎂",
+    categoryGroupId: "memories",
+    subcategoryId: "first-birthday",
+    parentIntent: "この瞬間を残したい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName", "familyMembers"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["memory", "birthday", "family", "pilot-12-page"],
+    creationMode: "fixed_template",
+    variantOf: "fixed-first-birthday",
+    variantLabel: "12ページ",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-first-birthday.webp",
+    sampleImageAlt: "はじめてのお誕生日のやさしい絵本イメージ（12ページ版）",
+    visualDirection:
+      "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling over a gentle 8-page rhythm.",
+    order: 4.5,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめての誕生日の思い出を12ページでゆっくり残す絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}のはじめてのたんじょうび",
+      previewImageUrl: "/images/templates/fixed-first-birthday.webp",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
+      openingNarrationTemplate:
+        "あさの ひかりの なかで、きょうは ちょっと とくべつ。{childName}と {familyMembers}の たんじょうびの いちにちが はじまります。",
+      pageCount: 12,
+      layoutVariant: "12_page",
+      pages: [        buildAgeSpecificPage({
+          textTemplate: "あさのおへやに、たんじょうびのけはいがそっとひろがりました。",
+          baby_toddler: "あさだよ。おたんじょうび、わくわく。",
+          preschool_3_4:
+            "あさのおへやに、たんじょうびの けはいが そっと ひろがりました。{childName}の えがおも ぽっと ひかります。",
+          early_reader_5_6:
+            "あさのおへやに、たんじょうびの けはいが そっと ひろがりました。{childName}は いつもより はやく めがさめて、きょうの たのしみを かぞえます。",
+          early_elementary_7_8:
+            "あさのおへやに、たんじょうびの けはいが そっと ひろがりました。{childName}は ひとつ 大きくなる日の くうきを、胸の おくで しずかに かんじます。",
+          general_child:
+            "あさのおへやに、たんじょうびの けはいが そっと ひろがりました。{childName}の えがおも ぽっと ひかります。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            withBirthdayImagePromptGuardrail("Establishing wide shot of a cozy home living room in gentle morning light on birthday day. A young child in pajamas stands near a curtain with soft sunlight. Family members prepare quietly in the background with pastel decorations not fully arranged yet. A tiny ribbon motif appears on a folded ribbon loop decoration. Soft watercolor picture book style, layered foreground-midground-background, warm and clean composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{familyMembers}といっしょに、かざりつけのじゅんびをたのしくすすめます。",
+          baby_toddler: "ふうせん ぽん。いっしょに じゅんび。",
+          preschool_3_4:
+            "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。おへやが すこしずつ きらきらに なります。",
+          early_reader_5_6:
+            "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。{childName}も ふうせんを そっと ささえて、できたを ふやしていきます。",
+          early_elementary_7_8:
+            "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。{childName}は じぶんの 手で きょうの ぶたいを つくっていることが うれしくなりました。",
+          general_child:
+            "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。おへやが すこしずつ きらきらに なります。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            withBirthdayImagePromptGuardrail("Medium-wide action shot of a child and family decorating a living room with pastel balloons and solid-color ribbon loops. The child reaches up with help from family to place a decoration on a wall. Warm indoor daylight and soft shadows. A tiny ribbon motif appears on a balloon knot near the child. Soft watercolor picture book style, lively but gentle movement, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ケーキとろうそくを見つけた{childName}の目は、きらきらかがやきました。",
+          baby_toddler: "ケーキ みつけた。ろうそく きらり。",
+          preschool_3_4:
+            "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。うれしい こえが ふわっと ひろがります。",
+          early_reader_5_6:
+            "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。ふーっと する前の どきどきが、胸のなかで 小さく はねます。",
+          early_elementary_7_8:
+            "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。うれしさと すこしの きんちょうが まざる しゅんかんです。",
+          general_child:
+            "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。うれしい こえが ふわっと ひろがります。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            withBirthdayImagePromptGuardrail("Medium shot of a child discovering a birthday cake with softly glowing candles on a table. Family members stand nearby with delighted expressions, hands gently clasped. Warm candlelight reflects in the child's eyes. A tiny ribbon motif appears in the scene. Soft watercolor picture book style, discovery-focused framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "みんなの「おめでとう」があつまって、おへやいっぱいにひろがりました。",
+          baby_toddler: "おめでとう。にこにこ いっぱい。",
+          preschool_3_4:
+            "みんなの「おめでとう」が あつまって、おへや いっぱいに ひろがりました。{childName}も にこっと わらいます。",
+          early_reader_5_6:
+            "みんなの「おめでとう」が あつまって、おへや いっぱいに ひろがりました。{childName}は 手を たたきながら、しあわせな 音を きいています。",
+          early_elementary_7_8:
+            "みんなの「おめでとう」が あつまって、おへや いっぱいに ひろがりました。{childName}は みんなの きもちが ひとつに なる あたたかさを かんじました。",
+          general_child:
+            "みんなの「おめでとう」が あつまって、おへや いっぱいに ひろがりました。{childName}も にこっと わらいます。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            withBirthdayImagePromptGuardrail("Wide celebration shot of child and family clapping and smiling around the birthday table after candle moment. Pastel paper bits drift softly in the air. Everyone faces the child with joyful expressions. A tiny ribbon motif is visible in the scene. Soft watercolor picture book style, clear celebratory composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "だいじなプレゼントをそっと手にもって、{childName}はうれしそうに見つめました。",
+          baby_toddler: "プレゼント だいじ。ぎゅっ。",
+          preschool_3_4:
+            "だいじな プレゼントを そっと 手に もって、{childName}は うれしそうに 見つめました。",
+          early_reader_5_6:
+            "だいじな プレゼントを そっと 手に もって、{childName}は うれしそうに 見つめました。どんな たからものに なるかなと 思いえがきます。",
+          early_elementary_7_8:
+            "だいじな プレゼントを そっと 手に もって、{childName}は うれしそうに 見つめました。ものに こもる 気持ちまで 受けとったようでした。",
+          general_child:
+            "だいじな プレゼントを そっと 手に もって、{childName}は うれしそうに 見つめました。",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate:
+            withBirthdayImagePromptGuardrail("Object-detail close shot of the child holding a small plain keepsake toy carefully with both hands. The soft texture, ribbon, and tiny fingers are in focus. Family smiles appear softly in the background. A tiny ribbon motif is visible softly in the background. Soft watercolor picture book style, object-focused intimate framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、ひとつ大きくなった気もちを胸にそっとしまいました。",
+          baby_toddler: "{childName}、ちょっぴり おにいさん おねえさん。",
+          preschool_3_4:
+            "{childName}は、ひとつ 大きくなった きもちを 胸に そっと しまいました。",
+          early_reader_5_6:
+            "{childName}は、ひとつ 大きくなった きもちを 胸に そっと しまいました。できたことを 思いだすと、こころが まっすぐに のびていきます。",
+          early_elementary_7_8:
+            "{childName}は、ひとつ 大きくなった きもちを 胸に そっと しまいました。きょうの ひかりが、これからの じぶんを そっと おしてくれるようでした。",
+          general_child:
+            "{childName}は、ひとつ 大きくなった きもちを 胸に そっと しまいました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            withBirthdayImagePromptGuardrail("Close-up emotional shot of a child resting a hand on chest with a soft proud smile, seated near warm birthday lights after celebration. Family members are nearby in gentle soft focus, watching with affection. A tiny ribbon motif appears on a cushion beside the child. Soft watercolor picture book style, tender introspective framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "みんなのえがおが、よるのやさしいひかりのなかでゆっくりほどけていきます。",
+          baby_toddler: "えがお ぽかぽか。よる しずか。",
+          preschool_3_4:
+            "みんなの えがおが、よるの やさしい ひかりの なかで ゆっくり ほどけていきます。",
+          early_reader_5_6:
+            "みんなの えがおが、よるの やさしい ひかりの なかで ゆっくり ほどけていきます。たのしかった きょうの けしきが、こころに そっと のこります。",
+          early_elementary_7_8:
+            "みんなの えがおが、よるの やさしい ひかりの なかで ゆっくり ほどけていきます。にぎやかな 時間の あとに くる しずけさまで、だいじな 思い出に なりました。",
+          general_child:
+            "みんなの えがおが、よるの やさしい ひかりの なかで ゆっくり ほどけていきます。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            withBirthdayImagePromptGuardrail("Wide quiet ending shot of child and family sitting together on a sofa in a softly lit evening room after birthday celebration. Decorations are still visible but calm, with warm amber light and gentle shadows. A tiny ribbon motif is visible in the scene. Soft watercolor picture book style, peaceful afterglow composition, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おいしい ケーキを たべたあとは、みんなで うたを うたいました。ハッピー・バースデー！",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Close-up: The birthday cake with candles lit, showing details of the frosting and decorations. The child's happy face slightly out of focus in the background. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}も うれしくて、てを たたきました。えがおが おへや いっぱいに ひろがります。",
+          pageVisualRole: "action",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Action shot: The child clapping hands, with a bright, joyful smile. Warm lighting reflecting the happy mood. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "きょうは {childName}が しゅやく。みんなの たからもの。げんきに おおきくなってね。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Close-up: The family looking lovingly at the child. The child is glowing with happiness. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "たくさん あそんで、たくさん わらって。とっても たのしい おたんじょうび だったね。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Wide shot: The child asleep with their new toys next to the bed. Peaceful and heartwarming atmosphere. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4: "{parentMessage}",
+          early_reader_5_6: "{parentMessage}",
+          early_elementary_7_8: "{parentMessage}",
+          general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            withBirthdayImagePromptGuardrail("Back-view gentle closing shot of the child leaning on family at the end of birthday night, looking toward soft lights and a calm room. Mood is peaceful, affectionate, and reflective. A tiny ribbon motif catches the final warm light near the table edge. Soft watercolor picture book style, serene closing framing, rich but not cluttered details. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+      ],
+    },
+  },
+    "fixed-brush-teeth-12p": {
+    name: "はじめての歯みがき（12ページ）",
+    description: "歯みがきの習慣を、朝の準備からおやすみまでたっぷり描く12ページ版です。",
+    icon: "🪥",
+    categoryGroupId: "growth-support",
+    subcategoryId: "daily-habit",
+    parentIntent: "できるようになってほしい。でも怒らず応援したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["teeth", "habit", "bedtime", "pilot-12-page"],
+    creationMode: "fixed_template",
+    variantOf: "fixed-brush-teeth",
+    variantLabel: "12ページ",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-brush-teeth.webp",
+    sampleImageAlt: "はじめての歯みがきのやさしい絵本イメージ（12ページ版）",
+    visualDirection:
+      "Bright but calm daily-habit picture-book mood with clean bathroom setting, rounded shapes, friendly routine support, and reassuring smiles over a gentle 8-page rhythm.",
+    order: 7.5,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、歯みがきの習慣を12ページでやさしく応援する絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}のはじめての歯みがき",
+      previewImageUrl: "/images/templates/fixed-brush-teeth.webp",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a cheerful preschool child holding a toothbrush in a bright clean bathroom, fresh morning or evening light, friendly mirror reflection, recurring shining star motif, encouraging cheerful mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "{childName}の はじめての 歯みがき",
+      openingNarrationTemplate:
+        "今日も歯みがきの時間がやってきました。{childName}はどんなふうにがんばるかな。",
+      pageCount: 12,
+      layoutVariant: "12_page",
+      pages: [        buildAgeSpecificPage({
+          textTemplate: "朝だ。{childName}は、お水をながして顔を洗います。",
+          baby_toddler: "あさだ。ぱしゃぱしゃ。きれいきれい。",
+          preschool_3_4:
+            "あさだ。{childName}は、おみずをながして かおを あらいます。きょうも はみがきのじゅんびが はじまります。",
+          early_reader_5_6:
+            "朝だ。{childName}は、お水をながして顔を洗います。鏡に映った自分を見ると、今日も がんばろう という きもちに なります。",
+          early_elementary_7_8:
+            "朝だ。{childName}は、お水をながして顔を洗います。毎朝の おなじ しぐさが、{childName}の からだに やさしく しみこんでいます。",
+          general_child:
+            "朝だ。{childName}は、お水をながして顔を洗います。きょうも はみがきのじゅんびが はじまります。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            withBrushTeethImagePromptGuardrail("Establishing wide shot of a preschool child at a bathroom sink in bright morning light, reaching for a faucet on a small step stool. The child's face is eager and alert. A bathroom mirror ahead shows the child's reflection. A colorful toothbrush cup sits on the counter with other bathroom items arranged neatly. Use only plain, unlabeled bathroom objects. Do not include readable text, product labels, logos, numbers, letters, posters, charts, or written marks anywhere in the sink area, mirror, counter, or background. A small shining star motif is tucked on the mirror frame. Soft watercolor picture book style, clean bright morning bathroom, rounded child-safe shapes, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "でも、歯みがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。",
+          baby_toddler: "めんどくさい。ぐずぐず。",
+          preschool_3_4:
+            "でも、はみがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。おへやから あぶくの おとが きこえてきました。",
+          early_reader_5_6:
+            "でも、歯みがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。でも、{childName}は知っています。やってみると たのしいことを。",
+          early_elementary_7_8:
+            "でも、歯みがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。誰もが そう感じる その気持ちを、{childName}は素直に 表しています。",
+          general_child:
+            "でも、歯みがきはめんどくさい。{childName}はちょっぴり ぐずぐずします。おへやから あぶくの音が きこえてきました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            withBrushTeethImagePromptGuardrail("Medium shot of the child sitting on the bathroom floor with a slightly pouty or uncertain expression, looking at the toothbrush with hesitation. The toothbrush and solid-colored toothpaste tube sit on the counter above. Soft bubbles or steam are visible near the sink. The room is still bright and welcoming despite the child's reluctance. A small shining star motif appears on the floor tile. Soft watercolor picture book style, relatable reluctance without negativity, rich but not cluttered.")
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。",
+          baby_toddler: "あぶく。ふわっ。たのしい。",
+          preschool_3_4:
+            "でも、はぶらしを にぎると、あぶくが ふわっと でてきました。あ、たのしい。{childName}の めが きらりと ひかります。",
+          early_reader_5_6:
+            "でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。小さな星のような あぶくが、{childName}の 心も ぷくぷくと 膨らませます。",
+          early_elementary_7_8:
+            "でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。めんどくさいと思っていた その気持ちが、ふんわり 変わっていく体験をします。",
+          general_child:
+            "でも、はぶらしを握ると、あぶくが ふわっと 出てきました。あ、楽しい。{childName}の目が きらりと 光ります。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            withBrushTeethImagePromptGuardrail("Medium action shot of the child actively brushing with delight. The toothbrush fills with foam bubbles that float in soft white clouds near the mouth. The child's expression shifts from reluctance to joy, eyes bright. Soft bubbles drift near the sink. A small shining star motif appears on the toothbrush handle or bubbles. Bright bathroom light. Soft watercolor picture book style, transformation moment, dynamic but gentle, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。",
+          baby_toddler: "しゃかしゃか。ぴかぴか。",
+          preschool_3_4:
+            "しゃかしゃか。まえばを もっと がんばる。ぴかぴかになれ。{childName}は、はの ひとつひとつに きもちを こめて みがきます。",
+          early_reader_5_6:
+            "しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。{childName}は、小さな手で せいいっぱい 磨いています。",
+          early_elementary_7_8:
+            "しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。{childName}は、じぶんの歯を大事にしようという 気持ちが、ぽかぽかと 湧き上がるのを感じます。",
+          general_child:
+            "しゃかしゃか。前歯をもっと頑張る。ぴかぴかになれ。{childName}は、歯のひとつひとつに 気持ちを こめて 磨きます。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            withBrushTeethImagePromptGuardrail("Action-focused medium shot of the child concentrating hard on brushing the front teeth. The child's hands are on both sides of the toothbrush, mouth open with gentle foam. Keep the toothbrush, toothpaste tube, cup, mirror, and counter completely plain and unlabeled. The toothpaste tube must be completely blank, plain white, and label-free, with no printed text, fake text, logo, decorative writing, symbols, numbers, or letter-like shapes. If needed, turn the tube away from the viewer or partially hide it behind the cup so no product surface can show markings. The mirror reflects the child's focused, determined face. Soft bubbles float around the mouth area. A small shining star motif appears on the mirror frame or tooth foam. Bright clean bathroom. Soft watercolor picture book style, determination and effort, dynamic but gentle, rich but not cluttered."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。",
+          baby_toddler: "奥歯も。そっと。きれいきれい。",
+          preschool_3_4:
+            "さらに、おくばも、そっと たんけんする。ここにも よごれがあるのか。みつけるぞ。{childName}は、かがみを のぞきながら いっしょうけんめい さがします。",
+          early_reader_5_6:
+            "さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。{childName}は、自分の歯の中を 小さな冒険者のように 探検しています。",
+          early_elementary_7_8:
+            "さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。{childName}は、歯の裏側まで 丁寧に 磨くことで、自分の体を 大事にしている という 実感を 深めていきます。",
+          general_child:
+            "さらに、奥歯も、そっと探検する。ここにも汚れがあるのか。見つけるぞ。{childName}は、鏡を覗きながら 一生懸命 探します。",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate:
+            withBrushTeethImagePromptGuardrail("Object-detail close shot focused on the child's mouth area as the toothbrush moves toward the back teeth, seen in the mirror. The child tilts the head slightly to the side, concentrating. Soft foam reveals gentle brushing action. Use a plain mirror frame and simple bathroom objects only. The mirror reflects the child's focused expression. A small shining star motif appears on the mirror edge. Soft bathroom light highlighting the brushing motion. Soft watercolor picture book style, intimate exploration, gentle care, rich but not cluttered."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "その様子を、おかあさん（またはおとうさん）が、やさしく見守っていました。",
+          baby_toddler: "ママも見てる。やさしい。",
+          preschool_3_4:
+            "そのようすを、おかあさん（またはおとうさん）が、やさしく みまもっていました。{childName}は、その しせんに きづき、もっと がんばろうと おもいました。",
+          early_reader_5_6:
+            "その様子を、家族が、やさしく見守っていました。{childName}は、その暖かい視線を感じて、一人じゃないんだと 思いました。",
+          early_elementary_7_8:
+            "その様子を、家族が、やさしく見守っていました。{childName}は、サポートされていることの ありがたさを 無意識に受け取り、その気持ちが 力に 変わっていきます。",
+          general_child:
+            "その様子を、おかあさん（またはおとうさん）が、やさしく見守っていました。{childName}は、その視線に 気づき、もっと 頑張ろう と 思いました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            withBrushTeethImagePromptGuardrail("Close-up emotional shot of the child brushing intently in the mirror while a family member (parent) stands in soft focus in the background, watching with a warm, proud smile. The parent's hand rests gently on the child's shoulder or nearby. The parent's face shows gentle encouragement without pressure. The mirror frame is plain and simplified. The bathroom wall behind the mirror is plain solid color. A small shining star motif appears on the parent's shirt or nearby. Soft warm bathroom light. Soft watercolor picture book style, supportive family moment, tender and reassuring, rich but not cluttered."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。",
+          baby_toddler: "ぐちゅぐちゅ。ぴかぴか。できた。",
+          preschool_3_4:
+            "しあげに、くちをゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。{childName}は、さいごの しあげに きあいが はいります。",
+          early_reader_5_6:
+            "仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。{childName}は、水のぬくもりを感じながら、全部 終わったという 喜びが こみ上げます。",
+          early_elementary_7_8:
+            "仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。{childName}は、最後の最後まで 丁寧に 仕上げることで、自分の 努力を 完成させる 喜びを 知ります。",
+          general_child:
+            "仕上げに、口をゆすぐ。ぐちゅぐちゅ。どんどん、きれいになる。{childName}は、最後の仕上げに 気合いが入ります。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            withBrushTeethImagePromptGuardrail("Wide payoff shot of the child rinsing vigorously, water streaming over the face with gentle splashes, foam and bubbles spinning away. The child's expression is determined and joyful. The bathroom counter is tidy around them. A small shining star motif appears on the rinse cup or soap dispenser. Clear water, bright light, sense of completion. Soft watercolor picture book style, accomplishment and freshness, dynamic but clean, rich but not cluttered."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "「しゃかしゃか しゅっしゅっ」 はブラシが おどります。あわが ぷくぷく、たのしいな。",
+          baby_toddler: "しゃかしゃか。しゅっしゅっ。ぷくぷく。",
+          preschool_3_4: "「しゃかしゃか しゅっしゅっ」はブラシが おどります。あわが ぷくぷく、たのしいな。",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate: withBrushTeethImagePromptGuardrail("Close-up: The toothbrush with toothpaste on it. Focus on the bubbles and the colorful handle. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}の おくの ほうの 歯も、きれいに なってきたよ。ばいきんさん、ばいばい！",
+          baby_toddler: "おくの 歯も、しゃかしゃか。ばいきん、ばいばい。",
+          preschool_3_4: "おくの ほうの 歯も、きれいに なってきたよ。ばいきんさん、ばいばい！",
+          pageVisualRole: "action",
+          imagePromptTemplate: withBrushTeethImagePromptGuardrail("Action shot: The child brushing their back teeth enthusiastically. Small soap bubbles or foam near their mouth. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "じぶんで できた！ {childName}は じまんげな おかおで にっこり。",
+          baby_toddler: "できた！ にっこり。ぴかぴか。",
+          preschool_3_4: "じぶんで できた！ かがみを みて、にっこり えがお。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withBrushTeethImagePromptGuardrail("Close-up: The child looking at themselves in the mirror, smiling proudly with clean teeth. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "さいごは パパや ママに しいあげの はみがきを してもらって、ピッカピカ。",
+          baby_toddler: "さいごは しいあげ。ピッカピカ。",
+          preschool_3_4: "さいごは パパや ママに しいあげを してもらって、ピッカピカ。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withBrushTeethImagePromptGuardrail("Wide shot: A parent helping the child with finishing touches on brushing. A tender, caring moment in the bathroom. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4: "{parentMessage}",
+          early_reader_5_6: "{parentMessage}",
+          early_elementary_7_8: "{parentMessage}",
+          general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            withBrushTeethImagePromptGuardrail("Wide quiet ending shot of the child at the bathroom mirror after brushing, looking up at their own reflection with a proud, happy smile, holding the toothbrush in one hand. A family member stands beside or behind the child, both gazing at the reflection with warmth. The bathroom is tidy and calm. The mirror is plain with a simple frame. The wall around the mirror is plain solid color—no posters, charts, written notes, or label-like objects. A small shining star motif glows on the nightlight or mirror frame edge only. Soft evening or warm bathroom light. Soft watercolor picture book style, serene satisfied framing, family pride, rich but not cluttered."),
+        }),
+      ],
+    },
+  },
+    "fixed-sleepy-moon-adventure-12p": {
+    name: "おつきさまとおやすみぼうけん（12ページ）",
+    description: "月あかりの冒険をゆっくり12ページで描く、安心おやすみテンプレートです。",
+    icon: "🌙",
+    categoryGroupId: "bedtime",
+    subcategoryId: "moon-adventure",
+    parentIntent: "今日も安心して眠ってほしい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["bedtime", "moon", "comfort", "pilot-12-page"],
+    creationMode: "fixed_template",
+    variantOf: "fixed-sleepy-moon-adventure",
+    variantLabel: "12ページ",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-sleepy-moon-adventure.webp",
+    sampleImageAlt: "おつきさまとおやすみぼうけんのやさしい絵本イメージ（12ページ版）",
+    visualDirection:
+      "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination cloud-and-star adventure, and calm reassuring expressions over an 8-page rhythm.",
+    order: 11.5,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、寝る前のおやすみぼうけんを12ページでやさしく描く絵本を作ります。",
+    fixedStory: {
+      titleTemplate: "{childName}とおつきさまのおやすみぼうけん",
+      previewImageUrl: "/images/templates/fixed-sleepy-moon-adventure.webp",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a sleepy child in cozy pajamas looking at a bright moon from a bedroom window, soft blanket draped around shoulders, tiny glowing star motif, calm and reassuring bedtime mood, soft watercolor style, rounded child-safe composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "おつきさまと おやすみぼうけん",
+      openingNarrationTemplate:
+        "よるのしずかな へやで、{childName}は まどのむこうの おつきさまを みつけました。きょうも やさしい おやすみぼうけんが はじまります。",
+      pageCount: 12,
+      layoutVariant: "12_page",
+      pages: [        buildAgeSpecificPage({
+          textTemplate: "ベッドのうえで、{childName}はまどのそとのおつきさまを見つけました。やさしい月あかりが、おへやをそっと包んでいます。",
+          baby_toddler: "{childName}、おつきさま みーつけた。ふわっと あたたかい。",
+          preschool_3_4:
+            "ベッドのうえで、{childName}は まどのそとの おつきさまを みつけました。やさしい つきあかりが、おへやを そっと つつんでいます。",
+          early_reader_5_6:
+            "ベッドのうえで、{childName}は まどのそとの おつきさまを みつけました。やさしい 月あかりが おへやを そっと 包んで、なんだか ほっと する 気持ちに なりました。",
+          early_elementary_7_8:
+            "ベッドのうえで、{childName}は まどのそとの おつきさまを みつけました。やさしい 月あかりが おへやを そっと 包んで、きょうの つかれが すこしずつ ほどけていく ようでした。",
+          general_child:
+            "ベッドのうえで、{childName}はまどのそとのおつきさまを見つけました。やさしい月あかりが、おへやをそっと包んでいます。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            withSleepyMoon8pRoomPropGuardrail("Establishing wide shot of a cozy bedroom at night. The same preschool-age child with a short dark-brown bob haircut sits upright on bed under a soft fluffy blanket, wearing the same pale blue pajamas with a tiny simple star pattern and gazing through a window at a bright round moon. The same small tan teddy bear plush sits beside the child. A warm bedside lamp glows in the corner. A tiny glowing star motif appears near the plain unprinted curtain. Moonlight and warm lamp light blend softly in the room. Soft watercolor picture book style, rich but uncluttered composition, child-safe rounded shapes. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、もっとよく見たくて、まどのそばにすわりなおしました。おつきさまがぐんと近く見えました。",
+          baby_toddler: "{childName}、おつきさまを もっと みたい。ちかい、ちかい。",
+          preschool_3_4:
+            "{childName}は、もっと よくみたくて、まどのそばに すわりなおしました。おつきさまが ぐんと ちかく みえました。",
+          early_reader_5_6:
+            "{childName}は、もっと よく見たくて、まどのそばに すわりなおしました。おつきさまが ぐんと 近く 見えて、しずかな よるが もっと 広くなったみたいでした。",
+          early_elementary_7_8:
+            "{childName}は、もっと よく見たくて、まどのそばに すわりなおしました。おつきさまが ぐんと 近く 見えて、よるの しずかさが からだ全体に ふかく 広がっていきました。",
+          general_child:
+            "{childName}は、もっとよく見たくて、まどのそばにすわりなおしました。おつきさまがぐんと近く見えました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            withSleepyMoon8pRoomPropGuardrail("Medium shot from the side of the same child sitting up in bed, face turned toward a window where a large bright moon fills the glass. The child leans forward with gentle curiosity, wearing the same pale blue pajamas with a tiny simple star pattern, with a soft blanket pooled around the waist. The same small tan teddy bear plush rests on the bed nearby. The curtain is plain fabric with no print or pattern. Moonlight falls softly across the child's face. A tiny glowing star motif appears on the plain window frame edge. Soft watercolor picture book style, intimate wondering mood, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、ふわふわの雲やきらきらの星をそうぞうしました。",
+          baby_toddler: "ふわふわ くも、きらきら ほし。",
+          preschool_3_4:
+            "{childName}は、ふわふわの くもや きらきらの ほしを そうぞうしました。",
+          early_reader_5_6:
+            "{childName}は、ふわふわの くもや きらきらの ほしを そうぞうしました。やさしい ぼうけんが こころのなかで ひろがります。",
+          early_elementary_7_8:
+            "{childName}は、ふわふわの くもや きらきらの ほしを そうぞうしました。へやにいながら、しずかな よるの そらを たびしている きぶんになります。",
+          general_child: "{childName}は、ふわふわの雲やきらきらの星をそうぞうしました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            withSleepyMoon8pRoomPropGuardrail(withSleepyMoon8pImagePromptGuardrail("Medium discovery shot of the same child smiling softly on bed while imagining soft glowing cloud wisps and star shapes floating gently around the cozy room. The child keeps the same short dark-brown bob haircut, the same pale blue pajamas with a tiny simple star pattern, and holds the same small tan teddy bear plush. The floating shapes are soft glowing points and curved wisps only, with no connecting lines, no symbol arrangement, no arrow shapes, no constellation-map patterns, no letter-like forms. The bedroom remains clear and safe, with moonlight entering from the window. Background stays simple and uncluttered with no visible bookshelf, no readable book covers, no spine writing, no paper items with visible writing, and no printed room surfaces. Any room props, if shown at all, are soft blurred unmarked shapes only. A small star motif appears among the symbolic floating shapes. Soft watercolor picture book style, dreamy but grounded composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.")),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、そうぞうの中で、ふわふわの雲に乗ってみました。星たちがやさしくそばで光っています。",
+          baby_toddler: "くもに のって、ふわふわ。ほしが きらきら。",
+          preschool_3_4:
+            "{childName}は、そうぞうの なかで、ふわふわの くもに のってみました。ほしたちが やさしく そばで ひかっています。",
+          early_reader_5_6:
+            "{childName}は、そうぞうの 中で、ふわふわの 雲に 乗ってみました。やさしく 光る 星たちが そばに 集まって、まるで 夜の 空を たびしているみたいでした。",
+          early_elementary_7_8:
+            "{childName}は、そうぞうの 中で、ふわふわの 雲に 乗ってみました。星たちが やさしく そばで 光って、へやにいながら よるの 宇宙を たびしている きぶんになります。",
+          general_child:
+            "{childName}は、そうぞうの中で、ふわふわの雲に乗ってみました。星たちがやさしくそばで光っています。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            withSleepyMoon8pImagePromptGuardrail("Action medium shot of the same child seated on a plain fluffy white cloud in an imagination layer above the same clearly recognizable bedroom, surrounded by softly glowing star points. The child keeps the same short dark-brown bob haircut, the same pale blue pajamas with a tiny simple star pattern, and hugs the same small tan teddy bear plush. The cloud surface is smooth and plain with no markings, no symbols, no lines, no arrows, no structural details. Stars appear as scattered soft glowing points only with no connecting lines. The bed, window, and room remain clearly recognizable to ground the dream-play context. The child's expression is gentle and adventurous. A tiny star motif glows near the cloud edge. Soft watercolor picture book style, dreamlike safe adventure, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "星たちがやさしくアーチをえがいて、{childName}のまわりをふんわりと囲みました。大きな安心感がひろがりました。",
+          baby_toddler: "ほしが ふわっ。{childName}、だいじょうぶ。あったかい。",
+          preschool_3_4:
+            "ほしたちが やさしく アーチを えがいて、{childName}のまわりを ふんわりと かこみました。なんだか おおきな あんしんかんが ひろがります。",
+          early_reader_5_6:
+            "星たちが やさしく アーチを えがいて、{childName}の まわりを ふんわりと 囲みました。その やわらかな 光の 中で、大きな 安心感が からだに ひろがりました。",
+          early_elementary_7_8:
+            "星たちが やさしく アーチを えがいて、{childName}の まわりを ふんわりと 囲みました。その やわらかな 光に 包まれて、きょう一日の 全部が そっと ゆるされていくような 感覚になります。",
+          general_child:
+            "星たちがやさしくアーチをえがいて、{childName}のまわりをふんわりと囲みました。大きな安心感がひろがりました。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            withSleepyMoon8pImagePromptGuardrail("Wide payoff shot of the same child surrounded by softly glowing star points arranged in a gentle arc overhead. The child keeps the same short dark-brown bob haircut, the same pale blue pajamas with a tiny simple star pattern, and holds the same small tan teddy bear plush. The stars are scattered soft glowing points in a gentle curve only, with no connecting lines, no symbol arrangement, no constellation-map style, no arrow-like paths. The moon is visible in the background as a plain luminous orb with no surface marks or craters. The child's expression shows serene wonder and contentment. A tiny star motif glows at the arc's highest point. Soft watercolor picture book style, peak wonder and warmth, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おつきさまが「きょうもだいじょうぶ」と見まもってくれているようでした。{childName}のこころはほっとあたたかくなりました。",
+          baby_toddler: "だいじょうぶ、って おつきさま。{childName}、あったかい。",
+          preschool_3_4:
+            "おつきさまが「きょうも だいじょうぶ」と 見まもってくれているようでした。{childName}の こころは ほっと あたたかくなりました。",
+          early_reader_5_6:
+            "おつきさまが「きょうも だいじょうぶ」と 見まもってくれているようでした。{childName}の こころは ほっと あたたかくなって、安心の 気持ちで いっぱいに なります。",
+          early_elementary_7_8:
+            "おつきさまが「きょうも だいじょうぶ」と そっと 見まもってくれているようでした。{childName}の こころは、しずかに ほぐれて、やさしい ぬくもりで みたされていきます。",
+          general_child:
+            "おつきさまが「きょうもだいじょうぶ」と見まもってくれているようでした。{childName}のこころはほっとあたたかくなりました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            withSleepyMoon8pRoomPropGuardrail("Emotional close-up of the same child resting on pillow with peaceful eyes, moonlight softly illuminating the face. The child keeps the same short dark-brown bob haircut, the same pale blue pajamas with a tiny simple star pattern, and hugs the same small tan teddy bear plush with comfort. Outside the window, the moon appears gentle and protective as a plain luminous orb with no surface marks or symbols. A tiny star motif glows near the pillow seam. Intimate calm framing, watercolor picture book style, warm reassurance and quiet confidence, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{childName}は、ふとんの中にもぐりこみました。まぶたがそっとおもくなってきます。おやすみなさい。",
+          baby_toddler: "ふとんに もぐって。まぶた おもい。おやすみ。",
+          preschool_3_4:
+            "{childName}は、ふとんの なかに もぐりこみました。まぶたが そっと おもくなってきます。おやすみなさい。",
+          early_reader_5_6:
+            "{childName}は、ふとんの 中に もぐりこみました。まぶたが そっと おもくなってきます。きょうの おやすみぼうけんも、これで おわりです。おやすみなさい。",
+          early_elementary_7_8:
+            "{childName}は、ふとんの 中に もぐりこみました。まぶたが そっと おもくなってきます。きょうの おやすみぼうけんで 感じた やさしい ひかりが、ゆめのなかにも つながっていきそうです。おやすみなさい。",
+          general_child:
+            "{childName}は、ふとんの中にもぐりこみました。まぶたがそっとおもくなってきます。おやすみなさい。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            withSleepyMoon8pRoomPropGuardrail("Medium quiet shot of the same child nestled under a soft blanket on their side, eyes gently closing. The child keeps the same short dark-brown bob haircut and the same pale blue pajamas with a tiny simple star pattern. The same small tan teddy bear plush is tucked under the child's arm with no printed features, no appliqué patterns, and no labels. Moonlight casts a gentle silver glow across the pillow. A tiny star motif appears on the plain pillow corner. Any background shelf or bedside surface, if shown at all, contains only plain toys, plain blocks, or a plain basket, with no visible book covers, no spine writing, and no paper items with visible writing. The room is peaceful and still. Soft watercolor picture book style, near-sleep serenity, intimate and safe, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おつきさまの ふねに のって、ほしの うみを ぷかぷか。きもちいいな。",
+          baby_toddler: "ほしの うみ。ぷかぷか。",
+          preschool_3_4: "おつきさまの ふねに のって、ほしの うみを ぷかぷか。",
+          pageVisualRole: "object_detail",
+          imagePromptTemplate: withBedtimeGoodDay8pImagePromptGuardrail("Close-up: The child's favorite plush toy resting gently against the child in the dreamscape. Soft glowing light from the stars. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "あ、ながれぼし！ {childName}は おねがいごとを しました。なにを おねがいしたのかな？",
+          baby_toddler: "ながれぼし！ しゅーっ。きらきら。",
+          preschool_3_4: "あ、ながれぼし！ そっと おねがいごとを しました。",
+          pageVisualRole: "action",
+          imagePromptTemplate: withBedtimeGoodDay8pImagePromptGuardrail("Action shot: The child reaching out to a falling star in the dreamscape. Eyes wide with wonder. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "おつきさまが 「また あしたね」と やさしく わらってくれました。",
+          baby_toddler: "おつきさま、にっこり。また あした。",
+          preschool_3_4: "おつきさまが 「また あしたね」と やさしく わらってくれました。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate: withBedtimeGoodDay8pImagePromptGuardrail("Close-up: The child's face lit by gentle moonlight, with a peaceful smile. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "ふかふかの おふとんの なかへ。あたたかい ぬくもりに つつまれて。",
+          baby_toddler: "ふかふか おふとん。ぽかぽか。",
+          preschool_3_4: "ふかふかの おふとんの なかへ。あたたかい ぬくもりに つつまれます。",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate: withBedtimeGoodDay8pImagePromptGuardrail("Medium shot: The child cuddling their blanket closely, looking very comfortable and asleep. Soft watercolor style."),
+        }),
+        buildAgeSpecificPage({
+          textTemplate: "{parentMessage}",
+          baby_toddler: "{parentMessage}",
+          preschool_3_4: "{parentMessage}",
+          early_reader_5_6: "{parentMessage}",
+          early_elementary_7_8: "{parentMessage}",
+          general_child: "{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            withSleepyMoon8pRoomPropGuardrail(`Wide quiet ending shot of the same child asleep comfortably in bed under a soft blanket. The child keeps the same short dark-brown bob haircut and the same pale blue pajamas with a tiny simple star pattern. The same small tan teddy bear plush rests by the child's side. Moonlight paints gentle silver highlights across the room while warm ambient light remains subtle. A tiny star motif appears on the plain blanket edge. Final bedtime scene is visual-only with no message area, no cloud frame, and no invented writing surface. Serene bedtime stillness, safe and cozy environment, watercolor picture book style, balanced calm composition, rich but uncluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark. ${SLEEPY_MOON_8P_ENDING_NO_BUBBLE_CLAUSE}`),
+        }),
+      ],
+    },
+  },
   "blank-dream-job-8p": {
     name: "○○になりたい！",
     description: "なりたいものを一言入れるだけ。夢を持つよろこびの絵本。",

@@ -6,15 +6,21 @@ const FIXED_TEMPLATE_IDS = [
   "fixed-first-zoo",
   "fixed-first-birthday",
   "fixed-first-birthday-8p",
+  "fixed-first-birthday-12p",
+  "fixed-first-birthday-12p",
   "fixed-first-zoo-8p",
   "fixed-bedtime-good-day",
   "fixed-bedtime-good-day-8p",
   "fixed-brush-teeth-8p",
+  "fixed-brush-teeth-12p",
+  "fixed-brush-teeth-12p",
   "fixed-brush-teeth",
   "fixed-first-christmas",
   "fixed-sharing-friends",
   "fixed-sleepy-moon-adventure",
   "fixed-sleepy-moon-adventure-8p",
+  "fixed-sleepy-moon-adventure-12p",
+  "fixed-sleepy-moon-adventure-12p",
   "fixed-cardboard-rocket",
   "fixed-cardboard-rocket-8p",
   "fixed-rainy-day-puddle",
@@ -145,6 +151,34 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
     "payoff",
     "quiet_ending",
   ],
+  "fixed-brush-teeth-12p": [
+    "opening_establishing",
+    "setback_or_question",
+    "discovery",
+    "action",
+    "object_detail",
+    "emotional_closeup",
+    "payoff",
+    "object_detail",
+    "action",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending"
+  ],
+  "fixed-brush-teeth-12p": [
+    "opening_establishing",
+    "setback_or_question",
+    "discovery",
+    "action",
+    "object_detail",
+    "emotional_closeup",
+    "payoff",
+    "object_detail",
+    "action",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending"
+  ],
   "fixed-first-birthday-8p": [
     "opening_establishing",
     "action",
@@ -154,6 +188,34 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
     "emotional_closeup",
     "quiet_ending",
     "quiet_ending",
+  ],
+  "fixed-first-birthday-12p": [
+    "opening_establishing",
+    "action",
+    "discovery",
+    "payoff",
+    "object_detail",
+    "emotional_closeup",
+    "quiet_ending",
+    "object_detail",
+    "action",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending"
+  ],
+  "fixed-first-birthday-12p": [
+    "opening_establishing",
+    "action",
+    "discovery",
+    "payoff",
+    "object_detail",
+    "emotional_closeup",
+    "quiet_ending",
+    "object_detail",
+    "action",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending"
   ],
   "fixed-first-zoo-8p": [
     "opening_establishing",
@@ -179,6 +241,34 @@ const EXPECTED_PAGE_ROLES: Record<string, PageVisualRole[]> = {
     "emotional_closeup",
     "quiet_ending",
     "quiet_ending",
+  ],
+  "fixed-sleepy-moon-adventure-12p": [
+    "opening_establishing",
+    "discovery",
+    "discovery",
+    "action",
+    "payoff",
+    "emotional_closeup",
+    "quiet_ending",
+    "object_detail",
+    "action",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending"
+  ],
+  "fixed-sleepy-moon-adventure-12p": [
+    "opening_establishing",
+    "discovery",
+    "discovery",
+    "action",
+    "payoff",
+    "emotional_closeup",
+    "quiet_ending",
+    "object_detail",
+    "action",
+    "emotional_closeup",
+    "quiet_ending",
+    "quiet_ending"
   ],
   "fixed-cardboard-rocket": ["opening_establishing", "discovery", "emotional_closeup", "quiet_ending"],
   "fixed-cardboard-rocket-8p": [
@@ -343,15 +433,21 @@ const EXPECTED_FIXED_SAMPLE_IMAGES: Record<string, string> = {
   "fixed-first-zoo": "/images/templates/fixed-first-zoo.webp",
   "fixed-first-birthday": "/images/templates/fixed-first-birthday.webp",
   "fixed-first-birthday-8p": "/images/templates/fixed-first-birthday.webp",
+  "fixed-first-birthday-12p": "/images/templates/fixed-first-birthday.webp",
+  "fixed-first-birthday-12p": "/images/templates/fixed-first-birthday.webp",
   "fixed-first-zoo-8p": "/images/templates/fixed-first-zoo.webp",
   "fixed-bedtime-good-day": "/images/templates/fixed-bedtime-good-day.webp",
   "fixed-bedtime-good-day-8p": "/images/templates/fixed-bedtime-good-day.webp",
   "fixed-first-christmas": "/images/templates/fixed-first-christmas.webp",
   "fixed-brush-teeth": "/images/templates/fixed-brush-teeth.webp",
   "fixed-brush-teeth-8p": "/images/templates/fixed-brush-teeth.webp",
+  "fixed-brush-teeth-12p": "/images/templates/fixed-brush-teeth.webp",
+  "fixed-brush-teeth-12p": "/images/templates/fixed-brush-teeth.webp",
   "fixed-sharing-friends": "/images/templates/fixed-sharing-friends.webp",
   "fixed-sleepy-moon-adventure": "/images/templates/fixed-sleepy-moon-adventure.webp",
   "fixed-sleepy-moon-adventure-8p": "/images/templates/fixed-sleepy-moon-adventure.webp",
+  "fixed-sleepy-moon-adventure-12p": "/images/templates/fixed-sleepy-moon-adventure.webp",
+  "fixed-sleepy-moon-adventure-12p": "/images/templates/fixed-sleepy-moon-adventure.webp",
   "fixed-cardboard-rocket": "/images/templates/fixed-cardboard-rocket.webp",
   "fixed-cardboard-rocket-8p": "/images/templates/fixed-cardboard-rocket.webp",
   "fixed-rainy-day-puddle": "/images/templates/fixed-rainy-day-puddle.webp",
@@ -396,9 +492,9 @@ function assertFixedStoryPageCountContract(fixedStory: {
 
 describe("SEED_TEMPLATES — fixed templates Phase T1-B", () => {
   it("Phase T3-8b: fixed templates are expanded to 24 (16 previous + 8 new Batch G)", () => {
-    expect(FIXED_TEMPLATE_IDS.length).toBe(24);
+    expect(FIXED_TEMPLATE_IDS.length).toBe(30);
     const existing = FIXED_TEMPLATE_IDS.filter((id) => SEED_TEMPLATES[id]);
-    expect(existing.length).toBe(24);
+    expect(existing.length).toBe(30);
   });
 
   for (const id of FIXED_TEMPLATE_IDS) {
