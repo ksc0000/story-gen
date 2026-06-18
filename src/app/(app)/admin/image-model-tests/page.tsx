@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PageTransition } from "@/components/page-transition";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -191,7 +192,9 @@ export default function AdminImageModelTestsPage() {
   };
 
   return (
-    <PageTransition className="mx-auto max-w-6xl px-4 py-8">
+    <>
+      <AdminNav />
+      <PageTransition className="mx-auto max-w-6xl px-4 py-8">
       <div className="space-y-3">
         <h1 className="text-2xl font-bold text-purple-900">画像モデル比較</h1>
         <p className="text-sm text-violet-600">
@@ -511,6 +514,7 @@ export default function AdminImageModelTestsPage() {
           </Card>
         </div>
       ) : null}
-    </PageTransition>
+      </PageTransition>
+    </>
   );
 }
