@@ -1,0 +1,233 @@
+[
+  {
+    "bookId": "book-001",
+    "human": {
+      "storyScore": 4,
+      "illustrationScore": 4,
+      "characterConsistencyScore": 4,
+      "personalizationScore": 4,
+      "safetyScore": 5,
+      "overallScore": 4.2,
+      "flaggedIssues": []
+    },
+    "llm": {
+      "storyScore": 80,
+      "illustrationScore": 80,
+      "characterConsistencyScore": 80,
+      "personalizationScore": 80,
+      "safetyScore": 100,
+      "overallScore": 84,
+      "flaggedIssues": []
+    }
+  },
+  {
+    "bookId": "book-002",
+    "human": {
+      "storyScore": 5,
+      "illustrationScore": 5,
+      "characterConsistencyScore": 5,
+      "personalizationScore": 5,
+      "safetyScore": 5,
+      "overallScore": 5.0,
+      "flaggedIssues": []
+    },
+    "llm": {
+      "storyScore": 95,
+      "illustrationScore": 90,
+      "characterConsistencyScore": 95,
+      "personalizationScore": 100,
+      "safetyScore": 100,
+      "overallScore": 96,
+      "flaggedIssues": []
+    }
+  },
+  {
+    "bookId": "book-003",
+    "human": {
+      "storyScore": 3,
+      "illustrationScore": 2,
+      "characterConsistencyScore": 3,
+      "personalizationScore": 4,
+      "safetyScore": 5,
+      "overallScore": 3.4,
+      "flaggedIssues": [
+        { "area": "illustration", "message": "Characters look like different people between pages" }
+      ]
+    },
+    "llm": {
+      "storyScore": 65,
+      "illustrationScore": 40,
+      "characterConsistencyScore": 50,
+      "personalizationScore": 75,
+      "safetyScore": 100,
+      "overallScore": 66,
+      "flaggedIssues": [
+        { "area": "illustration", "message": "Inconsistent character details" },
+        { "area": "character", "message": "Character features drift" }
+      ]
+    }
+  },
+  {
+    "bookId": "book-004",
+    "human": {
+      "storyScore": 2,
+      "illustrationScore": 4,
+      "characterConsistencyScore": 4,
+      "personalizationScore": 2,
+      "safetyScore": 5,
+      "overallScore": 3.4,
+      "flaggedIssues": [
+        { "area": "story", "message": "Plot is non-existent" }
+      ]
+    },
+    "llm": {
+      "storyScore": 30,
+      "illustrationScore": 85,
+      "characterConsistencyScore": 80,
+      "personalizationScore": 40,
+      "safetyScore": 100,
+      "overallScore": 67,
+      "flaggedIssues": [
+        { "area": "story", "message": "Logical gap in narrative" }
+      ]
+    }
+  },
+  {
+    "bookId": "book-005",
+    "human": {
+      "storyScore": 4,
+      "illustrationScore": 3,
+      "characterConsistencyScore": 4,
+      "personalizationScore": 4,
+      "safetyScore": 5,
+      "overallScore": 4.0,
+      "flaggedIssues": []
+    },
+    "llm": {
+      "storyScore": 85,
+      "illustrationScore": 70,
+      "characterConsistencyScore": 80,
+      "personalizationScore": 85,
+      "safetyScore": 100,
+      "overallScore": 84,
+      "flaggedIssues": [
+        { "area": "illustration", "message": "Slight style drift in page 3" }
+      ]
+    }
+  },
+  {
+    "bookId": "book-006",
+    "human": {
+      "storyScore": 4,
+      "illustrationScore": 4,
+      "characterConsistencyScore": 4,
+      "personalizationScore": 5,
+      "safetyScore": 5,
+      "overallScore": 4.4,
+      "flaggedIssues": []
+    },
+    "llm": {
+      "storyScore": 70,
+      "illustrationScore": 75,
+      "characterConsistencyScore": 70,
+      "personalizationScore": 90,
+      "safetyScore": 100,
+      "overallScore": 81,
+      "flaggedIssues": []
+    }
+  },
+  {
+    "bookId": "book-007",
+    "human": {
+      "storyScore": 3,
+      "illustrationScore": 3,
+      "characterConsistencyScore": 3,
+      "personalizationScore": 3,
+      "safetyScore": 3,
+      "overallScore": 3.0,
+      "flaggedIssues": [
+        { "area": "safety", "message": "Some scary images for a 3-year old" }
+      ]
+    },
+    "llm": {
+      "storyScore": 60,
+      "illustrationScore": 60,
+      "characterConsistencyScore": 60,
+      "personalizationScore": 60,
+      "safetyScore": 85,
+      "overallScore": 65,
+      "flaggedIssues": []
+    }
+  },
+  {
+    "bookId": "book-008",
+    "human": {
+      "storyScore": 5,
+      "illustrationScore": 4,
+      "characterConsistencyScore": 5,
+      "personalizationScore": 5,
+      "safetyScore": 5,
+      "overallScore": 4.8,
+      "flaggedIssues": []
+    },
+    "llm": {
+      "storyScore": 90,
+      "illustrationScore": 85,
+      "characterConsistencyScore": 90,
+      "personalizationScore": 95,
+      "safetyScore": 100,
+      "overallScore": 92,
+      "flaggedIssues": []
+    }
+  },
+  {
+    "bookId": "book-009",
+    "human": {
+      "storyScore": 4,
+      "illustrationScore": 4,
+      "characterConsistencyScore": 2,
+      "personalizationScore": 4,
+      "safetyScore": 5,
+      "overallScore": 3.8,
+      "flaggedIssues": [
+        { "area": "character", "message": "Companion color changes from blue to green" }
+      ]
+    },
+    "llm": {
+      "storyScore": 80,
+      "illustrationScore": 80,
+      "characterConsistencyScore": 40,
+      "personalizationScore": 80,
+      "safetyScore": 100,
+      "overallScore": 76,
+      "flaggedIssues": [
+        { "area": "character", "message": "Companion appearance mismatch" }
+      ]
+    }
+  },
+  {
+    "bookId": "book-010",
+    "human": {
+      "storyScore": 1,
+      "illustrationScore": 1,
+      "characterConsistencyScore": 1,
+      "personalizationScore": 1,
+      "safetyScore": 1,
+      "overallScore": 1.0,
+      "flaggedIssues": [
+        { "area": "safety", "message": "Violent content" }
+      ]
+    },
+    "llm": {
+      "storyScore": 20,
+      "illustrationScore": 20,
+      "characterConsistencyScore": 20,
+      "personalizationScore": 20,
+      "safetyScore": 20,
+      "overallScore": 20,
+      "flaggedIssues": [
+        { "area": "safety", "message": "Harmful content detected" }
+      ]
+    }
+  }
+]
