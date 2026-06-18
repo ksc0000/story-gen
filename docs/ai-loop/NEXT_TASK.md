@@ -1,7 +1,7 @@
-# Implement `availablePageCounts` in `FixedStoryTemplate` and its UI integration
+# Refine Template Quality: `fixed-first-birthday` Sample Image
 
 ## Context
 
-The product roadmap for Phase 3: Template Mode, specifically Step T3-A, calls for adding `availablePageCounts` to `TemplateData`. While `variantOf` and `variantLabel` have been implemented (PR #493), `availablePageCounts` remains unticked in the roadmap table. This feature is crucial for explicitly defining which page counts (e.g., 4, 8, 12) a given template supports and integrating this information into the user interface.
+The product is currently in Phase 5 (Monetization), with Cohort B rollout in progress. Continuous improvement of core story and illustration quality, especially for established "Template Mode" books, is crucial for user satisfaction and conversion.
 
-Currently, 8-page and 12-page variants are implemented (PR #276, PR #496), and a page count selector exists in the template detail
+The `T3-2 status update (2026-05-12)` in the roadmap identified specific P1 quality issues for existing templates. One such issue for `fixed-first-birthday` is an inconsistency between its sample image and its intended category/content. Addressing this directly supports the "Phase 2: Story & Illustration Quality" objective by ensuring generated results meet "納得できる絵本" criteria and align with user expectations set by template previews.
