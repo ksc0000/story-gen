@@ -1142,7 +1142,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fixed-first-birthday.webp",
+    sampleImageUrl: "/images/templates/fixed-birthday-4p.webp",
     sampleImageAlt: "家族で誕生日をお祝いする子どものやさしい絵本イメージ",
     visualDirection:
       "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling.",
@@ -1151,7 +1151,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、はじめての誕生日の思い出をやさしく残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のはじめてのたんじょうび",
-      previewImageUrl: "/images/templates/fixed-first-birthday.webp",
+      previewImageUrl: "/images/templates/fixed-birthday-4p.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
@@ -1232,7 +1232,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     creationMode: "fixed_template",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fixed-first-birthday.webp",
+    sampleImageUrl: "/images/templates/fixed-birthday-4p.webp",
     sampleImageAlt: "家族で誕生日をお祝いする子どものやさしい絵本イメージ（8ページ版）",
     visualDirection:
       "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling over a gentle 8-page rhythm.",
@@ -1241,7 +1241,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     systemPrompt: "固定テンプレートを使って、はじめての誕生日の思い出を8ページでゆっくり残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のはじめてのたんじょうび",
-      previewImageUrl: "/images/templates/fixed-first-birthday.webp",
+      previewImageUrl: "/images/templates/fixed-birthday-4p.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
@@ -7565,16 +7565,16 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     variantLabel: "12ページ",
     priceTier: "ume",
     storyCostLevel: "none",
-    sampleImageUrl: "/images/templates/fixed-first-birthday.webp",
+    sampleImageUrl: "/images/templates/fixed-birthday-4p.webp",
     sampleImageAlt: "はじめてのお誕生日のやさしい絵本イメージ（12ページ版）",
     visualDirection:
-      "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling over a gentle 8-page rhythm.",
+      "Warm birthday memory picture-book mood with soft candlelight, family smiles, pastel balloons, and a keepsake-photo feeling over a gentle 12-page rhythm.",
     order: 4.5,
     active: true,
     systemPrompt: "固定テンプレートを使って、はじめての誕生日の思い出を12ページでゆっくり残す絵本を作ります。",
     fixedStory: {
       titleTemplate: "{childName}のはじめてのたんじょうび",
-      previewImageUrl: "/images/templates/fixed-first-birthday.webp",
+      previewImageUrl: "/images/templates/fixed-birthday-4p.webp",
       coverImagePromptTemplate:
         withFixedImagePromptSafety("Picture book cover illustration: a young child in front of a small birthday cake with family gathered close, warm indoor lights, soft pastel balloons, recurring tiny ribbon motif, joyful and tender keepsake mood, soft watercolor style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
       titleSpreadTextTemplate: "{childName}の はじめての たんじょうび",
@@ -7741,7 +7741,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     sampleImageUrl: "/images/templates/fixed-brush-teeth.webp",
     sampleImageAlt: "はじめての歯みがきのやさしい絵本イメージ（12ページ版）",
     visualDirection:
-      "Bright but calm daily-habit picture-book mood with clean bathroom setting, rounded shapes, friendly routine support, and reassuring smiles over a gentle 8-page rhythm.",
+      "Bright but calm daily-habit picture-book mood with clean bathroom setting, rounded shapes, friendly routine support, and reassuring smiles over a gentle 12-page rhythm.",
     order: 7.5,
     active: true,
     systemPrompt: "固定テンプレートを使って、歯みがきの習慣を12ページでやさしく応援する絵本を作ります。",
@@ -7922,7 +7922,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     sampleImageUrl: "/images/templates/fixed-sleepy-moon-adventure.webp",
     sampleImageAlt: "おつきさまとおやすみぼうけんのやさしい絵本イメージ（12ページ版）",
     visualDirection:
-      "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination cloud-and-star adventure, and calm reassuring expressions over an 8-page rhythm.",
+      "Cozy bedtime picture-book mood with soft moonlight, fluffy blankets, gentle imagination cloud-and-star adventure, and calm reassuring expressions over a 12-page rhythm.",
     order: 11.5,
     active: true,
     systemPrompt: "固定テンプレートを使って、寝る前のおやすみぼうけんを12ページでやさしく描く絵本を作ります。",
