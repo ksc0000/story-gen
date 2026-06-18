@@ -82,11 +82,45 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         return;
       }
 
+      // Fetch page images for visual evaluation
+      const pageImages: { pageNumber: number; buffer: Buffer; mimeType: string }[] = [];
+      try {
+        const imageFetchResults = await Promise.all(
+          pages.map(async (page) => {
+            if (!page.imageUrl) return null;
+            try {
+              const resp = await fetch(page.imageUrl);
+              if (!resp.ok) {
+                logger.warn(`Failed to fetch image for book ${bookId} page ${page.pageNumber}: ${resp.statusText}`);
+                return null;
+              }
+              const buffer = Buffer.from(await resp.arrayBuffer());
+              const mimeType = resp.headers.get("content-type") || "image/png";
+              return { pageNumber: page.pageNumber, buffer, mimeType };
+            } catch (fetchErr) {
+              logger.warn(`Error fetching image for book ${bookId} page ${page.pageNumber}`, {
+                error: fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
+              });
+              return null;
+            }
+          })
+        );
+
+        for (const res of imageFetchResults) {
+          if (res) pageImages.push(res);
+        }
+      } catch (err) {
+        logger.warn(`Parallel image fetch failed for book ${bookId}, continuing with text context only.`, {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+
       // Call LLM for review
       const reviewResult = await runLLMAutoReview({
         apiKey: geminiApiKey.value(),
         book: afterData,
         pages,
+        pageImages: pageImages.length > 0 ? pageImages : undefined,
       });
 
       // Prepare review document
