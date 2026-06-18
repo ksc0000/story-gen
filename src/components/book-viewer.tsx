@@ -12,7 +12,7 @@ import type { Variants } from "framer-motion";
 /*  Reading item types                                                 */
 /* ------------------------------------------------------------------ */
 
-type ReadingItem =
+export type ReadingItem =
   | {
       kind: "cover_title_spread";
       imageUrl: string;
