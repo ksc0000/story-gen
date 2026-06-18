@@ -16,6 +16,7 @@ export { regenerateCoverImage } from "./regenerate-cover-image";
 export { saveDailySloSnapshot } from "./save-daily-slo-snapshot";
 export { saveWeeklySloSnapshot } from "./save-weekly-slo-snapshot";
 export { saveWeeklyQualitySnapshot } from "./save-weekly-quality-snapshot";
+export { saveDailyMetricsSnapshot, backfillDailyMetrics } from "./save-daily-metrics-snapshot";
 export { cleanupStaleGeneration } from "./cleanup-stale-generation";
 export { createCheckoutSession, createSinglePurchaseCheckout, stripeWebhook } from "./stripe-checkout";
 export { onAvatarJobCreated } from "./generate-avatar-job";

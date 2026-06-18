@@ -10,9 +10,10 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
-import { Briefcase, Cpu, Sparkles, RefreshCw } from "lucide-react";
+import { Briefcase, Cpu, Sparkles, RefreshCw, TrendingUp } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
+import { backfillDailyMetricsCallable } from "@/lib/functions";
 import { getPlanDisplayLabel, CREATION_MODE_LABELS } from "@/lib/plans";
 import { computeSloMetrics, SLO_TARGETS, EMPTY_SLO } from "@/lib/admin-slo-metrics";
 import { computeProviderCostMetrics } from "@/lib/admin-cost-metrics";
@@ -96,15 +97,76 @@ function buildDemoData(): { books: BookWithId[]; pagesMap: Map<string, PageWithI
   return { books, pagesMap };
 }
 
-type Lens = "business" | "system" | "ai";
+type Lens = "business" | "system" | "ai" | "analytics";
 
 const LENSES: { id: Lens; label: string; icon: typeof Briefcase; accent: string }[] = [
+  { id: "analytics", label: "アナリティクス", icon: TrendingUp, accent: "from-emerald-400 to-teal-500" },
   { id: "business", label: "経営", icon: Briefcase, accent: "from-amber-400 to-orange-400" },
   { id: "system", label: "システム", icon: Cpu, accent: "from-sky-400 to-indigo-400" },
   { id: "ai", label: "生成AI品質", icon: Sparkles, accent: "from-fuchsia-400 to-purple-500" },
 ];
 
 const SAMPLE_SIZES = [100, 200, 500] as const;
+
+/** 日次メトリクス・スナップショットの1行（adminMetrics/dailyMetrics/items） */
+interface DailyMetricsRow {
+  date: string;
+  dateMs: number;
+  totalUsers: number;
+  newUsers: number;
+  activeCreators: number;
+  booksCreated: number;
+  booksCompleted: number;
+  singlePurchaseRevenueJpy: number;
+  paidUsersStandard: number;
+  paidUsersPremium: number;
+  estimatedMrrJpy: number;
+}
+
+const PERIOD_OPTIONS = [7, 30, 90] as const;
+
+/** 円（JPY）を「¥1,480」形式に整形 */
+function formatJpy(n: number): string {
+  return `¥${Math.round(n).toLocaleString()}`;
+}
+
+/** デモ用の日次メトリクス時系列（90日分） */
+function buildDemoDailyMetrics(): DailyMetricsRow[] {
+  const rows: DailyMetricsRow[] = [];
+  const dayMs = 24 * 60 * 60 * 1000;
+  const todayStart = (() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  })();
+  let cumulative = 40;
+  let paidStd = 3;
+  let paidPrem = 1;
+  for (let i = 89; i >= 0; i--) {
+    const dateMs = todayStart - i * dayMs;
+    const d = new Date(dateMs);
+    const wave = Math.sin(i / 7) * 1.5;
+    const newUsers = Math.max(0, Math.round(2 + wave + (89 - i) * 0.05));
+    cumulative += newUsers;
+    if ((89 - i) % 9 === 0) paidStd += 1;
+    if ((89 - i) % 17 === 0) paidPrem += 1;
+    const booksCreated = Math.max(0, Math.round(4 + Math.sin(i / 5) * 3 + (89 - i) * 0.08));
+    const singles = (89 - i) % 4 === 0 ? (i % 8 === 0 ? 2000 : 1500) : 0;
+    rows.push({
+      date: `${d.getMonth() + 1}/${d.getDate()}`,
+      dateMs,
+      totalUsers: cumulative,
+      newUsers,
+      activeCreators: Math.max(1, Math.round(booksCreated * 0.7)),
+      booksCreated,
+      booksCompleted: Math.round(booksCreated * 0.9),
+      singlePurchaseRevenueJpy: singles,
+      paidUsersStandard: i === 0 ? paidStd : 0,
+      paidUsersPremium: i === 0 ? paidPrem : 0,
+      estimatedMrrJpy: i === 0 ? paidStd * 1480 + paidPrem * 2980 : 0,
+    });
+  }
+  return rows;
+}
 
 function getBookMs(b: BookWithId): number {
   if (typeof b.createdAtMs === "number") return b.createdAtMs;
@@ -116,11 +178,13 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const { isAdmin, checkingAdmin } = useAdminClaim();
 
-  const [lens, setLens] = useState<Lens>("business");
+  const [lens, setLens] = useState<Lens>("analytics");
   const [sampleSize, setSampleSize] = useState<(typeof SAMPLE_SIZES)[number]>(200);
   const [books, setBooks] = useState<BookWithId[]>([]);
   const [pagesMap, setPagesMap] = useState<Map<string, PageWithId[]>>(new Map());
   const [sloHistory, setSloHistory] = useState<number[]>([]);
+  const [dailyMetrics, setDailyMetrics] = useState<DailyMetricsRow[]>([]);
+  const [period, setPeriod] = useState<(typeof PERIOD_OPTIONS)[number]>(30);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -214,6 +278,45 @@ export default function AdminDashboardPage() {
       .catch(() => setSloHistory([]));
   }, [isAdmin]);
 
+  // Load daily metrics snapshots (analytics lens time-series).
+  useEffect(() => {
+    if (!isAdmin) return;
+    if (isDemoMode) {
+      setDailyMetrics(buildDemoDailyMetrics());
+      return;
+    }
+    const q = query(
+      collection(db, "adminMetrics", "dailyMetrics", "items"),
+      orderBy("dateMs", "desc"),
+      limit(90)
+    );
+    getDocs(q)
+      .then((snap) => {
+        const rows = snap.docs
+          .map((d) => {
+            const data = d.data() as Partial<DailyMetricsRow>;
+            const dateMs = data.dateMs ?? 0;
+            const dd = new Date(dateMs);
+            return {
+              date: `${dd.getMonth() + 1}/${dd.getDate()}`,
+              dateMs,
+              totalUsers: data.totalUsers ?? 0,
+              newUsers: data.newUsers ?? 0,
+              activeCreators: data.activeCreators ?? 0,
+              booksCreated: data.booksCreated ?? 0,
+              booksCompleted: data.booksCompleted ?? 0,
+              singlePurchaseRevenueJpy: data.singlePurchaseRevenueJpy ?? 0,
+              paidUsersStandard: data.paidUsersStandard ?? 0,
+              paidUsersPremium: data.paidUsersPremium ?? 0,
+              estimatedMrrJpy: data.estimatedMrrJpy ?? 0,
+            } satisfies DailyMetricsRow;
+          })
+          .reverse();
+        setDailyMetrics(rows);
+      })
+      .catch(() => setDailyMetrics([]));
+  }, [isAdmin]);
+
   const slo = useMemo(
     () => (books.length ? computeSloMetrics(books, pagesMap) : EMPTY_SLO),
     [books, pagesMap]
@@ -282,21 +385,40 @@ export default function AdminDashboardPage() {
           <div>
             <h1 className="text-2xl font-bold text-purple-950">ダッシュボード</h1>
             <p className="mt-1 text-sm text-violet-400">
-              直近 {books.length} 冊の絵本データを集計（視点を切り替えて確認できます）
+              {lens === "analytics"
+                ? "ユーザー・売上・生成の推移を時系列で確認できます"
+                : `直近 ${books.length} 冊の絵本データを集計（視点を切り替えて確認できます）`}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <select
-              value={sampleSize}
-              onChange={(e) => setSampleSize(Number(e.target.value) as (typeof SAMPLE_SIZES)[number])}
-              className="rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-sm text-purple-900"
-            >
-              {SAMPLE_SIZES.map((s) => (
-                <option key={s} value={s}>
-                  直近 {s} 冊
-                </option>
-              ))}
-            </select>
+            {lens === "analytics" ? (
+              <div className="inline-flex rounded-lg border border-violet-200 bg-white p-0.5">
+                {PERIOD_OPTIONS.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPeriod(p)}
+                    className={cn(
+                      "rounded-md px-3 py-1 text-sm font-medium transition-colors",
+                      period === p ? "bg-emerald-500 text-white" : "text-violet-500 hover:text-purple-700"
+                    )}
+                  >
+                    {p}日
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <select
+                value={sampleSize}
+                onChange={(e) => setSampleSize(Number(e.target.value) as (typeof SAMPLE_SIZES)[number])}
+                className="rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-sm text-purple-900"
+              >
+                {SAMPLE_SIZES.map((s) => (
+                  <option key={s} value={s}>
+                    直近 {s} 冊
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 
@@ -329,7 +451,11 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {loading && !books.length ? (
+        {lens === "analytics" ? (
+          <div className="mt-6">
+            <AnalyticsLens rows={dailyMetrics} period={period} isAdmin={isAdmin} />
+          </div>
+        ) : loading && !books.length ? (
           <div className="mt-10 flex items-center gap-2 text-violet-400">
             <RefreshCw className="size-4 animate-spin" /> 集計中...
           </div>
@@ -341,6 +467,198 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+/* ─────────────────────────────  アナリティクスビュー  ───────────────────────────── */
+
+function deltaBadge(current: number, previous: number): { badge?: string; tone: "good" | "bad" | "neutral" } {
+  if (previous <= 0) return { tone: "neutral" };
+  const pct = ((current - previous) / previous) * 100;
+  const sign = pct >= 0 ? "+" : "";
+  return { badge: `${sign}${pct.toFixed(0)}%`, tone: pct >= 0 ? "good" : "bad" };
+}
+
+function AnalyticsLens({
+  rows,
+  period,
+  isAdmin,
+}: {
+  rows: DailyMetricsRow[];
+  period: number;
+  isAdmin: boolean;
+}) {
+  const [backfilling, setBackfilling] = useState(false);
+  const [backfillMsg, setBackfillMsg] = useState<string | null>(null);
+
+  const view = rows.slice(-period);
+  const prev = rows.slice(-period * 2, -period);
+  const labels = view.map((r) => r.date);
+
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-2xl border border-violet-100 bg-white p-8 text-center">
+        <p className="text-sm text-violet-500">
+          日次メトリクスがまだありません。下のボタンで過去データを集計できます。
+        </p>
+        <BackfillButton
+          isAdmin={isAdmin}
+          backfilling={backfilling}
+          setBackfilling={setBackfilling}
+          backfillMsg={backfillMsg}
+          setBackfillMsg={setBackfillMsg}
+        />
+      </div>
+    );
+  }
+
+  const latest = view[view.length - 1] ?? rows[rows.length - 1];
+  const newUsersSum = view.reduce((s, r) => s + r.newUsers, 0);
+  const newUsersPrevSum = prev.reduce((s, r) => s + r.newUsers, 0);
+  const revenueSum = view.reduce((s, r) => s + r.singlePurchaseRevenueJpy, 0);
+  const revenuePrevSum = prev.reduce((s, r) => s + r.singlePurchaseRevenueJpy, 0);
+  const totalUsersPrev = prev[prev.length - 1]?.totalUsers ?? 0;
+  const paidTotal = latest.paidUsersStandard + latest.paidUsersPremium;
+
+  return (
+    <>
+      <SectionTitle title="サマリー" description={`直近 ${period} 日間（前期間比）`} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          label="累積ユーザー"
+          value={latest.totalUsers.toLocaleString()}
+          unit="人"
+          {...deltaBadge(latest.totalUsers, totalUsersPrev)}
+        />
+        <StatCard
+          label="新規ユーザー"
+          value={newUsersSum.toLocaleString()}
+          unit="人"
+          {...deltaBadge(newUsersSum, newUsersPrevSum)}
+          hint="期間内の合計"
+        />
+        <StatCard
+          label="単品購入売上"
+          value={formatJpy(revenueSum)}
+          {...deltaBadge(revenueSum, revenuePrevSum)}
+          hint="期間内の合計"
+        />
+        <StatCard
+          label="推定MRR（現在）"
+          value={formatJpy(latest.estimatedMrrJpy)}
+          tone="good"
+          hint={`有料 ${paidTotal}人（標準${latest.paidUsersStandard}/プレ${latest.paidUsersPremium}）`}
+        />
+      </div>
+
+      <SectionTitle title="ユーザー成長" description="累積ユーザー数の推移" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
+        <LineChart
+          labels={labels}
+          series={[{ label: "累積ユーザー", color: "#10b981", points: view.map((r) => r.totalUsers) }]}
+          unit="人"
+          height={200}
+        />
+      </div>
+
+      <SectionTitle title="日々の動き" description="新規ユーザー・アクティブ作成者・絵本作成数" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
+        <LineChart
+          labels={labels}
+          series={[
+            { label: "新規ユーザー", color: "#7c3aed", points: view.map((r) => r.newUsers) },
+            { label: "アクティブ作成者", color: "#06b6d4", points: view.map((r) => r.activeCreators) },
+            { label: "絵本作成数", color: "#f59e0b", points: view.map((r) => r.booksCreated) },
+          ]}
+          height={220}
+        />
+        <div className="mt-2 flex flex-wrap gap-4">
+          {[
+            { label: "新規ユーザー", color: "#7c3aed" },
+            { label: "アクティブ作成者", color: "#06b6d4" },
+            { label: "絵本作成数", color: "#f59e0b" },
+          ].map((s) => (
+            <span key={s.label} className="flex items-center gap-1.5 text-xs text-violet-500">
+              <span className="size-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+              {s.label}
+            </span>
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-violet-400">
+          ※ アクティブ作成者は「その日に絵本を作成した人数」の近似値です（閲覧のみの利用者は含みません）。
+        </p>
+      </div>
+
+      <SectionTitle title="売上（単品購入）" description="日次の単品購入売上" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
+        <LineChart
+          labels={labels}
+          series={[{ label: "単品売上", color: "#22c55e", points: view.map((r) => r.singlePurchaseRevenueJpy) }]}
+          unit="円"
+          height={200}
+        />
+        <p className="mt-2 text-[11px] text-violet-400">
+          ※ サブスクの売上推移は履歴が蓄積され次第表示します。現時点では推定MRR（現在値）のみ算出しています。
+        </p>
+      </div>
+
+      {isAdmin && (
+        <div className="mt-8 rounded-2xl border border-violet-100 bg-violet-50/40 p-4">
+          <h3 className="text-sm font-bold text-purple-900">データの再集計</h3>
+          <p className="mt-1 text-xs text-violet-500">
+            過去のユーザー登録・絵本作成・単品購入から日次メトリクスを再構築します（既存データから遡れる範囲）。
+          </p>
+          <BackfillButton
+            isAdmin={isAdmin}
+            backfilling={backfilling}
+            setBackfilling={setBackfilling}
+            backfillMsg={backfillMsg}
+            setBackfillMsg={setBackfillMsg}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+function BackfillButton({
+  isAdmin,
+  backfilling,
+  setBackfilling,
+  backfillMsg,
+  setBackfillMsg,
+}: {
+  isAdmin: boolean;
+  backfilling: boolean;
+  setBackfilling: (v: boolean) => void;
+  backfillMsg: string | null;
+  setBackfillMsg: (v: string | null) => void;
+}) {
+  if (!isAdmin) return null;
+  const run = async () => {
+    setBackfilling(true);
+    setBackfillMsg(null);
+    try {
+      const res = await backfillDailyMetricsCallable(90);
+      setBackfillMsg(`完了：${res.saved}日分を集計しました。ページを再読み込みすると反映されます。`);
+    } catch {
+      setBackfillMsg("再集計に失敗しました。時間をおいて再度お試しください。");
+    } finally {
+      setBackfilling(false);
+    }
+  };
+  return (
+    <div className="mt-3">
+      <button
+        onClick={run}
+        disabled={backfilling}
+        className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50"
+      >
+        {backfilling && <RefreshCw className="size-4 animate-spin" />}
+        過去90日を再集計
+      </button>
+      {backfillMsg && <p className="mt-2 text-xs text-violet-600">{backfillMsg}</p>}
     </div>
   );
 }

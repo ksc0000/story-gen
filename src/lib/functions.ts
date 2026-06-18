@@ -117,3 +117,23 @@ export async function bootstrapAdminCallable(): Promise<BootstrapAdminResult> {
   const result = await callable({});
   return result.data as BootstrapAdminResult;
 }
+
+// ---------------------------------------------------------------------------
+// backfillDailyMetrics（管理者：日次メトリクスの遡及集計）
+// ---------------------------------------------------------------------------
+
+export type BackfillDailyMetricsResult = {
+  ok: boolean;
+  days: number;
+  saved: number;
+};
+
+export async function backfillDailyMetricsCallable(
+  days: number
+): Promise<BackfillDailyMetricsResult> {
+  const callable = await getCallable<{ days: number }, BackfillDailyMetricsResult>(
+    "backfillDailyMetrics"
+  );
+  const result = await callable({ days });
+  return result.data as BackfillDailyMetricsResult;
+}
