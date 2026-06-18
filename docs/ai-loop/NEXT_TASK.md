@@ -1,7 +1,5 @@
-The product roadmap and current state indicate that significant progress has been made across all phases, especially in Phase 2 (Quality), Phase 3 (Templates), Phase 4 (JSON Hardening, now closed), and Phase 5 (Monetization/Soft Launch). Many items previously identified as "未実装" have been completed through recent PRs.
+# Implement `variantOf` and `variantLabel` in FixedStoryTemplate
 
-The current `in_progress_tasks` are empty.
-The "Already Open Jules Tasks" list is crucial for avoiding duplication.
-`Phase 1` is complete. `Phase 4` is complete. `Phase 5 Cohort B` is ongoing, but its related technical tasks are largely done or being handled (e.g., `PR #256` for rollout).
+## Context
 
-Looking at the remaining unchecked items in the roadmap'
+The product roadmap outlines Phase 3, "Template Mode — Reliability-First 生成," which aims to enhance the fixed template system. Specifically, Step T3-A proposes adding `availablePageCounts`, `variantOf`, and `variantLabel` to `TemplateData` (which corresponds to `FixedStoryTemplate`). While `pageCount` already exists and 8-page variants have been partially implemented, the `variantOf` and `variantLabel` fields are crucial for properly structuring and presenting template variations (e.g., "Bedtime Adventure - 4 Pages" vs. "Bedtime Adventure - 8 Pages") within the UI. This task will implement these data model additions, preparing the groundwork
