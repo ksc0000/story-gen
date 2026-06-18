@@ -401,6 +401,12 @@ function BookContent() {
             })}
             title={book.title}
             onClose={() => setIsCinematicOpen(false)}
+            onFeedback={canSubmitFeedback ? () => {
+              setIsCinematicOpen(false);
+              setTimeout(() => {
+                document.getElementById("feedback-section")?.scrollIntoView({ behavior: "smooth" });
+              }, 100);
+            } : undefined}
           />
         )}
         {coverRegenerationError && (
@@ -516,7 +522,7 @@ function BookContent() {
       )}
 
       {user && !isDemoMode && isOwner ? (
-        <div className="mt-8 rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-6">
+        <div id="feedback-section" className="mt-8 rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-6">
           <h2 className="text-lg font-semibold text-purple-900">この絵本はどうでしたか？</h2>
           <p className="mt-1 text-sm text-violet-600">
             仕上がりの感想を教えてもらえると、今後の品質改善に活かせます。
