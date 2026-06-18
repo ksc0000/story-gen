@@ -91,6 +91,192 @@ export function BarRow({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  円グラフ（ドーナツ）                                                */
+/* ------------------------------------------------------------------ */
+
+export interface DonutDatum {
+  label: string;
+  value: number;
+  color: string;
+}
+
+export function DonutChart({
+  data,
+  size = 160,
+  thickness = 26,
+  centerLabel,
+  centerValue,
+}: {
+  data: DonutDatum[];
+  size?: number;
+  thickness?: number;
+  centerLabel?: string;
+  centerValue?: string;
+}) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  const radius = (size - thickness) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const cx = size / 2;
+  const cy = size / 2;
+
+  if (total <= 0) {
+    return <p className="text-xs text-violet-300">データなし</p>;
+  }
+
+  let offset = 0;
+  const segments = data
+    .filter((d) => d.value > 0)
+    .map((d) => {
+      const fraction = d.value / total;
+      const dash = fraction * circumference;
+      const seg = {
+        color: d.color,
+        dasharray: `${dash} ${circumference - dash}`,
+        dashoffset: -offset,
+      };
+      offset += dash;
+      return seg;
+    });
+
+  return (
+    <div className="flex flex-wrap items-center gap-5">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+        <g transform={`rotate(-90 ${cx} ${cy})`}>
+          <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#f1ecfb" strokeWidth={thickness} />
+          {segments.map((s, i) => (
+            <circle
+              key={i}
+              cx={cx}
+              cy={cy}
+              r={radius}
+              fill="none"
+              stroke={s.color}
+              strokeWidth={thickness}
+              strokeDasharray={s.dasharray}
+              strokeDashoffset={s.dashoffset}
+              strokeLinecap="butt"
+            />
+          ))}
+        </g>
+        {(centerValue || centerLabel) && (
+          <>
+            <text x={cx} y={cy - 2} textAnchor="middle" className="fill-purple-900" fontSize={22} fontWeight={700}>
+              {centerValue}
+            </text>
+            <text x={cx} y={cy + 16} textAnchor="middle" className="fill-violet-400" fontSize={11}>
+              {centerLabel}
+            </text>
+          </>
+        )}
+      </svg>
+      <ul className="flex-1 space-y-1.5">
+        {data
+          .filter((d) => d.value > 0)
+          .map((d) => (
+            <li key={d.label} className="flex items-center gap-2 text-xs">
+              <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: d.color }} />
+              <span className="flex-1 truncate text-violet-600">{d.label}</span>
+              <span className="font-semibold text-purple-900">{d.value}</span>
+              <span className="w-12 text-right text-violet-400">
+                {((d.value / total) * 100).toFixed(0)}%
+              </span>
+            </li>
+          ))}
+      </ul>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  折れ線（時系列）チャート                                            */
+/* ------------------------------------------------------------------ */
+
+export interface LineSeries {
+  label: string;
+  color: string;
+  points: number[];
+}
+
+export function LineChart({
+  labels,
+  series,
+  height = 200,
+  yMin,
+  yMax,
+  unit = "",
+  yTickCount = 4,
+}: {
+  labels: string[];
+  series: LineSeries[];
+  height?: number;
+  yMin?: number;
+  yMax?: number;
+  unit?: string;
+  yTickCount?: number;
+}) {
+  const allValues = series.flatMap((s) => s.points).filter((v) => Number.isFinite(v));
+  if (allValues.length === 0 || labels.length < 2) {
+    return <div className="text-xs text-violet-300">データ不足</div>;
+  }
+  const dataMin = yMin ?? Math.min(...allValues);
+  const dataMax = yMax ?? Math.max(...allValues);
+  const range = dataMax - dataMin || 1;
+
+  const padL = 40;
+  const padR = 12;
+  const padT = 10;
+  const padB = 26;
+  const width = 520;
+  const innerW = width - padL - padR;
+  const innerH = height - padT - padB;
+  const n = labels.length;
+  const stepX = innerW / (n - 1);
+
+  const xPos = (i: number) => padL + i * stepX;
+  const yPos = (v: number) => padT + innerH - ((v - dataMin) / range) * innerH;
+
+  const yTicks = Array.from({ length: yTickCount + 1 }, (_, i) => dataMin + (range * i) / yTickCount);
+  const labelEvery = Math.ceil(n / 6);
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      {yTicks.map((t, i) => {
+        const y = yPos(t);
+        return (
+          <g key={i}>
+            <line x1={padL} y1={y} x2={width - padR} y2={y} stroke="#f1ecfb" strokeWidth={1} />
+            <text x={padL - 6} y={y + 3} textAnchor="end" fontSize={10} className="fill-violet-400">
+              {t.toFixed(t >= 100 ? 0 : 1)}
+              {unit}
+            </text>
+          </g>
+        );
+      })}
+      {labels.map((lab, i) =>
+        i % labelEvery === 0 || i === n - 1 ? (
+          <text key={i} x={xPos(i)} y={height - 8} textAnchor="middle" fontSize={10} className="fill-violet-400">
+            {lab}
+          </text>
+        ) : null
+      )}
+      {series.map((s) => {
+        const path = s.points
+          .map((v, i) => `${i === 0 ? "M" : "L"}${xPos(i).toFixed(1)},${yPos(v).toFixed(1)}`)
+          .join(" ");
+        return (
+          <g key={s.label}>
+            <path d={path} fill="none" stroke={s.color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+            {s.points.map((v, i) => (
+              <circle key={i} cx={xPos(i)} cy={yPos(v)} r={2.5} fill={s.color} />
+            ))}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 /** 数値配列からSVGスパークラインを描画。 */
 export function Sparkline({
   points,
