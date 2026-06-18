@@ -157,6 +157,7 @@
     "PR #470: feat: original characters CRUD (fixed routing + indentation) (merged)",
     "PR #471: fix: オリジナル相棒システム削除・なかよしキャラに統合 (merged)",
     "PR #473: feat: なかよしキャラ作成にプリセット10種＋AI作成選択を追加 (merged)",
+    "PR #474: Admin Dashboard: Aggregated Quality Metrics & Comparison (merged)",
     "PR #475: feat: なかよしキャラプリセット公式表示 / 上限時アップグレードボタン / プランページ比較表リデザイン (merged)",
     "PR #477: Implement User-Facing UI for Account and Child Profile Deletion (merged)",
     "PR #479: Implement Frontend UI for PDF Download and Sharing (merged)",
