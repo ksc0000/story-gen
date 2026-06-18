@@ -165,6 +165,7 @@
     "PR #484: feat: 作成フロー ガイドアニメーション＋?ヘルプボタン追加 (#482 #483) (merged)",
     "PR #491: Sync Roadmap and Implement 3D Button Polish (merged)",
     "PR #493: Implement variantOf and variantLabel in FixedStoryTemplate (merged)",
+    "PR #496: feat(templates): implement 12-page variants for selected fixed templates (merged)",
     "PR #497: Refine pageVisualRole sequences in 8-page templates (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
