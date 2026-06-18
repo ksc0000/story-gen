@@ -38,10 +38,39 @@ const fontLatin = Inter({
   variable: "--font-latin",
 });
 
+const SITE_URL = "https://ehoria.app";
+const SITE_NAME = "Ehoria（エホリア）";
+const SITE_TITLE = "Ehoria - AIで絵本を作ろう";
+const SITE_DESCRIPTION =
+  "我が子が主人公になれる絵本を、誰でも5分で作れる。AIが紡ぐ物語と挿絵で、世界にひとつだけの思い出を。";
+const OG_IMAGE = "/logo/ehoria-logo-512.png";
+
 export const metadata: Metadata = {
-  title: "Ehoria - AIで絵本を作ろう",
-  description:
-    "我が子が主人公になれる絵本を、誰でも5分で作れる。AIが紡ぐ物語と挿絵で、世界にひとつだけの思い出を。",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    locale: "ja_JP",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 512,
+        height: 512,
+        alt: SITE_NAME,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [OG_IMAGE],
+  },
 };
 
 export default function RootLayout({
