@@ -5,9 +5,10 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { Share2, Check, Copy, Globe, Sparkles, Loader2, Pencil, X } from "lucide-react";
+import { Share2, Check, Copy, Globe, Sparkles, Loader2, Pencil, X, Clapperboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BookViewer } from "@/components/book-viewer";
+import { BookViewer, buildReadingItems } from "@/components/book-viewer";
+import { CinematicViewer } from "@/components/cinematic-viewer";
 import { BookNextActions } from "@/components/book-next-actions";
 import { BookSeriesControl } from "@/components/book-series-control";
 import { PageTransition } from "@/components/page-transition";
@@ -57,6 +58,7 @@ function BookContent() {
   const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
   const [titleUpdateError, setTitleUpdateError] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isCinematicOpen, setIsCinematicOpen] = useState(false);
   const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
   const isOwner = Boolean(user && book && book.userId === user.uid);
 
@@ -348,6 +350,20 @@ function BookContent() {
       )}
 
       <div className="mt-6">
+        {/* Cinematic mode trigger */}
+        {viewablePages.length > 0 && (
+          <div className="mb-3 flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsCinematicOpen(true)}
+              className="rounded-full border-violet-200 text-violet-600 hover:border-violet-400 hover:text-purple-700 gap-1.5"
+            >
+              <Clapperboard className="size-4" />
+              シネマティックで見る
+            </Button>
+          </div>
+        )}
         <BookViewer
           pages={viewablePages}
           title={book.title}
@@ -370,6 +386,29 @@ function BookContent() {
           }
           isRegeneratingCover={isRegeneratingCover}
         />
+        {/* Cinematic viewer overlay */}
+        {isCinematicOpen && (
+          <CinematicViewer
+            items={buildReadingItems({
+              pages: viewablePages,
+              title: book.title,
+              coverImageUrl: book.coverImageUrl,
+              hasCoverPage: book.hasCoverPage,
+              coverStatus: book.coverStatus,
+              readingStructureVersion: book.readingStructureVersion,
+              titleSpreadText: book.titleSpreadText,
+              openingNarration: book.openingNarration,
+            })}
+            title={book.title}
+            onClose={() => setIsCinematicOpen(false)}
+            onFeedback={canSubmitFeedback ? () => {
+              setIsCinematicOpen(false);
+              setTimeout(() => {
+                document.getElementById("feedback-section")?.scrollIntoView({ behavior: "smooth" });
+              }, 100);
+            } : undefined}
+          />
+        )}
         {coverRegenerationError && (
           <p className="mt-2 text-center text-sm text-rose-500">{coverRegenerationError}</p>
         )}
@@ -483,7 +522,7 @@ function BookContent() {
       )}
 
       {user && !isDemoMode && isOwner ? (
-        <div className="mt-8 rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-6">
+        <div id="feedback-section" className="mt-8 rounded-3xl border border-[rgba(216,180,254,0.45)] bg-[rgba(250,245,255,0.96)] p-6">
           <h2 className="text-lg font-semibold text-purple-900">この絵本はどうでしたか？</h2>
           <p className="mt-1 text-sm text-violet-600">
             仕上がりの感想を教えてもらえると、今後の品質改善に活かせます。

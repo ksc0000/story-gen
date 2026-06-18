@@ -188,6 +188,8 @@ export function computeQualityTrend(books: BookWithId[]): QualityTrendSummary {
       avgPersonalization: 0,
       avgSafety: 0,
       scoreDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      avgStoryByPlan: {},
+      avgOverallByPlan: {},
       buckets: [],
       regressions: [],
     };

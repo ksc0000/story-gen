@@ -569,6 +569,9 @@ export interface TemplateData {
   visualDirection?: string;
   order: number;
   systemPrompt: string;
+  variantOf?: string;
+  variantLabel?: string;
+  availablePageCounts?: PageCount[];
   active: boolean;
 }
 
