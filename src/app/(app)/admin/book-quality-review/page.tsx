@@ -17,6 +17,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { PageTransition } from "@/components/page-transition";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -1397,7 +1398,9 @@ export default function AdminBookQualityReviewPage() {
   };
 
   return (
-    <PageTransition className="mx-auto max-w-[1600px] px-4 py-8">
+    <>
+      <AdminNav />
+      <PageTransition className="mx-auto max-w-[1600px] px-4 py-8">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -2899,6 +2902,7 @@ export default function AdminBookQualityReviewPage() {
           )}
         </CardContent>
       </Card>
-    </PageTransition>
+      </PageTransition>
+    </>
   );
 }
