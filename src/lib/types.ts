@@ -96,7 +96,8 @@ export type ProtagonistType =
   | "child"
   | "original_character"
   | "child_with_original_character"
-  | "family_or_pet";
+  | "family_or_pet"
+  | "companion";
 
 export interface StoryQualityAxes {
   childPersonalization: QualityReviewScore;

@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,9 +39,12 @@ function SelectCompanionContent() {
   const { companions, loading: companionsLoading } = useCompanions(user?.uid);
 
   const [selection, setSelection] = useState<Selection>({ type: "none", id: "none" });
+  const [isCompanionProtagonist, setIsCompanionProtagonist] = useState(false);
 
   const childId = searchParams.get("childId");
   const mode = (searchParams.get("mode") as CreationMode | null) ?? "guided_ai";
+
+  const hasCompanionSelected = selection.type !== "none";
 
   const handleNext = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -50,14 +53,28 @@ function SelectCompanionContent() {
       params.delete("companionId");
       params.delete("companionName");
       params.delete("companionVisualDescription");
+      params.set("protagonistType", childId ? "child" : "original_character");
     } else {
       if (selection.companionId) params.set("companionId", selection.companionId);
       else params.delete("companionId");
       if (selection.companionName) params.set("companionName", selection.companionName);
       if (selection.companionVisualDescription) params.set("companionVisualDescription", selection.companionVisualDescription);
-    }
 
-    params.set("protagonistType", childId ? "child" : "original_character");
+      if (isCompanionProtagonist) {
+        params.set("protagonistType", "companion");
+        // Skip child selection — companion is the protagonist
+        if (mode === "photo_story") {
+          router.push(`/create/photo-upload?${params.toString()}`);
+        } else if (mode === "guided_ai") {
+          router.push(`/create/ai-brief?${params.toString()}`);
+        } else {
+          router.push(`/create/input?${params.toString()}`);
+        }
+        return;
+      } else {
+        params.set("protagonistType", childId ? "child" : "original_character");
+      }
+    }
 
     if (mode === "photo_story") router.push(`/create/photo-upload?${params.toString()}`);
     else if (mode === "guided_ai") router.push(`/create/ai-brief?${params.toString()}`);
@@ -65,6 +82,12 @@ function SelectCompanionContent() {
   };
 
   const isSelected = (id: string) => selection.id === id;
+
+  const handleSelectCompanion = (newSelection: Selection) => {
+    setSelection(newSelection);
+    // Reset protagonist toggle when switching companions
+    if (newSelection.id !== selection.id) setIsCompanionProtagonist(false);
+  };
 
   return (
     <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
@@ -77,6 +100,61 @@ function SelectCompanionContent() {
           登場させるなかよしキャラを選んでください。登場させなくてもOKです。
         </p>
       </div>
+
+      {/* Protagonist toggle — appears when a companion is selected */}
+      <AnimatePresence>
+        {hasCompanionSelected && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -8, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="mt-4 overflow-hidden"
+          >
+            <button
+              type="button"
+              onClick={() => setIsCompanionProtagonist((v) => !v)}
+              className={cn(
+                "w-full flex items-center gap-3 rounded-2xl border p-4 transition-all text-left",
+                isCompanionProtagonist
+                  ? "border-amber-400 bg-amber-50 ring-2 ring-amber-200"
+                  : "border-violet-100 bg-white hover:border-purple-300"
+              )}
+            >
+              <div className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl transition-colors",
+                isCompanionProtagonist ? "bg-amber-100" : "bg-violet-50"
+              )}>
+                ⭐
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-purple-900 text-sm">
+                    {selection.companionName ?? "このキャラ"}を主人公にする
+                  </p>
+                  {isCompanionProtagonist && (
+                    <Badge className="bg-amber-400 text-white border-none text-xs px-2 py-0">主人公</Badge>
+                  )}
+                </div>
+                <p className="text-xs text-violet-400 mt-0.5">
+                  {isCompanionProtagonist
+                    ? "子どもは登場せず、このキャラが活躍する物語になります"
+                    : "ONにすると子ども不要でこのキャラが主人公になります"}
+                </p>
+              </div>
+              <div className={cn(
+                "h-6 w-11 rounded-full transition-colors relative shrink-0",
+                isCompanionProtagonist ? "bg-amber-400" : "bg-gray-200"
+              )}>
+                <div className={cn(
+                  "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
+                  isCompanionProtagonist ? "translate-x-5" : "translate-x-0.5"
+                )} />
+              </div>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {companionsLoading ? (
         <p className="mt-10 text-center text-violet-400">読み込み中...</p>
@@ -91,7 +169,7 @@ function SelectCompanionContent() {
           <motion.button
             variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.25 } } }}
             type="button"
-            onClick={() => setSelection({ type: "none", id: "none" })}
+            onClick={() => { setSelection({ type: "none", id: "none" }); setIsCompanionProtagonist(false); }}
             className={cn(
               "w-full flex items-center gap-4 rounded-2xl border bg-white p-4 transition-all text-left",
               isSelected("none")
@@ -134,7 +212,7 @@ function SelectCompanionContent() {
                         pattern: preset.pattern,
                         accessories: preset.accessories,
                       });
-                      setSelection({
+                      handleSelectCompanion({
                         type: "preset",
                         id: preset.id,
                         companionName: preset.defaultName,
@@ -182,7 +260,7 @@ function SelectCompanionContent() {
                     key={companion.id}
                     type="button"
                     onClick={() =>
-                      setSelection({
+                      handleSelectCompanion({
                         type: "my",
                         id: companion.id,
                         companionId: companion.id,
@@ -229,8 +307,12 @@ function SelectCompanionContent() {
 
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3">
         <div className="mx-auto max-w-lg">
-          <Button size="lg" className="w-full" onClick={handleNext}>
-            次へ
+          <Button
+            size="lg"
+            className={cn("w-full", isCompanionProtagonist && "bg-amber-500 hover:bg-amber-600")}
+            onClick={handleNext}
+          >
+            {isCompanionProtagonist ? `${selection.companionName ?? "このキャラ"}の絵本を作る` : "次へ"}
           </Button>
         </div>
       </div>

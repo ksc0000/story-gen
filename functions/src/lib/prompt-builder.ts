@@ -596,7 +596,20 @@ ${GOOD_TEXT_EXAMPLE}
 
 export function buildUserPrompt(input: BookInput, pageCount: PageCount): string {
   const lines: string[] = [];
-  lines.push(`主人公の名前: ${input.childName}`);
+
+  if (input.protagonistType === "companion" && input.companionName) {
+    // なかよしキャラが主人公モード
+    lines.push(`主人公: 「${input.companionName}」（なかよしキャラ・動物や生き物）`);
+    lines.push(`【重要】この絵本の主人公は人間の子どもではなく、なかよしキャラ（動物・生き物）の「${input.companionName}」です。子どもは登場させないでください。`);
+    if (input.companionVisualDescription) {
+      lines.push(`主人公の見た目: ${input.companionVisualDescription}`);
+    }
+    lines.push(`「${input.companionName}」が全ページの主人公として活躍する物語を作ってください。characterBibleは「${input.companionName}」の動物・生き物としての外見を英語で詳細に記述してください。`);
+  } else {
+    lines.push(`主人公の名前: ${input.childName}`);
+    if (input.characterLook) lines.push(`主人公の見た目: ${input.characterLook}`);
+  }
+
   if (input.storyRequest) lines.push(`今回の絵本で描きたいこと: ${input.storyRequest}`);
   if (input.childAge !== undefined) {
     lines.push(`年齢: ${input.childAge}歳`);
@@ -605,7 +618,6 @@ export function buildUserPrompt(input: BookInput, pageCount: PageCount): string 
   if (input.favorites) lines.push(`好きなもの: ${input.favorites}`);
   if (input.lessonToTeach) lines.push(`教えたいこと: ${input.lessonToTeach}`);
   if (input.memoryToRecreate) lines.push(`再現したい思い出: ${input.memoryToRecreate}`);
-  if (input.characterLook) lines.push(`主人公の見た目: ${input.characterLook}`);
   if (input.signatureItem) lines.push(`毎ページに出したい持ち物・服装: ${input.signatureItem}`);
   if (input.colorMood) lines.push(`色や雰囲気: ${input.colorMood}`);
   if (input.place) lines.push(`場所: ${input.place}`);
@@ -613,10 +625,13 @@ export function buildUserPrompt(input: BookInput, pageCount: PageCount): string 
   if (input.season) lines.push(`季節・時期: ${input.season}`);
   if (input.parentMessage) lines.push(`最後に伝えたい言葉: ${input.parentMessage}`);
   if (input.freeInput) lines.push(`ユーザーからの追加リクエスト: ${input.freeInput}`);
-  if (input.companionName && input.companionVisualDescription) {
+
+  // companion主人公モードでは「相棒」として再掲しない
+  if (input.protagonistType !== "companion" && input.companionName && input.companionVisualDescription) {
     lines.push(`相棒キャラクター（必ず絵本に登場させてください）: "${input.companionName}" — ${input.companionVisualDescription}`);
     lines.push(`"${input.companionName}"はcastに必ず含め、半数以上のページのappearingCharacterIdsに入れてください。`);
   }
+
   lines.push(`ページ数: ${pageCount}ページ`);
   return lines.join("\n");
 }
