@@ -516,15 +516,38 @@ export type QualityRecommendation = {
   action: QualityRecommendationAction;
   severity: "low" | "medium" | "high";
   reason: string;
+  details?: string[];
 };
 
 export function buildQualityRecommendations(
   book: BookDoc,
 ): QualityRecommendation[] {
-  // No scores yet → no recommendations
-  if (book.overallQualityScore == null) return [];
-
   const recs: QualityRecommendation[] = [];
+
+  // Group image regeneration fixes from qualityRecommendedFixes
+  const imageFixes = (book.qualityRecommendedFixes ?? []).filter(
+    (f) => f.action === "regenerate_page_image"
+  );
+
+  if (imageFixes.length > 0) {
+    const pageNums = imageFixes
+      .map((f) => f.pageNumber)
+      .filter((n): n is number => n != null)
+      .sort((a, b) => a - b);
+
+    // Heuristic severity mapping: hard failure = high, others = medium
+    const hasFailure = imageFixes.some((f) => f.reason.includes("失敗"));
+
+    recs.push({
+      action: "regenerate_images",
+      severity: hasFailure ? "high" : "medium",
+      reason: `${imageFixes.length} ページの画像再生成を推奨`,
+      details: imageFixes.map((f) => `page ${f.pageNumber}: ${f.reason}`),
+    });
+  }
+
+  // If no scores yet, only return fixes from qualityRecommendedFixes
+  if (book.overallQualityScore == null) return recs;
 
   if ((book.safetyScore ?? 0) > 0 && book.safetyScore! <= 2) {
     recs.push({
@@ -542,7 +565,11 @@ export function buildQualityRecommendations(
     });
   }
 
-  if ((book.illustrationQualityScore ?? 0) > 0 && book.illustrationQualityScore! <= 2) {
+  if (
+    (book.illustrationQualityScore ?? 0) > 0 &&
+    book.illustrationQualityScore! <= 2 &&
+    !recs.some((r) => r.action === "regenerate_images")
+  ) {
     recs.push({
       action: "regenerate_images",
       severity: "high",
