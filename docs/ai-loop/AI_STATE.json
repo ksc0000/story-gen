@@ -179,6 +179,7 @@
     "PR #511: feat: 管理者ダッシュボード（経営/システム/生成AI品質の3視点） (merged)",
     "PR #513: feat: 管理ダッシュボードを円グラフ・折れ線で視覚化 (merged)",
     "PR #515: feat: 管理ダッシュボードにアナリティクスビュー（時系列分析） (merged)",
+    "PR #516: feat: 本番で ENABLE_SCHEMA_REPAIR_RETRY を有効化 (#512) (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
