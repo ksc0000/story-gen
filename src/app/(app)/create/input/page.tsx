@@ -60,13 +60,13 @@ const ALLOWED_FIXED_TEMPLATE_PAGE_COUNTS = [4, 8, 12] as const;
 
 const PAGE_VISUAL_ROLE_LABELS: Record<PageVisualRole, string> = {
   opening_establishing: "おはなしのはじまり",
-  discovery: "発見シーン",
-  action: "行動シーン",
-  emotional_closeup: "気持ちのシーン",
+  discovery: "発見や驚きのシーン",
+  action: "動きのあるシーン",
+  emotional_closeup: "気持ちが伝わるシーン",
   object_detail: "だいじなもののシーン",
-  setback_or_question: "困りごと・問いのシーン",
-  payoff: "締めのシーン",
-  quiet_ending: "おやすみシーン",
+  setback_or_question: "困りごと・考え中のシーン",
+  payoff: "やった！できた！のシーン",
+  quiet_ending: "余韻とおわりのシーン",
 };
 
 function isAllowedFixedTemplatePageCount(value: number): value is 4 | 8 | 12 {

@@ -102,14 +102,14 @@ const STORY_JSON_FIELD_TYPE_CONTRACT = [
 ].join(" ");
 
 const PAGE_TEXT_ROLE_RULES = [
-  "opening_establishing: 場所、主人公の行動、storyGoal につながる小さな異変や発見、次ページへの予感を入れる。画像プロンプトは物語世界の基準点となるため、styleBible のアートスタイル・色調・線質を特に忠実に守ること。",
-  "discovery: 見つけたもの、それがなぜ不思議か、何に困っているか、主人公の反応を入れる。場所や手元の状況も1文入れる。",
-  "action: mainQuestObject を探すための行動、探す場所、小さな手がかり、同じ目的に向かっていることを明確にする。",
-  "emotional_closeup: 表情、手元、気持ち、何を感じて何を決めたかを自然に描く。",
-  "object_detail: 小物の見た目と、その小物が storyGoal にどう関係するかを書く。",
-  "setback_or_question: 見つからない、迷う、問いが生まれる場面を書く。ただし別目的に脱線しない。",
-  "payoff: mainQuestObject が見つかる、visualMotif や setup が回収される場面にする。",
-  "quiet_ending: 見つかった後の安心感、ありがとう、うれしさ、余韻を書く。別目的を持ち込まない。",
+  "opening_establishing: Introduce the setting and the child's initial state. Hint at the upcoming adventure or storyGoal to create anticipation. The narrative should establish a sense of place and time.",
+  "discovery: Describe the moment of noticing something new, surprising, or mysterious. Focus on the child's reaction (wonder, curiosity) and why the discovery is significant to the story.",
+  "action: Focus on physical movement, effort, or an active search. Use energetic verbs to describe the child's engagement with the world as they move toward their goal.",
+  "emotional_closeup: Delve into the child's inner feelings—joy, determination, or a quiet realization. Use descriptive language to convey the depth of the emotional moment.",
+  "object_detail: Highlight a specific item's texture, color, or importance. Explain how this object connects to the larger story or the child's current task.",
+  "setback_or_question: A moment of pause, doubt, or a small obstacle. Frame it as a natural part of the journey that leads to deeper thinking or a new approach, without losing momentum.",
+  "payoff: The peak of the narrative where the goal is reached or a mystery is solved. Celebrate the achievement with a sense of fulfillment and positive resolution.",
+  "quiet_ending: A gentle wrap-up that leaves a lasting warm feeling. Reflect on the day's events, expressing gratitude or peace as the story comes to a natural close.",
 ].join(" ");
 
 const BAD_TEXT_EXAMPLE =
@@ -154,23 +154,23 @@ function getDefaultPageVisualRole(pageNumber?: number): PageVisualRole {
 function getPageVisualRoleGuidance(role: PageVisualRole): string {
   switch (role) {
     case "opening_establishing":
-      return "Page visual role: opening_establishing. Use a wide establishing shot that clearly shows the place and the child's relationship to the world. The protagonist may appear small if that helps the scene.";
+      return "Page visual role: opening_establishing. Use a cinematic wide establishing shot to define the setting and atmosphere. Show the child character within a spacious environment to establish scale and mood. The background should be rich and inviting.";
     case "discovery":
-      return "Page visual role: discovery. Use a medium shot or guided composition where the protagonist notices something important, with the eye naturally led toward the discovery.";
+      return "Page visual role: discovery. Use a medium shot or low-angle view where the child notices something new or intriguing. Create a sense of wonder by leading the viewer's eye toward the object of discovery.";
     case "action":
-      return "Page visual role: action. Show movement, body gesture, interaction, and a clear sense of what is happening in this moment.";
+      return "Page visual role: action. Use a dynamic medium or wide shot with a clear sense of movement, such as running, reaching, or playing. Use diagonal compositions or active poses to convey energy and momentum.";
     case "emotional_closeup":
-      return "Page visual role: emotional_closeup. Use a close-up of face, hands, or a meaningful gesture to highlight emotion without turning the page into a static portrait.";
+      return "Page visual role: emotional_closeup. Use an intimate close-up or extreme close-up of the face, hands, or a small meaningful gesture. Focus on a specific expression (joy, awe, relief) to create a deep emotional connection with the reader.";
     case "object_detail":
-      return "Page visual role: object_detail. Focus on a meaningful object in the foreground, with the protagonist secondary or in the background if helpful.";
+      return "Page visual role: object_detail. Use a focused macro or detail shot of a key story object or recurring motif. The child may be partially visible in the foreground or background, but the object itself is the primary focal point.";
     case "setback_or_question":
-      return "Page visual role: setback_or_question. Show a gentle child-safe moment of uncertainty, wondering, or small tension, with clear visual storytelling.";
+      return "Page visual role: setback_or_question. Use a thoughtful medium shot or over-the-shoulder view to show a moment of gentle tension, doubt, or curiosity. Use soft lighting or slightly muted tones to emphasize the reflective mood.";
     case "payoff":
-      return "Page visual role: payoff. The protagonist must be present to show their reaction and achievement. Bring back an earlier motif or visual clue. Do not show only objects or backgrounds.";
+      return "Page visual role: payoff. Use a triumphant medium or wide shot featuring the child's clear reaction to success or resolution. The protagonist must be present to show their reaction and achievement. This is the visual climax; use vibrant colors, bright lighting, and an expressive, joyful pose. Do not show only objects or backgrounds.";
     case "quiet_ending":
-      return "Page visual role: quiet_ending. Use a scenic wide shot, warm back view, or calm closure image. The protagonist must be present to provide a sense of closure.";
+      return "Page visual role: quiet_ending. Use a peaceful wide shot, a scenic back view of the child walking away, or a cozy indoor scene. The protagonist must be present to provide a sense of closure. Emphasize a sense of closure, warmth, and lingering happiness with soft, gentle lighting.";
     default:
-      return "Page visual role: action. Keep the scene dynamic and story-driven.";
+      return "Page visual role: action. Keep the scene dynamic, story-driven, and visually distinct from previous pages.";
   }
 }
 

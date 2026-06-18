@@ -747,7 +747,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "さあ、あたらしい 世界へ しゅっぱつ！ {childName}なら、どこまでも 行けるよ。",
-          pageVisualRole: "discovery",
+          pageVisualRole: "action",
           imagePromptTemplate: withGraduationImagePromptGuardrail("Wide shot: The child taking a bold step forward toward a bright, open horizon with a look of hope and excitement. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
@@ -1110,7 +1110,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "あたらしい 街。あたらしい お家。 ちょっぴり ドキドキするけれど、{childName}は 前を 向きます。",
-          pageVisualRole: "discovery",
+          pageVisualRole: "opening_establishing",
           imagePromptTemplate: withFarewellImagePromptGuardrail("Wide shot: The child standing in front of a new house or a new park, looking around with curiosity. Bright light. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
@@ -1427,7 +1427,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。はじめての ばしょの においと おとが、{childName}のまわりを つつみます。",
           general_child:
             "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。たかい ゲートを みあげて、こころが はずみます。",
-          pageVisualRole: "discovery",
+          pageVisualRole: "opening_establishing",
           imagePromptTemplate:
             withZooImagePromptGuardrail("Setting: zoo entrance path with family, animal enclosures and trees. Wide establishing shot of a young child arriving at a friendly zoo entrance with family. The child stands near a tree-lined path just inside the entrance, looking up with excitement at the arch. Family members walk beside the child. A decorative text-free entrance arch frames the top. Use only a welcoming leafy threshold, open gate, trees, and path with no side boards, no map panels, no admission notices, and no posted signs anywhere in view. Dress the child in plain child-safe clothing with simple solid-color fabric only; no shirt lettering, no logo patches, no mascot prints, no badge text, and no decorative number or alphabet graphics on clothing, backpack, hat, or shoes. A small yellow star motif is tucked into the arch decoration. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, soft painterly watercolor texture, no hard outlines, rich watercolor pigment blooms, rounded child-safe shapes, rich but not cluttered background details. Keep all entrance, gate, ticket, map, board, and panel surfaces plain and unmarked, with no readable text, pseudo-text, letters, numbers, logos, symbols, or text-like marks.", { signText: true, clothingText: true }),
         }),
@@ -1663,7 +1663,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           early_elementary_7_8:
             "しゃかしゃか、こしこし。おくばや はのうらも わすれないように、かがみを見ながら ていねいに みがいていきます。",
           general_child: "しゃかしゃか、こしこし。すこしずつ、おくちがきれいになります。",
-          pageVisualRole: "discovery",
+          pageVisualRole: "action",
           imagePromptTemplate:
             withBrushTeethImagePromptGuardrail("Medium action shot of the child with short dark hair and mint-green pajamas actively brushing teeth with hero-like concentration. The child holds the toothbrush with both small hands, mouth slightly open with gentle white foam. A friendly mirror shows the child's focused, determined expression. Soft bubbles float near the sink. A small shining star motif appears on the toothbrush handle. Clean, bright bathroom setting. Soft watercolor picture book style, dynamic but gentle composition, rich but not cluttered."),
         }),
