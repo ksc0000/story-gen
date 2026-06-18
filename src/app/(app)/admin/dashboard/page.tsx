@@ -13,7 +13,7 @@ import {
 import { Briefcase, Cpu, Sparkles, RefreshCw } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
-import { getPlanDisplayLabel } from "@/lib/plans";
+import { getPlanDisplayLabel, CREATION_MODE_LABELS } from "@/lib/plans";
 import { computeSloMetrics, SLO_TARGETS, EMPTY_SLO } from "@/lib/admin-slo-metrics";
 import { computeProviderCostMetrics } from "@/lib/admin-cost-metrics";
 import { computeQualityTrend } from "@/lib/admin-quality-trend";
@@ -22,11 +22,23 @@ import {
   StatCard,
   SectionTitle,
   BarRow,
-  Sparkline,
+  LineChart,
+  DonutChart,
+  type DonutDatum,
+  type LineSeries,
 } from "@/components/admin/dashboard-widgets";
 import { cn } from "@/lib/utils";
 import { isDemoMode } from "@/lib/demo";
-import type { BookDoc, PageDoc, ProductPlan } from "@/lib/types";
+import type { BookDoc, CreationMode, PageDoc, ProductPlan } from "@/lib/types";
+
+/** チャート用カラーパレット */
+const CHART_COLORS = ["#7c3aed", "#22c55e", "#f59e0b", "#06b6d4", "#ec4899", "#6366f1", "#94a3b8"];
+
+/** システム値を「表示名 (system値)」形式に整形 */
+function labelCreationMode(mode: string): string {
+  const display = CREATION_MODE_LABELS[mode as CreationMode];
+  return display ? `${display} (${mode})` : mode;
+}
 
 type BookWithId = BookDoc & { id: string };
 type PageWithId = PageDoc & { id: string };
@@ -227,7 +239,24 @@ export default function AdminDashboardPage() {
     }
     const paid = (planCounts["standard_paid"] ?? 0) + (planCounts["premium_paid"] ?? 0);
     const paidShare = books.length ? (paid / books.length) * 100 : 0;
-    return { thisMonth, planCounts, modeCounts, paidShare };
+
+    // 直近14日の日次作成数（時系列）
+    const days = 14;
+    const dayMs = 24 * 60 * 60 * 1000;
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const dailyCounts = new Array(days).fill(0);
+    const dailyLabels: string[] = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(todayStart - (days - 1 - i) * dayMs);
+      dailyLabels.push(`${d.getMonth() + 1}/${d.getDate()}`);
+    }
+    for (const b of books) {
+      const ms = getBookMs(b);
+      if (ms <= 0) continue;
+      const dayIndex = Math.floor((ms - (todayStart - (days - 1) * dayMs)) / dayMs);
+      if (dayIndex >= 0 && dayIndex < days) dailyCounts[dayIndex] += 1;
+    }
+    return { thisMonth, planCounts, modeCounts, paidShare, dailyCounts, dailyLabels };
   }, [books]);
 
   if (checkingAdmin) {
@@ -331,10 +360,24 @@ function BusinessLens({
     planCounts: Record<string, number>;
     modeCounts: Record<string, number>;
     paidShare: number;
+    dailyCounts: number[];
+    dailyLabels: string[];
   };
   totalBooks: number;
 }) {
   const planEntries = Object.entries(business.planCounts).sort((a, b) => b[1] - a[1]);
+  const planDonut: DonutDatum[] = planEntries.map(([plan, count], i) => ({
+    label: getPlanDisplayLabel(plan as ProductPlan),
+    value: count,
+    color: plan === "free" ? "#94a3b8" : CHART_COLORS[i % CHART_COLORS.length],
+  }));
+  const modeDonut: DonutDatum[] = Object.entries(business.modeCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([mode, count], i) => ({
+      label: labelCreationMode(mode),
+      value: count,
+      color: CHART_COLORS[i % CHART_COLORS.length],
+    }));
   return (
     <>
       <SectionTitle title="事業サマリー" description="作成ボリュームとコスト効率の全体像" />
@@ -371,35 +414,24 @@ function BusinessLens({
         />
       </div>
 
+      <SectionTitle title="作成数の推移" description="直近14日の日次作成数" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
+        <LineChart
+          labels={business.dailyLabels}
+          series={[{ label: "作成数", color: "#7c3aed", points: business.dailyCounts }]}
+          unit="冊"
+          height={200}
+        />
+      </div>
+
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-          <h3 className="mb-3 text-sm font-bold text-purple-900">プラン別内訳</h3>
-          {planEntries.length ? (
-            planEntries.map(([plan, count]) => (
-              <BarRow
-                key={plan}
-                label={getPlanDisplayLabel(plan as ProductPlan)}
-                value={totalBooks ? (count / totalBooks) * 100 : 0}
-                display={`${count}冊`}
-                tone={plan === "free" ? "neutral" : "good"}
-              />
-            ))
-          ) : (
-            <p className="text-xs text-violet-300">データなし</p>
-          )}
+          <h3 className="mb-4 text-sm font-bold text-purple-900">プラン別内訳</h3>
+          <DonutChart data={planDonut} centerValue={`${totalBooks}`} centerLabel="冊" />
         </div>
         <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-          <h3 className="mb-3 text-sm font-bold text-purple-900">作成モード別内訳</h3>
-          {Object.entries(business.modeCounts)
-            .sort((a, b) => b[1] - a[1])
-            .map(([mode, count]) => (
-              <BarRow
-                key={mode}
-                label={mode}
-                value={totalBooks ? (count / totalBooks) * 100 : 0}
-                display={`${count}冊`}
-              />
-            ))}
+          <h3 className="mb-4 text-sm font-bold text-purple-900">作成モード別内訳</h3>
+          <DonutChart data={modeDonut} centerValue={`${totalBooks}`} centerLabel="冊" />
         </div>
       </div>
     </>
@@ -418,6 +450,14 @@ function SystemLens({
   const p95Sec = slo.imageP95Ms / 1000;
   const p90Sec = slo.imageP90Ms / 1000;
   const p50Sec = slo.imageP50Ms / 1000;
+  const sloLabels = sloHistory.map((_, i) =>
+    i === sloHistory.length - 1 ? "最新" : `-${sloHistory.length - 1 - i}`
+  );
+  const statusDonut: DonutDatum[] = [
+    { label: "完了", value: slo.completedBooks, color: "#22c55e" },
+    { label: "部分完了", value: slo.partialCompletedBooks, color: "#f59e0b" },
+    { label: "失敗", value: slo.failedBooks, color: "#ef4444" },
+  ];
   return (
     <>
       <SectionTitle title="信頼性 SLO" description="目標値との比較（緑=達成 / 赤=未達）" />
@@ -474,14 +514,25 @@ function SystemLens({
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
           <h3 className="mb-1 text-sm font-bold text-purple-900">完読率の推移</h3>
-          <p className="mb-3 text-xs text-violet-400">日次SLOスナップショット（直近14回）</p>
-          <Sparkline points={sloHistory} width={300} color="#6366f1" />
+          <p className="mb-3 text-xs text-violet-400">日次SLOスナップショット（直近{sloHistory.length}回）</p>
+          {sloHistory.length >= 2 ? (
+            <LineChart
+              labels={sloLabels}
+              series={[{ label: "完読率", color: "#6366f1", points: sloHistory }]}
+              unit="%"
+              height={200}
+              yMin={Math.max(0, Math.min(...sloHistory) - 3)}
+              yMax={100}
+            />
+          ) : (
+            <p className="py-8 text-center text-xs text-violet-300">
+              スナップショットが蓄積されると推移を表示します
+            </p>
+          )}
         </div>
         <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-          <h3 className="mb-3 text-sm font-bold text-purple-900">絵本ステータス内訳</h3>
-          <BarRow label="完了" value={pct(slo.completedBooks, slo.totalBooks)} display={`${slo.completedBooks}`} tone="good" />
-          <BarRow label="部分完了" value={pct(slo.partialCompletedBooks, slo.totalBooks)} display={`${slo.partialCompletedBooks}`} tone="warning" />
-          <BarRow label="失敗" value={pct(slo.failedBooks, slo.totalBooks)} display={`${slo.failedBooks}`} tone="bad" />
+          <h3 className="mb-4 text-sm font-bold text-purple-900">絵本ステータス内訳</h3>
+          <DonutChart data={statusDonut} centerValue={`${slo.totalBooks}`} centerLabel="冊" />
         </div>
       </div>
     </>
@@ -499,13 +550,27 @@ function AiLens({
 }) {
   const dist = quality.scoreDistribution;
   const distMax = Math.max(1, ...Object.values(dist));
-  const modelEntries = Object.entries(cost.providers).flatMap(([provider, stats]) =>
-    Object.entries(stats.models).map(([model, m]) => ({
-      label: `${provider} / ${model}`,
-      count: m.imageCount,
-    }))
-  ).sort((a, b) => b.count - a.count).slice(0, 6);
-  const modelMax = Math.max(1, ...modelEntries.map((m) => m.count));
+  const modelDonut: DonutDatum[] = Object.entries(cost.providers)
+    .flatMap(([, stats]) =>
+      Object.entries(stats.models).map(([model, m]) => ({
+        // モデル名は表示用に短縮（提供元プレフィックスを除去）
+        label: model.replace(/^.*\//, ""),
+        value: m.imageCount,
+      }))
+    )
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6)
+    .map((m, i) => ({ ...m, color: CHART_COLORS[i % CHART_COLORS.length] }));
+  const modelTotal = modelDonut.reduce((s, m) => s + m.value, 0);
+
+  // 品質スコアの時系列（バケット）
+  const buckets = quality.buckets ?? [];
+  const trendLabels = buckets.map((b) => b.label);
+  const trendSeries: LineSeries[] = [
+    { label: "総合", color: "#7c3aed", points: buckets.map((b) => b.avgOverall) },
+    { label: "物語", color: "#22c55e", points: buckets.map((b) => b.avgStory) },
+    { label: "挿絵", color: "#06b6d4", points: buckets.map((b) => b.avgIllustration) },
+  ];
 
   return (
     <>
@@ -532,6 +597,27 @@ function AiLens({
         </div>
       )}
 
+      <SectionTitle title="品質スコアの推移" description="レビュー期間ごとの平均スコア（5段階）" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
+        {trendLabels.length >= 2 ? (
+          <>
+            <LineChart labels={trendLabels} series={trendSeries} height={220} yMin={1} yMax={5} />
+            <div className="mt-2 flex flex-wrap gap-4">
+              {trendSeries.map((s) => (
+                <span key={s.label} className="flex items-center gap-1.5 text-xs text-violet-500">
+                  <span className="size-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+                  {s.label}
+                </span>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="py-8 text-center text-xs text-violet-300">
+            レビューが蓄積されると推移を表示します
+          </p>
+        )}
+      </div>
+
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
           <h3 className="mb-3 text-sm font-bold text-purple-900">総合スコア分布</h3>
@@ -546,14 +632,8 @@ function AiLens({
           ))}
         </div>
         <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-          <h3 className="mb-3 text-sm font-bold text-purple-900">画像モデル別生成数</h3>
-          {modelEntries.length ? (
-            modelEntries.map((m) => (
-              <BarRow key={m.label} label={m.label} value={(m.count / modelMax) * 100} display={`${m.count}枚`} />
-            ))
-          ) : (
-            <p className="text-xs text-violet-300">データなし</p>
-          )}
+          <h3 className="mb-4 text-sm font-bold text-purple-900">画像モデル別生成数</h3>
+          <DonutChart data={modelDonut} centerValue={`${modelTotal}`} centerLabel="枚" />
         </div>
       </div>
     </>
@@ -561,10 +641,6 @@ function AiLens({
 }
 
 /* ─────────────────────────────  helpers  ───────────────────────────── */
-
-function pct(n: number, total: number): number {
-  return total > 0 ? (n / total) * 100 : 0;
-}
 
 function scoreTone(score: number): "good" | "warning" | "bad" | "neutral" {
   if (score <= 0) return "neutral";
