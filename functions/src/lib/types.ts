@@ -98,7 +98,8 @@ export type ProtagonistType =
   | "child"
   | "original_character"
   | "child_with_original_character"
-  | "family_or_pet";
+  | "family_or_pet"
+  | "companion";
 
 export interface StoryQualityAxes {
   childPersonalization: QualityReviewScore;
@@ -199,6 +200,8 @@ export interface BookInput {
   companionId?: string;
   companionName?: string;
   companionVisualDescription?: string;
+  /** 主人公モード: "companion" のとき companionName が主人公になる */
+  protagonistType?: ProtagonistType;
 }
 
 export type GenderExpression = "boy" | "girl" | "neutral" | "unspecified";

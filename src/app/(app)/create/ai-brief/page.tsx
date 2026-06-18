@@ -16,13 +16,13 @@ import {
   type StoryPitch,
 } from "@/lib/functions";
 import { cn } from "@/lib/utils";
+import type { ProtagonistType } from "@/lib/types";
 
 // ─────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────
 
 type InputMode = "chat" | "free";
-type ProtagonistType = "child" | "fictional";
 
 type ChatAnswers = {
   protagonistType?: ProtagonistType;
@@ -66,10 +66,10 @@ const QUESTIONS: ChatQuestion[] = [
     text: "主人公は？",
     chips: [
       { emoji: "👶", label: "お子さんが主人公", value: "child" },
-      { emoji: "🌟", label: "架空のキャラクター", value: "fictional" },
+      { emoji: "🌟", label: "架空のキャラクター", value: "original_character" },
     ],
   },
-  // Q1b は protagonistType === "fictional" のときだけ挿入（動的）
+  // Q1b は protagonistType === "original_character" のときだけ挿入（動的）
   {
     id: "storyTheme",
     text: "どんな話がいい？",
@@ -181,8 +181,8 @@ function buildStoryBriefFromAnswers(answers: ChatAnswers, name: string): string 
 /** チャットモード用の質問シーケンスを構築 */
 function buildQuestionSequence(answers: ChatAnswers): ChatQuestion[] {
   const questions = [...QUESTIONS];
-  // protagonistType === "fictional" のとき Q1b を挿入
-  if (answers.protagonistType === "fictional") {
+  // protagonistType === "original_character" のとき Q1b を挿入
+  if (answers.protagonistType === "original_character") {
     const idx = questions.findIndex((q) => q.id === "storyTheme");
     questions.splice(idx, 0, FICTIONAL_NAME_QUESTION);
   }
@@ -287,6 +287,9 @@ function AiBriefPageContent() {
   const childId = searchParams.get("childId");
   const theme = searchParams.get("theme") ?? "";
   const modeParam = searchParams.get("mode") ?? "guided_ai";
+  const urlProtagonistType = searchParams.get("protagonistType");
+  const urlCompanionName = searchParams.get("companionName") ?? "";
+  const isCompanionProtagonist = urlProtagonistType === "companion";
 
   const child = children.find((c) => c.id === childId) ?? null;
   const childDisplayName = child?.nickname || child?.displayName || "";
@@ -295,18 +298,20 @@ function AiBriefPageContent() {
   const [inputMode, setInputMode] = useState<InputMode>("chat");
 
   // ── チャットモード状態 ─────────────────────
-  const [chatAnswers, setChatAnswers] = useState<ChatAnswers>(() =>
-    // childId があれば主人公は自動で「子ども」に
-    childId ? { protagonistType: "child" } : {}
-  );
-  const [chatStep, setChatStep] = useState(() => (childId ? 1 : 0)); // childId なら Q1 スキップ
+  const [chatAnswers, setChatAnswers] = useState<ChatAnswers>((): ChatAnswers => {
+    if (isCompanionProtagonist) return { protagonistType: "companion", protagonistName: urlCompanionName };
+    if (childId) return { protagonistType: "child" };
+    return {};
+  });
+  // companion主人公なら全問スキップ（Q1=protagonistType, Q1b=name は不要）
+  const [chatStep, setChatStep] = useState(() => (childId || isCompanionProtagonist ? 1 : 0));
   const [freeInputValue, setFreeInputValue] = useState(""); // 自由入力欄の一時値
   const [showFreeInput, setShowFreeInput] = useState(false); // チップ以外の自由入力表示フラグ
   const [summaryReady, setSummaryReady] = useState(false); // 全問完了フラグ
 
   // ── フリーテキストモード状態 ───────────────
   const [protagonistType, setProtagonistType] = useState<ProtagonistType>(
-    childId ? "child" : "fictional"
+    isCompanionProtagonist ? "companion" : childId ? "child" : "original_character"
   );
   const [protagonistName, setProtagonistName] = useState("");
   const [storyBrief, setStoryBrief] = useState("");
@@ -386,11 +391,17 @@ function AiBriefPageContent() {
   const chatEffectiveName =
     chatAnswers.protagonistType === "child"
       ? childDisplayName || chatAnswers.protagonistName || ""
-      : chatAnswers.protagonistName || "";
+      : chatAnswers.protagonistType === "companion"
+        ? urlCompanionName || chatAnswers.protagonistName || ""
+        : chatAnswers.protagonistName || "";
 
   // フリーモード: 名前の解決
   const freeEffectiveName =
-    protagonistType === "child" ? childDisplayName || protagonistName : protagonistName;
+    protagonistType === "child"
+      ? childDisplayName || protagonistName
+      : protagonistType === "companion"
+        ? urlCompanionName || protagonistName
+        : protagonistName;
 
   // ── チップ選択ハンドラ ─────────────────────
   const handleChipSelect = (questionId: string, value: string) => {
@@ -485,11 +496,15 @@ function AiBriefPageContent() {
       const companionName = searchParams.get("companionName") || undefined;
       const companionVisualDescription = searchParams.get("companionVisualDescription") || undefined;
 
+      const pitchProtagonistType: "child" | "original_character" | "companion" =
+        effectiveProtagonistType === "child" ? "child"
+        : effectiveProtagonistType === "companion" ? "companion"
+        : "original_character";
       const pitch = await generateStoryPitchCallable({
         protagonistName: effectiveName,
         storyBrief: brief,
         pageCount: effectivePageCount,
-        protagonistType: effectiveProtagonistType,
+        protagonistType: pitchProtagonistType,
         refinementRequest: refinementRequest?.trim(),
         companionName,
         companionVisualDescription,
@@ -549,6 +564,9 @@ function AiBriefPageContent() {
     if (effectivePType === "child") {
       if (childId) params.set("childId", childId);
       else if (effectiveName) params.set("protagonistName", effectiveName);
+    } else if (effectivePType === "companion") {
+      params.set("protagonistType", "companion");
+      params.set("protagonistName", effectiveName);
     } else {
       params.set("protagonistName", effectiveName);
       params.set("outfitMode", "theme_auto");
@@ -945,7 +963,7 @@ function AiBriefPageContent() {
               {(
                 [
                   { value: "child" as ProtagonistType, emoji: "👶", label: "お子さんが\n主人公" },
-                  { value: "fictional" as ProtagonistType, emoji: "🌟", label: "架空の\nキャラクター" },
+                  { value: "original_character" as ProtagonistType, emoji: "🌟", label: "架空の\nキャラクター" },
                 ] as const
               ).map((opt) => (
                 <button
@@ -1004,7 +1022,7 @@ function AiBriefPageContent() {
               </div>
             )}
 
-            {protagonistType === "fictional" && (
+            {protagonistType === "original_character" && (
               <div className="mt-3">
                 <input
                   type="text"

@@ -50,7 +50,15 @@ function StyleSelectionPageContent() {
   const template = templates.find((item) => item.id === theme);
   // protagonistName: ai-brief フロー（架空キャラ or 未登録の子ども名）で渡される
   const protagonistNameParam = searchParams.get("protagonistName");
-  const childName = protagonistNameParam || child?.nickname || child?.displayName || "";
+  const companionName = searchParams.get("companionName");
+  const companionVisualDescription = searchParams.get("companionVisualDescription");
+  const companionId = searchParams.get("companionId");
+  const protagonistType = searchParams.get("protagonistType");
+  // companion主人公のとき companionName を主人公名として使う
+  const isCompanionProtagonist = protagonistType === "companion";
+  const childName = isCompanionProtagonist
+    ? (companionName ?? "")
+    : (protagonistNameParam || child?.nickname || child?.displayName || "");
   const mode = (searchParams.get("mode") ?? template?.creationMode ?? "guided_ai") as
     | "fixed_template"
     | "guided_ai"
@@ -78,10 +86,6 @@ function StyleSelectionPageContent() {
   const outfitMode = (searchParams.get("outfitMode") ?? "profile_default") as OutfitMode;
   const customOutfit = searchParams.get("customOutfit");
   const keepSignatureItem = searchParams.get("keepSignatureItem") !== "false";
-  const companionId = searchParams.get("companionId");
-  const companionName = searchParams.get("companionName");
-  const companionVisualDescription = searchParams.get("companionVisualDescription");
-  const protagonistType = searchParams.get("protagonistType");
   const visibleStyleProfiles = useMemo(
     () => getStylePickerProfilesForTemplate(template?.id),
     [template?.id]
@@ -233,6 +237,11 @@ function StyleSelectionPageContent() {
             ...(companionId ? { companionId } : {}),
             ...(companionName ? { companionName } : {}),
             ...(companionVisualDescription ? { companionVisualDescription } : {}),
+            // companion主人公モード: protagonistTypeをinputに含め、visual descriptionを主人公の見た目として設定
+            ...(isCompanionProtagonist ? { protagonistType: "companion" } : {}),
+            ...(isCompanionProtagonist && companionVisualDescription
+              ? { characterLook: companionVisualDescription }
+              : {}),
           },
           createdAt: serverTimestamp(),
           createdAtMs,

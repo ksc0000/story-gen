@@ -94,7 +94,7 @@ export interface GenerateStoryPitchInput {
   protagonistName: string;
   storyBrief: string;
   pageCount: number;
-  protagonistType: "child" | "fictional";
+  protagonistType: "child" | "original_character" | "companion";
   refinementRequest?: string;
   companionName?: string;
   companionVisualDescription?: string;

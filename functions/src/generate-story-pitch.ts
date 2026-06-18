@@ -18,7 +18,7 @@ export interface GenerateStoryPitchInput {
   protagonistName: string;
   storyBrief: string;
   pageCount: number;
-  protagonistType: "child" | "fictional";
+  protagonistType: "child" | "original_character" | "companion";
   /** 「もう少し変えたい」で使う修正要望（省略可）*/
   refinementRequest?: string;
   /** 相棒キャラクターの情報 */
@@ -55,7 +55,9 @@ function buildPitchUserPrompt(input: GenerateStoryPitchInput): string {
   const protagonistDesc =
     protagonistType === "child"
       ? `${protagonistName}（実在の子どもを主人公にした絵本）`
-      : `${protagonistName}（架空のキャラクター）`;
+      : protagonistType === "companion"
+        ? `${protagonistName}（なかよしキャラ・動物や生き物が主人公の絵本。子どもは登場しない）`
+        : `${protagonistName}（架空のキャラクター）`;
 
   const lines = [
     `主人公: ${protagonistDesc}`,
