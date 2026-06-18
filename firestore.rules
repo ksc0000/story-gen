@@ -73,11 +73,12 @@ service cloud.firestore {
       allow update: if isAdmin() && onlyAdminReviewFieldsChanged();
       allow update: if isAuthenticated()
                && resource.data.userId == request.auth.uid
-               && request.resource.data.diff(resource.data).changedKeys().hasOnly(["seriesId", "updatedAt", "updatedAtMs"]);
+               && request.resource.data.diff(resource.data).changedKeys().hasOnly(["seriesId", "updatedAt", "updatedAtMs", "public"]);
       allow delete: if false;
 
       match /pages/{pageId} {
-        allow read: if isAdmin() || isBookOwner(bookId);
+        allow read: if isAdmin() || isBookOwner(bookId)
+                 || get(/databases/$(database)/documents/books/$(bookId)).data.public == true;
         allow write: if false;
 
         // Regeneration history – written by Cloud Functions, read-only for admin
