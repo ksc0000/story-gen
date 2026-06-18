@@ -1,9 +1,7 @@
-# Refine Japanese Text Quality for Naturalness and Sophistication
+# Implement `availablePageCounts` in `FixedStoryTemplate` and its UI integration
 
 ## Context
 
-The product roadmap for EhonAI emphasizes continuous improvement in `Phase 2: Story & Illustration Quality`. A key area identified under "本文品質" (Text Quality) is `日本語の自然さ改善` (Improve naturalness of Japanese) and `幼稚すぎる擬音・造語の抑制` (Suppress overly childish onomatopoeia/neologisms). While significant work has been done on prompt hardening, character consistency, and image quality, the naturalness and sophistication of the generated Japanese text for various age bands, particularly older children, remains an ongoing refinement goal. This task directly addresses these general text quality points by tuning the story generation prompts.
+The product roadmap for Phase 3: Template Mode, specifically Step T3-A, calls for adding `availablePageCounts` to `TemplateData`. While `variantOf` and `variantLabel` have been implemented (PR #493), `availablePageCounts` remains unticked in the roadmap table. This feature is crucial for explicitly defining which page counts (e.g., 4, 8, 12) a given template supports and integrating this information into the user interface.
 
-## Objective
-
-Improve the naturalness of the Japanese text and
+Currently, 8-page and 12-page variants are implemented (PR #276, PR #496), and a page count selector exists in the template detail
