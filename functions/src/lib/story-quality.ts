@@ -290,6 +290,14 @@ export function validateGeneratedStoryQuality(params: {
           pageIndex,
         });
       }
+      if (heuristics.monotonousSentenceEndings) {
+        issues.push({
+          severity: "warning",
+          code: "monotonous_sentence_endings",
+          message: "文末の表現が連続して単調になっています。語尾を工夫してリズムを整えてください。",
+          pageIndex,
+        });
+      }
     }
   });
 
@@ -551,6 +559,7 @@ type JapaneseTextHeuristics = {
   unnaturalJapaneseRisk: boolean;
   textTooGeneric: boolean;
   sentenceTooShortForAge: boolean;
+  monotonousSentenceEndings: boolean;
 };
 
 function analyzeJapaneseTextHeuristics(text: string): JapaneseTextHeuristics {
@@ -561,10 +570,32 @@ function analyzeJapaneseTextHeuristics(text: string): JapaneseTextHeuristics {
   const placeWords = /(おへや|へや|まど|そら|こうえん|もり|みち|すなば|すなのなか|すなのうえ|てのなか|てのひら|ゆびさき|うみ|かわ|やま|にわ|キッチン|テーブル|ベッド|どうぶつえん|みずうみ|くも)/;
   const actionWords = /(ある|はし|みつけ|あつめ|つく|のぼ|すべ|ひろ|みつめ|さわ|のぞ|えら|あけ|もっ|ぎゅっ|ふり|わら|みた|きい|のった|とんだ|ひらいた|ひろが|ならべ|おいた|みせた|つたえ|かんがえ|みつめた)/;
   const emotionOrDiscoveryWords = /(うれ|かなし|ほっ|びっくり|わくわく|どきどき|にっこり|わら|えがお|みつけ|きづ|ふしぎ|あんしん|こわ|たのし)/;
-  const coinedPatterns = /(こりころ|ふわりん|ころころこりころ|まきまきまきば|ぴかりん|きらりん)/;
+  const coinedPatterns = /(こりころ|ふわりん|ころころこりころ|まきまきまきば|ぴかりん|きらりん|ぽよん|ぷよん)/;
   const hiraganaRatio = normalized.length > 0
     ? ((normalized.match(/[ぁ-ん]/g) ?? []).length / normalized.length)
     : 0;
+
+  const sentences = text.split(/[。！？!?]+/).map((s) => s.trim()).filter(Boolean);
+  const endings = sentences.map((s) => {
+    if (s.endsWith("しました")) return "mashita";
+    if (s.endsWith("ました")) return "mashita";
+    if (s.endsWith("でした")) return "deshita";
+    if (s.endsWith("した")) return "shita";
+    if (s.endsWith("だった")) return "datta";
+    if (s.endsWith("です")) return "desu";
+    if (s.endsWith("ます")) return "masu";
+    return "other";
+  });
+
+  let monotonousSentenceEndings = false;
+  if (endings.length >= 3) {
+    for (let i = 0; i <= endings.length - 3; i++) {
+      if (endings[i] !== "other" && endings[i] === endings[i + 1] && endings[i] === endings[i + 2]) {
+        monotonousSentenceEndings = true;
+        break;
+      }
+    }
+  }
 
   return {
     tooManySoundWords: commonSoundWords.length >= 3,
@@ -578,6 +609,7 @@ function analyzeJapaneseTextHeuristics(text: string): JapaneseTextHeuristics {
       (!actionWords.test(text) || !emotionOrDiscoveryWords.test(text)),
     sentenceTooShortForAge:
       countJapaneseTextChars(text) < 40 || countSentences(text) <= 2,
+    monotonousSentenceEndings,
   };
 }
 

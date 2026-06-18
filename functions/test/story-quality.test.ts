@@ -114,6 +114,26 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "unnatural_japanese_risk")).toBe(true);
   });
 
+  it("flags monotonous sentence endings in preschool pages", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "ぼくは こうえんに いきました。おはなを みつけました。とても うれしくなりました。",
+            imagePrompt: "wide shot of a child in a park with flowers, gentle spring details",
+            compositionHint: "wide shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "monotonous_sentence_endings")).toBe(true);
+  });
+
   it("detects story goal drift and forbidden quest objects in weak premium text", () => {
     const report = validateGeneratedStoryQuality({
       story: {
