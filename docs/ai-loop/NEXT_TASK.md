@@ -1,5 +1,13 @@
-# Analyze Human vs. LLM Auto Review Score Discrepancies
+# Refine Template Quality: fixed-sleepy-moon-adventure Sample Image
 
 ## Context
 
-The product roadmap for EhonAI emphasizes "Phase 2: Story & Illustration Quality" to ensure generated storybooks are satisfactory for sale. Significant progress has been made in implementing quality review infrastructure, including granular human quality scores, LLM auto-review prototypes, and tools for comparison. Specifically, PR #430 "Implement Script for Human vs. LLM Auto Review Score Comparison" has been merged, providing the mechanism to compare these scores. With Phase 4 (Gemini JSON Hardening) closed and Phase 5 (Monetization) actively in a limited rollout (Cohort B `実施中`), understanding the agreement and discrepancies between human and automated quality assessments is crucial for refining both the LLM auto-review process
+The product roadmap's `Phase 3: Template Mode` section, specifically the `T3-2 status update (2026-05-12)`, references a `Template Quality Review`. This review identified `fixed-sleepy-moon-adventure` as having a P1 priority issue where its sample image is too similar to `fixed-little-helper` (visually overlapping compositions or themes). This task focuses on addressing this specific visual similarity.
+
+## Objective
+
+Update the `fixed-sleepy-moon-adventure` template's configuration to generate a visually distinct sample image, resolving the reported similarity with `fixed-little-helper`.
+
+## Allowed Scope
+
+-   `functions
