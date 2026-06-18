@@ -1,13 +1,5 @@
-# Implement Image Regeneration Recommendation in Admin UI
+# Analyze Human vs. LLM Auto Review Score Discrepancies
 
 ## Context
 
-The product roadmap for Phase 2: Story & Illustration Quality includes "image regeneration recommendation" under its "画像品質" section. While user-facing page regeneration is implemented (PR #347, #464), a recommendation system to proactively identify and suggest page regeneration is still untackled. This feature aligns with improving the overall image quality and streamlining the quality review process for administrators, especially given the current "Cohort B limited rollout" where quality observation is critical.
-
-This task will focus on the administrator's perspective, allowing them to see recommended regenerations based on quality signals.
-
-## Objective
-
-Implement the backend logic and persistence for image regeneration recommendations, and display these recommendations within the existing Admin Quality Review UI.
-
-## Allowed Scope
+The product roadmap for EhonAI emphasizes "Phase 2: Story & Illustration Quality" to ensure generated storybooks are satisfactory for sale. Significant progress has been made in implementing quality review infrastructure, including granular human quality scores, LLM auto-review prototypes, and tools for comparison. Specifically, PR #430 "Implement Script for Human vs. LLM Auto Review Score Comparison" has been merged, providing the mechanism to compare these scores. With Phase 4 (Gemini JSON Hardening) closed and Phase 5 (Monetization) actively in a limited rollout (Cohort B `実施中`), understanding the agreement and discrepancies between human and automated quality assessments is crucial for refining both the LLM auto-review process
