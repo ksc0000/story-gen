@@ -22,6 +22,7 @@ describe("admin-cost-metrics", () => {
     status: "completed",
     progress: 100,
     createdAt: { seconds: 0, nanoseconds: 0 } as unknown as BookDoc["createdAt"],
+    expiresAt: null,
     input: { childName: "test" },
     ...overrides,
   });
