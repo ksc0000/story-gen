@@ -118,8 +118,7 @@ export function getAgeReadingProfile(age?: number): AgeReadingProfile {
     return AGE_READING_PROFILES.early_elementary_7_8;
   }
 
-  // Age > 8: protagonist may be older, but picture books are read-aloud content
-  // for young children. Cap text complexity at early_reader_5_6 to keep
-  // character count (120–180 chars/page) and kanji within picture-book norms.
-  return AGE_READING_PROFILES.early_reader_5_6;
+  // Age > 8: use the most sophisticated profile available (7-8 years old)
+  // to ensure naturalness and depth while remaining within picture-book norms.
+  return AGE_READING_PROFILES.early_elementary_7_8;
 }

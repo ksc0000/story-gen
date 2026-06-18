@@ -1124,12 +1124,14 @@ export class GeminiClient implements LLMClient {
       "For ages 3+, each page should usually have 3 to 5 sentences and around 80 to 140 Japanese characters when natural.",
       "Add natural scene detail, action, emotion, and small discovery.",
       "On discovery pages, include where the character found something or what the hands / sand / nearby place looked like.",
-      "Reduce excessive onomatopoeia and unclear repeated sounds.",
+      "Reduce excessive onomatopoeia and avoid baby-talk neologisms (e.g., \"-rin\" suffixes).",
+      "Ensure sentence endings are varied and rhythmic (avoid repeating \"-shita\" or \"-datta\" excessively).",
+      "For ages 5+, include logical connections (cause and effect) to add depth to the narrative.",
       "Keep the main quest object consistent across all pages. Do not replace it with another object.",
       "hiddenDetail is for visual background fun only. Do not turn hiddenDetail into the main story goal.",
       "If imagePrompt shows a clear action or recurring motif, reflect that naturally in pages[].text.",
       "On the final page, clearly write the quest resolution or emotional resolution.",
-      "Do not turn the text into dry explanation. Keep it warm and story-like.",
+      "Do not turn the text into dry explanation. Keep it warm, evocative, and story-like.",
       "Return JSON only in this shape: {\"pages\":[{\"text\":\"...\"}]}",
     ].join("\n");
 
