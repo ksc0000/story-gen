@@ -119,17 +119,21 @@ function ThemeSelectionPageContent() {
     [categoryGroups]
   );
 
+  /** テンプレートのベースID: variantOf があればその値、なければ -Np サフィックスを除去した ID */
+  const getTemplateBaseId = (t: { id: string; variantOf?: string }) =>
+    t.variantOf ?? t.id.replace(/-\d+p$/, "");
+
   /** baseId → all page-count variants of that template, sorted by page count asc */
   const templateVariantsMap = useMemo(() => {
     const map = new Map<string, (typeof templates)[0][]>();
     for (const t of templates) {
       if ((t.creationMode ?? "guided_ai") !== selectedMode) continue;
-      const baseId = t.id.replace(/-8p$/, "");
+      const baseId = getTemplateBaseId(t);
       const arr = map.get(baseId) ?? [];
       arr.push(t);
       map.set(baseId, arr);
     }
-    // Sort each group by page count ascending (4p before 8p)
+    // Sort each group by page count ascending
     for (const arr of map.values()) {
       arr.sort(
         (a, b) =>
@@ -147,18 +151,18 @@ function ThemeSelectionPageContent() {
       return true;
     });
 
-    // De-duplicate by base ID (strip -8p suffix) — show one card per template group.
-    // Prefer the 4p variant as the primary display card.
+    // De-duplicate by base ID — show one card per template group.
+    // Prefer the smallest page count (base/primary variant) as the display card.
     const uniqueMap = new Map<string, (typeof templates)[0]>();
     for (const t of list) {
-      const baseId = t.id.replace(/-8p$/, "");
+      const baseId = getTemplateBaseId(t);
       if (!uniqueMap.has(baseId)) {
         uniqueMap.set(baseId, t);
       } else {
         const existing = uniqueMap.get(baseId)!;
         const existingPages = existing.fixedStory?.pages?.length ?? 4;
         const currentPages = t.fixedStory?.pages?.length ?? 4;
-        // Prefer 4-page as primary (smallest count wins)
+        // Prefer smallest page count as primary
         if (currentPages < existingPages) {
           uniqueMap.set(baseId, t);
         }
@@ -542,7 +546,10 @@ function ThemeSelectionPageContent() {
 
       <TemplateDetailDialog
         template={detailTemplateId ? (templates.find((t) => t.id === detailTemplateId) ?? null) : null}
-        variants={detailTemplateId ? (templateVariantsMap.get(detailTemplateId.replace(/-8p$/, "")) ?? []) : []}
+        variants={detailTemplateId ? (() => {
+          const t = templates.find((t) => t.id === detailTemplateId);
+          return t ? (templateVariantsMap.get(getTemplateBaseId(t)) ?? []) : [];
+        })() : []}
         allowedPageCounts={
           PLAN_CONFIGS[
             resolveProductPlan(profile)
