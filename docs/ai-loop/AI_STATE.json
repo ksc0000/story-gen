@@ -171,6 +171,7 @@
     "PR #498: feat: シネマティックビューア追加 (merged)",
     "PR #499: feat: シネマティックビューア エンドカード＋操作ヒント追加 (merged)",
     "PR #500: feat: CinematicViewer landscape layout + rotation hint (merged)",
+    "PR #502: fix: enable public book sharing (Firestore rules) (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
