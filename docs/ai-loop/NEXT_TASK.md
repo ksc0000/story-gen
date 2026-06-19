@@ -1,13 +1,15 @@
-# Refine Template Quality: fixed-sleepy-moon-adventure Sample Image
+# Implement Admin Operation Audit Logging
 
 ## Context
 
-The product roadmap's `Phase 3: Template Mode` section, specifically the `T3-2 status update (2026-05-12)`, references a `Template Quality Review`. This review identified `fixed-sleepy-moon-adventure` as having a P1 priority issue where its sample image is too similar to `fixed-little-helper` (visually overlapping compositions or themes). This task focuses on addressing this specific visual similarity.
+The product roadmap lists "admin operation audit log" as an unimplemented feature under Phase 0. Implementing this will improve accountability and observability of administrative actions within the system, which is crucial for overall system reliability and quality management. This task focuses on establishing the core logging mechanism.
 
 ## Objective
 
-Update the `fixed-sleepy-moon-adventure` template's configuration to generate a visually distinct sample image, resolving the reported similarity with `fixed-little-helper`.
+Implement a basic system to log administrative operations (e.g., manual quality review submissions, book status changes performed by an admin) to Firestore.
 
 ## Allowed Scope
 
--   `functions
+- `functions/`: Implement a new callable function or modify existing admin-triggered functions to write audit logs.
+- `src/lib/`: Define new types or interfaces for audit log entries.
+- `src/admin/`: Integrate logging calls into existing admin-only functions (e.g.,
