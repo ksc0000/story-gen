@@ -180,6 +180,7 @@
     "PR #513: feat: 管理ダッシュボードを円グラフ・折れ線で視覚化 (merged)",
     "PR #515: feat: 管理ダッシュボードにアナリティクスビュー（時系列分析） (merged)",
     "PR #516: feat: 本番で ENABLE_SCHEMA_REPAIR_RETRY を有効化 (#512) (merged)",
+    "PR #518: Implement Image Regeneration Recommendation in Admin UI (merged)",
     "PR #530: Update Template Mode (Phase 3) Roadmap Status (merged)",
     "PR #533: chore: AIレビューをClaudeのみにしCodexをレビューから除外 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
