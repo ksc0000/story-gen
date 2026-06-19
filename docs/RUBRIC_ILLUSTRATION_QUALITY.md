@@ -23,6 +23,7 @@ Reviewers should consider the following axes when determining the score:
 - **Artifact Avoidance**:
     - **No Text Artifacts**: Avoidance of signs, posters, banners, labels, or storefront signs with nonsensical text.
     - **Technical Correctness**: Absence of distorted limbs, faces, or impossible physical objects.
+    - **No Unintended Characters**: Absence of extra people or duplication (See [Unintended Character Rubric](./QUALITY_RUBRICS/UNINTENDED_CHARACTER_RUBRIC.md)).
 - **Prompt Completeness**: Does the illustration capture all the key elements requested in the prompt (characters, background, mood)?
 
 ## Examples
