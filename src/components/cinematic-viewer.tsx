@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Play, Pause, ChevronLeft, ChevronRight, BookOpen, MessageCircle, RotateCcw } from "lucide-react";
+import { X, Play, Pause, ChevronLeft, ChevronRight, BookOpen, MessageCircle, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { useSpeech } from "@/lib/hooks/use-speech";
+import { cn } from "@/lib/utils";
 import type { ReadingItem } from "./book-viewer";
 
 interface CinematicViewerProps {
@@ -11,6 +13,8 @@ interface CinematicViewerProps {
   title: string;
   onClose: () => void;
   onFeedback?: () => void;
+  readAloudEnabled?: boolean;
+  onToggleReadAloud?: () => void;
 }
 
 const AUTOPLAY_INTERVAL_MS = 4500;
@@ -41,10 +45,11 @@ function useIsLandscape() {
   return isLandscape;
 }
 
-export function CinematicViewer({ items, initialIndex = 0, title, onClose, onFeedback }: CinematicViewerProps) {
+export function CinematicViewer({ items, initialIndex = 0, title, onClose, onFeedback, readAloudEnabled, onToggleReadAloud }: CinematicViewerProps) {
   const [current, setCurrent] = useState(initialIndex);
   const [dir, setDir] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const { speak, cancel, supported } = useSpeech();
   const [showEndCard, setShowEndCard] = useState(false);
   const [hintVisible, setHintVisible] = useState(true);
   const [rotateHintVisible, setRotateHintVisible] = useState(true);
@@ -86,10 +91,42 @@ export function CinematicViewer({ items, initialIndex = 0, title, onClose, onFee
   }, [showEndCard]);
 
   useEffect(() => {
-    if (!isPlaying) { if (timerRef.current) clearTimeout(timerRef.current); return; }
+    if (!isPlaying) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      return;
+    }
+
+    // If reading aloud, the speech 'onEnd' should ideally trigger next,
+    // but for MVP we'll stick to fixed interval + stopping speech on change.
     timerRef.current = setTimeout(goNext, AUTOPLAY_INTERVAL_MS);
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [isPlaying, current, goNext]);
+
+  // Read aloud logic
+  useEffect(() => {
+    if (!readAloudEnabled) {
+      cancel();
+      return;
+    }
+
+    const item = items[current];
+    if (!item || showEndCard) return;
+
+    let textToRead = "";
+    if (item.kind === "cover_title_spread") {
+      textToRead = item.titleSpreadText || item.openingNarration || title;
+    } else {
+      textToRead = item.page.text;
+    }
+
+    if (textToRead) {
+      speak(textToRead);
+    }
+
+    return () => cancel();
+  }, [current, readAloudEnabled, items, title, speak, cancel, showEndCard]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -119,6 +156,10 @@ export function CinematicViewer({ items, initialIndex = 0, title, onClose, onFee
     if (delta < -60) goNext();
     else if (delta > 60) goPrev();
   };
+
+  useEffect(() => {
+    return () => cancel();
+  }, [cancel]);
 
   const item = items[current];
   if (!item) return null;
@@ -351,9 +392,23 @@ export function CinematicViewer({ items, initialIndex = 0, title, onClose, onFee
                 <button key={i} onClick={() => go(i, i > current ? 1 : -1)} className={`h-1.5 rounded-full transition-all ${i === current ? "w-5 bg-white" : "w-1.5 bg-white/35 hover:bg-white/60"}`} aria-label={`ページ ${i + 1}`} />
               ))}
             </div>
-            <button onClick={() => setIsPlaying((p) => !p)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label={isPlaying ? "一時停止" : "自動再生"}>
-              {isPlaying ? <Pause className="size-4" /> : <Play className="size-4 translate-x-0.5" />}
-            </button>
+            <div className="flex items-center gap-2">
+              {supported && onToggleReadAloud && (
+                <button
+                  onClick={onToggleReadAloud}
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-full transition",
+                    readAloudEnabled ? "bg-white/25 text-white" : "bg-white/15 text-white/50 hover:bg-white/25 hover:text-white"
+                  )}
+                  aria-label={readAloudEnabled ? "読み上げをオフにする" : "読み上げをオンにする"}
+                >
+                  {readAloudEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+                </button>
+              )}
+              <button onClick={() => setIsPlaying((p) => !p)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label={isPlaying ? "一時停止" : "自動再生"}>
+                {isPlaying ? <Pause className="size-4" /> : <Play className="size-4 translate-x-0.5" />}
+              </button>
+            </div>
           </div>
         </div>
       )}

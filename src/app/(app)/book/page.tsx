@@ -59,6 +59,7 @@ function BookContent() {
   const [titleUpdateError, setTitleUpdateError] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isCinematicOpen, setIsCinematicOpen] = useState(false);
+  const [readAloudEnabled, setReadAloudEnabled] = useState(false);
   const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
   const isOwner = Boolean(user && book && book.userId === user.uid);
 
@@ -385,6 +386,9 @@ function BookContent() {
               : undefined
           }
           isRegeneratingCover={isRegeneratingCover}
+          readAloudEnabled={readAloudEnabled}
+          onToggleReadAloud={() => setReadAloudEnabled((prev) => !prev)}
+          isCinematicOpen={isCinematicOpen}
         />
         {/* Cinematic viewer overlay */}
         {isCinematicOpen && (
@@ -407,6 +411,8 @@ function BookContent() {
                 document.getElementById("feedback-section")?.scrollIntoView({ behavior: "smooth" });
               }, 100);
             } : undefined}
+            readAloudEnabled={readAloudEnabled}
+            onToggleReadAloud={() => setReadAloudEnabled((prev) => !prev)}
           />
         )}
         {coverRegenerationError && (

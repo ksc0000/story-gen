@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, Loader2, Sparkles } from "lucide-react";
+import { RefreshCcw, Loader2, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RegenerateConfirmationDialog } from "@/components/regenerate-confirmation-dialog";
+import { cn } from "@/lib/utils";
+import { useSpeech } from "@/lib/hooks/use-speech";
 import type { PageDoc, CoverStatus, ReadingStructureVersion } from "@/lib/types";
 import type { Variants } from "framer-motion";
 
@@ -35,6 +37,9 @@ interface BookViewerProps {
   isRegeneratingPage?: (index: number) => boolean;
   onRegenerateCover?: () => void;
   isRegeneratingCover?: boolean;
+  readAloudEnabled?: boolean;
+  onToggleReadAloud?: () => void;
+  isCinematicOpen?: boolean;
 }
 
 /** Build reading items: cover+title spread (single sheet) → story pages (when v2 is active). */
@@ -255,8 +260,9 @@ function CoverSheetMobile({
 /* ------------------------------------------------------------------ */
 
 export function BookViewer(props: BookViewerProps) {
-  const { title, onRegeneratePage, isRegeneratingPage } = props;
+  const { title, onRegeneratePage, isRegeneratingPage, readAloudEnabled, onToggleReadAloud, isCinematicOpen } = props;
   const items = buildReadingItems(props);
+  const { speak, cancel, supported } = useSpeech();
 
   const [currentPage, setCurrentPage] = useState(0);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -310,6 +316,30 @@ export function BookViewer(props: BookViewerProps) {
     },
     [goNext, goPrev],
   );
+
+  // Read aloud logic
+  useEffect(() => {
+    if (!readAloudEnabled || isCinematicOpen) {
+      cancel();
+      return;
+    }
+
+    const item = items[currentPage];
+    if (!item) return;
+
+    let textToRead = "";
+    if (item.kind === "cover_title_spread") {
+      textToRead = item.titleSpreadText || item.openingNarration || item.title;
+    } else {
+      textToRead = item.page.text;
+    }
+
+    if (textToRead) {
+      speak(textToRead);
+    }
+
+    return () => cancel();
+  }, [currentPage, readAloudEnabled, items, speak, cancel, isCinematicOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -573,10 +603,24 @@ export function BookViewer(props: BookViewerProps) {
         </AnimatePresence>
       </div>
       {/* Navigation */}
-      <div className="mt-4 flex items-center justify-center gap-4">
-        <Button variant="outline" onClick={goPrev} disabled={currentPage === 0} className="px-6">← 前</Button>
-        <span className="text-sm text-violet-500">{pageLabel}</span>
-        <Button variant="outline" onClick={goNext} disabled={currentPage >= totalPages - 1} className="px-6">次 →</Button>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        <Button variant="outline" onClick={goPrev} disabled={currentPage === 0} className="px-4 sm:px-6">← 前</Button>
+        <span className="text-sm font-medium text-violet-500">{pageLabel}</span>
+        <Button variant="outline" onClick={goNext} disabled={currentPage >= totalPages - 1} className="px-4 sm:px-6">次 →</Button>
+        {supported && onToggleReadAloud && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleReadAloud}
+            className={cn(
+              "rounded-full transition-colors",
+              readAloudEnabled ? "text-purple-600 bg-purple-50" : "text-violet-400"
+            )}
+            title={readAloudEnabled ? "読み上げをオフにする" : "読み上げをオンにする"}
+          >
+            {readAloudEnabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
+          </Button>
+        )}
       </div>
 
       <RegenerateConfirmationDialog
