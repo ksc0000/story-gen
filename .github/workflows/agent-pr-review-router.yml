@@ -56,8 +56,8 @@ jobs:
               "## Agent PR next steps",
               "",
               isJules
-                ? "This PR appears to be from Jules. When the implementation is ready for review, add the `request-ai-review` label to trigger Claude and Codex review comments."
-                : "When this PR is ready for AI review, add the `request-ai-review` label to trigger Claude and Codex review comments.",
+                ? "This PR appears to be from Jules. When the implementation is ready for review, add the `request-ai-review` label to trigger a Claude review comment."
+                : "When this PR is ready for AI review, add the `request-ai-review` label to trigger a Claude review comment.",
               "",
               "Expected review flow:",
               "",
@@ -66,7 +66,6 @@ jobs:
               "  -> CI runs",
               "  -> add request-ai-review label",
               "  -> @claude review",
-              "  -> @codex review",
               "  -> fix comments",
               "  -> human merge",
               "```",
@@ -92,7 +91,7 @@ jobs:
             }
 
   request-ai-review:
-    name: Request Claude and Codex reviews
+    name: Request Claude review
     if: >
       github.event.action == 'labeled' &&
       github.event.label.name == 'request-ai-review'
@@ -124,14 +123,12 @@ jobs:
             }
 
             const body = [
-              "@codex review for correctness, regressions, missing tests, and accidental scope creep",
+              "@claude review for correctness, regressions, missing tests, and accidental scope creep",
               "",
               "Review scope:",
               "- Verify the PR satisfies the linked issue acceptance criteria.",
               "- Prioritize correctness, user-visible regressions, security, data loss, and missing tests.",
               "- Do not merge this PR.",
-              "",
-              "Note: @claude review will be triggered automatically after Codex responds (two-stage review).",
               "",
               marker,
             ].join("\n");

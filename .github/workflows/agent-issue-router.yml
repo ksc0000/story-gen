@@ -84,8 +84,8 @@ jobs:
                 "Create a branch, implement the issue, run focused checks, then open a PR.",
               ],
               "codex-ready": [
-                "Recommended executor: Codex for implementation review, CI diagnosis, or a focused patch.",
-                "Use `@codex review` on the PR after the first implementation pass.",
+                "Recommended executor: Codex for implementation, CI diagnosis, or a focused patch.",
+                "PR review is handled by Claude via the `request-ai-review` label (Codex is not used for review).",
               ],
               "jules-ready": [
                 "Recommended executor: Google Jules for small, parallelizable tasks.",
