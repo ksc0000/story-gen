@@ -7,7 +7,7 @@ if (getApps().length === 0) initializeApp();
 const db = getFirestore();
 
 const FIXED_IMAGE_PROMPT_STANDARD_SUFFIX =
-  "no readable writing anywhere, no signage, no storefront signs, no labels, no posters, no banners, no text-like marks, no text, no letters, no Japanese characters, no logo, no watermark";
+  "no readable writing anywhere, no signage, no storefront signs, no labels, no posters, no banners, no text-like marks, no text, no letters, no Japanese characters, no logo, no watermark, no typography, no brand names, no inscriptions, no graffiti, no word-like marks";
 
 const FIXED_IMAGE_PROMPT_REF_ISOLATION_SUFFIX =
   "use the reference image ONLY for the child character's face, hairstyle, outfit, age, and body proportions; do NOT copy the reference image background, location, pose, sandbox, playground, lighting, camera angle, or composition; place the child naturally into the scene described here, NOT a sandbox, NOT a playground";
@@ -36,6 +36,28 @@ function withBrushTeethImagePromptGuardrail(prompt: string): string {
   }
   if (!result.includes(BRUSH_TEETH_OBJECT_NO_TEXT_CLAUSE)) {
     result = `${result}, ${BRUSH_TEETH_OBJECT_NO_TEXT_CLAUSE}`;
+  }
+  return withFixedImagePromptSafety(result);
+}
+
+const LITTLE_HELPER_OBJECT_NO_TEXT_CLAUSE =
+  "household objects must be plain and unmarked: use solid-color baskets, towels, containers, and kitchen items with no brand marks, no labels, no stickers, no printed patterns, and no decorative text-like marks on any surface";
+
+function withLittleHelperImagePromptGuardrail(prompt: string): string {
+  let result = prompt;
+  if (!result.includes(LITTLE_HELPER_OBJECT_NO_TEXT_CLAUSE)) {
+    result = `${result}, ${LITTLE_HELPER_OBJECT_NO_TEXT_CLAUSE}`;
+  }
+  return withFixedImagePromptSafety(result);
+}
+
+const THANK_YOU_GRANDPARENT_PROP_NO_TEXT_CLAUSE =
+  "no text, letters, or symbols on any photo album, greeting card, garden sign, plant marker, or wall art; all gifts and household items must be plain or use simple decorative motifs with no readable writing or pseudo-script";
+
+function withThankYouGrandparentImagePromptGuardrail(prompt: string): string {
+  let result = prompt;
+  if (!result.includes(THANK_YOU_GRANDPARENT_PROP_NO_TEXT_CLAUSE)) {
+    result = `${result}, ${THANK_YOU_GRANDPARENT_PROP_NO_TEXT_CLAUSE}`;
   }
   return withFixedImagePromptSafety(result);
 }
@@ -76,7 +98,7 @@ const BIRTHDAY_8P_CHARACTER_ANCHOR_CLAUSE =
   "keep the same child across all 8 pages: same face, same age impression, same hair color and length, same clothing style and palette, do not change the child's age, outfit, or facial features between pages";
 
 const BIRTHDAY_8P_DECOR_NO_TEXT_CLAUSE =
-  "no text, letters, numbers, symbols, or readable marks on any balloon surface, ribbon, garland, streamer, cake, candle, labels, posters, banners, tableware edge, plate trim, keepsake, or gift-like object, all party decor surfaces must be plain color or simple pattern only with no pseudo-writing, no tag-like ornamentation, and no emblem-like detail";
+  "no text, letters, numbers, symbols, or readable marks on any balloon surface, ribbon, garland, streamer, cake, candle, labels, posters, banners, tableware edge, plate trim, keepsake, blank invitation-like card, plain table setting, or gift-like object, all party decor surfaces must be plain color or simple pattern only with no pseudo-writing, no tag-like ornamentation, and no emblem-like detail";
 
 /**
  * Birthday-8p template-local prompt guardrail wrapper.
@@ -152,7 +174,7 @@ function withCardboardRocket8pImagePromptGuardrail(prompt: string): string {
 }
 
 const GRADUATION_DECOR_NO_TEXT_CLAUSE =
-  "no text, letters, numbers, or symbols on any diploma, certificate, banner, poster, labels, posters, banners, garland, ribbon, or commemorative plaque; all ceremony decorations must be plain or use simple floral/geometric patterns with no readable characters or pseudo-writing";
+  "no text, letters, numbers, or symbols on any diploma, certificate, banner, poster, labels, posters, banners, garland, ribbon, school gate nameplate, or commemorative plaque; all ceremony decorations and plaques must be plain or use simple floral/geometric patterns with no readable characters or pseudo-writing";
 
 function withGraduationImagePromptGuardrail(prompt: string): string {
   let result = prompt;
@@ -174,7 +196,7 @@ function withNewBabyImagePromptGuardrail(prompt: string): string {
 }
 
 const FAREWELL_MOVING_NO_TEXT_CLAUSE =
-  "no text, letters, numbers, or addresses on any moving boxes, shipping labels, labels, posters, banners, packing tape, or farewell banners; all farewell signs and cards must be plain or use simple heart/star motifs with no readable writing or pseudo-script";
+  "no text, letters, numbers, or addresses on any cardboard boxes, shipping labels, labels, posters, banners, plain packing tape, or farewell banners; all boxes must remain unmarked cardboard, and all farewell signs and cards must be plain or use simple heart/star motifs with no readable writing or pseudo-script";
 
 function withFarewellImagePromptGuardrail(prompt: string): string {
   let result = prompt;
@@ -515,7 +537,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
           general_child: "{childName}は、{familyMembers}といっしょに{place}へでかけました。どんな どうぶつに あえるかな。",
           pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            withZooImagePromptGuardrail("Setting: zoo entrance path with family, animal enclosures and trees. Establishing wide shot of a young child arriving at a friendly zoo with family. The child stands near a tree-lined path just inside the entrance, looking up with excitement. Family members walk beside the child. A decorative text-free entrance arch frames the top. A small yellow star motif is tucked into the arch. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, soft painterly watercolor texture, no hard outlines, rich watercolor pigment blooms, rounded child-safe shapes, rich but not cluttered background details."),
+            withZooImagePromptGuardrail("Setting: zoo entrance path with family, animal enclosures and trees. Establishing wide shot of a young child arriving at a friendly zoo with family. The child stands near a tree-lined path just inside the entrance, looking up with excitement at a plain unmarked entrance arch. Family members walk beside the child. A decorative text-free entrance arch frames the top. A small yellow star motif is tucked into the arch. Gentle morning daylight with warm golden tones. Lush green trees and a winding path leading inward. Soft watercolor picture book style, soft painterly watercolor texture, no hard outlines, rich watercolor pigment blooms, rounded child-safe shapes, rich but not cluttered background details."),
         }),
         buildAgeSpecificPage({
           textTemplate: "大きなどうぶつ、小さなどうぶつ。{childName}の目はきらきらです。",
@@ -650,12 +672,12 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate: "おへやを みんなで かざりつけ。ふうせんが ぷかぷか、おはなが きらきら。",
           pageVisualRole: "action",
-          imagePromptTemplate: withBirthdayImagePromptGuardrail("Action shot: The child and family members putting up balloons and colorful decorations in the living room. Lively and happy atmosphere. Soft watercolor style."),
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Action shot: The child and family members putting up plain balloons and colorful unmarked decorations in the living room. Lively and happy atmosphere. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "おたんじょうびの プレゼント！ なにが入っているのかな？ {childName}は ドキドキしながら あけました。",
           pageVisualRole: "discovery",
-          imagePromptTemplate: withBirthdayImagePromptGuardrail("Discovery shot: The child opening a beautifully wrapped gift box. A look of anticipation and excitement on their face. Soft watercolor style."),
+          imagePromptTemplate: withBirthdayImagePromptGuardrail("Discovery shot: The child opening a beautifully wrapped plain unmarked gift box. A look of anticipation and excitement on their face. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "わあ、だいすきな おもちゃ！ {childName}は うれしくて、ぎゅっと だきしめました。",
@@ -718,7 +740,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate: "はじめて 門を くぐった日のこと、おぼえているかな？ {childName}は、こんなに 大きくなりました。",
           pageVisualRole: "opening_establishing",
-          imagePromptTemplate: withGraduationImagePromptGuardrail("Establishing wide shot: The child standing at the kindergarten gate on a sunny spring morning, wearing a graduation ribbon. Cherry blossoms are blooming. Soft watercolor style."),
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Establishing wide shot: The child standing at the plain unmarked kindergarten gate on a sunny spring morning, wearing a graduation ribbon. Cherry blossoms are blooming. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "どろんこ遊びに、かけっこ、おえかき。おともだちと いっしょに、たくさん 笑ったね。",
@@ -782,7 +804,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     fixedStory: {
       titleTemplate: "{childName}の しょうがっこう にゅうがく",
       previewImageUrl: "/images/templates/fixed-entrance-elementary.webp",
-      coverImagePromptTemplate: withGraduationImagePromptGuardrail("Picture book cover: A child wearing a new school uniform and a shiny randoseru backpack, standing at an elementary school gate with cherry blossoms, proud and excited, soft watercolor style, rich but not cluttered."),
+      coverImagePromptTemplate: withGraduationImagePromptGuardrail("Picture book cover: A child wearing a new school uniform and a shiny randoseru backpack, standing at a plain unmarked elementary school gate with cherry blossoms, proud and excited, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "ピカピカの 1ねんせい！",
       openingNarrationTemplate: "さくらの 花が さく日。{childName}は 今日から、しょうがっこうの 1ねんせいです。",
       pageCount: 8,
@@ -796,7 +818,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate: "しょうがっこうの 門を くぐります。大きな建物、広い校庭。すべてが 新しく 見えます。",
           pageVisualRole: "discovery",
-          imagePromptTemplate: withGraduationImagePromptGuardrail("Wide shot: The child standing at the elementary school gate, looking up at the large school building. A mix of awe and excitement. Soft watercolor style."),
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Wide shot: The child standing at the plain unmarked elementary school gate, looking up at the large school building. A mix of awe and excitement. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "にゅうがくしき。ちょっと 緊張するけれど、背すじを のばして 座りました。",
@@ -816,7 +838,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate: "ピカピカの 教科書に、あたらしい 筆箱。これから どんなことを 学ぶのかな？",
           pageVisualRole: "object_detail",
-          imagePromptTemplate: withGraduationImagePromptGuardrail("Medium shot: The child looking at new school supplies (textbooks, pencil case) on their desk. Eyes full of curiosity. Soft watercolor style."),
+          imagePromptTemplate: withGraduationImagePromptGuardrail("Medium shot: The child looking at new plain school supplies (text-free textbooks, unmarked pencil case) on their desk. Eyes full of curiosity. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "帰り道、ランドセルが ちょっぴり 重いけれど、{childName}の 足取りは 軽やかです。",
@@ -884,7 +906,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate: "ミルクを のんだり、ねんねしたり。あかちゃんの ことを見ていると、{childName}も やさしい きもちになります。",
           pageVisualRole: "object_detail",
-          imagePromptTemplate: withNewBabyImagePromptGuardrail("Medium shot: The child watching from a little distance as the baby sleeps peacefully. Quiet and warm atmosphere. Soft watercolor style."),
+          imagePromptTemplate: withNewBabyImagePromptGuardrail("Medium shot: The child watching from a little distance as the baby sleeps peacefully near plain unmarked baby supplies. Quiet and warm atmosphere. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "今日から {childName}は おにいちゃん（おねえちゃん）です。なんだか ちょっぴり 誇らしい きもち。",
@@ -1004,7 +1026,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     fixedStory: {
       titleTemplate: "{childName}から いつもありがとう",
       previewImageUrl: "/images/templates/fixed-thank-you-grandparent.webp",
-      coverImagePromptTemplate: withFixedImagePromptSafety("Picture book cover: A child and an elderly couple (grandparents) spending a warm moment together, perhaps reading or gardening, peaceful and loving atmosphere, soft watercolor style, rich but not cluttered."),
+      coverImagePromptTemplate: withThankYouGrandparentImagePromptGuardrail("Picture book cover: A child and an elderly couple (grandparents) spending a warm moment together, perhaps reading or gardening, peaceful and loving atmosphere, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "だいすきな おじいちゃん おばあちゃんへ",
       openingNarrationTemplate: "{childName}は、おじいちゃんと おばあちゃんが 大好きです。今日は 感謝の きもちを 伝えます。",
       pageCount: 8,
@@ -1013,42 +1035,42 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate: "いつも やさしく 笑ってくれる 二人の えがお。{childName}は その えがおが 大好きです。",
           pageVisualRole: "opening_establishing",
-          imagePromptTemplate: withFixedImagePromptSafety("Establishing wide shot: The child and grandparents together in a cozy living room or a sunny garden. Everyone is smiling. Warm, soft light. Soft watercolor style."),
+          imagePromptTemplate: withThankYouGrandparentImagePromptGuardrail("Establishing wide shot: The child and grandparents together in a cozy living room or a sunny garden. Everyone is smiling. Warm, soft light. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "いっしょに お散歩に 行ったり、お花を 見たり。二人と すごす 時間は、とくべつな 宝物です。",
           pageVisualRole: "action",
-          imagePromptTemplate: withFixedImagePromptSafety("Action shot: The child and grandparents walking together on a peaceful path or looking at flowers. Gentle movement. Soft watercolor style."),
+          imagePromptTemplate: withThankYouGrandparentImagePromptGuardrail("Action shot: The child and grandparents walking together on a peaceful path or looking at flowers. Gentle movement. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "おもしろい お話を 聞かせてくれたり、いっしょに 遊んでくれたり。{childName}は いつも わくわくします。",
           pageVisualRole: "discovery",
-          imagePromptTemplate: withFixedImagePromptSafety("Medium shot: Grandparents showing the child an old photo album or a toy. The child's eyes are full of curiosity. Soft watercolor style."),
+          imagePromptTemplate: withThankYouGrandparentImagePromptGuardrail("Medium shot: Grandparents showing the child a plain unmarked photo album or a toy. The child's eyes are full of curiosity. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "ちょっと 転んで 泣いちゃったとき、やさしく 抱きしめてくれましたね。{childName}は すぐに 元気に なれました。",
           pageVisualRole: "setback_or_question",
-          imagePromptTemplate: withFixedImagePromptSafety("Medium shot: A grandparent gently comforting the child. Tender and reassuring. Soft watercolor style."),
+          imagePromptTemplate: withThankYouGrandparentImagePromptGuardrail("Medium shot: A grandparent gently comforting the child. Tender and reassuring. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "いっしょに 食べる ごはんは、せかいいち おいしい！ おじいちゃん、おばあちゃん、いつも ありがとう。",
           pageVisualRole: "object_detail",
-          imagePromptTemplate: withFixedImagePromptSafety("Medium shot: The child and grandparents eating together at a table. Happy and warm atmosphere. Soft watercolor style."),
+          imagePromptTemplate: withThankYouGrandparentImagePromptGuardrail("Medium shot: The child and grandparents eating together at a table. Happy and warm atmosphere. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}が 描いた え。 二人に 見せると、とっても 喜んでくれましたね。",
           pageVisualRole: "discovery",
-          imagePromptTemplate: withFixedImagePromptSafety("Medium shot: The child showing a drawing to grandparents. Grandparents are reacting with great joy. Soft watercolor style."),
+          imagePromptTemplate: withThankYouGrandparentImagePromptGuardrail("Medium shot: The child showing a text-free colorful drawing to grandparents. Grandparents are reacting with great joy. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "これからも、ずっと 元気で いてね。いっしょに たくさん 思い出を つくろうね。",
           pageVisualRole: "emotional_closeup",
-          imagePromptTemplate: withFixedImagePromptSafety("Close-up: The child's sincere face, looking at grandparents with love. Emotional connection. Soft watercolor style."),
+          imagePromptTemplate: withThankYouGrandparentImagePromptGuardrail("Close-up: The child's sincere face, looking at grandparents with love. Emotional connection. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "だいすきだよ！ ずっとずっと、ありがとう。{parentMessage}",
           pageVisualRole: "quiet_ending",
-          imagePromptTemplate: withFixedImagePromptSafety("Wide shot: The child and grandparents sitting together, perhaps watching a sunset. Peaceful and affectionate ending. Soft watercolor style."),
+          imagePromptTemplate: withThankYouGrandparentImagePromptGuardrail("Wide shot: The child and grandparents sitting together, perhaps watching a sunset. Peaceful and affectionate ending. Soft watercolor style."),
         }),
       ],
     },
@@ -1077,7 +1099,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     fixedStory: {
       titleTemplate: "また あおうね、ずっと ともだち",
       previewImageUrl: "/images/templates/fixed-moving-farewell.webp",
-      coverImagePromptTemplate: withFarewellImagePromptGuardrail("Picture book cover: Two children (the protagonist and a best friend) holding hands or waving, with a few plain moving boxes in the background, bittersweet but hopeful expression, soft watercolor style, rich but not cluttered."),
+      coverImagePromptTemplate: withFarewellImagePromptGuardrail("Picture book cover: Two children (the protagonist and a best friend) holding hands or waving, with a few plain unmarked cardboard moving boxes in the background, bittersweet but hopeful expression, soft watercolor style, rich but not cluttered."),
       titleSpreadTextTemplate: "はなれても、ずっと ともだち",
       openingNarrationTemplate: "{childName}は、お引越しをすることになりました。お友達と お別れするのは、ちょっぴり さびしいけれど…",
       pageCount: 8,
@@ -1086,7 +1108,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate: "おへやの おもちゃを 箱に つめます。がらんとした お部屋を 見て、{childName}は しんみりしました。",
           pageVisualRole: "opening_establishing",
-          imagePromptTemplate: withFarewellImagePromptGuardrail("Establishing wide shot: The child in a partially empty room with plain moving boxes. A look of quiet sadness or reflection. Soft light. Soft watercolor style."),
+          imagePromptTemplate: withFarewellImagePromptGuardrail("Establishing wide shot: The child in a partially empty room with plain unmarked cardboard moving boxes. A look of quiet sadness or reflection. Soft light. Soft watercolor style."),
         }),
         buildAgeSpecificPage({
           textTemplate: "だいすきな お友達に、おわかれを 言いに行きました。いっしょに 遊んだ 公園、わすれないよ。",
@@ -2771,7 +2793,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       titleTemplate: "{childName}のちいさなおてつだい",
       previewImageUrl: "/images/templates/fixed-little-helper.webp",
       coverImagePromptTemplate:
-        withFixedImagePromptSafety("Picture book cover illustration: a smiling child carrying a small basket of folded towels in a cozy family room, warm family members nearby, gentle gratitude mood, recurring tiny heart-spark motif, watercolor storybook style, child-safe rounded composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+        withLittleHelperImagePromptGuardrail("Picture book cover illustration: a smiling child carrying a small plain basket of folded towels in a cozy family room, warm family members nearby, gentle gratitude mood, recurring tiny heart-spark motif, watercolor storybook style, child-safe rounded composition, rich but not cluttered details"),
       titleSpreadTextTemplate: "ちいさなおてつだい",
       openingNarrationTemplate:
         "あるひの おうちで、{childName}は みんなの やくにたてる ちいさな おてつだいを さがしはじめました。",
@@ -2789,7 +2811,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "おうちでは、みんながおかたづけやじゅんびでいそがしそうです。{childName}はそれを見ていました。",
           pageVisualRole: "opening_establishing",
           imagePromptTemplate:
-            "Establishing wide shot of a cozy family room connected to a safe kitchen area. Family members organize cushions, laundry, and table items while a child watches with interest, ready to help. A tiny heart-spark motif appears on a basket handle. Warm daylight, calm home atmosphere, child-safe environment with no hazardous tools visible. Watercolor picture book style, layered composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+            withLittleHelperImagePromptGuardrail("Establishing wide shot of a cozy family room connected to a safe kitchen area. Family members organize plain cushions, laundry, and unmarked table items while a child watches with interest, ready to help. A tiny heart-spark motif appears on a plain basket handle. Warm daylight, calm home atmosphere, child-safe environment with no hazardous tools visible. Watercolor picture book style, layered composition, rich but not cluttered."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、できそうなおてつだいを見つけました。小さなかごをもって、タオルをはこびます。",
@@ -2804,7 +2826,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "{childName}は、できそうなおてつだいを見つけました。小さなかごをもって、タオルをはこびます。",
           pageVisualRole: "discovery",
           imagePromptTemplate:
-            "Medium discovery shot of a child carefully carrying a small basket with folded towels across a cozy room. Family member nearby offers a supportive smile at child eye level. A tiny heart-spark motif appears near the folded towels. Safe simple household task only, with no hazardous tools or heat-source context visible. Watercolor picture book style, clear action framing, warm and encouraging mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+            withLittleHelperImagePromptGuardrail("Medium discovery shot of a child carefully carrying a small plain basket with folded towels across a cozy room. Family member nearby offers a supportive smile at child eye level. A tiny heart-spark motif appears near the folded towels. Safe simple household task only, with no hazardous tools or heat-source context visible. Watercolor picture book style, clear action framing, warm and encouraging mood, rich but not cluttered."),
         }),
         buildAgeSpecificPage({
           textTemplate: "「ありがとう」と言われて、{childName}のこころはぽかぽかになりました。",
@@ -2819,7 +2841,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "「ありがとう」と言われて、{childName}のこころはぽかぽかになりました。",
           pageVisualRole: "emotional_closeup",
           imagePromptTemplate:
-            "Emotional close-up of a child receiving warm thanks from a family member, both smiling with soft eye contact. The child holds an empty basket proudly after helping. A tiny heart-spark motif glows near their hands. Cozy indoor lighting, gentle family connection, and safe environment. Watercolor picture book style, intimate emotional composition, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+            withLittleHelperImagePromptGuardrail("Emotional close-up of a child receiving warm thanks from a family member, both smiling with soft eye contact. The child holds an empty basket proudly after helping. A tiny heart-spark motif glows near their hands. Cozy indoor lighting, gentle family connection, and safe environment. Watercolor picture book style, intimate emotional composition, rich but not cluttered."),
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は「またおてつだいしたいな」と思いました。{parentMessage}",
@@ -2834,7 +2856,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
             "{childName}は「またおてつだいしたいな」と思いました。{parentMessage}",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate:
-            "Wide quiet ending shot of a calm family room after the helper task is done. The child sits comfortably beside family, smiling with relaxed pride while a tidy basket rests nearby. A tiny heart-spark motif appears on a cushion seam. Warm evening light, peaceful home mood, safe and reassuring composition. Watercolor picture book style, reflective ending framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+            withLittleHelperImagePromptGuardrail("Wide quiet ending shot of a calm family room after the helper task is done. The child sits comfortably beside family, smiling with relaxed pride while a tidy basket rests nearby. A tiny heart-spark motif appears on a cushion seam. Warm evening light, peaceful home mood, safe and reassuring composition. Watercolor picture book style, reflective ending framing, rich but not cluttered."),
         }),
       ],
     },

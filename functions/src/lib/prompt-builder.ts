@@ -183,7 +183,7 @@ function sanitizeImagePromptText(value: string): string {
   return value
     .replace(/[「『][^」』]*[」』]/g, "")
     .replace(/"[^"]*"/g, "")
-    .replace(/\b(repeated phrase|phrase|text|letters?|caption|speech bubbles?|labels?|posters?|banners?|signboards?|signage|signs?|storefront signs?|written|writing|title on|words?|quotes?)\b/gi, "")
+    .replace(/\b(repeated phrase|phrase|text|letters?|caption|speech bubbles?|labels?|posters?|banners?|signboards?|signage|signs?|storefront signs?|written|writing|title on|words?|quotes?|typography|graffiti|logos?|brand names?|word-like marks?)\b/gi, "")
     // L3: imagination-specific text-risk token replacements (T6-32)
     .replace(/\bstar charts?\b/gi, "night sky")
     .replace(/\btreasure maps?\b/gi, "illustrated landscape")
