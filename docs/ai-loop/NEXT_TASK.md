@@ -1,9 +1,5 @@
-# Implement Audio Read-Aloud Mode (MVP)
+# Refine Story Text to Suppress Childish Onomatopoeia and Made-up Words
 
 ## Context
 
-The product roadmap indicates "音声読み聞かせ" (audio read-aloud) as an unimplemented feature in Section 0 and "read-aloud mode" as a recommended item in Phase 6: User Experience. The current state shows significant progress in core generation, quality, and user experience features, including animated page transitions and the Cinematic Viewer. Implementing a basic audio read-aloud mode will enhance the reading experience and move towards a key user experience goal.
-
-## Objective
-
-Implement a minimal viable product (MVP) for an audio read-aloud mode within the existing book reader UI. This task focuses on the client-side integration of a text-to-speech (TTS) API and basic playback controls for the book'
+The product roadmap in Phase 2, "Story & Illustration Quality," explicitly lists "幼稚すぎる擬音・造語の抑制" (suppression of overly childish onomatopoeia and made-up words) as a task to be included for improving story text quality. While general Japanese naturalness has been improved (PR #495), and age-band specific text generation has been implemented (PR #481, PR #427), this specific aspect needs dedicated attention to further enhance the perceived quality and sophistication of generated story texts. This aligns with the overarching objective of creating "売り物として納得できる絵本" (picture books acceptable as commercial products), especially for target
