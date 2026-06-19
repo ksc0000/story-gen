@@ -182,6 +182,7 @@
     "PR #515: feat: 管理ダッシュボードにアナリティクスビュー（時系列分析） (merged)",
     "PR #516: feat: 本番で ENABLE_SCHEMA_REPAIR_RETRY を有効化 (#512) (merged)",
     "PR #518: Implement Image Regeneration Recommendation in Admin UI (merged)",
+    "PR #522: Refine fixed-sleepy-moon-adventure Template Quality (merged)",
     "PR #524: Implement Admin Operation Audit Logging (merged)",
     "PR #530: Update Template Mode (Phase 3) Roadmap Status (merged)",
     "PR #533: chore: AIレビューをClaudeのみにしCodexをレビューから除外 (merged)",
