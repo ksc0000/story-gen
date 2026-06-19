@@ -123,6 +123,23 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         pageImages: pageImages.length > 0 ? pageImages : undefined,
       });
 
+      // P2: Merge heuristic fixes from the book doc with LLM-suggested fixes.
+      // Heuristic fixes (failed, fallback, slow) are set during book generation.
+      const existingFixes = afterData.qualityRecommendedFixes ?? [];
+      const mergedRecommendedFixes = [...existingFixes];
+
+      for (const newFix of reviewResult.recommendedFixes) {
+        const isDuplicate = existingFixes.some(
+          (ef) =>
+            ef.action === newFix.action &&
+            ef.pageNumber === newFix.pageNumber &&
+            ef.reason === newFix.reason
+        );
+        if (!isDuplicate) {
+          mergedRecommendedFixes.push(newFix);
+        }
+      }
+
       // Prepare review document
       const now = Date.now();
       const reviewId = `llm_auto_review_${now}`;
@@ -222,7 +239,7 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         status: "llm_reviewed",
         reviewReason: reviewResult.reviewReason,
         flaggedIssues: reviewResult.flaggedIssues,
-        recommendedFixes: reviewResult.recommendedFixes,
+        recommendedFixes: mergedRecommendedFixes,
         rubricVersion: "llm-auto-v2",
         llmAutoReviewResult: reviewResult,
         ...(storyAxes ? { storyAxes } : {}),
@@ -262,7 +279,7 @@ export const onBookCompletion_triggerLLMAutoReview = onDocumentUpdated(
         qualityReviewer: "system_llm",
         qualityReviewReason: reviewResult.reviewReason,
         qualityFlaggedIssues: reviewResult.flaggedIssues,
-        qualityRecommendedFixes: reviewResult.recommendedFixes,
+        qualityRecommendedFixes: mergedRecommendedFixes,
         ...(storyAxes ? { storyAxes } : {}),
         ...(illustrationAxes ? { illustrationAxes } : {}),
         ...(characterAxes ? { characterAxes } : {}),

@@ -161,4 +161,64 @@ describe("buildQualityRecommendations", () => {
     const recs = buildQualityRecommendations(book);
     expect(recs).toEqual([]);
   });
+
+  describe("qualityRecommendedFixes (Heuristics/LLM merging)", () => {
+    it("No scores yet, but has fixes → recommendations derived from fixes", () => {
+      const book = makeBook({
+        overallQualityScore: undefined,
+        qualityRecommendedFixes: [
+          { action: "regenerate_page_image", reason: "画像生成に失敗しました", pageNumber: 1 },
+        ],
+      });
+      const recs = buildQualityRecommendations(book);
+      expect(recs.length).toBe(1);
+      expect(recs[0].action).toBe("regenerate_images");
+      expect(recs[0].severity).toBe("high");
+      expect(recs[0].reason).toContain("1 ページの画像再生成を推奨");
+      expect(recs[0].details).toContain("page 1: 画像生成に失敗しました");
+    });
+
+    it("Multiple image fixes → grouped into single recommendation", () => {
+      const book = makeBook({
+        overallQualityScore: 4.0,
+        qualityRecommendedFixes: [
+          { action: "regenerate_page_image", reason: "フォールバック", pageNumber: 2 },
+          { action: "regenerate_page_image", reason: "低速", pageNumber: 5 },
+        ],
+      });
+      const recs = buildQualityRecommendations(book);
+      const imgRec = recs.find(r => r.action === "regenerate_images");
+      expect(imgRec).toBeDefined();
+      expect(imgRec!.severity).toBe("medium"); // No "失敗"
+      expect(imgRec!.details?.length).toBe(2);
+      expect(imgRec!.details).toContain("page 2: フォールバック");
+      expect(imgRec!.details).toContain("page 5: 低速");
+    });
+
+    it("Heuristic fix (failed) exists → grouped recommendation is High", () => {
+      const book = makeBook({
+        qualityRecommendedFixes: [
+          { action: "regenerate_page_image", reason: "生成に失敗", pageNumber: 3 },
+          { action: "regenerate_page_image", reason: "低速", pageNumber: 1 },
+        ],
+      });
+      const recs = buildQualityRecommendations(book);
+      const imgRec = recs.find(r => r.action === "regenerate_images");
+      expect(imgRec!.severity).toBe("high");
+    });
+
+    it("Illustration score low AND fixes exist → grouped recommendation takes precedence", () => {
+      const book = makeBook({
+        overallQualityScore: 2.0,
+        illustrationQualityScore: 2.0,
+        qualityRecommendedFixes: [
+          { action: "regenerate_page_image", reason: "失敗", pageNumber: 1 },
+        ],
+      });
+      const recs = buildQualityRecommendations(book);
+      const imgRecs = recs.filter(r => r.action === "regenerate_images");
+      expect(imgRecs.length).toBe(1);
+      expect(imgRecs[0].reason).toContain("1 ページの画像再生成を推奨");
+    });
+  });
 });

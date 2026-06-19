@@ -83,6 +83,15 @@ export function QualityRecommendationPanel({ book, onIntentAction }: QualityReco
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold">{ACTION_LABELS[rec.action]}</p>
                   <p className="text-xs opacity-80">{rec.reason}</p>
+                  {rec.details && rec.details.length > 0 && (
+                    <ul className="mt-1 space-y-0.5">
+                      {rec.details.map((detail, i) => (
+                        <li key={i} className="text-[10px] opacity-70 list-disc ml-3">
+                          {detail}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 {rec.action !== "approve" && (
                   <button

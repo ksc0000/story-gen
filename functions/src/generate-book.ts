@@ -23,6 +23,7 @@ import type {
   StoryCharacterKind,
   ImageModelProfile,
   CoverStatus,
+  QualityRecommendedFix,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import {
@@ -1875,6 +1876,29 @@ export async function processBookGeneration(
           ? "partial_completed"
           : "failed";
 
+    const qualityRecommendedFixes: QualityRecommendedFix[] = [];
+    for (const res of pageResults) {
+      if (!res.success) {
+        qualityRecommendedFixes.push({
+          action: "regenerate_page_image",
+          reason: "画像生成に失敗しました",
+          pageNumber: res.pageIndex + 1,
+        });
+      } else if (res.fallbackUsed) {
+        qualityRecommendedFixes.push({
+          action: "regenerate_page_image",
+          reason: "低画質モデルへのフォールバックが発生しました",
+          pageNumber: res.pageIndex + 1,
+        });
+      } else if (res.durationMs > 120000) {
+        qualityRecommendedFixes.push({
+          action: "regenerate_page_image",
+          reason: "生成に 120 秒以上かかりました（低速）",
+          pageNumber: res.pageIndex + 1,
+        });
+      }
+    }
+
     const bookMetrics = removeUndefinedDeep({
       imageSuccessCount,
       imageFailureCount,
@@ -1885,6 +1909,7 @@ export async function processBookGeneration(
       maxImageDurationMs,
       generationReliabilityStatus,
       generationMode,
+      qualityRecommendedFixes: qualityRecommendedFixes.length > 0 ? qualityRecommendedFixes : undefined,
     });
 
     if (bookStatus === "failed") {

@@ -579,7 +579,11 @@ export default function AdminBookQualityReviewPage() {
           characterConsistencyScore: 4,
           storyCast: [
             { characterId: "char1", displayName: "Test Character", role: "protagonist", visualBible: "A small blue robot" }
-          ]
+          ],
+          qualityRecommendedFixes: [
+            { action: "regenerate_page_image", reason: "画像生成に失敗しました", pageNumber: 1 },
+            { action: "regenerate_page_image", reason: "フォールバックが発生しました", pageNumber: 2 },
+          ],
         } as BookWithId,
         {
           id: "demo-book-2",
