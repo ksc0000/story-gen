@@ -1,10 +1,17 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
+import * as admin from "firebase-admin";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { extractJsonFromLLMResponse } from "./lib/llm-json-repair";
+import { isRateLimited } from "./lib/rate-limit";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
+
+const RATE_LIMIT_STORY_PITCH = {
+  maxRequests: 10,
+  windowSeconds: 300, // 5 minutes
+};
 
 export interface StoryPitch {
   title: string;
@@ -126,8 +133,31 @@ export const generateStoryPitch = onCall(
     secrets: [geminiApiKey],
   },
   async (request): Promise<StoryPitch> => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", "Authentication required");
+    }
+
     const data = request.data as GenerateStoryPitchInput;
     validateInput(data);
+
+    // Rate limiting
+    const isAdmin = request.auth?.token.admin === true;
+    const limited = await isRateLimited(
+      admin.firestore(),
+      uid,
+      "generate_story_pitch",
+      RATE_LIMIT_STORY_PITCH,
+      isAdmin
+    );
+
+    if (limited) {
+      logger.warn("generateStoryPitch: rate limited", { uid });
+      throw new HttpsError(
+        "resource-exhausted",
+        "リクエストが多すぎます。少し時間をおいてから、もう一度お試しください。"
+      );
+    }
 
     const apiKey = geminiApiKey.value();
     const genAI = new GoogleGenerativeAI(apiKey);

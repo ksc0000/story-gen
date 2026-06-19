@@ -3,6 +3,7 @@ import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
+import { isRateLimited } from "./lib/rate-limit";
 import type {
   BookData,
   TemplateData,
@@ -91,6 +92,11 @@ import { createImageAdapter, resolveImageProviderId } from "./lib/image-adapter-
 // ばらつくため、3倍の 360s に引き上げ（2026-06）。env で上書き可能。
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "360000");
 const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCURRENCY ?? "2")));
+
+const RATE_LIMIT_GENERATE_BOOK = {
+  maxRequests: 2,
+  windowSeconds: 300, // 5 minutes
+};
 
 // P3-15: USE_REPLICATE_ADAPTER and USE_OPENAI_ADAPTER feature flags removed.
 // Adapter path is now the canonical page generation path (no env var gate required).
@@ -659,6 +665,7 @@ function isRetryableGeminiFailure(err: unknown): boolean {
 }
 
 export interface GenerationDeps {
+  db: admin.firestore.Firestore;
   getTemplate: (theme: string) => Promise<TemplateData>;
   getUserPlan: (userId: string) => Promise<"free" | "premium">;
   llmClient: LLMClient;
@@ -1057,6 +1064,31 @@ export async function processBookGeneration(
   const generationStartMs = Date.now();
 
   try {
+    // Step 0: Rate limiting
+    const isAdminUser = await deps.isUserAdmin(bookData.userId);
+    const limited = await isRateLimited(
+      deps.db,
+      bookData.userId,
+      "generate_book",
+      RATE_LIMIT_GENERATE_BOOK,
+      isAdminUser
+    );
+
+    if (limited) {
+      const message = "リクエストが多すぎます。少し時間をおいてから、もう一度お試しください。";
+      logger.warn(`Rate limit exceeded for user ${bookData.userId}`, { bookId });
+      await deps.updateBookFailure(bookId, message);
+      await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
+        failureStage: "validation",
+        failureProvider: "system",
+        failureReason: "rate_limited",
+        retryable: true,
+        technicalErrorMessage: "Rate limit exceeded (API level)",
+      }));
+      await deps.updateBookStatus(bookId, "failed");
+      return;
+    }
+
     // Step 1: Validate input
     const mergedInput = mergeInputWithChildProfile(bookData.input, bookData.childProfileSnapshot);
     const sanitizeResult = sanitizeInput(mergedInput);
@@ -1098,7 +1130,6 @@ export async function processBookGeneration(
       }
     }
     const userPlan = await deps.getUserPlan(bookData.userId);
-    const isAdminUser = await deps.isUserAdmin(bookData.userId);
     const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
     const readingProfile = getAgeReadingProfile(mergedInput.childAge);
     const generationMode = normalizedBookData.generationMode ?? "reliable_fast";
@@ -1346,7 +1377,7 @@ export async function processBookGeneration(
       : storyResult.story;
 
     // Step 6b: Inject companion character reference image (if companion selected)
-    story = await injectCompanionCharacterReference({ story, mergedInput });
+    story = await injectCompanionCharacterReference({ db: deps.db, story, mergedInput });
 
     const { qualityReport } = storyResult;
     const selectedStyleProfile = getIllustrationStyleProfile(normalizedBookData.style);
@@ -2289,13 +2320,14 @@ function buildRecurringCharacterReferencePrompt(
  * companion が未設定・画像なし・cast に見つからない場合はそのまま返す（エラー非致命的）。
  */
 async function injectCompanionCharacterReference(params: {
+  db: admin.firestore.Firestore;
   story: GeneratedStory;
   mergedInput: BookInput;
 }): Promise<GeneratedStory> {
-  const { story, mergedInput } = params;
+  const { db, story, mergedInput } = params;
   if (!mergedInput.companionId || !story.cast?.length) return story;
   try {
-    const companionSnap = await admin.firestore()
+    const companionSnap = await db
       .collection("companions").doc(mergedInput.companionId).get();
     if (!companionSnap.exists) {
       logger.warn("injectCompanionCharacterReference: companion not found", {
@@ -2326,7 +2358,7 @@ async function ensureRecurringCharacterReferences(params: {
   bookId: string;
   story: GeneratedStory;
   normalizedBookData: BookData;
-  deps: Pick<GenerationDeps, "imageClient" | "uploadImage" | "replicateApiToken" | "openaiApiKey">;
+  deps: Pick<GenerationDeps, "db" | "imageClient" | "uploadImage" | "replicateApiToken" | "openaiApiKey">;
 }): Promise<GeneratedStory> {
   if (!params.story.cast?.length) {
     return params.story;
@@ -3150,6 +3182,7 @@ export const generateBook = onDocumentCreated(
 
     // Create production dependencies
     const deps: GenerationDeps = {
+      db,
       getTemplate: async (theme: string) => {
         const templateDoc = await db.collection("templates").doc(theme).get();
         if (!templateDoc.exists) throw new Error(`Template not found: ${theme}`);

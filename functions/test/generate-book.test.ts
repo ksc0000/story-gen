@@ -163,7 +163,20 @@ function createPremiumPassingStory(): GeneratedStory {
 }
 
 function createMockDeps() {
+  const mockDb = {
+    collection: vi.fn(() => ({
+      doc: vi.fn(() => ({
+        get: vi.fn().mockResolvedValue({ exists: false, data: () => ({}) }),
+      })),
+    })),
+    runTransaction: vi.fn((cb) => cb({
+      get: vi.fn().mockResolvedValue({ exists: false, data: () => ({}) }),
+      set: vi.fn(),
+    })),
+  };
+
   return {
+    db: mockDb as any,
     getTemplate: vi.fn().mockResolvedValue(mockTemplate),
     getUserPlan: vi.fn().mockResolvedValue("free" as const),
     llmClient: {
