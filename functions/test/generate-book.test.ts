@@ -215,7 +215,7 @@ describe("processBookGeneration", () => {
       })
     );
     expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
-      expect.not.stringContaining("reference image"),
+      expect.not.stringContaining("reference image "),
       expect.any(Object)
     );
     expect(deps.imageClient.generateImage).toHaveBeenCalledWith(

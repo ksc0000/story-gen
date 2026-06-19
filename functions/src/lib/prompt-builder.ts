@@ -702,11 +702,8 @@ export function buildOutfitRule(
 function buildCharacterConsistencyGuidance(characterBible?: string): string {
   return [
     characterBible ? `Character consistency: ${characterBible}` : "",
-    "Character consistency rules: same child character across all pages, same age impression, same hairstyle, same face shape, same body proportions, same outfit unless the outfit rule says otherwise, keep the signature item when appropriate.",
-    "If the child is seen from behind, in side view, or far away, preserve the same hairstyle, silhouette, outfit logic, and recognizable age impression.",
-    "Keep identity consistent, but change pose, camera angle, distance, action, background, and focal point according to this page.",
-    "Do not repeat the same pose or same framing from previous pages.",
-    "The child can appear from behind, side view, far away, or partially visible, as long as hairstyle, outfit, silhouette, and age impression remain recognizable.",
+    "Character consistency: same child across all pages, same age, hairstyle, face shape, proportions, and outfit. Keep identity consistent but vary pose, angle, distance, and action. Do not repeat framing. The child can appear from behind or distance if hairstyle and silhouette remain recognizable.",
+    "Provided character assets are ONLY for identity (face, hair, features). Strictly ignore their background, lighting, pose, and composition. The scene must be driven by the page description, not these assets.",
   ].filter(Boolean).join(" ");
 }
 

@@ -27,6 +27,7 @@ export type InputImageRole = "character_reference" | "style_reference" | "prev_p
 export type InputImageSource =
   | "approvedImageUrl"
   | "referenceImageUrl"
+  | "neutralReferenceImageUrl"
   | "generatedReferenceImageUrl"
   | "stylePreviewImageUrl";
 export type StoryCharacterKind =
@@ -372,6 +373,8 @@ export interface ChildVisualProfile {
   colorMood?: string;
   approvedImageUrl?: string;
   referenceImageUrl?: string;
+  neutralReferenceImageUrl?: string;
+  neutralReferenceImageVersion?: number;
   characterBible?: string;
   basePrompt?: string;
   version: number;
@@ -723,6 +726,7 @@ export interface StoryCharacter {
   negativeCharacterRules?: string[];
   canChangeByScene?: string[];
   referenceImageUrl?: string;
+  neutralReferenceImageUrl?: string;
   approvedImageUrl?: string;
   generatedReferenceImageUrl?: string;
   referenceImageGeneratedAt?: Timestamp | null;

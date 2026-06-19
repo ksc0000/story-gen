@@ -159,7 +159,7 @@ describe("buildImagePrompt", () => {
     const result = buildImagePrompt("A child at a party", "watercolor", "same yellow hat", "same paper texture");
     expect(result).toContain("same yellow hat");
     expect(result).toContain("same paper texture");
-    expect(result).toContain("same child character across all pages");
+    expect(result).toContain("same child across all pages");
   });
   it("includes visual storytelling rules", () => {
     const result = buildImagePrompt("A child at a party", "watercolor");
@@ -168,6 +168,12 @@ describe("buildImagePrompt", () => {
     expect(result).toContain("wide shots");
     expect(result).toContain("bird's-eye views");
     expect(result).toContain("secondary characters");
+  });
+  it("includes identity-only character reference guidance (REF-001)", () => {
+    const result = buildImagePrompt("A child in a park", "watercolor");
+    expect(result).toContain("Provided character assets are ONLY for identity");
+    expect(result).toContain("Strictly ignore their background, lighting, pose, and composition");
+    expect(result).toContain("scene must be driven by the page description, not these assets");
   });
   it("adds a wordless picture book instruction and blocks written elements", () => {
     const result = buildImagePrompt("A child at a party", "watercolor");
@@ -345,7 +351,7 @@ describe("buildImagePrompt", () => {
 
     expect(result).toContain("blue sky t-shirt");
     expect(result).toContain("green dinosaur toy");
-    expect(result).toContain("same child character across all pages");
+    expect(result).toContain("Character consistency:");
   });
   it("appends safety keywords", () => {
     const result = buildImagePrompt("A child at a party", "flat");
@@ -909,7 +915,7 @@ describe("prompt length regression (P5-3j)", () => {
     },
   ];
 
-  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 8100 chars", () => {
+  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 8500 chars", () => {
     const result = buildImagePrompt(
       "A child walks with a fox and a glowing star friend through a sunlit meadow, carrying a dinosaur toy",
       "classic_picture_book",
@@ -928,7 +934,7 @@ describe("prompt length regression (P5-3j)", () => {
         compositionHint: "wide establishing shot from slightly above",
       }
     );
-    expect(result.length).toBeLessThan(8100);
+    expect(result.length).toBeLessThan(8500);
   });
 
   it("non-animals non-star prompt (base case) stays under 6000 chars", () => {

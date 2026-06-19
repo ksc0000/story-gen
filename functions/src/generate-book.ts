@@ -174,6 +174,7 @@ export function sanitizeStoryCastForFirestore(cast?: GeneratedStory["cast"]): Ge
         negativeCharacterRules: character.negativeCharacterRules,
         canChangeByScene: character.canChangeByScene,
         referenceImageUrl: character.referenceImageUrl,
+        neutralReferenceImageUrl: character.neutralReferenceImageUrl,
         approvedImageUrl: character.approvedImageUrl,
         generatedReferenceImageUrl: character.generatedReferenceImageUrl,
         referenceImageGeneratedAt: character.referenceImageGeneratedAt,
@@ -259,6 +260,7 @@ export function normalizeStoryCastWithChildProfile(
     doNotChange: doNotChange.length > 0 ? doNotChange : undefined,
     canChangeByScene: existingProtagonist?.canChangeByScene,
     referenceImageUrl: visualProfile.referenceImageUrl,
+    neutralReferenceImageUrl: visualProfile.neutralReferenceImageUrl,
     approvedImageUrl: visualProfile.approvedImageUrl,
   });
 
@@ -694,6 +696,7 @@ export interface GenerationDeps {
     photoStoryCredits: number;
   }>;
   consumeCredit: (userId: string, type: "ai_guided" | "photo_story" | "legacy") => Promise<void>;
+  updateChildNeutralReference: (userId: string, childId: string, imageUrl: string) => Promise<void>;
   /**
    * P5-3c: Gated experiment mode for page image generation.
    * "simplified_scene" = cover-style short prompt without character bible.
@@ -726,6 +729,70 @@ interface PageImageResult {
 }
 
 
+
+/**
+ * Ensures a neutral reference image (plain white background, identity focus) exists for the child.
+ * If missing, it generates one using the high-quality profile and the first available reference image.
+ */
+async function ensureNeutralReferenceImage(params: {
+  userId: string;
+  childId: string;
+  childProfile: ChildProfileSnapshot;
+  deps: GenerationDeps;
+}): Promise<string | undefined> {
+  const { userId, childId, childProfile, deps } = params;
+  const { neutralReferenceImageUrl, approvedImageUrl, referenceImageUrl } = childProfile.visualProfile;
+
+  if (neutralReferenceImageUrl) {
+    return neutralReferenceImageUrl;
+  }
+
+  const baseRefUrl = approvedImageUrl || referenceImageUrl;
+  if (!baseRefUrl) {
+    return undefined;
+  }
+
+  logger.info("Generating neutral reference image", { userId, childId });
+
+  const styleProfile = getIllustrationStyleProfile(childProfile.visualProfile.outfit ? "soft_watercolor" : "flat_illustration"); // Default to a clean style
+  const neutralPrompt = [
+    "A clean character reference illustration for a child protagonist.",
+    "Draw the character on a plain, solid white background with NO scenery, NO environment, and NO objects.",
+    "Front-facing, eye-level, full-body standing pose.",
+    `Character identity: ${childProfile.visualProfile.characterBible || "A gentle child"}`,
+    childProfile.age ? `Age impression: about ${childProfile.age} years old.` : "",
+    childProfile.visualProfile.characterLook ? `Appearance: ${childProfile.visualProfile.characterLook}.` : "",
+    childProfile.visualProfile.outfit ? `Outfit: ${childProfile.visualProfile.outfit}.` : "",
+    childProfile.visualProfile.signatureItem ? `Signature item: ${childProfile.visualProfile.signatureItem}.` : "",
+    "Wordless illustration, no text, no labels, no watermark.",
+    `Illustration style: ${styleProfile.styleBible}`,
+  ].join(" ");
+
+  try {
+    const buffer = await deps.imageClient.generateImage(neutralPrompt, {
+      inputImageUrls: [toPublicUrl(baseRefUrl)],
+      purpose: "child_avatar", // Use avatar purpose for best identity focus
+      imageQualityTier: "premium",
+      imageModelProfile: "pro_consistent",
+    });
+
+    const neutralUrl = await deps.uploadImage(`neutral-${childId}`, 999, buffer);
+
+    // Asynchronously update the child profile in Firestore to not block the current generation too much,
+    // although we already have the URL for the current book.
+    await deps.updateChildNeutralReference(userId, childId, neutralUrl);
+
+    logger.info("Successfully generated and saved neutral reference image", { userId, childId, neutralUrl });
+    return neutralUrl;
+  } catch (err) {
+    logger.error("Failed to generate neutral reference image", {
+      userId,
+      childId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return undefined;
+  }
+}
 
 async function generatePageImageWithFallback(params: {
   prompt: string;
@@ -1147,8 +1214,32 @@ export async function processBookGeneration(
     }
 
     // Step 4: Build reference assets
+    if (normalizedBookData.childId && normalizedBookData.childProfileSnapshot) {
+      const { neutralReferenceImageUrl, approvedImageUrl, referenceImageUrl } = normalizedBookData.childProfileSnapshot.visualProfile;
+      if (!neutralReferenceImageUrl && (approvedImageUrl || referenceImageUrl)) {
+        try {
+          const neutralUrl = await ensureNeutralReferenceImage({
+            userId: normalizedBookData.userId,
+            childId: normalizedBookData.childId,
+            childProfile: normalizedBookData.childProfileSnapshot,
+            deps,
+          });
+          if (neutralUrl) {
+            normalizedBookData.childProfileSnapshot.visualProfile.neutralReferenceImageUrl = neutralUrl;
+          }
+        } catch (err) {
+          logger.warn("Failed to generate neutral reference, continuing with original refs", {
+            bookId,
+            childId: normalizedBookData.childId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+    }
+
     const childHasReferenceImages = Boolean(
-      normalizedBookData.childProfileSnapshot?.visualProfile.referenceImageUrl ||
+      normalizedBookData.childProfileSnapshot?.visualProfile.neutralReferenceImageUrl ||
+        normalizedBookData.childProfileSnapshot?.visualProfile.referenceImageUrl ||
         normalizedBookData.childProfileSnapshot?.visualProfile.approvedImageUrl
     );
 
@@ -2128,12 +2219,12 @@ export function buildInputImageRefs(
           url: sourcePhotoUrl,
         }
       : undefined,
-    childProfileSnapshot?.visualProfile.referenceImageUrl
+    childProfileSnapshot?.visualProfile.neutralReferenceImageUrl
       ? {
           role: "character_reference",
           characterId: "child_protagonist",
-          url: toPublicUrl(childProfileSnapshot.visualProfile.referenceImageUrl),
-          source: "referenceImageUrl" as const,
+          url: toPublicUrl(childProfileSnapshot.visualProfile.neutralReferenceImageUrl),
+          source: "neutralReferenceImageUrl" as const,
         }
       : undefined,
     childProfileSnapshot?.visualProfile.approvedImageUrl
@@ -2142,6 +2233,14 @@ export function buildInputImageRefs(
           characterId: "child_protagonist",
           url: toPublicUrl(childProfileSnapshot.visualProfile.approvedImageUrl),
           source: "approvedImageUrl" as const,
+        }
+      : undefined,
+    childProfileSnapshot?.visualProfile.referenceImageUrl
+      ? {
+          role: "character_reference",
+          characterId: "child_protagonist",
+          url: toPublicUrl(childProfileSnapshot.visualProfile.referenceImageUrl),
+          source: "referenceImageUrl" as const,
         }
       : undefined,
   ].filter(Boolean) as Array<{
@@ -2157,6 +2256,7 @@ export function buildInputImageRefs(
     }
 
     const candidates: Array<[string | undefined, InputImageSource]> = [
+      [character.neutralReferenceImageUrl, "neutralReferenceImageUrl"],
       [character.approvedImageUrl, "approvedImageUrl"],
       [character.referenceImageUrl, "referenceImageUrl"],
       [character.generatedReferenceImageUrl, "generatedReferenceImageUrl"],
@@ -3317,6 +3417,14 @@ export const generateBook = onDocumentCreated(
         gateUserData?.generationOverride?.p5ModelUnification === "safer_retry"
           ? "safer_retry"
           : undefined,
+
+      updateChildNeutralReference: async (userId, childId, imageUrl) => {
+        await db.collection("users").doc(userId).collection("children").doc(childId).update({
+          "visualProfile.neutralReferenceImageUrl": imageUrl,
+          "visualProfile.neutralReferenceImageVersion": admin.firestore.FieldValue.increment(1),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      },
     };
 
     await processBookGeneration(bookId, bookDataForProcessing, deps);
