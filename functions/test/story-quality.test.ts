@@ -114,6 +114,53 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "unnatural_japanese_risk")).toBe(true);
   });
 
+  it("flags new childish neologisms and baby talk for preschool pages", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "たっちゃん、おめめを ぱちぱち。ぴょんたんが きたよ。いっしょに あそぼ、ぴぴるる。",
+            imagePrompt: "discovery scene with a small star child and sandbox details",
+            compositionHint: "medium shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "text_too_childish")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "unnatural_japanese_risk")).toBe(true);
+  });
+
+  it("applies stricter onomatopoeia limits for older children (5+)", () => {
+    const textWithTwoOnomatopoeia = "おへやで わくわく しました。きらきら 光る ほしを みつけました。";
+
+    // 3-4 years old: warning/error for 3+ onomatopoeia, so 2 is okay.
+    const preschoolReport = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [{ text: textWithTwoOnomatopoeia, imagePrompt: "simple scene description that is long enough" }],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+    expect(preschoolReport.issues.some((issue) => issue.code === "too_many_sound_words")).toBe(false);
+
+    // 5-6 years old: stricter, 2 or more triggers warning.
+    const earlyReaderReport = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [{ text: textWithTwoOnomatopoeia, imagePrompt: "simple scene description that is long enough" }],
+      },
+      readingProfile: getAgeReadingProfile(6),
+      creationMode: "guided_ai",
+    });
+    expect(earlyReaderReport.issues.some((issue) => issue.code === "too_many_sound_words")).toBe(true);
+  });
+
   it("flags monotonous sentence endings in preschool pages", () => {
     const report = validateGeneratedStoryQuality({
       story: {
