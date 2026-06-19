@@ -48,6 +48,7 @@ import { CharacterConsistencyDiagnostics } from "@/components/admin/CharacterCon
 import { QualityRecommendationPanel, QualityRecommendationBadge } from "@/components/admin/QualityRecommendationPanel";
 import { RecommendationTaskDraftPanel } from "@/components/admin/RecommendationTaskDraftPanel";
 import { QualityTasksPanel } from "@/components/admin/QualityTasksPanel";
+import { logAdminOperation } from "@/lib/admin-audit-logger";
 import type { QualityReviewForm, QualityReviewWithId } from "@/lib/quality-review";
 import type { QualityRecommendationIntent } from "@/lib/quality-review";
 import {
@@ -1242,29 +1243,47 @@ export default function AdminBookQualityReviewPage() {
     setSavingReview(true);
     setSaveMessage(null);
     try {
+      const adminTextQualityScore = reviewForm.adminTextQualityScore
+        ? Number(reviewForm.adminTextQualityScore)
+        : null;
+      const adminImageQualityScore = reviewForm.adminImageQualityScore
+        ? Number(reviewForm.adminImageQualityScore)
+        : null;
+      const adminCharacterConsistencyScore = reviewForm.adminCharacterConsistencyScore
+        ? Number(reviewForm.adminCharacterConsistencyScore)
+        : null;
+      const adminStorySatisfactionScore = reviewForm.adminStorySatisfactionScore
+        ? Number(reviewForm.adminStorySatisfactionScore)
+        : null;
+      const adminMemo = reviewForm.adminMemo.trim();
+
       await updateDoc(doc(db, "books", selectedBook.id), {
-        adminTextQualityScore: reviewForm.adminTextQualityScore
-          ? Number(reviewForm.adminTextQualityScore)
-          : null,
-        adminImageQualityScore: reviewForm.adminImageQualityScore
-          ? Number(reviewForm.adminImageQualityScore)
-          : null,
-        adminCharacterConsistencyScore: reviewForm.adminCharacterConsistencyScore
-          ? Number(reviewForm.adminCharacterConsistencyScore)
-          : null,
-        adminQualityScore: reviewForm.adminImageQualityScore
-          ? Number(reviewForm.adminImageQualityScore)
-          : null,
-        adminImageConsistencyScore: reviewForm.adminCharacterConsistencyScore
-          ? Number(reviewForm.adminCharacterConsistencyScore)
-          : null,
-        adminStorySatisfactionScore: reviewForm.adminStorySatisfactionScore
-          ? Number(reviewForm.adminStorySatisfactionScore)
-          : null,
-        adminMemo: reviewForm.adminMemo.trim(),
+        adminTextQualityScore,
+        adminImageQualityScore,
+        adminCharacterConsistencyScore,
+        adminQualityScore: adminImageQualityScore,
+        adminImageConsistencyScore: adminCharacterConsistencyScore,
+        adminStorySatisfactionScore,
+        adminMemo,
         adminReviewedAt: serverTimestamp(),
         adminReviewedBy: user.uid,
       });
+
+      await logAdminOperation({
+        operation: "submit_quality_review",
+        adminUid: user.uid,
+        targetId: selectedBook.id,
+        targetType: "book",
+        payload: {
+          reviewType: "legacy_manual",
+          adminTextQualityScore,
+          adminImageQualityScore,
+          adminCharacterConsistencyScore,
+          adminStorySatisfactionScore,
+          memoLength: adminMemo.length,
+        },
+      });
+
       setSaveMessage("管理者レビューを保存しました");
     } catch (error) {
       console.error("Failed to save admin review:", error);
@@ -1375,6 +1394,22 @@ export default function AdminBookQualityReviewPage() {
       batch.set(reviewRef, reviewPayload);
       batch.update(bookRef, summaryPayload);
       await batch.commit();
+
+      await logAdminOperation({
+        operation: "submit_quality_review",
+        adminUid: user.uid,
+        targetId: selectedBook.id,
+        targetType: "book",
+        payload: {
+          reviewType: "detailed_v2",
+          reviewId: reviewRef.id,
+          overallScore: qualityReviewForm.overallScore,
+          status: qualityReviewForm.status,
+          flaggedIssuesCount: qualityReviewForm.flaggedIssues.length,
+          recommendedFixesCount: qualityReviewForm.recommendedFixes.length,
+        },
+      });
+
       setQualityReviewMessage("Quality review を保存しました");
       setQualityReviewForm(normalizeQualityReviewForm());
 
