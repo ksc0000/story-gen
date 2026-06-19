@@ -89,6 +89,7 @@ const STORY_AXES_SCHEMA = {
   type: "object" as const,
   properties: {
     childPersonalization: { type: "number" as const, description: "Child personalization (0-100)" },
+    storyGoalAdherence: { type: "number" as const, description: "Adherence to storyGoal and mainQuestObject (0-100)" },
     storyCoherence: { type: "number" as const, description: "Story coherence and pacing (0-100)" },
     ageAppropriateness: { type: "number" as const, description: "Age appropriateness of language and themes (0-100)" },
     emotionalSatisfaction: { type: "number" as const, description: "Emotional engagement and satisfaction (0-100)" },
@@ -98,6 +99,7 @@ const STORY_AXES_SCHEMA = {
   },
   required: [
     "childPersonalization",
+    "storyGoalAdherence",
     "storyCoherence",
     "ageAppropriateness",
     "emotionalSatisfaction",

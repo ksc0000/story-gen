@@ -21,6 +21,7 @@ Reviewers should consider the following axes when determining the score:
 - **Age Appropriateness**: Is the vocabulary, sentence length, and complexity suitable for the target age group?
 - **Emotional Satisfaction**: Does the story evoke the intended emotions (joy, curiosity, etc.) and provide a satisfying conclusion?
 - **Page Length Balance**: Is the amount of text per page consistent and appropriate for the pacing?
+- **Story Goal Adherence**: Does the narrative follow the initial `storyGoal`? See [Story Goal Adherence Rubric](./QUALITY_RUBRICS/STORY_GOAL_ADHERENCE_RUBRIC.md) for details.
 - **Ending Satisfaction**: Does the story conclude naturally without feeling abrupt?
 
 ## Examples

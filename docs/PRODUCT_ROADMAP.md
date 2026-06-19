@@ -166,7 +166,7 @@ Phase 1 は 2026-06-12 に Complete と判定。`docs/PRODUCTION_SMOKE_RESULTS.m
 - [ ] 3歳以上の意味量確保（場所・行動・気持ち・発見の2つ以上）
 - [ ] 幼稚すぎる擬音・造語の抑制
 - [ ] 日本語の自然さ改善
-- [ ] `storyGoal` の維持検証
+- [x] `storyGoal` の維持検証 ([Rubric](./QUALITY_RUBRICS/STORY_GOAL_ADHERENCE_RUBRIC.md) / [Process](./PROCESS_STORY_GOAL_AUDIT.md))
 - [ ] `hiddenDetail` の主目的化防止
 - [ ] opening / ending quality 改善
 - [ ] 読み聞かせ向け pacing 改善

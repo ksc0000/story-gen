@@ -8,6 +8,8 @@ Related:
 
 - [Product Roadmap](./PRODUCT_ROADMAP.md)
 - [Production Smoke Checklist](./PRODUCTION_SMOKE_CHECKLIST.md)
+- [Story Goal Adherence Rubric](./QUALITY_RUBRICS/STORY_GOAL_ADHERENCE_RUBRIC.md)
+- [Story Goal Audit Process](./PROCESS_STORY_GOAL_AUDIT.md)
 
 ---
 
@@ -46,10 +48,11 @@ Story Quality Score は 100 点満点。Book 単位で評価する。
 
 | Axis | Points | 評価内容 |
 |---|---:|---|
-| child personalization | 20 | 子ども本人らしさが物語に自然に入っているか |
-| story coherence | 20 | 起承転結・因果・ページ間接続が自然か |
+| child personalization | 15 | 子ども本人らしさが物語に自然に入っているか |
+| story goal adherence | 20 | 設定された `storyGoal` が最後まで維持され、達成されているか |
+| story coherence | 10 | 起承転結・因果・ページ間接続が自然か |
 | age appropriateness | 15 | 対象年齢に合った語彙・文章量・理解難度か |
-| emotional satisfaction | 15 | 読後感・達成感・安心感・親子で読む満足感があるか |
+| emotional satisfaction | 10 | 読後感・達成感・安心感・親子で読む満足感があるか |
 | page length balance | 10 | ページごとの文量・テンポが適切か |
 | character consistency | 10 | 主人公・相棒・登場人物の役割が一貫しているか |
 | ending satisfaction | 10 | 終わり方が唐突でなく、物語として締まっているか |
@@ -60,6 +63,7 @@ Story Quality Score は 100 点満点。Book 単位で評価する。
 | Axis | High | Medium | Low |
 |---|---|---|---|
 | child personalization | 名前・好きなもの・性格・思い出が自然に物語へ効いている | 名前や好みは出るが、物語上の意味は弱い | ほぼ generic。名前を差し替えても成立する |
+| story goal adherence | 冒頭で目的が示され、各ページで追求され、結末で解決する | 目的は追っているが、途中で逸れたり解決が弱い | 目的が忘れられる、または途中で別の話になる |
 | story coherence | 各ページが自然につながり、目的・行動・結果が明確 | 大筋は分かるが、場面転換や因果がやや弱い | 話が飛ぶ。なぜそうなったか分かりにくい |
 | age appropriateness | 語彙・文章量・感情表現が対象年齢に合う | 一部だけ幼すぎる/難しすぎる | 年齢に合わず読み聞かせに向かない |
 | emotional satisfaction | ワクワク・安心・達成感があり、もう一度読みたくなる | 悪くないが印象が薄い | 無機質、盛り上がり不足、読後感が弱い |
