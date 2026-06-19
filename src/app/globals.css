@@ -71,3 +71,65 @@
     radial-gradient(circle at bottom right, rgba(192, 132, 252, 0.14), transparent 30%),
     linear-gradient(180deg, #0f172a 0%, #111827 48%, #1e1b4b 100%);
 }
+
+/* 法務ページ（特商法・プライバシーポリシー・利用規約）の本文スタイル */
+.legal-prose {
+  color: #4c1d6b;
+  line-height: 1.9;
+  font-size: 0.95rem;
+}
+.legal-prose h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #581c87;
+  margin-bottom: 0.5rem;
+}
+.legal-prose .legal-updated {
+  font-size: 0.8rem;
+  color: #a78bca;
+  margin-bottom: 2rem;
+}
+.legal-prose h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #6b21a8;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #ede9fe;
+}
+.legal-prose p {
+  margin-bottom: 0.9rem;
+}
+.legal-prose ul {
+  list-style: disc;
+  padding-left: 1.4rem;
+  margin-bottom: 0.9rem;
+}
+.legal-prose ul li {
+  margin-bottom: 0.4rem;
+}
+.legal-prose a {
+  color: #7c3aed;
+  text-decoration: underline;
+}
+.legal-prose .legal-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+.legal-prose .legal-table th,
+.legal-prose .legal-table td {
+  border: 1px solid #ede9fe;
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  vertical-align: top;
+}
+.legal-prose .legal-table th {
+  background: #faf5ff;
+  color: #6b21a8;
+  font-weight: 700;
+  white-space: nowrap;
+  width: 11rem;
+}

@@ -120,6 +120,35 @@ export default function SettingsPage() {
           </Card>
         </div>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg text-purple-900">規約・ポリシー</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col">
+            <Link
+              href="/legal/terms"
+              className="flex items-center justify-between border-b border-violet-50 py-3 text-sm text-purple-900 hover:text-purple-600"
+            >
+              利用規約
+              <ChevronRight className="size-4 text-violet-300" />
+            </Link>
+            <Link
+              href="/legal/privacy"
+              className="flex items-center justify-between border-b border-violet-50 py-3 text-sm text-purple-900 hover:text-purple-600"
+            >
+              プライバシーポリシー
+              <ChevronRight className="size-4 text-violet-300" />
+            </Link>
+            <Link
+              href="/legal/tokushoho"
+              className="flex items-center justify-between py-3 text-sm text-purple-900 hover:text-purple-600"
+            >
+              特定商取引法に基づく表記
+              <ChevronRight className="size-4 text-violet-300" />
+            </Link>
+          </CardContent>
+        </Card>
+
         {error && (
           <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-600">
             {error}

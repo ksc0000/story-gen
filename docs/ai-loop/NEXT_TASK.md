@@ -1,7 +1,5 @@
-# Refine Template Quality: `fixed-first-birthday` Sample Image
+# Refine Story Text to Suppress Childish Onomatopoeia and Made-up Words
 
 ## Context
 
-The product is currently in Phase 5 (Monetization), with Cohort B rollout in progress. Continuous improvement of core story and illustration quality, especially for established "Template Mode" books, is crucial for user satisfaction and conversion.
-
-The `T3-2 status update (2026-05-12)` in the roadmap identified specific P1 quality issues for existing templates. One such issue for `fixed-first-birthday` is an inconsistency between its sample image and its intended category/content. Addressing this directly supports the "Phase 2: Story & Illustration Quality" objective by ensuring generated results meet "納得できる絵本" criteria and align with user expectations set by template previews.
+The product roadmap in Phase 2, "Story & Illustration Quality," explicitly lists "幼稚すぎる擬音・造語の抑制" (suppression of overly childish onomatopoeia and made-up words) as a task to be included for improving story text quality. While general Japanese naturalness has been improved (PR #495), and age-band specific text generation has been implemented (PR #481, PR #427), this specific aspect needs dedicated attention to further enhance the perceived quality and sophistication of generated story texts. This aligns with the overarching objective of creating "売り物として納得できる絵本" (picture books acceptable as commercial products), especially for target

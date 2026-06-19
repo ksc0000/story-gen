@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
           ? "すでに管理者としてログイン中です。"
           : result.message ?? "管理者権限を有効化しました。"
       );
-      router.push("/admin/image-model-tests/");
+      router.push("/admin/dashboard/");
     } catch (err: unknown) {
       console.error("Failed to bootstrap admin claim:", err);
       const code = typeof err === "object" && err && "code" in err ? String((err as { code?: string }).code) : "";

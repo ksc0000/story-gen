@@ -25,6 +25,8 @@ Reviewers should assess consistency across these seven granular axes:
 6.  **Outfit & Hairstyle Consistency**: Do the clothes and hair remain stable across scenes?
 7.  **Color Palette Consistency**: Does the character maintain their signature colors (e.g., "blue shirt," "yellow hat")?
 
+**See also**: [Unintended Character Rubric](./QUALITY_RUBRICS/UNINTENDED_CHARACTER_RUBRIC.md) for detecting extra characters or duplication.
+
 ## Examples
 
 ### Good (Score 4-5)

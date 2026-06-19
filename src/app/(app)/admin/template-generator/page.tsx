@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { httpsCallable } from "firebase/functions";
 import { PageTransition } from "@/components/page-transition";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -59,13 +60,12 @@ export default function AdminTemplateGeneratorPage() {
   };
 
   return (
-    <PageTransition className="mx-auto max-w-4xl px-4 py-8">
+    <>
+      <AdminNav />
+      <PageTransition className="mx-auto max-w-4xl px-4 py-8">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-purple-900">テンプレート生成</h1>
-          <Link href="/admin/book-quality-review">
-            <Button variant="outline">管理者トップへ</Button>
-          </Link>
         </div>
 
         <Card>
@@ -203,6 +203,7 @@ export default function AdminTemplateGeneratorPage() {
           </CardContent>
         </Card>
       </div>
-    </PageTransition>
+      </PageTransition>
+    </>
   );
 }

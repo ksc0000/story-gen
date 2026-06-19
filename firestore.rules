@@ -152,6 +152,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /adminAuditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
     match /adminMetrics/{docId} {
       allow read: if isAdmin();
       allow write: if false;

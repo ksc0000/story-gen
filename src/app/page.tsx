@@ -106,6 +106,23 @@ export default function LandingPage() {
           ))}
         </StaggerContainer>
       </section>
+
+      <footer className="border-t border-violet-100 px-6 py-10">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-4">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-violet-500">
+            <Link href="/legal/terms" className="hover:text-purple-700 hover:underline">
+              利用規約
+            </Link>
+            <Link href="/legal/privacy" className="hover:text-purple-700 hover:underline">
+              プライバシーポリシー
+            </Link>
+            <Link href="/legal/tokushoho" className="hover:text-purple-700 hover:underline">
+              特定商取引法に基づく表記
+            </Link>
+          </div>
+          <p className="text-xs text-violet-400">© 2026 Ehoria</p>
+        </div>
+      </footer>
     </main>
   );
 }

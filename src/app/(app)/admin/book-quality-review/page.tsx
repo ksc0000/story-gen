@@ -17,6 +17,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { PageTransition } from "@/components/page-transition";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +48,7 @@ import { CharacterConsistencyDiagnostics } from "@/components/admin/CharacterCon
 import { QualityRecommendationPanel, QualityRecommendationBadge } from "@/components/admin/QualityRecommendationPanel";
 import { RecommendationTaskDraftPanel } from "@/components/admin/RecommendationTaskDraftPanel";
 import { QualityTasksPanel } from "@/components/admin/QualityTasksPanel";
+import { logAdminOperation } from "@/lib/admin-audit-logger";
 import type { QualityReviewForm, QualityReviewWithId } from "@/lib/quality-review";
 import type { QualityRecommendationIntent } from "@/lib/quality-review";
 import {
@@ -578,7 +580,11 @@ export default function AdminBookQualityReviewPage() {
           characterConsistencyScore: 4,
           storyCast: [
             { characterId: "char1", displayName: "Test Character", role: "protagonist", visualBible: "A small blue robot" }
-          ]
+          ],
+          qualityRecommendedFixes: [
+            { action: "regenerate_page_image", reason: "画像生成に失敗しました", pageNumber: 1 },
+            { action: "regenerate_page_image", reason: "フォールバックが発生しました", pageNumber: 2 },
+          ],
         } as BookWithId,
         {
           id: "demo-book-2",
@@ -1241,29 +1247,47 @@ export default function AdminBookQualityReviewPage() {
     setSavingReview(true);
     setSaveMessage(null);
     try {
+      const adminTextQualityScore = reviewForm.adminTextQualityScore
+        ? Number(reviewForm.adminTextQualityScore)
+        : null;
+      const adminImageQualityScore = reviewForm.adminImageQualityScore
+        ? Number(reviewForm.adminImageQualityScore)
+        : null;
+      const adminCharacterConsistencyScore = reviewForm.adminCharacterConsistencyScore
+        ? Number(reviewForm.adminCharacterConsistencyScore)
+        : null;
+      const adminStorySatisfactionScore = reviewForm.adminStorySatisfactionScore
+        ? Number(reviewForm.adminStorySatisfactionScore)
+        : null;
+      const adminMemo = reviewForm.adminMemo.trim();
+
       await updateDoc(doc(db, "books", selectedBook.id), {
-        adminTextQualityScore: reviewForm.adminTextQualityScore
-          ? Number(reviewForm.adminTextQualityScore)
-          : null,
-        adminImageQualityScore: reviewForm.adminImageQualityScore
-          ? Number(reviewForm.adminImageQualityScore)
-          : null,
-        adminCharacterConsistencyScore: reviewForm.adminCharacterConsistencyScore
-          ? Number(reviewForm.adminCharacterConsistencyScore)
-          : null,
-        adminQualityScore: reviewForm.adminImageQualityScore
-          ? Number(reviewForm.adminImageQualityScore)
-          : null,
-        adminImageConsistencyScore: reviewForm.adminCharacterConsistencyScore
-          ? Number(reviewForm.adminCharacterConsistencyScore)
-          : null,
-        adminStorySatisfactionScore: reviewForm.adminStorySatisfactionScore
-          ? Number(reviewForm.adminStorySatisfactionScore)
-          : null,
-        adminMemo: reviewForm.adminMemo.trim(),
+        adminTextQualityScore,
+        adminImageQualityScore,
+        adminCharacterConsistencyScore,
+        adminQualityScore: adminImageQualityScore,
+        adminImageConsistencyScore: adminCharacterConsistencyScore,
+        adminStorySatisfactionScore,
+        adminMemo,
         adminReviewedAt: serverTimestamp(),
         adminReviewedBy: user.uid,
       });
+
+      await logAdminOperation({
+        operation: "submit_quality_review",
+        adminUid: user.uid,
+        targetId: selectedBook.id,
+        targetType: "book",
+        payload: {
+          reviewType: "legacy_manual",
+          adminTextQualityScore,
+          adminImageQualityScore,
+          adminCharacterConsistencyScore,
+          adminStorySatisfactionScore,
+          memoLength: adminMemo.length,
+        },
+      });
+
       setSaveMessage("管理者レビューを保存しました");
     } catch (error) {
       console.error("Failed to save admin review:", error);
@@ -1374,6 +1398,22 @@ export default function AdminBookQualityReviewPage() {
       batch.set(reviewRef, reviewPayload);
       batch.update(bookRef, summaryPayload);
       await batch.commit();
+
+      await logAdminOperation({
+        operation: "submit_quality_review",
+        adminUid: user.uid,
+        targetId: selectedBook.id,
+        targetType: "book",
+        payload: {
+          reviewType: "detailed_v2",
+          reviewId: reviewRef.id,
+          overallScore: qualityReviewForm.overallScore,
+          status: qualityReviewForm.status,
+          flaggedIssuesCount: qualityReviewForm.flaggedIssues.length,
+          recommendedFixesCount: qualityReviewForm.recommendedFixes.length,
+        },
+      });
+
       setQualityReviewMessage("Quality review を保存しました");
       setQualityReviewForm(normalizeQualityReviewForm());
 
@@ -1397,7 +1437,9 @@ export default function AdminBookQualityReviewPage() {
   };
 
   return (
-    <PageTransition className="mx-auto max-w-[1600px] px-4 py-8">
+    <>
+      <AdminNav />
+      <PageTransition className="mx-auto max-w-[1600px] px-4 py-8">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -2899,6 +2941,7 @@ export default function AdminBookQualityReviewPage() {
           )}
         </CardContent>
       </Card>
-    </PageTransition>
+      </PageTransition>
+    </>
   );
 }

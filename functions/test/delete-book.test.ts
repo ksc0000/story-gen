@@ -24,6 +24,7 @@ describe("processDeleteBook", () => {
     vi.clearAllMocks();
     mockDb.collection.mockReturnValue({
       doc: vi.fn().mockReturnValue(mockBookRef),
+      add: vi.fn().mockResolvedValue({ id: "log-123" }),
     });
   });
 
