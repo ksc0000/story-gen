@@ -175,6 +175,7 @@
     "PR #503: feat: なかよしキャラを主人公にする機能 (#436) (merged)",
     "PR #504: fix: 12ページテンプレートのページ数セレクターを正しく表示 (#501) (merged)",
     "PR #507: chore: 単品購入Stripe Price ID追加 + テスト型エラー修正 (merged)",
+    "PR #508: Refine Birthday Template Sample Image and Test Cleanup (merged)",
     "PR #509: Refine fixed-little-helper Category and Metadata Alignment (merged)",
     "PR #510: feat: 法務ページ(特商法/プライバシー/利用規約)とOGP対応 (merged)",
     "PR #511: feat: 管理者ダッシュボード（経営/システム/生成AI品質の3視点） (merged)",
