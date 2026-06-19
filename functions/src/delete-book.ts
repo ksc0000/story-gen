@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
+import { logAdminOperation } from "./lib/audit-logger";
 
 /**
  * Core logic for deleting a book.
@@ -34,6 +35,22 @@ export async function processDeleteBook(
   try {
     // 3. Recursive deletion of the book and its subcollections
     await db.recursiveDelete(bookRef);
+
+    // 4. Audit logging if performed by an admin
+    if (isAdmin) {
+      await logAdminOperation({
+        operation: "delete_book",
+        adminUid: uid,
+        targetId: bookId,
+        targetType: "book",
+        payload: {
+          title: bookData.title,
+          ownerId: bookData.userId,
+        },
+        db,
+      });
+    }
+
     return { success: true, bookId };
   } catch (err) {
     console.error(`Error deleting book ${bookId}:`, err);

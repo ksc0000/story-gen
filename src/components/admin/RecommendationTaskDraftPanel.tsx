@@ -5,6 +5,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/firebase";
+import { logAdminOperation } from "@/lib/admin-audit-logger";
 import type { BookDoc, PageDoc } from "@/lib/types";
 import type { QualityRecommendationIntent } from "@/lib/quality-review";
 import {
@@ -65,11 +66,23 @@ export function RecommendationTaskDraftPanel({
     setSaveError(null);
     try {
       const payload = buildQualityTaskPayload(intent, book, pages, adminUid);
-      await addDoc(collection(db, "qualityTasks"), {
+      const docRef = await addDoc(collection(db, "qualityTasks"), {
         ...payload,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+
+      await logAdminOperation({
+        operation: "create_quality_task",
+        adminUid,
+        targetId: docRef.id,
+        targetType: "task",
+        payload: {
+          bookId: book.id,
+          intent,
+        },
+      });
+
       setSaveStatus("saved");
     } catch (err) {
       setSaveStatus("error");

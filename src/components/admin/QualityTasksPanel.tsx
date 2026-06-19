@@ -12,9 +12,10 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { logAdminOperation } from "@/lib/admin-audit-logger";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { QualityTaskDoc, QualityTaskStatus } from "@/lib/types";
+import type { AdminOperation, QualityTaskDoc, QualityTaskStatus } from "@/lib/types";
 
 type TaskWithId = QualityTaskDoc & { id: string };
 
@@ -108,7 +109,7 @@ export function QualityTasksPanel({ adminUid }: QualityTasksPanelProps) {
 
   // --- Update helpers ---
 
-  async function updateTask(taskId: string, updates: Partial<QualityTaskDoc>) {
+  async function updateTask(taskId: string, updates: Partial<QualityTaskDoc>, operation?: AdminOperation) {
     setSaving(taskId);
     try {
       const ref = doc(db, "qualityTasks", taskId);
@@ -117,6 +118,19 @@ export function QualityTasksPanel({ adminUid }: QualityTasksPanelProps) {
         updatedAt: serverTimestamp(),
         updatedAtMs: Date.now(),
       });
+
+      if (operation && adminUid) {
+        await logAdminOperation({
+          operation,
+          adminUid,
+          targetId: taskId,
+          targetType: "task",
+          payload: {
+            updates,
+          },
+        });
+      }
+
       setTasks((prev) =>
         prev.map((t) =>
           t.id === taskId ? { ...t, ...updates, updatedAtMs: Date.now() } : t
@@ -133,7 +147,7 @@ export function QualityTasksPanel({ adminUid }: QualityTasksPanelProps) {
     const checklist = Array.isArray(task.checklist) ? [...task.checklist] : [];
     if (!checklist[index]) return;
     checklist[index] = { ...checklist[index], checked: !checklist[index].checked };
-    updateTask(task.id, { checklist });
+    updateTask(task.id, { checklist }, "update_quality_task");
   }
 
   function handleStatusChange(task: TaskWithId, newStatus: QualityTaskStatus) {
@@ -150,11 +164,11 @@ export function QualityTasksPanel({ adminUid }: QualityTasksPanelProps) {
       updates.resolvedBy = null;
       updates.resolvedAtMs = null;
     }
-    updateTask(task.id, updates);
+    updateTask(task.id, updates, "update_quality_task");
   }
 
   function handleResolutionNoteChange(task: TaskWithId, note: string) {
-    updateTask(task.id, { resolutionNote: note });
+    updateTask(task.id, { resolutionNote: note }, "update_quality_task");
   }
 
   const openCount = tasks.filter((t) => t.status === "open").length;

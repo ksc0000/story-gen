@@ -10,6 +10,7 @@ import {
 } from "./lib/prompt-builder";
 import { getAgeReadingProfile } from "./lib/age-reading-profile";
 import { isSaferRetryEnabled } from "./lib/image-model-policy";
+import { logAdminOperation } from "./lib/audit-logger";
 import type { ImageModelProfile, CoverStatus, BookData } from "./lib/types";
 import { generateCoverImageWithFallback } from "./controllers/imageGeneration";
 
@@ -141,6 +142,20 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
       coverStatus: "generating" as CoverStatus,
       coverFailureReason: null,
     });
+
+    if (isAdmin) {
+      await logAdminOperation({
+        operation: "regenerate_cover_image",
+        adminUid: uid,
+        targetId: bookId,
+        targetType: "book",
+        payload: {
+          previousStatus: bookData.coverStatus,
+          hadValidCover,
+        },
+        db,
+      });
+    }
 
     /* ---------- Generate cover image ---------- */
     let coverResult: import("./controllers/imageGeneration").CoverImageResult;

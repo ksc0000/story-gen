@@ -154,6 +154,26 @@ export type QualityReviewStatus =
   | "approved";
 export type QualityReviewerType = "human" | "llm";
 
+export type AdminOperation =
+  | "delete_book"
+  | "regenerate_page_image"
+  | "regenerate_cover_image"
+  | "check_book_completion"
+  | "submit_quality_review"
+  | "create_quality_task"
+  | "update_quality_task";
+
+export interface AdminAuditLog {
+  id?: string;
+  operation: AdminOperation;
+  adminUid: string;
+  targetId: string;
+  targetType: "book" | "task" | "page" | "user" | "child" | "system";
+  payload: Record<string, unknown>;
+  createdAt?: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+  createdAtMs: number;
+}
+
 export type IllustrationStyleProfile = {
   id: IllustrationStyle;
   name: string;

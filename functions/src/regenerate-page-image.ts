@@ -15,6 +15,7 @@ import {
   resolveProviderFromProfile,
 } from "./lib/generation-event-logger";
 import { resolveOpenAIModelLabel } from "./lib/openai-image";
+import { logAdminOperation } from "./lib/audit-logger";
 import type { PageData, BookData, ImageModelProfile, PageStatus, GenerationReliabilityStatus } from "./lib/types";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
@@ -118,6 +119,21 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
       regenerationAttemptCount: admin.firestore.FieldValue.increment(1),
       regenerationTriggeredBy: isAdmin ? "admin" : "owner",
     });
+
+    if (isAdmin) {
+      await logAdminOperation({
+        operation: "regenerate_page_image",
+        adminUid: uid,
+        targetId: resolvedPageId,
+        targetType: "page",
+        payload: {
+          bookId,
+          pageNumber: pageData.pageNumber,
+          previousStatus: pageData.status,
+        },
+        db,
+      });
+    }
 
     const imageClient = new ReplicateImageClient(replicateApiToken.value());
     const primaryProfile = (pageData.imageModelProfile ?? "pro_consistent") as ImageModelProfile;
@@ -449,6 +465,21 @@ export const checkBookCompletion = onCall<{ bookId: string }, Promise<{ bookStat
 
     const updatedSnap = await bookRef.get();
     const newStatus = (updatedSnap.data() as BookData).status;
+
+    if (request.auth.token?.admin === true) {
+      await logAdminOperation({
+        operation: "check_book_completion",
+        adminUid: request.auth.uid,
+        targetId: bookId,
+        targetType: "book",
+        payload: {
+          previousStatus,
+          newStatus,
+          recovered: previousStatus === "partial_completed" && newStatus === "completed",
+        },
+        db,
+      });
+    }
 
     return {
       bookStatus: newStatus,
