@@ -48,6 +48,7 @@
 - delete account / delete child profile (PR #454 / #477)
 - プラン別制限 (PR #392)
 - provider abstraction (ImageProvider)
+- Template Mode 拡充（cover 対応 + テンプレート 10 本 + 8/12 ページ）
 
 ### 一部実装済み
 
@@ -62,7 +63,6 @@
 - provider 比較・A/B テスト
 - 音声読み聞かせ
 - 印刷注文
-- Template Mode 拡充（cover 対応 + テンプレート 10 本 + 8/12 ページ）
 - admin operation audit log
 - rate limit（API レベル）
 - Replicate webhook / prediction ID 管理
@@ -237,7 +237,7 @@ Phase 1 は 2026-06-12 に Complete と判定。`docs/PRODUCTION_SMOKE_RESULTS.m
 | T1-B | 既存 4 テンプレートの seed に cover / title / narration テンプレート追加 | **done** |
 | T1-C | `generate-book.ts` で fixed_template の cover / title / narration をテンプレート展開 | **done** |
 | T1-D | 既存 4 テンプレートの `imagePromptTemplate` 強化 + `pageVisualRole` 追加 | **done** |
-| T1-Smoke | fixed_template 6テンプレート（既存4 + T2-A追加2）の実生成 smoke checklist 実行 | |
+| T1-Smoke | fixed_template 6テンプレート（既存4 + T2-A追加2）の実生成 smoke checklist 実行 | **done** |
 
 ### Phase T2: テンプレート拡充（4 ページ × 10 本目標）
 
@@ -254,10 +254,10 @@ Phase 1 は 2026-06-12 に Complete と判定。`docs/PRODUCTION_SMOKE_RESULTS.m
 
 | Step | 内容 | Status |
 |------|------|--------|
-| T3-A | `TemplateData` に `availablePageCounts` / `variantOf` / `variantLabel` 追加 | |
-| T3-B | 人気テンプレート 2〜3 本の 8 ページ版作成 | |
-| T3-C | PlanConfig 更新: `light_paid` で 8 ページ fixed_template 許可 | |
-| T3-D | テーマ選択 UI でバリアント / ページ数選択対応 | |
+| T3-A | `TemplateData` に `availablePageCounts` / `variantOf` / `variantLabel` 追加 | **done** |
+| T3-B | 人気テンプレート 2〜3 本の 8 ページ版作成 | **done** |
+| T3-C | PlanConfig 更新: `light_paid` で 8 ページ fixed_template 許可 | **done** |
+| T3-D | テーマ選択 UI でバリアント / ページ数選択対応 | **done** |
 
 ### T3 実装前の推奨順序（pre-implementation plan）
 
@@ -296,11 +296,11 @@ T3-4j / T3-4k status update (2026-05-15):
 ### 完了条件
 
 - [x] fixed_template 6テンプレート（既存4 + T2-A追加2）が cover / title / narration 対応済み
-- [ ] fixed_template 6テンプレートの smoke checklist が実行済み
-- [ ] 合計 10 本以上の 4 ページテンプレートが seed 済み
+- [x] fixed_template 6テンプレートの smoke checklist が実行済み
+- [x] 合計 10 本以上の 4 ページテンプレートが seed 済み
 - [ ] テンプレート生成の成功率 >= 99%
-- [ ] 8 ページテンプレートが 2 本以上利用可能
-- [ ] テーマ選択画面にプレビュー画像が表示される
+- [x] 8 ページテンプレートが 2 本以上利用可能
+- [x] テーマ選択画面にプレビュー画像が表示される
 
 ---
 
