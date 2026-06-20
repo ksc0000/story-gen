@@ -30,6 +30,8 @@ const VISUAL_STORYTELLING_RULES = [
   "Keep the protagonist recognizable when present, but allow the scene itself to be the main focus.",
 ].join(" ");
 
+const GLOBAL_NEGATIVE_CHARACTER_PROMPT = "Negative character guardrail: do not add extra people, unrequested children, unrequested animals, ghost companions, crowds, or random background figures. Do not draw the protagonist twice in the same scene. No character duplication. No unmentioned pets.";
+
 const STORY_QUALITY_RULES = [
   "Do not generate overly thin pages.",
   "Each page should contain enough story substance for the target age.",
@@ -93,6 +95,8 @@ const CHARACTER_METADATA_RULES = [
   "Avoid words like child, boy, girl, person, human, or spirit child for non-human magical companions.",
   "pages[].appearingCharacterIds must contain only characterId strings from cast plus child_protagonist.",
   "pages[].focusCharacterId must be a single characterId string or omitted.",
+  "Do not introduce any unrequested companions, extra pets, random animals, or background people not mentioned in the story.",
+  "If the narrative implies a private or solo moment, strictly omit any secondary characters or crowds.",
 ].join(" ");
 
 // P4-7: Explicit JSON field type contract to prevent field_type_mismatch errors.
@@ -532,6 +536,7 @@ ${GOOD_TEXT_EXAMPLE}
 - cast を省略してはいけません。ただし完全に主人公だけの話なら空配列は可です。
 - cast に定義されたキャラクターは、登場するすべてのページで visualBible に記述された見た目を守ってください。主人公以外のキャラクターも、体の大きさ・色・特徴的なアイテムをページ間で統一してください。
 - imagePrompt に cast キャラクターを登場させる場合は、そのキャラクターの visualBible の要点（色、体格、特徴）を imagePrompt 内に必ず反映してください。
+- 各ページの imagePrompt では、appearingCharacterIds に指定されたキャラクターのみを描写してください。cast 外の人物、勝手に追加されたペットや動物、群衆などを描写することは厳禁です。
 - JSON field type contract (must follow exactly): ${STORY_JSON_FIELD_TYPE_CONTRACT}
 
 ## 出力形式
@@ -839,6 +844,7 @@ export function buildCoverImagePrompt(
     "Magical friends must not be drawn as human children unless characterKind is human_child.",
     "If a non-human magical creature appears, preserve its non-human silhouette.",
     "Do not clone the protagonist. Do not draw the protagonist twice in the same image.",
+    GLOBAL_NEGATIVE_CHARACTER_PROMPT,
     `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
     visualContinuityGuard,
     starGuard,
@@ -984,8 +990,9 @@ export function buildImagePrompt(
     "If a non-human magical creature appears, preserve its non-human silhouette.",
     "Do not clone the protagonist. Do not draw the protagonist twice in the same image unless the page explicitly requires a reflection, memory, or picture-within-picture.",
     options?.appearingCharacterIds?.length
-      ? `Only draw these recurring characters when relevant: ${options.appearingCharacterIds.join(", ")}. Do not add other recurring characters.`
-      : "",
+      ? `Strict character list for this page: ${options.appearingCharacterIds.join(", ")}. Draw ONLY these characters. Do not add any other people or creatures.`
+      : "Strict character list for this page: child_protagonist. Draw ONLY the protagonist. Do not add any other people or creatures.",
+    GLOBAL_NEGATIVE_CHARACTER_PROMPT,
     `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
     visualContinuityGuard,
     starGuard,
