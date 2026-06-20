@@ -262,7 +262,7 @@ Phase 1 は 2026-06-12 に Complete と判定。`docs/PRODUCTION_SMOKE_RESULTS.m
 ### T3 実装前の推奨順序（pre-implementation plan）
 
 - T3-1: Template selection UI 改善（カテゴリ導線 / 推奨表示 / stable 概念）
-- T3-2: 既存10テンプレート品質磨き込み（scene anchor / 読み聞かせ自然さ / IMG-001 minor follow-up）
+- [x] T3-2: 既存10テンプレート品質磨き込み（scene anchor / 読み聞かせ自然さ / IMG-001 minor follow-up）
 - T3-3: 8/12ページ対応（後続）
 
 T3-1 status update (2026-05-12):
@@ -272,13 +272,13 @@ T3-1 status update (2026-05-12):
 - 検証: typecheck/lint/test は pass（lint は既存 warning のみ）
 - 実機目視: **verified**（fixed_template 10本表示、category grouping、card metadata、badge、`/create/input` 遷移、PC/モバイル表示、guided_ai/original_ai 導線いずれも PASS）
 
-T3-2 status update (2026-05-12):
+T3-2 status update (2026-06-20):
 
-- 棚卸し: **review-started (docs only)**
+- 品質磨き込み: **done**
 - 成果物: [Template Quality Review](./TEMPLATE_QUALITY_REVIEW.md)
-- 内容: 10本を category fit / story structure / text / image prompt / visual role / smoke readiness / product value で棚卸し
-- 優先度: P0=0 / P1=3観点 (`fixed-brush-teeth` の `pageVisualRole` 整合、`fixed-first-birthday` / `fixed-sleepy-moon-adventure` / `fixed-little-helper` の sampleImage 重複・カテゴリ不一致) / P2=4観点 / No action=2本
-- 次アクション: P1 項目から段階適用（T3-2a〜T3-2d を docs に列挙済み）
+- 内容: 既存10本の品質改善（scene anchor 強化、読み聞かせ自然さ、UIプレビュー画像整合、role 整合）をすべて完了。
+- 優先度: P1/P2 項目はすべてコード・seed 反映済み。
+- 判定: **Complete (2026-06-20)**
 
 T3-4j / T3-4k status update (2026-05-15):
 
