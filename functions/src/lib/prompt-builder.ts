@@ -66,6 +66,8 @@ const JAPANESE_STORY_TEXT_RULES = [
   "5歳以上では、1ページに「出来事→反応→感情」の流れを自然に込めてください。",
   "情景描写を1文以上入れてください。",
   "子どもの行動または感情を1文以上入れてください。",
+  "物語の冒頭（1ページ目）では、いきなり事件を起こすのではなく、まず「どこで」「だれが」「何をしていたか」という情景と日常の様子を丁寧に描写し、読み手を物語の世界へ引き込んでください。「急に物語が始まる感」を抑え、自然な導入を心がけてください。",
+  "物語の結末（最後のページ）では、出来事の解決だけでなく、主人公の気持ちの安らぎや、物語のテーマ（storyGoal）を振り返るような余韻のある表現で締めくくってください。単に「解決してよかった」で終わらず、温かい気持ちが残るような一文を入れてください。",
   "日本語として自然で、かつ情緒豊かな文にしてください。",
   "ひらがなを多めにしても、意味が曖昧になりすぎないようにしてください。",
   "特に低年齢（0-4歳）向けでは、ひらがなを主体にし、難しい漢字は一切使用しないでください。",
@@ -107,23 +109,29 @@ const STORY_JSON_FIELD_TYPE_CONTRACT = [
 ].join(" ");
 
 const PAGE_TEXT_ROLE_RULES = [
-  "opening_establishing: Introduce the setting and the child's initial state. Hint at the upcoming adventure or storyGoal to create anticipation. The narrative should establish a sense of place and time.",
+  "opening_establishing: Focus on 'Where, Who, and When'. Set the scene and the child's peaceful initial state before any conflict or adventure begins. Use evocative language to establish atmosphere and ground the reader in the story's world. Avoid jumping into action too quickly.",
   "discovery: Describe the moment of noticing something new, surprising, or mysterious. Focus on the child's reaction (wonder, curiosity) and why the discovery is significant to the story.",
   "action: Focus on physical movement, effort, or an active search. Use energetic verbs to describe the child's engagement with the world as they move toward their goal.",
   "emotional_closeup: Delve into the child's inner feelings—joy, determination, or a quiet realization. Use descriptive language to convey the depth of the emotional moment.",
   "object_detail: Highlight a specific item's texture, color, or importance. Explain how this object connects to the larger story or the child's current task.",
   "setback_or_question: A moment of pause, doubt, or a small obstacle. Frame it as a natural part of the journey that leads to deeper thinking or a new approach, without losing momentum.",
   "payoff: The peak of the narrative where the goal is reached or a mystery is solved. Celebrate the achievement with a sense of fulfillment and positive resolution.",
-  "quiet_ending: A gentle wrap-up that leaves a lasting warm feeling. Reflect on the day's events, expressing gratitude or peace as the story comes to a natural close.",
+  "quiet_ending: A gentle wrap-up that leaves a lasting warm feeling of 'Peace and Reflection'. Connect the resolution back to the story's beginning or the child's growth. Use soft, rhythmic language to signal the end of the journey and provide a satisfying emotional conclusion.",
 ].join(" ");
 
 const BAD_TEXT_EXAMPLE =
   "ころころ こりころ。まきまき まきば。まきまき むすんで、ふしぎな じゅうたん。";
 const GOOD_TEXT_EXAMPLE = [
-  "すなばの すみに、あかい スコップが ちょこんと ありました。",
-  "〇〇ちゃんが すなを まるく あつめると、ふしぎな もようが できました。",
-  "『これ、じゅうたんみたい』",
-  "そのとき、さらさらの すなが 小さく ひかりました。",
+  "【良い導入の例 (opening_establishing)】",
+  "ぽかぽかと あたたかい ごごのことです。さくらちゃんは、おにわで おはなを ながめていました。",
+  "ちょうちょが ひらひらと まっています。「どこへ いくのかな？」",
+  "さくらちゃんは、そっと ちょうちょの あとを おいかけてみました。",
+  "",
+  "【良い結末の例 (quiet_ending)】",
+  "おそらが オレンジいろに そまり、おうちに かえる じかんです。",
+  "さくらちゃんは、みつけた ぴかぴかの いしを ぎゅっと にぎりしめました。",
+  "「きょうは たのしかったね」",
+  "あしたは どんな すてきなことが まっているでしょうか。さくらちゃんは しあわせな きもちで いっぱいに なりました。",
 ].join("\n");
 
 function getDefaultCompositionHint(pageNumber?: number): string {
