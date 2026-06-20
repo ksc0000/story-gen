@@ -987,6 +987,54 @@ function addCastConsistencyIssues(params: {
       });
     }
   }
+
+  // Heuristic for unintended characters in imagePrompt
+  params.story.pages.forEach((page, index) => {
+    const prompt = page.imagePrompt.toLowerCase();
+    const appearingIds = new Set(page.appearingCharacterIds ?? []);
+
+    // 1. Unrequested humans (if child_protagonist or human cast not specified)
+    const hasHumanInPrompt = /\b(child|boy|girl|person|human|man|woman|people|crowd)\b/i.test(prompt);
+    if (hasHumanInPrompt) {
+      const isHumanAuthorized = appearingIds.has("child_protagonist") ||
+        Array.from(appearingIds).some(id => {
+          const c = cast.find(char => char.characterId === id);
+          return c?.characterKind === "human_child" || c?.characterKind === "human_adult" ||
+                 /\b(child|boy|girl|person|human|man|woman)\b/i.test(c?.visualBible ?? "");
+        });
+      if (!isHumanAuthorized) {
+        params.issues.push({
+          severity: "warning",
+          code: "unauthorized_human_in_prompt",
+          message: "登場人物に指定されていない人間が imagePrompt に含まれている可能性があります。",
+          pageIndex: index,
+        });
+      }
+    }
+
+    // 2. Unrequested animals
+    const animalMatch = prompt.match(/\b(dog|cat|bear|rabbit|fox|bird|panda|penguin|hamster|mouse|lion|tiger|elephant|monkey|squirrel|koala|sheep|horse|cow|pig|chicken|duck)\b/i);
+    if (animalMatch) {
+      const foundToken = animalMatch[0].toLowerCase();
+      const isAnimalAuthorized = Array.from(appearingIds).some(id => {
+        const c = cast.find(char => char.characterId === id);
+        return c && (
+          c.characterId.toLowerCase().includes(foundToken) ||
+          c.displayName.toLowerCase().includes(foundToken) ||
+          c.visualBible?.toLowerCase().includes(foundToken) ||
+          c.characterKind === "animal"
+        );
+      });
+      if (!isAnimalAuthorized) {
+        params.issues.push({
+          severity: "warning",
+          code: "unauthorized_animal_in_prompt",
+          message: `登場人物に指定されていない動物（${foundToken}）が imagePrompt に含まれている可能性があります。`,
+          pageIndex: index,
+        });
+      }
+    }
+  });
 }
 
 export function toFirestoreStoryQualityReport(report: StoryQualityReport): StoryQualityReportData {
