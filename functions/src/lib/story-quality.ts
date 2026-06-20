@@ -233,7 +233,32 @@ export function validateGeneratedStoryQuality(params: {
     }
 
     if (readingProfile.ageBand !== "baby_toddler") {
-      const heuristics = analyzeJapaneseTextHeuristics(story.pages[pageIndex].text, readingProfile.ageBand);
+      const isOpening = pageIndex === 0;
+      const isClosing = pageIndex === pageCount - 1;
+      const heuristics = analyzeJapaneseTextHeuristics(story.pages[pageIndex].text, {
+        ageBand: readingProfile.ageBand,
+        isOpening,
+        isClosing,
+      });
+
+      if (isOpening && heuristics.missingSceneDetail) {
+        issues.push({
+          severity: "warning",
+          code: "opening.missing_scene_detail",
+          message: "冒頭ページに場所や情景の描写が不足しており、唐突に始まる印象を与える可能性があります。",
+          pageIndex,
+        });
+      }
+
+      if (isClosing && !heuristics.hasClosingTone) {
+        issues.push({
+          severity: "warning",
+          code: "closing.missing_warmth",
+          message: "結末ページに余韻や安心感のある描写が不足しており、唐突に終わる印象を与える可能性があります。",
+          pageIndex,
+        });
+      }
+
       if (heuristics.tooManySoundWords) {
         issues.push({
           severity: readingProfile.ageBand === "preschool_3_4" ? "error" : "warning",
@@ -560,9 +585,13 @@ type JapaneseTextHeuristics = {
   textTooGeneric: boolean;
   sentenceTooShortForAge: boolean;
   monotonousSentenceEndings: boolean;
+  hasClosingTone: boolean;
 };
 
-function analyzeJapaneseTextHeuristics(text: string, ageBand?: AgeBand): JapaneseTextHeuristics {
+function analyzeJapaneseTextHeuristics(
+  text: string,
+  options?: { ageBand?: AgeBand; isOpening?: boolean; isClosing?: boolean }
+): JapaneseTextHeuristics {
   const normalized = text.replace(/\s+/g, "");
   const commonSoundWords =
     normalized.match(
@@ -598,17 +627,20 @@ function analyzeJapaneseTextHeuristics(text: string, ageBand?: AgeBand): Japanes
     }
   }
 
+  const hasClosingTone = /(あした|おやすみ|わらって|しあわせ|きもち|ずっと|これから|おしまい|またね|ありがとう|にっこり|ほっと|あんしん|ゆめ|ねむ|おうちに)/.test(text);
   const isOlderChild =
-    ageBand === "early_reader_5_6" ||
-    ageBand === "early_elementary_7_8" ||
-    ageBand === "general_child";
+    options?.ageBand === "early_reader_5_6" ||
+    options?.ageBand === "early_elementary_7_8" ||
+    options?.ageBand === "general_child";
+  const missingSceneDetail =
+    !placeWords.test(text) || (!!options?.isOpening && countJapaneseTextChars(text) < 25);
 
   return {
     tooManySoundWords: commonSoundWords.length >= (isOlderChild ? 2 : 3),
     textTooChildish:
       (commonSoundWords.length >= (isOlderChild ? 1 : 2) && countJapaneseTextChars(text) < 80) ||
       coinedPatterns.test(text),
-    missingSceneDetail: !placeWords.test(text),
+    missingSceneDetail,
     missingActionOrEmotion: !(actionWords.test(text) || emotionOrDiscoveryWords.test(text)),
     unnaturalJapaneseRisk:
       coinedPatterns.test(text) || (hiraganaRatio > 0.9 && commonSoundWords.length >= 2),
@@ -619,6 +651,7 @@ function analyzeJapaneseTextHeuristics(text: string, ageBand?: AgeBand): Japanes
     sentenceTooShortForAge:
       countJapaneseTextChars(text) < 40 || countSentences(text) <= 2,
     monotonousSentenceEndings,
+    hasClosingTone,
   };
 }
 
