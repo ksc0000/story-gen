@@ -233,7 +233,7 @@ export function validateGeneratedStoryQuality(params: {
     }
 
     if (readingProfile.ageBand !== "baby_toddler") {
-      const heuristics = analyzeJapaneseTextHeuristics(story.pages[pageIndex].text);
+      const heuristics = analyzeJapaneseTextHeuristics(story.pages[pageIndex].text, readingProfile.ageBand);
       if (heuristics.tooManySoundWords) {
         issues.push({
           severity: readingProfile.ageBand === "preschool_3_4" ? "error" : "warning",
@@ -562,18 +562,19 @@ type JapaneseTextHeuristics = {
   monotonousSentenceEndings: boolean;
 };
 
-function analyzeJapaneseTextHeuristics(text: string): JapaneseTextHeuristics {
+function analyzeJapaneseTextHeuristics(text: string, ageBand?: AgeBand): JapaneseTextHeuristics {
   const normalized = text.replace(/\s+/g, "");
-  const commonSoundWords = normalized.match(
-    /(ころころ|わくわく|どきどき|きらきら|ふわふわ|さらさら|ぴかぴか|ぐるぐる|ごろごろ|ぺたぺた|しゃかしゃか|こしこし|にこにこ)/g
-  ) ?? [];
+  const commonSoundWords =
+    normalized.match(
+      /(ころころ|わくわく|どきどき|きらきら|ふわふわ|さらさら|ぴかぴか|ぐるぐる|ごろごろ|ぺたぺた|しゃかしゃか|こしこし|にこにこ|ふんわり|どっしり|すたすた|ぴょんぴょん|すやすや|ぱくぱく|もぐもぐ|ぴょんと)/g
+    ) ?? [];
   const placeWords = /(おへや|へや|まど|そら|こうえん|もり|みち|すなば|すなのなか|すなのうえ|てのなか|てのひら|ゆびさき|うみ|かわ|やま|にわ|キッチン|テーブル|ベッド|どうぶつえん|みずうみ|くも)/;
   const actionWords = /(ある|はし|みつけ|あつめ|つく|のぼ|すべ|ひろ|みつめ|さわ|のぞ|えら|あけ|もっ|ぎゅっ|ふり|わら|みた|きい|のった|とんだ|ひらいた|ひろが|ならべ|おいた|みせた|つたえ|かんがえ|みつめた)/;
   const emotionOrDiscoveryWords = /(うれ|かなし|ほっ|びっくり|わくわく|どきどき|にっこり|わら|えがお|みつけ|きづ|ふしぎ|あんしん|こわ|たのし)/;
-  const coinedPatterns = /(こりころ|ふわりん|ころころこりころ|まきまきまきば|ぴかりん|きらりん|ぽよん|ぷよん)/;
-  const hiraganaRatio = normalized.length > 0
-    ? ((normalized.match(/[ぁ-ん]/g) ?? []).length / normalized.length)
-    : 0;
+  const coinedPatterns =
+    /(こりころ|ふわりん|ころころこりころ|まきまきまきば|ぴかりん|きらりん|ぽよん|ぷよん|ぽよよん|ぴょんたん|りるりん|ぱぱる|ぴぴる|ぷるるん|おめめ|おてて|あんよ|おくち|おみみ)/;
+  const hiraganaRatio =
+    normalized.length > 0 ? (normalized.match(/[ぁ-ん]/g) ?? []).length / normalized.length : 0;
 
   const sentences = text.split(/[。！？!?]+/).map((s) => s.trim()).filter(Boolean);
   const endings = sentences.map((s) => {
@@ -597,12 +598,20 @@ function analyzeJapaneseTextHeuristics(text: string): JapaneseTextHeuristics {
     }
   }
 
+  const isOlderChild =
+    ageBand === "early_reader_5_6" ||
+    ageBand === "early_elementary_7_8" ||
+    ageBand === "general_child";
+
   return {
-    tooManySoundWords: commonSoundWords.length >= 3,
-    textTooChildish: (commonSoundWords.length >= 2 && countJapaneseTextChars(text) < 80) || coinedPatterns.test(text),
+    tooManySoundWords: commonSoundWords.length >= (isOlderChild ? 2 : 3),
+    textTooChildish:
+      (commonSoundWords.length >= (isOlderChild ? 1 : 2) && countJapaneseTextChars(text) < 80) ||
+      coinedPatterns.test(text),
     missingSceneDetail: !placeWords.test(text),
     missingActionOrEmotion: !(actionWords.test(text) || emotionOrDiscoveryWords.test(text)),
-    unnaturalJapaneseRisk: coinedPatterns.test(text) || (hiraganaRatio > 0.92 && commonSoundWords.length >= 2),
+    unnaturalJapaneseRisk:
+      coinedPatterns.test(text) || (hiraganaRatio > 0.9 && commonSoundWords.length >= 2),
     textTooGeneric:
       countJapaneseTextChars(text) < 45 &&
       countSentences(text) <= 3 &&
