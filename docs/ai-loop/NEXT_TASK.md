@@ -1,7 +1,9 @@
-# Implement `identity-only` Character Reference Strategy (REF-001 Implementation)
+# Refine Character Generation to Prevent Hallucinated Characters (Outside of `storyCast`)
 
 ## Context
 
-The product roadmap (Section 10, "Now" priority, and Phase 3: Quality Follow-ups `REF-001`) outlines the design of an `identity-only reference strategy` for character consistency. The design document `docs/CHARACTER_REFERENCE_STRATEGY.md` has been completed. The goal is to evolve from using full reference images (which can leak background/composition) to a more robust method that focuses solely on character identity. This is a critical step towards improving overall character consistency in generated illustrations, a key aspect of Phase 2: Story & Illustration Quality.
+Phase 2 of the roadmap, "Story & Illustration Quality," aims to make generated results "satisfactory picture books for sale." A critical component of this is character consistency. The roadmap explicitly lists "余計な人物が増えない制御（cast 外のキャラが登場しない）" (Control to prevent additional people from appearing, i.e., characters outside `cast` should not appear) under the "キャラクター一貫性" section. Currently, the AI may sometimes introduce extraneous characters not defined in the `storyCast` or `appearingCharacterIds`, leading to inconsistencies in the narrative and illustrations.
 
-Currently, the system relies on reference images which can sometimes lead to issues like background bleeding
+## Objective
+
+Enhance the story generation and/or image prompt generation logic to prevent the halluc
