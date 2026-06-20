@@ -94,7 +94,7 @@ const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_
 const IMAGE_CONCURRENCY = Math.max(1, Math.min(5, Number(process.env.IMAGE_CONCURRENCY ?? "2")));
 
 const RATE_LIMIT_GENERATE_BOOK = {
-  maxRequests: 2,
+  maxRequests: 3,
   windowSeconds: 300, // 5 minutes
 };
 
