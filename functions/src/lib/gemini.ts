@@ -1132,7 +1132,7 @@ export class GeminiClient implements LLMClient {
       "Write in a picture-book narrator style: sentence endings like 「〜のです」「〜でした」「〜ましたが」「〜ましょう」give a warm storytelling voice.",
       "For ages 5+, weave 'event → reaction → emotion' naturally into each page.",
       "Keep the main quest object consistent across all pages. Do not replace it with another object.",
-      "hiddenDetail is for visual background fun only. Do not turn hiddenDetail into the main story goal.",
+      "hiddenDetail is strictly for visual background discovery. The characters must NOT interact with, talk about, or be distracted by the hiddenDetail. It must remain a passive element that only the reader notices. Do not mention the hiddenDetail in the story text (pages[].text).",
       "If imagePrompt shows a clear action or recurring motif, reflect that naturally in pages[].text.",
       "On the final page, clearly write the quest resolution or emotional resolution.",
       "Do not turn the text into dry explanation. Keep it warm, evocative, and story-like — written as if a narrator is reading aloud to a child.",
