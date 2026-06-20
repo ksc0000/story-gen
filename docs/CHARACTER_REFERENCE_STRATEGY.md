@@ -39,7 +39,7 @@ Note that this is currently a "design-in-progress," and the subsequent sections 
 現在の child reference image は、顔・髪型・服装だけでなく、背景・場所・構図・小物・照明までモデルに拾われる可能性がある。
 
 - IMG-002 で、sandbox/playground 背景が `fixed-first-zoo` の動物園シーンにリークするリスクを確認
-- prompt-level reference isolation により軽減済み
+- prompt-level reference isolation により軽減済み（詳細は [IMG-002 Verification Protocol](./IMG-002_VERIFICATION_PROTOCOL.md) を参照）
 - ただし根本的には、入力 reference 自体を背景非依存に寄せる必要がある
 
 ---
