@@ -1,0 +1,28 @@
+
+const BEDTIME_GOOD_DAY_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same preschool child across all pages: same round face, same short black hair, same soft yellow pajamas with a small simple duckling pattern, same white rabbit plush toy, do not change the child's appearance, do not change the pajamas, do not swap the rabbit for a different animal";
+
+function withBedtimeGoodDayImagePromptGuardrail(prompt: string): string {
+  let result = prompt;
+  if (!result.includes(BEDTIME_GOOD_DAY_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${BEDTIME_GOOD_DAY_CHARACTER_ANCHOR_CLAUSE}`;
+  }
+  return withFixedImagePromptSafety(result);
+}
+
+const CHRISTMAS_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same child across all pages: same face, same hair color and style, same cozy red Christmas sweater with a small white snowflake pattern, same green trousers, do not change the child's age or outfit between pages";
+
+const CHRISTMAS_DECOR_NO_TEXT_CLAUSE =
+  "all Christmas decorations must be plain and unmarked: use solid-color ornaments, ribbons, stockings, and gift boxes with no letters, no names, no labels, no printed 'Merry Christmas' text, and no pseudo-script on any surface";
+
+function withChristmasImagePromptGuardrail(prompt: string): string {
+  let result = prompt;
+  if (!result.includes(CHRISTMAS_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${CHRISTMAS_CHARACTER_ANCHOR_CLAUSE}`;
+  }
+  if (!result.includes(CHRISTMAS_DECOR_NO_TEXT_CLAUSE)) {
+    result = `${result}, ${CHRISTMAS_DECOR_NO_TEXT_CLAUSE}`;
+  }
+  return withFixedImagePromptSafety(result);
+}
