@@ -6,10 +6,12 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
     name: "やさしい水彩",
     previewImageUrl: "/images/styles/soft_watercolor.webp",
     styleBible:
-      "High quality Japanese children's picture book watercolor masterpiece, soft warm colors, pale colors, gentle pigment blooms, hand-painted paper texture, stunning cozy lighting, tender child-friendly atmosphere.",
+      "High quality Japanese children's picture book watercolor masterpiece, soft warm colors, pale colors, gentle pigment blooms, soft wet-on-wet transitions, delicate washes, artful use of white space, subtle pencil under-drawing, hand-painted paper texture, stunning cozy lighting, tender child-friendly atmosphere.",
     negativeStyleRules: [
       "Do not add readable text, signs, labels, posters, banners, logos, watermarks, or pseudo-writing.",
       "Do not make the rendering harsh, metallic, or photorealistic.",
+      "Avoid heavy black outlines, sharp digital edges, or solid flat fills without texture.",
+      "No neon or overly saturated colors.",
     ],
     usePreviewAsReference: false,
   },
@@ -130,10 +132,12 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
     name: "やさしい水彩",
     previewImageUrl: "/images/styles/soft_watercolor.webp",
     styleBible:
-      "High quality Japanese children's picture book watercolor masterpiece, soft warm colors, pale colors, gentle pigment blooms, hand-painted paper texture, stunning cozy lighting, tender child-friendly atmosphere.",
+      "High quality Japanese children's picture book watercolor masterpiece, soft warm colors, pale colors, gentle pigment blooms, soft wet-on-wet transitions, delicate washes, artful use of white space, subtle pencil under-drawing, hand-painted paper texture, stunning cozy lighting, tender child-friendly atmosphere.",
     negativeStyleRules: [
       "Do not add readable text, signs, labels, posters, banners, logos, watermarks, or pseudo-writing.",
       "Do not make the rendering harsh, metallic, or photorealistic.",
+      "Avoid heavy black outlines, sharp digital edges, or solid flat fills without texture.",
+      "No neon or overly saturated colors.",
     ],
     usePreviewAsReference: false,
   },
