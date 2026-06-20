@@ -1,18 +1,14 @@
-# Diagnose Protagonist Visual Consistency Failures
+# Implement Replicate Webhook / Prediction ID Management
 
 ## Context
 
-The product roadmap for EhonAI (Ehoria) explicitly lists `主人公一貫性の改善` (Improve protagonist consistency) under Phase 2: Story & Illustration Quality. While `character consistency diagnostics` (PR #388) and `anchor recurring character face geometry to the reference` (PR #447) have been implemented, the core improvement task remains. This task aims to leverage existing diagnostic tools and manual review capabilities to identify specific, recurring failure patterns in protagonist visual consistency across generated book pages. This analysis will inform subsequent targeted improvements in prompt engineering or model usage.
+The product roadmap lists "Replicate webhook / prediction ID 管理" under the "未実装" (Unimplemented) section (0. Current Achievements). This feature is essential for robust monitoring and reliability of image generation using Replicate, allowing for better tracking of individual predictions and handling of asynchronous callbacks. This task aims to implement the foundational backend components for this management.
 
 ## Objective
 
-Analyze a selection of generated books to systematically identify and document common failure patterns in the visual consistency of the protagonist character. The output will be a detailed report describing these patterns, their observed frequency, and potential contributing factors, providing a concrete foundation for future iteration.
+Implement backend logic to store Replicate prediction IDs for image generation requests and process webhook notifications to update job statuses. This task focuses on the core data persistence and processing, without immediate UI implications.
 
 ## Allowed Scope
 
-- `docs/`: Create a new diagnostic report Markdown file (`docs/PROTAGONIST_CONSISTENCY_DIAGNOSTICS.md`).
-- Read-only access to:
-    - Admin Quality Review UI
-    - Admin UI for Character Consistency Diagnostics
-    - Cloud Logging (for generation logs related to selected books)
-    - Source code related to `generate-book.ts`, `styleBible`, and character prompting (for
+- `functions/src/` (for backend logic, Firestore interactions, Replicate API calls)
+- `types/` (for defining new data
