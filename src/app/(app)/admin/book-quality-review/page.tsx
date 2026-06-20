@@ -1407,7 +1407,7 @@ export default function AdminBookQualityReviewPage() {
         payload: {
           reviewType: "detailed_v2",
           reviewId: reviewRef.id,
-          overallScore: qualityReviewForm.overallScore,
+          overallScore: summaryPayload.overallQualityScore,
           status: qualityReviewForm.status,
           flaggedIssuesCount: qualityReviewForm.flaggedIssues.length,
           recommendedFixesCount: qualityReviewForm.recommendedFixes.length,

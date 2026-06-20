@@ -1,4 +1,4 @@
-import { collection, addDoc, serverTimestamp, FieldValue } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
 import type { AdminAuditLog, AdminOperation } from "./types";
 
@@ -21,7 +21,7 @@ export async function logAdminOperation(params: {
     targetId,
     targetType,
     payload,
-    createdAt: serverTimestamp() as unknown as FieldValue,
+    createdAt: serverTimestamp() as unknown as AdminAuditLog["createdAt"],
     createdAtMs: Date.now(),
   };
 
