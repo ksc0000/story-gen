@@ -1,5 +1,5 @@
-# Refine Template Quality: Address `scene anchor` consistency for a specific template
+# Finalize Template Quality Review Document for 10 Fixed Templates (T3-2)
 
 ## Context
 
-The product roadmap (Phase 3: Template Mode, T3-2 status update) indicates an ongoing need for "既存10テンプレート品質磨き込み" focusing on "scene anchor" consistency, "読み聞かせ自然さ", and "IMG-001 minor follow-up". While "読み聞かせ自然さ" and "IMG-001" have seen recent improvements (PR #495, PR #374, PR #548, PR #535), the "scene anchor" aspect, related to `pageVisualRole` consistency and image generation, remains an area for improvement beyond the 8-page template refinements (PR #497).
+Phase 3, "Template Mode — Reliability-First 生成," has completed most of its implementation steps, including `T3-2: 既存10テンプレート品質磨き込み`. The roadmap explicitly states that the "棚卸し" (inventory/audit) for this step is "**review-started (docs only)**" and lists `[Template Quality Review](./TEMPLATE_QUALITY_REVIEW.md)` as the deliverable. While several specific quality issues identified during this review have been addressed by individual PRs (e.g., PR #280, #282, #309, #508, #509, #522),
