@@ -1,9 +1,18 @@
-# Document `IMG-002` Verification Protocol and Initial Audit for Fixed Templates
+# Diagnose Protagonist Visual Consistency Failures
 
 ## Context
 
-The product roadmap's "Now" section explicitly calls for `IMG-002 verification` (continued check for background leakage recurrence in `fixed_template` books). The `IMG-002` implementation, which aims to suppress background leakage from reference images by using prompt-level character reference isolation, is noted as `実施済み` (implemented) in Phase 3. This task aims to formalize the ongoing verification process for `IMG-002` and conduct an initial audit to confirm its continued effectiveness and detect any potential regressions or recurrences of background leakage specifically within fixed template generations.
+The product roadmap for EhonAI (Ehoria) explicitly lists `主人公一貫性の改善` (Improve protagonist consistency) under Phase 2: Story & Illustration Quality. While `character consistency diagnostics` (PR #388) and `anchor recurring character face geometry to the reference` (PR #447) have been implemented, the core improvement task remains. This task aims to leverage existing diagnostic tools and manual review capabilities to identify specific, recurring failure patterns in protagonist visual consistency across generated book pages. This analysis will inform subsequent targeted improvements in prompt engineering or model usage.
 
 ## Objective
 
-Create a new Markdown document detailing a clear, reproducible `IMG-002
+Analyze a selection of generated books to systematically identify and document common failure patterns in the visual consistency of the protagonist character. The output will be a detailed report describing these patterns, their observed frequency, and potential contributing factors, providing a concrete foundation for future iteration.
+
+## Allowed Scope
+
+- `docs/`: Create a new diagnostic report Markdown file (`docs/PROTAGONIST_CONSISTENCY_DIAGNOSTICS.md`).
+- Read-only access to:
+    - Admin Quality Review UI
+    - Admin UI for Character Consistency Diagnostics
+    - Cloud Logging (for generation logs related to selected books)
+    - Source code related to `generate-book.ts`, `styleBible`, and character prompting (for
