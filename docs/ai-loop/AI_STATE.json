@@ -187,6 +187,7 @@
     "PR #524: Implement Admin Operation Audit Logging (merged)",
     "PR #530: Update Template Mode (Phase 3) Roadmap Status (merged)",
     "PR #533: chore: AIレビューをClaudeのみにしCodexをレビューから除外 (merged)",
+    "PR #546: fix: 監査ログ統合の型エラーを修正 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
