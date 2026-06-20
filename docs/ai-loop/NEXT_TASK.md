@@ -1,92 +1,40 @@
-# Refine Story Generation Prompts for Improved Opening and Ending Quality
+# Refine Story Generation to Prevent `hiddenDetail` from Dominating the Narrative
 
 ## Context
 
-The EhonAI product roadmap (Phase 2: Story & Illustration Quality) aims to make generated stories "a marketable picture book." A critical aspect of this is ensuring a natural and engaging reading experience, specifically addressing the completion criteria: "読み聞かせ用途として、story opening と page progression が不自然でないこと" and reducing "「急に始まる感」feedback が一定以下". While general text quality and semantic richness have been improved, a dedicated focus on the narrative flow and impact of story openings and endings is needed. This task targets prompt refinements to achieve smoother introductions and more conclusive resolutions.
+The EhonAI product roadmap for Phase 2, "Story & Illustration Quality," identifies "hiddenDetail の主目的化防止" (Prevent `hiddenDetail` from becoming the main objective) as a required improvement. Observations suggest that the `hiddenDetail`, intended as a subtle background element or minor discovery, sometimes receives undue emphasis in the generated story, potentially overshadowing the primary `storyGoal` or leading to unintended plot diversions. This task aims to refine the story generation prompts to ensure `hiddenDetail` maintains its intended secondary role.
 
 ## Objective
 
-Enhance the story generation prompts to ensure smoother, more engaging story openings and more satisfying, conclusive endings, reducing instances of "abrupt beginnings" and improving overall narrative flow.
+Adjust the story generation prompts to ensure that `hiddenDetail` remains a subtle, secondary element within the narrative, complementing the `storyGoal` without becoming its primary focus or an overarching quest.
 
 ## Allowed Scope
 
--   `functions/src/ai/story/` (Story generation logic, prompt construction for openings and endings)
--   `functions/src/prompts/` (LLM prompt definitions related to story structure)
--   `functions/tests/ai/story/` (Unit and integration tests for story generation that can assert opening/ending quality)
--   `docs/` (Documentation for prompt refinements and rationale)
+- `functions/src/`:
+    - `functions/src/story/`: For modifying story generation logic and prompt construction.
+    - `functions/src/prompts/`: For adjusting prompt templates related to story generation.
+- `docs/`: For documenting analysis, examples, and prompt draft iterations.
+- `scripts/`: For creating any diagnostic scripts to identify or verify cases of `hiddenDetail` dominance (if necessary).
+- `__tests__/`: For adding or updating unit and integration tests for story generation.
 
 ## Forbidden Scope
 
--   Infrastructure changes (Cloud Functions, Firestore rules not directly related to prompt storage, CI/CD)
--   Billing logic or pricing model modifications
--   Core authentication system redesign
--   Management of secret keys or environment variables (beyond referencing existing ones)
--   Generated assets (e.g., images, PDFs) that are not directly related to prompt output validation
--   UI changes (beyond what's necessary to observe generation output for testing)
+- Infrastructure changes (e.g., Cloud Functions configuration, Firestore rules, IAM).
+- Billing logic or pricing model modifications.
+- Authentication system redesign.
+- Management of secret keys.
+- Automatic generation of visual assets (e.g., image generation, avatar creation beyond prompt adjustments).
+- Any user interface (UI) or user experience (UX) modifications (frontend changes).
+- Changes to the core `ImageProvider` or image generation fallback logic.
 
 ## Requirements
 
--   **Audit & Analysis:** Conduct a focused audit of a small sample of recently generated books (e.g., 5-10 books) to identify common patterns that lead to unnatural or abrupt story openings and endings. Document these patterns in `docs/`.
--   **Prompt Refinement:** Based on the audit, propose and implement specific modifications to the LLM story generation prompts. These modifications should guide the AI towards:
-    *   More natural and engaging introductions that set the scene and character(s).
-    *   More satisfying and conclusive resolutions that wrap up the `storyGoal`.
--   **Test Coverage:** Add or update relevant unit/integration tests within `functions/tests/ai/story/` to assert improved opening/ending structures or the presence/absence of specific keywords/phrases, where feasible and impactful.
--   **Documentation:** Create a document (e.g., `docs/STORY_OPENING_ENDING_IMPROVEMENTS.md`) detailing:
-    *   The identified issues from the audit.
-    *   The specific prompt changes made.
-    *   The rationale behind these changes.
-    *   Expected improvements and potential remaining challenges.
--   **Follow-up Items:** Report any new issues or observations related to overall story pacing, clarity of `storyGoal` resolution, or unexpected side effects from the prompt changes.
-
-## Output Format
-
-```markdown
-# [REPLACE WITH ACTUAL TASK TITLE]
-
-## Context
-
-[Describe the context, why this task is important now, and how it aligns with the roadmap.]
-
-## Objective
-
-[State the single, clear, and bounded objective.]
-
-## Allowed Scope
-
-- Explicitly list editable directories.
-
-## Forbidden Scope
-
-- Infrastructure
-- Billing
-- Authentication redesign
-- Secrets
-- Generated assets
-
-## Requirements
-
-- Keep changes reviewable.
-- Prefer docs-first updates.
-- Include tests where appropriate.
-- Report follow-up items.
-
-## Output Summary
-
-[A brief summary of the work done.]
-
-## Changed Files
-
-- [List of files changed]
-
-## Tests Executed
-
-- [List of tests executed and their results]
-
-## Known Issues
-
-- [List of any known issues or regressions]
-
-## Suggested Next Task
-
-[Suggest the very next task for the AI Loop, following the template format.]
-```
+- **Analysis & Documentation (Docs-First):**
+    - Identify and document 2-3 specific examples (e.g., using `storyQualityReport` or past review feedback) where `hiddenDetail` unintentionally became a primary narrative element. Describe the `storyGoal`, `hiddenDetail`, and how the generated story overemphasized the `hiddenDetail`.
+    - Draft proposed changes to the LLM prompt instructions in `docs/` before implementation.
+- **Prompt Modification:**
+    - Implement changes to the `generateStory` function's prompt construction in `functions/src/story/` and `functions/src/prompts/` to clearly instruct the LLM on the hierarchical relationship between `storyGoal` (primary) and `hiddenDetail` (secondary/subtle).
+    - Ensure `hiddenDetail` is framed as a background element, a minor discovery, or a subtle observation rather than a core objective.
+- **Testing:**
+    - Ensure all existing unit and integration tests for story generation pass without regressions.
+    - Add at least one new integration test case (`functions/__tests__/story/generateStory.test.ts`) that specifically sets up a `storyGoal` and `hiddenDetail` where
