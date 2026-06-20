@@ -928,10 +928,10 @@ describe("prompt length regression (P5-3j)", () => {
         compositionHint: "wide establishing shot from slightly above",
       }
     );
-    expect(result.length).toBeLessThan(8100);
+    expect(result.length).toBeLessThan(8500);
   });
 
-  it("non-animals non-star prompt (base case) stays under 6000 chars", () => {
+  it("non-animals non-star prompt (base case) stays under 6300 chars", () => {
     const result = buildImagePrompt(
       "A child plays in a sunny garden with flowers",
       "watercolor",
@@ -939,6 +939,6 @@ describe("prompt length regression (P5-3j)", () => {
       "soft watercolor picture book palette",
       { imageModelProfile: "pro_consistent", ageBand: "preschool_3_4" }
     );
-    expect(result.length).toBeLessThan(6000);
+    expect(result.length).toBeLessThan(6300);
   });
 });

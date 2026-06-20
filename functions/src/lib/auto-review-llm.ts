@@ -56,6 +56,7 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
     - Clothing, hairstyles, and color palettes remain stable across pages for the same characterId.
     - The correct characterIds are listed in "appearingCharacterIds" based on the page text and prompt.
     - "focusCharacterId" is appropriately chosen and consistent.
+    - **Unintended Characters**: Strictly check for characters NOT in the "cast" or "appearingCharacterIds". Detect "hallucinated companions" (extra pets or children that follow the protagonist) and "character duplication" (the same character appearing twice in one frame).
 4. **Personalization Depth (0-100)**: Evaluate how well the story might incorporate child-specific elements (if any are apparent).
 5. **Safety & Age Appropriateness (0-100)**: Check for any inappropriate content, violence, or themes unsuitable for young children.
 6. **Semantic Content (Age 3+ Diagnostic)**:

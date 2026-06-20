@@ -235,7 +235,11 @@ export function validateGeneratedStoryQuality(params: {
     if (readingProfile.ageBand !== "baby_toddler") {
       const isOpening = pageIndex === 0;
       const isClosing = pageIndex === pageCount - 1;
-      const heuristics = analyzeJapaneseTextHeuristics(story.pages[pageIndex].text, { isOpening, isClosing });
+      const heuristics = analyzeJapaneseTextHeuristics(story.pages[pageIndex].text, {
+        ageBand: readingProfile.ageBand,
+        isOpening,
+        isClosing,
+      });
 
       if (isOpening && heuristics.missingSceneDetail) {
         issues.push({
@@ -586,19 +590,20 @@ type JapaneseTextHeuristics = {
 
 function analyzeJapaneseTextHeuristics(
   text: string,
-  options?: { isOpening?: boolean; isClosing?: boolean }
+  options?: { ageBand?: AgeBand; isOpening?: boolean; isClosing?: boolean }
 ): JapaneseTextHeuristics {
   const normalized = text.replace(/\s+/g, "");
-  const commonSoundWords = normalized.match(
-    /(ころころ|わくわく|どきどき|きらきら|ふわふわ|さらさら|ぴかぴか|ぐるぐる|ごろごろ|ぺたぺた|しゃかしゃか|こしこし|にこにこ)/g
-  ) ?? [];
+  const commonSoundWords =
+    normalized.match(
+      /(ころころ|わくわく|どきどき|きらきら|ふわふわ|さらさら|ぴかぴか|ぐるぐる|ごろごろ|ぺたぺた|しゃかしゃか|こしこし|にこにこ|ふんわり|どっしり|すたすた|ぴょんぴょん|すやすや|ぱくぱく|もぐもぐ|ぴょんと)/g
+    ) ?? [];
   const placeWords = /(おへや|へや|まど|そら|こうえん|もり|みち|すなば|すなのなか|すなのうえ|てのなか|てのひら|ゆびさき|うみ|かわ|やま|にわ|キッチン|テーブル|ベッド|どうぶつえん|みずうみ|くも)/;
   const actionWords = /(ある|はし|みつけ|あつめ|つく|のぼ|すべ|ひろ|みつめ|さわ|のぞ|えら|あけ|もっ|ぎゅっ|ふり|わら|みた|きい|のった|とんだ|ひらいた|ひろが|ならべ|おいた|みせた|つたえ|かんがえ|みつめた)/;
   const emotionOrDiscoveryWords = /(うれ|かなし|ほっ|びっくり|わくわく|どきどき|にっこり|わら|えがお|みつけ|きづ|ふしぎ|あんしん|こわ|たのし)/;
-  const coinedPatterns = /(こりころ|ふわりん|ころころこりころ|まきまきまきば|ぴかりん|きらりん|ぽよん|ぷよん)/;
-  const hiraganaRatio = normalized.length > 0
-    ? ((normalized.match(/[ぁ-ん]/g) ?? []).length / normalized.length)
-    : 0;
+  const coinedPatterns =
+    /(こりころ|ふわりん|ころころこりころ|まきまきまきば|ぴかりん|きらりん|ぽよん|ぷよん|ぽよよん|ぴょんたん|りるりん|ぱぱる|ぴぴる|ぷるるん|おめめ|おてて|あんよ|おくち|おみみ)/;
+  const hiraganaRatio =
+    normalized.length > 0 ? (normalized.match(/[ぁ-ん]/g) ?? []).length / normalized.length : 0;
 
   const sentences = text.split(/[。！？!?]+/).map((s) => s.trim()).filter(Boolean);
   const endings = sentences.map((s) => {
@@ -623,15 +628,22 @@ function analyzeJapaneseTextHeuristics(
   }
 
   const hasClosingTone = /(あした|おやすみ|わらって|しあわせ|きもち|ずっと|これから|おしまい|またね|ありがとう|にっこり|ほっと|あんしん|ゆめ|ねむ|おうちに)/.test(text);
-  const hasPlaceDetail = placeWords.test(text);
-  const missingSceneDetail = !hasPlaceDetail || (options?.isOpening && countJapaneseTextChars(text) < 25);
+  const isOlderChild =
+    options?.ageBand === "early_reader_5_6" ||
+    options?.ageBand === "early_elementary_7_8" ||
+    options?.ageBand === "general_child";
+  const missingSceneDetail =
+    !placeWords.test(text) || (!!options?.isOpening && countJapaneseTextChars(text) < 25);
 
   return {
-    tooManySoundWords: commonSoundWords.length >= 3,
-    textTooChildish: (commonSoundWords.length >= 2 && countJapaneseTextChars(text) < 80) || coinedPatterns.test(text),
+    tooManySoundWords: commonSoundWords.length >= (isOlderChild ? 2 : 3),
+    textTooChildish:
+      (commonSoundWords.length >= (isOlderChild ? 1 : 2) && countJapaneseTextChars(text) < 80) ||
+      coinedPatterns.test(text),
     missingSceneDetail,
     missingActionOrEmotion: !(actionWords.test(text) || emotionOrDiscoveryWords.test(text)),
-    unnaturalJapaneseRisk: coinedPatterns.test(text) || (hiraganaRatio > 0.92 && commonSoundWords.length >= 2),
+    unnaturalJapaneseRisk:
+      coinedPatterns.test(text) || (hiraganaRatio > 0.9 && commonSoundWords.length >= 2),
     textTooGeneric:
       countJapaneseTextChars(text) < 45 &&
       countSentences(text) <= 3 &&
@@ -1008,6 +1020,54 @@ function addCastConsistencyIssues(params: {
       });
     }
   }
+
+  // Heuristic for unintended characters in imagePrompt
+  params.story.pages.forEach((page, index) => {
+    const prompt = page.imagePrompt.toLowerCase();
+    const appearingIds = new Set(page.appearingCharacterIds ?? []);
+
+    // 1. Unrequested humans (if child_protagonist or human cast not specified)
+    const hasHumanInPrompt = /\b(child|boy|girl|person|human|man|woman|people|crowd)\b/i.test(prompt);
+    if (hasHumanInPrompt) {
+      const isHumanAuthorized = appearingIds.has("child_protagonist") ||
+        Array.from(appearingIds).some(id => {
+          const c = cast.find(char => char.characterId === id);
+          return c?.characterKind === "human_child" || c?.characterKind === "human_adult" ||
+                 /\b(child|boy|girl|person|human|man|woman)\b/i.test(c?.visualBible ?? "");
+        });
+      if (!isHumanAuthorized) {
+        params.issues.push({
+          severity: "warning",
+          code: "unauthorized_human_in_prompt",
+          message: "登場人物に指定されていない人間が imagePrompt に含まれている可能性があります。",
+          pageIndex: index,
+        });
+      }
+    }
+
+    // 2. Unrequested animals
+    const animalMatch = prompt.match(/\b(dog|cat|bear|rabbit|fox|bird|panda|penguin|hamster|mouse|lion|tiger|elephant|monkey|squirrel|koala|sheep|horse|cow|pig|chicken|duck)\b/i);
+    if (animalMatch) {
+      const foundToken = animalMatch[0].toLowerCase();
+      const isAnimalAuthorized = Array.from(appearingIds).some(id => {
+        const c = cast.find(char => char.characterId === id);
+        return c && (
+          c.characterId.toLowerCase().includes(foundToken) ||
+          c.displayName.toLowerCase().includes(foundToken) ||
+          c.visualBible?.toLowerCase().includes(foundToken) ||
+          c.characterKind === "animal"
+        );
+      });
+      if (!isAnimalAuthorized) {
+        params.issues.push({
+          severity: "warning",
+          code: "unauthorized_animal_in_prompt",
+          message: `登場人物に指定されていない動物（${foundToken}）が imagePrompt に含まれている可能性があります。`,
+          pageIndex: index,
+        });
+      }
+    }
+  });
 }
 
 export function toFirestoreStoryQualityReport(report: StoryQualityReport): StoryQualityReportData {
