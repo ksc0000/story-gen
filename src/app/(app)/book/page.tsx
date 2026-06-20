@@ -385,6 +385,11 @@ function BookContent() {
               : undefined
           }
           isRegeneratingCover={isRegeneratingCover}
+          bookId={bookId}
+          readAloudAvailable={
+            isOwner && !isDemoMode &&
+            (profile?.productPlan === "standard_paid" || profile?.productPlan === "premium_paid")
+          }
         />
         {/* Cinematic viewer overlay */}
         {isCinematicOpen && (

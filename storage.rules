@@ -6,6 +6,13 @@ service firebase.storage {
         && firestore.get(/databases/(default)/documents/books/$(bookId)).data.userId == request.auth.uid;
       allow write: if false;
     }
+    // 読み上げ音声（ニューラルTTS）。所有者または公開された絵本のみ読み取り可。書き込みは Functions のみ。
+    match /bookAudio/{bookId}/{fileName} {
+      allow read: if (request.auth != null
+          && firestore.get(/databases/(default)/documents/books/$(bookId)).data.userId == request.auth.uid)
+        || firestore.get(/databases/(default)/documents/books/$(bookId)).data.public == true;
+      allow write: if false;
+    }
     match /{allPaths=**} {
       allow read, write: if false;
     }

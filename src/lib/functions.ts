@@ -137,3 +137,24 @@ export async function backfillDailyMetricsCallable(
   const result = await callable({ days });
   return result.data as BackfillDailyMetricsResult;
 }
+
+// ---------------------------------------------------------------------------
+// generateBookNarration（読み上げ音声生成・有料プラン限定）
+// ---------------------------------------------------------------------------
+
+export type GenerateBookNarrationResult = {
+  ok: boolean;
+  generated: number;
+  cached: number;
+  failed: number;
+};
+
+export async function generateBookNarrationCallable(
+  bookId: string
+): Promise<GenerateBookNarrationResult> {
+  const callable = await getCallable<{ bookId: string }, GenerateBookNarrationResult>(
+    "generateBookNarration"
+  );
+  const result = await callable({ bookId });
+  return result.data as GenerateBookNarrationResult;
+}

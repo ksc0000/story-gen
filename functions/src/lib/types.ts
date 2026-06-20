@@ -494,6 +494,8 @@ export interface PageData {
   text: string;
   imageUrl: string;
   imagePrompt: string;
+  audioUrl?: string;
+  audioStatus?: "generating" | "ready" | "failed";
   textCharCount?: number;
   textSentenceCount?: number;
   textQualityWarnings?: string[];

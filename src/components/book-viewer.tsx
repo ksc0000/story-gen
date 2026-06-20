@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, Loader2, Sparkles } from "lucide-react";
+import { RefreshCcw, Loader2, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RegenerateConfirmationDialog } from "@/components/regenerate-confirmation-dialog";
+import { useNarration } from "@/lib/hooks/use-narration";
+import { generateBookNarrationCallable } from "@/lib/functions";
+import { cn } from "@/lib/utils";
 import type { PageDoc, CoverStatus, ReadingStructureVersion } from "@/lib/types";
 import type { Variants } from "framer-motion";
 
@@ -35,6 +38,10 @@ interface BookViewerProps {
   isRegeneratingPage?: (index: number) => boolean;
   onRegenerateCover?: () => void;
   isRegeneratingCover?: boolean;
+  /** 読み上げ対象の bookId（音声生成に必要）。 */
+  bookId?: string;
+  /** 読み上げ機能を使えるか（有料プラン限定）。 */
+  readAloudAvailable?: boolean;
 }
 
 /** Build reading items: cover+title spread (single sheet) → story pages (when v2 is active). */
@@ -255,12 +262,17 @@ function CoverSheetMobile({
 /* ------------------------------------------------------------------ */
 
 export function BookViewer(props: BookViewerProps) {
-  const { title, onRegeneratePage, isRegeneratingPage } = props;
+  const { title, onRegeneratePage, isRegeneratingPage, bookId, readAloudAvailable } = props;
   const items = buildReadingItems(props);
 
   const [currentPage, setCurrentPage] = useState(0);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pageToRegenerate, setPageToRegenerate] = useState<number | null>(null);
+
+  // 読み上げ（ニューラルTTS）状態
+  const [readAloudOn, setReadAloudOn] = useState(false);
+  const [narrationLoading, setNarrationLoading] = useState(false);
+  const [narrationError, setNarrationError] = useState<string | null>(null);
 
   /** 1 = forward (next), -1 = backward (prev). Used for animation direction. */
   const directionRef = useRef(1);
@@ -276,6 +288,55 @@ export function BookViewer(props: BookViewerProps) {
     directionRef.current = -1;
     setCurrentPage((p) => Math.max(p - 1, 0));
   }, []);
+
+  // 読み上げ：音声終了で次ページへ自動送り
+  const { play: playNarration, stop: stopNarration } = useNarration(goNext);
+
+  const storyPages = props.pages.filter((p) => p.text);
+  const allAudioReady = storyPages.length > 0 && storyPages.every((p) => p.audioUrl);
+
+  const handleToggleReadAloud = useCallback(async () => {
+    setNarrationError(null);
+    if (readAloudOn) {
+      setReadAloudOn(false);
+      stopNarration();
+      return;
+    }
+    // ONにする：音声が未生成なら生成
+    if (!allAudioReady && bookId) {
+      setNarrationLoading(true);
+      try {
+        await generateBookNarrationCallable(bookId);
+        // page docs が onSnapshot 経由で audioUrl 付きに更新される
+      } catch (err) {
+        const code = typeof err === "object" && err && "code" in err ? String((err as { code?: string }).code) : "";
+        setNarrationError(
+          code.includes("permission-denied")
+            ? "読み上げは有料プラン限定の機能です"
+            : "音声の生成に失敗しました。時間をおいて再度お試しください。"
+        );
+        setNarrationLoading(false);
+        return;
+      }
+      setNarrationLoading(false);
+    }
+    setReadAloudOn(true);
+  }, [readAloudOn, allAudioReady, bookId, stopNarration]);
+
+  // 現在ページの音声を再生（ページ送り・ON/OFF に追従）
+  useEffect(() => {
+    if (!readAloudOn) {
+      stopNarration();
+      return;
+    }
+    const item = items[currentPage];
+    const url = item && item.kind === "story_page" ? item.page.audioUrl : undefined;
+    if (url) {
+      playNarration(url);
+    } else {
+      stopNarration();
+    }
+  }, [readAloudOn, currentPage, items, playNarration, stopNarration]);
 
   const handleDragEnd = useCallback(
     (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
@@ -573,11 +634,38 @@ export function BookViewer(props: BookViewerProps) {
         </AnimatePresence>
       </div>
       {/* Navigation */}
-      <div className="mt-4 flex items-center justify-center gap-4">
-        <Button variant="outline" onClick={goPrev} disabled={currentPage === 0} className="px-6">← 前</Button>
-        <span className="text-sm text-violet-500">{pageLabel}</span>
-        <Button variant="outline" onClick={goNext} disabled={currentPage >= totalPages - 1} className="px-6">次 →</Button>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        <Button variant="outline" onClick={goPrev} disabled={currentPage === 0} className="px-4 sm:px-6">← 前</Button>
+        <span className="text-sm font-medium text-violet-500">{pageLabel}</span>
+        <Button variant="outline" onClick={goNext} disabled={currentPage >= totalPages - 1} className="px-4 sm:px-6">次 →</Button>
+        {readAloudAvailable && bookId && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleToggleReadAloud}
+            disabled={narrationLoading}
+            className={cn(
+              "rounded-full transition-colors",
+              readAloudOn ? "bg-purple-50 text-purple-600" : "text-violet-400"
+            )}
+            title={readAloudOn ? "読み上げをオフにする" : "読み上げをオンにする（本物の声）"}
+          >
+            {narrationLoading ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : readAloudOn ? (
+              <Volume2 className="size-5" />
+            ) : (
+              <VolumeX className="size-5" />
+            )}
+          </Button>
+        )}
       </div>
+      {narrationLoading && (
+        <p className="mt-2 text-center text-xs text-violet-400">音声を生成しています…（初回のみ少し時間がかかります）</p>
+      )}
+      {narrationError && (
+        <p className="mt-2 text-center text-xs text-rose-500">{narrationError}</p>
+      )}
 
       <RegenerateConfirmationDialog
         isOpen={isConfirmOpen}

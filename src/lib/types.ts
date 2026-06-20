@@ -642,6 +642,9 @@ export interface PageDoc {
   text: string;
   imageUrl: string;
   imagePrompt: string;
+  /** ニューラルTTS（ElevenLabs）で生成した本文音声の再生URL。 */
+  audioUrl?: string;
+  audioStatus?: "generating" | "ready" | "failed";
   textCharCount?: number;
   textSentenceCount?: number;
   textQualityWarnings?: string[];
