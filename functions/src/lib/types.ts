@@ -475,6 +475,7 @@ export interface BookData {
   recoveredFromPartialCompleted?: boolean;
   recoveredAt?: FirebaseFirestore.Timestamp;
   recoveredAtMs?: number;
+  usedIdentityOnlyReference?: boolean;
   public?: boolean;
   pdfStatus?: PdfStatus;
   pdfUrl?: string;

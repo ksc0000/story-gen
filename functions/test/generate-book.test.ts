@@ -1120,13 +1120,12 @@ describe("processBookGeneration", () => {
         inputImageUrls: [],
       })
     );
-    // Cover should HAVE reference images
+    // Cover should HAVE reference images (best available)
     expect(deps.imageClient.generateImage).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         purpose: "book_cover",
         inputImageUrls: expect.arrayContaining([
-          "https://example.com/reference.png",
           "https://example.com/approved.png",
         ]),
       })

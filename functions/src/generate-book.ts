@@ -1214,7 +1214,8 @@ export async function processBookGeneration(
     }
 
     // Step 4: Build reference assets
-    if (normalizedBookData.childId && normalizedBookData.childProfileSnapshot) {
+    const isIdentityOnlyEnabled = process.env.ENABLE_IDENTITY_ONLY_REFERENCE === "true";
+    if (isIdentityOnlyEnabled && normalizedBookData.childId && normalizedBookData.childProfileSnapshot) {
       const { neutralReferenceImageUrl, approvedImageUrl, referenceImageUrl } = normalizedBookData.childProfileSnapshot.visualProfile;
       if (!neutralReferenceImageUrl && (approvedImageUrl || referenceImageUrl)) {
         try {
@@ -1449,7 +1450,14 @@ export async function processBookGeneration(
           Boolean(character.referenceImageUrl) ||
           Boolean(character.generatedReferenceImageUrl)
       );
+
+    const usedIdentityOnlyReference = Boolean(
+      normalizedBookData.childProfileSnapshot?.visualProfile.neutralReferenceImageUrl ||
+      (story.cast ?? []).some(c => c.neutralReferenceImageUrl)
+    );
+
     const storyGenerationMetadata = removeUndefinedDeep({
+      usedIdentityOnlyReference: usedIdentityOnlyReference || undefined,
         storyModel: story.storyModel,
         storyModelFallbackUsed: story.storyModelFallbackUsed,
         storyGenerationAttempts: story.storyGenerationAttempts,
@@ -2212,65 +2220,60 @@ export function buildInputImageRefs(
     characterId?: string;
     url: string;
     source?: InputImageSource;
-  }> = [
-    sourcePhotoUrl
-      ? {
-          role: "style_reference" as const, // High priority for photo_story mode consistency
-          url: sourcePhotoUrl,
-        }
-      : undefined,
-    childProfileSnapshot?.visualProfile.neutralReferenceImageUrl
-      ? {
-          role: "character_reference",
-          characterId: "child_protagonist",
-          url: toPublicUrl(childProfileSnapshot.visualProfile.neutralReferenceImageUrl),
-          source: "neutralReferenceImageUrl" as const,
-        }
-      : undefined,
-    childProfileSnapshot?.visualProfile.approvedImageUrl
-      ? {
-          role: "character_reference",
-          characterId: "child_protagonist",
-          url: toPublicUrl(childProfileSnapshot.visualProfile.approvedImageUrl),
-          source: "approvedImageUrl" as const,
-        }
-      : undefined,
-    childProfileSnapshot?.visualProfile.referenceImageUrl
-      ? {
-          role: "character_reference",
-          characterId: "child_protagonist",
-          url: toPublicUrl(childProfileSnapshot.visualProfile.referenceImageUrl),
-          source: "referenceImageUrl" as const,
-        }
-      : undefined,
-  ].filter(Boolean) as Array<{
-    role: InputImageRole;
-    characterId?: string;
-    url: string;
-    source?: InputImageSource;
-  }>;
+  }> = [];
 
+  // photo_story mode source photo takes top priority
+  if (sourcePhotoUrl) {
+    refs.push({
+      role: "style_reference" as const,
+      url: sourcePhotoUrl,
+    });
+  }
+
+  // 1. Collect child protagonist reference (best available only)
+  if (childProfileSnapshot) {
+    const vp = childProfileSnapshot.visualProfile;
+    // Prioritize neutral reference to prevent background bleeding (REF-001)
+    const url = vp.neutralReferenceImageUrl || vp.approvedImageUrl || vp.referenceImageUrl;
+    const source = vp.neutralReferenceImageUrl ? "neutralReferenceImageUrl"
+                 : vp.approvedImageUrl ? "approvedImageUrl"
+                 : "referenceImageUrl";
+
+    if (url) {
+      refs.push({
+        role: "character_reference",
+        characterId: "child_protagonist",
+        url: toPublicUrl(url),
+        source: source as InputImageSource,
+      });
+    }
+  }
+
+  // 2. Collect other cast member references (best available only per character)
   for (const character of cast ?? []) {
     if (!appearingCharacterIds?.includes(character.characterId)) {
       continue;
     }
+    // Already handled child_protagonist above via snapshot
+    if (character.characterId === "child_protagonist") {
+      continue;
+    }
 
-    const candidates: Array<[string | undefined, InputImageSource]> = [
-      [character.neutralReferenceImageUrl, "neutralReferenceImageUrl"],
-      [character.approvedImageUrl, "approvedImageUrl"],
-      [character.referenceImageUrl, "referenceImageUrl"],
-      [character.generatedReferenceImageUrl, "generatedReferenceImageUrl"],
-    ];
+    // Prioritize neutral reference for consistency and isolation (REF-001)
+    const url = character.neutralReferenceImageUrl || character.approvedImageUrl ||
+                character.referenceImageUrl || character.generatedReferenceImageUrl;
 
-    for (const [url, source] of candidates) {
-      if (!url) {
-        continue;
-      }
+    const source = character.neutralReferenceImageUrl ? "neutralReferenceImageUrl"
+                 : character.approvedImageUrl ? "approvedImageUrl"
+                 : character.referenceImageUrl ? "referenceImageUrl"
+                 : "generatedReferenceImageUrl";
+
+    if (url) {
       refs.push({
         role: "character_reference",
         characterId: character.characterId,
         url: toPublicUrl(url),
-        source,
+        source: source as InputImageSource,
       });
     }
   }
