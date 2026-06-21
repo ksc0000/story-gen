@@ -1,9 +1,7 @@
-# Enhance Story Generation Prompts for Semantic Richness in 3+ Age Band Books
+# Implement Quality Recommendation Action Buttons in Admin UI
 
 ## Context
 
-The product roadmap for Phase 2, "Story & Illustration Quality," includes a task to improve text quality, specifically: "3歳以上の意味量確保（場所・行動・気持ち・発見の2つ以上）" (Ensure semantic richness for ages 3 and up, including at least two elements from location, action, emotion, or discovery). While PR #481 addressed semantic richness for the 3+ age band, this specific, measurable aspect needs dedicated attention. This task focuses on refining story generation prompts to ensure the output explicitly incorporates at least two of the specified semantic elements in the story text for older children.
+The product roadmap indicates a strong focus on "Phase 2: Story & Illustration Quality" and includes a series of tasks related to quality management and recommendations. Specifically, "Recommendation Action Buttons（安全な導線のみ）" is listed as a task within Phase 2 and is currently marked as "done". However, the current state and surrounding tasks suggest that while the *recommendation* system is implemented, the *actionable buttons* that trigger rewrite/regeneration might still need explicit implementation or refinement for "safe workflows."
 
-## Objective
-
-Refine the Gemini story generation prompts for books
+This task aims to implement specific action buttons within the Admin Quality Review UI that directly trigger a book rewrite or page regeneration based on the recommendations, ensuring these actions operate within defined safe boundaries. This moves beyond just displaying recommendations
