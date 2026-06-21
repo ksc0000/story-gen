@@ -1,5 +1,13 @@
-# Refine `styleBible` Entry for 'soft_watercolor' to Improve Consistency
+# Diagnose Companion Character Visual Consistency Issues
 
 ## Context
 
-The product roadmap for Phase 2, "Story & Illustration Quality," explicitly lists "styleBible 改善" (styleBible improvement) as a continuing task. While PR #397 and PR #398 addressed significant style consistency issues, continuous refinement of individual `styleBible` entries is essential to achieve illustrations that are "売り物として納得できる絵本" (satisfactory picture books for sale). This task focuses on refining the `soft_watercolor` style, which is frequently used and crucial for conveying a gentle and consistent visual experience. This task is derived from the ongoing "品質管理" (quality management) and "画像品質" (image quality) objectives within Phase 2.
+The product roadmap for Phase 2: Story & Illustration Quality includes "相棒キャラ一貫性の改善" (Improve companion character consistency) under the "キャラクター一貫性" (Character consistency) section. While general character generation has seen improvements (e.g., `PR #545` to prevent hallucinated characters, `PR #445` to enforce registered companion appearance), a dedicated diagnosis of *companion character* visual consistency across pages has not been performed. This task aims to identify and document specific issues related to how companion characters are rendered throughout a story.
+
+## Objective
+
+Identify and document common visual consistency issues observed in companion characters across multiple pages of generated books. The output should be a diagnostic report detailing observed problems, their frequency, and initial hypotheses for root causes, informing future prompt engineering or generation logic improvements.
+
+## Allowed Scope
+
+- `docs/`: To create a new diagnostic report Markdown file (`docs/COMPANION_CHARACTER_CONSISTENCY_DIAGNOSIS.md`).
