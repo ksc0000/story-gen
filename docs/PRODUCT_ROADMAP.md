@@ -62,7 +62,7 @@
 
 - provider 比較・A/B テスト
 - 音声読み聞かせ
-- 印刷注文
+- 印刷注文（[Design Doc](./PRINT_ORDER_DESIGN.md) 作成中）
 - admin operation audit log
 - rate limit（API レベル）
 - Replicate webhook / prediction ID 管理
