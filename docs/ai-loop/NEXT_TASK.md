@@ -1,13 +1,9 @@
-# Complete `approvedImageUrl` / `referenceImageUrl` Integration for All Character Types
+# Enhance Story Generation Prompts for Semantic Richness in 3+ Age Band Books
 
 ## Context
 
-The product roadmap indicates that the structure for `approvedImageUrl` and `referenceImageUrl` is prepared for cast members, but full integration across all character types in the image generation pipeline is still "in progress." This task aims to complete that integration to enhance character visual consistency.
+The product roadmap for Phase 2, "Story & Illustration Quality," includes a task to improve text quality, specifically: "3歳以上の意味量確保（場所・行動・気持ち・発見の2つ以上）" (Ensure semantic richness for ages 3 and up, including at least two elements from location, action, emotion, or discovery). While PR #481 addressed semantic richness for the 3+ age band, this specific, measurable aspect needs dedicated attention. This task focuses on refining story generation prompts to ensure the output explicitly incorporates at least two of the specified semantic elements in the story text for older children.
 
 ## Objective
 
-Ensure that `approvedImageUrl` and `referenceImageUrl` fields are correctly utilized for all character types (children's avatars, companions, and original characters) in the image generation process. This will leverage existing data structures to improve the consistency of character appearances, especially when explicit visual references are available and approved.
-
-## Allowed Scope
-
--   `functions/src/`: Modifications to the book generation pipeline, specifically `generate-book
+Refine the Gemini story generation prompts for books
