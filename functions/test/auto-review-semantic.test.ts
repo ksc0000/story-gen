@@ -23,7 +23,7 @@ describe("LLM Auto Review Semantic Content Prompt", () => {
     const prompt = buildAutoReviewPrompt(mockBookBase as BookData, mockPages as PageData[]);
     expect(prompt).toContain("Semantic Content (Age 3+ Diagnostic)");
     expect(prompt).toContain("early_reader_5_6");
-    expect(prompt).toContain("Each page SHOULD contain at least TWO of these elements.");
+    expect(prompt).toContain("Each page MUST contain at least TWO of these elements");
     expect(prompt).toContain("insufficient_semantic_content");
   });
 

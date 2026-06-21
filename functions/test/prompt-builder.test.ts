@@ -54,6 +54,13 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("日本語の読みやすさ: 子どもが自分で読んだり、親が読み聞かせたりしやすいよう、ひらがな主体の読みやすい日本語を優先してください。");
     expect(result).toContain("悪い例");
     expect(result).toContain("良い例");
+    expect(result).toContain("【重要：3歳以上の意味量確保】");
+    expect(result).toContain("「場所」(Location)");
+    expect(result).toContain("「行動」(Action)");
+    expect(result).toContain("「気持ち」(Emotion)");
+    expect(result).toContain("「発見」(Discovery)");
+    expect(result).toContain("（場所：情景）");
+    expect(result).toContain("（発見：気づき）");
     expect(result).toContain("cast");
     expect(result).toContain("appearingCharacterIds");
     expect(result).toContain("focusCharacterId");

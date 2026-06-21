@@ -1121,6 +1121,7 @@ export class GeminiClient implements LLMClient {
       "Keep storyGoal, mainQuestObject, forbiddenQuestObjects, titleSpreadText, openingNarration, and coverImagePrompt unchanged.",
       "pages[].text only. Do not modify imagePrompt, pageVisualRole, cast, appearingCharacterIds, or focusCharacterId.",
       "For ages 3+, avoid sound-play-only text and meaningless invented words (e.g., \"-tan\", \"-riru\", \"-pipi\", \"-papa\").",
+      "For ages 3+, each page must naturally incorporate at least two of the following elements to ensure semantic richness: Location (場所 - where), Action (行動 - what they do), Emotion (気持ち - how they feel), and Discovery (発見 - what they find/notice).",
       "For ages 3+, each page should usually have 3 to 5 sentences and around 80 to 140 Japanese characters when natural.",
       "Add natural scene detail, action, emotion, and small discovery.",
       "On discovery pages, include where the character found something or what the hands / sand / nearby place looked like.",
