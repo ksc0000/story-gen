@@ -1,11 +1,16 @@
-# Verify `IMG-002` Fix for Character Reference Background Leakage in Fixed Templates
+# Automate Cloud Logging Saved Query Deployment for Smoke Test Observability
 
 ## Context
 
-The `IMG-002` initiative aimed to suppress background leakage from character reference images (e.g., sandbox backgrounds appearing in generated images). The initial implementation has been completed (PR #266 and related efforts). The roadmap indicates a need for ongoing verification: "IMG-002 verification（fixed_template 6本で背景リーク再発有無を継続確認）".
+The project has recently completed significant work on `Phase 4: Gemini JSON Hardening` and `P2 SLO Automation`, including the definition of numerous Cloud Logging queries to monitor generation outcomes (`P2_GENERATION_SLO_SAVED_LOGGING_QUERIES.md`). However, the process of importing these pre-defined queries into the Google Cloud Log Explorer for easy access remains manual ("Cloud Console への import は手動" in P2-8).
 
-Jules currently has task #552, which is to "Document `IMG-002` Verification Protocol and Initial Audit for Fixed Templates". This current task is to *perform* the verification, as the documentation of the protocol is being handled separately.
+This task addresses the "P4-logging: Cloud Logging クエリ自動化（smoke 実行の可観測性向上）" follow-up item identified in the roadmap, aiming to improve observability and efficiency for verifying smoke test results by automating the deployment of relevant saved queries.
 
 ## Objective
 
-Generate a
+Implement a script or a set of `gcloud` commands to automatically deploy pre-defined Cloud Logging saved queries into the Google Cloud project. This will make these queries readily accessible within the Log Explorer, specifically enhancing the capability for quick analysis and validation of smoke test executions.
+
+## Allowed Scope
+
+-   `docs/` (for documenting the script/commands and their usage, e.g., in a new `docs/AUTOMATE_LOGGING_QUERIES.md`)
+-   `scripts/` (for the automation script itself, e.g.,
