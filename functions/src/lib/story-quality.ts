@@ -429,13 +429,30 @@ export function validateGeneratedStoryQuality(params: {
 
     if (compositionHints.length > 1) {
       const normalizedHints = compositionHints.map((value) => value.toLowerCase());
-      if (new Set(normalizedHints).size === 1) {
+      const uniqueHints = new Set(normalizedHints);
+      const roles = story.pages.map((p) => p.pageVisualRole).filter(Boolean) as string[];
+      const uniqueRoles = new Set(roles);
+
+      if (uniqueHints.size === 1 || uniqueRoles.size === 1) {
         issues.push({
           severity: "warning",
           code: "composition_hint.monotone",
-          message: "構図指定が全ページで同じです。絵のリズムが単調になる可能性があります。",
+          message: "構図指定または役割（pageVisualRole）が全ページで同じです。絵のリズムが単調になる可能性があります。",
         });
       }
+
+      // Variety check for longer books
+      const minUniqueRoles = pageCount >= 8 ? 5 : pageCount >= 4 ? 3 : 2;
+      if (uniqueRoles.size < minUniqueRoles) {
+        issues.push({
+          severity: "warning",
+          code: "image_composition.low_variety",
+          message: `構図のバリエーションが不足しています。${pageCount}ページの構成では、少なくとも${minUniqueRoles}種類以上の異なる役割（pageVisualRole）を使用することを推奨します。`,
+          actual: uniqueRoles.size,
+          expected: `>= ${minUniqueRoles}`,
+        });
+      }
+
       const allPortraitLike = normalizedHints.every((value) => value.includes("portrait"));
       const hasVariedShot = normalizedHints.some((value) =>
         ["wide", "back", "detail", "bird", "object", "close", "side"].some((token) => value.includes(token))

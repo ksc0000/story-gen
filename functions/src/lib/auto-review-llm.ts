@@ -36,6 +36,8 @@ export function buildAutoReviewPrompt(book: BookData, pages: PageData[]): string
       pageNumber: p.pageNumber + 1,
       text: p.text,
       imagePrompt: p.imagePrompt,
+      pageVisualRole: p.pageVisualRole,
+      compositionHint: p.compositionHint,
       appearingCharacterIds: p.appearingCharacterIds,
       focusCharacterId: p.focusCharacterId,
     })),
@@ -48,6 +50,7 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
 1. **Story Quality (0-100)**: Evaluate story structure, pacing, coherence, and emotional engagement. Is the story appropriate for children?
 2. **Illustration Quality (0-100)**: Evaluate both the descriptive quality of the image prompts AND the actual generated images (if provided).
     - **Image Prompts**: Are they vivid and appropriate for the scene?
+    - **Compositional Variety**: Evaluate the visual rhythm across the whole book. Are the "pageVisualRole" and "compositionHint" varied enough? Identify visual monotony (e.g., too many front-facing portraits, or using the same role too frequently).
     - **Visual Artifacts**: Examine images for distorted limbs, unnatural faces, floating objects, or physically impossible structures.
     - **Text Artifacts**: Check for nonsensical text, gibberish characters, or pseudo-writing on signs, posters, or labels in the background.
     - **Style Consistency**: Does the visual style remain consistent across all images according to the chosen style profile?
