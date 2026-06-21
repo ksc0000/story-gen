@@ -1,13 +1,13 @@
-# Diagnose Companion Character Visual Consistency Issues
+# Complete `approvedImageUrl` / `referenceImageUrl` Integration for All Character Types
 
 ## Context
 
-The product roadmap for Phase 2: Story & Illustration Quality includes "相棒キャラ一貫性の改善" (Improve companion character consistency) under the "キャラクター一貫性" (Character consistency) section. While general character generation has seen improvements (e.g., `PR #545` to prevent hallucinated characters, `PR #445` to enforce registered companion appearance), a dedicated diagnosis of *companion character* visual consistency across pages has not been performed. This task aims to identify and document specific issues related to how companion characters are rendered throughout a story.
+The product roadmap indicates that the structure for `approvedImageUrl` and `referenceImageUrl` is prepared for cast members, but full integration across all character types in the image generation pipeline is still "in progress." This task aims to complete that integration to enhance character visual consistency.
 
 ## Objective
 
-Identify and document common visual consistency issues observed in companion characters across multiple pages of generated books. The output should be a diagnostic report detailing observed problems, their frequency, and initial hypotheses for root causes, informing future prompt engineering or generation logic improvements.
+Ensure that `approvedImageUrl` and `referenceImageUrl` fields are correctly utilized for all character types (children's avatars, companions, and original characters) in the image generation process. This will leverage existing data structures to improve the consistency of character appearances, especially when explicit visual references are available and approved.
 
 ## Allowed Scope
 
-- `docs/`: To create a new diagnostic report Markdown file (`docs/COMPANION_CHARACTER_CONSISTENCY_DIAGNOSIS.md`).
+-   `functions/src/`: Modifications to the book generation pipeline, specifically `generate-book
