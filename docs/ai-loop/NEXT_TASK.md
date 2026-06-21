@@ -1,14 +1,14 @@
-# Implement Firebase App Check Enforcement
+# Generate Design Document for Print Order Feature
 
 ## Context
 
-The product roadmap explicitly states that Firebase App Check is "計画策定済み、enforcement 未実施" (plan formulated, enforcement not yet done) under the "一部実装済み" (partially implemented) section. Firebase App Check is a crucial security feature that helps protect backend resources (like Cloud Functions and Firestore) from abuse by ensuring that requests originate from legitimate applications. Implementing enforcement is a foundational step in enhancing the overall security posture of the application.
+The product roadmap lists "印刷注文" (Print Order) as an unimplemented feature. While several quality, reliability, and UX improvements have recently been completed, "印刷注文" represents a significant monetization opportunity and a desired user feature. To ensure this complex feature is implemented effectively and iteratively, a clear design document is the necessary first step, adhering to the "docs-first" constraint.
 
 ## Objective
 
-Activate and verify Firebase App Check enforcement for Cloud Functions and Firestore to ensure only legitimate clients can access backend resources, as per the existing plan.
+Create an initial design document outlining the scope, user flow, technical considerations, and potential challenges for integrating a print order feature. This document will serve as the foundation for subsequent implementation tasks.
 
 ## Allowed Scope
 
--   `functions/`: For updating Cloud Functions configurations to enforce App Check (`appCheck: true`).
--   `
+- Creation of new Markdown files within `docs/`.
+- Updates to `docs/PRODUCT_ROADMAP.md` to reflect
