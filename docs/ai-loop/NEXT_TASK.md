@@ -1,14 +1,9 @@
-# Generate Design Document for Print Order Feature
+# Enhance `pageVisualRole` Application for Increased Image Compositional Variety
 
 ## Context
 
-The product roadmap lists "印刷注文" (Print Order) as an unimplemented feature. While several quality, reliability, and UX improvements have recently been completed, "印刷注文" represents a significant monetization opportunity and a desired user feature. To ensure this complex feature is implemented effectively and iteratively, a clear design document is the necessary first step, adhering to the "docs-first" constraint.
+The product roadmap for Phase 2, "Story & Illustration Quality," includes "画像品質" tasks, specifically "[ ] `pageVisualRole` 改善（構図バリエーション）" as an unticked item. While PR #497 addressed `pageVisualRole` sequences in 8-page templates, a more general improvement to ensure greater compositional variety and better application of `pageVisualRole` across all book generation modes (especially `guided_ai` and `original_ai`) is needed. This refinement will prevent visual monotony and enhance the overall illustration quality of generated books.
 
 ## Objective
 
-Create an initial design document outlining the scope, user flow, technical considerations, and potential challenges for integrating a print order feature. This document will serve as the foundation for subsequent implementation tasks.
-
-## Allowed Scope
-
-- Creation of new Markdown files within `docs/`.
-- Updates to `docs/PRODUCT_ROADMAP.md` to reflect
+Refine the integration and application of `pageVisualRole` in the image generation pipeline to yield more diverse and
