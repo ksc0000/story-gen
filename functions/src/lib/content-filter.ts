@@ -1,4 +1,9 @@
-import type { BookInput } from "./types";
+import type {
+  BookInput,
+  ContentModerationResult,
+  ViolationCategory,
+  UserAbuseStatus,
+} from "./types";
 
 const NG_WORDS: string[] = [
   "殺す",
@@ -99,4 +104,38 @@ export function sanitizeInput(input: BookInput): SanitizeResult {
   }
 
   return { valid: true };
+}
+
+/**
+ * Placeholder for LLM-based intent detection.
+ * Analyzes the user's input for malicious intent, prompt injection, or policy violations.
+ */
+export async function detectAbusiveIntent(
+  input: BookInput,
+  options?: { apiKey: string }
+): Promise<ContentModerationResult> {
+  // TODO: Implement actual LLM call for intent detection.
+  // For now, return a default safe result.
+  return {
+    status: "safe",
+    categories: [],
+    scoredBy: "llm",
+    timestampMs: Date.now(),
+  };
+}
+
+/**
+ * Placeholder for evaluating user abuse status.
+ * Determines if a user should be warned, restricted, or blocked based on their violation history.
+ */
+export function evaluateUserAbuseStatus(params: {
+  currentStatus: UserAbuseStatus;
+  violationCount: number;
+  newViolation: ViolationCategory | null;
+}): { nextStatus: UserAbuseStatus; shouldBlock: boolean } {
+  // TODO: Implement actual logic for transitioning abuse status.
+  return {
+    nextStatus: params.currentStatus,
+    shouldBlock: params.currentStatus === "blocked",
+  };
 }

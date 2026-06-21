@@ -2,6 +2,14 @@
 
 export type UserPlan = "free" | "premium";
 export type BookStatus = "generating" | "completed" | "partial_completed" | "failed";
+export type ContentModerationStatus = "safe" | "flagged" | "blocked";
+export type ViolationCategory =
+  | "prompt_injection"
+  | "harmful_content"
+  | "spam"
+  | "policy_bypass"
+  | "other";
+export type UserAbuseStatus = "clean" | "warned" | "restricted" | "blocked";
 export type CoverStatus = "not_started" | "generating" | "completed" | "failed";
 export type ReadingStructureVersion = "v1_pages_only" | "v2_cover_title_story";
 export type PageStatus = "pending" | "generating" | "completed" | "image_failed" | "fallback_completed" | "failed";
@@ -290,6 +298,32 @@ export interface ChildProfileData {
   active: boolean;
 }
 
+export interface UserDoc {
+  displayName: string;
+  email: string;
+  plan: UserPlan;
+  productPlan?: ProductPlan;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string | null;
+  singleBookCredits?: number;
+  singlePurchaseCredits?: {
+    ai_guided?: number;
+    photo_story?: number;
+  };
+  activeChildId?: string | null;
+  createdAt: FirebaseFirestore.Timestamp;
+  monthlyGenerationCount: number;
+  generationOverride?: {
+    allowCandidateProfile?: boolean;
+    bypassMonthlyLimit?: boolean;
+    p5PageExperiment?: "simplified_scene";
+    p5ModelUnification?: "safer_retry";
+  };
+  abuseStatus?: UserAbuseStatus;
+  violationCount?: number;
+  lastViolationAtMs?: number;
+}
+
 export type AvatarCandidate = {
   generationId: string;
   imageUrl: string;
@@ -434,6 +468,7 @@ export interface BookData {
   coverImageFallbackUsed?: boolean;
   hasCoverPage?: boolean;
   readingStructureVersion?: ReadingStructureVersion;
+  moderationResult?: ContentModerationResult;
   storyQualityReport?: StoryQualityReportData;
   storyQualityScore?: number;
   illustrationQualityScore?: number;
@@ -649,6 +684,14 @@ export interface StoryCharacter {
   referenceImageGeneratedAt?: FirebaseFirestore.Timestamp;
   referenceImagePrompt?: string;
   referenceImageStatus?: "pending" | "completed" | "failed";
+}
+
+export interface ContentModerationResult {
+  status: ContentModerationStatus;
+  reason?: string;
+  categories: ViolationCategory[];
+  scoredBy: "heuristics" | "llm" | "human";
+  timestampMs: number;
 }
 
 export interface StoryQualityReportData {

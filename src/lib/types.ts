@@ -3,6 +3,14 @@ export type { Timestamp };
 
 export type UserPlan = "free" | "premium";
 export type BookStatus = "generating" | "completed" | "partial_completed" | "failed";
+export type ContentModerationStatus = "safe" | "flagged" | "blocked";
+export type ViolationCategory =
+  | "prompt_injection"
+  | "harmful_content"
+  | "spam"
+  | "policy_bypass"
+  | "other";
+export type UserAbuseStatus = "clean" | "warned" | "restricted" | "blocked";
 export type PageStatus = "pending" | "generating" | "completed" | "image_failed" | "fallback_completed" | "failed";
 export type CoverStatus = "not_started" | "generating" | "completed" | "failed";
 export type ReadingStructureVersion = "v1_pages_only" | "v2_cover_title_story";
@@ -318,6 +326,9 @@ export interface UserDoc {
     p5PageExperiment?: "simplified_scene";
     p5ModelUnification?: "safer_retry";
   };
+  abuseStatus?: UserAbuseStatus;
+  violationCount?: number;
+  lastViolationAtMs?: number;
 }
 
 export interface BookInput {
@@ -556,6 +567,7 @@ export interface BookDoc {
   titleSpreadText?: string;
   openingNarration?: string;
   readingStructureVersion?: ReadingStructureVersion;
+  moderationResult?: ContentModerationResult;
   storyQualityReport?: StoryQualityReportData;
   storyQualityStatus?: "ok" | "warning" | "failed";
   generationMode?: GenerationMode;
@@ -728,6 +740,14 @@ export interface StoryCharacter {
   referenceImageGeneratedAt?: Timestamp | null;
   referenceImagePrompt?: string;
   referenceImageStatus?: "pending" | "completed" | "failed";
+}
+
+export interface ContentModerationResult {
+  status: ContentModerationStatus;
+  reason?: string;
+  categories: ViolationCategory[];
+  scoredBy: "heuristics" | "llm" | "human";
+  timestampMs: number;
 }
 
 export interface StoryQualityReportData {
