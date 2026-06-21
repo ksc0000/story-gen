@@ -24,6 +24,7 @@ export const createCheckoutSession = onCall(
   {
     region: "asia-northeast1",
     secrets: [stripeSecretKey],
+    enforceAppCheck: true,
   },
   async (request) => {
     if (!request.auth) {
@@ -83,6 +84,7 @@ export const createSinglePurchaseCheckout = onCall(
   {
     region: "asia-northeast1",
     secrets: [stripeSecretKey],
+    enforceAppCheck: true,
   },
   async (request) => {
     if (!request.auth) {

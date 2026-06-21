@@ -29,7 +29,12 @@ export const saveDailyMetricsSnapshot = onSchedule(
  * ※ 有料内訳・MRR は現在値のみ（過去のプラン状態は記録が無いため最新日に付与）。
  */
 export const backfillDailyMetrics = onCall(
-  { region: "asia-northeast1", timeoutSeconds: 540, memory: "512MiB" },
+  {
+    region: "asia-northeast1",
+    timeoutSeconds: 540,
+    memory: "512MiB",
+    enforceAppCheck: true,
+  },
   async (request) => {
     if (request.auth?.token.admin !== true) {
       throw new HttpsError("permission-denied", "管理者のみ実行できます。");

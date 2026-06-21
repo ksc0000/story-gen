@@ -131,6 +131,7 @@ export const generateStoryPitch = onCall(
     region: "asia-northeast1",
     timeoutSeconds: 30,
     secrets: [geminiApiKey],
+    enforceAppCheck: true,
   },
   async (request): Promise<StoryPitch> => {
     const uid = request.auth?.uid;

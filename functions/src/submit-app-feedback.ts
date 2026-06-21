@@ -10,8 +10,7 @@ export const submitAppFeedback = onCall(
     region: "asia-northeast1",
     memory: "256MiB",
     timeoutSeconds: 30,
-    // We can enable App Check if configured, but let's keep it consistent with others
-    // consumeAppCheckToken: true,
+    enforceAppCheck: true,
   },
   async (request) => {
     // Authentication check

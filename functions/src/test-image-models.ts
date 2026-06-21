@@ -79,6 +79,7 @@ export const testImageModels = onCall(
     secrets: [replicateApiToken, openaiApiKey],
     memory: "1GiB",
     timeoutSeconds: 300,
+    enforceAppCheck: true,
   },
   async (request) => {
     if (!request.auth) {

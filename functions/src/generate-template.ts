@@ -130,6 +130,7 @@ export const generateTemplate = onCall(
     secrets: [geminiApiKey],
     timeoutSeconds: 300,
     memory: "512MiB",
+    enforceAppCheck: true,
   },
   async (request) => {
     // Admin only check
