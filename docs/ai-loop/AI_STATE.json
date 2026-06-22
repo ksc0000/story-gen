@@ -193,6 +193,7 @@
     "PR #546: fix: 監査ログ統合の型エラーを修正 (merged)",
     "PR #548: Refine Story Generation Prompts for Improved Opening and Ending Quality (merged)",
     "PR #599: chore: AIループの自動スケジュールを停止（商用化フェーズ） (merged)",
+    "PR #601: feat: テスター向けクーポンコード機能（生成クレジット付与） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
