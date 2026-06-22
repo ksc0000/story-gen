@@ -573,4 +573,60 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.ok).toBe(true);
     expect(report.issues.every((issue) => issue.severity === "warning")).toBe(true);
   });
+
+  describe("Pacing Heuristics", () => {
+    it("flags missing transitions for older children (5+)", () => {
+      const textWithoutTransitions = "たろうくんは 公園に いきました。きれいな 花を みつけました。とても 喜びました。";
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: [{ text: textWithoutTransitions, imagePrompt: "simple scene description that is long enough" }],
+        },
+        readingProfile: getAgeReadingProfile(6),
+        creationMode: "guided_ai",
+      });
+      expect(report.issues.some((issue) => issue.code === "missing_transitions")).toBe(true);
+    });
+
+    it("does not flag missing transitions if a connective is present", () => {
+      const textWithTransition = "たろうくんは 公園に いきました。すると、きれいな 花が 咲いていました。";
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: [{ text: textWithTransition, imagePrompt: "simple scene description that is long enough" }],
+        },
+        readingProfile: getAgeReadingProfile(6),
+        creationMode: "guided_ai",
+      });
+      expect(report.issues.some((issue) => issue.code === "missing_transitions")).toBe(false);
+    });
+
+    it("flags monotone rhythm (low variance in sentence length)", () => {
+      // Sentences: 10 chars, 11 chars, 10 chars -> variance < 1
+      const monotoneText = "きょうははれです。あしたもはれです。あさってもはれ。";
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: [{ text: monotoneText, imagePrompt: "simple scene description that is long enough" }],
+        },
+        readingProfile: getAgeReadingProfile(4),
+        creationMode: "guided_ai",
+      });
+      expect(report.issues.some((issue) => issue.code === "monotone_rhythm")).toBe(true);
+    });
+
+    it("does not flag varied rhythm", () => {
+      // Sentences lengths: ~10 chars, ~25 chars, ~5 chars -> high variance
+      const variedText = "きょうははれ。おにわにはきれいなちょうちょがとんでいます。わあ。";
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: [{ text: variedText, imagePrompt: "simple scene description that is long enough" }],
+        },
+        readingProfile: getAgeReadingProfile(4),
+        creationMode: "guided_ai",
+      });
+      expect(report.issues.some((issue) => issue.code === "monotone_rhythm")).toBe(false);
+    });
+  });
 });

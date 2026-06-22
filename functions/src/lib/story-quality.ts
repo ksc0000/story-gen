@@ -235,6 +235,10 @@ export function validateGeneratedStoryQuality(params: {
     if (readingProfile.ageBand !== "baby_toddler") {
       const isOpening = pageIndex === 0;
       const isClosing = pageIndex === pageCount - 1;
+      const isOlderChild =
+        readingProfile.ageBand === "early_reader_5_6" ||
+        readingProfile.ageBand === "early_elementary_7_8" ||
+        readingProfile.ageBand === "general_child";
       const heuristics = analyzeJapaneseTextHeuristics(story.pages[pageIndex].text, {
         ageBand: readingProfile.ageBand,
         isOpening,
@@ -320,6 +324,24 @@ export function validateGeneratedStoryQuality(params: {
           severity: "warning",
           code: "monotonous_sentence_endings",
           message: "文末の表現が連続して単調になっています。語尾を工夫してリズムを整えてください。",
+          pageIndex,
+        });
+      }
+
+      if (isOlderChild && heuristics.missingTransitions) {
+        issues.push({
+          severity: "warning",
+          code: "missing_transitions",
+          message: "ページ内またはページ間のつながり（接続詞）が不足しており、展開が唐突に感じられる可能性があります。",
+          pageIndex,
+        });
+      }
+
+      if (heuristics.monotoneRhythm) {
+        issues.push({
+          severity: "warning",
+          code: "monotone_rhythm",
+          message: "文章の長さが均一すぎて、読み上げのリズムが単調になっています。短い文と長い文を組み合わせてください。",
           pageIndex,
         });
       }
@@ -586,6 +608,8 @@ type JapaneseTextHeuristics = {
   sentenceTooShortForAge: boolean;
   monotonousSentenceEndings: boolean;
   hasClosingTone: boolean;
+  missingTransitions: boolean;
+  monotoneRhythm: boolean;
 };
 
 function analyzeJapaneseTextHeuristics(
@@ -627,6 +651,20 @@ function analyzeJapaneseTextHeuristics(
     }
   }
 
+  const transitions = /(すると|でも|やがて|ところが|そのとき|そして|それから|だから|しかし|また|さらに)/;
+  const missingTransitions = !transitions.test(text);
+
+  const sentenceLengths = sentences.map((s) => countJapaneseTextChars(s));
+  let monotoneRhythm = false;
+  if (sentenceLengths.length >= 3) {
+    const avgLen = sentenceLengths.reduce((a, b) => a + b, 0) / sentenceLengths.length;
+    const variance = sentenceLengths.reduce((a, b) => a + Math.pow(b - avgLen, 2), 0) / sentenceLengths.length;
+    // If variance is very low (e.g. < 15) and sentence count is decent, it might be monotone
+    if (variance < 15) {
+      monotoneRhythm = true;
+    }
+  }
+
   const hasClosingTone = /(あした|おやすみ|わらって|しあわせ|きもち|ずっと|これから|おしまい|またね|ありがとう|にっこり|ほっと|あんしん|ゆめ|ねむ|おうちに)/.test(text);
   const isOlderChild =
     options?.ageBand === "early_reader_5_6" ||
@@ -652,6 +690,8 @@ function analyzeJapaneseTextHeuristics(
       countJapaneseTextChars(text) < 40 || countSentences(text) <= 2,
     monotonousSentenceEndings,
     hasClosingTone,
+    missingTransitions,
+    monotoneRhythm,
   };
 }
 

@@ -62,8 +62,10 @@ const JAPANESE_STORY_TEXT_RULES = [
   "3歳向けでも、1ページ2〜4文を基本にしてください。",
   "文章はやさしいが、内容は幼稚にしすぎないでください。",
   "文末の表現（「〜した」「〜だった」など）が連続して単調にならないよう、語尾にバリエーションを持たせてリズムを整えてください。",
+  "1ページ内の文章の長さをあえて変える（短い文と長い文を混ぜる）ことで、読み上げの際に心地よい「ため」や「リズム」を作ってください。すべての文が同じ長さだと単調になります。",
+  "読み聞かせの際に親が適切な場所で息を継げるよう、意味の区切り（文節）ごとに半角スペースを入れる「分かち書き」を適切に活用してください。ただし、単語の途中で不自然に分断（例：「あそ び」など）することは厳禁です。",
   "5歳以上では、出来事の理由や原因と結果のつながりを自然に含め、深みのある文章にしてください。",
-  "「すると」「でも」「やがて」「ところが」などの接続詞を使って、ページ内・ページ間に物語の流れと展開を作ってください。",
+  "5歳以上では、「すると」「でも」「やがて」「ところが」「そのとき」などの接続詞を効果的に使って、ページ内・ページ間に物語の流れと展開を作ってください。ページをめくるのが楽しみになるような引き（フック）を意識してください。",
   "文体は絵本の語り部スタイル（「〜のです」「〜でした」「〜ましたが」「〜ましょう」など）を基本にしてください。",
   "5歳以上では、1ページに「出来事→反応→感情」の流れを自然に込めてください。",
   "情景描写を1文以上入れてください。",
@@ -113,14 +115,14 @@ const STORY_JSON_FIELD_TYPE_CONTRACT = [
 ].join(" ");
 
 const PAGE_TEXT_ROLE_RULES = [
-  "opening_establishing: Focus on 'Where, Who, and When'. Set the scene and the child's peaceful initial state before any conflict or adventure begins. Use evocative language to establish atmosphere and ground the reader in the story's world. Avoid jumping into action too quickly.",
-  "discovery: Describe the moment of noticing something new, surprising, or mysterious. Focus on the child's reaction (wonder, curiosity) and why the discovery is significant to the story.",
-  "action: Focus on physical movement, effort, or an active search. Use energetic verbs to describe the child's engagement with the world as they move toward their goal.",
-  "emotional_closeup: Delve into the child's inner feelings—joy, determination, or a quiet realization. Use descriptive language to convey the depth of the emotional moment.",
-  "object_detail: Highlight a specific item's texture, color, or importance. Explain how this object connects to the larger story or the child's current task.",
-  "setback_or_question: A moment of pause, doubt, or a small obstacle. Frame it as a natural part of the journey that leads to deeper thinking or a new approach, without losing momentum.",
-  "payoff: The peak of the narrative where the goal is reached or a mystery is solved. Celebrate the achievement with a sense of fulfillment and positive resolution.",
-  "quiet_ending: A gentle wrap-up that leaves a lasting warm feeling of 'Peace and Reflection'. Connect the resolution back to the story's beginning or the child's growth. Use soft, rhythmic language to signal the end of the journey and provide a satisfying emotional conclusion.",
+  "opening_establishing: Focus on 'Where, Who, and When'. Set the scene and the child's peaceful initial state. Pacing should be calm and invitational, creating a stable baseline for the story world. Use evocative language to establish atmosphere and ground the reader. Avoid jumping into action too quickly.",
+  "discovery: Describe the moment of noticing something new. Pacing should feel like a 'heartbeat skip' — a sudden shift in attention. Focus on the child's reaction (wonder, curiosity) and why this discovery sparks the journey.",
+  "action: Focus on physical movement, effort, or an active search. Pacing should be energetic and rhythmic, using dynamic verbs and shorter, punchier sentences to convey movement and momentum toward the goal.",
+  "emotional_closeup: Delve into the child's inner feelings—joy, determination, or a quiet realization. Pacing should slow down here, allowing the reader to dwell on the emotion. Use descriptive, heart-felt language.",
+  "object_detail: Highlight a specific item's texture, color, or importance. Pacing is observational and focused. Explain how this object connects to the larger story or the child's current task, creating a meaningful 'pause' for visual discovery.",
+  "setback_or_question: A moment of pause, doubt, or a small obstacle. Pacing should create a gentle tension or a thoughtful breath. Frame it as a natural part of the journey that leads to a new approach, without losing momentum.",
+  "payoff: The peak of the narrative where the goal is reached. Pacing is celebratory and fulfilling. Use bright, joyful language to mark the climax and the release of tension built through the action.",
+  "quiet_ending: A gentle wrap-up that leaves a lasting warm feeling of 'Peace and Reflection'. Pacing should be soothing and slow, signaling the end of the journey. Connect the resolution back to the beginning or the child's growth. Use soft, rhythmic language for a satisfying emotional conclusion.",
 ].join(" ");
 
 const BAD_TEXT_EXAMPLE =
