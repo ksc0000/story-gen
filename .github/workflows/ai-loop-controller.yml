@@ -19,9 +19,12 @@ on:
         description: "Roadmap or issue reference"
         required: true
         default: "docs"
-  schedule:
-    - cron: "0 */2 * * *"
-    - cron: "0 1,9,17 * * *"
+  # 商用化フェーズに向け、AIループの自動スケジュールを停止。
+  # Jules タスクの量産を止め、発売クリティカルパスに集中するため。
+  # 必要時は workflow_dispatch（手動）で起動する。再開する場合は以下のコメントを解除。
+  # schedule:
+  #   - cron: "0 */2 * * *"
+  #   - cron: "0 1,9,17 * * *"
 
 jobs:
   controller:
