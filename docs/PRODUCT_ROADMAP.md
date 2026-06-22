@@ -222,6 +222,8 @@ Phase 1 は 2026-06-12 に Complete と判定。`docs/PRODUCTION_SMOKE_RESULTS.m
 - [Template Smoke Checklist](./TEMPLATE_SMOKE_CHECKLIST.md)
 - [Character Reference Strategy (REF-001)](./CHARACTER_REFERENCE_STRATEGY.md)
 - [Template Mode T3 Plan](./TEMPLATE_MODE_T3_PLAN.md)
+- [Read-Aloud Design](./READ_ALOUD_DESIGN_DOCUMENT.md)
+- [Read-Aloud Pacing Rubric](./READ_ALOUD_PACING_RUBRIC.md)
 
 ### Quality Follow-ups（Template Mode 画像品質）
 
@@ -335,7 +337,7 @@ T3-4j / T3-4k status update (2026-05-15):
 - [x] 「このページだけ作り直す」（ユーザー起点の再生成）(PR #464)
 - [x] タイトル編集 (PR #396)
 - [x] サンプル絵本ギャラリー (PR #361)
-- [ ] read-aloud mode
+- [ ] read-aloud mode ([Design](./READ_ALOUD_DESIGN_DOCUMENT.md) / [Pacing Rubric](./READ_ALOUD_PACING_RUBRIC.md))
 
 ---
 
