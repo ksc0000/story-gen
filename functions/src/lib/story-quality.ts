@@ -757,6 +757,9 @@ function addStoryGoalConsistencyIssues(params: {
     const hiddenHits = hiddenDetailTokens.filter(
       (token) => token && normalized.includes(normalizeJapanese(token))
     );
+    const hiddenGoalHits = hiddenDetailTokens.filter((token) =>
+      token ? isForbiddenObjectUsedAsGoal(text, token) : false
+    );
     const motifHits = visualMotifTokens.filter(
       (token) => token && normalized.includes(normalizeJapanese(token))
     );
@@ -799,21 +802,28 @@ function addStoryGoalConsistencyIssues(params: {
       driftPages.push(pageIndex);
     }
 
-    if (
-      (hiddenHits.length > 0 || (forbiddenGoalHits.length > 0 && Boolean(page.hiddenDetail?.trim()))) &&
-      !hasMainQuestSignal
-    ) {
+    if (hiddenHits.length > 0) {
+      issues.push({
+        severity: "warning",
+        code: "hidden_detail_mentioned_in_text",
+        message: "hiddenDetail が本文（pages[].text）に含まれています。hiddenDetail は絵だけの要素にしてください。",
+        pageIndex,
+        actual: hiddenHits.join(", "),
+      });
+    }
+
+    if (hiddenGoalHits.length > 0) {
       issues.push({
         severity: "warning",
         code: "hidden_detail_used_as_main_goal",
-        message: "hiddenDetail が本文の主筋として使われている可能性があります。",
+        message: "hiddenDetail が本文の主目的として扱われている可能性があります。",
         pageIndex,
-        actual: hiddenHits.join(", ") || page.hiddenDetail,
+        actual: hiddenGoalHits.join(", "),
       });
       issues.push({
         severity: "warning",
         code: "hidden_detail_too_prominent",
-        message: "hiddenDetail が目立ちすぎて、主筋より前に出ている可能性があります。",
+        message: "hiddenDetail が目立ちすぎて、主目的より前に出ている可能性があります。",
         pageIndex,
       });
     }

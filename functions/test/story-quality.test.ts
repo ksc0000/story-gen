@@ -229,6 +229,50 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "forbidden_object_became_goal")).toBe(true);
   });
 
+  it("flags hiddenDetail mentioned in story text", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        storyGoal: "たっちゃんが ほしのこと いっしょに 星のかけらを さがす",
+        mainQuestObject: "星のかけら",
+        pages: [
+          {
+            text: "たっちゃんは、すなばで あおい コップを みつけました。",
+            imagePrompt: "child finding a blue cup in the sandbox",
+            hiddenDetail: "あおいコップ",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "hidden_detail_mentioned_in_text")).toBe(true);
+  });
+
+  it("flags hiddenDetail becoming the primary story goal", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        storyGoal: "たっちゃんが ほしのこと いっしょに 星のかけらを さがす",
+        mainQuestObject: "星のかけら",
+        pages: [
+          {
+            text: "たっちゃんは、どこかに かくれた あおい コップを さがしています。",
+            imagePrompt: "child searching for a blue cup in the sandbox",
+            hiddenDetail: "あおい コップ",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "hidden_detail_used_as_main_goal")).toBe(true);
+    expect(report.issues.some((issue) => issue.code === "hidden_detail_too_prominent")).toBe(true);
+  });
+
   it("warns when prompt constraints conflict with scene objects", () => {
     const report = validateGeneratedStoryQuality({
       story: {
