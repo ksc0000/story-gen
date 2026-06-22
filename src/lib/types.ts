@@ -297,6 +297,19 @@ export interface FixedStoryTemplate {
   pages: FixedStoryPageTemplate[];
 }
 
+/** テスター/成長施策用のクーポン。引き換えで singleBookCredits を付与する。 */
+export interface CouponDoc {
+  code: string;
+  creditsGranted: number;
+  maxRedemptions: number;
+  redemptionCount: number;
+  expiresAtMs?: number;
+  active: boolean;
+  note?: string;
+  createdAt: Timestamp;
+  createdAtMs: number;
+}
+
 export interface UserDoc {
   displayName: string;
   email: string;

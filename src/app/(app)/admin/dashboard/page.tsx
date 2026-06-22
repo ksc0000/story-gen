@@ -19,6 +19,7 @@ import { computeSloMetrics, SLO_TARGETS, EMPTY_SLO } from "@/lib/admin-slo-metri
 import { computeProviderCostMetrics } from "@/lib/admin-cost-metrics";
 import { computeQualityTrend } from "@/lib/admin-quality-trend";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { CouponGenerator } from "@/components/admin/CouponGenerator";
 import {
   StatCard,
   SectionTitle,
@@ -751,6 +752,11 @@ function BusinessLens({
           <h3 className="mb-4 text-sm font-bold text-purple-900">作成モード別内訳</h3>
           <DonutChart data={modeDonut} centerValue={`${totalBooks}`} centerLabel="冊" />
         </div>
+      </div>
+
+      <SectionTitle title="グロース施策" description="テスター向けクーポンの発行" />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <CouponGenerator />
       </div>
     </>
   );

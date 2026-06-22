@@ -137,3 +137,37 @@ export async function backfillDailyMetricsCallable(
   const result = await callable({ days });
   return result.data as BackfillDailyMetricsResult;
 }
+
+// ---------------------------------------------------------------------------
+// クーポン（テスター向け無料生成クレジット）
+// ---------------------------------------------------------------------------
+
+export type RedeemCouponResult = { ok: boolean; creditsGranted: number };
+
+export async function redeemCouponCallable(code: string): Promise<RedeemCouponResult> {
+  const callable = await getCallable<{ code: string }, RedeemCouponResult>("redeemCoupon");
+  const result = await callable({ code });
+  return result.data as RedeemCouponResult;
+}
+
+export type CreateCouponInput = {
+  code?: string;
+  creditsGranted: number;
+  maxRedemptions: number;
+  expiresAtMs?: number;
+  note?: string;
+};
+export type CreateCouponResult = {
+  ok: boolean;
+  code: string;
+  creditsGranted: number;
+  maxRedemptions: number;
+};
+
+export async function createCouponCallable(
+  input: CreateCouponInput
+): Promise<CreateCouponResult> {
+  const callable = await getCallable<CreateCouponInput, CreateCouponResult>("createCoupon");
+  const result = await callable(input);
+  return result.data as CreateCouponResult;
+}
