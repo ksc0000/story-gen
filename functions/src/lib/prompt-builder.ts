@@ -1,3 +1,4 @@
+import * as logger from "firebase-functions/logger";
 import type {
   TemplateData,
   IllustrationStyle,
@@ -784,6 +785,10 @@ export function buildCoverImagePrompt(
     categoryGroupId?: string;
   }
 ): string {
+  logger.debug("buildCoverImagePrompt_diagnostic", {
+    characterBible,
+    castRoles: options.cast?.map((c) => c.role),
+  });
   const styleProfile = getIllustrationStyleProfile(style);
   // Strip the avatar prompt's own style/color directives so they don't override
   // the book's selected styleBible on the cover either.
@@ -887,6 +892,11 @@ export function buildImagePrompt(
     hasStarCharacter?: boolean;
   }
 ): string {
+  logger.debug("buildImagePrompt_diagnostic", {
+    pageNumber: options?.pageNumber,
+    characterBible,
+    appearingCharacterIds: options?.appearingCharacterIds,
+  });
   const styleProfile = getIllustrationStyleProfile(style);
   const compositionHint = sanitizeImagePromptText(
     options?.compositionHint || getDefaultCompositionHint(options?.pageNumber)
