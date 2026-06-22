@@ -1,9 +1,7 @@
-# Implement Replicate Webhook Receiver for Image Generation Status Updates
+# Refine Story Pacing for Read-Aloud Experience
 
 ## Context
 
-The product roadmap lists "Replicate webhook / prediction ID 管理" under `未実装`. While prediction IDs are already being stored in Firestore as `providerJobId` (as observed in `functions/src/image/providers/replicate/ReplicateImageProvider.ts`), the next logical step to fully "manage" these predictions and improve real-time status updates is to implement a webhook receiver. This will allow Replicate to notify our system directly about the status of image generation predictions, rather than relying solely on polling. This task focuses specifically on creating the webhook endpoint and updating Firestore based on incoming events.
+The product roadmap for Phase 2, "Story & Illustration Quality," includes "読み聞かせ向け pacing 改善" (improve pacing for read-aloud) as an important task to ensure the generated story flows naturally for a read-aloud experience. While some improvements have been made to opening/ending quality and semantic richness, the overall pacing for reading aloud remains an area for refinement. This task aims to address this by focusing on the `storyText` and `pageProgression` aspects.
 
-## Objective
-
-Create a new Firebase Cloud Function (HTTP endpoint) to receive status updates from Replicate via web
+Phase 6 also lists "read-aloud mode" as a recommended feature, for which a design document is an open task (#590). Improving pacing is a prerequisite for a good read-aloud experience.
