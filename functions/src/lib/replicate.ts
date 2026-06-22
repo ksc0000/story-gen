@@ -1,10 +1,14 @@
 import Replicate from "replicate";
+import * as admin from "firebase-admin";
 import type {
   ImageClient,
   ImageModelProfile,
   ImagePurpose,
   ImageQualityTier,
+  ReplicatePredictionDoc,
 } from "./types";
+
+export const REPLICATE_PREDICTIONS_COLLECTION = "replicatePredictions";
 // P3-8: Policy functions extracted to image-model-policy.ts.
 // Imported here for local use (generateImageWithMetadata uses resolveImageModelProfile).
 // Re-exported here for backward compatibility so existing imports (generate-book.ts, tests)
@@ -342,4 +346,62 @@ export class ReplicateImageClient implements ImageClient {
 
     return [];
   }
+
+  /**
+   * Initiate an asynchronous image generation prediction on Replicate with a webhook callback.
+   * Does NOT wait for completion. Returns a doc object ready to be persisted via recordPrediction.
+   */
+  async createPrediction(
+    prompt: string,
+    options: {
+      targetId: string;
+      targetType: ReplicatePredictionDoc["targetType"];
+      webhookUrl: string;
+      inputImageUrls?: string[];
+      purpose?: ImagePurpose;
+      imageQualityTier?: ImageQualityTier;
+      imageModelProfile?: ImageModelProfile;
+      metadata?: ReplicatePredictionDoc["metadata"];
+    }
+  ): Promise<ReplicatePredictionDoc> {
+    const model = resolveReplicateModel({
+      purpose: options.purpose,
+      imageQualityTier: options.imageQualityTier,
+      imageModelProfile: options.imageModelProfile,
+    });
+    const input = buildReplicateInput({
+      model,
+      prompt,
+      inputImageUrls: options.inputImageUrls,
+    });
+
+    const prediction = await this.replicate.predictions.create({
+      model,
+      input,
+      webhook: options.webhookUrl,
+      webhook_events_filter: ["start", "completed"],
+    });
+
+    const now = Date.now();
+    return {
+      id: prediction.id,
+      status: prediction.status as any,
+      targetId: options.targetId,
+      targetType: options.targetType,
+      metadata: options.metadata,
+      createdAtMs: now,
+      updatedAtMs: now,
+    };
+  }
+}
+
+/**
+ * Persist or update a Replicate prediction record in Firestore.
+ */
+export async function recordPrediction(doc: ReplicatePredictionDoc): Promise<void> {
+  await admin
+    .firestore()
+    .collection(REPLICATE_PREDICTIONS_COLLECTION)
+    .doc(doc.id)
+    .set(doc, { merge: true });
 }

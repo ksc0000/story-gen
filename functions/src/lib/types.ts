@@ -814,3 +814,23 @@ export interface ImageClient {
     }
   ): Promise<Buffer>;
 }
+
+export type ReplicatePredictionStatus = "starting" | "processing" | "succeeded" | "failed" | "canceled";
+
+export interface ReplicatePredictionDoc {
+  id: string; // Replicate prediction ID
+  status: ReplicatePredictionStatus;
+  targetId: string; // e.g. bookId or pageId
+  targetType: "book_cover" | "book_page" | "child_avatar" | "companion_image";
+  metadata?: {
+    bookId?: string;
+    pageNumber?: number;
+    childId?: string;
+    companionId?: string;
+  };
+  output?: string | string[];
+  error?: string;
+  createdAtMs: number;
+  updatedAtMs: number;
+  completedAtMs?: number;
+}
