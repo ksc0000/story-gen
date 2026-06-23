@@ -2258,12 +2258,33 @@ function buildInputImageRoles(
   return Array.from(roles);
 }
 
-function shouldGenerateRecurringCharacterReference(
+/**
+ * Character kinds eligible for an auto-generated recurring reference image.
+ * #571: extended beyond non-human kinds to cover non-protagonist humans
+ * (siblings, friends, parents, grandparents, teachers). The protagonist is
+ * always excluded — it is anchored by the child profile snapshot reference,
+ * not a separately generated one.
+ */
+const RECURRING_REFERENCE_ELIGIBLE_KINDS: ReadonlyArray<StoryCharacterKind> = [
+  "magical_creature",
+  "object_character",
+  "animal",
+  "human_child",
+  "human_adult",
+];
+
+export function shouldGenerateRecurringCharacterReference(
   character: StoryCharacter,
   story: GeneratedStory,
   bookData: BookData
 ): boolean {
   if (!["standard_paid", "premium_paid"].includes(bookData.productPlan ?? "free")) {
+    return false;
+  }
+
+  // The protagonist is referenced via the child profile snapshot; never
+  // generate a competing reference for it even though it is a human_child.
+  if (character.role === "protagonist") {
     return false;
   }
 
@@ -2275,7 +2296,7 @@ function shouldGenerateRecurringCharacterReference(
     return false;
   }
 
-  if (!["magical_creature", "object_character", "animal"].includes(character.characterKind ?? "")) {
+  if (!RECURRING_REFERENCE_ELIGIBLE_KINDS.includes(character.characterKind as StoryCharacterKind)) {
     return false;
   }
 
@@ -2285,15 +2306,27 @@ function shouldGenerateRecurringCharacterReference(
   return appearances >= 2;
 }
 
+const CHARACTER_KIND_NOUN: Record<StoryCharacterKind, string> = {
+  human_child: "child",
+  human_adult: "adult person",
+  animal: "animal",
+  magical_creature: "magical creature",
+  object_character: "object character",
+  background: "background element",
+};
+
 function buildRecurringCharacterReferencePrompt(
   character: StoryCharacter,
   story: GeneratedStory,
   bookData: BookData
 ): string {
   const styleProfile = getIllustrationStyleProfile(bookData.style);
+  const kindNoun = character.characterKind
+    ? CHARACTER_KIND_NOUN[character.characterKind] ?? "character"
+    : "character";
   return [
     `Character reference illustration for recurring character ${character.characterId}.`,
-    `Draw exactly one recurring ${character.characterKind ?? "non-human"} character on a clean, simple background.`,
+    `Draw exactly one recurring ${kindNoun} on a clean, simple background.`,
     "No protagonist, no extra children, no other characters, no duplicated character, no scenery clutter.",
     character.nonHuman ? "This character must remain clearly non-human." : "",
     character.noHumanFace ? "Do not give it a human face." : "",
