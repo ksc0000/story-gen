@@ -332,7 +332,8 @@ describe("GeminiClient", () => {
     expect(normalizePageVisualRole("mystery_role", 1, 4)).toBe("discovery");
     expect(normalizePageVisualRole("mystery_role", 2, 4)).toBe("payoff");
     expect(normalizePageVisualRole(undefined, 3, 4)).toBe("quiet_ending");
-    expect(defaultPageVisualRole(4, 8)).toBe("action");
+    // Updated expectation for improved 8-page sequence
+    expect(defaultPageVisualRole(4, 8)).toBe("setback_or_question");
   });
 
   it("retries retryable 503 errors and succeeds on the same model", async () => {

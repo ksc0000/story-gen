@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
+import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath, getDefaultPageVisualRole, getDefaultCompositionHint } from "../src/lib/prompt-builder";
 import type { TemplateData } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
@@ -206,13 +206,13 @@ describe("buildImagePrompt", () => {
     const payoffResult = buildImagePrompt("A child finds the star", "watercolor", undefined, undefined, {
       pageVisualRole: "payoff",
     });
-    expect(payoffResult).toContain("The protagonist must be present to show their reaction and achievement");
-    expect(payoffResult).toContain("Do not show only objects or backgrounds");
+    expect(payoffResult).toContain("The child must be present, showing a clear reaction to success");
+    expect(payoffResult).toContain("vibrant colors, bright radiant lighting, and dynamic upward camera angles");
 
     const quietEndingResult = buildImagePrompt("The child sleeps", "watercolor", undefined, undefined, {
       pageVisualRole: "quiet_ending",
     });
-    expect(quietEndingResult).toContain("The protagonist must be present to provide a sense of closure");
+    expect(quietEndingResult).toContain("The child must be present to provide emotional resonance");
   });
   it("includes recurring cast character consistency only for appearing characters", () => {
     const result = buildImagePrompt(
@@ -452,6 +452,29 @@ describe("buildImagePrompt", () => {
   });
   it("returns a style reference image path", () => {
     expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.webp");
+  });
+
+  describe("enhanced variety and sequences", () => {
+    it("provides diverse default roles across 8 pages", () => {
+      const roles = Array.from({ length: 8 }, (_, i) => getDefaultPageVisualRole(i));
+      expect(roles[0]).toBe("opening_establishing");
+      expect(roles[1]).toBe("discovery");
+      expect(roles[2]).toBe("payoff");
+      expect(roles[3]).toBe("quiet_ending");
+      expect(roles[4]).toBe("action");
+      expect(roles[5]).toBe("emotional_closeup");
+      expect(roles[6]).toBe("object_detail");
+      expect(roles[7]).toBe("setback_or_question");
+    });
+
+    it("provides diverse default composition hints across 12 pages", () => {
+      const hints = Array.from({ length: 12 }, (_, i) => getDefaultCompositionHint(i));
+      const uniqueHints = new Set(hints);
+      expect(uniqueHints.size).toBe(12);
+      expect(hints[0]).toContain("low-angle");
+      expect(hints[5]).toContain("bird's-eye");
+      expect(hints[9]).toContain("extreme close-up");
+    });
   });
 
   describe("buildCoverImagePrompt", () => {
