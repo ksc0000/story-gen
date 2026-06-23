@@ -405,6 +405,48 @@ describe("validateGeneratedStoryQuality", () => {
     ).toBe(false);
   });
 
+  it("does NOT flag text/brand risk on our own no-text safety guardrails (#566)", () => {
+    const safetyPrompt =
+      "a cozy graduation ceremony with a child receiving a plain tube. " +
+      "Signature item: a small green ribbon. Keep the same character design. " +
+      "no text, letters, numbers, or symbols on any diploma, certificate, banner, poster, labels, posters, banners, garland, ribbon. " +
+      "no readable writing anywhere, no signage, no storefront signs, no labels, no posters, no banners, no text, no letters, no logo, no watermark, no brand names. " +
+      "Keep it purely visual and never written as text.";
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          { ...baseStory.pages[0], imagePrompt: safetyPrompt },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "fixed_template",
+    });
+    expect(report.issues.some((i) => i.code === "image_prompt.text_risk")).toBe(false);
+    expect(report.issues.some((i) => i.code === "readable_text_risk")).toBe(false);
+    expect(report.issues.some((i) => i.code === "brand_or_logo_risk")).toBe(false);
+  });
+
+  it("still flags affirmative text/logo requests in imagePrompt (#566)", () => {
+    const riskyPrompt =
+      "a wooden sign that says Welcome to the park, and a child wearing a shirt with a brand logo on it";
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          { ...baseStory.pages[0], imagePrompt: riskyPrompt },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+    expect(report.issues.some((i) => i.code === "image_prompt.text_risk")).toBe(true);
+    expect(report.issues.some((i) => i.code === "readable_text_risk")).toBe(true);
+    expect(report.issues.some((i) => i.code === "brand_or_logo_risk")).toBe(true);
+  });
+
   it("treats early reader pages with only 2 sentences as errors", () => {
     const report = validateGeneratedStoryQuality({
       story: {
