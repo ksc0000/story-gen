@@ -649,8 +649,16 @@ function analyzeJapaneseTextHeuristics(
     options?.ageBand === "early_reader_5_6" ||
     options?.ageBand === "early_elementary_7_8" ||
     options?.ageBand === "general_child";
+  // 再キャリブレーション（2026-06）: 場所語/動作・感情語の allowlist は絵本本文を
+  // 網羅できず、絵が情景を担う充実したページにも無差別発火していた（実データで
+  // missing_scene_detail=98.9%, missing_action_or_emotion=90.4% の book 発火率）。
+  // 「薄いページ（THIN_PAGE_CHARS 未満）」に限定することで、本当に空疎な短いページ
+  // だけを検出する判別力のある指標にする（両者とも book 発火率 ~42.6% に低下）。
+  const THIN_PAGE_CHARS = 35;
+  const charCount = countJapaneseTextChars(text);
   const missingSceneDetail =
-    !placeWords.test(text) || (!!options?.isOpening && countJapaneseTextChars(text) < 25);
+    (!placeWords.test(text) && charCount < THIN_PAGE_CHARS) ||
+    (!!options?.isOpening && charCount < 25);
 
   return {
     tooManySoundWords: commonSoundWords.length >= (isOlderChild ? 2 : 3),
@@ -658,7 +666,8 @@ function analyzeJapaneseTextHeuristics(
       (commonSoundWords.length >= (isOlderChild ? 1 : 2) && countJapaneseTextChars(text) < 80) ||
       coinedPatterns.test(text),
     missingSceneDetail,
-    missingActionOrEmotion: !(actionWords.test(text) || emotionOrDiscoveryWords.test(text)),
+    missingActionOrEmotion:
+      !(actionWords.test(text) || emotionOrDiscoveryWords.test(text)) && charCount < THIN_PAGE_CHARS,
     unnaturalJapaneseRisk:
       coinedPatterns.test(text) || (hiraganaRatio > 0.9 && commonSoundWords.length >= 2),
     textTooGeneric:
