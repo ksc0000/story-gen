@@ -36,6 +36,8 @@ export function buildAutoReviewPrompt(book: BookData, pages: PageData[]): string
       pageNumber: p.pageNumber + 1,
       text: p.text,
       imagePrompt: p.imagePrompt,
+      pageVisualRole: p.pageVisualRole,
+      compositionHint: p.compositionHint,
       appearingCharacterIds: p.appearingCharacterIds,
       focusCharacterId: p.focusCharacterId,
     })),
@@ -48,6 +50,7 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
 1. **Story Quality (0-100)**: Evaluate story structure, pacing, coherence, and emotional engagement. Is the story appropriate for children?
 2. **Illustration Quality (0-100)**: Evaluate both the descriptive quality of the image prompts AND the actual generated images (if provided).
     - **Image Prompts**: Are they vivid and appropriate for the scene?
+    - **Compositional Variety**: Evaluate the visual rhythm across the whole book. Are the "pageVisualRole" and "compositionHint" varied enough? Identify visual monotony (e.g., too many front-facing portraits, or using the same role too frequently).
     - **Visual Artifacts**: Examine images for distorted limbs, unnatural faces, floating objects, or physically impossible structures.
     - **Text Artifacts**: Check for nonsensical text, gibberish characters, or pseudo-writing on signs, posters, or labels in the background.
     - **Style Consistency**: Does the visual style remain consistent across all images according to the chosen style profile?
@@ -62,11 +65,11 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
 6. **Semantic Content (Age 3+ Diagnostic)**:
     For books targeted at ages 3 and above (current age band: ${ageBand}), evaluate each page's story text for "semantic richness".
     Identify which of these four elements are present:
-    - **場所 (Location)**: Setting or environment description.
-    - **行動 (Action)**: Specific character movements or activities.
-    - **気持ち (Emotion)**: Internal states or feelings.
-    - **発見 (Discovery)**: Realizations or noticing something new.
-    ${isAge3Plus ? "Each page SHOULD contain at least TWO of these elements." : "This is diagnostic only for this age group."}
+    - **場所 (Location)**: Setting, environment description, or situational context.
+    - **行動 (Action)**: Specific character movements, activities, or sensory actions.
+    - **気持ち (Emotion)**: Internal states, feelings, or emotional reactions.
+    - **発見 (Discovery)**: Realizations, noticing something new, or situational changes.
+    ${isAge3Plus ? "Each page MUST contain at least TWO of these elements to meet the quality standard for this age group. Missing these elements is a quality failure." : "This is diagnostic only for this age group."}
 
 ## Axis-Level Evaluation (0-100 for each)
 You must also provide granular scores for the following axes:

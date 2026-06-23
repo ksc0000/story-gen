@@ -594,7 +594,16 @@ export function buildQualityRecommendations(
   }
 
   if (
-    book.overallQualityScore >= 4.2 &&
+    (book.overallQualityScore ?? 0) >= 4.0 &&
+    (book.qualityReviewStatus === "llm_reviewed" || book.qualityReviewStatus === "human_reviewed")
+  ) {
+    recs.push({
+      action: "approve",
+      severity: "low",
+      reason: `Overall score ${book.overallQualityScore} — 品質基準を満たしています。承認を推奨します`,
+    });
+  } else if (
+    (book.overallQualityScore ?? 0) >= 4.0 &&
     book.qualityReviewStatus === "approved"
   ) {
     recs.push({

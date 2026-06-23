@@ -614,4 +614,40 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.ok).toBe(true);
     expect(report.issues.every((issue) => issue.severity === "warning")).toBe(true);
   });
+
+  it("flags low pageVisualRole variety for 8-page books", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: Array.from({ length: 8 }, (_, i) => ({
+          text: `ページ${i + 1}の本文です。情景描写と行動を含めて十分に長くします。`,
+          imagePrompt: `image prompt for page ${i + 1} that is long enough to avoid thin prompt warning`,
+          compositionHint: `composition hint ${i + 1}`,
+          pageVisualRole: (i % 2 === 0) ? "action" : "discovery", // Only 2 roles
+        })),
+      },
+      readingProfile: getAgeReadingProfile(5),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "image_composition.low_variety")).toBe(true);
+  });
+
+  it("flags monotone pageVisualRole", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: Array.from({ length: 4 }, (_, i) => ({
+          text: `ページ${i + 1}の本文です。情景描写と行動を含めて十分に長くします。`,
+          imagePrompt: `image prompt for page ${i + 1} that is long enough to avoid thin prompt warning`,
+          compositionHint: `unique hint ${i + 1}`,
+          pageVisualRole: "action", // Monotone role
+        })),
+      },
+      readingProfile: getAgeReadingProfile(5),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "composition_hint.monotone")).toBe(true);
+  });
 });

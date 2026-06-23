@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath } from "../src/lib/prompt-builder";
+import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath, getDefaultPageVisualRole, getDefaultCompositionHint } from "../src/lib/prompt-builder";
 import type { TemplateData } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
@@ -54,6 +54,13 @@ describe("buildSystemPrompt", () => {
     expect(result).toContain("日本語の読みやすさ: 子どもが自分で読んだり、親が読み聞かせたりしやすいよう、ひらがな主体の読みやすい日本語を優先してください。");
     expect(result).toContain("悪い例");
     expect(result).toContain("良い例");
+    expect(result).toContain("【重要：3歳以上の意味量確保】");
+    expect(result).toContain("「場所」(Location)");
+    expect(result).toContain("「行動」(Action)");
+    expect(result).toContain("「気持ち」(Emotion)");
+    expect(result).toContain("「発見」(Discovery)");
+    expect(result).toContain("（場所：情景）");
+    expect(result).toContain("（発見：気づき）");
     expect(result).toContain("cast");
     expect(result).toContain("appearingCharacterIds");
     expect(result).toContain("focusCharacterId");
@@ -206,13 +213,13 @@ describe("buildImagePrompt", () => {
     const payoffResult = buildImagePrompt("A child finds the star", "watercolor", undefined, undefined, {
       pageVisualRole: "payoff",
     });
-    expect(payoffResult).toContain("The protagonist must be present to show their reaction and achievement");
-    expect(payoffResult).toContain("Do not show only objects or backgrounds");
+    expect(payoffResult).toContain("The child must be present, showing a clear reaction to success");
+    expect(payoffResult).toContain("vibrant colors, bright radiant lighting, and dynamic upward camera angles");
 
     const quietEndingResult = buildImagePrompt("The child sleeps", "watercolor", undefined, undefined, {
       pageVisualRole: "quiet_ending",
     });
-    expect(quietEndingResult).toContain("The protagonist must be present to provide a sense of closure");
+    expect(quietEndingResult).toContain("The child must be present to provide emotional resonance");
   });
   it("includes recurring cast character consistency only for appearing characters", () => {
     const result = buildImagePrompt(
@@ -452,6 +459,29 @@ describe("buildImagePrompt", () => {
   });
   it("returns a style reference image path", () => {
     expect(getStyleReferenceImagePath("toy_3d")).toBe("/images/styles/toy_3d.webp");
+  });
+
+  describe("enhanced variety and sequences", () => {
+    it("provides diverse default roles across 8 pages", () => {
+      const roles = Array.from({ length: 8 }, (_, i) => getDefaultPageVisualRole(i));
+      expect(roles[0]).toBe("opening_establishing");
+      expect(roles[1]).toBe("discovery");
+      expect(roles[2]).toBe("payoff");
+      expect(roles[3]).toBe("quiet_ending");
+      expect(roles[4]).toBe("action");
+      expect(roles[5]).toBe("emotional_closeup");
+      expect(roles[6]).toBe("object_detail");
+      expect(roles[7]).toBe("setback_or_question");
+    });
+
+    it("provides diverse default composition hints across 12 pages", () => {
+      const hints = Array.from({ length: 12 }, (_, i) => getDefaultCompositionHint(i));
+      const uniqueHints = new Set(hints);
+      expect(uniqueHints.size).toBe(12);
+      expect(hints[0]).toContain("low-angle");
+      expect(hints[5]).toContain("bird's-eye");
+      expect(hints[9]).toContain("extreme close-up");
+    });
   });
 
   describe("buildCoverImagePrompt", () => {
@@ -931,7 +961,7 @@ describe("prompt length regression (P5-3j)", () => {
     expect(result.length).toBeLessThan(8500);
   });
 
-  it("non-animals non-star prompt (base case) stays under 6300 chars", () => {
+  it("non-animals non-star prompt (base case) stays under 6400 chars", () => {
     const result = buildImagePrompt(
       "A child plays in a sunny garden with flowers",
       "watercolor",
@@ -939,6 +969,8 @@ describe("prompt length regression (P5-3j)", () => {
       "soft watercolor picture book palette",
       { imageModelProfile: "pro_consistent", ageBand: "preschool_3_4" }
     );
-    expect(result.length).toBeLessThan(6300);
+    // 閾値を 6300→6400 に小幅調整: #568(水彩descriptor/ネガティブ規則)・#545(キャラ重複ガード)・
+    // #587(構図ヒント) の正当な品質追加が累積したため。引き続きプロンプト肥大は監視する。
+    expect(result.length).toBeLessThan(6400);
   });
 });

@@ -82,6 +82,32 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<ProductPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [singlePurchaseLoading, setSinglePurchaseLoading] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  async function handleRedeemCoupon() {
+    const code = couponCode.trim();
+    if (!code || couponLoading) return;
+    setCouponLoading(true);
+    setCouponMessage(null);
+    setCouponError(null);
+    try {
+      const { redeemCouponCallable } = await import("@/lib/functions");
+      const res = await redeemCouponCallable(code);
+      setCouponMessage(`コードを引き換えました！生成クレジットを ${res.creditsGranted} 付与しました。`);
+      setCouponCode("");
+    } catch (err: unknown) {
+      const msg =
+        typeof err === "object" && err && "message" in err
+          ? String((err as { message?: string }).message)
+          : "引き換えに失敗しました。";
+      setCouponError(msg);
+    } finally {
+      setCouponLoading(false);
+    }
+  }
 
   const currentPlan = resolveProductPlan(profile);
 
@@ -309,6 +335,35 @@ export default function PricingPage() {
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* クーポンコード引き換え */}
+        <div className="rounded-[2rem] border border-violet-200 bg-violet-50/40 p-6 mb-8">
+          <div className="mb-4 text-center">
+            <Badge variant="outline" className="mb-2 border-violet-300 text-violet-600">クーポンコード</Badge>
+            <h2 className="text-lg font-bold text-purple-900">コードをお持ちの方</h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              テスター向けコードを引き換えると、無料で絵本を作成できる生成クレジットが付与されます。
+            </p>
+          </div>
+          <div className="mx-auto flex max-w-md flex-col gap-2 sm:flex-row">
+            <input
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              placeholder="例: ABCD2345"
+              className="flex-1 rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-center font-mono tracking-widest text-purple-900 placeholder:tracking-normal placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-violet-300"
+              maxLength={32}
+            />
+            <Button onClick={handleRedeemCoupon} disabled={couponLoading || !couponCode.trim()}>
+              {couponLoading ? <Loader2 className="size-4 animate-spin" /> : "引き換える"}
+            </Button>
+          </div>
+          {couponMessage && (
+            <p className="mt-3 text-center text-sm font-medium text-emerald-600">{couponMessage}</p>
+          )}
+          {couponError && (
+            <p className="mt-3 text-center text-sm font-medium text-rose-500">{couponError}</p>
+          )}
         </div>
 
         {error && (

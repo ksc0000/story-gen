@@ -13,6 +13,7 @@
     "test:generation-guards": "cd functions && npx vitest run test/candidate-gate.test.ts test/generation-event-logger.test.ts",
     "check:phase2": "npm run guard:hygiene && npm run report:generation-slo:self-test && npm run test:slo-report && npm run test:generation-guards",
     "logs:generation-query": "node scripts/print-generation-log-query.mjs",
+    "deploy:logging-queries": "node scripts/apply-saved-queries.mjs",
     "smoke:create-template-books": "node scripts/create-template-smoke-books.js",
     "smoke:create-nonfixed-book": "node scripts/create-nonfixed-smoke-book.js",
     "smoke:monitor": "node scripts/monitor-smoke-book.js",

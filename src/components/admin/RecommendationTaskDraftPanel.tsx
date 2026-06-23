@@ -19,6 +19,9 @@ interface RecommendationTaskDraftPanelProps {
   book: BookDoc & { id: string };
   pages: PageDoc[];
   adminUid?: string;
+  onApproveBook?: () => Promise<void>;
+  onRegenerateFlaggedPages?: () => Promise<void>;
+  isExecuting?: boolean;
 }
 
 export function RecommendationTaskDraftPanel({
@@ -26,16 +29,16 @@ export function RecommendationTaskDraftPanel({
   book,
   pages,
   adminUid,
+  onApproveBook,
+  onRegenerateFlaggedPages,
+  isExecuting = false,
 }: RecommendationTaskDraftPanelProps) {
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [confirmChecks, setConfirmChecks] = useState<Record<string, boolean>>({});
 
   const draft = useMemo(() => buildTaskDraft(intent, book, pages), [intent, book, pages]);
-
-  if (intent === "confirm_approval") {
-    return null;
-  }
 
   const copyText = [
     `## ${draft.title}`,
@@ -90,6 +93,57 @@ export function RecommendationTaskDraftPanel({
     }
   };
 
+  if (intent === "confirm_approval") {
+    const allChecked = draft.checklist.every((item) => confirmChecks[item.label]);
+    return (
+      <Card className="border-emerald-200 bg-emerald-50/30">
+        <CardContent className="space-y-4 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <h4 className="text-sm font-semibold text-emerald-900">✅ {draft.title}</h4>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                onClick={onApproveBook}
+                disabled={!allChecked || isExecuting}
+              >
+                {isExecuting ? "実行中..." : "Book を承認する"}
+              </Button>
+            </div>
+          </div>
+
+          <p className="text-xs text-emerald-800">{draft.summary}</p>
+
+          <div className="space-y-2 rounded-lg border border-emerald-100 bg-white/50 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">承認前チェックリスト</p>
+            <ul className="space-y-2">
+              {draft.checklist.map((item) => (
+                <li key={item.label} className="flex items-start gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    id={`check-${item.label}`}
+                    checked={!!confirmChecks[item.label]}
+                    onChange={(e) => setConfirmChecks(prev => ({ ...prev, [item.label]: e.target.checked }))}
+                    className="mt-0.5 shrink-0"
+                  />
+                  <label htmlFor={`check-${item.label}`} className="cursor-pointer select-none">
+                    <span className="font-semibold text-emerald-950">{item.label}:</span>{" "}
+                    <span className="text-emerald-800">{item.detail}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {!allChecked && (
+            <p className="text-[10px] text-emerald-600">※ すべての項目を確認すると承認ボタンが有効になります</p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-amber-200 bg-amber-50/30">
       <CardContent className="space-y-3 p-4">
@@ -114,6 +168,18 @@ export function RecommendationTaskDraftPanel({
             >
               タスクをコピー
             </Button>
+            {intent === "review_image_regeneration" && onRegenerateFlaggedPages && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={onRegenerateFlaggedPages}
+                disabled={isExecuting}
+                className="border-rose-300 text-rose-700 hover:bg-rose-100 text-xs"
+              >
+                {isExecuting ? "実行中..." : "対象ページを再生成"}
+              </Button>
+            )}
             {adminUid && (
               <Button
                 type="button"

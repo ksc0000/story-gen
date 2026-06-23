@@ -50,11 +50,11 @@ const STORY_QUALITY_RULES = [
 const JAPANESE_STORY_TEXT_RULES = [
   "pages[].text は、画像プロンプトではなく、親が読み聞かせる本文です。",
   "3歳以上では、単なる音遊びや擬音の羅列にしないでください。",
-  "すべてのページに以下の4つの「意味内容」のうち2つ以上を自然に含めて、読み応えのある内容にしてください。",
-  "- 「場所」(Location): どこで起きているか、周囲の情景",
-  "- 「行動」(Action): キャラクターの具体的な動きや振る舞い",
-  "- 「気持ち」(Emotion): キャラクターの感情や心の声",
-  "- 「発見」(Discovery): 何かに気づいたり、新しいことが起きたりする変化",
+  "【重要：3歳以上の意味量確保】すべてのページに以下の4つの「意味内容」のうち、必ず2つ以上を自然に組み合わせて、物語としての深みと読み応えを出してください。1ページが短すぎたり、内容が薄くなったりしないよう注意してください。",
+  "- 「場所」(Location): どこで起きているか、周囲の情景、季節や時間（例：おにわ、夕焼けの空、キッチンのテーブル）",
+  "- 「行動」(Action): キャラクターの具体的な動き、振る舞い、五感を使った動作（例：そっとのぞく、ぎゅっと握る、一生懸命走る）",
+  "- 「気持ち」(Emotion): キャラクターの感情、心の声、内面の変化（例：わくわくする、ちょっとドキドキ、安心した気持ち）",
+  "- 「発見」(Discovery): 何かに気づくこと、新しい出会い、状況の変化（例：キラリと光るものを見つけた、不思議な音が聞こえてきた）",
   "意味の通らない造語を使わないでください。特に「〜たん」「〜りる」「〜ぴぴ」「〜ぱぱ」といった安易な語尾の変形や、意味のない音の羅列による造語は厳禁です。",
   "「おもしろい こえ」「ふわふわ ふわりん」のような曖昧で説明不足な文や、安易な赤ちゃん言葉（「〜りん」や、何にでも「お」をつける「おめめ」「おてて」「あんよ」「おみみ」など）を避けてください（0-2歳向けを除く）。",
   "擬音（オノマトペ）に頼りすぎず、具体的な動詞や形容詞を使って情景を描写してください。擬音は効果的なものに厳選し、1ページにつき最大1〜2個までにしてください。",
@@ -127,68 +127,88 @@ const PAGE_TEXT_ROLE_RULES = [
 const BAD_TEXT_EXAMPLE =
   "ころころ こりころ。まきまき まきば。ふわりん ぴかりん、ふしぎな じゅうたん。たっちゃん、おててを ぎゅっ。";
 const GOOD_TEXT_EXAMPLE = [
-  "【良い導入の例 (opening_establishing)】",
-  "ぽかぽかと あたたかい ごごのことです。さくらちゃんは、おにわで おはなを ながめていました。",
-  "ちょうちょが ひらひらと まっています。「どこへ いくのかな？」",
-  "さくらちゃんは、そっと ちょうちょの あとを おいかけてみました。",
+  "【良い導入の例 (opening_establishing) - 場所・行動・発見の要素を含む】",
+  "ぽかぽかと あたたかい ごごのことです（場所：情景）。さくらちゃんは、おにわでおはなを ながめていました（場所：環境）。",
+  "すると、草のむこうで ちょうちょが ひらひらと まっています（発見：気づき）。「どこへ いくのかな？」",
+  "さくらちゃんは、そっと ちょうちょの あとを おいかけてみました（行動：具体的な動作）。",
   "",
-  "【良い結末の例 (quiet_ending)】",
-  "おそらが オレンジいろに そまり、おうちに かえる じかんです。",
-  "さくらちゃんは、みつけた ぴかぴかの いしを ぎゅっと にぎりしめました。",
-  "「きょうは たのしかったね」",
-  "あしたは どんな すてきなことが まっているでしょうか。さくらちゃんは しあわせな きもちで いっぱいに なりました。",
+  "【良い結末の例 (quiet_ending) - 場所・行動・気持ちの要素を含む】",
+  "おそらが オレンジいろに そまり、おうちに かえる じかんです（場所：時間と情景）。",
+  "さくらちゃんは、みつけた ぴかぴかの いしを ぎゅっと にぎりしめました（行動：具体的な動作）。",
+  "「きょうは たのしかったね」（気持ち：心の声）",
+  "あしたは どんな すてきなことが まっているでしょうか。さくらちゃんは しあわせな きもちで いっぱいに なりました（気持ち：内面の変化）。",
 ].join("\n");
 
-function getDefaultCompositionHint(pageNumber?: number): string {
-  switch (pageNumber) {
-    case 0:
-      return "establishing wide shot";
-    case 1:
-      return "medium shot with action";
-    case 2:
-      return "close-up or emotional detail shot";
-    case 3:
-      return "warm ending shot, back view, or scenic emotional wide shot";
-    default:
-      return "varied storybook composition with a clear focal point";
+/** @internal Exported for testing */
+export function getDefaultCompositionHint(pageNumber?: number): string {
+  // Enhanced composition hints to ensure variety even when LLM doesn't specify.
+  const hints: string[] = [
+    "cinematic wide establishing shot, low-angle perspective", // 0
+    "dynamic medium shot, asymmetrical framing",            // 1
+    "close-up with shallow depth of field",                 // 2
+    "macro detail focus with soft-focus background",        // 3
+    "over-the-shoulder view, medium shot",                  // 4
+    "bird's-eye view looking down, wide shot",              // 5
+    "side-view profile, medium action shot",                // 6
+    "heroic centered framing, vibrant wide shot",           // 7
+    "back-view wide shot walking into distance",            // 8
+    "extreme close-up on hands or a meaningful gesture",    // 9
+    "dynamic diagonal composition, low-angle action",       // 10
+    "peaceful wide scenic shot with warm lighting",         // 11
+  ];
+
+  if (pageNumber !== undefined && pageNumber >= 0) {
+    return hints[pageNumber % hints.length];
   }
+  return "varied storybook composition with a clear focal point and distinct camera angle";
 }
 
-function getDefaultPageVisualRole(pageNumber?: number): PageVisualRole {
+/** @internal Exported for testing */
+export function getDefaultPageVisualRole(pageNumber?: number): PageVisualRole {
+  // Mirroring the logic from gemini.ts for consistency.
+  // This logic is mostly for 4-page books; gemini.ts handles 8 and 12-page variety.
   switch (pageNumber) {
     case 0:
       return "opening_establishing";
     case 1:
       return "discovery";
     case 2:
-      return "emotional_closeup";
+      return "payoff";
     case 3:
       return "quiet_ending";
     default:
-      return "action";
+      // Cycle through roles for longer books if somehow triggered.
+      const roles: PageVisualRole[] = [
+        "action",
+        "emotional_closeup",
+        "object_detail",
+        "setback_or_question",
+        "discovery",
+      ];
+      return pageNumber !== undefined ? roles[(pageNumber - 4) % roles.length] : "action";
   }
 }
 
 function getPageVisualRoleGuidance(role: PageVisualRole): string {
   switch (role) {
     case "opening_establishing":
-      return "Page visual role: opening_establishing. Use a cinematic wide establishing shot to define the setting and atmosphere. Show the child character within a spacious environment to establish scale and mood. The background should be rich and inviting.";
+      return "Page visual role: opening_establishing. Use a cinematic wide establishing shot, either a low-angle perspective to emphasize scale or a high-angle view to reveal the surroundings. Define the setting and atmosphere clearly. Show the child character within a spacious, inviting environment with rich background details.";
     case "discovery":
-      return "Page visual role: discovery. Use a medium shot or low-angle view where the child notices something new or intriguing. Create a sense of wonder by leading the viewer's eye toward the object of discovery.";
+      return "Page visual role: discovery. Use a medium shot or an over-the-shoulder view where the child notices something new. Focus the viewer's eye on the object of discovery using leading lines or a shallow depth of field. Capture a sense of wonder and curiosity.";
     case "action":
-      return "Page visual role: action. Use a dynamic medium or wide shot with a clear sense of movement, such as running, reaching, or playing. Use diagonal compositions or active poses to convey energy and momentum.";
+      return "Page visual role: action. Use a dynamic medium or wide shot with a clear sense of movement (running, reaching, jumping). Employ diagonal compositions, active poses, or asymmetrical framing to convey energy, momentum, and purposeful motion.";
     case "emotional_closeup":
-      return "Page visual role: emotional_closeup. Use an intimate close-up or extreme close-up of the face, hands, or a small meaningful gesture. Focus on a specific expression (joy, awe, relief) to create a deep emotional connection with the reader.";
+      return "Page visual role: emotional_closeup. Use an intimate close-up or extreme close-up of the face, hands, or a meaningful gesture. Apply a shallow depth of field with a soft-focus background to create an eye-level emotional connection. Focus on a specific, expressive reaction.";
     case "object_detail":
-      return "Page visual role: object_detail. Use a focused macro or detail shot of a key story object or recurring motif. The child may be partially visible in the foreground or background, but the object itself is the primary focal point.";
+      return "Page visual role: object_detail. Use a macro focus or extreme close-up on a key story object or recurring motif. Emphasize tactile textures and fine details. The child may be partially visible in the soft-focus foreground or background, keeping the object as the primary focal point.";
     case "setback_or_question":
-      return "Page visual role: setback_or_question. Use a thoughtful medium shot or over-the-shoulder view to show a moment of gentle tension, doubt, or curiosity. Use soft lighting or slightly muted tones to emphasize the reflective mood.";
+      return "Page visual role: setback_or_question. Use a thoughtful medium shot, an over-the-shoulder view, or an asymmetrical composition to show a moment of pause or doubt. Use gentle shadows and soft, muted lighting to emphasize a reflective, contemplative mood.";
     case "payoff":
-      return "Page visual role: payoff. Use a triumphant medium or wide shot featuring the child's clear reaction to success or resolution. The protagonist must be present to show their reaction and achievement. This is the visual climax; use vibrant colors, bright lighting, and an expressive, joyful pose. Do not show only objects or backgrounds.";
+      return "Page visual role: payoff. Use a triumphant medium or wide shot with a centered heroic framing. The child must be present, showing a clear reaction to success with an expressive, joyful pose. Use vibrant colors, bright radiant lighting, and dynamic upward camera angles to mark the visual climax.";
     case "quiet_ending":
-      return "Page visual role: quiet_ending. Use a peaceful wide shot, a scenic back view of the child walking away, or a cozy indoor scene. The protagonist must be present to provide a sense of closure. Emphasize a sense of closure, warmth, and lingering happiness with soft, gentle lighting.";
+      return "Page visual role: quiet_ending. Use a peaceful wide shot, a scenic back view of the child walking away, or a cozy bird's-eye view of a resting scene. Emphasize closure and warmth with soft golden hour lighting or gentle silhouettes. The child must be present to provide emotional resonance.";
     default:
-      return "Page visual role: action. Keep the scene dynamic, story-driven, and visually distinct from previous pages.";
+      return "Page visual role: action. Keep the scene dynamic, story-driven, and visually distinct from previous pages using varied camera angles.";
   }
 }
 
@@ -489,7 +509,9 @@ ${ageReadingGuidance}
 - imagePrompt のシーン記述に、主人公の年齢を具体的な数字（例: "around 7-8 years old", "12-year-old child" など）で書き込まないでください。年齢感の管理は characterBible に一元化します。imagePrompt に年齢数字を入れると characterBible と矛盾し、画像生成で別人になります。
 - 各ページの imagePrompt は、主人公の見た目だけでなく、場面・背景・周囲の出来事・画面の焦点を具体的に書いてください。
 - すべてのページで主人公を中央に大きく描く構図は禁止です。
-- ページごとに wide shot / medium shot / close-up / detail shot / bird's-eye view などの視点を変えてください。
+- ページごとに wide shot / medium shot / close-up / detail shot / bird's-eye view などの視点を変えて、絵本全体の視覚的なリズムを作ってください。
+- 同じ pageVisualRole や compositionHint を連続して使用することは避けてください。8ページ以上の構成では、少なくとも5種類以上の異なる pageVisualRole を組み合わせて、構図の多様性を最大化してください。
+- compositionHint には、選択した pageVisualRole を補完する具体的なカメラアングル（low-angle, high-angle, side-view, over-the-shoulder, bird's-eye view, macro focus など）を明記してください。
 - ときには背景、物、家族、友だち、動物、サブキャラクターが絵の主役になっても構いません。
 - imagePrompt には、そのページで何を一番見せたいかを明確に含めてください。
 - 屋内シーン（家の中、お風呂、寝室、リビングなど）では主人公は裸足または靴下を着用させ、屋外シーン（公園、庭、道路など）では靴を着用させてください。状況に合わない靴（屋内で土足など）は禁止です。

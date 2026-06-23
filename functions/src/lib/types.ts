@@ -489,11 +489,25 @@ export interface AppFeedbackDoc {
   createdAtMs: number;
 }
 
+/** テスター/成長施策用のクーポン。引き換えで singleBookCredits を付与する。 */
+export interface CouponData {
+  code: string;
+  creditsGranted: number;
+  maxRedemptions: number;
+  redemptionCount: number;
+  expiresAtMs?: number;
+  active: boolean;
+  note?: string;
+  createdAt: FirebaseFirestore.Timestamp;
+  createdAtMs: number;
+}
+
 export interface PageData {
   pageNumber: number;
   text: string;
   imageUrl: string;
   imagePrompt: string;
+  compositionHint?: string;
   textCharCount?: number;
   textSentenceCount?: number;
   textQualityWarnings?: string[];

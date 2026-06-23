@@ -412,9 +412,44 @@ export function defaultPageVisualRole(
 ): PageVisualRole {
   if (pageIndex === 0) return "opening_establishing";
   if (pageIndex === totalPages - 1) return "quiet_ending";
-  if (totalPages >= 4 && pageIndex === totalPages - 2) return "payoff";
-  if (pageIndex === 1) return "discovery";
-  return "action";
+
+  if (totalPages <= 4) {
+    if (pageIndex === 1) return "discovery";
+    if (pageIndex === 2) return "payoff";
+    return "action";
+  }
+
+  // Improved sequence for 8 and 12-page books to ensure compositional variety.
+  const roles8: PageVisualRole[] = [
+    "opening_establishing", // 0
+    "action",               // 1
+    "discovery",            // 2
+    "object_detail",        // 3
+    "setback_or_question",  // 4
+    "emotional_closeup",    // 5
+    "payoff",               // 6
+    "quiet_ending",         // 7
+  ];
+
+  const roles12: PageVisualRole[] = [
+    "opening_establishing", // 0
+    "discovery",            // 1
+    "action",               // 2
+    "object_detail",        // 3
+    "action",               // 4
+    "discovery",            // 5
+    "setback_or_question",  // 6
+    "emotional_closeup",    // 7
+    "action",               // 8
+    "discovery",            // 9
+    "payoff",               // 10
+    "quiet_ending",         // 11
+  ];
+
+  if (totalPages <= 8) {
+    return roles8[pageIndex] || "action";
+  }
+  return roles12[pageIndex] || "action";
 }
 
 export function normalizePageVisualRole(
@@ -1121,6 +1156,7 @@ export class GeminiClient implements LLMClient {
       "Keep storyGoal, mainQuestObject, forbiddenQuestObjects, titleSpreadText, openingNarration, and coverImagePrompt unchanged.",
       "pages[].text only. Do not modify imagePrompt, pageVisualRole, cast, appearingCharacterIds, or focusCharacterId.",
       "For ages 3+, avoid sound-play-only text and meaningless invented words (e.g., \"-tan\", \"-riru\", \"-pipi\", \"-papa\").",
+      "For ages 3+, each page must naturally incorporate at least two of the following elements to ensure semantic richness: Location (場所 - where), Action (行動 - what they do), Emotion (気持ち - how they feel), and Discovery (発見 - what they find/notice).",
       "For ages 3+, each page should usually have 3 to 5 sentences and around 80 to 140 Japanese characters when natural.",
       "Add natural scene detail, action, emotion, and small discovery.",
       "On discovery pages, include where the character found something or what the hands / sand / nearby place looked like.",

@@ -1366,6 +1366,67 @@ export default function AdminBookQualityReviewPage() {
     setIntentMessage(null);
   };
 
+  const handleApproveBook = async () => {
+    if (!selectedBook || !user) return;
+    setSavingQualityReview(true);
+    setQualityReviewMessage(null);
+    try {
+      await updateDoc(doc(db, "books", selectedBook.id), {
+        qualityReviewStatus: "approved",
+        approvedAt: serverTimestamp(),
+        approvedBy: user.uid,
+      });
+
+      await logAdminOperation({
+        operation: "submit_quality_review",
+        adminUid: user.uid,
+        targetId: selectedBook.id,
+        targetType: "book",
+        payload: {
+          action: "approve_book_via_recommendation",
+          previousStatus: selectedBook.qualityReviewStatus || "not_reviewed",
+        },
+      });
+
+      setQualityReviewMessage("Book を承認しました");
+    } catch (error) {
+      console.error("Failed to approve book:", error);
+      setQualityReviewMessage("承認に失敗しました");
+    } finally {
+      setSavingQualityReview(false);
+    }
+  };
+
+  const handleRegenerateFlaggedPages = async () => {
+    if (!selectedBook || !user) return;
+    const fixes = selectedBook.qualityRecommendedFixes ?? [];
+    const imageFixes = fixes.filter(
+      (f) => f.action === "regenerate_page_image" && f.pageNumber != null
+    );
+
+    if (imageFixes.length === 0) {
+      setQualityReviewMessage("再生成が必要なページが見つかりません");
+      return;
+    }
+
+    setSavingQualityReview(true);
+    setQualityReviewMessage(`${imageFixes.length} ページの再生成を開始します...`);
+
+    try {
+      const regenerate = httpsCallable(functions, "regeneratePageImage");
+      // Sequential execution to avoid overwhelming the system
+      for (const fix of imageFixes) {
+        await regenerate({ bookId: selectedBook.id, pageNumber: fix.pageNumber });
+      }
+      setQualityReviewMessage("フラグ付きページの再生成指示を完了しました");
+    } catch (error) {
+      console.error("Failed to regenerate flagged pages:", error);
+      setQualityReviewMessage("再生成の指示に失敗しました");
+    } finally {
+      setSavingQualityReview(false);
+    }
+  };
+
   const handleSaveQualityReview = async () => {
     if (!selectedBook || !user) return;
     const validationError = validateQualityReviewForm(qualityReviewForm);
@@ -2901,13 +2962,16 @@ export default function AdminBookQualityReviewPage() {
                           </button>
                         </div>
                       )}
-                      {activeIntent && activeIntent !== "confirm_approval" && selectedBook && (
+                      {activeIntent && selectedBook && (
                         <RecommendationTaskDraftPanel
                           key={`${selectedBook.id}-${activeIntent}`}
                           intent={activeIntent}
                           book={selectedBook}
                           pages={pages}
                           adminUid={user?.uid}
+                          onApproveBook={handleApproveBook}
+                          onRegenerateFlaggedPages={handleRegenerateFlaggedPages}
+                          isExecuting={savingQualityReview}
                         />
                       )}
                       </div>

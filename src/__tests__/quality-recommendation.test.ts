@@ -101,13 +101,13 @@ describe("buildQualityRecommendations", () => {
     expect(found!.severity).toBe("high");
   });
 
-  it("Scenario F: overallQualityScore >= 4.2 && approved → approve / low", () => {
+  it("Scenario F: overallQualityScore >= 4.0 && approved → approve / low", () => {
     const book = makeBook({
-      overallQualityScore: 4.4,
-      storyQualityScore: 5,
+      overallQualityScore: 4.0,
+      storyQualityScore: 4,
       illustrationQualityScore: 4,
       characterConsistencyScore: 4,
-      personalizationScore: 5,
+      personalizationScore: 4,
       safetyScore: 4,
       qualityReviewStatus: "approved",
     });
@@ -135,7 +135,7 @@ describe("buildQualityRecommendations", () => {
     expect(recs.map((r) => r.action)).toContain("improve_personalization");
   });
 
-  it("全 score 高 + reviewed (not approved) → approve は出ない", () => {
+  it("全 score 高 + reviewed (not approved) → approve が出る", () => {
     const book = makeBook({
       overallQualityScore: 4.6,
       storyQualityScore: 5,
@@ -146,7 +146,9 @@ describe("buildQualityRecommendations", () => {
       qualityReviewStatus: "human_reviewed",
     });
     const recs = buildQualityRecommendations(book);
-    expect(recs.find((r) => r.action === "approve")).toBeUndefined();
+    const found = recs.find((r) => r.action === "approve");
+    expect(found).toBeDefined();
+    expect(found!.reason).toContain("承認を推奨します");
   });
 
   it("score = 3 (境界) → recommendation 出ない", () => {
