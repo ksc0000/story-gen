@@ -206,6 +206,7 @@
     "PR #605: feat(generation): 全キャラ種別に参照画像生成を拡張 (#571) (merged)",
     "PR #606: feat(scripts): 品質リグレッション・レポート（ゼロコスト集計） (merged)",
     "PR #607: fix(quality): scene-detail/action-emotion ヒューリスティクスを再キャリブレーション (merged)",
+    "PR #608: fix(quality): 画像テキストリスク検出器の偽陽性を除去 (#566) (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
