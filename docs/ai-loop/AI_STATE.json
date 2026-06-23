@@ -194,6 +194,7 @@
     "PR #548: Refine Story Generation Prompts for Improved Opening and Ending Quality (merged)",
     "PR #568: Refine soft_watercolor styleBible for Improved Consistency (merged)",
     "PR #573: Enhance Story Generation Prompts for Semantic Richness in 3+ Age Band (merged)",
+    "PR #577: Implement Quality Recommendation Action Buttons in Admin UI (merged)",
     "PR #581: Automate Cloud Logging Saved Query Deployment (merged)",
     "PR #587: Enhance pageVisualRole Application for Increased Image Compositional Variety (merged)",
     "PR #599: chore: AIループの自動スケジュールを停止（商用化フェーズ） (merged)",
