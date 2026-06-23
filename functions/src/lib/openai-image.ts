@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import type {
   ImageClient,
   ImageModelProfile,
@@ -203,10 +203,66 @@ export class OpenAIImageClient implements ImageClient {
     throw new Error("Unexpected OpenAI Image API response format");
   }
 
+  /** Models that natively accept image inputs via the Images edit endpoint. */
+  private supportsNativeImageEdit(): boolean {
+    return this.opts.model === "gpt-image-2" || this.opts.model === "gpt-image-1.5";
+  }
+
+  /**
+   * Reference-image path for GPT-image-2 / 1.5. These models accept image inputs
+   * directly on the Images edit endpoint, so we call them by name (genuinely using
+   * the selected model) instead of routing through the Responses API + gpt-4o tool,
+   * which cannot pin a specific gpt-image model. This is essential for character
+   * consistency, the main reason to adopt gpt-image-2 for this product.
+   */
+  private async generateWithImageEdit(
+    prompt: string,
+    inputImageUrls: string[]
+  ): Promise<Buffer> {
+    const hardenedPrompt = REFERENCE_IMAGE_PROMPT_PREFIX + prompt + REFERENCE_IMAGE_PROMPT_SUFFIX;
+    const images = await Promise.all(
+      inputImageUrls.slice(0, 14).map(async (url, index) => {
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`Failed to download reference image: ${res.status}`);
+        }
+        const buffer = Buffer.from(await res.arrayBuffer());
+        return toFile(buffer, `reference-${index}.png`, { type: "image/png" });
+      })
+    );
+
+    const response = await (this.client as any).images.edit({
+      model: this.opts.model,
+      image: images,
+      prompt: hardenedPrompt,
+      size: this.opts.size as any,
+      quality: this.opts.quality as any,
+    });
+
+    const data = response.data?.[0];
+    if ((data as any)?.b64_json) {
+      return Buffer.from((data as any).b64_json, "base64");
+    }
+    if (data?.url) {
+      const fetchResponse = await fetch(data.url);
+      if (!fetchResponse.ok) {
+        throw new Error(`Failed to download OpenAI image: ${fetchResponse.status}`);
+      }
+      return Buffer.from(await fetchResponse.arrayBuffer());
+    }
+    throw new Error("No image output from OpenAI Images edit API");
+  }
+
   private async generateWithReferenceImages(
     prompt: string,
     inputImageUrls: string[]
   ): Promise<Buffer> {
+    // GPT-image-2 / 1.5: use the Images edit endpoint so the selected model is
+    // genuinely used with the character reference images.
+    if (this.supportsNativeImageEdit()) {
+      return this.generateWithImageEdit(prompt, inputImageUrls);
+    }
+
     // Use Responses API for reference images.
     // gpt-image-1-mini is not available via Responses API; use responsesModel fallback.
     const model = this.opts.responsesModel ?? this.resolveResponsesModel();
