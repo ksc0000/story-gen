@@ -1,4 +1,5 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { logger } from "firebase-functions/v2";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
@@ -102,6 +103,7 @@ export const testImageModels = onCall(
       throw new HttpsError("invalid-argument", "prompt is required");
     }
 
+    try {
     const normalized = normalizeTestImageModelsRequest(data);
     const {
       purpose,
@@ -177,13 +179,19 @@ export const testImageModels = onCall(
           results.push(outcome.value);
         } else {
           const modelProfile = modelProfiles[index];
+          const message =
+            outcome.reason instanceof Error
+              ? outcome.reason.message
+              : String(outcome.reason);
+          logger.error("testImageModels: profile generation failed", {
+            modelProfile,
+            provider: PROFILE_PROVIDER_MAP[modelProfile],
+            message,
+          });
           results.push({
             modelProfile,
             model: labelForProfile(modelProfile),
-            error:
-              outcome.reason instanceof Error
-                ? outcome.reason.message
-                : String(outcome.reason),
+            error: message,
           });
         }
       });
@@ -231,5 +239,10 @@ export const testImageModels = onCall(
       inputImageRoles,
       results,
     };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error("testImageModels: top-level failure", { message, stack: err instanceof Error ? err.stack : undefined });
+      throw new HttpsError("internal", `testImageModels failed: ${message}`);
+    }
   }
 );
