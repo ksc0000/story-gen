@@ -534,38 +534,65 @@ function getEffectiveThreshold(ageBand: AgeBand, productPlan?: ProductPlan): Sto
   return base;
 }
 
+/**
+ * 否定・禁止の節を取り除く。画像プロンプトには安全層として "no signage, no
+ * labels, no letters, ..." といった「文字を描くな」という指示が大量に含まれる。
+ * これらを単純部分一致で拾うと自分自身の安全指示を「文字描画リスク」と誤検出して
+ * しまうため、否定節を除去してから走査する（再キャリブレーション 2026-06 / #566）。
+ */
+function stripNegatedClauses(prompt: string): string {
+  // 文単位（ピリオド/句点）で判定する。"no diploma, banner, labels, posters" の
+  // ような列挙否定はカンマで切ると先頭の "no" から各項目が切り離されて誤検出する
+  // ため、文に否定の手がかりがあれば列挙項目ごと文全体を除外する。
+  return prompt
+    .split(/[.!?。！？]/)
+    .filter((sentence) => {
+      const s = sentence.toLowerCase();
+      return !(
+        /\bno\b/.test(s) ||
+        /\b(without|never|must be plain|must remain|stays? (plain|natural)|unmarked|unlabel|purely visual|visual[- ]only|only visual|avoid|free of|plain[- ]color|plain solid|remain plain)/.test(
+          s
+        )
+      );
+    })
+    .join(". ");
+}
+
+// 文字描画を「肯定的に」要求する表現のみを単語境界付きで検出する。
+// 単語境界により "signature" / "design" などの部分一致誤検出を防ぐ。
+const TEXT_RISK_PATTERNS: RegExp[] = [
+  /\btext:/,
+  /\bcaption\b/,
+  /\bspeech bubble\b/,
+  /\blabel(s|ed|led|ing)?\b/,
+  /\bsign(s|age|board|post|posts)?\b/,
+  /\bletters?\b/,
+  /\bwritten\b/,
+  /\bwriting\b/,
+  /\btitle on\b/,
+  /\bwords?\b/,
+  /\bquote\b/,
+  /\bphrase\b/,
+  // imagination / fantasy text-bearing elements that correlate with E005 on flux-2-pro
+  /\brune(s)?\b/,
+  /\bglyph(s)?\b/,
+  /\binscription(s)?\b/,
+  /\bstar chart\b/,
+  /\btreasure map\b/,
+  /\bcelestial map\b/,
+  /\bmagical text\b/,
+  /\bglowing text\b/,
+  /\benchanted mark\b/,
+  /\bconstellation name\b/,
+  /\bcompass direction\b/,
+];
+
 function hasImagePromptTextRisk(imagePrompt: string): boolean {
-  const normalized = imagePrompt.toLowerCase();
   if (/[「」『』]/.test(imagePrompt)) {
     return true;
   }
-
-  return [
-    "text:",
-    "caption",
-    "speech bubble",
-    "label",
-    "sign",
-    "letters",
-    "written",
-    "writing",
-    "title on",
-    "words",
-    "quote",
-    "phrase",
-    // imagination / fantasy text-bearing elements that correlate with E005 on flux-2-pro
-    "rune",
-    "glyph",
-    "inscription",
-    "star chart",
-    "treasure map",
-    "celestial map",
-    "magical text",
-    "glowing text",
-    "enchanted mark",
-    "constellation name",
-    "compass direction",
-  ].some((token) => normalized.includes(token));
+  const normalized = stripNegatedClauses(imagePrompt).toLowerCase();
+  return TEXT_RISK_PATTERNS.some((re) => re.test(normalized));
 }
 
 function hasSceneConstraintConflict(imagePrompt: string): boolean {
@@ -577,15 +604,17 @@ function hasSceneConstraintConflict(imagePrompt: string): boolean {
 }
 
 function hasReadableTextRisk(imagePrompt: string): boolean {
-  const normalized = imagePrompt.toLowerCase();
-  return /(label|sign|letters|written|writing|caption|speech bubble|readable text)/.test(
+  const normalized = stripNegatedClauses(imagePrompt).toLowerCase();
+  return /(\blabel(s|ed|led|ing)?\b|\bsign(s|age|board|post)?\b|\bletters?\b|\bwritten\b|\bwriting\b|\bcaption\b|\bspeech bubble\b|\breadable text\b)/.test(
     normalized
   );
 }
 
 function hasBrandOrLogoRisk(imagePrompt: string): boolean {
-  const normalized = imagePrompt.toLowerCase();
-  return /(logo|brand mark|trademark|company mark)/.test(normalized);
+  const normalized = stripNegatedClauses(imagePrompt).toLowerCase();
+  return /(\blogo(s)?\b|\bbrand mark\b|\bbrand name(s)?\b|\btrademark\b|\bcompany mark\b)/.test(
+    normalized
+  );
 }
 
 function hasUnsafeSceneObject(imagePrompt: string): boolean {
