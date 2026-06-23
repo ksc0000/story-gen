@@ -507,6 +507,7 @@ export interface PageData {
   text: string;
   imageUrl: string;
   imagePrompt: string;
+  compositionHint?: string;
   textCharCount?: number;
   textSentenceCount?: number;
   textQualityWarnings?: string[];

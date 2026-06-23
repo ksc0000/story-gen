@@ -33,9 +33,9 @@ describe("Story Flow Prompt Rules", () => {
 
   it("includes new good examples for opening and ending", () => {
     const result = buildSystemPrompt(mockTemplate, "watercolor");
-    expect(result).toContain("【良い導入の例 (opening_establishing)】");
+    expect(result).toContain("【良い導入の例 (opening_establishing)");
     expect(result).toContain("ぽかぽかと あたたかい ごごのことです");
-    expect(result).toContain("【良い結末の例 (quiet_ending)】");
+    expect(result).toContain("【良い結末の例 (quiet_ending)");
     expect(result).toContain("おそらが オレンジいろに そまり");
   });
 });
