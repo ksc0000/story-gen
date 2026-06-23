@@ -192,6 +192,7 @@
     "PR #545: Refine Character Generation to Prevent Hallucinated Characters (merged)",
     "PR #546: fix: 監査ログ統合の型エラーを修正 (merged)",
     "PR #548: Refine Story Generation Prompts for Improved Opening and Ending Quality (merged)",
+    "PR #568: Refine soft_watercolor styleBible for Improved Consistency (merged)",
     "PR #581: Automate Cloud Logging Saved Query Deployment (merged)",
     "PR #599: chore: AIループの自動スケジュールを停止（商用化フェーズ） (merged)",
     "PR #601: feat: テスター向けクーポンコード機能（生成クレジット付与） (merged)",
