@@ -357,13 +357,14 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.severity === "error")).toBe(false);
   });
 
-  it("warns when scene detail or action/emotion is missing", () => {
+  it("warns when a thin page lacks scene detail or action/emotion", () => {
     const report = validateGeneratedStoryQuality({
       story: {
         ...baseStory,
         pages: [
           {
-            text: "ふわふわです。きらきらです。たのしいです。",
+            // 場所語・動作語・感情語のいずれも無く、かつ薄い（35字未満）ページ。
+            text: "あかい いろ。あおい いろ。",
             imagePrompt: "medium shot of a child with a soft glow and simple background details in a picture book style",
             compositionHint: "medium shot",
           },
@@ -376,6 +377,32 @@ describe("validateGeneratedStoryQuality", () => {
 
     expect(report.issues.some((issue) => issue.code === "missing_scene_detail")).toBe(true);
     expect(report.issues.some((issue) => issue.code === "missing_action_or_emotion")).toBe(true);
+  });
+
+  it("does NOT warn on a substantive page that conveys scene via illustration (recalibration 2026-06)", () => {
+    // 場所語は無いが本文が充実している（35字以上）ページ。絵が情景を担う絵本では正常で、
+    // 旧ロジックの過剰発火（book発火率98.9%）を抑えるため、薄いページに限定する。
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "おおきな いぬが ゆっくりと ちかづいてきて、やさしく しっぽを ふってくれました。",
+            imagePrompt: "wide shot of a friendly large dog approaching a child in a warm picture book style",
+            compositionHint: "wide shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(
+      report.issues.some(
+        (issue) => issue.code === "missing_scene_detail" && issue.pageIndex === 0
+      )
+    ).toBe(false);
   });
 
   it("treats early reader pages with only 2 sentences as errors", () => {
