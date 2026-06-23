@@ -207,6 +207,7 @@
     "PR #606: feat(scripts): 品質リグレッション・レポート（ゼロコスト集計） (merged)",
     "PR #607: fix(quality): scene-detail/action-emotion ヒューリスティクスを再キャリブレーション (merged)",
     "PR #608: fix(quality): 画像テキストリスク検出器の偽陽性を除去 (#566) (merged)",
+    "PR #609: feat(image): gpt-image-2 の参照画像を Images edit API 経由にする (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
