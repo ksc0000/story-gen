@@ -43,10 +43,16 @@ function withBrushTeethImagePromptGuardrail(prompt: string): string {
 const LITTLE_HELPER_OBJECT_NO_TEXT_CLAUSE =
   "household objects must be plain and unmarked: use solid-color baskets, towels, containers, and kitchen items with no brand marks, no labels, no stickers, no printed patterns, and no decorative text-like marks on any surface";
 
+const LITTLE_HELPER_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same child across all pages: same round face proportions, same age impression around {childAge} years old, same hair color and style, and a consistent simple indoor outfit suitable for helping at home; preserve hairstyle, outfit, and facial features between pages";
+
 function withLittleHelperImagePromptGuardrail(prompt: string): string {
   let result = prompt;
   if (!result.includes(LITTLE_HELPER_OBJECT_NO_TEXT_CLAUSE)) {
     result = `${result}, ${LITTLE_HELPER_OBJECT_NO_TEXT_CLAUSE}`;
+  }
+  if (!result.includes(LITTLE_HELPER_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${LITTLE_HELPER_CHARACTER_ANCHOR_CLAUSE}`;
   }
   return withFixedImagePromptSafety(result);
 }
@@ -54,10 +60,16 @@ function withLittleHelperImagePromptGuardrail(prompt: string): string {
 const THANK_YOU_GRANDPARENT_PROP_NO_TEXT_CLAUSE =
   "no text, letters, or symbols on any photo album, greeting card, garden sign, plant marker, or wall art; all gifts and household items must be plain or use simple decorative motifs with no readable writing or pseudo-script";
 
+const THANK_YOU_GRANDPARENT_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same child across all pages: same round face proportions, same age impression around {childAge} years old, same hair color and style, and consistent clothing style and palette; keep each grandparent's appearance consistent too, and preserve hairstyles and facial features between pages";
+
 function withThankYouGrandparentImagePromptGuardrail(prompt: string): string {
   let result = prompt;
   if (!result.includes(THANK_YOU_GRANDPARENT_PROP_NO_TEXT_CLAUSE)) {
     result = `${result}, ${THANK_YOU_GRANDPARENT_PROP_NO_TEXT_CLAUSE}`;
+  }
+  if (!result.includes(THANK_YOU_GRANDPARENT_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${THANK_YOU_GRANDPARENT_CHARACTER_ANCHOR_CLAUSE}`;
   }
   return withFixedImagePromptSafety(result);
 }
@@ -176,10 +188,16 @@ function withCardboardRocket8pImagePromptGuardrail(prompt: string): string {
 const GRADUATION_DECOR_NO_TEXT_CLAUSE =
   "no text, letters, numbers, or symbols on any diploma, certificate, banner, poster, labels, posters, banners, garland, ribbon, school gate nameplate, or commemorative plaque; all ceremony decorations and plaques must be plain or use simple floral/geometric patterns with no readable characters or pseudo-writing";
 
+const GRADUATION_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same child across all pages: same round face proportions, same age impression around {childAge} years old, same hair color and style, and the same graduation outfit; preserve hairstyle, outfit, and facial features between pages";
+
 function withGraduationImagePromptGuardrail(prompt: string): string {
   let result = prompt;
   if (!result.includes(GRADUATION_DECOR_NO_TEXT_CLAUSE)) {
     result = `${result}, ${GRADUATION_DECOR_NO_TEXT_CLAUSE}`;
+  }
+  if (!result.includes(GRADUATION_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${GRADUATION_CHARACTER_ANCHOR_CLAUSE}`;
   }
   return withFixedImagePromptSafety(result);
 }
@@ -187,10 +205,16 @@ function withGraduationImagePromptGuardrail(prompt: string): string {
 const NEW_BABY_PROP_NO_TEXT_CLAUSE =
   "no text, letters, or logo-like marks on the crib, bassinet, baby blanket, mobile, diapers, bottles, or nursery wall art; all baby items and furniture must be plain solid color or simple nursery patterns with no readable writing";
 
+const NEW_BABY_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same older sibling child across all pages: same round face proportions, same age impression around {childAge} years old, same hair color and style, and consistent clothing style and palette; keep the new baby's appearance consistent too, and preserve hairstyles and facial features between pages";
+
 function withNewBabyImagePromptGuardrail(prompt: string): string {
   let result = prompt;
   if (!result.includes(NEW_BABY_PROP_NO_TEXT_CLAUSE)) {
     result = `${result}, ${NEW_BABY_PROP_NO_TEXT_CLAUSE}`;
+  }
+  if (!result.includes(NEW_BABY_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${NEW_BABY_CHARACTER_ANCHOR_CLAUSE}`;
   }
   return withFixedImagePromptSafety(result);
 }
@@ -198,10 +222,16 @@ function withNewBabyImagePromptGuardrail(prompt: string): string {
 const FAREWELL_MOVING_NO_TEXT_CLAUSE =
   "no text, letters, numbers, or addresses on any cardboard boxes, shipping labels, labels, posters, banners, plain packing tape, or farewell banners; all boxes must remain unmarked cardboard, and all farewell signs and cards must be plain or use simple heart/star motifs with no readable writing or pseudo-script";
 
+const FAREWELL_CHARACTER_ANCHOR_CLAUSE =
+  "keep the same child across all pages: same round face proportions, same age impression around {childAge} years old, same hair color and style, and consistent clothing style and palette; keep any friends' appearances consistent too, and preserve hairstyles and facial features between pages";
+
 function withFarewellImagePromptGuardrail(prompt: string): string {
   let result = prompt;
   if (!result.includes(FAREWELL_MOVING_NO_TEXT_CLAUSE)) {
     result = `${result}, ${FAREWELL_MOVING_NO_TEXT_CLAUSE}`;
+  }
+  if (!result.includes(FAREWELL_CHARACTER_ANCHOR_CLAUSE)) {
+    result = `${result}, ${FAREWELL_CHARACTER_ANCHOR_CLAUSE}`;
   }
   return withFixedImagePromptSafety(result);
 }
