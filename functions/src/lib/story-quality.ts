@@ -816,23 +816,25 @@ function addStoryGoalConsistencyIssues(params: {
       driftPages.push(pageIndex);
     }
 
-    if (
-      (hiddenHits.length > 0 || (forbiddenGoalHits.length > 0 && Boolean(page.hiddenDetail?.trim()))) &&
-      !hasMainQuestSignal
-    ) {
+    if (hiddenHits.length > 0 || (forbiddenGoalHits.length > 0 && Boolean(page.hiddenDetail?.trim()))) {
+      const isProminent = !hasMainQuestSignal || forbiddenGoalHits.length > 0;
       issues.push({
         severity: "warning",
-        code: "hidden_detail_used_as_main_goal",
-        message: "hiddenDetail が本文の主筋として使われている可能性があります。",
+        code: isProminent ? "hidden_detail_used_as_main_goal" : "hidden_detail_mentioned_in_text",
+        message: isProminent
+          ? "hiddenDetail が本文の主筋として使われている可能性があります。"
+          : "hiddenDetail が本文（text）で言及されています。hiddenDetail は原則として本文に出さず、絵だけの要素にしてください。",
         pageIndex,
         actual: hiddenHits.join(", ") || page.hiddenDetail,
       });
-      issues.push({
-        severity: "warning",
-        code: "hidden_detail_too_prominent",
-        message: "hiddenDetail が目立ちすぎて、主筋より前に出ている可能性があります。",
-        pageIndex,
-      });
+      if (isProminent) {
+        issues.push({
+          severity: "warning",
+          code: "hidden_detail_too_prominent",
+          message: "hiddenDetail が目立ちすぎて、主筋より前に出ている可能性があります。",
+          pageIndex,
+        });
+      }
     }
 
     if (

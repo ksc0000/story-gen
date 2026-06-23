@@ -229,6 +229,47 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "forbidden_object_became_goal")).toBe(true);
   });
 
+  it("flags hiddenDetail mentioned in text or becoming the main goal", () => {
+    const readingProfile = getAgeReadingProfile(4);
+    const story: GeneratedStory = {
+      ...baseStory,
+      storyGoal: "星をさがす",
+      mainQuestObject: "星",
+      pages: [
+        {
+          text: "こうえんに きました。ほしを さがしています。あ、あそこに すいかの くもが あります。",
+          imagePrompt: "park with watermelon cloud",
+          hiddenDetail: "すいか",
+        },
+        {
+          text: "ぼくは ほしを みつけました。きらきら しています。",
+          imagePrompt: "finding a star",
+        }
+      ],
+    };
+
+    // Case 1: mentioned in text (but main quest is also mentioned)
+    const report1 = validateGeneratedStoryQuality({ story, readingProfile });
+    expect(report1.issues.some(i => i.code === "hidden_detail_mentioned_in_text")).toBe(true);
+    expect(report1.issues.some(i => i.code === "hidden_detail_used_as_main_goal")).toBe(false);
+
+    // Case 2: becoming the main goal (mainQuestObject signal missing on that page)
+    const story2: GeneratedStory = {
+      ...story,
+      pages: [
+        {
+          text: "ぼくは すいかの くもを おいかけて いきました。どこまでも つづく あおい そらです。",
+          imagePrompt: "chasing watermelon cloud",
+          hiddenDetail: "すいか",
+        },
+        story.pages[1]
+      ]
+    };
+    const report2 = validateGeneratedStoryQuality({ story: story2, readingProfile });
+    expect(report2.issues.some(i => i.code === "hidden_detail_used_as_main_goal")).toBe(true);
+    expect(report2.issues.some(i => i.code === "hidden_detail_too_prominent")).toBe(true);
+  });
+
   it("warns when prompt constraints conflict with scene objects", () => {
     const report = validateGeneratedStoryQuality({
       story: {
