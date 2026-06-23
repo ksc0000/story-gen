@@ -65,11 +65,11 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
 6. **Semantic Content (Age 3+ Diagnostic)**:
     For books targeted at ages 3 and above (current age band: ${ageBand}), evaluate each page's story text for "semantic richness".
     Identify which of these four elements are present:
-    - **場所 (Location)**: Setting or environment description.
-    - **行動 (Action)**: Specific character movements or activities.
-    - **気持ち (Emotion)**: Internal states or feelings.
-    - **発見 (Discovery)**: Realizations or noticing something new.
-    ${isAge3Plus ? "Each page SHOULD contain at least TWO of these elements." : "This is diagnostic only for this age group."}
+    - **場所 (Location)**: Setting, environment description, or situational context.
+    - **行動 (Action)**: Specific character movements, activities, or sensory actions.
+    - **気持ち (Emotion)**: Internal states, feelings, or emotional reactions.
+    - **発見 (Discovery)**: Realizations, noticing something new, or situational changes.
+    ${isAge3Plus ? "Each page MUST contain at least TWO of these elements to meet the quality standard for this age group. Missing these elements is a quality failure." : "This is diagnostic only for this age group."}
 
 ## Axis-Level Evaluation (0-100 for each)
 You must also provide granular scores for the following axes:
