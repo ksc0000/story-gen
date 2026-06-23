@@ -40,6 +40,7 @@ import {
   OPENAI_IMAGE_CANDIDATE_PROFILE,
   OPENAI_MINI_PROFILE,
   OPENAI_STANDARD_PROFILE,
+  OPENAI_GPT_IMAGE_2_PROFILE,
   resolveOpenAIModelLabel,
   type OpenAIClientOptions,
 } from "./openai-image";
@@ -145,6 +146,8 @@ export class OpenAIImageAdapter implements ImageProvider {
       inputImageUrls = []; // T6-62: OpenAI Mini does not support reference images
     } else if (profile === "openai_standard") {
       opts = OPENAI_STANDARD_PROFILE;
+    } else if (profile === "openai_gpt_image_2") {
+      opts = OPENAI_GPT_IMAGE_2_PROFILE;
     } else if (profile === "openai_image_candidate") {
       opts = OPENAI_IMAGE_CANDIDATE_PROFILE;
     } else {
@@ -223,6 +226,9 @@ export class OpenAIImageAdapter implements ImageProvider {
     }
     if (profile === "openai_standard") {
       return resolveOpenAIModelLabel(false, OPENAI_STANDARD_PROFILE);
+    }
+    if (profile === "openai_gpt_image_2") {
+      return resolveOpenAIModelLabel(false, OPENAI_GPT_IMAGE_2_PROFILE);
     }
     if (profile === "openai_image_candidate") {
       return resolveOpenAIModelLabel(false, OPENAI_IMAGE_CANDIDATE_PROFILE);

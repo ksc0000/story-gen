@@ -42,9 +42,13 @@ const MODEL_PROFILE_OPTIONS: Array<{
   label: string;
   disabled?: boolean;
 }> = [
-  { value: "klein_fast", label: "klein_fast" },
-  { value: "klein_base", label: "klein_base" },
-  { value: "pro_consistent", label: "pro_consistent" },
+  { value: "klein_fast", label: "klein_fast (flux-2-klein)" },
+  { value: "klein_base", label: "klein_base (flux-2-klein-base)" },
+  { value: "pro_consistent", label: "pro_consistent (flux-2-pro / 現Premium)" },
+  { value: "kontext_max", label: "kontext_max (flux-kontext-max / 一貫性◎)" },
+  { value: "openai_standard", label: "openai_standard (gpt-image-1)" },
+  { value: "openai_gpt_image_2", label: "openai_gpt_image_2 (gpt-image-2 / 最新)" },
+  { value: "openai_mini", label: "openai_mini (gpt-image-1-mini / 安価)" },
   { value: "kontext_reference", label: "kontext_reference", disabled: true },
 ];
 
@@ -71,7 +75,11 @@ const PROFILE_RESULT_ORDER: ImageModelProfile[] = [
   "klein_fast",
   "klein_base",
   "pro_consistent",
+  "kontext_max",
   "kontext_reference",
+  "openai_mini",
+  "openai_standard",
+  "openai_gpt_image_2",
 ];
 
 function sortResults(results: TestImageModelsResult["results"]) {
@@ -110,6 +118,7 @@ export default function AdminImageModelTestsPage() {
   const [result, setResult] = useState<TestImageModelsResult | null>(null);
   const [executedAt, setExecutedAt] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [selectedWinner, setSelectedWinner] = useState<string | null>(null);
   const [tierMemos, setTierMemos] = useState<Record<ImageQualityTier, string>>({
     light: "",
     standard: "",
@@ -198,7 +207,7 @@ export default function AdminImageModelTestsPage() {
       <div className="space-y-3">
         <h1 className="text-2xl font-bold text-purple-900">画像モデル比較</h1>
         <p className="text-sm text-violet-600">
-          同じプロンプトと参照画像で light / standard / premium を比較します。通常の絵本生成設定は変更されません。
+          同じプロンプトと参照画像で複数モデル（flux 系・gpt-image 系）を並列生成して横並び比較します。各モデルを跨いで同時実行し、生成時間と概算コストも表示。通常の絵本生成設定は変更されません。
         </p>
       </div>
 
@@ -414,7 +423,7 @@ export default function AdminImageModelTestsPage() {
                   {submitting ? "比較生成中..." : "比較生成する"}
                 </Button>
                 <div className="space-y-1 text-xs leading-relaxed text-violet-500">
-                  <p>この画面は管理者向けの検証用です。実行すると実際にReplicate APIを呼び出し、画像生成コストが発生します。</p>
+                  <p>この画面は管理者向けの検証用です。実行すると実際に Replicate / OpenAI API を呼び出し、選択したモデルの枚数分の画像生成コストが発生します（gpt-image 系は高品質設定のため割高）。</p>
                   <p>現在、light と standard はどちらも flux-2-klein-9b を使用します。premium は flux-2-pro を使用します。</p>
                 </div>
               </div>
@@ -447,45 +456,92 @@ export default function AdminImageModelTestsPage() {
           </Card>
 
           <div className="grid gap-4 md:grid-cols-3">
-            {result.results.map((item) => (
+            {result.results.map((item) => {
+              const itemKey = item.modelProfile ?? item.tier ?? item.model;
+              const isWinner = selectedWinner === itemKey;
+              return (
               <Card
-                key={`${result.batchId}-${item.tier ?? item.modelProfile ?? item.model}`}
-                className="overflow-hidden"
+                key={`${result.batchId}-${itemKey}`}
+                className={`overflow-hidden transition ${
+                  isWinner ? "ring-2 ring-emerald-400 shadow-lg" : ""
+                }`}
               >
                 <CardContent className="space-y-4 p-4">
-                  <div>
-                    <p className="text-sm font-semibold text-purple-900">
-                      {item.modelProfile ?? item.tier}
-                    </p>
-                    <p className="mt-1 break-all text-xs text-violet-500">{item.model}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-purple-900">
+                        {item.modelProfile ?? item.tier}
+                        {isWinner && (
+                          <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                            採用
+                          </span>
+                        )}
+                      </p>
+                      <p className="mt-1 break-all text-xs text-violet-500">{item.model}</p>
+                    </div>
+                    <div className="shrink-0 text-right text-[11px] text-violet-600">
+                      {typeof item.latencyMs === "number" && (
+                        <p>{(item.latencyMs / 1000).toFixed(1)}s</p>
+                      )}
+                      {typeof item.estimatedCostUsd === "number" && (
+                        <p>≈${item.estimatedCostUsd.toFixed(3)}/枚</p>
+                      )}
+                    </div>
                   </div>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.imageUrl}
-                    alt={`${item.tier} generated comparison`}
-                    className="aspect-[4/3] w-full rounded-2xl border border-[rgba(240,171,252,0.3)] object-cover"
-                  />
-                  <div className="flex flex-wrap gap-2">
-                    <a
-                      href={item.imageUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-700"
-                    >
-                      画像URLを開く
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyUrl(item.imageUrl)}
-                      className="rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700"
-                    >
-                      {copiedUrl === item.imageUrl ? "コピーしました" : "URLをコピー"}
-                    </button>
-                  </div>
+
+                  {item.error ? (
+                    <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-700">
+                      <p className="font-semibold">生成に失敗しました</p>
+                      <p className="mt-1 break-all">{item.error}</p>
+                    </div>
+                  ) : item.imageUrl ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.imageUrl}
+                        alt={`${item.modelProfile ?? item.tier} generated comparison`}
+                        className="aspect-[4/3] w-full rounded-2xl border border-[rgba(240,171,252,0.3)] object-cover"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedWinner(isWinner ? null : itemKey)}
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            isWinner
+                              ? "bg-emerald-500 text-white"
+                              : "bg-emerald-100 text-emerald-700"
+                          }`}
+                        >
+                          {isWinner ? "採用中（解除）" : "このモデルを採用"}
+                        </button>
+                        <a
+                          href={item.imageUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-700"
+                        >
+                          画像URLを開く
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyUrl(item.imageUrl!)}
+                          className="rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700"
+                        >
+                          {copiedUrl === item.imageUrl ? "コピーしました" : "URLをコピー"}
+                        </button>
+                      </div>
+                    </>
+                  ) : null}
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
+          {selectedWinner && (
+            <p className="text-sm font-medium text-emerald-700">
+              採用中のモデル: <span className="font-bold">{selectedWinner}</span>
+            </p>
+          )}
 
           <Card>
             <CardContent className="space-y-5 p-6">

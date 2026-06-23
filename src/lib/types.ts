@@ -22,7 +22,8 @@ export type ImageModelProfile =
   | "kontext_reference"
   | "kontext_max"
   | "openai_mini"
-  | "openai_standard";
+  | "openai_standard"
+  | "openai_gpt_image_2";
 export type InputImageRole = "character_reference" | "style_reference" | "prev_page_reference";
 export type InputImageSource =
   | "approvedImageUrl"

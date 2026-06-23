@@ -104,9 +104,19 @@ const ESTIMATED_COST_PER_IMAGE: Record<string, number> = {
   "black-forest-labs/flux-schnell": 0.003,
   "openai/gpt-image-1-mini": 0.011,
   "openai/gpt-image-1": 0.042,
+  "openai/gpt-image-2": 0.08, // estimate (high quality); refine once billed usage is observed
   "openai/gpt-4o": 0.042,
   "dall-e-3": 0.04,
 };
+
+/**
+ * Returns the estimated USD cost per image for a resolved model label
+ * (e.g. "openai/gpt-image-2", "black-forest-labs/flux-2-pro"), or undefined
+ * if the label is unknown. Used by the admin image-model comparison tool.
+ */
+export function getEstimatedImageCostForModel(modelLabel: string): number | undefined {
+  return ESTIMATED_COST_PER_IMAGE[modelLabel];
+}
 
 function getEstimatedImageCost(page: PageLike): number {
   if (page.imageModel && ESTIMATED_COST_PER_IMAGE[page.imageModel]) {
@@ -124,6 +134,7 @@ function getEstimatedImageCost(page: PageLike): number {
       kontext_max: 0.05,
       openai_mini: 0.011,
       openai_standard: 0.042,
+      openai_gpt_image_2: 0.08,
       flux11_pro_candidate: 0.04,
       openai_image_candidate: 0.042,
     };
