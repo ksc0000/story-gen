@@ -198,6 +198,7 @@
     "PR #587: Enhance pageVisualRole Application for Increased Image Compositional Variety (merged)",
     "PR #599: chore: AIループの自動スケジュールを停止（商用化フェーズ） (merged)",
     "PR #601: feat: テスター向けクーポンコード機能（生成クレジット付与） (merged)",
+    "PR #602: fix: 生成プロンプトPRマージ後の回帰修正（型/レート制限フェイルオープン/閾値） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
