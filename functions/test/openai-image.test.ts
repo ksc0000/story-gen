@@ -4,6 +4,7 @@ import {
   OPENAI_IMAGE_CANDIDATE_PROFILE,
   OPENAI_MINI_PROFILE,
   OPENAI_STANDARD_PROFILE,
+  OPENAI_GPT_IMAGE_2_PROFILE,
   REFERENCE_IMAGE_SYSTEM_INSTRUCTION,
   REFERENCE_IMAGE_PROMPT_PREFIX,
   REFERENCE_IMAGE_PROMPT_SUFFIX,
@@ -12,13 +13,15 @@ import {
 
 const mockGenerate = vi.fn();
 const mockResponsesCreate = vi.fn();
+const mockEdit = vi.fn();
 
 vi.mock("openai", () => {
   return {
     default: vi.fn().mockImplementation(() => ({
-      images: { generate: mockGenerate },
+      images: { generate: mockGenerate, edit: mockEdit },
       responses: { create: mockResponsesCreate },
     })),
+    toFile: vi.fn(async (buffer: Buffer, name: string) => ({ name, buffer })),
   };
 });
 
@@ -26,6 +29,7 @@ describe("OpenAIImageClient", () => {
   beforeEach(() => {
     mockGenerate.mockReset();
     mockResponsesCreate.mockReset();
+    mockEdit.mockReset();
   });
 
   describe("Profiles (T6-62)", () => {
@@ -136,6 +140,36 @@ describe("OpenAIImageClient", () => {
 
       const client = new OpenAIImageClient("sk-test-key", OPENAI_IMAGE_CANDIDATE_PROFILE);
       await expect(client.generateImage("test")).rejects.toThrow("No image output from OpenAI Image API");
+    });
+  });
+
+  describe("generateImage (gpt-image-2 reference images via Images edit API)", () => {
+    it("routes gpt-image-2 reference images through images.edit, not responses.create", async () => {
+      const fakeB64 = Buffer.from("edit-image-data").toString("base64");
+      mockEdit.mockResolvedValue({ data: [{ b64_json: fakeB64 }] });
+      const fetchSpy = vi
+        .fn()
+        .mockResolvedValue({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) });
+      vi.stubGlobal("fetch", fetchSpy);
+
+      const client = new OpenAIImageClient("sk-test-key", OPENAI_GPT_IMAGE_2_PROFILE);
+      const result = await client.generateImage("a watercolor child", {
+        inputImageUrls: ["https://example.com/child-ref.png"],
+      });
+
+      expect(result.toString()).toBe("edit-image-data");
+      expect(mockEdit).toHaveBeenCalledOnce();
+      expect(mockResponsesCreate).not.toHaveBeenCalled();
+
+      const call = mockEdit.mock.calls[0][0];
+      expect(call.model).toBe("gpt-image-2");
+      expect(Array.isArray(call.image)).toBe(true);
+      expect(call.image).toHaveLength(1);
+      expect(call.prompt).toContain("a watercolor child");
+      // reference image was downloaded before being passed to the edit endpoint
+      expect(fetchSpy).toHaveBeenCalledWith("https://example.com/child-ref.png");
+
+      vi.unstubAllGlobals();
     });
   });
 
