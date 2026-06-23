@@ -961,7 +961,7 @@ describe("prompt length regression (P5-3j)", () => {
     expect(result.length).toBeLessThan(8500);
   });
 
-  it("non-animals non-star prompt (base case) stays under 6300 chars", () => {
+  it("non-animals non-star prompt (base case) stays under 6400 chars", () => {
     const result = buildImagePrompt(
       "A child plays in a sunny garden with flowers",
       "watercolor",
@@ -969,6 +969,8 @@ describe("prompt length regression (P5-3j)", () => {
       "soft watercolor picture book palette",
       { imageModelProfile: "pro_consistent", ageBand: "preschool_3_4" }
     );
-    expect(result.length).toBeLessThan(6300);
+    // 閾値を 6300→6400 に小幅調整: #568(水彩descriptor/ネガティブ規則)・#545(キャラ重複ガード)・
+    // #587(構図ヒント) の正当な品質追加が累積したため。引き続きプロンプト肥大は監視する。
+    expect(result.length).toBeLessThan(6400);
   });
 });

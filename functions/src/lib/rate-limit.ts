@@ -27,13 +27,17 @@ export async function isRateLimited(
     return false;
   }
 
+  // フェイルオープン: db が無い/トランザクション不可なら制限しない（生成をブロックしない）。
+  if (!db || typeof db.runTransaction !== "function") {
+    return false;
+  }
+
   const { maxRequests, windowSeconds } = options;
   const now = Date.now();
   const cutoff = now - windowSeconds * 1000;
 
-  const docRef = db.collection("rateLimits").doc(`${userId}_${action}`);
-
   try {
+    const docRef = db.collection("rateLimits").doc(`${userId}_${action}`);
     const isLimited = await db.runTransaction(async (transaction) => {
       const doc = await transaction.get(docRef);
       const data = doc.data();
