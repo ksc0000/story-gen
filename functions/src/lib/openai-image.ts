@@ -68,6 +68,7 @@ export const REFERENCE_IMAGE_PROMPT_SUFFIX =
 
 export const OPENAI_MINI_MODEL = "gpt-image-1-mini";
 export const OPENAI_STANDARD_MODEL = "gpt-image-1";
+export const OPENAI_GPT_IMAGE_2_MODEL = "gpt-image-2";
 
 /** I1/I2 smoke profile: lowest cost, E005 relaxation test */
 export const OPENAI_IMAGE_CANDIDATE_PROFILE: OpenAIClientOptions = {
@@ -95,6 +96,40 @@ export const OPENAI_STANDARD_PROFILE: OpenAIClientOptions = {
   quality: "low",
   size: "1024x1024",
 };
+
+/**
+ * GPT-image-2 eval profile. Latest OpenAI image model — strongest instruction
+ * following (reliably honors "no text" / "no signage") and sharp text control.
+ * Run at high quality so the comparison reflects the model's best output.
+ */
+export const OPENAI_GPT_IMAGE_2_PROFILE: OpenAIClientOptions = {
+  model: OPENAI_GPT_IMAGE_2_MODEL,
+  responsesModel: "gpt-4o",
+  moderation: "low",
+  quality: "high",
+  size: "1024x1024",
+};
+
+/**
+ * Maps an OpenAI-backed ImageModelProfile to its client options.
+ * Returns undefined for non-OpenAI (Replicate) profiles.
+ */
+export function resolveOpenAIProfileOptions(
+  profile: ImageModelProfile
+): OpenAIClientOptions | undefined {
+  switch (profile) {
+    case "openai_mini":
+      return OPENAI_MINI_PROFILE;
+    case "openai_standard":
+      return OPENAI_STANDARD_PROFILE;
+    case "openai_gpt_image_2":
+      return OPENAI_GPT_IMAGE_2_PROFILE;
+    case "openai_image_candidate":
+      return OPENAI_IMAGE_CANDIDATE_PROFILE;
+    default:
+      return undefined;
+  }
+}
 
 /**
  * Returns the correct imageModel label for Firestore page metadata when using OpenAI generation.

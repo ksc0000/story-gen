@@ -10,8 +10,16 @@ import type {
   InputImageRole,
 } from "./lib/types";
 import { ReplicateImageClient, resolveReplicateModel } from "./lib/replicate";
-import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE } from "./lib/openai-image";
+import {
+  OpenAIImageClient,
+  OPENAI_IMAGE_CANDIDATE_PROFILE,
+  resolveOpenAIProfileOptions,
+  resolveOpenAIModelLabel,
+} from "./lib/openai-image";
+import { PROFILE_PROVIDER_MAP } from "./lib/image-provider";
+import { getEstimatedImageCostForModel } from "./lib/slo-metrics";
 import { getIllustrationStyleProfile } from "./lib/illustration-styles";
+import type { ImageClient } from "./lib/types";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 const openaiApiKey = defineSecret("OPENAI_API_KEY");
@@ -104,43 +112,81 @@ export const testImageModels = onCall(
       inputImageRoles,
     } = normalized;
 
-    const useOpenAI = modelProfiles.includes("openai_image_candidate");
-    const imageClient = useOpenAI
-      ? new OpenAIImageClient(openaiApiKey.value(), OPENAI_IMAGE_CANDIDATE_PROFILE)
-      : new ReplicateImageClient(replicateApiToken.value());
     const bucket = admin.storage().bucket("story-gen-8a769.firebasestorage.app");
     const batchId = randomUUID();
+    const hasReferenceImages = inputImageUrls.length > 0;
+
+    // Route each profile to its owning provider so cross-provider batches
+    // (e.g. gpt-image-2 vs flux-2-pro) compare correctly in a single run.
+    const clientForProfile = (modelProfile: ImageModelProfile): ImageClient => {
+      if (PROFILE_PROVIDER_MAP[modelProfile] === "openai") {
+        const opts = resolveOpenAIProfileOptions(modelProfile) ?? OPENAI_IMAGE_CANDIDATE_PROFILE;
+        return new OpenAIImageClient(openaiApiKey.value(), opts);
+      }
+      return new ReplicateImageClient(replicateApiToken.value());
+    };
+
+    const labelForProfile = (modelProfile: ImageModelProfile): string => {
+      if (PROFILE_PROVIDER_MAP[modelProfile] === "openai") {
+        const opts = resolveOpenAIProfileOptions(modelProfile) ?? OPENAI_IMAGE_CANDIDATE_PROFILE;
+        return resolveOpenAIModelLabel(hasReferenceImages, opts);
+      }
+      return resolveReplicateModel({ purpose, imageModelProfile: modelProfile });
+    };
+
     const results: Array<{
       tier?: ImageQualityTier;
       modelProfile?: ImageModelProfile;
       model: string;
-      imageUrl: string;
+      imageUrl?: string;
+      latencyMs?: number;
+      estimatedCostUsd?: number;
+      error?: string;
     }> = [];
 
     if (compareByModelProfile) {
-      for (const modelProfile of modelProfiles) {
-        const imageBuffer = await imageClient.generateImage(data.prompt, {
-          purpose,
-          imageModelProfile: modelProfile,
-          inputImageUrls,
-        });
-        const filename = `internal-tests/image-models/${batchId}/${modelProfile}.png`;
-        const token = randomUUID();
-        await bucket.file(filename).save(imageBuffer, {
-          contentType: "image/png",
-          metadata: {
-            metadata: {
-              firebaseStorageDownloadTokens: token,
-            },
-          },
-        });
+      // Generate every profile in parallel; one failure must not abort the batch.
+      const settled = await Promise.allSettled(
+        modelProfiles.map(async (modelProfile) => {
+          const model = labelForProfile(modelProfile);
+          const startedAt = Date.now();
+          const imageBuffer = await clientForProfile(modelProfile).generateImage(data.prompt, {
+            purpose,
+            imageModelProfile: modelProfile,
+            inputImageUrls,
+          });
+          const latencyMs = Date.now() - startedAt;
+          const filename = `internal-tests/image-models/${batchId}/${modelProfile}.png`;
+          const token = randomUUID();
+          await bucket.file(filename).save(imageBuffer, {
+            contentType: "image/png",
+            metadata: { metadata: { firebaseStorageDownloadTokens: token } },
+          });
+          return {
+            modelProfile,
+            model,
+            imageUrl: `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${token}`,
+            latencyMs,
+            estimatedCostUsd: getEstimatedImageCostForModel(model),
+          };
+        })
+      );
 
-        results.push({
-          modelProfile,
-          model: resolveReplicateModel({ purpose, imageModelProfile: modelProfile }),
-          imageUrl: `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${token}`,
-        });
-      }
+      settled.forEach((outcome, index) => {
+        if (outcome.status === "fulfilled") {
+          results.push(outcome.value);
+        } else {
+          const modelProfile = modelProfiles[index];
+          results.push({
+            modelProfile,
+            model: labelForProfile(modelProfile),
+            error:
+              outcome.reason instanceof Error
+                ? outcome.reason.message
+                : String(outcome.reason),
+          });
+        }
+      });
 
       return {
         batchId,
@@ -150,6 +196,9 @@ export const testImageModels = onCall(
         results,
       };
     }
+
+    const tierImageClient = new ReplicateImageClient(replicateApiToken.value());
+    const imageClient = tierImageClient;
 
     for (const tier of qualityTiers) {
       const imageBuffer = await imageClient.generateImage(data.prompt, {

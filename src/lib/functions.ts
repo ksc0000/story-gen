@@ -57,7 +57,10 @@ export type TestImageModelsResult = {
     tier?: ImageQualityTier;
     modelProfile?: ImageModelProfile;
     model: string;
-    imageUrl: string;
+    imageUrl?: string;
+    latencyMs?: number;
+    estimatedCostUsd?: number;
+    error?: string;
   }>;
 };
 

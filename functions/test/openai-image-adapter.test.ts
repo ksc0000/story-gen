@@ -527,14 +527,15 @@ describe("PROFILE_PROVIDER_MAP consistency with OpenAIImageAdapter", () => {
     }
   });
 
-  it("three openai profiles in PROFILE_PROVIDER_MAP (openai_mini, openai_standard, openai_image_candidate)", () => {
+  it("four openai profiles in PROFILE_PROVIDER_MAP (openai_mini, openai_standard, openai_gpt_image_2, openai_image_candidate)", () => {
     const openaiProfiles = Object.entries(PROFILE_PROVIDER_MAP).filter(
       ([, v]) => v === "openai"
     );
-    expect(openaiProfiles).toHaveLength(3);
+    expect(openaiProfiles).toHaveLength(4);
     const profiles = openaiProfiles.map(([p]) => p);
     expect(profiles).toContain("openai_mini");
     expect(profiles).toContain("openai_standard");
+    expect(profiles).toContain("openai_gpt_image_2");
     expect(profiles).toContain("openai_image_candidate");
   });
 });
