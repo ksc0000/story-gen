@@ -55,6 +55,7 @@ export async function generateCoverImageWithFallback(params: {
   bookId: string;
   imageQualityTier: ImageQualityTier;
   imageModelProfile?: ImageModelProfile;
+  isSinglePurchase?: boolean;
   inputImageUrls?: string[];
   replicateApiToken?: string;
   openaiApiKey?: string;
@@ -74,6 +75,7 @@ export async function generateCoverImageWithFallback(params: {
     purpose: "book_cover",
     imageQualityTier: params.imageQualityTier,
     imageModelProfile: params.imageModelProfile,
+    isSinglePurchase: params.isSinglePurchase,
   });
   const fallbackProfiles = resolveImageFallbackProfiles(primaryProfile);
   const startMs = Date.now();

@@ -23,7 +23,9 @@ export type ImageModelProfile =
   | "kontext_max"
   | "openai_mini"             // T6-62: GPT-image-1-mini (free tier)
   | "openai_standard"         // T6-62: GPT-image-1 (standard tier)
-  | "openai_gpt_image_2"      // diagnostic/eval: GPT-image-2 (latest, strong instruction following)
+  | "openai_gpt_image_2"        // GPT-image-2 high (単品購入 / child_avatar / 高品質)
+  | "openai_gpt_image_2_medium" // GPT-image-2 medium (Standard / Premium サブスク)
+  | "openai_gpt_image_2_low"    // GPT-image-2 low (Free)
   | "flux11_pro_candidate"    // T6-37: diagnostic only — not for production routing
   | "openai_image_candidate"; // T6-43: diagnostic only — OpenAI Image E005 smoke test
 export type InputImageRole = "character_reference" | "style_reference" | "prev_page_reference";

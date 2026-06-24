@@ -129,29 +129,66 @@ describe("resolveImageModelProfile — default routing", () => {
   });
 
   it("returns pro_consistent for premium quality tier (flag off, default)", () => {
-    delete process.env.ENABLE_GPT_IMAGE_2_PREMIUM;
+    delete process.env.ENABLE_GPT_IMAGE_2;
     expect(resolveImageModelProfile({ imageQualityTier: "premium" })).toBe("pro_consistent");
   });
 
-  it("routes premium tier to gpt-image-2 when ENABLE_GPT_IMAGE_2_PREMIUM=true", () => {
-    const prev = process.env.ENABLE_GPT_IMAGE_2_PREMIUM;
-    process.env.ENABLE_GPT_IMAGE_2_PREMIUM = "true";
-    try {
-      expect(resolveImageModelProfile({ imageQualityTier: "premium" })).toBe("openai_gpt_image_2");
-      // child_avatar still forces pro_consistent regardless of the flag.
+  describe("full cutover — ENABLE_GPT_IMAGE_2=true", () => {
+    let prev: string | undefined;
+    beforeEach(() => {
+      prev = process.env.ENABLE_GPT_IMAGE_2;
+      process.env.ENABLE_GPT_IMAGE_2 = "true";
+    });
+    afterEach(() => {
+      if (prev === undefined) delete process.env.ENABLE_GPT_IMAGE_2;
+      else process.env.ENABLE_GPT_IMAGE_2 = prev;
+    });
+
+    it("free/light → gpt-image-2 low", () => {
+      expect(resolveImageModelProfile({ imageQualityTier: "light" })).toBe("openai_gpt_image_2_low");
+      expect(resolveImageModelProfile({})).toBe("openai_gpt_image_2_low");
+    });
+
+    it("standard / premium subscription → gpt-image-2 medium", () => {
+      expect(resolveImageModelProfile({ imageQualityTier: "standard" })).toBe("openai_gpt_image_2_medium");
+      expect(resolveImageModelProfile({ imageQualityTier: "premium" })).toBe("openai_gpt_image_2_medium");
+    });
+
+    it("single purchase → gpt-image-2 high (overrides tier)", () => {
+      expect(
+        resolveImageModelProfile({ imageQualityTier: "premium", isSinglePurchase: true })
+      ).toBe("openai_gpt_image_2");
+      expect(
+        resolveImageModelProfile({ imageQualityTier: "light", isSinglePurchase: true })
+      ).toBe("openai_gpt_image_2");
+    });
+
+    it("child_avatar → gpt-image-2 high", () => {
       expect(resolveImageModelProfile({ purpose: "child_avatar", imageQualityTier: "premium" })).toBe(
-        "pro_consistent"
+        "openai_gpt_image_2"
       );
-    } finally {
-      if (prev === undefined) delete process.env.ENABLE_GPT_IMAGE_2_PREMIUM;
-      else process.env.ENABLE_GPT_IMAGE_2_PREMIUM = prev;
-    }
+    });
+
+    it("explicit imageModelProfile still wins", () => {
+      expect(
+        resolveImageModelProfile({ imageQualityTier: "premium", imageModelProfile: "kontext_max" })
+      ).toBe("kontext_max");
+    });
   });
 
-  it("gpt-image-2 falls back to flux-2-pro then klein_fast", () => {
+  it("gpt-image-2 fallback chains", () => {
     expect(resolveImageFallbackProfiles("openai_gpt_image_2")).toEqual([
       "openai_gpt_image_2",
       "pro_consistent",
+      "klein_fast",
+    ]);
+    expect(resolveImageFallbackProfiles("openai_gpt_image_2_medium")).toEqual([
+      "openai_gpt_image_2_medium",
+      "pro_consistent",
+      "klein_fast",
+    ]);
+    expect(resolveImageFallbackProfiles("openai_gpt_image_2_low")).toEqual([
+      "openai_gpt_image_2_low",
       "klein_fast",
     ]);
   });

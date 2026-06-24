@@ -110,6 +110,24 @@ export const OPENAI_GPT_IMAGE_2_PROFILE: OpenAIClientOptions = {
   size: "1024x1024",
 };
 
+/** GPT-image-2 medium — Standard / Premium サブスク向け（コスト/品質バランス）。 */
+export const OPENAI_GPT_IMAGE_2_MEDIUM_PROFILE: OpenAIClientOptions = {
+  model: OPENAI_GPT_IMAGE_2_MODEL,
+  responsesModel: "gpt-4o",
+  moderation: "low",
+  quality: "medium",
+  size: "1024x1024",
+};
+
+/** GPT-image-2 low — Free 向け（最安・全冊を高品質化）。 */
+export const OPENAI_GPT_IMAGE_2_LOW_PROFILE: OpenAIClientOptions = {
+  model: OPENAI_GPT_IMAGE_2_MODEL,
+  responsesModel: "gpt-4o",
+  moderation: "low",
+  quality: "low",
+  size: "1024x1024",
+};
+
 /**
  * Maps an OpenAI-backed ImageModelProfile to its client options.
  * Returns undefined for non-OpenAI (Replicate) profiles.
@@ -124,6 +142,10 @@ export function resolveOpenAIProfileOptions(
       return OPENAI_STANDARD_PROFILE;
     case "openai_gpt_image_2":
       return OPENAI_GPT_IMAGE_2_PROFILE;
+    case "openai_gpt_image_2_medium":
+      return OPENAI_GPT_IMAGE_2_MEDIUM_PROFILE;
+    case "openai_gpt_image_2_low":
+      return OPENAI_GPT_IMAGE_2_LOW_PROFILE;
     case "openai_image_candidate":
       return OPENAI_IMAGE_CANDIDATE_PROFILE;
     default:
