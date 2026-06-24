@@ -78,6 +78,23 @@ export async function testImageModelsCallable(
   return result.data as TestImageModelsResult;
 }
 
+export type RegenerateStylePreviewsResult = {
+  count: number;
+  results: Array<{ styleId: string; url?: string; error?: string }>;
+};
+
+export async function regenerateStylePreviewsCallable(
+  styleIds?: string[]
+): Promise<RegenerateStylePreviewsResult> {
+  // 11スタイル × gpt-image-2 high は数分かかるため timeout を延長。
+  const callable = await getCallable<{ styleIds?: string[] }, RegenerateStylePreviewsResult>(
+    "regenerateStylePreviews",
+    { timeout: 540000 }
+  );
+  const result = await callable({ styleIds });
+  return result.data as RegenerateStylePreviewsResult;
+}
+
 export type BootstrapAdminResult = {
   ok: boolean;
   admin: boolean;
