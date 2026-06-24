@@ -37,6 +37,16 @@ function isKleinBaseEnabled(): boolean {
   return process.env.ENABLE_KLEIN_BASE === "true";
 }
 
+/**
+ * Returns true when ENABLE_GPT_IMAGE_2_PREMIUM is "true". Gates routing the
+ * premium quality tier to gpt-image-2 (Images API / edit endpoint) instead of
+ * flux-2-pro. Default OFF — flip the env var to activate after visual A/B sign-off.
+ * Module-private — not exported.
+ */
+function isGptImage2PremiumEnabled(): boolean {
+  return process.env.ENABLE_GPT_IMAGE_2_PREMIUM === "true";
+}
+
 // -------------------------------------------------------------------------
 // Candidate profile registry
 // -------------------------------------------------------------------------
@@ -94,7 +104,7 @@ export function resolveImageModelProfile(params: {
   }
 
   if (params.imageQualityTier === "premium") {
-    return "pro_consistent";
+    return isGptImage2PremiumEnabled() ? "openai_gpt_image_2" : "pro_consistent";
   }
 
   if (params.imageQualityTier === "standard" && isKleinBaseEnabled()) {
@@ -125,6 +135,9 @@ export function resolveImageModelProfile(params: {
  */
 export function resolveImageFallbackProfiles(profile: ImageModelProfile): ImageModelProfile[] {
   switch (profile) {
+    case "openai_gpt_image_2":
+      // Premium gpt-image-2 → fall back to flux-2-pro, then klein_fast last resort.
+      return ["openai_gpt_image_2", "pro_consistent", "klein_fast"];
     case "openai_standard":
       return ["openai_standard", "klein_fast"];
     case "openai_mini":
@@ -154,5 +167,5 @@ export function resolveImageFallbackProfiles(profile: ImageModelProfile): ImageM
  * P3-8: replicate.ts re-exports this function.
  */
 export function isSaferRetryEnabled(profile: ImageModelProfile): boolean {
-  return profile === "pro_consistent" || profile === "openai_standard" || profile === "openai_mini" || profile === "kontext_max";
+  return profile === "pro_consistent" || profile === "openai_standard" || profile === "openai_mini" || profile === "kontext_max" || profile === "openai_gpt_image_2";
 }
