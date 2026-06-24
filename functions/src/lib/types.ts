@@ -177,6 +177,26 @@ export interface AdminAuditLog {
   createdAtMs: number;
 }
 
+export type ReplicatePredictionStatus =
+  | "starting"
+  | "processing"
+  | "succeeded"
+  | "failed"
+  | "canceled";
+
+export interface ReplicatePredictionDoc {
+  id: string; // Replicate prediction ID
+  status: ReplicatePredictionStatus;
+  targetId: string;
+  targetType: "book_page" | "book_cover" | "child_avatar" | "companion_image";
+  metadata?: Record<string, unknown>;
+  error?: string | null;
+  output?: unknown;
+  createdAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+  updatedAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+  completedAt?: FirebaseFirestore.Timestamp | null;
+}
+
 export type IllustrationStyleProfile = {
   id: IllustrationStyle;
   name: string;

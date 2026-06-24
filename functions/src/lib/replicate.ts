@@ -1,9 +1,11 @@
 import Replicate from "replicate";
+import * as admin from "firebase-admin";
 import type {
   ImageClient,
   ImageModelProfile,
   ImagePurpose,
   ImageQualityTier,
+  ReplicatePredictionDoc,
 } from "./types";
 // P3-8: Policy functions extracted to image-model-policy.ts.
 // Imported here for local use (generateImageWithMetadata uses resolveImageModelProfile).
@@ -219,11 +221,89 @@ export class ImageTimeoutError extends Error {
   }
 }
 
+export const REPLICATE_PREDICTIONS_COLLECTION = "replicatePredictions";
+
+/**
+ * Utility to save or update a Replicate prediction record in Firestore.
+ */
+export async function recordPrediction(
+  db: FirebaseFirestore.Firestore,
+  prediction: Partial<ReplicatePredictionDoc> & { id: string }
+): Promise<void> {
+  const docRef = db.collection(REPLICATE_PREDICTIONS_COLLECTION).doc(prediction.id);
+  await docRef.set(
+    {
+      ...prediction,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
 export class ReplicateImageClient implements ImageClient {
   private replicate: Replicate;
 
   constructor(apiToken: string) {
     this.replicate = new Replicate({ auth: apiToken });
+  }
+
+  /**
+   * Starts an asynchronous image generation prediction using Replicate.
+   */
+  async createPrediction(params: {
+    prompt: string;
+    targetId: string;
+    targetType: ReplicatePredictionDoc["targetType"];
+    inputImageUrls?: string[];
+    purpose?: ImagePurpose;
+    imageQualityTier?: ImageQualityTier;
+    imageModelProfile?: ImageModelProfile;
+    webhookUrl?: string;
+    db: FirebaseFirestore.Firestore;
+    metadata?: Record<string, unknown>;
+  }): Promise<string> {
+    const modelProfile = resolveImageModelProfile({
+      purpose: params.purpose,
+      imageQualityTier: params.imageQualityTier,
+      imageModelProfile: params.imageModelProfile,
+    });
+    const modelName = resolveReplicateModel({
+      purpose: params.purpose,
+      imageQualityTier: params.imageQualityTier,
+      imageModelProfile: params.imageModelProfile,
+    });
+
+    const input = buildReplicateInput({
+      model: modelName,
+      prompt: params.prompt,
+      inputImageUrls: params.inputImageUrls,
+    });
+
+    // Replicate SDK uses predictions.create.
+    // For models on replicate.com, version is usually required.
+    // However, some official models support model name directly.
+    const prediction = await this.replicate.predictions.create({
+      model: modelName,
+      input,
+      webhook: params.webhookUrl,
+      webhook_events_filter: ["completed"],
+    });
+
+    await recordPrediction(params.db, {
+      id: prediction.id,
+      status: "starting",
+      targetId: params.targetId,
+      targetType: params.targetType,
+      metadata: {
+        ...params.metadata,
+        modelName,
+        modelProfile,
+      },
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return prediction.id;
   }
 
   async generateImage(
