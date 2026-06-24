@@ -47,7 +47,7 @@ import {
   withImageTimeout,
   ImageTimeoutError,
 } from "./lib/replicate";
-import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE, resolveOpenAIModelLabel } from "./lib/openai-image";
+import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE, resolveOpenAIModelLabel, resolveOpenAIModelLabelForProfile } from "./lib/openai-image";
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
 import { canUseProductPlan } from "./lib/entitlements";
 import { canGenerateBookThisMonth } from "./lib/usage";
@@ -893,7 +893,11 @@ async function generatePageImageWithFallback(params: {
             IMAGE_GENERATION_TIMEOUT_MS
           );
           const durationMs = Date.now() - startMs;
-          const currentImageModel = resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
+          // アダプタが解決した正しいラベル（プロファイル別: openai/gpt-image-2 等）を使う。
+          // resolveOpenAIModelLabel を opts 無しで呼ぶと既定の candidate(gpt-image-1-mini)に
+          // なってしまい、gpt-image-2 生成が mini と誤記録される。
+          const currentImageModel =
+            adapterResult.modelLabel ?? resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
 
           logGenerationEvent({
             eventName: "page_image_succeeded",
@@ -2501,7 +2505,7 @@ async function ensureRecurringCharacterReferences(params: {
                 imageQualityTier: params.normalizedBookData.imageQualityTier,
                 imageModelProfile: profile,
               })
-            : resolveOpenAIModelLabel(false);
+            : resolveOpenAIModelLabelForProfile(profile, false);
 
           logGenerationEvent({
             eventName: "page_image_succeeded",
