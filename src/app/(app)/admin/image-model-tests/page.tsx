@@ -47,7 +47,9 @@ const MODEL_PROFILE_OPTIONS: Array<{
   { value: "pro_consistent", label: "pro_consistent (flux-2-pro / 現Premium)" },
   { value: "kontext_max", label: "kontext_max (flux-kontext-max / 一貫性◎)" },
   { value: "openai_standard", label: "openai_standard (gpt-image-1)" },
-  { value: "openai_gpt_image_2", label: "openai_gpt_image_2 (gpt-image-2 / 最新)" },
+  { value: "openai_gpt_image_2", label: "openai_gpt_image_2 (gpt-image-2 high / 単品・avatar)" },
+  { value: "openai_gpt_image_2_medium", label: "openai_gpt_image_2_medium (Std/Premサブスク)" },
+  { value: "openai_gpt_image_2_low", label: "openai_gpt_image_2_low (Free)" },
   { value: "openai_mini", label: "openai_mini (gpt-image-1-mini / 安価)" },
   { value: "kontext_reference", label: "kontext_reference", disabled: true },
 ];
@@ -80,6 +82,8 @@ const PROFILE_RESULT_ORDER: ImageModelProfile[] = [
   "openai_mini",
   "openai_standard",
   "openai_gpt_image_2",
+  "openai_gpt_image_2_medium",
+  "openai_gpt_image_2_low",
 ];
 
 function sortResults(results: TestImageModelsResult["results"]) {

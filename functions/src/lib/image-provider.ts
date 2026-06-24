@@ -255,6 +255,8 @@ export const PROFILE_PROVIDER_MAP: Record<ImageModelProfile, ImageProviderId> = 
   openai_mini:           "openai",
   openai_standard:       "openai",
   openai_gpt_image_2:    "openai",
+  openai_gpt_image_2_medium: "openai",
+  openai_gpt_image_2_low:    "openai",
   flux11_pro_candidate:  "replicate",
   openai_image_candidate:"openai",
 } as const;

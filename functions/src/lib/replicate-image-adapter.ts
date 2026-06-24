@@ -184,7 +184,9 @@ export class ReplicateImageAdapter implements ImageProvider {
       profile === "openai_image_candidate" ||
       profile === "openai_mini" ||
       profile === "openai_standard" ||
-      profile === "openai_gpt_image_2"
+      profile === "openai_gpt_image_2" ||
+      profile === "openai_gpt_image_2_medium" ||
+      profile === "openai_gpt_image_2_low"
     ) {
       throw new Error(
         `ReplicateImageAdapter does not support ${profile}. ` +

@@ -1532,6 +1532,7 @@ export async function processBookGeneration(
         purpose: imagePurpose,
         imageQualityTier,
         imageModelProfile: normalizedBookData.imageModelProfile,
+        isSinglePurchase: normalizedBookData.isSinglePurchase,
       });
       const imageModel = resolveReplicateModel({
         purpose: imagePurpose,
@@ -1819,6 +1820,7 @@ export async function processBookGeneration(
           bookId,
           imageQualityTier: normalizedBookData.imageQualityTier ?? "light",
           imageModelProfile: normalizedBookData.imageModelProfile,
+          isSinglePurchase: normalizedBookData.isSinglePurchase,
           inputImageUrls: coverInputImageUrls,
           replicateApiToken: deps.replicateApiToken,
           openaiApiKey: deps.openaiApiKey,
@@ -2416,6 +2418,7 @@ async function ensureRecurringCharacterReferences(params: {
       purpose: imagePurpose,
       imageQualityTier: params.normalizedBookData.imageQualityTier ?? "light",
       imageModelProfile: params.normalizedBookData.imageModelProfile,
+      isSinglePurchase: params.normalizedBookData.isSinglePurchase,
     });
     const fallbackProfiles = resolveImageFallbackProfiles(primaryProfile);
 

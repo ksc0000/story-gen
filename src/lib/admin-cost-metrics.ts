@@ -24,7 +24,7 @@ export const ESTIMATED_COST_PER_IMAGE: Record<string, number> = {
   // OpenAI
   "openai/gpt-image-1-mini": 0.011,
   "openai/gpt-image-1": 0.042,
-  "openai/gpt-image-2": 0.08, // Estimate (high quality); refine once billed usage is observed
+  "openai/gpt-image-2": 0.211, // high @1024 (公式)
   "openai/gpt-4o": 0.042, // Estimate for Responses API image tool
   "dall-e-3": 0.04, // Standard DALL-E 3 rate
 };
@@ -40,7 +40,9 @@ export const PROFILE_ESTIMATED_COST: Record<ImageModelProfile, number> = {
   kontext_max: 0.05,
   openai_mini: 0.011,
   openai_standard: 0.042,
-  openai_gpt_image_2: 0.08,
+  openai_gpt_image_2: 0.211,
+  openai_gpt_image_2_medium: 0.053,
+  openai_gpt_image_2_low: 0.006,
 };
 
 // Handle candidate profiles that might be in data but not in main union yet
