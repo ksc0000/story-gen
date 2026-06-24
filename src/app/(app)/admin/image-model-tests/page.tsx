@@ -12,7 +12,9 @@ import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { ILLUSTRATION_STYLE_PROFILES } from "@/lib/illustration-styles";
 import {
   testImageModelsCallable,
+  regenerateStylePreviewsCallable,
   type TestImageModelsResult,
+  type RegenerateStylePreviewsResult,
 } from "@/lib/functions";
 import type {
   IllustrationStyle,
@@ -123,6 +125,26 @@ export default function AdminImageModelTestsPage() {
   const [executedAt, setExecutedAt] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [selectedWinner, setSelectedWinner] = useState<string | null>(null);
+  const [regenPreviews, setRegenPreviews] = useState<{
+    running: boolean;
+    result: RegenerateStylePreviewsResult | null;
+    error: string | null;
+  }>({ running: false, result: null, error: null });
+
+  const handleRegenerateStylePreviews = async () => {
+    if (regenPreviews.running) return;
+    if (!window.confirm("全スタイルのプレビュー画像を gpt-image-2(high) で再生成します。数分かかり、画像生成コストが発生します。続けますか？")) {
+      return;
+    }
+    setRegenPreviews({ running: true, result: null, error: null });
+    try {
+      const result = await regenerateStylePreviewsCallable();
+      setRegenPreviews({ running: false, result, error: null });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setRegenPreviews({ running: false, result: null, error: message });
+    }
+  };
   const [tierMemos, setTierMemos] = useState<Record<ImageQualityTier, string>>({
     light: "",
     standard: "",
@@ -214,6 +236,43 @@ export default function AdminImageModelTestsPage() {
           同じプロンプトと参照画像で複数モデル（flux 系・gpt-image 系）を並列生成して横並び比較します。各モデルを跨いで同時実行し、生成時間と概算コストも表示。通常の絵本生成設定は変更されません。
         </p>
       </div>
+
+      <Card className="mt-6 border-emerald-200 bg-emerald-50/30">
+        <CardContent className="space-y-3 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-emerald-900">スタイルプレビュー画像の再生成</p>
+              <p className="text-xs text-emerald-700">
+                スタイル選択で表示する見本画像を gpt-image-2(high) で全スタイル再生成し、実出力と一致させます（固定URLに上書き）。
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={handleRegenerateStylePreviews}
+              disabled={regenPreviews.running}
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
+            >
+              {regenPreviews.running ? "再生成中…（数分）" : "プレビューを再生成"}
+            </Button>
+          </div>
+          {regenPreviews.error && (
+            <p className="text-xs text-rose-600">失敗: {regenPreviews.error}</p>
+          )}
+          {regenPreviews.result && (
+            <div className="text-xs text-emerald-800">
+              <p>{regenPreviews.result.count} スタイルを処理しました。</p>
+              <ul className="mt-1 space-y-0.5">
+                {regenPreviews.result.results.map((r) => (
+                  <li key={r.styleId}>
+                    {r.error ? "❌" : "✅"} {r.styleId}
+                    {r.error ? ` — ${r.error}` : ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="mt-6">
         <CardContent className="space-y-6 p-6">

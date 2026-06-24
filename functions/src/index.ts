@@ -10,6 +10,7 @@ export { cleanupExpired } from "./cleanup-expired";
 export { resetMonthlyQuota } from "./reset-monthly-quota";
 export { seedTemplates } from "./seed-templates";
 export { testImageModels } from "./test-image-models";
+export { regenerateStylePreviews } from "./regenerate-style-previews";
 export { bootstrapAdmin } from "./bootstrap-admin";
 export { regeneratePageImage, checkBookCompletion } from "./regenerate-page-image";
 export { regenerateCoverImage } from "./regenerate-cover-image";
