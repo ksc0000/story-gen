@@ -128,8 +128,32 @@ describe("resolveImageModelProfile — default routing", () => {
     }
   });
 
-  it("returns pro_consistent for premium quality tier", () => {
+  it("returns pro_consistent for premium quality tier (flag off, default)", () => {
+    delete process.env.ENABLE_GPT_IMAGE_2_PREMIUM;
     expect(resolveImageModelProfile({ imageQualityTier: "premium" })).toBe("pro_consistent");
+  });
+
+  it("routes premium tier to gpt-image-2 when ENABLE_GPT_IMAGE_2_PREMIUM=true", () => {
+    const prev = process.env.ENABLE_GPT_IMAGE_2_PREMIUM;
+    process.env.ENABLE_GPT_IMAGE_2_PREMIUM = "true";
+    try {
+      expect(resolveImageModelProfile({ imageQualityTier: "premium" })).toBe("openai_gpt_image_2");
+      // child_avatar still forces pro_consistent regardless of the flag.
+      expect(resolveImageModelProfile({ purpose: "child_avatar", imageQualityTier: "premium" })).toBe(
+        "pro_consistent"
+      );
+    } finally {
+      if (prev === undefined) delete process.env.ENABLE_GPT_IMAGE_2_PREMIUM;
+      else process.env.ENABLE_GPT_IMAGE_2_PREMIUM = prev;
+    }
+  });
+
+  it("gpt-image-2 falls back to flux-2-pro then klein_fast", () => {
+    expect(resolveImageFallbackProfiles("openai_gpt_image_2")).toEqual([
+      "openai_gpt_image_2",
+      "pro_consistent",
+      "klein_fast",
+    ]);
   });
 });
 
