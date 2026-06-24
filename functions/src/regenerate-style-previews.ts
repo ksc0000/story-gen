@@ -45,7 +45,7 @@ export const regenerateStylePreviews = onCall(
     region: "asia-northeast1",
     secrets: [openaiApiKey],
     memory: "1GiB",
-    timeoutSeconds: 540,
+    timeoutSeconds: 900,
   },
   async (request) => {
     if (!request.auth) {
@@ -65,8 +65,7 @@ export const regenerateStylePreviews = onCall(
 
     const results: Array<{ styleId: string; url?: string; error?: string }> = [];
 
-    // gpt-image-2 high は重いので逐次実行（レート制限・メモリ配慮）。
-    for (const target of targets) {
+    const generateOne = async (target: { id: IllustrationStyle; styleBible: string; negative: string[] }) => {
       try {
         const prompt = [
           `${PREVIEW_SCENE}.`,
@@ -88,7 +87,19 @@ export const regenerateStylePreviews = onCall(
         logger.error("regenerateStylePreviews: failed", { styleId: target.id, message });
         results.push({ styleId: target.id, error: message });
       }
-    }
+    };
+
+    // 同時実行プール（gpt-image-2 high は重く、逐次だと 540s を超えるため並列化。
+    // OpenAI レート制限を避けるため同時 CONCURRENCY 本に制限）。
+    const CONCURRENCY = 4;
+    let cursor = 0;
+    const workers = Array.from({ length: Math.min(CONCURRENCY, targets.length) }, async () => {
+      while (cursor < targets.length) {
+        const target = targets[cursor++];
+        await generateOne(target);
+      }
+    });
+    await Promise.all(workers);
 
     return { count: results.length, results };
   }
