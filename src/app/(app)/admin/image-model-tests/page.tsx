@@ -127,22 +127,46 @@ export default function AdminImageModelTestsPage() {
   const [selectedWinner, setSelectedWinner] = useState<string | null>(null);
   const [regenPreviews, setRegenPreviews] = useState<{
     running: boolean;
-    result: RegenerateStylePreviewsResult | null;
+    progress: string;
+    results: RegenerateStylePreviewsResult["results"];
     error: string | null;
-  }>({ running: false, result: null, error: null });
+  }>({ running: false, progress: "", results: [], error: null });
 
   const handleRegenerateStylePreviews = async () => {
     if (regenPreviews.running) return;
-    if (!window.confirm("全スタイルのプレビュー画像を gpt-image-2(high) で再生成します。数分かかり、画像生成コストが発生します。続けますか？")) {
+    // previewImageUrl が重複するスタイルは1回だけ（エイリアス対策）。
+    const seen = new Set<string>();
+    const styleIds: string[] = [];
+    for (const p of ILLUSTRATION_STYLE_PROFILES) {
+      if (seen.has(p.previewImageUrl)) continue;
+      seen.add(p.previewImageUrl);
+      styleIds.push(p.id);
+    }
+    if (
+      !window.confirm(
+        `${styleIds.length} スタイルのプレビューを gpt-image-2(high) で1件ずつ再生成します。数分かかり、画像生成コストが発生します。続けますか？`
+      )
+    ) {
       return;
     }
-    setRegenPreviews({ running: true, result: null, error: null });
+    setRegenPreviews({ running: true, progress: `0/${styleIds.length}`, results: [], error: null });
+    const acc: RegenerateStylePreviewsResult["results"] = [];
     try {
-      const result = await regenerateStylePreviewsCallable();
-      setRegenPreviews({ running: false, result, error: null });
+      // レート制限と request timeout を避けるため、1スタイルずつ順番に呼ぶ。
+      for (let i = 0; i < styleIds.length; i++) {
+        const res = await regenerateStylePreviewsCallable([styleIds[i]]);
+        acc.push(...res.results);
+        setRegenPreviews({
+          running: true,
+          progress: `${i + 1}/${styleIds.length}`,
+          results: [...acc],
+          error: null,
+        });
+      }
+      setRegenPreviews({ running: false, progress: "完了", results: acc, error: null });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setRegenPreviews({ running: false, result: null, error: message });
+      setRegenPreviews({ running: false, progress: "", results: acc, error: message });
     }
   };
   const [tierMemos, setTierMemos] = useState<Record<ImageQualityTier, string>>({
@@ -252,17 +276,17 @@ export default function AdminImageModelTestsPage() {
               disabled={regenPreviews.running}
               className="bg-emerald-600 text-white hover:bg-emerald-700"
             >
-              {regenPreviews.running ? "再生成中…（数分）" : "プレビューを再生成"}
+              {regenPreviews.running ? `再生成中… ${regenPreviews.progress}` : "プレビューを再生成"}
             </Button>
           </div>
           {regenPreviews.error && (
-            <p className="text-xs text-rose-600">失敗: {regenPreviews.error}</p>
+            <p className="text-xs text-rose-600">失敗: {regenPreviews.error}（途中までの結果は下に表示）</p>
           )}
-          {regenPreviews.result && (
+          {regenPreviews.results.length > 0 && (
             <div className="text-xs text-emerald-800">
-              <p>{regenPreviews.result.count} スタイルを処理しました。</p>
+              <p>進捗: {regenPreviews.progress}</p>
               <ul className="mt-1 space-y-0.5">
-                {regenPreviews.result.results.map((r) => (
+                {regenPreviews.results.map((r) => (
                   <li key={r.styleId}>
                     {r.error ? "❌" : "✅"} {r.styleId}
                     {r.error ? ` — ${r.error}` : ""}
