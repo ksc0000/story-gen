@@ -52,6 +52,18 @@ function isGptImage2Enabled(): boolean {
   return process.env.ENABLE_GPT_IMAGE_2 === "true";
 }
 
+/**
+ * プラン設定（plans.ts）が本に焼く既定の flux 系プロファイル。gpt-image-2 全面切替時は
+ * これらを「明示 override」ではなく既定値とみなしてティアルーティングに委ねる。
+ */
+const LEGACY_FLUX_DEFAULT_PROFILES = new Set<ImageModelProfile>([
+  "pro_consistent",
+  "kontext_max",
+  "kontext_reference",
+  "klein_base",
+  "klein_fast",
+]);
+
 // -------------------------------------------------------------------------
 // Candidate profile registry
 // -------------------------------------------------------------------------
@@ -110,7 +122,14 @@ export function resolveImageModelProfile(params: {
   }
 
   if (params.imageModelProfile) {
-    return params.imageModelProfile;
+    // gpt-image-2 全面切替時は、プラン設定由来のレガシー flux 既定プロファイル
+    // （pro_consistent / kontext_max 等）を無視してティアルーティングに回す。
+    // これをしないと本に焼かれた旧プロファイルが切替をバイパスしてしまう。
+    // 本物の非レガシー override（診断/明示 gpt-image-2 指定）はそのまま尊重する。
+    const isLegacyFluxDefault = LEGACY_FLUX_DEFAULT_PROFILES.has(params.imageModelProfile);
+    if (!(gptImage2 && isLegacyFluxDefault)) {
+      return params.imageModelProfile;
+    }
   }
 
   if (gptImage2) {

@@ -169,11 +169,34 @@ describe("resolveImageModelProfile — default routing", () => {
       );
     });
 
-    it("explicit imageModelProfile still wins", () => {
+    it("ignores legacy flux plan-default profiles so the cutover applies", () => {
+      // 実ユーザー本はプラン設定から pro_consistent/kontext_max が焼かれる。切替時は無視。
       expect(
-        resolveImageModelProfile({ imageQualityTier: "premium", imageModelProfile: "kontext_max" })
-      ).toBe("kontext_max");
+        resolveImageModelProfile({ imageQualityTier: "premium", imageModelProfile: "pro_consistent" })
+      ).toBe("openai_gpt_image_2_medium");
+      expect(
+        resolveImageModelProfile({ imageQualityTier: "standard", imageModelProfile: "kontext_max" })
+      ).toBe("openai_gpt_image_2_medium");
+      expect(
+        resolveImageModelProfile({ imageQualityTier: "light", imageModelProfile: "klein_fast" })
+      ).toBe("openai_gpt_image_2_low");
     });
+
+    it("honors a genuine non-legacy override (e.g. explicit gpt-image-2 high)", () => {
+      expect(
+        resolveImageModelProfile({
+          imageQualityTier: "standard",
+          imageModelProfile: "openai_gpt_image_2",
+        })
+      ).toBe("openai_gpt_image_2");
+    });
+  });
+
+  it("legacy flux profile still wins when cutover flag is OFF", () => {
+    delete process.env.ENABLE_GPT_IMAGE_2;
+    expect(
+      resolveImageModelProfile({ imageQualityTier: "premium", imageModelProfile: "kontext_max" })
+    ).toBe("kontext_max");
   });
 
   it("gpt-image-2 fallback chains", () => {
