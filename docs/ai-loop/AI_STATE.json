@@ -216,6 +216,7 @@
     "PR #615: chore(image): gpt-image-2 全面切替を有効化 (ENABLE_GPT_IMAGE_2=true) (merged)",
     "PR #616: fix(image): 切替時にレガシー flux プラン既定プロファイルを無視 (merged)",
     "PR #617: fix(image): gpt-image-2 のモデルラベル誤記録を修正 (merged)",
+    "PR #618: docs: 主人公一貫性 診断レポート (#554) (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
