@@ -14,7 +14,7 @@ import {
   ImageTimeoutError,
   resolveReplicateModel,
 } from "../lib/replicate";
-import { resolveOpenAIModelLabel } from "../lib/openai-image";
+import { resolveOpenAIModelLabelForProfile } from "../lib/openai-image";
 import {
   logGenerationEvent,
   resolveProviderFromProfile,
@@ -149,7 +149,7 @@ export async function generateCoverImageWithFallback(params: {
                 imageQualityTier: params.imageQualityTier,
                 imageModelProfile: profile,
               })
-            : resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
+            : resolveOpenAIModelLabelForProfile(profile, effectiveInputImageUrls.length > 0);
 
           logGenerationEvent({
             eventName: "page_image_succeeded",
@@ -196,7 +196,7 @@ export async function generateCoverImageWithFallback(params: {
                 imageQualityTier: params.imageQualityTier,
                 imageModelProfile: profile,
               })
-            : resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
+            : resolveOpenAIModelLabelForProfile(profile, effectiveInputImageUrls.length > 0);
 
           logGenerationEvent({
             eventName: "page_image_succeeded",

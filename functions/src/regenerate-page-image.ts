@@ -14,7 +14,7 @@ import {
   logGenerationEvent,
   resolveProviderFromProfile,
 } from "./lib/generation-event-logger";
-import { resolveOpenAIModelLabel } from "./lib/openai-image";
+import { resolveOpenAIModelLabelForProfile } from "./lib/openai-image";
 import { logAdminOperation } from "./lib/audit-logger";
 import type { PageData, BookData, ImageModelProfile, PageStatus, GenerationReliabilityStatus } from "./lib/types";
 
@@ -174,7 +174,7 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
                 imageQualityTier: pageData.imageQualityTier,
                 imageModelProfile: profile,
               })
-            : resolveOpenAIModelLabel(inputImageUrls.length > 0);
+            : resolveOpenAIModelLabelForProfile(profile, inputImageUrls.length > 0);
 
           logGenerationEvent({
             eventName: "page_image_succeeded",

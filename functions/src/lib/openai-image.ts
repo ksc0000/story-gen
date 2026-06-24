@@ -129,6 +129,19 @@ export const OPENAI_GPT_IMAGE_2_LOW_PROFILE: OpenAIClientOptions = {
 };
 
 /**
+ * プロファイルに対応する正しい OpenAI モデルラベルを返す。
+ * resolveOpenAIModelLabel を opts 無しで呼ぶと既定の candidate(gpt-image-1-mini)に
+ * なってしまうため、プロファイル別のラベル解決にはこちらを使う。
+ */
+export function resolveOpenAIModelLabelForProfile(
+  profile: ImageModelProfile,
+  hasReferenceImages: boolean
+): string {
+  const opts = resolveOpenAIProfileOptions(profile) ?? OPENAI_IMAGE_CANDIDATE_PROFILE;
+  return resolveOpenAIModelLabel(hasReferenceImages, opts);
+}
+
+/**
  * Maps an OpenAI-backed ImageModelProfile to its client options.
  * Returns undefined for non-OpenAI (Replicate) profiles.
  */
