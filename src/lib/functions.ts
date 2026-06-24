@@ -28,14 +28,15 @@ async function getClientFunctions(): Promise<Functions> {
 }
 
 async function getCallable<RequestData, ResponseData>(
-  name: string
+  name: string,
+  options?: { timeout?: number }
 ): Promise<HttpsCallable<RequestData, ResponseData>> {
   const [{ httpsCallable }, functions] = await Promise.all([
     import("firebase/functions"),
     getClientFunctions(),
   ]);
 
-  return httpsCallable<RequestData, ResponseData>(functions, name);
+  return httpsCallable<RequestData, ResponseData>(functions, name, options);
 }
 
 export type TestImageModelsRequest = {
@@ -67,8 +68,11 @@ export type TestImageModelsResult = {
 export async function testImageModelsCallable(
   data: TestImageModelsRequest
 ): Promise<TestImageModelsResult> {
+  // 複数モデルの並列生成は数十秒〜数分かかるため、クライアント既定の 70s では
+  // deadline-exceeded になる。関数側の timeoutSeconds(300) に合わせて延長する。
   const callable = await getCallable<TestImageModelsRequest, TestImageModelsResult>(
-    "testImageModels"
+    "testImageModels",
+    { timeout: 300000 }
   );
   const result = await callable(data);
   return result.data as TestImageModelsResult;
