@@ -213,6 +213,7 @@
     "PR #612: fix(admin): 画像モデル比較のクライアントタイムアウトを300sに延長 (merged)",
     "PR #613: feat(image): Premium の gpt-image-2 移行をフラグgateで用意 (merged)",
     "PR #614: feat(image): gpt-image-2 全面刷新ルーティング（フラグgate） (merged)",
+    "PR #615: chore(image): gpt-image-2 全面切替を有効化 (ENABLE_GPT_IMAGE_2=true) (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
