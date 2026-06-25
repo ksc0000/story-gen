@@ -151,23 +151,31 @@ export default function AdminImageModelTestsPage() {
     }
     setRegenPreviews({ running: true, progress: `0/${styleIds.length}`, results: [], error: null });
     const acc: RegenerateStylePreviewsResult["results"] = [];
-    try {
-      // レート制限と request timeout を避けるため、1スタイルずつ順番に呼ぶ。
-      for (let i = 0; i < styleIds.length; i++) {
-        const res = await regenerateStylePreviewsCallable([styleIds[i]]);
+    // レート制限と request timeout を避けるため1スタイルずつ順次。
+    // 1件が失敗(internal等)しても全体を止めず次へ進む（最後にまとめて成否表示）。
+    for (let i = 0; i < styleIds.length; i++) {
+      const styleId = styleIds[i];
+      try {
+        const res = await regenerateStylePreviewsCallable([styleId]);
         acc.push(...res.results);
-        setRegenPreviews({
-          running: true,
-          progress: `${i + 1}/${styleIds.length}`,
-          results: [...acc],
-          error: null,
-        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        acc.push({ styleId, error: message });
       }
-      setRegenPreviews({ running: false, progress: "完了", results: acc, error: null });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setRegenPreviews({ running: false, progress: "", results: acc, error: message });
+      setRegenPreviews({
+        running: i + 1 < styleIds.length,
+        progress: `${i + 1}/${styleIds.length}`,
+        results: [...acc],
+        error: null,
+      });
     }
+    const failed = acc.filter((r) => r.error).length;
+    setRegenPreviews({
+      running: false,
+      progress: failed > 0 ? `完了（失敗 ${failed} 件・再実行で補完可）` : "完了",
+      results: acc,
+      error: null,
+    });
   };
   const [tierMemos, setTierMemos] = useState<Record<ImageQualityTier, string>>({
     light: "",
