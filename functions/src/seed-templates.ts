@@ -10701,6 +10701,540 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-classic-mitten": {
+    name: "{childName}の あったか てぶくろ",
+    description:
+      "世界の名作『てぶくろ』を、お子さまが主人公になって楽しむ固定テンプレート。ひとつの てぶくろに、どうぶつが ひとり ずつ。わけあう あたたかさの おはなし。",
+    icon: "🧤",
+    categoryGroupId: "classic-tales",
+    subcategoryId: "classic-mitten",
+    parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["classic tale", "world folk", "sharing", "warmth", "repetition"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-classic-mitten.webp",
+    sampleImageAlt: "雪の中の てぶくろに動物が集まる、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Cozy snowy forest picture-book mood: a warm dropped mitten in the snow filling up with friendly little animals sheltering together one by one, a kind child returning, warm sharing-warmth theme, soft watercolor storybook style.",
+    order: 39,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、名作『てぶくろ』をお子さまが主人公（やさしく わけあう役）になって楽しむ絵本を作ります。",
+    fixedStory: {
+      previewImageUrl: "/images/templates/fixed-classic-mitten.webp",
+      titleTemplate: "{childName}の あったか てぶくろ",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a cozy warm mitten resting in soft snow with friendly little animals (a mouse, a rabbit, a fox) peeking out snugly from inside, a kind child smiling nearby in a snowy forest, warm sharing-warmth mood, soft watercolor storybook style, recurring tiny snowflake motif, keep the same child across all pages with consistent round face, hair, and a warm winter outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "てぶくろ",
+      openingNarrationTemplate:
+        "ゆきの もりを あるく {childName}は、あったかい てぶくろを ひとつ、ゆきの うえに おとしました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "ゆきの もりで、{childName}は あったかい てぶくろを ひとつ、ゆきの うえに おとしました。",
+          baby_toddler: "てぶくろ ぽとん。ゆきの うえ。",
+          preschool_3_4:
+            "ゆきの もりで、{childName}は あったかい てぶくろを ひとつ、ゆきの うえに おとしました。",
+          early_reader_5_6:
+            "ゆきの ふる もりを あるいていた {childName}は、あったかい てぶくろを ひとつ、しらずに ゆきの うえに おとしました。",
+          early_elementary_7_8:
+            "ゆきの しんしん ふる もりを あるいていた {childName}は、あったかい てぶくろを ひとつ、おとしたことに きづかず、すたすたと さきへ いってしまいました。",
+          general_child:
+            "ゆきの もりで、{childName}は あったかい てぶくろを ひとつ、ゆきの うえに おとしました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing snowy-forest shot of a warm knitted mitten resting on soft white snow, a child walking on ahead without noticing, gentle falling snow and quiet woods. Soft cool light, tiny snowflake motif. Keep the same child across all pages with consistent round face, hair, and warm winter outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "ちいさな ねずみが みつけて、ぬくぬくの てぶくろに もぐりこみました。つぎに うさぎが 「いれて」。ふたりで ぬくぬく。",
+          baby_toddler: "ねずみ うさぎ、ぬくぬく。",
+          preschool_3_4:
+            "ちいさな ねずみが みつけて、ぬくぬくの てぶくろに もぐりこみました。つぎに うさぎが 「いれて」。ふたりで ぬくぬく。",
+          early_reader_5_6:
+            "ちいさな ねずみが てぶくろを みつけ、ぬくぬくの なかに もぐりこみました。つぎに うさぎが きて、「いれて」。ふたりで なかよく ぬくぬくです。",
+          early_elementary_7_8:
+            "ちいさな ねずみが てぶくろを みつけて、「あったかい」と なかに もぐりこみました。つぎに うさぎが やってきて、「ぼくも いれて」。ねずみは 「どうぞ」と ばしょを あけて、ふたりで なかよく ぬくぬくに なりました。",
+          general_child:
+            "ちいさな ねずみが みつけて、ぬくぬくの てぶくろに もぐりこみました。つぎに うさぎが 「いれて」。ふたりで ぬくぬく。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Cozy shot of a little mouse snuggling inside the warm mitten in the snow, while a rabbit approaches asking to join, the mitten glowing warm and inviting. Gentle snowfall, heartwarming mood, tiny snowflake motif. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "きつねも、ほかの どうぶつも やってきて、「いれて」。てぶくろは のびて、みんなで ぎゅっと ぬくぬく。",
+          baby_toddler: "きつねも いれて。ぎゅっ ぬくぬく。",
+          preschool_3_4:
+            "きつねも、ほかの どうぶつも やってきて、「いれて」。てぶくろは のびて、みんなで ぎゅっと ぬくぬく。",
+          early_reader_5_6:
+            "きつねも、ほかの どうぶつたちも やってきて、「いれて」。てぶくろは ふしぎと のびて、みんなで ぎゅっと よりそって ぬくぬくです。",
+          early_elementary_7_8:
+            "きつねも、ほかの どうぶつたちも つぎつぎ やってきて、「いれて」と たずねました。みんな 「どうぞ」と ばしょを あけあい、てぶくろは ふしぎと のびて、みんなで ぎゅっと よりそって ぬくぬくに なりました。",
+          general_child:
+            "きつねも、ほかの どうぶつも やってきて、「いれて」。てぶくろは のびて、みんなで ぎゅっと ぬくぬく。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Heartwarming shot of the mitten now stretched and full of several friendly animals — mouse, rabbit, fox, and more — all snuggled together cozily, more animals gently asking to join. Soft snowfall, warm sharing mood, tiny snowflake motif. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "もどってきた {childName}は、どうぶつたちが ぬくぬく しているのを みて にっこり。「みんなで あたたまろうね」。わけあうと、もっと あたたかい。{parentMessage}",
+          baby_toddler: "{childName} にこにこ。みんな ぬくぬく。{parentMessage}",
+          preschool_3_4:
+            "もどってきた {childName}は、どうぶつたちが ぬくぬく しているのを みて にっこり。「みんなで あたたまろうね」。わけあうと、もっと あたたかい。{parentMessage}",
+          early_reader_5_6:
+            "てぶくろを さがしに もどってきた {childName}は、どうぶつたちが ぬくぬく しているのを みて にっこり。「みんなで あたたまろうね」と いいました。わけあうと、あたたかさは もっと ふえるのです。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "てぶくろを さがしに もどってきた {childName}は、どうぶつたちが ぎゅっと よりそって ぬくぬく しているのを みて、にっこり わらいました。「みんなで あたたまろうね」。{childName}は、わけあうと あたたかさは もっと ふえるのだと かんじました。さいごに、{parentMessage}",
+          general_child:
+            "もどってきた {childName}は、どうぶつたちが ぬくぬく しているのを みて にっこり。「みんなで あたたまろうね」。わけあうと、もっと あたたかい。{parentMessage}",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Warm payoff shot of the child returning to find the mitten full of cozy snuggling animals, smiling tenderly and crouching down to share the warmth with them. Gentle snowfall, golden heartwarming light, tiny snowflake motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-classic-mitten-8p": {
+    name: "{childName}の あったか てぶくろ（8ページ）",
+    description:
+      "名作『てぶくろ』の8ページ版。どうぶつが ひとり ずつ ふえて よりそう、わけあう あたたかさを じっくり えがく、お子さまが主人公の固定テンプレート。",
+    icon: "🧤",
+    categoryGroupId: "classic-tales",
+    subcategoryId: "classic-mitten",
+    parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["classic tale", "world folk", "sharing", "warmth", "repetition"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-classic-mitten.webp",
+    sampleImageAlt: "雪の中の てぶくろに動物が集まる、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Cozy snowy forest picture-book mood: a warm dropped mitten filling up with friendly little animals sheltering together one by one, a kind child returning, warm sharing-warmth theme, soft watercolor storybook style.",
+    order: 39.5,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、名作『てぶくろ』の8ページ版を、お子さまが主人公（やさしく わけあう役）になって楽しむ絵本を作ります。",
+    fixedStory: {
+      pageCount: 8,
+      previewImageUrl: "/images/templates/fixed-classic-mitten.webp",
+      titleTemplate: "{childName}の あったか てぶくろ",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a cozy warm mitten resting in soft snow with friendly little animals peeking out snugly from inside, a kind child smiling nearby in a snowy forest, warm sharing-warmth mood, soft watercolor storybook style, recurring tiny snowflake motif, keep the same child across all pages with consistent round face, hair, and a warm winter outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "てぶくろ",
+      openingNarrationTemplate:
+        "ゆきの もりを あるく {childName}は、あったかい てぶくろを ひとつ、ゆきの うえに おとしました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "ゆきの もりで、{childName}は あったかい てぶくろを ひとつ、しらずに おとして いきました。",
+          baby_toddler: "てぶくろ ぽとん。",
+          preschool_3_4:
+            "ゆきの もりで、{childName}は あったかい てぶくろを ひとつ、しらずに おとして いきました。",
+          early_reader_5_6:
+            "ゆきの ふる もりを あるいていた {childName}は、あったかい てぶくろを ひとつ、しらずに ゆきの うえに おとして いきました。",
+          early_elementary_7_8:
+            "ゆきの しんしん ふる もりを あるいていた {childName}は、あったかい てぶくろを ひとつ おとしたことに きづかず、さきへ あるいて いってしまいました。",
+          general_child:
+            "ゆきの もりで、{childName}は あったかい てぶくろを ひとつ、しらずに おとして いきました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing snowy-forest shot of a warm knitted mitten on soft white snow, the child walking on ahead without noticing, gentle falling snow. Soft cool light, tiny snowflake motif. Keep the same child across all pages with consistent round face, hair, and warm winter outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "ちいさな ねずみが てぶくろを みつけ、「あったかい」と なかに もぐりこみました。",
+          baby_toddler: "ねずみ もぐりこむ。",
+          preschool_3_4:
+            "ちいさな ねずみが てぶくろを みつけ、「あったかい」と なかに もぐりこみました。",
+          early_reader_5_6:
+            "ちいさな ねずみが てぶくろを みつけて、「わあ、あったかい」と なかに もぐりこみました。",
+          early_elementary_7_8:
+            "ちいさな ねずみが ゆきの うえの てぶくろを みつけて、「わあ、あったかい」と うれしそうに なかへ もぐりこみました。",
+          general_child:
+            "ちいさな ねずみが てぶくろを みつけ、「あったかい」と なかに もぐりこみました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Cozy shot of a little mouse discovering the warm mitten and snuggling happily inside it on the snow, the mitten glowing warm and inviting. Gentle snowfall, tiny snowflake motif. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "つぎに うさぎが きて 「いれて」。ねずみは 「どうぞ」。ふたりで ぬくぬく。",
+          baby_toddler: "うさぎも いれて。ぬくぬく。",
+          preschool_3_4:
+            "つぎに うさぎが きて 「いれて」。ねずみは 「どうぞ」。ふたりで ぬくぬく。",
+          early_reader_5_6:
+            "つぎに うさぎが やってきて、「ぼくも いれて」。ねずみは 「どうぞ」と ばしょを あけて、ふたりで ぬくぬくです。",
+          early_elementary_7_8:
+            "つぎに うさぎが やってきて、「ぼくも いれて」と たずねました。ねずみは 「どうぞ」と ばしょを あけて、ふたりで なかよく ぬくぬくに なりました。",
+          general_child:
+            "つぎに うさぎが きて 「いれて」。ねずみは 「どうぞ」。ふたりで ぬくぬく。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Heartwarming shot of a rabbit asking to join, the mouse making room, the two animals snuggling cozily inside the warm mitten together. Gentle snowfall, tiny snowflake motif. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "きつねも やってきて 「いれて」。みんなで ばしょを あけあって、3びきで ぬくぬく。",
+          baby_toddler: "きつねも いれて。3びき。",
+          preschool_3_4:
+            "きつねも やってきて 「いれて」。みんなで ばしょを あけあって、3びきで ぬくぬく。",
+          early_reader_5_6:
+            "つぎに きつねが やってきて、「わたしも いれて」。みんなで ばしょを あけあって、3びきで なかよく ぬくぬくです。",
+          early_elementary_7_8:
+            "つぎに きつねが やってきて、「わたしも いれて」と たずねました。みんなは こころよく ばしょを あけあい、3びきで ぎゅっと よりそって ぬくぬくに なりました。",
+          general_child:
+            "きつねも やってきて 「いれて」。みんなで ばしょを あけあって、3びきで ぬくぬく。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Cozy shot of a fox joining the mouse and rabbit inside the stretching warm mitten, all three snuggled together kindly making room. Gentle snowfall, tiny snowflake motif. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "ふくろうや、もっと おおきな どうぶつまで やってきました。てぶくろは ふしぎと のびて いきます。",
+          baby_toddler: "もっと いっぱい！ のびる てぶくろ。",
+          preschool_3_4:
+            "ふくろうや、もっと おおきな どうぶつまで やってきました。てぶくろは ふしぎと のびて いきます。",
+          early_reader_5_6:
+            "ふくろうや、もっと おおきな どうぶつまで つぎつぎ やってきました。てぶくろは ふしぎと、どんどん のびて いきます。",
+          early_elementary_7_8:
+            "ふくろうや、もっと おおきな どうぶつまで つぎつぎ やってきて、「いれて」と たずねました。みんなが ばしょを あけあうたび、てぶくろは ふしぎと どんどん のびて いきました。",
+          general_child:
+            "ふくろうや、もっと おおきな どうぶつまで やってきました。てぶくろは ふしぎと のびて いきます。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Whimsical shot of the mitten stretching larger to hold an owl and even bigger animals joining the snug pile inside, everyone making room kindly. Gentle snowfall, warm cozy mood, tiny snowflake motif. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "みんなで ぎゅっと よりそって、てぶくろの なかは とても あたたか。だれも さむく ありません。",
+          baby_toddler: "ぎゅっ。あったか。",
+          preschool_3_4:
+            "みんなで ぎゅっと よりそって、てぶくろの なかは とても あたたか。だれも さむく ありません。",
+          early_reader_5_6:
+            "みんなで ぎゅっと よりそうと、てぶくろの なかは とても あたたか。もう だれも さむく ありません。",
+          early_elementary_7_8:
+            "みんなで ばしょを あけあい、ぎゅっと よりそうと、てぶくろの なかは とても あたたかに なりました。わけあったから、もう だれも さむく ありません。",
+          general_child:
+            "みんなで ぎゅっと よりそって、てぶくろの なかは とても あたたか。だれも さむく ありません。",
+          pageVisualRole: "emotional_closeup",
+          imagePromptTemplate:
+            "Warm close-up of all the animals snuggled cozily together inside the full warm mitten, content and toasty, no one cold. Gentle snowfall outside, golden cozy glow, tiny snowflake motif. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "てぶくろを さがしに もどってきた {childName}は、その ようすを みて にっこり わらいました。",
+          baby_toddler: "{childName} もどって にこにこ。",
+          preschool_3_4:
+            "てぶくろを さがしに もどってきた {childName}は、その ようすを みて にっこり わらいました。",
+          early_reader_5_6:
+            "てぶくろを さがしに もどってきた {childName}は、どうぶつたちが ぬくぬく しているのを みて、にっこり わらいました。",
+          early_elementary_7_8:
+            "てぶくろを さがしに もどってきた {childName}は、どうぶつたちが ぎゅっと よりそって ぬくぬく しているのを みて、おもわず にっこり わらいました。",
+          general_child:
+            "てぶくろを さがしに もどってきた {childName}は、その ようすを みて にっこり わらいました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Tender shot of the child returning and crouching to discover the warm mitten full of cozy snuggling animals, a delighted gentle smile. Gentle snowfall, warm light, tiny snowflake motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "「みんなで あたたまろうね」。わけあうと、あたたかさは もっと ふえるのですね。{parentMessage}",
+          baby_toddler: "みんなで あったか。{parentMessage}",
+          preschool_3_4:
+            "「みんなで あたたまろうね」。わけあうと、あたたかさは もっと ふえるのですね。{parentMessage}",
+          early_reader_5_6:
+            "「みんなで あたたまろうね」と {childName}。わけあうと、あたたかさは もっと ふえるのです。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "「みんなで あたたまろうね」と {childName}は いいました。{childName}は、わけあうと あたたかさは もっと ふえるのだと かんじました。さいごに、{parentMessage}",
+          general_child:
+            "「みんなで あたたまろうね」。わけあうと、あたたかさは もっと ふえるのですね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Heartwarming ending shot of the child sitting together with all the cozy animals around the warm mitten in the snow, everyone sharing warmth and smiles, soft golden light. Tender sharing mood, tiny snowflake motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-classic-ant-grasshopper": {
+    name: "{childName}と はたらきものの なつ",
+    description:
+      "イソップの名作『アリとキリギリス』を、お子さまが主人公（こつこつ そなえる アリ役）になって楽しむ固定テンプレート。そなえる たいせつさと、わけあう やさしさの おはなし。",
+    icon: "🐜",
+    categoryGroupId: "classic-tales",
+    subcategoryId: "classic-ant-grasshopper",
+    parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["classic tale", "aesop", "diligence", "preparation", "kindness"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-classic-ant-grasshopper.webp",
+    sampleImageAlt: "夏にこつこつ食べ物を運ぶアリの、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Warm seasonal picture-book mood: a diligent child as an ant gathering food through sunny summer and golden autumn, a cheerful music-playing grasshopper, gentle snowy winter where the child kindly shares stored food, soft watercolor storybook style.",
+    order: 40,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、イソップ『アリとキリギリス』をお子さまが主人公（こつこつ そなえる アリ役）になって楽しむ絵本を作ります。さいごは やさしく わけあう、あたたかい けつまつに します。",
+    fixedStory: {
+      previewImageUrl: "/images/templates/fixed-classic-ant-grasshopper.webp",
+      titleTemplate: "{childName}と はたらきものの なつ",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a cheerful diligent child carrying a basket of food along a sunny summer meadow path like a busy ant, a friendly grasshopper playing a little fiddle nearby, warm preparation-and-kindness mood, soft watercolor storybook style, recurring tiny wheat-grain motif, keep the same child across all pages with consistent round face, hair, and outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "アリとキリギリス",
+      openingNarrationTemplate:
+        "あつい なつの ひ、{childName}は ふゆに そなえて、こつこつ たべものを はこんで いました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "あつい なつ、{childName}は ふゆに そなえて こつこつ たべものを はこびます。キリギリスは うたって あそんで います。",
+          baby_toddler: "なつ。たべもの はこぶ。",
+          preschool_3_4:
+            "あつい なつ、{childName}は ふゆに そなえて こつこつ たべものを はこびます。キリギリスは うたって あそんで います。",
+          early_reader_5_6:
+            "あつい なつの ひ、{childName}は ふゆに そなえて、こつこつ たべものを はこんで いました。キリギリスは うたを うたって あそんで います。",
+          early_elementary_7_8:
+            "あつい なつの ひざしの なか、{childName}は ふゆに そなえて、こつこつと たべものを すへ はこんで いました。となりでは キリギリスが バイオリンを ひいて、たのしそうに あそんで います。",
+          general_child:
+            "あつい なつ、{childName}は ふゆに そなえて こつこつ たべものを はこびます。キリギリスは うたって あそんで います。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing sunny summer meadow shot of the child diligently carrying food like a busy ant, while a cheerful grasshopper plays a little fiddle and lounges in the grass. Warm bright light, tiny wheat-grain motif. Keep the same child across all pages with consistent round face, hair, and outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "「いっしょに あそぼうよ」と キリギリス。でも {childName}は 「ふゆの ぶんも ためなくちゃ」と はたらきます。",
+          baby_toddler: "あそぼう？ ためなくちゃ。",
+          preschool_3_4:
+            "「いっしょに あそぼうよ」と キリギリス。でも {childName}は 「ふゆの ぶんも ためなくちゃ」と はたらきます。",
+          early_reader_5_6:
+            "「いっしょに あそぼうよ」と キリギリスが いいました。でも {childName}は、「ふゆの ぶんも ためなくちゃ」と、こつこつ はたらきつづけます。",
+          early_elementary_7_8:
+            "「そんなに はたらかないで、いっしょに あそぼうよ」と キリギリスが さそいました。でも {childName}は、「さむい ふゆが きても こまらないように、いまから ためなくちゃ」と、こつこつ はたらきつづけました。",
+          general_child:
+            "「いっしょに あそぼうよ」と キリギリス。でも {childName}は 「ふゆの ぶんも ためなくちゃ」と はたらきます。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Shot of the grasshopper cheerfully inviting the child to come play, while the child kindly keeps working and storing food for winter. Sunny summer meadow, warm friendly mood, tiny wheat-grain motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "やがて さむい ふゆ。キリギリスは たべものが なくて、ぶるぶる ふるえて います。",
+          baby_toddler: "ふゆ さむい。キリギリス ぶるぶる。",
+          preschool_3_4:
+            "やがて さむい ふゆ。キリギリスは たべものが なくて、ぶるぶる ふるえて います。",
+          early_reader_5_6:
+            "やがて さむい ふゆが やってきました。キリギリスは たべものが なくて、ゆきの なかで ぶるぶる ふるえて います。",
+          early_elementary_7_8:
+            "やがて しんしんと ゆきの ふる さむい ふゆが やってきました。なつに あそんで ばかりいた キリギリスは、たべものが ひとつも なく、ゆきの なかで ぶるぶると ふるえて いました。",
+          general_child:
+            "やがて さむい ふゆ。キリギリスは たべものが なくて、ぶるぶる ふるえて います。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Quiet snowy winter shot of the cold grasshopper shivering with no food, looking small and chilly in the falling snow. Gentle melancholy but not scary, soft cool light, tiny snowflake motif. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は ためた たべものを わけて あげました。「いっしょに たべよう」。そなえると あんしん、わけあうと あたたかい。{parentMessage}",
+          baby_toddler: "{childName} わけてあげる。あったか。{parentMessage}",
+          preschool_3_4:
+            "{childName}は ためた たべものを わけて あげました。「いっしょに たべよう」。そなえると あんしん、わけあうと あたたかい。{parentMessage}",
+          early_reader_5_6:
+            "{childName}は、こつこつ ためた たべものを キリギリスに わけて あげました。「いっしょに たべよう」。そなえて おくと あんしん、そして わけあうと こころが あたたかく なります。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "{childName}は、なつの あいだ こつこつ ためた たべものを、ふるえる キリギリスに わけて あげました。「さあ、いっしょに たべよう」。そなえて おくと あんしんで、そして こまった ともだちに わけあうと、こころまで あたたかく なるのです。さいごに、{parentMessage}",
+          general_child:
+            "{childName}は ためた たべものを わけて あげました。「いっしょに たべよう」。そなえると あんしん、わけあうと あたたかい。{parentMessage}",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Warm payoff shot of the child kindly sharing stored food with the cold grasshopper inside a cozy warm burrow, both happy and grateful together. Golden warm light, snow outside the window, tiny wheat-grain motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-classic-ant-grasshopper-8p": {
+    name: "{childName}と はたらきものの なつ（8ページ）",
+    description:
+      "イソップ『アリとキリギリス』の8ページ版。なつ・あき・ふゆと きせつを おって、そなえる たいせつさと わけあう やさしさを じっくり えがく、お子さまが主人公の固定テンプレート。",
+    icon: "🐜",
+    categoryGroupId: "classic-tales",
+    subcategoryId: "classic-ant-grasshopper",
+    parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["classic tale", "aesop", "diligence", "preparation", "kindness"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-classic-ant-grasshopper.webp",
+    sampleImageAlt: "夏にこつこつ食べ物を運ぶアリの、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Warm seasonal picture-book mood: a diligent child as an ant gathering food through sunny summer and golden autumn, a cheerful music-playing grasshopper, gentle snowy winter where the child kindly shares stored food, soft watercolor storybook style.",
+    order: 40.5,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、イソップ『アリとキリギリス』の8ページ版を、お子さまが主人公（こつこつ そなえる アリ役）になって楽しむ絵本を作ります。さいごは やさしく わけあう、あたたかい けつまつに します。",
+    fixedStory: {
+      pageCount: 8,
+      previewImageUrl: "/images/templates/fixed-classic-ant-grasshopper.webp",
+      titleTemplate: "{childName}と はたらきものの なつ",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a cheerful diligent child carrying a basket of food along a sunny summer meadow path like a busy ant, a friendly grasshopper playing a little fiddle nearby, warm preparation-and-kindness mood, soft watercolor storybook style, recurring tiny wheat-grain motif, keep the same child across all pages with consistent round face, hair, and outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "アリとキリギリス",
+      openingNarrationTemplate:
+        "あつい なつの ひ、{childName}は ふゆに そなえて、こつこつ たべものを はこんで いました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "あつい なつ、{childName}は ふゆに そなえて こつこつ たべものを はこんで いました。",
+          baby_toddler: "なつ。たべもの はこぶ。",
+          preschool_3_4:
+            "あつい なつ、{childName}は ふゆに そなえて こつこつ たべものを はこんで いました。",
+          early_reader_5_6:
+            "あつい なつの ひ、{childName}は ふゆに そなえて、こつこつ たべものを すへ はこんで いました。",
+          early_elementary_7_8:
+            "あつい なつの ひざしの なか、{childName}は ふゆに そなえて、こつこつと たべものを すへ はこんで いました。",
+          general_child:
+            "あつい なつ、{childName}は ふゆに そなえて こつこつ たべものを はこんで いました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing sunny summer meadow shot of the child diligently carrying food like a busy ant toward a little burrow. Warm bright light, tiny wheat-grain motif. Keep the same child across all pages with consistent round face, hair, and outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "そばで キリギリスは バイオリンを ひいて、「あそぼうよ」と さそいます。",
+          baby_toddler: "キリギリス あそぼう。",
+          preschool_3_4:
+            "そばで キリギリスは バイオリンを ひいて、「あそぼうよ」と さそいます。",
+          early_reader_5_6:
+            "そばで キリギリスは バイオリンを ひきながら、「いっしょに あそぼうよ」と さそいました。",
+          early_elementary_7_8:
+            "すぐ そばでは キリギリスが バイオリンを たのしそうに ひきながら、「そんなに はたらかないで、いっしょに あそぼうよ」と さそいました。",
+          general_child:
+            "そばで キリギリスは バイオリンを ひいて、「あそぼうよ」と さそいます。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Shot of the cheerful grasshopper playing a little fiddle and inviting the child to come play in the sunny summer grass. Warm friendly mood, tiny wheat-grain motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "でも {childName}は 「ふゆの ぶんも ためなくちゃ」と、こつこつ はたらきます。",
+          baby_toddler: "ためなくちゃ。こつこつ。",
+          preschool_3_4:
+            "でも {childName}は 「ふゆの ぶんも ためなくちゃ」と、こつこつ はたらきます。",
+          early_reader_5_6:
+            "でも {childName}は、「さむい ふゆの ぶんも ためなくちゃ」と、こつこつ はたらきつづけました。",
+          early_elementary_7_8:
+            "でも {childName}は、「さむい ふゆが きても こまらないように、いまから ためて おかなくちゃ」と、ひたむきに はたらきつづけました。",
+          general_child:
+            "でも {childName}は 「ふゆの ぶんも ためなくちゃ」と、こつこつ はたらきます。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Shot of the child kindly declining to play and continuing to diligently carry and store food for winter. Sunny summer meadow, determined gentle mood, tiny wheat-grain motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "あきに なっても、{childName}は きのみや むぎを こつこつ ためつづけます。",
+          baby_toddler: "あき。もっと ためる。",
+          preschool_3_4:
+            "あきに なっても、{childName}は きのみや むぎを こつこつ ためつづけます。",
+          early_reader_5_6:
+            "はが いろづく あきに なっても、{childName}は きのみや むぎを こつこつ ためつづけました。",
+          early_elementary_7_8:
+            "はっぱが あかや きいろに いろづく あきに なっても、{childName}は きのみや むぎを すこしずつ、こつこつと ためつづけました。",
+          general_child:
+            "あきに なっても、{childName}は きのみや むぎを こつこつ ためつづけます。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Golden autumn shot of the child gathering nuts and grain among colorful falling leaves, steadily filling the storehouse. Warm amber light, tiny wheat-grain motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "やがて ゆきの ふる さむい ふゆ。{childName}の すは たべもので いっぱいです。",
+          baby_toddler: "ふゆ。すは いっぱい。",
+          preschool_3_4:
+            "やがて ゆきの ふる さむい ふゆ。{childName}の すは たべもので いっぱいです。",
+          early_reader_5_6:
+            "やがて ゆきの ふる さむい ふゆが きました。{childName}の すは、ためた たべもので いっぱいです。",
+          early_elementary_7_8:
+            "やがて しんしんと ゆきの ふる さむい ふゆが やってきました。{childName}の すは、なつと あきに ためた たべもので いっぱいで、あたたかく あんしんです。",
+          general_child:
+            "やがて ゆきの ふる さむい ふゆ。{childName}の すは たべもので いっぱいです。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Cozy shot of the child safe and warm inside a burrow full of stored food, snow falling gently outside the window. Warm golden glow, tiny snowflake motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "そとでは キリギリスが たべものも なく、ぶるぶる ふるえて いました。",
+          baby_toddler: "キリギリス ぶるぶる。",
+          preschool_3_4:
+            "そとでは キリギリスが たべものも なく、ぶるぶる ふるえて いました。",
+          early_reader_5_6:
+            "そとでは キリギリスが たべものも なくて、ゆきの なかで ぶるぶる ふるえて いました。",
+          early_elementary_7_8:
+            "そとでは、なつに あそんで ばかりいた キリギリスが、たべものも なくて、ゆきの なかで ぶるぶると ふるえて いました。",
+          general_child:
+            "そとでは キリギリスが たべものも なく、ぶるぶる ふるえて いました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Quiet snowy winter shot of the cold grasshopper shivering with no food outside the burrow, looking small and chilly. Gentle melancholy but not scary, soft cool light, tiny snowflake motif. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は キリギリスを すに よんで、ためた たべものを わけて あげました。",
+          baby_toddler: "{childName} わけてあげる。",
+          preschool_3_4:
+            "{childName}は キリギリスを すに よんで、ためた たべものを わけて あげました。",
+          early_reader_5_6:
+            "それを みた {childName}は、キリギリスを あたたかい すに よんで、ためた たべものを わけて あげました。",
+          early_elementary_7_8:
+            "それを みた {childName}は、ふるえる キリギリスを あたたかい すに よびいれて、なつから こつこつ ためた たべものを、こころよく わけて あげました。",
+          general_child:
+            "{childName}は キリギリスを すに よんで、ためた たべものを わけて あげました。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Warm shot of the child welcoming the cold grasshopper into the cozy burrow and sharing stored food, both grateful and happy. Golden warm light, snow outside, tiny wheat-grain motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "「いっしょに たべよう」。そなえると あんしん、わけあうと あたたかい。{parentMessage}",
+          baby_toddler: "いっしょに たべよう。{parentMessage}",
+          preschool_3_4:
+            "「いっしょに たべよう」。そなえると あんしん、わけあうと あたたかい。{parentMessage}",
+          early_reader_5_6:
+            "「いっしょに たべよう」と {childName}。そなえて おくと あんしん、そして わけあうと こころが あたたかく なります。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "「さあ、いっしょに たべよう」と {childName}は わらいました。そなえて おくと あんしんで、そして こまった ともだちに わけあうと、こころまで あたたかく なるのです。さいごに、{parentMessage}",
+          general_child:
+            "「いっしょに たべよう」。そなえると あんしん、わけあうと あたたかい。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Heartwarming ending shot of the child and the grasshopper eating together happily in the cozy warm burrow, snow falling softly outside. Tender grateful mood, golden light, tiny wheat-grain motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
 };
 
 const legacyTemplateIds = ["birthday", "seasons", "challenge", "family"];
