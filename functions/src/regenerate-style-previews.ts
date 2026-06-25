@@ -56,6 +56,7 @@ export const regenerateStylePreviews = onCall(
     }
 
     const requestedIds = (request.data?.styleIds as string[] | undefined) ?? undefined;
+    const force = request.data?.force === true;
     const targets = uniqueStyleTargets().filter(
       (t) => !requestedIds || requestedIds.includes(t.id)
     );
@@ -67,6 +68,16 @@ export const regenerateStylePreviews = onCall(
 
     const generateOne = async (target: { id: IllustrationStyle; styleBible: string; negative: string[] }) => {
       try {
+        const filenameExisting = `${STORAGE_DIR}/${target.id}.png`;
+        if (!force) {
+          // 既に生成済みならスキップ（再実行を高速化・無駄なコストを回避）。
+          const [exists] = await bucket.file(filenameExisting).exists();
+          if (exists) {
+            results.push({ styleId: target.id, url: stylePreviewPublicUrl(target.id) });
+            logger.info("regenerateStylePreviews: skipped (exists)", { styleId: target.id });
+            return;
+          }
+        }
         const prompt = [
           `${PREVIEW_SCENE}.`,
           `Illustration style: ${target.styleBible}`,
