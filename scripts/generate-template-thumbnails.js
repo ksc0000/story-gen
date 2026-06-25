@@ -670,6 +670,43 @@ const THUMBNAILS = [
       "Warm perseverance-and-kindness mood, recurring tiny puff-of-steam motif, soft watercolor storybook style, rich but not cluttered."
     ),
   },
+
+  // ── 名作プリセット第1弾 5枚 (PR #626・画像未生成のため追加) ─────────────────
+  {
+    id: "fixed-classic-big-turnip",
+    prompt: buildPrompt(
+      "The Giant Turnip (Ookina Kabu) picture-book cover. A cheerful child pulls hard on the leafy top of an enormous turnip in a sunny vegetable garden, friendly helpers — a grandfather, a dog, a cat, and a little mouse — lined up behind, all heaving together with happy effort. " +
+      "Warm teamwork-and-perseverance mood, recurring tiny leaf motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-classic-tortoise-hare",
+    prompt: buildPrompt(
+      "The Tortoise and the Hare picture-book cover. A steady smiling child walks the race path beside a gentle slow tortoise, a friendly hare napping under a tree in the background, a grassy hill course winding ahead under a bright sky. " +
+      "Warm steady-effort mood, recurring tiny clover motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-classic-momotaro",
+    prompt: buildPrompt(
+      "Momotaro (Peach Boy) picture-book cover. A brave kind child stands cheerfully with a small banner and millet dumplings, three friendly animal companions — a dog, a monkey, and a pheasant — gathered happily beside them, a giant peach and a soft blue sky behind. " +
+      "Warm courage-and-friendship mood, no violence, recurring tiny peach motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-classic-kasajizo",
+    prompt: buildPrompt(
+      "Kasa-jizo (The Straw-Hat Jizo) picture-book cover. A warm-hearted child gently places woven straw hats on a row of small stone Jizo statues standing in soft falling snow, snow caps melting away under the kind gesture. " +
+      "Tender quiet kindness mood, snowy evening light, recurring tiny snowflake motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-goodnight-everyone",
+    prompt: buildPrompt(
+      "Goodnight to Everyone bedtime picture-book cover. A sleepy smiling child in cozy pajamas waves goodnight from bed to gentle friends — a moon, a star, a teddy bear, and a little bird on the windowsill — soft warm lamp light and a calm navy night sky. " +
+      "Peaceful tender bedtime mood, recurring tiny star motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
 ];
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
