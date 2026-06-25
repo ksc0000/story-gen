@@ -11769,6 +11769,540 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-tiny-seed-big-tree": {
+    name: "{childName}と ちいさな たねの おおきな き",
+    description:
+      "ちいさな たねを {childName}が こつこつ そだてて、おおきな きに する オリジナル絵本。あきらめず つづける たいせつさ（がまんづよさ・せいちょう）の おはなし。",
+    icon: "🌱",
+    categoryGroupId: "growth-support",
+    subcategoryId: "tiny-seed-big-tree",
+    parentIntent: "できるようになってほしい。でも怒らず応援したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["original", "patience", "growth", "perseverance", "nature"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-tiny-seed-big-tree.webp",
+    sampleImageAlt: "小さな種をこつこつ育てて大きな木にする、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Gentle nature picture-book mood: a child patiently planting and watering a tiny seed, a small sprout slowly growing through sun and rain into a great leafy tree, warm hopeful growth-and-patience theme, soft watercolor storybook style.",
+    order: 95,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、ちいさな たねを こつこつ そだてて おおきな きに する オリジナルの絵本を、お子さまが主人公になって作ります。あきらめず つづける たいせつさを、あたたかく えがきます。",
+    fixedStory: {
+      previewImageUrl: "/images/templates/fixed-tiny-seed-big-tree.webp",
+      titleTemplate: "{childName}と ちいさな たねの おおきな き",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a hopeful child kneeling beside a tiny sprout in soft soil, gently holding a small watering can, a faint silhouette of a great leafy tree behind them as a dream, warm patience-and-growth mood, soft watercolor storybook style, recurring tiny green-leaf motif, keep the same child across all pages with consistent round face, hair, and outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "ちいさな たねの おおきな き",
+      openingNarrationTemplate:
+        "{childName}は、てのひらの ちいさな たねを、そっと つちに うえました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は てのひらの ちいさな たねを、そっと つちに うえました。「おおきく なあれ」。",
+          baby_toddler: "たねを うえた。おおきく なあれ。",
+          preschool_3_4:
+            "{childName}は てのひらの ちいさな たねを、そっと つちに うえました。「おおきく なあれ」。",
+          early_reader_5_6:
+            "{childName}は、てのひらの ちいさな たねを、そっと つちに うえました。「おおきく なあれ」と こえを かけます。",
+          early_elementary_7_8:
+            "{childName}は、てのひらに のせた ちいさな たねを、ふかふかの つちに そっと うえました。「はやく おおきく なあれ」と、やさしく こえを かけます。",
+          general_child:
+            "{childName}は てのひらの ちいさな たねを、そっと つちに うえました。「おおきく なあれ」。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing tender shot of the child gently planting a tiny seed into soft soil with both hands, hopeful expression. Warm morning light, tiny green-leaf motif. Keep the same child across all pages with consistent round face, hair, and outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "まいにち みずを あげても、なかなか めは でません。{childName}は それでも こつこつ つづけます。",
+          baby_toddler: "まいにち みず。こつこつ。",
+          preschool_3_4:
+            "まいにち みずを あげても、なかなか めは でません。{childName}は それでも こつこつ つづけます。",
+          early_reader_5_6:
+            "まいにち みずを あげても、なかなか めは でません。それでも {childName}は、あきらめずに こつこつ つづけます。",
+          early_elementary_7_8:
+            "まいにち かかさず みずを あげても、たねは なかなか めを ださず、つちは しずかな ままです。それでも {childName}は、がっかりせず、こつこつと せわを つづけました。",
+          general_child:
+            "まいにち みずを あげても、なかなか めは でません。{childName}は それでも こつこつ つづけます。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Shot of the child patiently watering the quiet bare soil each day with a small watering can, no sprout yet, gentle determined expression. Soft daylight, tiny green-leaf motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "ある あさ、ちいさな めが ひょっこり！ひざしと あめを うけて、すこしずつ せが のびて いきます。",
+          baby_toddler: "め が でた！ ぐんぐん。",
+          preschool_3_4:
+            "ある あさ、ちいさな めが ひょっこり！ひざしと あめを うけて、すこしずつ せが のびて いきます。",
+          early_reader_5_6:
+            "ある あさ、ちいさな みどりの めが ひょっこり でました！ひざしと あめを うけて、すこしずつ せが のびて いきます。",
+          early_elementary_7_8:
+            "ある あさ、つちの なかから ちいさな みどりの めが ひょっこり かおを だしました！あたたかい ひざしと めぐみの あめを うけて、なえは すこしずつ せを のばして いきます。",
+          general_child:
+            "ある あさ、ちいさな めが ひょっこり！ひざしと あめを うけて、すこしずつ せが のびて いきます。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Joyful shot of a tiny green sprout finally poking up from the soil, the delighted child leaning close, sun and a gentle rain nourishing it. Fresh hopeful light, tiny green-leaf motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "やがて たねは、{childName}より ずっと おおきな きに なりました。こつこつ つづけたから だね。{parentMessage}",
+          baby_toddler: "おおきな き！ やったね。{parentMessage}",
+          preschool_3_4:
+            "やがて たねは、{childName}より ずっと おおきな きに なりました。こつこつ つづけたから だね。{parentMessage}",
+          early_reader_5_6:
+            "やがて あの ちいさな たねは、{childName}より ずっと おおきな きに なりました。あきらめず こつこつ つづけたから ですね。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "なんども きせつが めぐり、やがて あの てのひらの ちいさな たねは、{childName}が みあげる ほど おおきな、はっぱの しげる きに なりました。まいにち あきらめず こつこつ つづけた からですね。さいごに、{parentMessage}",
+          general_child:
+            "やがて たねは、{childName}より ずっと おおきな きに なりました。こつこつ つづけたから だね。{parentMessage}",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Heartwarming payoff shot of the child looking up at a great leafy tree grown from the tiny seed, resting happily in its shade. Warm golden light, tiny green-leaf motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-tiny-seed-big-tree-8p": {
+    name: "{childName}と ちいさな たねの おおきな き（8ページ）",
+    description:
+      "ちいさな たねを {childName}が こつこつ そだてる オリジナル絵本の8ページ版。きせつを おって、あきらめず つづける たいせつさと せいちょうを じっくり えがきます。",
+    icon: "🌱",
+    categoryGroupId: "growth-support",
+    subcategoryId: "tiny-seed-big-tree",
+    parentIntent: "できるようになってほしい。でも怒らず応援したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["original", "patience", "growth", "perseverance", "nature"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-tiny-seed-big-tree.webp",
+    sampleImageAlt: "小さな種をこつこつ育てて大きな木にする、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Gentle nature picture-book mood: a child patiently planting and watering a tiny seed, a small sprout slowly growing through sun and rain into a great leafy tree, warm hopeful growth-and-patience theme, soft watercolor storybook style.",
+    order: 95.5,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、ちいさな たねを こつこつ そだてる オリジナルの絵本の8ページ版を、お子さまが主人公になって作ります。あきらめず つづける たいせつさを、あたたかく えがきます。",
+    fixedStory: {
+      pageCount: 8,
+      previewImageUrl: "/images/templates/fixed-tiny-seed-big-tree.webp",
+      titleTemplate: "{childName}と ちいさな たねの おおきな き",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a hopeful child kneeling beside a tiny sprout in soft soil, gently holding a small watering can, a faint silhouette of a great leafy tree behind them as a dream, warm patience-and-growth mood, soft watercolor storybook style, recurring tiny green-leaf motif, keep the same child across all pages with consistent round face, hair, and outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "ちいさな たねの おおきな き",
+      openingNarrationTemplate:
+        "{childName}は、てのひらの ちいさな たねを、そっと つちに うえました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は てのひらの ちいさな たねを、そっと つちに うえました。「おおきく なあれ」。",
+          baby_toddler: "たねを うえた。",
+          preschool_3_4:
+            "{childName}は てのひらの ちいさな たねを、そっと つちに うえました。「おおきく なあれ」。",
+          early_reader_5_6:
+            "{childName}は、てのひらの ちいさな たねを、そっと つちに うえました。「おおきく なあれ」。",
+          early_elementary_7_8:
+            "{childName}は、てのひらに のせた ちいさな たねを、ふかふかの つちに そっと うえ、「はやく おおきく なあれ」と こえを かけました。",
+          general_child:
+            "{childName}は てのひらの ちいさな たねを、そっと つちに うえました。「おおきく なあれ」。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing tender shot of the child gently planting a tiny seed into soft soil with both hands, hopeful expression. Warm morning light, tiny green-leaf motif. Keep the same child across all pages with consistent round face, hair, and outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "つぎの ひも、また つぎの ひも、{childName}は まいにち みずを あげました。",
+          baby_toddler: "まいにち みず。",
+          preschool_3_4:
+            "つぎの ひも、また つぎの ひも、{childName}は まいにち みずを あげました。",
+          early_reader_5_6:
+            "つぎの ひも、また つぎの ひも、{childName}は かかさず まいにち みずを あげました。",
+          early_elementary_7_8:
+            "つぎの ひも、また つぎの ひも、{childName}は あさに ゆうに、かかさず まいにち みずを あげつづけました。",
+          general_child:
+            "つぎの ひも、また つぎの ひも、{childName}は まいにち みずを あげました。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Shot of the child watering a small pot of soil each day with a little watering can, a daily-routine feeling. Soft daylight, tiny green-leaf motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "でも なかなか めは でません。「まだかな」。{childName}は ちょっぴり しんぱいに。",
+          baby_toddler: "まだかな。しんぱい。",
+          preschool_3_4:
+            "でも なかなか めは でません。「まだかな」。{childName}は ちょっぴり しんぱいに。",
+          early_reader_5_6:
+            "でも なかなか めは でません。「まだ でないのかな」。{childName}は ちょっぴり しんぱいに なりました。",
+          early_elementary_7_8:
+            "でも、いくら まっても つちは しずかな ままで、なかなか めが でません。「ほんとうに でるのかな」と、{childName}は ちょっぴり しんぱいに なりました。",
+          general_child:
+            "でも なかなか めは でません。「まだかな」。{childName}は ちょっぴり しんぱいに。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Quiet shot of the child peering worriedly at the still-bare soil, wondering if the seed will sprout. Gentle pensive mood, soft light, tiny green-leaf motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "それでも あきらめず つづけると、ある あさ ちいさな みどりの めが ひょっこり！",
+          baby_toddler: "め が でた！",
+          preschool_3_4:
+            "それでも あきらめず つづけると、ある あさ ちいさな みどりの めが ひょっこり！",
+          early_reader_5_6:
+            "それでも あきらめず せわを つづけると、ある あさ、ちいさな みどりの めが ひょっこり でました！",
+          early_elementary_7_8:
+            "それでも {childName}が あきらめず せわを つづけて いると、ある あさ、つちの なかから ちいさな みどりの めが ひょっこり かおを だしました！",
+          general_child:
+            "それでも あきらめず つづけると、ある あさ ちいさな みどりの めが ひょっこり！",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Joyful shot of a tiny green sprout finally poking up from the soil, the surprised and delighted child leaning close. Fresh hopeful morning light, tiny green-leaf motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "ひざしを あびて、あめに うたれて、なえは すこしずつ せを のばします。",
+          baby_toddler: "ひざし。あめ。のびる。",
+          preschool_3_4:
+            "ひざしを あびて、あめに うたれて、なえは すこしずつ せを のばします。",
+          early_reader_5_6:
+            "あたたかい ひざしを あびて、めぐみの あめに うたれて、なえは すこしずつ せを のばして いきます。",
+          early_elementary_7_8:
+            "あたたかい ひざしを いっぱいに あびて、ときには つよい あめに うたれながらも、なえは すこしずつ、たくましく せを のばして いきました。",
+          general_child:
+            "ひざしを あびて、あめに うたれて、なえは すこしずつ せを のばします。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Shot of the young sapling growing taller through sunny days and gentle rain, the child caring for it across changing weather. Warm hopeful light, tiny green-leaf motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "きせつが めぐって、なえは いつしか {childName}の せを こえました。",
+          baby_toddler: "せが のびた。たかいね。",
+          preschool_3_4:
+            "きせつが めぐって、なえは いつしか {childName}の せを こえました。",
+          early_reader_5_6:
+            "きせつが いくつも めぐって、なえは いつしか {childName}の せを こえる たかさに なりました。",
+          early_elementary_7_8:
+            "はるが すぎ、なつが きて、きせつが いくつも めぐる うちに、なえは いつしか {childName}の せを こえる たかさまで そだって いました。",
+          general_child:
+            "きせつが めぐって、なえは いつしか {childName}の せを こえました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Shot of the sapling now grown taller than the child, who stands beside it amazed and proud as the seasons turn. Warm light, tiny green-leaf motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "やがて それは、はっぱの しげる おおきな きに なりました。",
+          baby_toddler: "おおきな き！",
+          preschool_3_4:
+            "やがて それは、はっぱの しげる おおきな きに なりました。",
+          early_reader_5_6:
+            "やがて それは、みどりの はっぱが しげる、おおきな きに なりました。",
+          early_elementary_7_8:
+            "そして やがて それは、みどりの はっぱを いっぱいに しげらせた、{childName}が みあげる ほど おおきな きに なりました。",
+          general_child:
+            "やがて それは、はっぱの しげる おおきな きに なりました。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Triumphant shot of the great leafy tree now towering, the child looking up at it with wonder and joy. Warm golden light, tiny green-leaf motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は おおきな きの かげで ひとやすみ。あきらめず こつこつ つづけたから だね。{parentMessage}",
+          baby_toddler: "きの かげ。やったね。{parentMessage}",
+          preschool_3_4:
+            "{childName}は おおきな きの かげで ひとやすみ。あきらめず こつこつ つづけたから だね。{parentMessage}",
+          early_reader_5_6:
+            "{childName}は、おおきな きの かげで ゆっくり ひとやすみ。あきらめず こつこつ つづけたから、ですね。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "{childName}は、その おおきな きの すずしい かげで、ゆっくり ひとやすみ。あの ちいさな たねが ここまで そだったのは、まいにち あきらめず こつこつ つづけた からですね。さいごに、{parentMessage}",
+          general_child:
+            "{childName}は おおきな きの かげで ひとやすみ。あきらめず こつこつ つづけたから だね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Heartwarming ending shot of the child resting peacefully in the cool shade of the great tree they grew from a tiny seed. Warm tender golden light, tiny green-leaf motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-little-train-hill": {
+    name: "{childName}の おかをのぼる ちいさな きしゃ",
+    description:
+      "ちいさな きしゃの うんてんしゅに なった {childName}が、おもちゃを のせて たかい おかを のぼる オリジナル絵本。あきらめず がんばる たいせつさ（やりとげる ちから）の おはなし。",
+    icon: "🚂",
+    categoryGroupId: "growth-support",
+    subcategoryId: "little-train-hill",
+    parentIntent: "できるようになってほしい。でも怒らず応援したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["original", "perseverance", "effort", "kindness", "train"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-little-train-hill.webp",
+    sampleImageAlt: "おもちゃを乗せて坂をのぼる小さな汽車の運転手になった、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Cheerful determined picture-book mood: a child as the driver of a small friendly train carrying toys, slowly puffing up a steep green hill and joyfully rolling down to friends on the other side, warm perseverance-and-kindness theme, soft watercolor storybook style.",
+    order: 96,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、ちいさな きしゃで たかい おかを のぼる オリジナルの絵本を、お子さまが主人公（うんてんしゅ）になって作ります。あきらめず がんばる たいせつさを、あたたかく えがきます。とくていの ゆうめいな ぶんを まねず、オリジナルの ことばで えがきます。",
+    fixedStory: {
+      previewImageUrl: "/images/templates/fixed-little-train-hill.webp",
+      titleTemplate: "{childName}の おかをのぼる ちいさな きしゃ",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a cheerful child as the driver of a small friendly train loaded with colorful toys, starting up a steep green hill with a determined smile, warm perseverance-and-kindness mood, soft watercolor storybook style, recurring tiny puff-of-steam motif, keep the same child across all pages with consistent round face, hair, and outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "おかをのぼる ちいさな きしゃ",
+      openingNarrationTemplate:
+        "{childName}は ちいさな きしゃの うんてんしゅ。おもちゃを のせて、おかの むこうの ともだちへ。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は ちいさな きしゃの うんてんしゅ。おもちゃを のせて、おかの むこうの ともだちへ しゅっぱつ！",
+          baby_toddler: "きしゃ しゅっぱつ！ おもちゃ のせて。",
+          preschool_3_4:
+            "{childName}は ちいさな きしゃの うんてんしゅ。おもちゃを のせて、おかの むこうの ともだちへ しゅっぱつ！",
+          early_reader_5_6:
+            "{childName}は、ちいさな きしゃの うんてんしゅです。たくさんの おもちゃを のせて、おかの むこうの ともだちへ しゅっぱつ！",
+          early_elementary_7_8:
+            "{childName}は、ちいさな きしゃの たよれる うんてんしゅです。きょうは たくさんの おもちゃを のせて、おかの むこうで まつ ともだちの ところへ しゅっぱつです！",
+          general_child:
+            "{childName}は ちいさな きしゃの うんてんしゅ。おもちゃを のせて、おかの むこうの ともだちへ しゅっぱつ！",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing cheerful shot of the child driving a small friendly train loaded with colorful toys, setting off along sunny tracks toward distant hills. Bright morning light, tiny puff-of-steam motif. Keep the same child across all pages with consistent round face, hair, and outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "ところが、めの まえには とても たかい おか。きしゃは だんだん おそく なって いきます。",
+          baby_toddler: "たかい おか。おそく なる。",
+          preschool_3_4:
+            "ところが、めの まえには とても たかい おか。きしゃは だんだん おそく なって いきます。",
+          early_reader_5_6:
+            "ところが、めの まえには とても たかい おかが。きしゃは だんだん おそく なって いきます。",
+          early_elementary_7_8:
+            "ところが、ゆくてには みあげる ほど たかい おかが そびえて いました。のぼりはじめると、きしゃは だんだん おそく、おもく なって いきます。",
+          general_child:
+            "ところが、めの まえには とても たかい おか。きしゃは だんだん おそく なって いきます。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Shot of the small toy-laden train reaching the foot of a tall steep green hill and beginning to slow, the child looking up at the challenge. Soft daylight, tiny puff-of-steam motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "さかの とちゅうで とまりそう。でも {childName}は あきらめません。「だいじょうぶ、すこしずつ」。",
+          baby_toddler: "あきらめない。すこしずつ。",
+          preschool_3_4:
+            "さかの とちゅうで とまりそう。でも {childName}は あきらめません。「だいじょうぶ、すこしずつ」。",
+          early_reader_5_6:
+            "さかの とちゅうで、きしゃは とまりそうに なりました。でも {childName}は あきらめません。「だいじょうぶ、すこしずつ いこう」。",
+          early_elementary_7_8:
+            "さかの とちゅうで、きしゃは いまにも とまりそうに なりました。それでも {childName}は あきらめません。ふかく いきを すって、「だいじょうぶ、すこしずつ いけば いいんだ」と じぶんに いいきかせます。",
+          general_child:
+            "さかの とちゅうで とまりそう。でも {childName}は あきらめません。「だいじょうぶ、すこしずつ」。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Tense determined shot of the little train nearly stalling partway up the steep hill, the child gripping the controls with a brave, focused face, encouraging it onward. Dramatic but gentle light, tiny puff-of-steam motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "こつこつ がんばって、とうとう おかの てっぺんへ！ともだちに おもちゃを とどけ、みんな おおよろこび。あきらめず つづけたら、できたね。{parentMessage}",
+          baby_toddler: "てっぺん ついた！ できたね。{parentMessage}",
+          preschool_3_4:
+            "こつこつ がんばって、とうとう おかの てっぺんへ！ともだちに おもちゃを とどけ、みんな おおよろこび。あきらめず つづけたら、できたね。{parentMessage}",
+          early_reader_5_6:
+            "こつこつ がんばって、とうとう おかの てっぺんへ つきました！おかの むこうの ともだちに おもちゃを とどけると、みんな おおよろこび。あきらめず つづけたら、できましたね。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "すこしずつ、こつこつ がんばって、きしゃは とうとう おかの てっぺんに たどりつきました！そして さかを くだり、まっていた ともだちに おもちゃを とどけると、みんな おおよろこび。あきらめずに つづけたから、やりとげられたのですね。さいごに、{parentMessage}",
+          general_child:
+            "こつこつ がんばって、とうとう おかの てっぺんへ！ともだちに おもちゃを とどけ、みんな おおよろこび。あきらめず つづけたら、できたね。{parentMessage}",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Triumphant joyful shot of the little train cresting the hilltop and rolling down to delighted friends who receive the toys, everyone cheering, the proud smiling child driver. Bright victorious light, tiny puff-of-steam motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-little-train-hill-8p": {
+    name: "{childName}の おかをのぼる ちいさな きしゃ（8ページ）",
+    description:
+      "ちいさな きしゃで たかい おかを のぼる オリジナル絵本の8ページ版。すこしずつ、あきらめず やりとげる たいせつさを じっくり えがきます。",
+    icon: "🚂",
+    categoryGroupId: "growth-support",
+    subcategoryId: "little-train-hill",
+    parentIntent: "できるようになってほしい。でも怒らず応援したい",
+    recommendedAgeMin: 2,
+    recommendedAgeMax: 7,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["original", "perseverance", "effort", "kindness", "train"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-little-train-hill.webp",
+    sampleImageAlt: "おもちゃを乗せて坂をのぼる小さな汽車の運転手になった、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Cheerful determined picture-book mood: a child as the driver of a small friendly train carrying toys, slowly puffing up a steep green hill and joyfully rolling down to friends on the other side, warm perseverance-and-kindness theme, soft watercolor storybook style.",
+    order: 96.5,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、ちいさな きしゃで たかい おかを のぼる オリジナルの絵本の8ページ版を、お子さまが主人公（うんてんしゅ）になって作ります。あきらめず がんばる たいせつさを、あたたかく えがきます。とくていの ゆうめいな ぶんを まねず、オリジナルの ことばで えがきます。",
+    fixedStory: {
+      pageCount: 8,
+      previewImageUrl: "/images/templates/fixed-little-train-hill.webp",
+      titleTemplate: "{childName}の おかをのぼる ちいさな きしゃ",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a cheerful child as the driver of a small friendly train loaded with colorful toys, starting up a steep green hill with a determined smile, warm perseverance-and-kindness mood, soft watercolor storybook style, recurring tiny puff-of-steam motif, keep the same child across all pages with consistent round face, hair, and outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "おかをのぼる ちいさな きしゃ",
+      openingNarrationTemplate:
+        "{childName}は ちいさな きしゃの うんてんしゅ。おもちゃを のせて、おかの むこうの ともだちへ。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は ちいさな きしゃの うんてんしゅ。きょうは おもちゃを たくさん のせて しゅっぱつです。",
+          baby_toddler: "きしゃ しゅっぱつ！",
+          preschool_3_4:
+            "{childName}は ちいさな きしゃの うんてんしゅ。きょうは おもちゃを たくさん のせて しゅっぱつです。",
+          early_reader_5_6:
+            "{childName}は、ちいさな きしゃの うんてんしゅです。きょうは おもちゃを たくさん のせて しゅっぱつです。",
+          early_elementary_7_8:
+            "{childName}は、ちいさな きしゃの たよれる うんてんしゅです。きょうは いろとりどりの おもちゃを たくさん のせて、げんきよく しゅっぱつです。",
+          general_child:
+            "{childName}は ちいさな きしゃの うんてんしゅ。きょうは おもちゃを たくさん のせて しゅっぱつです。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing cheerful shot of the child driving a small friendly train loaded with colorful toys, setting off from a sunny little station. Bright morning light, tiny puff-of-steam motif. Keep the same child across all pages with consistent round face, hair, and outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "おかの むこうでは、ともだちが おもちゃを たのしみに まって います。",
+          baby_toddler: "ともだち まってる。",
+          preschool_3_4:
+            "おかの むこうでは、ともだちが おもちゃを たのしみに まって います。",
+          early_reader_5_6:
+            "おかの むこうの まちでは、ともだちが おもちゃを たのしみに まって います。",
+          early_elementary_7_8:
+            "とおい おかの むこうの まちでは、{childName}の はこぶ おもちゃを、ともだちが いまかいまかと たのしみに まって いました。",
+          general_child:
+            "おかの むこうでは、ともだちが おもちゃを たのしみに まって います。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Warm shot of friends on the far side of a hill happily waiting for the toy delivery, looking toward the tracks. Sunny hopeful mood, tiny puff-of-steam motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "ところが ゆくてには、みあげる ほど たかい おかが ありました。",
+          baby_toddler: "たかい おか！",
+          preschool_3_4:
+            "ところが ゆくてには、みあげる ほど たかい おかが ありました。",
+          early_reader_5_6:
+            "ところが ゆくてには、みあげる ほど たかくて けわしい おかが ありました。",
+          early_elementary_7_8:
+            "ところが、ゆくてには みあげる ほど たかく、けわしい おかが どっしりと そびえて いました。",
+          general_child:
+            "ところが ゆくてには、みあげる ほど たかい おかが ありました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Shot of the small train arriving at the foot of a tall steep green hill, the child looking up at the daunting climb ahead. Soft daylight, tiny puff-of-steam motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "のぼりはじめると、きしゃは だんだん おそく、おもく なって いきます。",
+          baby_toddler: "おそく なる。よいしょ。",
+          preschool_3_4:
+            "のぼりはじめると、きしゃは だんだん おそく、おもく なって いきます。",
+          early_reader_5_6:
+            "のぼりはじめると、きしゃは だんだん おそく、そして おもく なって いきます。",
+          early_elementary_7_8:
+            "さかを のぼりはじめると、おもちゃを たくさん のせた きしゃは、だんだん おそく、おもく なって、しゃりんが きしみはじめました。",
+          general_child:
+            "のぼりはじめると、きしゃは だんだん おそく、おもく なって いきます。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Shot of the toy-laden train starting up the steep slope and slowing, straining, the child concentrating at the controls. Gentle effortful mood, tiny puff-of-steam motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "さかの とちゅうで、きしゃは いまにも とまりそうに なりました。",
+          baby_toddler: "とまりそう。",
+          preschool_3_4:
+            "さかの とちゅうで、きしゃは いまにも とまりそうに なりました。",
+          early_reader_5_6:
+            "さかの ちょうど まんなかで、きしゃは いまにも とまりそうに なりました。",
+          early_elementary_7_8:
+            "さかの ちょうど まんなか あたりで、きしゃは ちからつきて、いまにも とまって しまいそうに なりました。",
+          general_child:
+            "さかの とちゅうで、きしゃは いまにも とまりそうに なりました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Tense shot of the little train nearly stalling halfway up the steep hill, wheels straining, the child wide-eyed but brave. Dramatic but gentle light, tiny puff-of-steam motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "でも {childName}は あきらめません。「だいじょうぶ、すこしずつ いこう」。",
+          baby_toddler: "あきらめない。すこしずつ。",
+          preschool_3_4:
+            "でも {childName}は あきらめません。「だいじょうぶ、すこしずつ いこう」。",
+          early_reader_5_6:
+            "でも {childName}は あきらめません。ふかく いきを すって、「だいじょうぶ、すこしずつ いこう」。",
+          early_elementary_7_8:
+            "でも {childName}は あきらめません。ふかく いきを すって、「だいじょうぶ、あわてず すこしずつ いけば いいんだ」と、しずかに きしゃを はげまします。",
+          general_child:
+            "でも {childName}は あきらめません。「だいじょうぶ、すこしずつ いこう」。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Determined shot of the child encouraging the straining little train onward with a brave, focused smile, refusing to give up on the slope. Hopeful gentle light, tiny puff-of-steam motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "こつこつ がんばって、とうとう おかの てっぺんに たどりつきました！",
+          baby_toddler: "てっぺん ついた！",
+          preschool_3_4:
+            "こつこつ がんばって、とうとう おかの てっぺんに たどりつきました！",
+          early_reader_5_6:
+            "すこしずつ こつこつ がんばって、とうとう おかの てっぺんに たどりつきました！",
+          early_elementary_7_8:
+            "すこしずつ、すこしずつ、こつこつ がんばって、きしゃは とうとう たかい おかの てっぺんに たどりつきました！",
+          general_child:
+            "こつこつ がんばって、とうとう おかの てっぺんに たどりつきました！",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Triumphant shot of the little train finally cresting the hilltop, the child cheering with arms raised, wide sky and the town visible below. Bright victorious light, tiny puff-of-steam motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "さかを くだって、ともだちに おもちゃを とどけると みんな おおよろこび。あきらめず つづけたら、できたね。{parentMessage}",
+          baby_toddler: "おもちゃ とどけた！ できたね。{parentMessage}",
+          preschool_3_4:
+            "さかを くだって、ともだちに おもちゃを とどけると みんな おおよろこび。あきらめず つづけたら、できたね。{parentMessage}",
+          early_reader_5_6:
+            "さかを くだって、まっていた ともだちに おもちゃを とどけると、みんな おおよろこび。あきらめず つづけたら、できましたね。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "そして きもちよく さかを くだり、まっていた ともだちに おもちゃを とどけると、みんな おおよろこび。あきらめずに こつこつ つづけたから、やりとげられたのですね。さいごに、{parentMessage}",
+          general_child:
+            "さかを くだって、ともだちに おもちゃを とどけると みんな おおよろこび。あきらめず つづけたら、できたね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Heartwarming ending shot of the train rolling down to delighted friends who joyfully receive the toys, the proud smiling child driver among them. Warm golden celebratory light, tiny puff-of-steam motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
 };
 
 const legacyTemplateIds = ["birthday", "seasons", "challenge", "family"];
