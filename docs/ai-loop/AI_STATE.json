@@ -222,6 +222,7 @@
     "PR #621: fix(admin): スタイルプレビュー再生成を1件ずつ順次呼び出し (merged)",
     "PR #622: fix(admin): プレビュー再生成を resilient 化＋既存スキップ (merged)",
     "PR #623: feat(styles): スタイルプレビューを gpt-image-2 画像に差し替え (merged)",
+    "PR #624: feat(quality): storyGoal 遵守を auto-review に追加＋rubric (#540) (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
