@@ -596,6 +596,80 @@ const THUMBNAILS = [
       "Bittersweet but hopeful mood, soft warm light, strong bond of lasting friendship. Soft watercolor style, rich but not cluttered."
     ),
   },
+
+  // ── 名作プリセット第2弾 10枚 (2026-06-26) ───────────────────────────────────
+  // むかしばなし・名作（PD再話）。各テンプレの visualDirection に対応。お子さまが主人公。
+  {
+    id: "fixed-classic-issunboshi",
+    prompt: buildPrompt(
+      "Issun-boshi (One-Inch Boy) picture-book cover. A brave tiny child the size of a thumb stands proudly in a wooden rice bowl boat, using a sewing-needle sword and a chopstick oar, floating down a sparkling river toward a traditional Japanese town. " +
+      "Warm encouraging mood, recurring tiny rice-grain motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-classic-omusubi",
+    prompt: buildPrompt(
+      "Omusubi-kororin (The Rolling Rice Ball) picture-book cover. A cheerful kind child watches a round rice ball roll into a small hole at the foot of a grassy hill, friendly little mice peeking out happily from inside. " +
+      "Sunny gentle countryside, warm kindness-and-wonder mood, recurring tiny rice-ball motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-classic-crane",
+    prompt: buildPrompt(
+      "Tsuru-no-ongaeshi (The Grateful Crane) picture-book cover. A gentle child kindly frees a beautiful white crane from a snowy field, the graceful bird spreading its wings in gratitude, soft snow falling around them. " +
+      "Tender quiet mood, cool whites and warm accents, recurring tiny feather motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-classic-three-pigs",
+    prompt: buildPrompt(
+      "Three Little Pigs picture-book cover. A diligent smiling child happily builds a sturdy little brick house with a trowel, two friendly piglet friends nearby beside straw and stick houses, a gentle comical wolf peeking harmlessly from behind a tree. " +
+      "Cheerful diligence-and-preparation mood, recurring tiny brick motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-classic-mitten",
+    prompt: buildPrompt(
+      "The Mitten picture-book cover. A warm-hearted child kneels beside a big cozy knitted mitten in the snow, friendly small animals — a mouse, a rabbit, and a fox — snuggling inside together sharing warmth. " +
+      "Soft snowy winter, tender sharing mood, recurring tiny snowflake motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-classic-ant-grasshopper",
+    prompt: buildPrompt(
+      "The Ant and the Grasshopper picture-book cover. A diligent child carries a basket of food like a busy ant along a sunny summer meadow path, a cheerful grasshopper playing a little fiddle nearby in the tall grass. " +
+      "Warm preparation-and-kindness mood, recurring tiny wheat-grain motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-classic-golden-goose",
+    prompt: buildPrompt(
+      "The Golden Goose picture-book cover. A kind smiling child gently carries a softly shining golden goose, a funny little chain of cheerful people comically stuck together following behind in playful poses. " +
+      "Warm whimsical humorous mood, recurring tiny golden-feather motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-classic-bremen",
+    prompt: buildPrompt(
+      "The Bremen Town Musicians picture-book cover. A cheerful child leads a happy band of friendly animals — a donkey, a dog, a cat, and a rooster — ready to make music together on a sunny road. " +
+      "Warm teamwork-and-friendship mood, recurring tiny music-note motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  // 創作（成長を応援）。完全オリジナル。
+  {
+    id: "fixed-tiny-seed-big-tree",
+    prompt: buildPrompt(
+      "Original growth tale picture-book cover. A hopeful child kneels beside a tiny green sprout in soft soil, gently holding a small watering can, a faint dreamy silhouette of a great leafy tree rising behind them. " +
+      "Warm patience-and-growth mood, recurring tiny green-leaf motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
+  {
+    id: "fixed-little-train-hill",
+    prompt: buildPrompt(
+      "Original perseverance tale picture-book cover. A cheerful child as the driver of a small friendly train loaded with colorful toys, starting up a steep green hill with a determined hopeful smile. " +
+      "Warm perseverance-and-kindness mood, recurring tiny puff-of-steam motif, soft watercolor storybook style, rich but not cluttered."
+    ),
+  },
 ];
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
