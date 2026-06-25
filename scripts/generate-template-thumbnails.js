@@ -617,7 +617,8 @@ const THUMBNAILS = [
     id: "fixed-classic-crane",
     prompt: buildPrompt(
       "Tsuru-no-ongaeshi (The Grateful Crane) picture-book cover. A gentle child kindly frees a beautiful white crane from a snowy field, the graceful bird spreading its wings in gratitude, soft snow falling around them. " +
-      "Tender quiet mood, cool whites and warm accents, recurring tiny feather motif, soft watercolor storybook style, rich but not cluttered."
+      "Tender quiet mood, cool whites and warm accents, recurring tiny feather motif, soft watercolor storybook style, rich but not cluttered. " +
+      "CRITICAL: absolutely no title text, no book title, no words, no letters, and no characters anywhere in the image."
     ),
   },
   {
@@ -638,7 +639,8 @@ const THUMBNAILS = [
     id: "fixed-classic-ant-grasshopper",
     prompt: buildPrompt(
       "The Ant and the Grasshopper picture-book cover. A diligent child carries a basket of food like a busy ant along a sunny summer meadow path, a cheerful grasshopper playing a little fiddle nearby in the tall grass. " +
-      "Warm preparation-and-kindness mood, recurring tiny wheat-grain motif, soft watercolor storybook style, rich but not cluttered."
+      "Warm preparation-and-kindness mood, recurring tiny wheat-grain motif, soft watercolor storybook style, rich but not cluttered. " +
+      "CRITICAL: absolutely no title text, no book title, no words, no letters, and no characters anywhere in the image."
     ),
   },
   {
@@ -689,8 +691,9 @@ const THUMBNAILS = [
   {
     id: "fixed-classic-momotaro",
     prompt: buildPrompt(
-      "Momotaro (Peach Boy) picture-book cover. A brave kind child stands cheerfully with a small banner and millet dumplings, three friendly animal companions — a dog, a monkey, and a pheasant — gathered happily beside them, a giant peach and a soft blue sky behind. " +
-      "Warm courage-and-friendship mood, no violence, recurring tiny peach motif, soft watercolor storybook style, rich but not cluttered."
+      "Momotaro (Peach Boy) picture-book cover. A brave kind child stands cheerfully with a small plain banner and millet dumplings, three friendly animal companions — a dog, a monkey, and a pheasant — gathered happily beside them, a giant peach and a soft blue sky behind. " +
+      "Warm courage-and-friendship mood, no violence, recurring tiny peach motif, soft watercolor storybook style, rich but not cluttered. " +
+      "CRITICAL: absolutely no title text, no book title, no words, no letters, and no characters anywhere in the image — the banner must be blank."
     ),
   },
   {
