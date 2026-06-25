@@ -10434,6 +10434,273 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-classic-three-pigs": {
+    name: "{childName}と 3びきの こぶた",
+    description:
+      "世界の名作『3びきのこぶた』を、お子さまが主人公になって楽しむ固定テンプレート。こつこつ しっかり つくると みんなを まもれる、おだやかな おはなし。",
+    icon: "🐷",
+    categoryGroupId: "classic-tales",
+    subcategoryId: "classic-three-pigs",
+    parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["classic tale", "world folk", "diligence", "preparation"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-classic-three-pigs.webp",
+    sampleImageAlt: "れんがの家を作る、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Cheerful storybook countryside mood: a hardworking child building a sturdy brick house with two little piglet friends, a big gentle comical wolf, warm diligence-and-teamwork theme, soft watercolor storybook style.",
+    order: 38,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、名作『3びきのこぶた』をお子さまが主人公（しっかり者の役）になって、おだやかに楽しむ絵本を作ります。",
+    fixedStory: {
+      previewImageUrl: "/images/templates/fixed-classic-three-pigs.webp",
+      titleTemplate: "{childName}と 3びきの こぶた",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a cheerful hardworking child building a sturdy brick house alongside two friendly little piglets building straw and stick houses, a big gentle comical wolf peeking from afar, warm sunny countryside, teamwork-and-diligence mood, soft watercolor storybook style, recurring tiny brick motif, keep the same child across all pages with consistent round face, hair, and a simple work outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "3びきの こぶた",
+      openingNarrationTemplate:
+        "{childName}と 2ひきの こぶたは、それぞれ じぶんの おうちを つくることに しました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "こぶたたちは わらと きで、あっというまに おうちを つくりました。{childName}は れんがで、こつこつ じょうぶな おうちを つくります。",
+          baby_toddler: "わら、き、れんが。おうち つくろう。",
+          preschool_3_4:
+            "こぶたたちは わらと きで、あっというまに おうちを つくりました。{childName}は れんがで、こつこつ じょうぶな おうちを つくります。",
+          early_reader_5_6:
+            "ふたりの こぶたは わらと きで、あっというまに おうちを つくりました。{childName}は れんがを ひとつ ひとつ つみ、こつこつ じょうぶな おうちを つくりました。",
+          early_elementary_7_8:
+            "ふたりの こぶたは、わらと きで あっというまに おうちを つくって あそびに いきました。{childName}は たいへんでも、れんがを ひとつ ひとつ つみあげ、じかんを かけて じょうぶな おうちを つくりました。",
+          general_child:
+            "こぶたたちは わらと きで、あっというまに おうちを つくりました。{childName}は れんがで、こつこつ じょうぶな おうちを つくります。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Cheerful establishing shot of a sunny countryside meadow: two little piglets finishing quick straw and stick houses while the diligent child carefully stacks bricks to build a sturdy house, working hard with a determined smile. Warm daylight, tiny brick motif. Keep the same child across all pages with consistent round face, hair, and simple work outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "そこへ おおきな おおかみが やってきて、ふうっと いきを ふきました。わらと きの おうちは とんでしまいました。",
+          baby_toddler: "おおかみ ふうっ。おうち とんだ！",
+          preschool_3_4:
+            "そこへ おおきな おおかみが やってきて、ふうっと いきを ふきました。わらと きの おうちは とんでしまいました。",
+          early_reader_5_6:
+            "そこへ おおきな おおかみが やってきて、ふうっと つよく いきを ふきました。わらの おうちも きの おうちも、とんでしまいました。",
+          early_elementary_7_8:
+            "そこへ おおきな おおかみが やってきて、「ふうっ」と つよく いきを ふきました。すると、わらの おうちも きの おうちも、あっというまに とんでしまいました。",
+          general_child:
+            "そこへ おおきな おおかみが やってきて、ふうっと いきを ふきました。わらと きの おうちは とんでしまいました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Lively shot of a big gentle comical wolf blowing a strong puff of air, the straw and stick houses scattering away in the wind, the two piglets scrambling in surprise. Playful not-scary mood, tiny brick motif. Keep the same child and piglets consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "こぶたたちは {childName}の れんがの おうちに かけこみました。おおかみが ふうふう しても、おうちは びくともしません。",
+          baby_toddler: "れんがの おうち、びくともしない！",
+          preschool_3_4:
+            "こぶたたちは {childName}の れんがの おうちに かけこみました。おおかみが ふうふう しても、おうちは びくともしません。",
+          early_reader_5_6:
+            "こぶたたちは あわてて {childName}の れんがの おうちに かけこみました。おおかみが いくら ふうふう ふいても、じょうぶな おうちは びくとも しません。",
+          early_elementary_7_8:
+            "こぶたたちは あわてて {childName}の れんがの おうちに かけこみました。おおかみが いくら ちからいっぱい ふうふう ふいても、こつこつ つくった じょうぶな おうちは、びくとも しませんでした。",
+          general_child:
+            "こぶたたちは {childName}の れんがの おうちに かけこみました。おおかみが ふうふう しても、おうちは びくともしません。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Reassuring shot of the two piglets safely inside the sturdy brick house with the child, while the big comical wolf outside huffs and puffs with all its might but the brick house stands firm and unmoved. Warm safe mood, tiny brick motif. Keep the same child and piglets consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "とうとう おおかみは あきらめて かえっていきました。「こつこつ つくると、みんなを まもれるね」。{childName}は にっこり。{parentMessage}",
+          baby_toddler: "おおかみ あきらめた。みんな ぶじ。{parentMessage}",
+          preschool_3_4:
+            "とうとう おおかみは あきらめて かえっていきました。「こつこつ つくると、みんなを まもれるね」。{childName}は にっこり。{parentMessage}",
+          early_reader_5_6:
+            "とうとう おおかみは あきらめて かえっていきました。{childName}は、こつこつ じょうぶに つくれば、たいせつな みんなを まもれるのだと 知りました。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "とうとう おおかみは つかれて あきらめ、すごすごと かえっていきました。{childName}は、たいへんでも こつこつ じょうぶに つくることが、じぶんも たいせつな なかまも まもることに つながるのだと かんじました。さいごに、{parentMessage}",
+          general_child:
+            "とうとう おおかみは あきらめて かえっていきました。「こつこつ つくると、みんなを まもれるね」。{childName}は にっこり。{parentMessage}",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Happy payoff shot of the comical wolf giving up and trudging away, while the child and two piglets celebrate safely together inside and around the sturdy brick house. Warm relieved cheerful mood, tiny brick motif. Keep the same child and piglets consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-classic-three-pigs-8p": {
+    name: "{childName}と 3びきの こぶた（8ページ）",
+    description:
+      "名作『3びきのこぶた』の8ページ版。わら・き・れんがの おうちづくりから、おおかみが あきらめるまでを じっくり えがく、お子さまが主人公の固定テンプレート。",
+    icon: "🐷",
+    categoryGroupId: "classic-tales",
+    subcategoryId: "classic-three-pigs",
+    parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["classic tale", "world folk", "diligence", "preparation"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-classic-three-pigs.webp",
+    sampleImageAlt: "れんがの家を作る、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Cheerful storybook countryside mood: a hardworking child building a sturdy brick house with two little piglet friends, a big gentle comical wolf, warm diligence-and-teamwork theme, soft watercolor storybook style.",
+    order: 38.5,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、名作『3びきのこぶた』の8ページ版を、お子さまが主人公（しっかり者の役）になって、おだやかに楽しむ絵本を作ります。",
+    fixedStory: {
+      pageCount: 8,
+      previewImageUrl: "/images/templates/fixed-classic-three-pigs.webp",
+      titleTemplate: "{childName}と 3びきの こぶた",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a cheerful hardworking child building a sturdy brick house alongside two friendly little piglets building straw and stick houses, a big gentle comical wolf peeking from afar, warm sunny countryside, teamwork-and-diligence mood, soft watercolor storybook style, recurring tiny brick motif, keep the same child across all pages with consistent round face, hair, and a simple work outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "3びきの こぶた",
+      openingNarrationTemplate:
+        "{childName}と 2ひきの こぶたは、それぞれ じぶんの おうちを つくることに しました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}と 2ひきの こぶたは、それぞれ じぶんの おうちを つくることに しました。",
+          baby_toddler: "みんなで おうち つくろう。",
+          preschool_3_4:
+            "{childName}と 2ひきの こぶたは、それぞれ じぶんの おうちを つくることに しました。",
+          early_reader_5_6:
+            "よく はれた日、{childName}と 2ひきの こぶたは、それぞれ じぶんの おうちを つくることに しました。",
+          early_elementary_7_8:
+            "よく はれた日、{childName}と なかよしの 2ひきの こぶたは、それぞれ じぶんの おうちを つくることに しました。",
+          general_child:
+            "{childName}と 2ひきの こぶたは、それぞれ じぶんの おうちを つくることに しました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Cheerful establishing shot of a sunny countryside meadow where a child and two little piglets gather their building materials — straw, sticks, and bricks — ready to build their own houses. Warm daylight, tiny brick motif. Keep the same child across all pages with consistent round face, hair, and simple work outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "1ぴきめの こぶたは わらで、あっというまに おうちを つくって あそびに いきました。",
+          baby_toddler: "わらの おうち、はやい！",
+          preschool_3_4:
+            "1ぴきめの こぶたは わらで、あっというまに おうちを つくって あそびに いきました。",
+          early_reader_5_6:
+            "1ぴきめの こぶたは わらで、あっというまに おうちを つくり、すぐに あそびに いってしまいました。",
+          early_elementary_7_8:
+            "1ぴきめの こぶたは わらで、あっというまに かるい おうちを つくり、「もう できた」と すぐに あそびに いってしまいました。",
+          general_child:
+            "1ぴきめの こぶたは わらで、あっというまに おうちを つくって あそびに いきました。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Playful shot of the first little piglet quickly finishing a light straw house and dashing off to play, carefree. Sunny meadow, tiny brick motif. Keep the scene consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "2ひきめの こぶたは きで、はやばやと おうちを つくって あそびに いきました。",
+          baby_toddler: "きの おうちも はやい！",
+          preschool_3_4:
+            "2ひきめの こぶたは きで、はやばやと おうちを つくって あそびに いきました。",
+          early_reader_5_6:
+            "2ひきめの こぶたは きで、はやばやと おうちを つくり、こちらも すぐに あそびに いきました。",
+          early_elementary_7_8:
+            "2ひきめの こぶたは きで、はやばやと おうちを つくり、「これで じゅうぶん」と こちらも すぐに あそびに いってしまいました。",
+          general_child:
+            "2ひきめの こぶたは きで、はやばやと おうちを つくって あそびに いきました。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Playful shot of the second little piglet quickly building a stick house and hurrying off to play, easygoing. Sunny meadow, tiny brick motif. Keep the scene consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は れんがを ひとつ ひとつ つみ、たいへんでも こつこつ じょうぶな おうちを つくりました。",
+          baby_toddler: "{childName} れんが こつこつ。",
+          preschool_3_4:
+            "{childName}は れんがを ひとつ ひとつ つみ、たいへんでも こつこつ じょうぶな おうちを つくりました。",
+          early_reader_5_6:
+            "{childName}は れんがを ひとつ ひとつ ていねいに つみ、たいへんでも こつこつ、じょうぶな おうちを つくりました。",
+          early_elementary_7_8:
+            "{childName}は あそびたい きもちを がまんして、れんがを ひとつ ひとつ ていねいに つみあげ、じかんを かけて こつこつ、とても じょうぶな おうちを つくりました。",
+          general_child:
+            "{childName}は れんがを ひとつ ひとつ つみ、たいへんでも こつこつ じょうぶな おうちを つくりました。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Diligent shot of the child carefully stacking bricks one by one to build a sturdy house, working hard with a focused determined smile while the piglets play in the distance. Warm light, tiny brick motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "そこへ おおきな おおかみが やってきて、わらの おうちを ふうっ。おうちは とんで、1ぴきめの こぶたは にげだしました。",
+          baby_toddler: "おおかみ ふうっ。わら とんだ！",
+          preschool_3_4:
+            "そこへ おおきな おおかみが やってきて、わらの おうちを ふうっ。おうちは とんで、1ぴきめの こぶたは にげだしました。",
+          early_reader_5_6:
+            "そこへ おおきな おおかみが やってきて、わらの おうちを ふうっと ふきました。おうちは とんでしまい、1ぴきめの こぶたは あわてて にげだしました。",
+          early_elementary_7_8:
+            "そこへ おおきな おおかみが やってきて、わらの おうちを 「ふうっ」と ふきました。かるい わらの おうちは あっというまに とんでしまい、1ぴきめの こぶたは あわてて にげだしました。",
+          general_child:
+            "そこへ おおきな おおかみが やってきて、わらの おうちを ふうっ。おうちは とんで、1ぴきめの こぶたは にげだしました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Lively shot of a big gentle comical wolf blowing the straw house apart, the first piglet scrambling away in surprise. Playful not-scary mood, tiny brick motif. Keep the scene consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "つぎに きの おうちも ふうっと とんで、2ひきの こぶたは {childName}の れんがの おうちへ かけこみました。",
+          baby_toddler: "きの おうちも とんだ！ にげろ。",
+          preschool_3_4:
+            "つぎに きの おうちも ふうっと とんで、2ひきの こぶたは {childName}の れんがの おうちへ かけこみました。",
+          early_reader_5_6:
+            "つぎに おおかみは きの おうちも ふうっと ふきとばし、2ひきの こぶたは あわてて {childName}の れんがの おうちへ かけこみました。",
+          early_elementary_7_8:
+            "つぎに おおかみは きの おうちも 「ふうっ」と ふきとばしました。にげば を なくした 2ひきの こぶたは、あわてて {childName}の じょうぶな れんがの おうちへ かけこみました。",
+          general_child:
+            "つぎに きの おうちも ふうっと とんで、2ひきの こぶたは {childName}の れんがの おうちへ かけこみました。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Shot of the stick house blowing apart and both piglets running toward the child's sturdy brick house for safety, the comical wolf behind them. Playful mood, tiny brick motif. Keep the same child and piglets consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "おおかみが いくら ふうふう しても、れんがの おうちは びくとも しません。",
+          baby_toddler: "れんが びくともしない！",
+          preschool_3_4:
+            "おおかみが いくら ふうふう しても、れんがの おうちは びくとも しません。",
+          early_reader_5_6:
+            "おおかみが いくら ちからいっぱい ふうふう ふいても、{childName}の れんがの おうちは びくとも しません。",
+          early_elementary_7_8:
+            "おおかみは ちからいっぱい なんども ふうふう ふきましたが、{childName}が こつこつ つくった じょうぶな れんがの おうちは、びくとも しませんでした。",
+          general_child:
+            "おおかみが いくら ふうふう しても、れんがの おうちは びくとも しません。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Reassuring shot of the comical wolf outside huffing and puffing with all its might at the sturdy brick house, which stands firm and unmoved, the child and piglets safe and calm inside. Warm safe mood, tiny brick motif. Keep the same child and piglets consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "とうとう おおかみは あきらめて かえっていきました。「こつこつ つくると、みんなを まもれるね」。{childName}は にっこり。{parentMessage}",
+          baby_toddler: "おおかみ あきらめた。みんな ぶじ。{parentMessage}",
+          preschool_3_4:
+            "とうとう おおかみは あきらめて かえっていきました。「こつこつ つくると、みんなを まもれるね」。{childName}は にっこり。{parentMessage}",
+          early_reader_5_6:
+            "とうとう おおかみは あきらめて かえっていきました。{childName}は、こつこつ じょうぶに つくれば、たいせつな みんなを まもれるのだと 知りました。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "とうとう おおかみは つかれて あきらめ、すごすごと かえっていきました。{childName}は、たいへんでも こつこつ じょうぶに つくることが、じぶんも たいせつな なかまも まもることに つながるのだと かんじました。さいごに、{parentMessage}",
+          general_child:
+            "とうとう おおかみは あきらめて かえっていきました。「こつこつ つくると、みんなを まもれるね」。{childName}は にっこり。{parentMessage}",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Happy payoff shot of the comical wolf giving up and trudging away into the distance, while the child and two piglets celebrate safely together around the sturdy brick house. Warm relieved cheerful mood, tiny brick motif. Keep the same child and piglets consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
 };
 
 const legacyTemplateIds = ["birthday", "seasons", "challenge", "family"];
