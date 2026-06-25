@@ -11235,6 +11235,540 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-classic-golden-goose": {
+    name: "{childName}と きんのがちょう",
+    description:
+      "グリムの名作『きんのがちょう』を、お子さまが主人公（やさしい こころの もちぬし）になって楽しむ固定テンプレート。やさしさが しあわせを よび、わらいが みんなを つなぐ おはなし。",
+    icon: "🪿",
+    categoryGroupId: "classic-tales",
+    subcategoryId: "classic-golden-goose",
+    parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["classic tale", "grimm", "kindness", "laughter", "repetition"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-classic-golden-goose.webp",
+    sampleImageAlt: "金色のがちょうと、くっついた人たちの行列の、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Whimsical cheerful picture-book mood: a kind child carrying a shining golden goose, a comical chain of people stuck together following along, a never-smiling princess finally bursting into laughter, soft watercolor storybook style.",
+    order: 41,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、グリム『きんのがちょう』をお子さまが主人公（やさしい こころの もちぬし）になって楽しむ絵本を作ります。こわい ばつでは なく、コミカルで あたたかい わらいの けつまつに します。",
+    fixedStory: {
+      previewImageUrl: "/images/templates/fixed-classic-golden-goose.webp",
+      titleTemplate: "{childName}と きんのがちょう",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a kind smiling child gently carrying a softly shining golden goose, with a funny little chain of cheerful people comically stuck together following behind, warm whimsical mood, soft watercolor storybook style, recurring tiny golden-feather motif, keep the same child across all pages with consistent round face, hair, and outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "きんのがちょう",
+      openingNarrationTemplate:
+        "もりの みちで、{childName}は おなかを すかせた おじいさんに、おべんとうを わけて あげました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "もりで、{childName}は おなかを すかせた おじいさんに おべんとうを わけて あげました。おじいさんは おれいに きんいろの がちょうを くれました。",
+          baby_toddler: "わけて あげた。きんの がちょう。",
+          preschool_3_4:
+            "もりで、{childName}は おなかを すかせた おじいさんに おべんとうを わけて あげました。おじいさんは おれいに きんいろの がちょうを くれました。",
+          early_reader_5_6:
+            "もりの みちで、{childName}は おなかを すかせた おじいさんに、おべんとうを わけて あげました。おじいさんは おれいに、きんいろに かがやく がちょうを くれました。",
+          early_elementary_7_8:
+            "もりの みちで、{childName}は おなかを すかせた おじいさんに、じぶんの おべんとうを こころよく わけて あげました。すると おじいさんは おれいに、きんいろに きらきら かがやく ふしぎな がちょうを くれたのです。",
+          general_child:
+            "もりで、{childName}は おなかを すかせた おじいさんに おべんとうを わけて あげました。おじいさんは おれいに きんいろの がちょうを くれました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing forest-path shot of the kind child sharing lunch with a gentle old man, who hands over a softly shining golden goose in thanks. Warm dappled light, tiny golden-feather motif. Keep the same child across all pages with consistent round face, hair, and outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "きんの はねが ほしくて、ひとりが そっと さわると…ぴたっ！てが くっついて はなれません。",
+          baby_toddler: "さわると ぴたっ！ くっついた。",
+          preschool_3_4:
+            "きんの はねが ほしくて、ひとりが そっと さわると…ぴたっ！てが くっついて はなれません。",
+          early_reader_5_6:
+            "きんの はねが ほしくて、ひとりが そっと さわると…ぴたっ！てが くっついて、もう はなれません。",
+          early_elementary_7_8:
+            "きんの はねを ひとつ ほしがった ひとが、こっそり さわった とたん…ぴたっ！てが がちょうに くっついて、ひっぱっても もう はなれなく なって しまいました。",
+          general_child:
+            "きんの はねが ほしくて、ひとりが そっと さわると…ぴたっ！てが くっついて はなれません。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Comical shot of a person reaching to pluck a golden feather and their hand suddenly sticking fast to the goose, eyes wide in funny surprise. Lighthearted humor, tiny golden-feather motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "つぎつぎ ひとが くっついて、ながい ぎょうれつに。{childName}と がちょうの あとを みんなで ぞろぞろ。",
+          baby_toddler: "みんな くっついた。ぞろぞろ。",
+          preschool_3_4:
+            "つぎつぎ ひとが くっついて、ながい ぎょうれつに。{childName}と がちょうの あとを みんなで ぞろぞろ。",
+          early_reader_5_6:
+            "それを はなそうと した ひとも、つぎつぎ くっついて、ながい ぎょうれつに。{childName}と がちょうの あとを、みんなで ぞろぞろ ついていきます。",
+          early_elementary_7_8:
+            "くっついた ひとを はなそうと した ひとまで、つぎつぎ ぴたっと くっついて、とうとう ながい ながい ぎょうれつに なりました。{childName}と がちょうの あとを、みんなで おかしな かっこうで ぞろぞろ ついていきます。",
+          general_child:
+            "つぎつぎ ひとが くっついて、ながい ぎょうれつに。{childName}と がちょうの あとを みんなで ぞろぞろ。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Whimsical shot of a long comical chain of cheerful people all stuck together in funny poses, following the child and the golden goose through a sunny town. Lively humorous mood, tiny golden-feather motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "わらった ことの ない おひめさまが、その ようすを みて おおわらい！みんなも わらって、てが すっと はなれました。やさしさと わらいが しあわせを よぶのですね。{parentMessage}",
+          baby_toddler: "おひめさま おおわらい！ みんな にこにこ。{parentMessage}",
+          preschool_3_4:
+            "わらった ことの ない おひめさまが、その ようすを みて おおわらい！みんなも わらって、てが すっと はなれました。やさしさと わらいが しあわせを よぶのですね。{parentMessage}",
+          early_reader_5_6:
+            "いちども わらった ことの ない おひめさまが、その おかしな ぎょうれつを みて、おおわらい！みんなも つられて わらうと、くっついた てが すっと はなれました。やさしさと わらいが しあわせを よぶのですね。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "うまれてから いちども わらった ことの ない おひめさまが、その おかしな ぎょうれつを みた とたん、おなかを かかえて おおわらい！みんなも つられて わらいだすと、ふしぎと くっついた てが すっと はなれました。{childName}の やさしさと、みんなの わらいが、しあわせを よんだのです。さいごに、{parentMessage}",
+          general_child:
+            "わらった ことの ない おひめさまが、その ようすを みて おおわらい！みんなも わらって、てが すっと はなれました。やさしさと わらいが しあわせを よぶのですね。{parentMessage}",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Joyful payoff shot of a princess bursting into delighted laughter at the silly stuck chain, everyone laughing together as the hands come free, the child smiling warmly with the golden goose. Bright happy mood, tiny golden-feather motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-classic-golden-goose-8p": {
+    name: "{childName}と きんのがちょう（8ページ）",
+    description:
+      "グリム『きんのがちょう』の8ページ版。やさしさが しあわせを よび、くっつく れんさの おかしさと わらいが みんなを つなぐ ようすを じっくり えがく、お子さまが主人公の固定テンプレート。",
+    icon: "🪿",
+    categoryGroupId: "classic-tales",
+    subcategoryId: "classic-golden-goose",
+    parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["classic tale", "grimm", "kindness", "laughter", "repetition"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-classic-golden-goose.webp",
+    sampleImageAlt: "金色のがちょうと、くっついた人たちの行列の、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Whimsical cheerful picture-book mood: a kind child carrying a shining golden goose, a comical chain of people stuck together following along, a never-smiling princess finally bursting into laughter, soft watercolor storybook style.",
+    order: 41.5,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、グリム『きんのがちょう』の8ページ版を、お子さまが主人公（やさしい こころの もちぬし）になって楽しむ絵本を作ります。こわい ばつでは なく、コミカルで あたたかい わらいの けつまつに します。",
+    fixedStory: {
+      pageCount: 8,
+      previewImageUrl: "/images/templates/fixed-classic-golden-goose.webp",
+      titleTemplate: "{childName}と きんのがちょう",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a kind smiling child gently carrying a softly shining golden goose, with a funny little chain of cheerful people comically stuck together following behind, warm whimsical mood, soft watercolor storybook style, recurring tiny golden-feather motif, keep the same child across all pages with consistent round face, hair, and outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "きんのがちょう",
+      openingNarrationTemplate:
+        "もりの みちで、{childName}は おなかを すかせた おじいさんに、おべんとうを わけて あげました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "もりの みちで、{childName}は おなかを すかせた おじいさんに、おべんとうを わけて あげました。",
+          baby_toddler: "わけて あげた。やさしいね。",
+          preschool_3_4:
+            "もりの みちで、{childName}は おなかを すかせた おじいさんに、おべんとうを わけて あげました。",
+          early_reader_5_6:
+            "もりの みちで、{childName}は おなかを すかせた おじいさんに、じぶんの おべんとうを わけて あげました。",
+          early_elementary_7_8:
+            "もりの みちで、{childName}は おなかを すかせた おじいさんに であい、じぶんの おべんとうを こころよく わけて あげました。",
+          general_child:
+            "もりの みちで、{childName}は おなかを すかせた おじいさんに、おべんとうを わけて あげました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing forest-path shot of the kind child sharing lunch with a gentle hungry old man, warm dappled light. Tiny golden-feather motif. Keep the same child across all pages with consistent round face, hair, and outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "おじいさんは おれいに、きんいろに かがやく ふしぎな がちょうを くれました。",
+          baby_toddler: "きんの がちょう、もらった。",
+          preschool_3_4:
+            "おじいさんは おれいに、きんいろに かがやく ふしぎな がちょうを くれました。",
+          early_reader_5_6:
+            "おじいさんは おれいに、きんいろに きらきら かがやく、ふしぎな がちょうを くれました。",
+          early_elementary_7_8:
+            "やさしさに かんしんした おじいさんは、おれいに きんいろに きらきら かがやく、ふしぎな がちょうを {childName}に くれました。",
+          general_child:
+            "おじいさんは おれいに、きんいろに かがやく ふしぎな がちょうを くれました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Warm shot of the old man handing the child a softly shining golden goose in thanks, the child delighted. Magical glow, tiny golden-feather motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "きんの はねが ほしくて、ひとりが そっと さわると…ぴたっ！てが くっつきました。",
+          baby_toddler: "ぴたっ！ くっついた。",
+          preschool_3_4:
+            "きんの はねが ほしくて、ひとりが そっと さわると…ぴたっ！てが くっつきました。",
+          early_reader_5_6:
+            "きんの はねが ほしくて、ひとりが そっと さわると…ぴたっ！てが くっついて、はなれません。",
+          early_elementary_7_8:
+            "きんの はねを ひとつ ほしがった ひとが、こっそり さわった とたん…ぴたっ！てが がちょうに くっついて、もう はなれなく なって しまいました。",
+          general_child:
+            "きんの はねが ほしくて、ひとりが そっと さわると…ぴたっ！てが くっつきました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Comical shot of a person reaching to pluck a golden feather and their hand sticking fast to the goose, eyes wide in funny surprise. Lighthearted humor, tiny golden-feather motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "はなそうと した ひとも、また その ひとも、つぎつぎ ぴたっと くっついて いきます。",
+          baby_toddler: "つぎつぎ くっつく。",
+          preschool_3_4:
+            "はなそうと した ひとも、また その ひとも、つぎつぎ ぴたっと くっついて いきます。",
+          early_reader_5_6:
+            "それを はなそうと した ひとも、また その ひとも、つぎつぎ ぴたっと くっついて いきました。",
+          early_elementary_7_8:
+            "くっついた ひとを はなそうと した ひとまで、また その ひとまで、つぎつぎ ぴたっと くっついて、どんどん つながって いきました。",
+          general_child:
+            "はなそうと した ひとも、また その ひとも、つぎつぎ ぴたっと くっついて いきます。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Funny shot of more people trying to pull the stuck person free and all getting stuck themselves one after another, a growing comical chain. Lively humor, tiny golden-feather motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "ながい ぎょうれつに なって、{childName}と がちょうの あとを みんなで ぞろぞろ。",
+          baby_toddler: "ぞろぞろ ながい れつ。",
+          preschool_3_4:
+            "ながい ぎょうれつに なって、{childName}と がちょうの あとを みんなで ぞろぞろ。",
+          early_reader_5_6:
+            "とうとう ながい ぎょうれつに なって、{childName}と がちょうの あとを、みんなで ぞろぞろ ついていきます。",
+          early_elementary_7_8:
+            "とうとう ながい ながい ぎょうれつに なって、{childName}と がちょうの あとを、みんなで おかしな かっこうの まま ぞろぞろ ついていきました。",
+          general_child:
+            "ながい ぎょうれつに なって、{childName}と がちょうの あとを みんなで ぞろぞろ。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Whimsical shot of a long comical chain of cheerful stuck people following the child and golden goose through a sunny town in funny poses. Lively humorous mood, tiny golden-feather motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "おしろには、いちども わらった ことの ない おひめさまが いました。",
+          baby_toddler: "わらわない おひめさま。",
+          preschool_3_4:
+            "おしろには、いちども わらった ことの ない おひめさまが いました。",
+          early_reader_5_6:
+            "おしろには、いままで いちども わらった ことの ない、さびしそうな おひめさまが いました。",
+          early_elementary_7_8:
+            "その まちの おしろには、うまれてから いちども わらった ことの ない、さびしそうな おひめさまが くらして いました。",
+          general_child:
+            "おしろには、いちども わらった ことの ない おひめさまが いました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Quiet shot of a gentle princess at a castle window who has never laughed, looking wistful. Soft tender mood, tiny golden-feather motif. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "おかしな ぎょうれつを みた おひめさまは、とうとう おおわらい！みんなも つられて わらいました。",
+          baby_toddler: "おひめさま おおわらい！",
+          preschool_3_4:
+            "おかしな ぎょうれつを みた おひめさまは、とうとう おおわらい！みんなも つられて わらいました。",
+          early_reader_5_6:
+            "その おかしな ぎょうれつを みた おひめさまは、とうとう おなかを かかえて おおわらい！みんなも つられて わらいました。",
+          early_elementary_7_8:
+            "その おかしな ぎょうれつを みた とたん、おひめさまは とうとう おなかを かかえて おおわらい！その わらいごえに、まちじゅうの みんなも つられて わらいだしました。",
+          general_child:
+            "おかしな ぎょうれつを みた おひめさまは、とうとう おおわらい！みんなも つられて わらいました。",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Joyful shot of the princess bursting into delighted laughter at the silly stuck chain, the whole town laughing along. Bright happy mood, tiny golden-feather motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "わらった とたん、くっついた てが すっと はなれました。やさしさと わらいが しあわせを よぶのですね。{parentMessage}",
+          baby_toddler: "みんな にこにこ。はなれた。{parentMessage}",
+          preschool_3_4:
+            "わらった とたん、くっついた てが すっと はなれました。やさしさと わらいが しあわせを よぶのですね。{parentMessage}",
+          early_reader_5_6:
+            "みんなが わらった とたん、ふしぎと くっついた てが すっと はなれました。{childName}の やさしさと、みんなの わらいが、しあわせを よんだのですね。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "みんなが こころから わらった とたん、ふしぎと くっついた てが すっと はなれました。{childName}の やさしさが この おはなしの はじまりで、そして みんなの わらいが、まちじゅうに しあわせを よんだのです。さいごに、{parentMessage}",
+          general_child:
+            "わらった とたん、くっついた てが すっと はなれました。やさしさと わらいが しあわせを よぶのですね。{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Heartwarming ending shot of the freed people, the laughing princess, and the kind child with the golden goose all smiling together in a sunny square. Warm joyful mood, tiny golden-feather motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-classic-bremen": {
+    name: "{childName}と ブレーメンの おんがくたい",
+    description:
+      "グリムの名作『ブレーメンの音楽隊』を、お子さまが主人公（なかまを まとめる リーダー役）になって楽しむ固定テンプレート。ちからを あわせると おおきな ことが できる、なかまの おはなし。",
+    icon: "🎺",
+    categoryGroupId: "classic-tales",
+    subcategoryId: "classic-bremen",
+    parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["classic tale", "grimm", "teamwork", "friendship", "courage"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-classic-bremen.webp",
+    sampleImageAlt: "ロバ・犬・猫・にわとりと音楽隊を組む、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Cheerful musical picture-book mood: a child leading a band of friendly animals (donkey, dog, cat, rooster) on a journey, standing on each other's backs to make a big surprising sound, warm teamwork-and-friendship theme, soft watercolor storybook style.",
+    order: 42,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、グリム『ブレーメンの音楽隊』をお子さまが主人公（なかまを まとめる リーダー役）になって楽しむ絵本を作ります。こわい どろぼうは コミカルに にげる だけにして、あたたかい けつまつに します。",
+    fixedStory: {
+      previewImageUrl: "/images/templates/fixed-classic-bremen.webp",
+      titleTemplate: "{childName}と ブレーメンの おんがくたい",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a cheerful child leading a happy band of friendly animals — a donkey, a dog, a cat, and a rooster — ready to make music together on a sunny road, warm teamwork-and-friendship mood, soft watercolor storybook style, recurring tiny music-note motif, keep the same child across all pages with consistent round face, hair, and outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "ブレーメンの おんがくたい",
+      openingNarrationTemplate:
+        "{childName}は、おんがくたいを つくろうと、たびに でかけました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は おんがくたいを つくろうと たびに でました。みちで ロバに であい、「いっしょに いこう」。",
+          baby_toddler: "たびに でた。ロバと いっしょ。",
+          preschool_3_4:
+            "{childName}は おんがくたいを つくろうと たびに でました。みちで ロバに であい、「いっしょに いこう」。",
+          early_reader_5_6:
+            "{childName}は、おんがくたいを つくろうと たびに でかけました。みちで ロバに であい、「いっしょに いこう」と なかまに なりました。",
+          early_elementary_7_8:
+            "{childName}は、すてきな おんがくたいを つくろうと たびに でかけました。みちで ひとりぼっちの ロバに であい、「いっしょに いこうよ」と こえを かけて、なかまに なりました。",
+          general_child:
+            "{childName}は おんがくたいを つくろうと たびに でました。みちで ロバに であい、「いっしょに いこう」。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing sunny-road shot of the child setting out on a journey and meeting a friendly donkey, inviting it along. Warm bright light, tiny music-note motif. Keep the same child across all pages with consistent round face, hair, and outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "つぎに いぬ、ねこ、にわとりも なかまに。みんなで うたいながら あるきます。",
+          baby_toddler: "いぬ ねこ にわとり、なかま。",
+          preschool_3_4:
+            "つぎに いぬ、ねこ、にわとりも なかまに。みんなで うたいながら あるきます。",
+          early_reader_5_6:
+            "つぎに いぬ、ねこ、にわとりも、つぎつぎ なかまに なりました。みんなで うたいながら あるきます。",
+          early_elementary_7_8:
+            "つぎに いぬ、それから ねこ、さいごに にわとりも、つぎつぎ なかまに なりました。みんなで こえを そろえて うたいながら、たのしく あるいて いきます。",
+          general_child:
+            "つぎに いぬ、ねこ、にわとりも なかまに。みんなで うたいながら あるきます。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Cheerful shot of the child now joined by a dog, a cat, and a rooster, all walking and singing together along a sunny country road. Lively friendly mood, tiny music-note motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "よるに なり、あかりの ついた いえを みつけました。みんなで そうっと のぞきます。",
+          baby_toddler: "よる。あかりの いえ。",
+          preschool_3_4:
+            "よるに なり、あかりの ついた いえを みつけました。みんなで そうっと のぞきます。",
+          early_reader_5_6:
+            "よるに なり、もりの おくに あかりの ついた いえを みつけました。みんなで そうっと まどから のぞきます。",
+          early_elementary_7_8:
+            "ひが くれて よるに なり、もりの おくに あたたかな あかりの ついた いえを みつけました。おなかも すいて いたので、みんなで そうっと まどから なかを のぞいて みました。",
+          general_child:
+            "よるに なり、あかりの ついた いえを みつけました。みんなで そうっと のぞきます。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Evening shot of the child and animals discovering a cozy lit-up house in the woods at night, peeking curiously toward the warm window. Soft moonlit mood, tiny music-note motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "みんなで かさなって、「せーの」で だいごうそう！おおきな おとに びっくりして、こわがりの どろぼうたちは あわてて にげて いきました。ちからを あわせると おおきな ことが できる！{parentMessage}",
+          baby_toddler: "せーの！ おおきな おと。みんな すごい。{parentMessage}",
+          preschool_3_4:
+            "みんなで かさなって、「せーの」で だいごうそう！おおきな おとに びっくりして、こわがりの どろぼうたちは あわてて にげて いきました。ちからを あわせると おおきな ことが できる！{parentMessage}",
+          early_reader_5_6:
+            "{childName}の あいずで、みんなが せなかに かさなって、「せーの」で だいごうそう！その おおきな おとに びっくりして、こわがりの どろぼうたちは あわてて にげて いきました。ちからを あわせると、おおきな ことが できるのですね。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "{childName}の あいずで、ロバの うえに いぬ、いぬの うえに ねこ、ねこの うえに にわとりが かさなって、「せーの」で みんな いっしょに だいごうそう！その おおきな おとに びっくりして、こわがりの どろぼうたちは あわてて にげだしました。ひとりでは むりでも、ちからを あわせれば おおきな ことが できるのです。さいごに、{parentMessage}",
+          general_child:
+            "みんなで かさなって、「せーの」で だいごうそう！おおきな おとに びっくりして、こわがりの どろぼうたちは あわてて にげて いきました。ちからを あわせると おおきな ことが できる！{parentMessage}",
+          pageVisualRole: "payoff",
+          imagePromptTemplate:
+            "Triumphant comical shot of the child and animals stacked on each other's backs making one big joyful sound together, while a couple of timid comical robbers scramble away in funny surprise. Bright lively victorious mood, tiny music-note motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
+  "fixed-classic-bremen-8p": {
+    name: "{childName}と ブレーメンの おんがくたい（8ページ）",
+    description:
+      "グリム『ブレーメンの音楽隊』の8ページ版。なかまが ひとり ずつ ふえ、ちからを あわせて おおきな ことを なしとげる ようすを じっくり えがく、お子さまが主人公の固定テンプレート。",
+    icon: "🎺",
+    categoryGroupId: "classic-tales",
+    subcategoryId: "classic-bremen",
+    parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
+    recommendedAgeMin: 3,
+    recommendedAgeMax: 8,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["classic tale", "grimm", "teamwork", "friendship", "courage"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-classic-bremen.webp",
+    sampleImageAlt: "ロバ・犬・猫・にわとりと音楽隊を組む、お子さまが主人公の絵本イメージ",
+    visualDirection:
+      "Cheerful musical picture-book mood: a child leading a band of friendly animals (donkey, dog, cat, rooster) on a journey, standing on each other's backs to make a big surprising sound, warm teamwork-and-friendship theme, soft watercolor storybook style.",
+    order: 42.5,
+    active: true,
+    systemPrompt:
+      "固定テンプレートを使って、グリム『ブレーメンの音楽隊』の8ページ版を、お子さまが主人公（なかまを まとめる リーダー役）になって楽しむ絵本を作ります。こわい どろぼうは コミカルに にげる だけにして、あたたかい けつまつに します。",
+    fixedStory: {
+      pageCount: 8,
+      previewImageUrl: "/images/templates/fixed-classic-bremen.webp",
+      titleTemplate: "{childName}と ブレーメンの おんがくたい",
+      coverImagePromptTemplate: withFixedImagePromptSafety(
+        "Picture book cover illustration: a cheerful child leading a happy band of friendly animals — a donkey, a dog, a cat, and a rooster — ready to make music together on a sunny road, warm teamwork-and-friendship mood, soft watercolor storybook style, recurring tiny music-note motif, keep the same child across all pages with consistent round face, hair, and outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
+      ),
+      titleSpreadTextTemplate: "ブレーメンの おんがくたい",
+      openingNarrationTemplate:
+        "{childName}は、おんがくたいを つくろうと、たびに でかけました。",
+      pages: [
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}は すてきな おんがくたいを つくろうと、たびに でかけました。",
+          baby_toddler: "たびに でた。",
+          preschool_3_4:
+            "{childName}は すてきな おんがくたいを つくろうと、たびに でかけました。",
+          early_reader_5_6:
+            "{childName}は、すてきな おんがくたいを つくろうと、げんきよく たびに でかけました。",
+          early_elementary_7_8:
+            "{childName}は、みんなで えんそうする すてきな おんがくたいを つくろうと、げんきよく たびに でかけました。",
+          general_child:
+            "{childName}は すてきな おんがくたいを つくろうと、たびに でかけました。",
+          pageVisualRole: "opening_establishing",
+          imagePromptTemplate:
+            "Establishing sunny-road shot of the cheerful child setting out alone on a journey to form a music band. Warm bright light, tiny music-note motif. Keep the same child across all pages with consistent round face, hair, and outfit. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "みちで ひとりぼっちの ロバに であい、「いっしょに いこう」と なかまに なりました。",
+          baby_toddler: "ロバと なかま。",
+          preschool_3_4:
+            "みちで ひとりぼっちの ロバに であい、「いっしょに いこう」と なかまに なりました。",
+          early_reader_5_6:
+            "みちで ひとりぼっちの ロバに であい、「いっしょに いこうよ」と こえを かけて、なかまに なりました。",
+          early_elementary_7_8:
+            "みちの とちゅうで ひとりぼっちの ロバに であい、{childName}は 「いっしょに おんがくたいを つくろうよ」と こえを かけて、なかまに しました。",
+          general_child:
+            "みちで ひとりぼっちの ロバに であい、「いっしょに いこう」と なかまに なりました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Warm shot of the child meeting a lonely friendly donkey on the road and inviting it to join the band. Sunny mood, tiny music-note motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "つぎに いぬ、それから ねこ、さいごに にわとりも なかまに なりました。",
+          baby_toddler: "いぬ ねこ にわとり、なかま。",
+          preschool_3_4:
+            "つぎに いぬ、それから ねこ、さいごに にわとりも なかまに なりました。",
+          early_reader_5_6:
+            "つぎに いぬ、それから ねこ、さいごに にわとりも、つぎつぎ なかまに なりました。",
+          early_elementary_7_8:
+            "つぎに いぬ、それから ねこ、さいごに にわとりも、ひとり また ひとりと、つぎつぎ なかまに くわわって いきました。",
+          general_child:
+            "つぎに いぬ、それから ねこ、さいごに にわとりも なかまに なりました。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Cheerful shot of a dog, a cat, and a rooster joining the child and donkey one by one along the road. Lively friendly mood, tiny music-note motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "みんなで こえを そろえて うたいながら、たのしく あるいて いきます。",
+          baby_toddler: "みんなで うたう。たのしい。",
+          preschool_3_4:
+            "みんなで こえを そろえて うたいながら、たのしく あるいて いきます。",
+          early_reader_5_6:
+            "みんなで こえを そろえて うたいながら、なかよく たのしく あるいて いきます。",
+          early_elementary_7_8:
+            "{childName}を せんとうに、みんなで こえを そろえて うたいながら、なかよく たのしく みちを あるいて いきました。",
+          general_child:
+            "みんなで こえを そろえて うたいながら、たのしく あるいて いきます。",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Joyful shot of the child leading the donkey, dog, cat, and rooster all singing together as they walk down a sunny road. Lively musical mood, tiny music-note motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "よるに なり、もりの おくに あかりの ついた いえを みつけました。",
+          baby_toddler: "よる。あかりの いえ。",
+          preschool_3_4:
+            "よるに なり、もりの おくに あかりの ついた いえを みつけました。",
+          early_reader_5_6:
+            "ひが くれて よるに なり、もりの おくに あかりの ついた いえを みつけました。",
+          early_elementary_7_8:
+            "ひが くれて よるに なり、おなかも すいた ころ、もりの おくに あたたかな あかりの ついた いえを みつけました。",
+          general_child:
+            "よるに なり、もりの おくに あかりの ついた いえを みつけました。",
+          pageVisualRole: "setback_or_question",
+          imagePromptTemplate:
+            "Evening shot of the child and animals discovering a cozy lit-up house deep in the woods at night. Soft moonlit mood, tiny music-note motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "みんなで そうっと まどから のぞくと、なかには こわがりの どろぼうたちが いました。",
+          baby_toddler: "そうっと のぞく。",
+          preschool_3_4:
+            "みんなで そうっと まどから のぞくと、なかには こわがりの どろぼうたちが いました。",
+          early_reader_5_6:
+            "みんなで そうっと まどから のぞくと、なかには こわがりの どろぼうたちが いました。",
+          early_elementary_7_8:
+            "みんなで そうっと まどから なかを のぞいて みると、いえの なかには、いばって いるけれど じつは こわがりな どろぼうたちが いました。",
+          general_child:
+            "みんなで そうっと まどから のぞくと、なかには こわがりの どろぼうたちが いました。",
+          pageVisualRole: "discovery",
+          imagePromptTemplate:
+            "Shot of the child and animals peeking through the window to see a couple of comical timid robbers inside the cozy house. Soft suspenseful but lighthearted mood, tiny music-note motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "{childName}の あいずで みんなが せなかに かさなって、「せーの」で だいごうそう！",
+          baby_toddler: "せーの！ おおきな おと。",
+          preschool_3_4:
+            "{childName}の あいずで みんなが せなかに かさなって、「せーの」で だいごうそう！",
+          early_reader_5_6:
+            "{childName}の あいずで、みんなが せなかに かさなって、「せーの」で だいごうそう！",
+          early_elementary_7_8:
+            "{childName}の あいずで、ロバの うえに いぬ、いぬの うえに ねこ、ねこの うえに にわとりが かさなって、「せーの」で みんな いっしょに だいごうそう！",
+          general_child:
+            "{childName}の あいずで みんなが せなかに かさなって、「せーの」で だいごうそう！",
+          pageVisualRole: "action",
+          imagePromptTemplate:
+            "Dynamic shot of the child and animals stacked on each other's backs — donkey, dog, cat, rooster — all making one big joyful sound together on the child's signal. Lively energetic mood, tiny music-note motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+        buildAgeSpecificPage({
+          textTemplate:
+            "おおきな おとに びっくりして、どろぼうたちは あわてて にげて いきました。ひとりでは むりでも、ちからを あわせれば おおきな ことが できる！{parentMessage}",
+          baby_toddler: "どろぼう にげた。みんな すごい。{parentMessage}",
+          preschool_3_4:
+            "おおきな おとに びっくりして、どろぼうたちは あわてて にげて いきました。ひとりでは むりでも、ちからを あわせれば おおきな ことが できる！{parentMessage}",
+          early_reader_5_6:
+            "その おおきな おとに びっくりして、こわがりの どろぼうたちは あわてて にげて いきました。ひとりでは むりでも、ちからを あわせれば おおきな ことが できるのですね。さいごに、{parentMessage}",
+          early_elementary_7_8:
+            "その おおきな おとに びっくりして、こわがりの どろぼうたちは あわてて にげだしました。そして みんなは あたたかい いえで なかよく くらしました。ひとりでは むりでも、なかまと ちからを あわせれば、おおきな ことが できるのです。さいごに、{parentMessage}",
+          general_child:
+            "おおきな おとに びっくりして、どろぼうたちは あわてて にげて いきました。ひとりでは むりでも、ちからを あわせれば おおきな ことが できる！{parentMessage}",
+          pageVisualRole: "quiet_ending",
+          imagePromptTemplate:
+            "Heartwarming ending shot of the timid robbers scrambling away in comical surprise while the child and animal friends celebrate happily together in the cozy house. Warm joyful victorious mood, tiny music-note motif. Keep the same child consistent. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark.",
+        }),
+      ],
+    },
+  },
 };
 
 const legacyTemplateIds = ["birthday", "seasons", "challenge", "family"];
