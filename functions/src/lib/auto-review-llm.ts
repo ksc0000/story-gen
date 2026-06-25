@@ -48,21 +48,26 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
 
 ## Evaluation Criteria
 1. **Story Quality (0-100)**: Evaluate story structure, pacing, coherence, and emotional engagement. Is the story appropriate for children?
-2. **Illustration Quality (0-100)**: Evaluate both the descriptive quality of the image prompts AND the actual generated images (if provided).
+2. **Story Goal Adherence (0-100)**: Evaluate how well the story follows and achieves the \`storyGoal\` and \`mainQuestObject\`.
+    - **Goal Clarity**: Is the goal introduced clearly in the opening?
+    - **Narrative Continuity**: Do page-to-page transitions logically lead toward the goal?
+    - **Drift Prevention**: Does the story avoid getting sidetracked by secondary details or \`forbiddenQuestObjects\`?
+    - **Resolution**: Is the goal satisfyingly resolved in the ending?
+3. **Illustration Quality (0-100)**: Evaluate both the descriptive quality of the image prompts AND the actual generated images (if provided).
     - **Image Prompts**: Are they vivid and appropriate for the scene?
     - **Compositional Variety**: Evaluate the visual rhythm across the whole book. Are the "pageVisualRole" and "compositionHint" varied enough? Identify visual monotony (e.g., too many front-facing portraits, or using the same role too frequently).
     - **Visual Artifacts**: Examine images for distorted limbs, unnatural faces, floating objects, or physically impossible structures.
     - **Text Artifacts**: Check for nonsensical text, gibberish characters, or pseudo-writing on signs, posters, or labels in the background.
     - **Style Consistency**: Does the visual style remain consistent across all images according to the chosen style profile?
-3. **Character Consistency (0-100)**: Evaluate character consistency across pages. Use the "characterBible" and "cast" definitions as the ground truth. Check if:
+4. **Character Consistency (0-100)**: Evaluate character consistency across pages. Use the "characterBible" and "cast" definitions as the ground truth. Check if:
     - Character descriptions (visualBible) are consistently reflected in page imagePrompts.
     - Clothing, hairstyles, and color palettes remain stable across pages for the same characterId.
     - The correct characterIds are listed in "appearingCharacterIds" based on the page text and prompt.
     - "focusCharacterId" is appropriately chosen and consistent.
     - **Unintended Characters**: Strictly check for characters NOT in the "cast" or "appearingCharacterIds". Detect "hallucinated companions" (extra pets or children that follow the protagonist) and "character duplication" (the same character appearing twice in one frame).
-4. **Personalization Depth (0-100)**: Evaluate how well the story might incorporate child-specific elements (if any are apparent).
-5. **Safety & Age Appropriateness (0-100)**: Check for any inappropriate content, violence, or themes unsuitable for young children.
-6. **Semantic Content (Age 3+ Diagnostic)**:
+5. **Personalization Depth (0-100)**: Evaluate how well the story might incorporate child-specific elements (if any are apparent).
+6. **Safety & Age Appropriateness (0-100)**: Check for any inappropriate content, violence, or themes unsuitable for young children.
+7. **Semantic Content (Age 3+ Diagnostic)**:
     For books targeted at ages 3 and above (current age band: ${ageBand}), evaluate each page's story text for "semantic richness".
     Identify which of these four elements are present:
     - **場所 (Location)**: Setting, environment description, or situational context.
@@ -74,7 +79,7 @@ You are an expert children's book quality reviewer. Your task is to evaluate a g
 ## Axis-Level Evaluation (0-100 for each)
 You must also provide granular scores for the following axes:
 
-- **Story Axes**: childPersonalization, storyCoherence, ageAppropriateness, emotionalSatisfaction, pageLengthBalance, characterConsistency, endingSatisfaction.
+- **Story Axes**: childPersonalization, storyGoalAdherence, storyCoherence, ageAppropriateness, emotionalSatisfaction, pageLengthBalance, characterConsistency, endingSatisfaction.
 - **Illustration Axes**: promptCompleteness, visualConsistency, characterConsistency, sceneRelevance, styleConsistency, artifactAvoidance.
 - **Character Axes**: visualBibleReflected, characterIdConsistency, appearingCharacterConsistency, focusCharacterConsistency, pageLevelCharacterLinkage, outfitHairstyleConsistency, colorPaletteConsistency.
 - **Personalization Axes**: childProfileUsage, nameNicknameUsage, favoriteThings, familyContext, memoryEventContext, overPersonalizationRisk.

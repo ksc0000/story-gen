@@ -105,6 +105,7 @@ describe("AUTO_REVIEW_RESPONSE_SCHEMA", () => {
     expect(axes.type).toBe("object");
     const requiredAxes = [
       "childPersonalization",
+      "storyGoalAdherence",
       "storyCoherence",
       "ageAppropriateness",
       "emotionalSatisfaction",
