@@ -349,7 +349,8 @@ const categoryGroups: Record<string, CategoryGroupData> = {
     description: "世界と日本の名作を、お子さまが主人公になって楽しむ日に",
     icon: "📖",
     parentIntent: "有名なおはなしの主人公に、わが子をしてあげたい",
-    order: 10,
+    // 穴埋め絵本(order:10) との衝突回避。コンテンツ系の末尾・ユーティリティの前に配置。
+    order: 9.5,
     active: true,
   },
   "blank-templates": {
