@@ -4,6 +4,8 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { doc, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2 } from "lucide-react";
 import { PageTransition } from "@/components/page-transition";
 import { ChildProfileForm, type ChildProfileFormValues } from "@/components/child-profile-form";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,7 @@ function ChildEditPageContent() {
   const childId = searchParams.get("childId");
   const { children, loading } = useChildren(user?.uid);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const child = useMemo(() => children.find((item) => item.id === childId) ?? null, [childId, children]);
   const { startJob } = useAvatarGenerationJob(null);
 
@@ -54,11 +57,11 @@ function ChildEditPageContent() {
           });
           router.push(`/onboarding/child/avatar?childId=${childId}&reason=profile_updated&jobId=${jobId}`);
         } else {
-          router.push("/children");
+          setSaved(true);
         }
         return;
       }
-      router.push("/children");
+      setSaved(true);
     } finally {
       setSaving(false);
     }
@@ -84,6 +87,42 @@ function ChildEditPageContent() {
         <p className="mt-3 text-sm text-violet-500">今後作る絵本に使う主人公情報を更新します。</p>
       </div>
       <ChildProfileForm initialChild={child} submitLabel="保存する" saving={saving} onSubmit={handleSubmit} />
+
+      <AnimatePresence>
+        {saved && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl bg-white p-8 shadow-2xl"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-50 text-green-500">
+                  <CheckCircle2 className="size-10" />
+                </div>
+                <h2 className="text-xl font-bold text-purple-900">子どものプロフィールを登録しました！</h2>
+                <p className="mt-3 text-sm leading-relaxed text-violet-500">
+                  プロフィールの変更を保存しました。
+                </p>
+                <Button
+                  size="lg"
+                  className="mt-8 w-full"
+                  onClick={() => router.push("/children")}
+                >
+                  一覧に戻る
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </PageTransition>
   );
 }
