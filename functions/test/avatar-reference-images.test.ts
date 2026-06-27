@@ -36,7 +36,7 @@ describe("buildReferenceImageInstruction with child_photo", () => {
     const instruction = buildReferenceImageInstruction([
       { role: "child_photo", url: "https://example.com/photo.jpg" },
     ]);
-    expect(instruction).toMatch(/real photo of the child/i);
+    expect(instruction).toMatch(/reference photo provided by the parent/i);
     expect(instruction).toMatch(/non-photorealistic/i);
     expect(instruction).toMatch(/do not copy the exact face/i);
     expect(instruction).toMatch(/clearly fictional/i);
@@ -47,7 +47,7 @@ describe("buildReferenceImageInstruction with child_photo", () => {
       { role: "child_photo", url: "https://example.com/photo.jpg" },
       { role: "style_reference", url: "https://example.com/style.png" },
     ]);
-    expect(instruction).toMatch(/Reference image 1: this is a real photo/i);
+    expect(instruction).toMatch(/Reference image 1: this is a reference photo/i);
     expect(instruction).toMatch(/Reference image 2: use this only as the visual style reference/i);
   });
 });

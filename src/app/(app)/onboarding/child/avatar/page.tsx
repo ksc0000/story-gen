@@ -161,7 +161,8 @@ function ChildAvatarPageContent() {
       setCurrentJobId(jobId);
       setHasUnsavedGeneration(true);
       setAllowNavigation(false);
-      setRevisionRequest({});
+      // ボタン選択はリセット、notes（必ず反映してほしいこと）は次回も引き継ぐ
+      setRevisionRequest((prev) => (prev.notes ? { notes: prev.notes } : {}));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(`キャラクター生成に失敗しました: ${message}`);
@@ -262,18 +263,19 @@ function ChildAvatarPageContent() {
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
           ) : null}
 
-          {child.photoUrl && candidates.length === 0 && !generating ? (
+          {child.photoUrl ? (
             <label className="flex items-start gap-3 rounded-2xl border border-purple-100 bg-purple-50/60 p-4 cursor-pointer">
               <input
                 type="checkbox"
                 checked={usePhoto}
                 onChange={(event) => setUsePhoto(event.target.checked)}
                 className="mt-0.5 h-5 w-5 shrink-0 accent-purple-500"
+                disabled={generating}
               />
               <span className="text-sm text-violet-700">
-                <span className="font-semibold text-purple-900">お子さんの写真を参考にする</span>
+                <span className="font-semibold text-purple-900">お子さんの写真を参考にする（推奨）</span>
                 <span className="mt-1 block text-xs text-violet-500">
-                  登録した写真から髪型や雰囲気などの「本人らしさ」をやさしい絵本タッチに変換して生成します。写真がそのまま絵本に載ることはありません。
+                  登録した写真の髪型・雰囲気・目元などを参考に、やさしい絵本キャラクターへ変換します。大人の写真でもその方のお子さん時代のイメージで生成します。写真がそのまま絵本に載ることはありません。
                 </span>
               </span>
             </label>
@@ -317,10 +319,9 @@ function ChildAvatarPageContent() {
                   className="text-left"
                 >
                   <div className={`overflow-hidden rounded-[28px] border bg-purple-50/50 transition ${selectedCandidateId === candidate.generationId ? "border-purple-400 ring-2 ring-purple-200" : "border-[rgba(240,171,252,0.35)] hover:border-purple-300"}`}>
-                    <Image src={candidate.imageUrl} alt={`${candidate.styleLabel}の候補`} width={768} height={1024} className="h-auto w-full object-cover" unoptimized />
+                    <Image src={candidate.imageUrl} alt="生成候補" width={768} height={1024} className="h-auto w-full object-cover" unoptimized />
                     <div className="p-4">
-                      <p className="font-semibold text-purple-900">{candidate.styleLabel}</p>
-                      <p className="mt-1 text-xs text-violet-500">この絵柄を採用する</p>
+                      <p className="text-sm text-violet-500">この絵柄を採用する</p>
                     </div>
                   </div>
                 </button>
