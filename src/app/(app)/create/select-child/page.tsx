@@ -11,7 +11,9 @@ import { StepIndicator } from "@/components/step-indicator";
 import { AvatarNudgeBanner } from "@/components/avatar-nudge-banner";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
+import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { childProfileToSummary } from "@/lib/child-profile";
+import { PLAN_CONFIGS } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
 function SelectChildContent() {
@@ -19,7 +21,11 @@ function SelectChildContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { children, loading, error } = useChildren(user?.uid);
+  const { profile } = useUserProfile(user?.uid);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+
+  const planConfig = PLAN_CONFIGS[profile?.productPlan || "free"];
+  const isLimitReached = children.length >= planConfig.maxChildren;
 
   const companionQuery = (() => {
     const companionId = searchParams.get("companionId");
@@ -114,9 +120,13 @@ function SelectChildContent() {
         )}
 
       <div className="mt-5 text-center">
-        <Link href="/onboarding/child" className="text-sm text-violet-400 hover:text-purple-600 hover:underline">
-          ＋ 新しい子を登録する
-        </Link>
+        {isLimitReached ? (
+          <p className="text-sm text-violet-300">プランをアップグレードすると子どもを追加できます</p>
+        ) : (
+          <Link href="/onboarding/child" className="text-sm text-violet-400 hover:text-purple-600 hover:underline">
+            ＋ 新しい子を登録する
+          </Link>
+        )}
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3">

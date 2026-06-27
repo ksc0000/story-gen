@@ -77,7 +77,7 @@ export function ConfirmationDialog({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 60 }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="relative z-10 w-full max-w-md overflow-hidden rounded-t-[32px] bg-white p-6 shadow-2xl sm:rounded-[32px]"
+            className="relative z-10 w-full max-w-md overflow-y-auto rounded-t-[32px] bg-white p-6 shadow-2xl sm:rounded-[32px]" style={{ maxHeight: "90svh" }}
           >
             {/* Close button */}
             {!isLoading && (
