@@ -997,10 +997,15 @@ export function buildImagePrompt(
   // consistency guidelines follow as secondary constraints.  This addresses 竹-plan
   // reports of "all pages same image" and "style not reflected" where the original
   // ordering buried the scene at position ~16 of ~20 prompt segments.
+  const characterRefStyleNote = options?.childProfileBasePrompt
+    ? "Character reference style adaptation: The character reference image may have been rendered in a different illustration style. Render the character in the book's illustration style above — preserve only identity (face shape, hair style and color, age impression, key features) from the reference, not the art style of the reference image."
+    : "";
+
   return [
     compositionGuidance,
     `Illustration style: ${styleProfile.styleBible}`,
     styleBible ? `Story-specific style consistency: ${styleBible}` : "",
+    characterRefStyleNote,
     styleProfile.negativeStyleRules?.length
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
