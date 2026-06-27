@@ -314,11 +314,22 @@ export default function HomePage() {
         )}
 
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link href="/create/select-child" className="w-full sm:w-auto">
-            <Button size="lg" className="text-lg w-full sm:w-auto">
-              新しい絵本を作る
-            </Button>
-          </Link>
+          {remaining <= 0 && !isUnlimited ? (
+            <div className="flex w-full flex-col items-center gap-1 sm:w-auto">
+              <Button size="lg" className="w-full text-lg sm:w-auto" disabled>
+                今月の生成上限に達しました
+              </Button>
+              <Link href="/pricing" className="text-xs text-violet-400 hover:text-purple-600 hover:underline">
+                プランをアップグレードしてさらに作る
+              </Link>
+            </div>
+          ) : (
+            <Link href="/create/select-child" className="w-full sm:w-auto">
+              <Button size="lg" className="text-lg w-full sm:w-auto">
+                新しい絵本を作る
+              </Button>
+            </Link>
+          )}
           <Link href="/children">
             <Button size="lg" variant="outline" className="text-base px-6">
               子どもプロフィール

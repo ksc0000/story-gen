@@ -106,8 +106,8 @@ function ThemeModeSelectContent() {
 
   const handleNext = () => {
     trackAnalyticsEvent("select_story_theme", { creationMode: selectedMode });
-    const params = new URLSearchParams();
-    if (childId) params.set("childId", childId);
+    // Preserve all incoming params (childId, companionId, companionName, protagonistType, etc.)
+    const params = new URLSearchParams(searchParams.toString());
     params.set("mode", selectedMode);
 
     if (selectedMode === "fixed_template") {

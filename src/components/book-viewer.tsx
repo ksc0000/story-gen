@@ -459,7 +459,7 @@ export function BookViewer(props: BookViewerProps) {
                   )}
                 </div>
                 <div className="flex flex-col justify-center p-8">
-                  <p className="text-lg leading-relaxed text-purple-900">{item.page.text}</p>
+                  <p className="whitespace-pre-line text-lg leading-relaxed text-purple-900">{item.page.text.replace(/。(?=\S)/g, "。\n")}</p>
                   <p className="mt-4 text-sm text-violet-400">{pageLabel}</p>
                 </div>
               </>
@@ -564,7 +564,7 @@ export function BookViewer(props: BookViewerProps) {
                   )}
                 </div>
                 <div className="p-4">
-                  <p className="text-base leading-relaxed text-purple-900">{item.page.text}</p>
+                  <p className="whitespace-pre-line text-base leading-relaxed text-purple-900">{item.page.text.replace(/。(?=\S)/g, "。\n")}</p>
                   <p className="mt-2 text-sm text-violet-400">{pageLabel}</p>
                 </div>
               </>
@@ -573,10 +573,21 @@ export function BookViewer(props: BookViewerProps) {
         </AnimatePresence>
       </div>
       {/* Navigation */}
-      <div className="mt-4 flex items-center justify-center gap-4">
-        <Button variant="outline" onClick={goPrev} disabled={currentPage === 0} className="px-6">← 前</Button>
-        <span className="text-sm text-violet-500">{pageLabel}</span>
-        <Button variant="outline" onClick={goNext} disabled={currentPage >= totalPages - 1} className="px-6">次 →</Button>
+      <div className="mt-4 flex flex-col items-center gap-2">
+        <div className="flex items-center justify-center gap-4">
+          <Button variant="outline" onClick={goPrev} disabled={currentPage === 0} className="px-6">← 前</Button>
+          <span className="text-sm text-violet-500">{pageLabel}</span>
+          <Button variant="outline" onClick={goNext} disabled={currentPage >= totalPages - 1} className="px-6">次 →</Button>
+        </div>
+        {currentPage >= totalPages - 1 && (
+          <Button
+            variant="ghost"
+            className="text-sm text-violet-500 hover:text-purple-700"
+            onClick={() => { directionRef.current = -1; setCurrentPage(0); }}
+          >
+            ↩ さいしょからよむ
+          </Button>
+        )}
       </div>
 
       <RegenerateConfirmationDialog

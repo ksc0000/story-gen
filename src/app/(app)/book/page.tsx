@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { Share2, Check, Copy, Globe, Sparkles, Loader2, Pencil, X, Clapperboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,8 +59,17 @@ function BookContent() {
   const [titleUpdateError, setTitleUpdateError] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isCinematicOpen, setIsCinematicOpen] = useState(false);
+  const [templateDisplayName, setTemplateDisplayName] = useState<string | undefined>();
   const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
   const isOwner = Boolean(user && book && book.userId === user.uid);
+
+  useEffect(() => {
+    const templateId = book?.templateId;
+    if (!templateId) return;
+    getDoc(doc(db, "templates", templateId)).then((snap) => {
+      if (snap.exists()) setTemplateDisplayName((snap.data() as { name?: string }).name);
+    });
+  }, [book?.templateId]);
 
   useEffect(() => {
     if (!user || !bookId || isDemoMode) return;
@@ -400,6 +409,7 @@ function BookContent() {
               openingNarration: book.openingNarration,
             })}
             title={book.title}
+            originalTitle={templateDisplayName}
             onClose={() => setIsCinematicOpen(false)}
             onFeedback={canSubmitFeedback ? () => {
               setIsCinematicOpen(false);
