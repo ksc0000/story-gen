@@ -49,9 +49,9 @@ export function BookCard({ book }: BookCardProps) {
             <h3 className="truncate text-sm font-semibold text-purple-900">
               {book.title || (book.status === "generating" ? "生成中..." : "無題の絵本")}
             </h3>
-            {book.createdAt && (
+            {(book.createdAt || (book.createdAtMs ?? 0) > 0) && (
               <p className="mt-1 text-[10px] text-violet-400">
-                {formatDateSafe(book.createdAt)}
+                {formatDateSafe(book.createdAt ?? book.createdAtMs)}
               </p>
             )}
             {book.pdfStatus === "completed" && (

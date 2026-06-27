@@ -45,11 +45,13 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
     name: "シンプルフラット",
     previewImageUrl: "/images/styles/flat_illustration.webp",
     styleBible:
-      "High quality simple flat illustration masterpiece, bright clean colors, stunning clear lighting, readable shapes, minimal shadows, modern child-friendly picture book layout.",
+      "Flat digital illustration for children's picture book. Clean solid-fill color areas with no watercolor washes, no wet-on-wet bleed, no paper texture, no brush strokes. Bold simple outlines, geometric-style shapes, vivid solid colors. The look is like modern vector art or clean 2D digital illustration — smooth fills, hard edges, no paint or ink textures. Bright cheerful palette, strong shape readability, minimal drop shadows. Every element reads clearly as a distinct flat shape.",
     negativeStyleRules: [
       "Do not add readable text, signs, labels, posters, banners, logos, watermarks, or pseudo-writing.",
-      "Do not add gritty textures or realistic photographic detail.",
-      "Night and dark scenes must maintain the same bright clean colors — use soft moonlight or gentle ambient glow. Do not darken the palette for night scenes.",
+      "No watercolor, no paint texture, no paper grain, no ink bleeds, no brushwork, no pigment blooms.",
+      "No photorealistic rendering, no 3D shading, no gritty textures.",
+      "No heavy gradients — use flat or very subtle gradient fills only.",
+      "Night and dark scenes must maintain the same bright vivid colors — use soft ambient glow. Do not darken the palette for night scenes.",
     ],
     usePreviewAsReference: false,
   },
