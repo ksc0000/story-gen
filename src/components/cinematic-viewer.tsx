@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Play, Pause, ChevronLeft, ChevronRight, BookOpen, MessageCircle, RotateCcw } from "lucide-react";
+import { X, Play, Pause, ChevronLeft, ChevronRight, BookOpen, MessageCircle, RotateCcw, SunMoon } from "lucide-react";
 import type { ReadingItem } from "./book-viewer";
 
 interface CinematicViewerProps {
   items: ReadingItem[];
   initialIndex?: number;
   title: string;
+  originalTitle?: string;
   onClose: () => void;
   onFeedback?: () => void;
 }
@@ -41,13 +42,14 @@ function useIsLandscape() {
   return isLandscape;
 }
 
-export function CinematicViewer({ items, initialIndex = 0, title, onClose, onFeedback }: CinematicViewerProps) {
+export function CinematicViewer({ items, initialIndex = 0, title, originalTitle, onClose, onFeedback }: CinematicViewerProps) {
   const [current, setCurrent] = useState(initialIndex);
   const [dir, setDir] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showEndCard, setShowEndCard] = useState(false);
   const [hintVisible, setHintVisible] = useState(true);
   const [rotateHintVisible, setRotateHintVisible] = useState(true);
+  const [isTextInverted, setIsTextInverted] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLandscape = useIsLandscape();
@@ -203,27 +205,53 @@ export function CinematicViewer({ items, initialIndex = 0, title, onClose, onFee
               </div>
 
               {/* Right: text panel */}
-              <div className="flex h-full w-1/2 flex-col items-center justify-center bg-[#0d0d14] px-8">
+              <div className={`relative flex h-full w-1/2 flex-col items-center justify-center px-8 transition-colors duration-300 ${isTextInverted ? "bg-white" : "bg-[#0d0d14]"}`}>
+                {/* B&W toggle button */}
+                <button
+                  onClick={() => setIsTextInverted((v) => !v)}
+                  className={`absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full transition-colors ${isTextInverted ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-white/10 text-white/60 hover:bg-white/20"}`}
+                  aria-label="文字の明暗を切り替え"
+                >
+                  <SunMoon className="size-4" />
+                </button>
                 <AnimatePresence mode="wait">
-                  {displayText && (
+                  {item.kind === "cover_title_spread" ? (
+                    <motion.div
+                      key={`cover-${current}`}
+                      variants={textVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="text-center"
+                    >
+                      {originalTitle && (
+                        <p className={`text-3xl font-bold md:text-4xl ${isTextInverted ? "text-gray-900" : "text-white"}`} style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
+                          {originalTitle}
+                        </p>
+                      )}
+                      <p className={`mt-2 text-base md:text-lg ${isTextInverted ? "text-gray-500" : "text-white/70"}`} style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
+                        {title}
+                      </p>
+                    </motion.div>
+                  ) : displayText ? (
                     <motion.p
                       key={`text-${current}`}
                       variants={textVariants}
                       initial="hidden"
                       animate="visible"
                       exit="exit"
-                      className="text-center text-base font-medium leading-loose text-white/90 md:text-lg"
-                      style={{ fontFamily: "'Hiragino Mincho ProN', 'Yu Mincho', Georgia, serif" }}
+                      className={`whitespace-pre-line text-center text-base font-medium leading-loose md:text-lg ${isTextInverted ? "text-gray-900" : "text-white/90"}`}
+                      style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}
                     >
-                      {displayText}
+                      {displayText.replace(/。(?=\S)/g, "。\n")}
                     </motion.p>
-                  )}
+                  ) : null}
                 </AnimatePresence>
                 <motion.p
                   key={`label-${current}`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mt-6 text-xs text-white/30"
+                  className={`mt-6 text-xs ${isTextInverted ? "text-gray-400" : "text-white/30"}`}
                 >
                   {label}
                 </motion.p>
@@ -266,18 +294,37 @@ export function CinematicViewer({ items, initialIndex = 0, title, onClose, onFee
       {!isLandscape && !showEndCard && (
         <div className="absolute bottom-0 left-0 right-0 z-10 px-6 pb-24">
           <AnimatePresence mode="wait">
-            {displayText && (
+            {item.kind === "cover_title_spread" ? (
+              <motion.div
+                key={`cover-portrait-${current}`}
+                variants={textVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="text-center"
+              >
+                {originalTitle && (
+                  <p className="text-3xl font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] md:text-4xl" style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
+                    {originalTitle}
+                  </p>
+                )}
+                <p className="mt-1 text-base text-white/80 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] md:text-lg" style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
+                  {title}
+                </p>
+              </motion.div>
+            ) : displayText ? (
               <motion.p
                 key={current}
                 variants={textVariants}
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="text-center text-lg font-medium leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] md:text-xl"
+                className="whitespace-pre-line text-center text-lg font-medium leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] md:text-xl"
+                style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}
               >
-                {displayText}
+                {displayText.replace(/。(?=\S)/g, "。\n")}
               </motion.p>
-            )}
+            ) : null}
           </AnimatePresence>
         </div>
       )}
@@ -298,7 +345,7 @@ export function CinematicViewer({ items, initialIndex = 0, title, onClose, onFee
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.7, ease: "easeOut" }}
               className="text-5xl font-light tracking-[0.25em] text-white/90"
-              style={{ fontFamily: "'Hiragino Mincho ProN', 'Yu Mincho', Georgia, serif" }}
+              style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}
             >
               おしまい
             </motion.p>
@@ -308,7 +355,14 @@ export function CinematicViewer({ items, initialIndex = 0, title, onClose, onFee
               transition={{ delay: 0.8, duration: 0.5 }}
               className="mt-10 flex flex-col items-center gap-3 w-full max-w-xs"
             >
-              <button onClick={onClose} className="flex w-full items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm text-white hover:bg-white/20 transition">
+              <button
+                onClick={() => { setShowEndCard(false); go(0, -1); }}
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm text-white hover:bg-white/20 transition"
+              >
+                <RotateCcw className="size-4" />
+                さいしょからよむ
+              </button>
+              <button onClick={onClose} className="flex w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm text-white/80 hover:bg-white/15 transition">
                 <BookOpen className="size-4" />
                 絵本ビューに戻る
               </button>

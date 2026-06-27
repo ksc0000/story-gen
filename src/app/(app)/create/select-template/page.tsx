@@ -128,17 +128,12 @@ function SelectTemplateContent() {
       templateId: effectiveId,
       creationMode: "fixed_template",
     });
-    const companionId = searchParams.get("companionId");
-    const companionName = searchParams.get("companionName");
-    const companionVisualDescription = searchParams.get("companionVisualDescription");
-
-    const params = new URLSearchParams();
-    if (childId) params.set("childId", childId);
-    if (companionId) params.set("companionId", companionId);
-    if (companionName) params.set("companionName", companionName);
-    if (companionVisualDescription) params.set("companionVisualDescription", companionVisualDescription);
+    // Preserve all incoming params (companionId, protagonistType, etc.)
+    const params = new URLSearchParams(searchParams.toString());
     params.set("mode", "fixed_template");
     params.set("theme", effectiveId);
+    // Remove category filter — not relevant downstream
+    params.delete("category");
 
     router.push(`/create/select-companion?${params.toString()}`);
   };

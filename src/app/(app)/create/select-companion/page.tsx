@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -43,6 +43,20 @@ function SelectCompanionContent() {
 
   const childId = searchParams.get("childId");
   const mode = (searchParams.get("mode") as CreationMode | null) ?? "guided_ai";
+  const protagonistType = searchParams.get("protagonistType");
+
+  // If companion was already chosen as protagonist in select-child, skip this screen
+  useEffect(() => {
+    if (protagonistType !== "companion") return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (mode === "photo_story") router.replace(`/create/photo-upload?${params.toString()}`);
+    else if (mode === "guided_ai") router.replace(`/create/ai-brief?${params.toString()}`);
+    else router.replace(`/create/input?${params.toString()}`);
+  }, [protagonistType, mode, router, searchParams]);
+
+  if (protagonistType === "companion") {
+    return <div className="p-8 text-center text-violet-400">読み込み中...</div>;
+  }
 
   const hasCompanionSelected = selection.type !== "none";
 
