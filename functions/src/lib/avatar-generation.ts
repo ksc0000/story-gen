@@ -93,14 +93,14 @@ export function buildChildCharacterPrompt(
     child.genderExpression && child.genderExpression !== "unspecified" ? `Gender expression: ${child.genderExpression}` : "",
     personality ? `Personality: ${personality}` : "",
     favorites ? `Favorite things: ${favorites}` : "",
-    visual.characterLook ? `Appearance: ${visual.characterLook}` : "",
-    visual.outfit ? `Usual outfit: ${visual.outfit}` : "",
-    visual.signatureItem ? `Signature item: ${visual.signatureItem}` : "",
+    visual.characterLook ? `REQUIRED physical appearance (must be accurately reflected): ${visual.characterLook}` : "",
+    visual.outfit ? `Default outfit (reflect faithfully unless parent correction says otherwise): ${visual.outfit}` : "",
+    visual.signatureItem ? `Signature item (must be clearly visible): ${visual.signatureItem}` : "",
     visual.colorMood ? `Color mood: ${visual.colorMood}` : "",
     previousPrompt ? `Keep continuity with this approved character direction: ${previousPrompt}` : "",
-    correctionText ? `Latest user correction request: ${correctionText}` : "",
+    correctionText ? `IMPORTANT — parent correction requests (apply all of these exactly): ${correctionText}` : "",
     correctionText
-      ? "Preserve all aspects that were not explicitly requested to change. Do not change the child's core identity, overall face structure, default outfit, or signature item unless the user specifically requested it."
+      ? "For each correction: apply the change clearly and visibly. Preserve aspects NOT mentioned in the corrections. If outfit or appearance change is requested, apply it significantly — do not make it subtle."
       : "",
   ]
     .filter(Boolean)
@@ -135,7 +135,7 @@ export function buildStructuredCorrectionText(revisionRequest: AvatarRevisionReq
     revisionRequest.signatureItem ? `Signature item: ${mapRevisionValue("signatureItem", revisionRequest.signatureItem)}.` : "",
     revisionRequest.colorTone ? `Color tone: ${mapRevisionValue("colorTone", revisionRequest.colorTone)}.` : "",
     revisionRequest.likeness ? `Likeness: ${mapRevisionValue("likeness", revisionRequest.likeness)}.` : "",
-    revisionRequest.notes?.trim() ? `Additional parent note: ${revisionRequest.notes.trim()}.` : "",
+    revisionRequest.notes?.trim() ? `MUST apply — parent's direct instruction: ${revisionRequest.notes.trim()}.` : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -209,7 +209,7 @@ export function buildReferenceImageInstruction(referenceImageRoles: ReferenceIma
 
     if (descriptor.role === "child_photo") {
       lines.push(
-        `Reference image ${imageNumber}: this is a real photo of the child, provided only as a soft likeness hint. Do NOT reproduce the photo realistically. Transform it into a gentle, non-photorealistic Japanese picture book character. Borrow only general traits such as approximate hairstyle, hair color, and overall warm impression. Do not copy the exact face, skin texture, background, clothing, or any identifying detail from the photo. The result must look clearly fictional, illustrated, and child-safe, never like a photograph or a realistic likeness of a specific real person.`
+        `Reference image ${imageNumber}: this is a reference photo provided by the parent. It may show the child themselves, or it may show an adult (such as a parent). In either case, do NOT reproduce the photo realistically. Transform it into a gentle, non-photorealistic Japanese picture book child character. If the photo shows an adult, imagine what this person might have looked like as a young child — borrow general traits such as eye shape, hair color direction, and overall impression, then render as a child of the age described in the profile. Do not copy the exact face, skin texture, background, or clothing. The result must look clearly fictional, illustrated, and child-safe.`
       );
     }
 

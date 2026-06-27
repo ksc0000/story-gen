@@ -68,12 +68,19 @@ export function useAvatarGenerationJob(jobId: string | null) {
       usePhoto?: boolean;
     }) => {
       try {
+        const sanitizedRevisionRequest = params.revisionRequest
+          ? Object.fromEntries(
+              Object.entries(params.revisionRequest).filter(([, v]) => v !== undefined && v !== "")
+            )
+          : null;
         const jobData = {
           userId: params.userId,
           childId: params.childId,
           status: "pending",
           request: {
-            revisionRequest: params.revisionRequest || null,
+            revisionRequest: sanitizedRevisionRequest && Object.keys(sanitizedRevisionRequest).length > 0
+              ? sanitizedRevisionRequest
+              : null,
             baseGenerationId: params.baseGenerationId || null,
             variantStyle: params.variantStyle || null,
             usePhoto: params.usePhoto ?? false,

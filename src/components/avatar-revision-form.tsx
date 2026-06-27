@@ -99,10 +99,13 @@ const REVISION_OPTIONS: Array<{
 
 export function AvatarRevisionForm({ value, onChange, summary = [] }: AvatarRevisionFormProps) {
   const updateField = (key: keyof AvatarRevisionRequest, nextValue: string) => {
-    onChange({
-      ...value,
-      [key]: nextValue || undefined,
-    });
+    const next = { ...value };
+    if (nextValue) {
+      (next as Record<string, string>)[key] = nextValue;
+    } else {
+      delete (next as Record<string, unknown>)[key];
+    }
+    onChange(next);
   };
 
   return (
@@ -111,7 +114,6 @@ export function AvatarRevisionForm({ value, onChange, summary = [] }: AvatarRevi
         <p className="font-semibold text-purple-900">今回の補正内容</p>
         <ul className="mt-2 space-y-1">
           {summary.length > 0 ? summary.map((item) => <li key={item}>- {item}</li>) : <li>- まだ補正指定はありません</li>}
-          <li>- 背景は公園の砂場のまま</li>
         </ul>
       </div>
 
@@ -143,15 +145,16 @@ export function AvatarRevisionForm({ value, onChange, summary = [] }: AvatarRevi
       ))}
 
       <div className="space-y-2">
-        <Label htmlFor="avatar-revision-notes">補足</Label>
+        <Label htmlFor="avatar-revision-notes">必ず反映してほしいこと（目の形・特定の特徴など）</Label>
         <textarea
           id="avatar-revision-notes"
           value={value.notes ?? ""}
           onChange={(event) => updateField("notes", event.target.value)}
-          placeholder="例：前髪を少し軽くして、目元は今よりやさしい印象にしたいです"
+          placeholder="例：目が切れ長、髪をツインテールに、赤いリボンをつけて"
           className="min-h-24 w-full rounded-[20px] border border-[rgba(240,171,252,0.3)] bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
           maxLength={300}
         />
+        <p className="text-xs text-violet-400">ボタン選択よりも優先して反映されます。次回の再生成でも引き継がれます。</p>
       </div>
     </div>
   );
