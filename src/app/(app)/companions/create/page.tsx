@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -55,8 +55,10 @@ const STEPS: Step[] = [
   "confirm",
 ];
 
-export default function CreateCompanionPage() {
+function CreateCompanionContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
   const { companions, addCompanion, loading: companionsLoading } = useCompanions(user?.uid);
@@ -173,7 +175,11 @@ export default function CreateCompanionPage() {
         // 画像生成の失敗は致命的ではない
       }
 
-      router.push(`/companions/profile?id=${companionId}`);
+      if (returnTo) {
+        router.push(returnTo);
+      } else {
+        router.push(`/companions/profile?id=${companionId}`);
+      }
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
@@ -404,7 +410,13 @@ export default function CreateCompanionPage() {
                       : "border-transparent bg-violet-50/50 hover:bg-violet-50"
                   )}
                 >
-                  <span className="text-3xl leading-none">{opt.emoji}</span>
+                  {opt.imageUrl ? (
+                    <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm">
+                      <Image src={opt.imageUrl} alt={`${opt.label}のもよう`} fill className="object-cover" />
+                    </div>
+                  ) : (
+                    <span className="text-3xl leading-none">{opt.emoji}</span>
+                  )}
                   <span className="text-xs font-medium text-purple-900">{opt.label}</span>
                 </button>
               ))}
@@ -545,8 +557,18 @@ export default function CreateCompanionPage() {
                 </div>
                 <div className="rounded-2xl border border-violet-100 p-4">
                   <div className="text-xs font-semibold text-violet-300">もよう</div>
-                  <div className="mt-1 text-sm font-medium text-purple-700">
-                    {PATTERN_OPTIONS.find(o => o.value === pattern)?.label ?? "むじ"}
+                  <div className="mt-1 flex items-center gap-2 text-sm font-medium text-purple-700">
+                    {PATTERN_OPTIONS.find(o => o.value === pattern)?.imageUrl ? (
+                      <div className="relative size-6 overflow-hidden rounded-md border border-violet-100">
+                        <Image
+                          src={PATTERN_OPTIONS.find(o => o.value === pattern)!.imageUrl!}
+                          alt={`${PATTERN_OPTIONS.find(o => o.value === pattern)?.label ?? "むじ"}のもよう`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : null}
+                    <span>{PATTERN_OPTIONS.find(o => o.value === pattern)?.label ?? "むじ"}</span>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-violet-100 p-4">
@@ -587,5 +609,13 @@ export default function CreateCompanionPage() {
         </div>
       </Card>
     </PageTransition>
+  );
+}
+
+export default function CreateCompanionPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="size-8 animate-spin text-violet-400" /></div>}>
+      <CreateCompanionContent />
+    </Suspense>
   );
 }

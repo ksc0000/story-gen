@@ -298,7 +298,10 @@ function SelectCompanionContent() {
             className="pt-1 text-center"
             variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.3 } } }}
           >
-            <Link href="/companions/create" className="text-xs text-violet-400 hover:text-purple-600 hover:underline">
+            <Link
+              href={`/companions/create?returnTo=${encodeURIComponent(`/create/select-companion?${searchParams.toString()}`)}`}
+              className="text-xs text-violet-400 hover:text-purple-600 hover:underline"
+            >
               ＋ 新しいなかよしキャラを作る
             </Link>
           </motion.div>
