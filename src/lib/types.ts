@@ -318,6 +318,12 @@ export interface UserDoc {
   email: string;
   plan: UserPlan;
   productPlan?: ProductPlan;
+  /**
+   * 管理者専用のプラン上書き。設定画面の開発パネルから設定し、
+   * resolveProductPlan() が productPlan より優先して採用する。
+   * 全プランの「見える景色」を確認するための開発用フィールド。
+   */
+  planOverride?: ProductPlan;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string | null;
   singleBookCredits?: number;

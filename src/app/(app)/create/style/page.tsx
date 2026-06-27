@@ -339,11 +339,21 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
   );
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object") return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
 function stripUndefined<T>(value: T): T {
   if (Array.isArray(value)) {
     return value.map((item) => stripUndefined(item)) as T;
   }
-  if (value && typeof value === "object") {
+  // Only recurse into plain objects. Recursing into class instances such as
+  // Firestore's FieldValue (serverTimestamp) or Timestamp would strip their
+  // prototype and persist a broken plain object like {_methodName:"serverTimestamp"},
+  // which never resolves server-side and breaks date display.
+  if (isPlainObject(value)) {
     return Object.fromEntries(
       Object.entries(value)
         .filter(([, entryValue]) => entryValue !== undefined)

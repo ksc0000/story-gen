@@ -4,7 +4,7 @@ import { FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCard } from "@/components/animated-card";
-import { formatDateSafe } from "@/lib/date-utils";
+import { formatDateSafe, toMillisSafe } from "@/lib/date-utils";
 import type { BookDoc } from "@/lib/types";
 
 interface BookCardProps {
@@ -13,6 +13,9 @@ interface BookCardProps {
 
 export function BookCard({ book }: BookCardProps) {
   const href = book.status === "generating" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
+  // Prefer createdAtMs; createdAt may be an unresolved serverTimestamp sentinel
+  // on legacy books, which toMillisSafe treats as null.
+  const createdMillis = toMillisSafe(book.createdAtMs ?? book.createdAt);
 
   return (
     <Link href={href} className="group relative block">
@@ -49,9 +52,9 @@ export function BookCard({ book }: BookCardProps) {
             <h3 className="truncate text-sm font-semibold text-purple-900">
               {book.title || (book.status === "generating" ? "生成中..." : "無題の絵本")}
             </h3>
-            {book.createdAt && (
+            {createdMillis !== null && (
               <p className="mt-1 text-[10px] text-violet-400">
-                {formatDateSafe(book.createdAt)}
+                {formatDateSafe(createdMillis)}
               </p>
             )}
             {book.pdfStatus === "completed" && (
