@@ -1134,7 +1134,7 @@ export async function processBookGeneration(
       }
     }
     const userPlan = await deps.getUserPlan(bookData.userId);
-    const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
+    const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan, isAdminUser);
     const readingProfile = getAgeReadingProfile(mergedInput.childAge);
     const generationMode = normalizedBookData.generationMode ?? "reliable_fast";
 
@@ -2066,7 +2066,8 @@ function resolveEnableRecurringCharacterReference(generationMode: string): boole
 export function normalizeBookForGeneration(
   bookData: BookData,
   template: TemplateData,
-  userPlan: "free" | "premium"
+  userPlan: "free" | "premium",
+  isAdmin = false
 ): BookData {
   const creationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
   const isSinglePurchase = bookData.isSinglePurchase === true;
@@ -2079,17 +2080,32 @@ export function normalizeBookForGeneration(
 
   let normalizedPlan = requestedProductPlan;
 
-  // 2. Entitlement check (only for non-single-purchase)
-  if (!isSinglePurchase && !canUseProductPlan({ userPlan, productPlan: requestedProductPlan })) {
+  // 2. Entitlement check (only for non-single-purchase).
+  // 正規の有料ユーザー（userPlan=premium）・単品購入・管理者は本分岐に到達しない。
+  if (!isSinglePurchase && !canUseProductPlan({ userPlan, productPlan: requestedProductPlan, isAdmin })) {
     if (creationMode === "fixed_template") {
+      // 固定テンプレは free でも作れるため、無料相当に正規化して継続する。
       normalizedPlan = "free";
       console.log(
         `Paid plan normalized to free for book generation. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
       );
+    } else if (process.env.ENFORCE_AI_MODE_ENTITLEMENT === "true") {
+      // guided_ai / original_ai は有料プラン限定モード（free の allowedCreationModes は
+      // fixed_template のみ）。free へ正規化しても後段の creation-mode 互換チェックで既定の
+      // 有料プランへ戻ってしまうため、無料ユーザーの有料モード要求は明示的に拒否する。
+      // UI もこれらのモードを無料ユーザーに見せないため、ここはサーバー側の防御線。
+      // 既存の互換挙動を壊さないようフラグでgate。実課金開始（billing rollout）時に
+      // ENFORCE_AI_MODE_ENTITLEMENT=true を設定して有効化する。
+      console.error(
+        `Blocked paid-only creation mode for un-entitled user. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
+      );
+      throw new Error(
+        "このAIおまかせ作成は有料プラン限定です。プランをご確認のうえ、もう一度お試しください。"
+      );
     } else {
-      // TODO: Tighten paid-plan entitlement enforcement for guided_ai / original_ai after billing rollout.
-      console.log(
-        `Paid plan requested without entitlement, but kept for compatibility. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
+      // フラグ無効時（rollout 前）は従来どおり互換のため許可するが、監査用に記録する。
+      console.warn(
+        `Paid plan requested without entitlement, kept for compatibility (enforcement disabled). requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
       );
     }
   }

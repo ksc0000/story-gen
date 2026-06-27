@@ -2337,6 +2337,55 @@ describe("normalizeBookForGeneration (Phase 3-C)", () => {
     expect(result.pageCount).toBe(12);
     expect(result.productPlan).toBe("premium_paid");
   });
+
+  // 有料プラン限定モード（guided_ai / original_ai）のサーバー側エンタイトルメント強制。
+  // ENFORCE_AI_MODE_ENTITLEMENT フラグで gate（rollout 前は互換のため許可）。
+  const guidedTemplate: TemplateData = { ...fixedTemplate, creationMode: "guided_ai", fixedStory: undefined };
+
+  describe("with ENFORCE_AI_MODE_ENTITLEMENT enabled", () => {
+    beforeEach(() => { process.env.ENFORCE_AI_MODE_ENTITLEMENT = "true"; });
+    afterEach(() => { delete process.env.ENFORCE_AI_MODE_ENTITLEMENT; });
+
+    it("blocks guided_ai paid plan for un-entitled free user", () => {
+      const standardBookData = { ...baseBookData, productPlan: "standard_paid" as const };
+      expect(() =>
+        normalizeBookForGeneration(standardBookData, guidedTemplate, freeUserPlan)
+      ).toThrow(/有料プラン限定/);
+    });
+
+    it("blocks original_ai paid plan for un-entitled free user", () => {
+      const originalTemplate: TemplateData = { ...guidedTemplate, creationMode: "original_ai" };
+      const premiumBookData = { ...baseBookData, productPlan: "premium_paid" as const };
+      expect(() =>
+        normalizeBookForGeneration(premiumBookData, originalTemplate, freeUserPlan)
+      ).toThrow(/有料プラン限定/);
+    });
+
+    it("allows guided_ai paid plan for entitled premium user", () => {
+      const standardBookData = { ...baseBookData, productPlan: "standard_paid" as const };
+      const result = normalizeBookForGeneration(standardBookData, guidedTemplate, premiumUserPlan);
+      expect(result.productPlan).toBe("standard_paid");
+    });
+
+    it("allows guided_ai paid plan for admin (plan preview) even on free userPlan", () => {
+      const standardBookData = { ...baseBookData, productPlan: "standard_paid" as const };
+      const result = normalizeBookForGeneration(standardBookData, guidedTemplate, freeUserPlan, true);
+      expect(result.productPlan).toBe("standard_paid");
+    });
+
+    it("does not block single purchase guided_ai for free user", () => {
+      const singlePurchaseBook = { ...baseBookData, isSinglePurchase: true };
+      const result = normalizeBookForGeneration(singlePurchaseBook, guidedTemplate, freeUserPlan);
+      expect(result.productPlan).toBe("premium_paid");
+    });
+  });
+
+  it("keeps guided_ai for free user when enforcement flag is disabled (compat)", () => {
+    delete process.env.ENFORCE_AI_MODE_ENTITLEMENT;
+    const standardBookData = { ...baseBookData, productPlan: "standard_paid" as const };
+    const result = normalizeBookForGeneration(standardBookData, guidedTemplate, freeUserPlan);
+    expect(result.productPlan).toBe("standard_paid");
+  });
 });
 
 describe("sanitizeForbiddenQuestObjects", () => {

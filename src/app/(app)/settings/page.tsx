@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PageTransition } from "@/components/page-transition";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
+import { AdminPlanPanel } from "@/components/settings/admin-plan-panel";
 import { functions } from "@/lib/firebase";
 import { useAuth } from "@/lib/hooks/use-auth";
 
@@ -78,6 +79,9 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Admin-only developer panel (plan override + unlimited companions) */}
+        <AdminPlanPanel />
 
         {/* General Actions */}
         <Card className="border-violet-100 shadow-sm">

@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
-import { PLAN_CONFIGS } from "@/lib/plans";
+import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
+import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { useCompanions } from "../use-companions-hook";
 import {
   SPECIES_OPTIONS,
@@ -61,6 +62,7 @@ function CreateCompanionContent() {
   const returnTo = searchParams.get("returnTo");
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
+  const { isAdmin } = useAdminClaim();
   const { companions, addCompanion, loading: companionsLoading } = useCompanions(user?.uid);
 
   const [step, setStep] = useState<Step>("species");
@@ -77,9 +79,11 @@ function CreateCompanionContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const maxCompanions = useMemo(() => {
-    const productPlan = profile?.productPlan || profile?.plan || "free";
-    return PLAN_CONFIGS[productPlan as keyof typeof PLAN_CONFIGS]?.maxCompanions ?? 2;
-  }, [profile]);
+    // 管理者はなかよしキャラを無制限に作成できる（開発・全プラン確認用）。
+    if (isAdmin) return Infinity;
+    const productPlan = resolveProductPlan(profile);
+    return PLAN_CONFIGS[productPlan]?.maxCompanions ?? 2;
+  }, [profile, isAdmin]);
 
   const isLimitReached = companions.length >= maxCompanions;
 

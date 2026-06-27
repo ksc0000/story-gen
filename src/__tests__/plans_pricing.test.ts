@@ -18,6 +18,15 @@ describe("resolveProductPlan", () => {
     expect(resolveProductPlan(undefined)).toBe("free");
     expect(resolveProductPlan(null)).toBe("free");
   });
+
+  it("planOverride takes precedence over productPlan (admin dev panel)", () => {
+    expect(
+      resolveProductPlan({ productPlan: "free", plan: "free", planOverride: "premium_paid" })
+    ).toBe("premium_paid");
+    expect(
+      resolveProductPlan({ productPlan: "premium_paid", plan: "premium", planOverride: "free" })
+    ).toBe("free");
+  });
 });
 
 describe("PLAN_CONFIGS Pricing", () => {

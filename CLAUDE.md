@@ -171,6 +171,7 @@ Firestore 保存
 | `ENABLE_RESPONSE_SCHEMA` | Gemini structured output（本番非推奨） |
 | `ENABLE_KLEIN_BASE` | klein_base モデル有効化 |
 | `RESPONSE_SCHEMA_MODE` | `minimal` 等のスキーマ変形 |
+| `ENFORCE_AI_MODE_ENTITLEMENT` | `true` で guided_ai / original_ai の有料エンタイトルメントをサーバー強制（未エンタイトルの無料ユーザーをブロック）。**既定OFF（互換）。実課金開始時に有効化する** |
 
 ### ユーザードキュメントの `generationOverride` フィールド
 

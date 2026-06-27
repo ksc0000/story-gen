@@ -182,11 +182,14 @@ export function getPlanDisplayLabel(productPlan: ProductPlan): string {
 
 /**
  * ユーザープロフィールから有効な productPlan を解決する。
- * productPlan が未設定の場合は legacy `plan` フィールドにフォールバックする
- * （`plan === "premium"` は standard_paid 相当として扱う）。
+ * - planOverride（管理者専用の開発用上書き）が最優先。
+ * - 次に productPlan。
+ * - 未設定の場合は legacy `plan` フィールドにフォールバックする
+ *   （`plan === "premium"` は standard_paid 相当として扱う）。
  */
 export function resolveProductPlan(
-  profile?: { productPlan?: ProductPlan; plan?: UserPlan } | null
+  profile?: { productPlan?: ProductPlan; plan?: UserPlan; planOverride?: ProductPlan } | null
 ): ProductPlan {
+  if (profile?.planOverride) return profile.planOverride;
   return profile?.productPlan ?? (profile?.plan === "premium" ? "standard_paid" : "free");
 }
