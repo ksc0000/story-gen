@@ -180,6 +180,9 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
           imageQualityTier: bookData.imageQualityTier,
           ageBand: readingProfile.ageBand,
           categoryGroupId: bookData.categoryGroupId,
+          protagonistIsNonHuman:
+            bookData.input?.protagonistType === "companion" && Boolean(bookData.input?.companionName),
+          nonHumanProtagonistName: bookData.input?.companionName,
         }
       );
 

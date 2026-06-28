@@ -1593,6 +1593,9 @@ export async function processBookGeneration(
           scenePolicy: normalizedBookData.scenePolicy,
           categoryGroupId: template.categoryGroupId,
           hasAnimalCharacters: normalizedBookData.theme === "animals",
+          protagonistIsNonHuman:
+            mergedInput.protagonistType === "companion" && Boolean(mergedInput.companionName),
+          nonHumanProtagonistName: mergedInput.companionName,
         }
       );
 
@@ -1795,6 +1798,9 @@ export async function processBookGeneration(
             imageQualityTier: normalizedBookData.imageQualityTier,
             ageBand: readingProfile.ageBand,
             categoryGroupId: template.categoryGroupId,
+            protagonistIsNonHuman:
+              mergedInput.protagonistType === "companion" && Boolean(mergedInput.companionName),
+            nonHumanProtagonistName: mergedInput.companionName,
           }
         )
       : undefined;
@@ -2937,6 +2943,9 @@ function buildStoryFromFixedTemplate(
 
   const hasCompanion = Boolean(companionName && companionVisual);
   const companionCharacterId = "companion_character";
+  // なかよしキャラが主人公のとき、固定テンプレは「子どもが主人公」前提なので、
+  // 主人公を相棒に置き換える（全ページに相棒のみ・人間の子どもは登場させない）。
+  const isCompanionProtagonist = mergedInput.protagonistType === "companion" && hasCompanion;
 
   const pages = fixedStory.pages.map((page, index) => {
     const text = applyTemplateReplacements(
@@ -2947,14 +2956,20 @@ function buildStoryFromFixedTemplate(
     );
     const baseImagePrompt = applyTemplateReplacements(page.imagePromptTemplate, replacements);
 
-    // 相棒がいる場合、1ページおき（0, 2, 4...）に登場させる（半数以上）
-    const appearingCharacterIds = ["child_protagonist"];
+    let appearingCharacterIds: string[];
     let imagePrompt = baseImagePrompt;
-    if (hasCompanion && index % 2 === 0) {
-      appearingCharacterIds.push(companionCharacterId);
-      // 固定テンプレートの Scene 記述は相棒に触れないため、相棒を能動的にシーンへ配置する指示を加える。
-      // （cast の一貫性ガイダンスだけでは「補足」扱いになり描かれにくいため、Scene レベルで明示する）
-      imagePrompt = `${baseImagePrompt} Also clearly present in this scene: ${companionName} (${companionVisual}), a friendly companion staying close beside the child and joining the moment naturally. Draw ${companionName} as a visible part of the scene, not in the background.`;
+    if (isCompanionProtagonist) {
+      // 相棒が主人公: 全ページに相棒のみ。人間の子どもは描かない。
+      appearingCharacterIds = [companionCharacterId];
+      imagePrompt = `The protagonist (main character) of this scene is ${companionName} (${companionVisual}), a non-human companion who must be the central figure. There is no human child in this story — do not draw any human child. ${baseImagePrompt}`;
+    } else {
+      // 相棒がいる場合、1ページおき（0, 2, 4...）に脇役として登場させる（半数以上）
+      appearingCharacterIds = ["child_protagonist"];
+      if (hasCompanion && index % 2 === 0) {
+        appearingCharacterIds.push(companionCharacterId);
+        // 固定テンプレートの Scene 記述は相棒に触れないため、相棒を能動的にシーンへ配置する指示を加える。
+        imagePrompt = `${baseImagePrompt} Also clearly present in this scene: ${companionName} (${companionVisual}), a friendly companion staying close beside the child and joining the moment naturally. Draw ${companionName} as a visible part of the scene, not in the background.`;
+      }
     }
 
     return {
@@ -2970,7 +2985,7 @@ function buildStoryFromFixedTemplate(
     cast.push({
       characterId: companionCharacterId,
       displayName: companionName!,
-      role: "buddy",
+      role: isCompanionProtagonist ? "protagonist" : "buddy",
       characterKind: "magical_creature",
       visualBible: companionVisual!,
       nonHuman: true,
