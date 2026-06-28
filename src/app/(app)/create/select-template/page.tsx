@@ -56,6 +56,14 @@ function SelectTemplateContent() {
     return map;
   }, [templates]);
 
+  // ストーリー（base）ごとの対応ページ数（例: [4, 8]）。カードのタグ表示に使う。
+  const getAvailablePageCounts = (t: (typeof templates)[0]): number[] => {
+    const variants = templateVariantsMap.get(getTemplateBaseId(t)) ?? [t];
+    const counts = new Set<number>();
+    for (const v of variants) counts.add(v.fixedStory?.pages?.length ?? 4);
+    return Array.from(counts).sort((a, b) => a - b);
+  };
+
   const filteredTemplates = useMemo(() => {
     const list = templates.filter((template) => {
       const templateMode = template.creationMode ?? "guided_ai";
@@ -219,6 +227,7 @@ function SelectTemplateContent() {
                           template={template}
                           selected={selectedId === template.id}
                           onSelect={() => setDetailTemplateId(template.id)}
+                          availablePageCounts={getAvailablePageCounts(template)}
                           categoryName={group.groupName}
                         />
                       </StaggerItem>
@@ -235,6 +244,7 @@ function SelectTemplateContent() {
                     template={template}
                     selected={selectedId === template.id}
                     onSelect={() => setDetailTemplateId(template.id)}
+                    availablePageCounts={getAvailablePageCounts(template)}
                     categoryName={categoryGroupMap.get(template.categoryGroupId ?? "")?.name}
                   />
                 </StaggerItem>
