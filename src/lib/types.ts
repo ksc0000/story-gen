@@ -507,6 +507,32 @@ export interface CharacterUsage {
   keepSignatureItem: boolean;
 }
 
+/**
+ * ユーザーが保存した「生成設定テンプレート」。絵本ビューアで既存の絵本の設定を
+ * 名前を付けて保存し、作成フローの入口から呼び出して同じ設定で別の絵本を作れる。
+ * 保存先は users/{uid}/savedTemplates/{id}。主人公は再利用時に選び直す。
+ */
+export interface SavedTemplateDoc {
+  name: string;
+  creationMode: CreationMode;
+  theme: string;
+  templateId?: string;
+  selectedStyleId?: IllustrationStyle;
+  selectedStyleName?: string;
+  pageCount?: PageCount;
+  outfitMode?: OutfitMode;
+  customOutfit?: string;
+  keepSignatureItem?: boolean;
+  companionId?: string;
+  companionName?: string;
+  companionVisualDescription?: string;
+  /** 一覧でのサムネイル用（元になった絵本の表紙） */
+  coverImageUrl?: string;
+  sourceBookId?: string;
+  createdAt: Timestamp;
+  createdAtMs: number;
+}
+
 export interface BookDoc {
   userId: string;
   childId?: string | null;

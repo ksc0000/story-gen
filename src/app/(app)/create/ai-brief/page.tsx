@@ -579,6 +579,9 @@ function AiBriefPageContent() {
     if (companionName) params.set("companionName", companionName);
     if (companionVisualDescription)
       params.set("companionVisualDescription", companionVisualDescription);
+    // 保存テンプレ由来のスタイルを style 画面へ引き継ぐ（プリフィル用）。
+    const selectedStyleIdParam = searchParams.get("selectedStyleId");
+    if (selectedStyleIdParam) params.set("selectedStyleId", selectedStyleIdParam);
 
     router.push(`/create/style?${params.toString()}`);
   };

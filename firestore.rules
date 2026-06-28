@@ -82,6 +82,12 @@ service cloud.firestore {
         allow read: if isAdmin() || isOwner(userId);
         allow write: if false;
       }
+
+      // 保存した生成設定テンプレート（オーナーのみ読み書き）。課金・権限には影響しない。
+      match /savedTemplates/{templateId} {
+        allow read: if isAdmin() || isOwner(userId);
+        allow create, update, delete: if isOwner(userId);
+      }
     }
 
     match /books/{bookId} {

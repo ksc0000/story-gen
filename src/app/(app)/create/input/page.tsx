@@ -235,6 +235,9 @@ function InputPageContent() {
     params.set("productPlan", productPlan);
     params.set("outfitMode", outfitMode);
     params.set("keepSignatureItem", String(keepSignatureItem));
+    // 保存テンプレ由来のスタイルを style 画面へ引き継ぐ（プリフィル用）。
+    const selectedStyleIdParam = searchParams.get("selectedStyleId");
+    if (selectedStyleIdParam) params.set("selectedStyleId", selectedStyleIdParam);
     if (creationMode !== "fixed_template") {
       params.set("pageCount", String(pageCount));
     }

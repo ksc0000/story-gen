@@ -11,6 +11,7 @@ import { BookViewer, buildReadingItems } from "@/components/book-viewer";
 import { CinematicViewer } from "@/components/cinematic-viewer";
 import { BookNextActions } from "@/components/book-next-actions";
 import { BookSeriesControl } from "@/components/book-series-control";
+import { BookSettingsPanel } from "@/components/book/book-settings-panel";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -335,6 +336,10 @@ function BookContent() {
           </div>
         )}
       </div>
+
+      {isOwner && user && (book.status === "completed" || book.status === "partial_completed") && (
+        <BookSettingsPanel book={book} userId={user.uid} />
+      )}
 
       {isPartial && (
         <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50/50 p-4 sm:flex-row">

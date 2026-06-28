@@ -39,7 +39,10 @@ function StyleSelectionPageContent() {
   const { profile } = useUserProfile(user?.uid);
   const { children } = useChildren(user?.uid);
   const { templates } = useTemplates();
-  const [selected, setSelected] = useState<IllustrationStyle | null>("soft_watercolor");
+  // 保存テンプレからの再利用時は selectedStyleId をプリフィル（可視なスタイルなら維持される）。
+  const [selected, setSelected] = useState<IllustrationStyle | null>(
+    (searchParams.get("selectedStyleId") as IllustrationStyle | null) ?? "soft_watercolor"
+  );
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const hasInteracted = useRef(false);
