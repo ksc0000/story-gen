@@ -11,6 +11,7 @@ type AnalyticsEventName =
   | "complete_book_generation"
   | "partial_complete_book_generation"
   | "fail_book_generation"
+  | "retry_book_generation"
   | "submit_book_feedback"
   | "view_quality_sample"
   | "submit_ai_brief"

@@ -16,6 +16,7 @@ import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
+import { validateBookInputLengths } from "@/lib/input-validation";
 import { getStylePickerProfilesForTemplate } from "@/lib/style-exposure";
 import {
   getDefaultProductPlanForCreationMode,
@@ -254,6 +255,17 @@ function StyleSelectionPageContent() {
           updatedAtMs: createdAtMs,
           expiresAt,
         });
+
+        // 生成後に「入力テキストが長すぎます」で失敗する前に、ここで知らせる。
+        const lengthCheck = validateBookInputLengths(
+          (bookPayload as { input?: Record<string, unknown> }).input
+        );
+        if (!lengthCheck.valid) {
+          setCreateError(lengthCheck.message ?? "入力内容を確認してください。");
+          setCreating(false);
+          return;
+        }
+
         const bookRef = await addDoc(collection(db, "books"), bookPayload);
         bookId = bookRef.id;
       }
