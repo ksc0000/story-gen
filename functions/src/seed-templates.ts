@@ -3628,6 +3628,420 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       ],
     },
   },
+  "fixed-first-christmas-8p": {
+    name: "はじめてのクリスマス（8ページ）",
+    description: "家族とのクリスマスの思い出を、夜のはじまりからおやすみまでじっくり残せる8ページ版",
+    icon: "🎄",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "christmas",
+    parentIntent: "季節の体験を特別な思い出にしたい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName", "familyMembers"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["christmas", "season", "family"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-first-christmas.webp",
+    sampleImageAlt: "家族でクリスマスを楽しむ子どものやさしい絵本イメージ",
+    visualDirection:
+      "Warm Christmas picture-book mood with soft lights, family warmth, festive decorations, child-safe wonder, and cozy winter colors.",
+    order: 10.5,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、はじめてのクリスマスを夜のはじまりからおやすみまで、やさしく残す8ページの絵本を作ります。",
+    fixedStory: {
+      previewImageUrl: "/images/templates/fixed-first-christmas.webp",
+      titleTemplate: "{childName}のはじめてのクリスマス",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a young child celebrating Christmas with family in a cozy living room, soft warm fairy lights, decorated Christmas tree, gentle winter glow, recurring small golden bell motif, festive but calm storybook mood, soft watercolor style, child-safe tender composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "{childName}の はじめての クリスマス",
+      openingNarrationTemplate:
+        "きらきらの ひかりに つつまれた よる。{childName}と {familyMembers}の とくべつな クリスマスが はじまります。",
+      pages: [
+        {
+          textTemplate: "まどの そとは ゆきもよう。{childName}と {familyMembers}の クリスマスの よるが はじまりました。",
+          textTemplatesByAge: {
+            baby_toddler: "{childName}、クリスマスの よる。",
+            preschool_3_4: "まどの そとは ゆきもよう。{childName}と {familyMembers}の クリスマスの よるが はじまりました。",
+            early_reader_5_6: "まどの そとは しずかな ゆきもよう。{childName}と {familyMembers}の とくべつな クリスマスの よるが、そっと はじまりました。",
+            early_elementary_7_8: "まどの そとには やわらかな ゆきが ふり、へやの なかは あたたかな ひかりで いっぱい。{childName}と {familyMembers}の クリスマスの よるが はじまりました。",
+            general_child: "まどの そとは ゆきもよう。{childName}と {familyMembers}の クリスマスの よるが はじまりました。",
+          },
+          pageVisualRole: "opening_establishing" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Establishing wide shot of a cozy living room on a snowy Christmas evening, seen through a softly frosted window glow. A young child stands near a sparkling Christmas tree with wide amazed eyes. Family members sit nearby on a sofa, smiling warmly. Soft fairy lights drape across the tree. A small golden bell motif hangs on a low branch. Warm candlelight and gentle winter evening tones. Soft watercolor picture book style, festive but calm, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "ツリーには、きらきらの かざりが いっぱい。{childName}は そっと 手を のばしました。",
+          textTemplatesByAge: {
+            baby_toddler: "ツリー、きらきら。",
+            preschool_3_4: "ツリーには、きらきらの かざりが いっぱい。{childName}は そっと 手を のばしました。",
+            early_reader_5_6: "ツリーには きらきらの かざりが いっぱい。{childName}は ちいさな おほしさまの かざりに そっと 手を のばしました。",
+            early_elementary_7_8: "ツリーには いろとりどりの かざりが きらきらと ゆれています。{childName}は おきにいりの ちいさな かざりを 見つけて、そっと 手を のばしました。",
+            general_child: "ツリーには、きらきらの かざりが いっぱい。{childName}は そっと 手を のばしました。",
+          },
+          pageVisualRole: "discovery" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Medium shot of the child reaching gently toward a sparkling ornament on the Christmas tree, eyes full of wonder. Colorful baubles and soft lights surround the branches. A small golden bell motif is hidden among the ornaments. Family visible in soft focus behind. Warm amber holiday tones. Soft watercolor picture book style, wonder-filled, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "{familyMembers}と いっしょに、ツリーの かざりつけ。たかい ところは だっこで ぺったん。",
+          textTemplatesByAge: {
+            baby_toddler: "いっしょに かざろう。",
+            preschool_3_4: "{familyMembers}と いっしょに、ツリーの かざりつけ。たかい ところは だっこで ぺったん。",
+            early_reader_5_6: "{familyMembers}と いっしょに ツリーの かざりつけ。たかい ところは だっこして もらって、ぺったん と つけました。",
+            early_elementary_7_8: "{familyMembers}と いっしょに ツリーの かざりつけ。とどかない たかい えだは だっこして もらい、{childName}は うれしそうに かざりを つけました。",
+            general_child: "{familyMembers}と いっしょに、ツリーの かざりつけ。たかい ところは だっこで ぺったん。",
+          },
+          pageVisualRole: "action" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Dynamic scene of the child being gently lifted by a family member to place an ornament high on the Christmas tree. Both are smiling with joy and teamwork. Decorations and fairy lights glow warmly. A small golden bell motif near the top of the tree. Cozy living room, warm winter colors. Soft watercolor picture book style, lively but tender, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "ツリーの したには、リボンの ついた プレゼント。だれの かな？",
+          textTemplatesByAge: {
+            baby_toddler: "プレゼント、みつけた。",
+            preschool_3_4: "ツリーの したには、リボンの ついた プレゼント。だれの かな？",
+            early_reader_5_6: "ツリーの したには、リボンの ついた プレゼントが ならんでいました。だれの プレゼントかな、と {childName}は どきどき。",
+            early_elementary_7_8: "ツリーの したには、いろとりどりの リボンを むすんだ プレゼントが ならんでいました。どれが じぶんの かな、と {childName}は わくわく しながら ながめました。",
+            general_child: "ツリーの したには、リボンの ついた プレゼント。だれの かな？",
+          },
+          pageVisualRole: "object_detail" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Close detail of wrapped presents with colorful ribbons resting under the Christmas tree, glowing in soft light. The child crouches and looks at them with curious sparkling eyes. A small golden bell motif tied to one ribbon. Warm cozy tones. Soft watercolor picture book style, intimate framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "{childName}の にこにこ えがおを 見て、{familyMembers}も にっこり しました。",
+          textTemplatesByAge: {
+            baby_toddler: "{childName}、にこにこ。",
+            preschool_3_4: "{childName}の にこにこ えがおを 見て、{familyMembers}も にっこり しました。",
+            early_reader_5_6: "{childName}の にこにこ えがおを 見て、{familyMembers}も にっこり。うれしい きもちが、みんなに ふわっと ひろがりました。",
+            early_elementary_7_8: "{childName}の うれしそうな えがおを 見て、{familyMembers}も にっこり しました。たのしい きもちは、そばに いる人へ ひろがっていくのだと かんじる ひとときでした。",
+            general_child: "{childName}の にこにこ えがおを 見て、{familyMembers}も にっこり しました。",
+          },
+          pageVisualRole: "emotional_closeup" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Close-up of the child's delighted face during the Christmas celebration, family leaning in close with warm smiles. Soft fairy light bokeh in the background. A small golden bell motif nearby. Warm golden and soft white tones. Soft watercolor picture book style, intimate emotional framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "まどの そとを 見あげると、おほしさまが ちかちか。サンタさん、きてくれるかな。",
+          textTemplatesByAge: {
+            baby_toddler: "おほしさま、ちかちか。",
+            preschool_3_4: "まどの そとを 見あげると、おほしさまが ちかちか。サンタさん、きてくれるかな。",
+            early_reader_5_6: "まどの そとを 見あげると、よぞらに おほしさまが ちかちか。サンタさんは きてくれるかな、と {childName}は むねを わくわく させました。",
+            early_elementary_7_8: "まどの そとを 見あげると、ふゆの よぞらに おほしさまが ちかちかと かがやいていました。サンタさんは きてくれるかな、と {childName}は そっと そらに ねがいました。",
+            general_child: "まどの そとを 見あげると、おほしさまが ちかちか。サンタさん、きてくれるかな。",
+          },
+          pageVisualRole: "discovery" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("The child looks up through the window at a starry winter night sky, hopeful and dreamy expression. Snowflakes drift gently outside. Warm room light contrasts with the cool blue night. A small golden bell motif on the windowsill. Soft watercolor picture book style, dreamy calm mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "つぎの あさ、プレゼントを あけると——わあ！ {childName}は とびきりの えがお。",
+          textTemplatesByAge: {
+            baby_toddler: "わあ！ うれしいね。",
+            preschool_3_4: "つぎの あさ、プレゼントを あけると——わあ！ {childName}は とびきりの えがお。",
+            early_reader_5_6: "つぎの あさ、リボンを ほどいて プレゼントを あけると——わあ！ {childName}は とびきりの えがおに なりました。",
+            early_elementary_7_8: "つぎの あさ、どきどき しながら リボンを ほどいて プレゼントを あけると——わあ！ おもわず こえが でるほど うれしくて、{childName}は とびきりの えがおに なりました。",
+            general_child: "つぎの あさ、プレゼントを あけると——わあ！ {childName}は とびきりの えがお。",
+          },
+          pageVisualRole: "payoff" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Joyful morning scene: the child opens a wrapped present and beams with an overjoyed expression, ribbon falling away. Bright soft morning light fills the cozy room, tree still glowing. Family shares the happy moment. A small golden bell motif on the wrapping. Warm cheerful tones. Soft watercolor picture book style, triumphant joyful framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "たのしい クリスマスが おわって、おやすみなさい。あったかい きもちが のこりました。{parentMessage}",
+          textTemplatesByAge: {
+            baby_toddler: "おやすみなさい。",
+            preschool_3_4: "たのしい クリスマスが おわって、おやすみなさい。あったかい きもちが のこりました。{parentMessage}",
+            early_reader_5_6: "たのしい クリスマスの よるが おわって、おやすみなさい。むねの なかには、あったかい きもちが そっと のこりました。{parentMessage}",
+            early_elementary_7_8: "たのしい クリスマスの よるが おわり、{childName}は しあわせな きもちで おやすみなさい。きょうの あたたかい おもいでは、ずっと むねの なかで ひかりつづけます。{parentMessage}",
+            general_child: "たのしい クリスマスが おわって、おやすみなさい。あったかい きもちが のこりました。{parentMessage}",
+          },
+          pageVisualRole: "quiet_ending" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Peaceful closing scene: the child cozy and sleepy near the gently glowing Christmas tree, family tucking them in or sitting close. Soft warm low light, calm and content mood. A small golden bell motif resting nearby. Warm tender tones, sense of closure. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+      ],
+    },
+  },
+  "fixed-tanabata-8p": {
+    name: "たなばたのねがい（8ページ）",
+    description: "7月7日、たなばたの夜。笹に短冊をかけ、天の川を見上げて、{childName}の願いを星に届ける8ページ版",
+    icon: "🎋",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "japanese-traditional",
+    parentIntent: "季節の体験を特別な思い出にしたい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["tanabata", "season", "japanese"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-tanabata.webp",
+    sampleImageAlt: "笹かざりと天の川を見上げる子どものやさしい絵本イメージ",
+    visualDirection:
+      "Gentle summer-night tanabata mood with bamboo grass, colorful paper strips, a glowing Milky Way, soft starlight, and calm child-safe wonder.",
+    order: 53.5,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、たなばたの夜に星へ願いを届ける、8ページのやさしい絵本を作ります。",
+    fixedStory: {
+      previewImageUrl: "/images/templates/fixed-tanabata.webp",
+      titleTemplate: "{childName}の たなばたの ねがい",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a young child looking up at a glowing Milky Way on a tanabata summer night, bamboo grass decorated with colorful paper strips swaying gently, soft starlight, recurring small golden star motif, calm dreamy storybook mood, soft watercolor style, child-safe tender composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "ほしに ねがいを とどけよう",
+      openingNarrationTemplate:
+        "なつの よる、ささの はが さらさら ゆれて。{childName}の たなばたの ねがいが はじまります。",
+      pages: [
+        {
+          textTemplate: "なつの よる、にわには ささかざり。{childName}の たなばたが はじまりました。",
+          textTemplatesByAge: {
+            baby_toddler: "ささ、さらさら。たなばた。",
+            preschool_3_4: "なつの よる、にわには ささかざり。{childName}の たなばたが はじまりました。",
+            early_reader_5_6: "なつの よる、にわには ささかざりが さらさら。{childName}の たなばたの よるが、そっと はじまりました。",
+            early_elementary_7_8: "なつの よる、にわには せの たかい ささかざりが さらさらと ゆれていました。{childName}の たなばたの よるが はじまります。",
+            general_child: "なつの よる、にわには ささかざり。{childName}の たなばたが はじまりました。",
+          },
+          pageVisualRole: "opening_establishing" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Establishing wide shot of a summer evening garden with a tall bamboo grass branch decorated with colorful paper strips swaying gently. A young child stands nearby, looking up with curiosity. Soft dusk colors fade into early starlight. A small golden star motif among the decorations. Soft watercolor picture book style, calm seasonal mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "いろとりどりの たんざくを、ささの はに むすびます。なにを おねがい しようかな。",
+          textTemplatesByAge: {
+            baby_toddler: "たんざく、むすぶよ。",
+            preschool_3_4: "いろとりどりの たんざくを、ささの はに むすびます。なにを おねがい しようかな。",
+            early_reader_5_6: "いろとりどりの たんざくを ささの はに むすびました。{childName}は なにを おねがい しようかな、と かんがえます。",
+            early_elementary_7_8: "あか、きいろ、みずいろの たんざくを ささの はに むすびながら、{childName}は どんな おねがいを しようかと わくわく かんがえました。",
+            general_child: "いろとりどりの たんざくを、ささの はに むすびます。なにを おねがい しようかな。",
+          },
+          pageVisualRole: "action" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("The child carefully ties colorful paper strips onto the bamboo grass branch, focused and happy. Decorations of paper stars and streamers around. Soft warm evening light. A small golden star motif nearby. Soft watercolor picture book style, gentle activity, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "{childName}は たんざくに、ちいさな ねがいごとを かきました。",
+          textTemplatesByAge: {
+            baby_toddler: "おねがい、かくよ。",
+            preschool_3_4: "{childName}は たんざくに、ちいさな ねがいごとを かきました。",
+            early_reader_5_6: "{childName}は たんざくに、こころを こめて ちいさな ねがいごとを かきました。",
+            early_elementary_7_8: "{childName}は たんざくを てに とり、こころを こめて、たいせつな ねがいごとを ひとつ ひとつ かきました。",
+            general_child: "{childName}は たんざくに、ちいさな ねがいごとを かきました。",
+          },
+          pageVisualRole: "object_detail" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Close detail of the child holding a paper strip with both hands, looking at it thoughtfully as if making a wish, near the bamboo grass. Soft glow of evening. A small golden star motif on the paper edge. Soft watercolor picture book style, intimate framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "そらを 見あげると、あまのがわが きらきら ながれていました。",
+          textTemplatesByAge: {
+            baby_toddler: "おそら、きらきら。",
+            preschool_3_4: "そらを 見あげると、あまのがわが きらきら ながれていました。",
+            early_reader_5_6: "そらを 見あげると、よぞらいっぱいに あまのがわが きらきらと ながれていました。",
+            early_elementary_7_8: "そらを 見あげると、くらい よぞらいっぱいに あまのがわが きらきらと ひろがり、ながれているように 見えました。",
+            general_child: "そらを 見あげると、あまのがわが きらきら ながれていました。",
+          },
+          pageVisualRole: "discovery" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("The child looks up in awe at a glowing Milky Way stretching across the night sky, eyes wide with wonder. Bamboo grass silhouette in the foreground. Deep blue night with countless soft stars. A small golden star motif slightly brighter among them. Soft watercolor picture book style, magical calm, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "{childName}は ほしに むかって、そっと ねがいごとを いいました。",
+          textTemplatesByAge: {
+            baby_toddler: "ほしさん、おねがい。",
+            preschool_3_4: "{childName}は ほしに むかって、そっと ねがいごとを いいました。",
+            early_reader_5_6: "{childName}は ほしに むかって、めを とじて そっと ねがいごとを いいました。",
+            early_elementary_7_8: "{childName}は きらめく ほしに むかって、めを とじ、こころの なかで そっと ねがいごとを となえました。",
+            general_child: "{childName}は ほしに むかって、そっと ねがいごとを いいました。",
+          },
+          pageVisualRole: "emotional_closeup" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Close-up of the child with hands gently clasped and eyes closed, making a wish toward the starry sky, peaceful sincere expression. Soft starlight on the face. A small golden star motif glowing above. Soft watercolor picture book style, tender emotional framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "そのとき、ほしが ひとつ、すうっと ながれました。ながれぼしだ！",
+          textTemplatesByAge: {
+            baby_toddler: "ながれぼし、すうっ。",
+            preschool_3_4: "そのとき、ほしが ひとつ、すうっと ながれました。ながれぼしだ！",
+            early_reader_5_6: "そのとき、ほしが ひとつ、すうっと よぞらを ながれました。ながれぼしだ、と {childName}は おどろきました。",
+            early_elementary_7_8: "ちょうど そのとき、ほしが ひとつ、すうっと よぞらを ながれました。ながれぼしだ、と {childName}は おもわず めを かがやかせました。",
+            general_child: "そのとき、ほしが ひとつ、すうっと ながれました。ながれぼしだ！",
+          },
+          pageVisualRole: "payoff" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Magical moment: a shooting star streaks softly across the night sky, leaving a gentle trail of light. The child watches with a joyful surprised expression, pointing up. Bamboo grass and Milky Way behind. A small golden star motif as the shooting star. Soft watercolor picture book style, wondrous joyful framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "{childName}の ねがいごとが、きっと ほしまで とどきますように。",
+          textTemplatesByAge: {
+            baby_toddler: "ねがい、とどけ。",
+            preschool_3_4: "{childName}の ねがいごとが、きっと ほしまで とどきますように。",
+            early_reader_5_6: "{childName}の こころを こめた ねがいごとが、きっと ほしまで とどきますように。",
+            early_elementary_7_8: "{childName}が こころを こめた ねがいごとが、あまのがわを こえて、きっと ほしまで とどきますように。",
+            general_child: "{childName}の ねがいごとが、きっと ほしまで とどきますように。",
+          },
+          pageVisualRole: "discovery" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Soft dreamy view of the bamboo grass with paper strips fluttering, the child standing peacefully below, gazing up as starlight gently rains down toward the wish. Milky Way glowing warmly. A small golden star motif drifting. Soft watercolor picture book style, hopeful gentle mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "ささかざりが さらさら ゆれて、たなばたの よるは しずかに ふけていきました。{parentMessage}",
+          textTemplatesByAge: {
+            baby_toddler: "おやすみ、たなばた。",
+            preschool_3_4: "ささかざりが さらさら ゆれて、たなばたの よるは しずかに ふけていきました。{parentMessage}",
+            early_reader_5_6: "ささかざりが さらさら ゆれて、たなばたの よるは しずかに ふけていきました。むねには あたたかい きもちが のこります。{parentMessage}",
+            early_elementary_7_8: "ささかざりが さらさらと ゆれるなか、たなばたの よるは しずかに ふけていきました。{childName}の むねには、ねがいを こめた あたたかい きもちが そっと のこりました。{parentMessage}",
+            general_child: "ささかざりが さらさら ゆれて、たなばたの よるは しずかに ふけていきました。{parentMessage}",
+          },
+          pageVisualRole: "quiet_ending" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Peaceful closing scene: the bamboo grass with paper strips sways gently under a calm starry sky as the tanabata night grows quiet. The child looks content and a little sleepy. Soft fading starlight, sense of closure. A small golden star motif resting. Soft watercolor picture book style, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+      ],
+    },
+  },
+  "fixed-new-year-8p": {
+    name: "おしょうがつのあさ（8ページ）",
+    description: "新年のお正月。初日の出、初詣、おせちにお年玉まで、特別な一日をじっくり味わう8ページ版",
+    icon: "⛩️",
+    categoryGroupId: "seasonal-events",
+    subcategoryId: "new-year",
+    parentIntent: "季節の体験を特別な思い出にしたい",
+    recommendedAgeMin: 1,
+    recommendedAgeMax: 6,
+    requiredInputs: ["childName"],
+    optionalInputs: ["parentMessage"],
+    themeTags: ["new-year", "season", "japanese"],
+    creationMode: "fixed_template",
+    priceTier: "ume",
+    storyCostLevel: "none",
+    sampleImageUrl: "/images/templates/fixed-new-year.webp",
+    sampleImageAlt: "初日の出や初詣を楽しむお正月の子どものやさしい絵本イメージ",
+    visualDirection:
+      "Bright fresh New Year morning mood with golden sunrise, calm shrine visit, festive osechi food, warm family togetherness, and child-safe seasonal joy.",
+    order: 57.5,
+    active: true,
+    systemPrompt: "固定テンプレートを使って、お正月のとくべつな一日をじっくり味わう、8ページのやさしい絵本を作ります。",
+    fixedStory: {
+      previewImageUrl: "/images/templates/fixed-new-year.webp",
+      titleTemplate: "{childName}の おしょうがつの あさ",
+      coverImagePromptTemplate:
+        withFixedImagePromptSafety("Picture book cover illustration: a young child greeting a bright golden New Year sunrise, calm and joyful, a small traditional shrine torii gate softly in the distance, recurring small golden bell motif, fresh hopeful storybook mood, soft watercolor style, child-safe tender composition, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"),
+      titleSpreadTextTemplate: "あけまして、おめでとう！",
+      openingNarrationTemplate:
+        "あたらしい としの あさ。そらが きんいろに かがやいて、{childName}の おしょうがつが はじまります。",
+      pages: [
+        {
+          textTemplate: "あたらしい としの あさ。{childName}は はつひので を 見に そとへ でました。",
+          textTemplatesByAge: {
+            baby_toddler: "あさだ。あけまして。",
+            preschool_3_4: "あたらしい としの あさ。{childName}は はつひので を 見に そとへ でました。",
+            early_reader_5_6: "あたらしい としの あさ。{childName}は はつひので を 見ようと、そとへ でました。",
+            early_elementary_7_8: "あたらしい としの はじまりの あさ。{childName}は はつひので を 見ようと、しろい いきを はきながら そとへ でました。",
+            general_child: "あたらしい としの あさ。{childName}は はつひので を 見に そとへ でました。",
+          },
+          pageVisualRole: "opening_establishing" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Establishing wide shot of a crisp New Year morning. A young child steps outside in warm winter clothes, breath visible in the cold air, looking toward the horizon. Quiet neighborhood in soft early light. A small golden bell motif on the child's coat. Soft watercolor picture book style, fresh hopeful mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "そらが だんだん きんいろに。はつひので が、ゆっくり のぼってきました。",
+          textTemplatesByAge: {
+            baby_toddler: "おひさま、きんいろ。",
+            preschool_3_4: "そらが だんだん きんいろに。はつひので が、ゆっくり のぼってきました。",
+            early_reader_5_6: "そらが だんだん きんいろに そまり、はつひので が ゆっくりと のぼってきました。",
+            early_elementary_7_8: "そらが だんだんと きんいろに そまっていき、まちを やさしく てらしながら、はつひので が ゆっくりと のぼってきました。",
+            general_child: "そらが だんだん きんいろに。はつひので が、ゆっくり のぼってきました。",
+          },
+          pageVisualRole: "discovery" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("The child watches a golden New Year sunrise rising slowly over the horizon, sky glowing warm gold and soft pink. Awe and wonder on the child's face. Gentle winter scenery. A small golden bell motif catching the light. Soft watercolor picture book style, radiant calm, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "じんじゃへ おまいり。きんの すずを りん と ならして、おいのり しました。",
+          textTemplatesByAge: {
+            baby_toddler: "りん。おまいり。",
+            preschool_3_4: "じんじゃへ おまいり。きんの すずを りん と ならして、おいのり しました。",
+            early_reader_5_6: "じんじゃへ おまいりに いきました。きんいろの すずを りん と ならして、しずかに おいのり しました。",
+            early_elementary_7_8: "じんじゃへ おまいりに いきました。{childName}は きんいろの すずを りん と ならし、めを とじて、しずかに おいのり しました。",
+            general_child: "じんじゃへ おまいり。きんの すずを りん と ならして、おいのり しました。",
+          },
+          pageVisualRole: "action" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("The child at a calm traditional shrine, gently ringing a golden bell with a rope, hands together in prayer, eyes closed peacefully. A soft torii gate and evergreen trees in the background. Quiet New Year morning light. A small golden bell motif prominent. Soft watercolor picture book style, respectful gentle mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "「ことしも げんきに すごせますように」。{childName}は こころを こめて おねがい しました。",
+          textTemplatesByAge: {
+            baby_toddler: "げんきに、ね。",
+            preschool_3_4: "「ことしも げんきに すごせますように」。{childName}は こころを こめて おねがい しました。",
+            early_reader_5_6: "「ことしも げんきに すごせますように」。{childName}は こころを こめて、そっと おねがい しました。",
+            early_elementary_7_8: "「ことしも かぞくみんなが げんきに すごせますように」。{childName}は こころを こめて、ていねいに おねがい しました。",
+            general_child: "「ことしも げんきに すごせますように」。{childName}は こころを こめて おねがい しました。",
+          },
+          pageVisualRole: "emotional_closeup" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Close-up of the child with hands clasped in earnest prayer, a sincere hopeful expression, soft morning light on the face at the shrine. A small golden bell motif glowing softly. Soft watercolor picture book style, tender emotional framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "おうちに かえると、いいかおり。おせちと おぞうにが ならんでいました。",
+          textTemplatesByAge: {
+            baby_toddler: "おいしいね、おせち。",
+            preschool_3_4: "おうちに かえると、いいかおり。おせちと おぞうにが ならんでいました。",
+            early_reader_5_6: "おうちに かえると、いいかおりが しました。テーブルには おせちと おぞうにが ならんでいました。",
+            early_elementary_7_8: "おうちに かえると、あたたかい いいかおりが しました。テーブルには いろどり ゆたかな おせちと、ほかほかの おぞうにが ならんでいました。",
+            general_child: "おうちに かえると、いいかおり。おせちと おぞうにが ならんでいました。",
+          },
+          pageVisualRole: "object_detail" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Warm detail of a New Year table set with colorful festive osechi food in lacquer boxes and a steaming bowl of ozoni soup. The child looks at it with delighted hungry eyes. Cozy home interior, warm light. A small golden bell motif on a chopstick rest. Soft watercolor picture book style, appetizing cozy framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "かぞく みんなで、おいしいね。{childName}は おとしだまも もらって にっこり。",
+          textTemplatesByAge: {
+            baby_toddler: "みんなで、おいしいね。",
+            preschool_3_4: "かぞく みんなで、おいしいね。{childName}は おとしだまも もらって にっこり。",
+            early_reader_5_6: "かぞく みんなで「おいしいね」。{childName}は おとしだまも もらって、にっこり しました。",
+            early_elementary_7_8: "かぞく みんなで かこんで「おいしいね」と わらいあいました。{childName}は おとしだまも もらって、うれしくて にっこり しました。",
+            general_child: "かぞく みんなで、おいしいね。{childName}は おとしだまも もらって にっこり。",
+          },
+          pageVisualRole: "payoff" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Joyful family scene around the New Year table, everyone smiling and enjoying the meal together. The child happily holds a small decorated New Year money envelope, beaming. Warm cheerful home atmosphere. A small golden bell motif nearby. Soft watercolor picture book style, warm joyful framing, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "「ことしは なにを しようかな」。{childName}は わくわく かんがえました。",
+          textTemplatesByAge: {
+            baby_toddler: "わくわく、ことし。",
+            preschool_3_4: "「ことしは なにを しようかな」。{childName}は わくわく かんがえました。",
+            early_reader_5_6: "「ことしは なにを しようかな」。{childName}は あたらしい としの ことを、わくわく かんがえました。",
+            early_elementary_7_8: "「ことしは どんな たのしい ことが あるかな、なにに ちょうせん しようかな」。{childName}は あたらしい としの ことを わくわく かんがえました。",
+            general_child: "「ことしは なにを しようかな」。{childName}は わくわく かんがえました。",
+          },
+          pageVisualRole: "discovery" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("The child sitting cozily by a window, gazing out at the bright New Year day with a hopeful dreamy smile, imagining the year ahead. Soft daylight, calm home. A small golden bell motif on the windowsill. Soft watercolor picture book style, hopeful gentle mood, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+        {
+          textTemplate: "あたらしい いちねんの はじまり。{childName}に とって、いい としに なりますように。{parentMessage}",
+          textTemplatesByAge: {
+            baby_toddler: "いい としに、ね。",
+            preschool_3_4: "あたらしい いちねんの はじまり。{childName}に とって、いい としに なりますように。{parentMessage}",
+            early_reader_5_6: "あたらしい いちねんの はじまり。{childName}に とって、すてきな いい としに なりますように。{parentMessage}",
+            early_elementary_7_8: "あたらしい いちねんの はじまり。{childName}に とって、えがおの たくさん あふれる いい としに なりますように。{parentMessage}",
+            general_child: "あたらしい いちねんの はじまり。{childName}に とって、いい としに なりますように。{parentMessage}",
+          },
+          pageVisualRole: "quiet_ending" as const,
+          imagePromptTemplate:
+            withFixedImagePromptSafety("Peaceful closing scene: the child content and a little sleepy at home on the New Year day, family close by, warm soft light, a sense of fresh beginnings and calm. A small golden bell motif resting nearby. Soft watercolor picture book style, tender sense of closure, rich but not cluttered. No text, no letters, no Japanese characters, no readable signs, no logo, no watermark."),
+        },
+      ],
+    },
+  },
   "fixed-first-nursery": {
     name: "はじめてのにゅうえん",
     description: "はじめて保育園・幼稚園に行った日。ドキドキしながらも頑張った{childName}の記念日絵本",
