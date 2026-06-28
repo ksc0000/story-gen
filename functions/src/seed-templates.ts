@@ -10436,7 +10436,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     },
   },
   "fixed-classic-three-pigs": {
-    name: "{childName}と 3びきの こぶた",
+    name: "{childName}と 2ひきの こぶた",
     description:
       "世界の名作『3びきのこぶた』を、お子さまが主人公になって楽しむ固定テンプレート。こつこつ しっかり つくると みんなを まもれる、おだやかな おはなし。",
     icon: "🐷",
@@ -10461,11 +10461,11 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       "固定テンプレートを使って、名作『3びきのこぶた』をお子さまが主人公（しっかり者の役）になって、おだやかに楽しむ絵本を作ります。",
     fixedStory: {
       previewImageUrl: "/images/templates/fixed-classic-three-pigs.webp",
-      titleTemplate: "{childName}と 3びきの こぶた",
+      titleTemplate: "{childName}と 2ひきの こぶた",
       coverImagePromptTemplate: withFixedImagePromptSafety(
         "Picture book cover illustration: a cheerful hardworking child building a sturdy brick house alongside two friendly little piglets building straw and stick houses, a big gentle comical wolf peeking from afar, warm sunny countryside, teamwork-and-diligence mood, soft watercolor storybook style, recurring tiny brick motif, keep the same child across all pages with consistent round face, hair, and a simple work outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
       ),
-      titleSpreadTextTemplate: "3びきの こぶた",
+      titleSpreadTextTemplate: "2ひきの こぶた",
       openingNarrationTemplate:
         "{childName}と 2ひきの こぶたは、それぞれ じぶんの おうちを つくることに しました。",
       pages: [
@@ -10537,7 +10537,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     },
   },
   "fixed-classic-three-pigs-8p": {
-    name: "{childName}と 3びきの こぶた（8ページ）",
+    name: "{childName}と 2ひきの こぶた（8ページ）",
     description:
       "名作『3びきのこぶた』の8ページ版。わら・き・れんがの おうちづくりから、おおかみが あきらめるまでを じっくり えがく、お子さまが主人公の固定テンプレート。",
     icon: "🐷",
@@ -10563,11 +10563,11 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
     fixedStory: {
       pageCount: 8,
       previewImageUrl: "/images/templates/fixed-classic-three-pigs.webp",
-      titleTemplate: "{childName}と 3びきの こぶた",
+      titleTemplate: "{childName}と 2ひきの こぶた",
       coverImagePromptTemplate: withFixedImagePromptSafety(
         "Picture book cover illustration: a cheerful hardworking child building a sturdy brick house alongside two friendly little piglets building straw and stick houses, a big gentle comical wolf peeking from afar, warm sunny countryside, teamwork-and-diligence mood, soft watercolor storybook style, recurring tiny brick motif, keep the same child across all pages with consistent round face, hair, and a simple work outfit, rich but not cluttered details, no text, no letters, no Japanese characters, no readable signs, no logo, no watermark"
       ),
-      titleSpreadTextTemplate: "3びきの こぶた",
+      titleSpreadTextTemplate: "2ひきの こぶた",
       openingNarrationTemplate:
         "{childName}と 2ひきの こぶたは、それぞれ じぶんの おうちを つくることに しました。",
       pages: [
