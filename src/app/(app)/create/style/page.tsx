@@ -83,7 +83,8 @@ function StyleSelectionPageContent() {
   const place = searchParams.get("place");
   const parentMessage = searchParams.get("parentMessage");
   const freeInput = searchParams.get("freeInput");
-  const outfitMode = (searchParams.get("outfitMode") ?? "profile_default") as OutfitMode;
+  // 既定は「テーマに合わせてAIが決める」(theme_auto)。input 等でユーザーが指定すれば上書きされる。
+  const outfitMode = (searchParams.get("outfitMode") ?? "theme_auto") as OutfitMode;
   const customOutfit = searchParams.get("customOutfit");
   const keepSignatureItem = searchParams.get("keepSignatureItem") !== "false";
   const visibleStyleProfiles = useMemo(

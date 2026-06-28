@@ -257,6 +257,16 @@ function SelectChildContent() {
                   })}
                 </div>
               )}
+
+              {/* 新しいなかよしキャラを作る導線 */}
+              <div className="pt-1 text-center">
+                <Link
+                  href={`/companions/create?returnTo=${encodeURIComponent("/create/select-child")}`}
+                  className="text-xs text-violet-400 hover:text-purple-600 hover:underline"
+                >
+                  ＋ 新しいなかよしキャラを作る
+                </Link>
+              </div>
             </div>
           )}
         </div>
