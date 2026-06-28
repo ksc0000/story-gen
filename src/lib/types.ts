@@ -667,6 +667,8 @@ export interface BookDoc {
   createdAt: Timestamp;
   expiresAt: Timestamp | null;
   public?: boolean;
+  /** 本棚でのお気に入り（ピン留め）。オーナーが切り替える。 */
+  favorite?: boolean;
   seriesId?: string;
   protagonistType?: ProtagonistType;
   pdfStatus?: "not_started" | "processing" | "completed" | "failed";
