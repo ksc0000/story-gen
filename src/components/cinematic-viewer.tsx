@@ -224,14 +224,14 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
                       exit="exit"
                       className="text-center"
                     >
-                      {originalTitle && (
-                        <p className={`text-3xl font-bold md:text-4xl ${isTextInverted ? "text-gray-900" : "text-white"}`} style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
-                          {originalTitle}
+                      <p className={`text-3xl font-bold md:text-4xl ${isTextInverted ? "text-gray-900" : "text-white"}`} style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
+                        {originalTitle || title}
+                      </p>
+                      {originalTitle && originalTitle !== title && (
+                        <p className={`mt-2 text-base md:text-lg ${isTextInverted ? "text-gray-500" : "text-white/70"}`} style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
+                          {title}
                         </p>
                       )}
-                      <p className={`mt-2 text-base md:text-lg ${isTextInverted ? "text-gray-500" : "text-white/70"}`} style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
-                        {title}
-                      </p>
                     </motion.div>
                   ) : displayText ? (
                     <motion.p

@@ -68,9 +68,22 @@ function BookContent() {
     const templateId = book?.templateId;
     if (!templateId) return;
     getDoc(doc(db, "templates", templateId)).then((snap) => {
-      if (snap.exists()) setTemplateDisplayName((snap.data() as { name?: string }).name);
+      if (!snap.exists()) return;
+      const rawName = (snap.data() as { name?: string }).name;
+      if (!rawName) return;
+      // テンプレ名は表示用ラベル（"{childName}と …（8ページ）"）でプレースホルダや
+      // 管理用のページ数サフィックスを含む。シネマティックの主タイトルに使うため、
+      // 実際の子ども名で置換し、未置換プレースホルダと（Nページ）を取り除く。
+      const cleaned = rawName
+        .replace(/\{childName\}/g, book?.input?.childName ?? "")
+        .replace(/\{[^}]*\}/g, "")
+        .replace(/（\s*\d+\s*ページ\s*）/g, "")
+        .replace(/\(\s*\d+\s*pages?\s*\)/gi, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      setTemplateDisplayName(cleaned || undefined);
     });
-  }, [book?.templateId]);
+  }, [book?.templateId, book?.input?.childName]);
 
   useEffect(() => {
     if (!user || !bookId || isDemoMode) return;
