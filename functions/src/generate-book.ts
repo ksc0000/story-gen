@@ -1815,7 +1815,10 @@ export async function processBookGeneration(
         const coverInputImageRefs = buildInputImageRefs(
           normalizedBookData.childProfileSnapshot,
           story.cast,
-          undefined // Cover includes all cast by default in prompt; refs follow logic
+          // 表紙は全キャストを対象に参照画像を集める。undefined を渡すと
+          // buildInputImageRefs のキャスト走査が全スキップされ、相棒（なかよしキャラ）が
+          // 主人公でも表紙にだけ参照画像が効かず、テキストプロンプトだけで描かれてしまう。
+          (story.cast ?? []).map((character) => character.characterId)
         );
         const coverInputImageUrls = coverInputImageRefs.map((ref) => ref.url);
 
