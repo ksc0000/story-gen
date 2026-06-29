@@ -32,6 +32,13 @@ const VISUAL_STORYTELLING_RULES = [
 
 const GLOBAL_NEGATIVE_CHARACTER_PROMPT = "Negative character guardrail: do not add extra people, unrequested children, unrequested animals, ghost companions, crowds, or random background figures. Do not draw the protagonist twice in the same scene. No character duplication. No unmentioned pets.";
 
+// The single most-reported quality failure for fixed-template books: the page's
+// key action/expression (e.g. "closes their eyes", "looks down", "falls over")
+// is described in the Scene but not drawn, and every page collapses into the same
+// framing. This forces the action/expression to be the primary, unmistakable subject.
+const SCENE_ACTION_FIDELITY_RULE =
+  "Action fidelity (critical): draw the exact action, gaze direction, and facial expression named in the Scene as the clearest element — closed/squeezed-shut eyes must look closed, a downward or sideways look must point that way, and falling, reaching, pointing, or hugging must be obvious at a glance. Do not replace the described action with a generic front-facing smile.";
+
 const STORY_QUALITY_RULES = [
   "Do not generate overly thin pages.",
   "Each page should contain enough story substance for the target age.",
@@ -972,9 +979,11 @@ export function buildImagePrompt(
 
   const compositionGuidance = [
     getPageVisualRoleGuidance(pageVisualRole),
-    `Composition variety: ${compositionHint}.`,
+    `Camera & framing for THIS page (required): ${compositionHint}.`,
+    "Keep camera distance and angle visibly different from the previous and next page; never repeat the same framing on consecutive pages.",
     "Avoid front-facing portrait composition unless the page genuinely needs it.",
     "Use a clear focal point with cinematic picture-book framing.",
+    SCENE_ACTION_FIDELITY_RULE,
   ].join(" ");
 
   const backgroundGuidance = [
