@@ -2,7 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RefreshCcw } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 
 interface RegenerateConfirmationDialogProps {
@@ -18,6 +19,14 @@ export function RegenerateConfirmationDialog({
   onConfirm,
   isLoading = false,
 }: RegenerateConfirmationDialogProps) {
+  // Portal to document.body so the fixed overlay escapes any transform ancestor
+  // (e.g. PageTransition), which would otherwise mis-position the centered
+  // desktop dialog. See confirmation-dialog.tsx for the full explanation.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Prevent body scroll when dialog is open
   useEffect(() => {
     if (isOpen) {
@@ -30,7 +39,9 @@ export function RegenerateConfirmationDialog({
     };
   }, [isOpen]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-4">
@@ -94,6 +105,7 @@ export function RegenerateConfirmationDialog({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
