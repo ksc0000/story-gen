@@ -88,7 +88,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
-    monthlyBookQuota: 1,
+    // 2026-07: 1→3。集客強化のため無料枠を拡大（純コストは1冊¥39前後 × 3）。
+    monthlyBookQuota: 3,
     maxCompanions: 2,
     isPaid: false,
     enabled: true,

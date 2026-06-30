@@ -15,7 +15,8 @@ type AnalyticsEventName =
   | "submit_book_feedback"
   | "view_quality_sample"
   | "submit_ai_brief"
-  | "submit_app_feedback";
+  | "submit_app_feedback"
+  | "lp_cta_click";
 
 type AnalyticsPayload = Record<string, string | number | boolean | undefined>;
 

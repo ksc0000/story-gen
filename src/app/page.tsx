@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FloatingParticles } from "@/components/floating-particles";
 import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { CtaButton } from "@/components/lp/cta-button";
+import { PLAN_CONFIGS } from "@/lib/plans";
 import {
   Reveal,
   RevealGroup,
@@ -95,6 +96,40 @@ const trust = [
   },
 ];
 
+// 料金プラン（金額・冊数・ページ数は PLAN_CONFIGS を単一の真実として参照）。
+const plans = [
+  {
+    cfg: PLAN_CONFIGS.free,
+    tagline: "まずは無料でお試し",
+    highlight: false,
+    features: ["テンプレートで作成", "やさしい水彩の挿絵", "なかよしキャラ"],
+  },
+  {
+    cfg: PLAN_CONFIGS.standard_paid,
+    tagline: "いちばん人気",
+    highlight: true,
+    features: ["＋かんたんカスタムモード", "高品質生成", "お子さま3人まで登録"],
+  },
+  {
+    cfg: PLAN_CONFIGS.premium_paid,
+    tagline: "特別な1冊・ギフトに",
+    highlight: false,
+    features: ["全モード＋写真からつくる", "高精細生成", "登録人数・なかよし無制限"],
+  },
+];
+
+function formatYen(n?: number): string {
+  return `¥${(n ?? 0).toLocaleString()}`;
+}
+
+function Check() {
+  return (
+    <span className="grid size-5 shrink-0 place-items-center rounded-full bg-violet-400 text-[11px] font-bold text-white">
+      ✓
+    </span>
+  );
+}
+
 export default function LandingPage() {
   return (
     <main className="app-shell overflow-x-hidden">
@@ -142,14 +177,12 @@ export default function LandingPage() {
             </p>
           </StaggerItem>
           <StaggerItem>
-            <Link href="/login" className="mt-7 inline-block">
-              <Button size="lg" className="text-lg px-8 py-6">
-                無料で絵本を作る
-              </Button>
-            </Link>
+            <div className="mt-7">
+              <CtaButton location="hero" className="text-lg px-8 py-6" />
+            </div>
           </StaggerItem>
           <StaggerItem>
-            <p className="app-copy-muted mt-3 text-sm">無料ではじめられる・登録かんたん・クレカ不要</p>
+            <p className="app-copy-muted mt-3 text-sm">月3冊まで無料・登録かんたん・クレカ不要</p>
           </StaggerItem>
         </StaggerContainer>
 
@@ -540,6 +573,86 @@ export default function LandingPage() {
         </RevealGroup>
       </section>
 
+      {/* ───────────── 料金プラン ───────────── */}
+      <section className="bg-gradient-to-b from-violet-50/70 to-transparent py-16 sm:py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <Reveal className="text-center">
+            <h2 className="text-2xl font-bold text-purple-900 sm:text-4xl">
+              まずは無料で、気軽にはじめる。
+            </h2>
+            <p className="mt-3 text-base text-gray-600">
+              いつでもアップグレード・解約できます。クレジットカードの登録は無料プランでは不要です。
+            </p>
+          </Reveal>
+
+          <RevealGroup className="mt-12 grid items-stretch gap-6 md:grid-cols-3">
+            {plans.map((p) => (
+              <RevealItem key={p.cfg.productPlan}>
+                <Lift className="h-full">
+                  <Card
+                    className={`relative flex h-full flex-col ${
+                      p.highlight ? "ring-2 ring-purple-400 shadow-lg" : ""
+                    }`}
+                  >
+                    {p.highlight ? (
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-purple-500 to-violet-500 px-4 py-1 text-xs font-bold text-white shadow-md">
+                        {p.tagline}
+                      </span>
+                    ) : null}
+                    <CardContent className="flex h-full flex-col p-7">
+                      {!p.highlight ? (
+                        <span className="text-xs font-bold text-violet-500">{p.tagline}</span>
+                      ) : (
+                        <span className="text-xs font-bold text-transparent">.</span>
+                      )}
+                      <h3 className="mt-1 text-xl font-bold text-purple-900">{p.cfg.label}</h3>
+                      <div className="mt-3 flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-purple-900">
+                          {formatYen(p.cfg.priceJpy)}
+                        </span>
+                        {p.cfg.isPaid ? (
+                          <span className="text-sm text-gray-500">/月</span>
+                        ) : null}
+                      </div>
+                      <ul className="mt-5 space-y-2 text-sm text-purple-800">
+                        <li className="flex items-center gap-2">
+                          <Check />
+                          月{p.cfg.monthlyBookQuota}冊まで作成
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check />
+                          {p.cfg.allowedPageCounts.join("・")}ページ
+                        </li>
+                        {p.features.map((f) => (
+                          <li key={f} className="flex items-center gap-2">
+                            <Check />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-7 pt-2">
+                        <CtaButton
+                          location={`pricing_${p.cfg.productPlan}`}
+                          variant={p.highlight ? "default" : "outline"}
+                          className="w-full"
+                        >
+                          {p.cfg.isPaid ? "このプランを選ぶ" : "無料ではじめる"}
+                        </CtaButton>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Lift>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+          <Reveal className="mt-6 text-center">
+            <p className="text-xs text-violet-400">
+              ※ 表示は税込価格です。プラン内容は予告なく変更される場合があります。
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ───────────── 最終CTA ───────────── */}
       <section className="px-4 pb-20">
         <Reveal>
@@ -573,15 +686,13 @@ export default function LandingPage() {
                 <br className="hidden sm:inline" />
                 今すぐ、家族だけの特別な物語を作りはじめませんか？
               </p>
-              <Link href="/login" className="mt-8 inline-block">
-                <Button
-                  size="lg"
+              <div className="mt-8">
+                <CtaButton
+                  location="final"
                   variant="secondary"
                   className="bg-white px-8 py-6 text-lg text-purple-700 hover:bg-violet-50"
-                >
-                  無料で絵本を作る
-                </Button>
-              </Link>
+                />
+              </div>
               <p className="mt-3 text-sm text-violet-100">登録かんたん・クレカ不要</p>
             </div>
           </div>
