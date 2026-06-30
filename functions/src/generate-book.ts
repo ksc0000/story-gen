@@ -2929,7 +2929,7 @@ function generateFixedTemplateStoryWithQualityReport(
   };
 }
 
-function buildStoryFromFixedTemplate(
+export function buildStoryFromFixedTemplate(
   fixedStory: FixedStoryTemplate,
   mergedInput: BookInput,
   bookData: BookData,
@@ -2947,13 +2947,32 @@ function buildStoryFromFixedTemplate(
   // 主人公を相棒に置き換える（全ページに相棒のみ・人間の子どもは登場させない）。
   const isCompanionProtagonist = mergedInput.protagonistType === "companion" && hasCompanion;
 
+  // 親が入力した「伝えたいメッセージ」。年齢帯によっては最終ページの定型文が
+  // 極端に短く {parentMessage} を含まないため（特に baby_toddler）、ユーザーが
+  // 設定したメッセージが消えてしまう。これを防ぐため最終ページで必ず補う。
+  const lastPageIndex = fixedStory.pages.length - 1;
+  const userParentMessage = (mergedInput.parentMessage ?? "").trim();
+
   const pages = fixedStory.pages.map((page, index) => {
-    const text = applyTemplateReplacements(
+    let text = applyTemplateReplacements(
       page.textTemplatesByAge?.[readingProfile.ageBand]
         ?? page.textTemplatesByAge?.general_child
         ?? page.textTemplate,
       replacements
     );
+
+    // 最終ページ: テンプレートが parentMessage を想定している（いずれかの定型文に
+    // {parentMessage} を含む）のに、選ばれた年齢帯テキストに反映されていない場合は、
+    // ユーザーが入力したメッセージを末尾に補完する（年齢帯による取りこぼし防止）。
+    if (index === lastPageIndex && userParentMessage) {
+      const templateUsesParentMessage =
+        (page.textTemplate?.includes("{parentMessage}") ?? false) ||
+        Object.values(page.textTemplatesByAge ?? {}).some((t) => t?.includes("{parentMessage}"));
+      if (templateUsesParentMessage && !text.includes(userParentMessage)) {
+        text = text ? `${text} ${userParentMessage}` : userParentMessage;
+      }
+    }
+
     const baseImagePrompt = applyTemplateReplacements(page.imagePromptTemplate, replacements);
 
     let appearingCharacterIds: string[];

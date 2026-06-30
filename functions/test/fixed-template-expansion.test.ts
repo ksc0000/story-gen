@@ -2,8 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   applyTemplateReplacements,
   buildFixedTemplateReplacements,
+  buildStoryFromFixedTemplate,
 } from "../src/generate-book";
-import type { BookInput, FixedStoryTemplate } from "../src/lib/types";
+import type { BookData, BookInput, FixedStoryTemplate, TemplateData } from "../src/lib/types";
 import { SEED_TEMPLATES } from "../src/seed-templates";
 
 describe("applyTemplateReplacements", () => {
@@ -141,4 +142,83 @@ describe("fixed_template cover / title / narration expansion", () => {
       });
     });
   }
+});
+
+describe("buildStoryFromFixedTemplate: parentMessage on last page", () => {
+  // 最終ページの最年少帯テキストが {parentMessage} を含まないテンプレート。
+  // 親が入力したメッセージが年齢帯で取りこぼされないことを検証する。
+  const templateWithShortLastPage: FixedStoryTemplate = {
+    titleTemplate: "{childName}のきがえ",
+    pages: [
+      {
+        textTemplate: "{childName}は きがえを はじめました。",
+        imagePromptTemplate: "A child getting dressed",
+      },
+      {
+        textTemplate: "じぶんで できたね。{parentMessage}",
+        textTemplatesByAge: {
+          baby_toddler: "できたね、すごいね。", // ← {parentMessage} を含まない
+          general_child: "じぶんで できたね。{parentMessage}",
+        },
+        imagePromptTemplate: "A proud child who dressed themselves",
+      },
+    ],
+  };
+
+  const bookData = {
+    style: "soft_watercolor",
+    childProfileSnapshot: undefined,
+  } as unknown as BookData;
+  const template = { name: "きがえ", creationMode: "fixed_template" } as unknown as TemplateData;
+
+  it("最年少帯でも親のメッセージを最終ページに補完する", () => {
+    const input = {
+      childName: "ゆうた",
+      parentMessage: "よくできたね。またつぎもがんばろうね！",
+    } as BookInput;
+    const story = buildStoryFromFixedTemplate(
+      templateWithShortLastPage,
+      input,
+      bookData,
+      template,
+      { ageBand: "baby_toddler" }
+    );
+    const lastText = story.pages[story.pages.length - 1].text;
+    expect(lastText).toContain("よくできたね。またつぎもがんばろうね！");
+  });
+
+  it("年長帯（既に反映済み）では二重に追加しない", () => {
+    const input = {
+      childName: "ゆうた",
+      parentMessage: "よくできたね。",
+    } as BookInput;
+    const story = buildStoryFromFixedTemplate(
+      templateWithShortLastPage,
+      input,
+      bookData,
+      template,
+      { ageBand: "general_child" }
+    );
+    const lastText = story.pages[story.pages.length - 1].text;
+    const occurrences = lastText.split("よくできたね。").length - 1;
+    expect(occurrences).toBe(1);
+  });
+
+  it("parentMessage を想定しないテンプレートには勝手に追加しない", () => {
+    const noMsgTemplate: FixedStoryTemplate = {
+      titleTemplate: "{childName}のおはなし",
+      pages: [
+        { textTemplate: "おしまい。", imagePromptTemplate: "The end" },
+      ],
+    };
+    const input = { childName: "ゆうた", parentMessage: "がんばれ！" } as BookInput;
+    const story = buildStoryFromFixedTemplate(
+      noMsgTemplate,
+      input,
+      bookData,
+      template,
+      { ageBand: "baby_toddler" }
+    );
+    expect(story.pages[story.pages.length - 1].text).toBe("おしまい。");
+  });
 });
