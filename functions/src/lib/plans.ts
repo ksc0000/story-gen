@@ -43,7 +43,8 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template"],
     generationMode: "reliable_fast",
-    monthlyBookQuota: 1,
+    // 2026-07: 1→3。集客強化のため無料枠を拡大。
+    monthlyBookQuota: 3,
     enabled: true,
   },
   standard_paid: {

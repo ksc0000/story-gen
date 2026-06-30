@@ -182,7 +182,7 @@ export default function LandingPage() {
             </div>
           </StaggerItem>
           <StaggerItem>
-            <p className="app-copy-muted mt-3 text-sm">無料ではじめられる・登録かんたん・クレカ不要</p>
+            <p className="app-copy-muted mt-3 text-sm">月3冊まで無料・登録かんたん・クレカ不要</p>
           </StaggerItem>
         </StaggerContainer>
 
