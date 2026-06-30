@@ -193,8 +193,14 @@ export default function LandingPage() {
           <Reveal direction="left">
             <Card className="h-full bg-slate-50/80">
               <CardContent className="flex h-full flex-col items-center p-8 text-center">
-                <div className="flex h-44 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-6xl grayscale">
-                  📚
+                <div className="w-full overflow-hidden rounded-2xl shadow-sm ring-1 ring-slate-200">
+                  <Image
+                    src="/images/lp/ordinary-bedtime.webp"
+                    alt="いつもの絵本での寝かしつけの様子"
+                    width={1672}
+                    height={941}
+                    className="h-44 w-full object-cover"
+                  />
                 </div>
                 <h3 className="mt-5 text-lg font-bold text-slate-600">いつもの読み聞かせ</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-500">
@@ -240,54 +246,35 @@ export default function LandingPage() {
             </p>
           </Reveal>
 
-          <div className="mt-12 flex flex-col items-center gap-6 md:flex-row md:justify-center md:gap-4">
-            <RevealGroup className="flex flex-col gap-3">
-              {[
-                { emoji: "🧒", label: "お子さんの名前" },
-                { emoji: "🌤️", label: "今日の出来事" },
-                { emoji: "🦕", label: "大好きな恐竜" },
-              ].map((chip) => (
-                <RevealItem key={chip.label}>
-                  <div className="flex items-center gap-3 rounded-full bg-white px-5 py-3 shadow-md ring-1 ring-violet-100">
-                    <span className="text-xl">{chip.emoji}</span>
-                    <span className="text-sm font-semibold text-purple-800">{chip.label}</span>
-                  </div>
-                </RevealItem>
-              ))}
-            </RevealGroup>
-
-            <Reveal direction="none" delay={0.2} className="text-3xl text-violet-300">
-              <span className="hidden md:inline">→</span>
-              <span className="md:hidden">↓</span>
-            </Reveal>
-
-            <Reveal delay={0.3}>
-              <Float distance={10}>
-                <div className="grid size-28 place-items-center rounded-3xl bg-gradient-to-br from-purple-400 to-violet-400 text-center text-sm font-bold text-white shadow-xl">
-                  AIが
-                  <br />
-                  魔法をかける
-                </div>
-              </Float>
-            </Reveal>
-
-            <Reveal direction="none" delay={0.4} className="text-3xl text-violet-300">
-              <span className="hidden md:inline">→</span>
-              <span className="md:hidden">↓</span>
-            </Reveal>
-
-            <Reveal delay={0.5}>
-              <Float distance={12} delay={0.4}>
+          <Reveal className="mx-auto mt-12 max-w-4xl" amount={0.15}>
+            <Parallax strength={24}>
+              <div className="overflow-hidden rounded-[28px] shadow-xl ring-1 ring-violet-200/60">
                 <Image
-                  src="/images/lp/cutout-magic-book.webp"
-                  alt="完成した世界にひとつだけの絵本"
-                  width={1254}
-                  height={1254}
-                  className="w-40 drop-shadow-2xl"
+                  src="/images/lp/inputs-to-book-flow.webp"
+                  alt="名前・今日の出来事・好きな恐竜が、AIによって1冊の絵本に紡がれていく流れ"
+                  width={1672}
+                  height={941}
+                  className="h-auto w-full object-cover"
                 />
-              </Float>
-            </Reveal>
-          </div>
+              </div>
+            </Parallax>
+          </Reveal>
+
+          {/* 入力例チップ（軽いモーションは維持） */}
+          <RevealGroup className="mt-8 flex flex-wrap justify-center gap-3">
+            {[
+              { emoji: "🧒", label: "お子さんの名前" },
+              { emoji: "🌤️", label: "今日の出来事" },
+              { emoji: "🦕", label: "大好きな恐竜" },
+            ].map((chip) => (
+              <RevealItem key={chip.label}>
+                <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-md ring-1 ring-violet-100">
+                  <span className="text-lg">{chip.emoji}</span>
+                  <span className="text-sm font-semibold text-purple-800">{chip.label}</span>
+                </div>
+              </RevealItem>
+            ))}
+          </RevealGroup>
         </div>
       </section>
 
@@ -354,7 +341,21 @@ export default function LandingPage() {
             </p>
           </Reveal>
 
-          <RevealGroup className="mt-12 grid gap-6 sm:grid-cols-3">
+          <Reveal className="mx-auto mt-10 max-w-4xl" amount={0.15}>
+            <Parallax strength={24}>
+              <div className="overflow-hidden rounded-[28px] shadow-xl ring-1 ring-emerald-200/50">
+                <Image
+                  src="/images/lp/growth-tree-stages.webp"
+                  alt="芽から大樹へ。成長に合わせて物語が育っていくイメージ"
+                  width={1672}
+                  height={941}
+                  className="h-auto w-full object-cover"
+                />
+              </div>
+            </Parallax>
+          </Reveal>
+
+          <RevealGroup className="mt-10 grid gap-6 sm:grid-cols-3">
             {ageBands.map((b, i) => (
               <RevealItem key={b.age}>
                 <Lift className="h-full">
@@ -395,24 +396,19 @@ export default function LandingPage() {
               深い安心感と愛着が生まれます。
             </p>
           </Reveal>
-          <RevealGroup className="grid grid-cols-3 gap-3" amount={0.3}>
-            {[
-              { emoji: "🚀", label: "宇宙" },
-              { emoji: "🌳", label: "森" },
-              { emoji: "🛏️", label: "おうち" },
-            ].map((s, i) => (
-              <RevealItem key={s.label}>
-                <Float distance={10} delay={i * 0.25}>
-                  <Card>
-                    <CardContent className="flex flex-col items-center gap-2 p-5 text-center">
-                      <span className="text-4xl">{s.emoji}</span>
-                      <span className="text-xs font-semibold text-purple-700">{s.label}の冒険</span>
-                    </CardContent>
-                  </Card>
-                </Float>
-              </RevealItem>
-            ))}
-          </RevealGroup>
+          <Reveal direction="right">
+            <Parallax strength={24}>
+              <div className="overflow-hidden rounded-[28px] shadow-xl ring-1 ring-fuchsia-200/50">
+                <Image
+                  src="/images/lp/companion-scenes.webp"
+                  alt="宇宙・森・おうちの3つの場面で、同じ相棒キャラが子どもと一緒にいる様子"
+                  width={1672}
+                  height={941}
+                  className="h-auto w-full object-cover"
+                />
+              </div>
+            </Parallax>
+          </Reveal>
         </div>
       </section>
 
