@@ -66,13 +66,13 @@ const ageBands = [
 
 const useCases = [
   {
-    emoji: "🌙",
+    image: "/images/lp/usecase-bedtime.webp",
     title: "おやすみ前の共創タイム",
     description:
       "トイレトレーニングやお友達とのけんかなど、いま直面している子育ての課題を、やさしい物語にして心に寄り添います。",
   },
   {
-    emoji: "🎀",
+    image: "/images/lp/usecase-keepsake.webp",
     title: "記念日のオーダーメイド絵本",
     description:
       "誕生日・発表会・卒園に。大切な思い出を世界にひとつの絵本にして、特別な贈り物にできます。",
@@ -424,10 +424,18 @@ export default function LandingPage() {
             {useCases.map((u) => (
               <RevealItem key={u.title}>
                 <Lift className="h-full">
-                  <Card className="h-full">
-                    <CardContent className="flex h-full flex-col p-7">
-                      <span className="text-4xl">{u.emoji}</span>
-                      <h3 className="mt-3 text-lg font-bold text-purple-900">{u.title}</h3>
+                  <Card className="h-full overflow-hidden">
+                    <div className="overflow-hidden">
+                      <Image
+                        src={u.image}
+                        alt={u.title}
+                        width={1672}
+                        height={941}
+                        className="h-44 w-full object-cover transition duration-500 hover:scale-105"
+                      />
+                    </div>
+                    <CardContent className="flex flex-col p-7">
+                      <h3 className="text-lg font-bold text-purple-900">{u.title}</h3>
                       <p className="mt-2 text-sm leading-relaxed text-gray-600">{u.description}</p>
                     </CardContent>
                   </Card>
