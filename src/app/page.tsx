@@ -5,81 +5,101 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FloatingParticles } from "@/components/floating-particles";
 import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
-import { AnimatedCard } from "@/components/animated-card";
 import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  Reveal,
+  RevealGroup,
+  RevealItem,
+  Parallax,
+  Float,
+  Lift,
+  ScrollProgressBar,
+} from "@/components/lp/motion-bits";
 
-/** 3つの作り方（作成モード）。アプリの creationMode に対応。 */
 const modes = [
   {
-    badge: "いちばん簡単",
-    title: "テンプレートで作る",
+    emoji: "⏱️",
+    badge: "最短1分",
+    title: "おまかせテンプレート",
     description:
-      "できあがりの物語にお子さまの名前や思い出を入れるだけ。最短数分で、すぐに1冊が完成します。",
+      "テーマを選ぶだけで完成。疲れている夜のベッドタイムに最適な物語を、すぐにお届けします。",
     accent: "from-violet-400 to-purple-400",
   },
   {
+    emoji: "💬",
     badge: "人気No.1",
-    title: "かんたんカスタム",
+    title: "いっしょにAI作成",
     description:
-      "いくつかの質問に答えるだけで、AIがお子さま専用の物語をやさしく組み立てます。",
+      "親子で会話しながら「次はどうなる？」と選んで進める、インタラクティブな作成モードです。",
     accent: "from-fuchsia-400 to-purple-400",
   },
   {
-    badge: "自由自在",
-    title: "オリジナル・写真から",
+    emoji: "✨",
+    badge: "本格派",
+    title: "完全オリジナル",
     description:
-      "自由に書いた内容や、お子さまの写真をもとに、世界にひとつだけの物語と挿絵を生成します。",
+      "誕生日や特別な行事に。登場人物から細かなストーリーまで、すべて自由に作り込めます。",
     accent: "from-sky-400 to-violet-400",
   },
 ];
 
-/** かんたん3ステップ。 */
-const steps = [
+const ageBands = [
   {
-    no: "1",
-    title: "お子さまを登録",
-    description: "名前・年齢・好きなものを入力。写真を使うと、より本人らしいキャラクターに。",
+    emoji: "🌱",
+    age: "1〜2歳",
+    title: "オノマトペとリズム",
+    example: "「わんわん、だーれだ？」「ぽんぽん、ころころ！」",
   },
   {
-    no: "2",
-    title: "テーマを選ぶ",
-    description: "誕生日・寝かしつけ・できたよ記念など、シーンに合わせて選ぶだけ。",
+    emoji: "🌿",
+    age: "3〜4歳",
+    title: "シンプルな起承転結",
+    example: "「おもちゃをかしてあげる、やさしいライオンさんのおはなし。」",
   },
   {
-    no: "3",
-    title: "5分でできあがり",
-    description: "AIが物語と挿絵を自動生成。その場で読んで、何度でも楽しめます。",
+    emoji: "🌳",
+    age: "5〜6歳",
+    title: "豊かな語彙と選択",
+    example: "「迷いの森で、勇気を出して正しい道を選ぶ大冒険。」",
   },
 ];
 
-/** 3つの安心ポイント（切り抜き素材を使用）。 */
-const features = [
+const useCases = [
   {
-    title: "我が子だけの魔法の物語",
+    emoji: "🌙",
+    title: "おやすみ前の共創タイム",
     description:
-      "名前・見た目・好きなものを反映。お子さまが主人公になって冒険する、唯一無二の絵本に。",
-    image: "/images/lp/cutout-magic-book.webp",
-    shadow: "rgba(167, 139, 250, 0.25)",
+      "トイレトレーニングやお友達とのけんかなど、いま直面している子育ての課題を、やさしい物語にして心に寄り添います。",
   },
   {
-    title: "贈り物にもぴったり",
+    emoji: "🎀",
+    title: "記念日のオーダーメイド絵本",
     description:
-      "誕生日・入園・卒園・お祝いに。世界にひとつの絵本は、心に残る特別なギフトになります。",
-    image: "/images/lp/cutout-gift-book.webp",
-    shadow: "rgba(244, 114, 182, 0.25)",
+      "誕生日・発表会・卒園に。大切な思い出を世界にひとつの絵本にして、特別な贈り物にできます。",
   },
+];
+
+const bookshelf = [
+  { age: "3歳", title: "電車の大冒険", emoji: "🚃" },
+  { age: "4歳", title: "はじめての恐竜", emoji: "🦕" },
+  { age: "5歳", title: "妹がやってきた日", emoji: "👶" },
+  { age: "6歳", title: "お友達に貸してあげる", emoji: "🤝" },
+];
+
+const trust = [
   {
-    title: "安心の安全設計",
-    description:
-      "多層コンテンツフィルタで、お子さまに安全な内容のみを生成。安心してお楽しみいただけます。",
     image: "/images/lp/cutout-safety-shield.webp",
-    shadow: "rgba(253, 224, 71, 0.3)",
+    title: "安心のプライバシー",
+    description:
+      "お子さまの名前や物語のデータは、銀行レベルの厳格なセキュリティで保護。外部に漏れることはありません。",
   },
 ];
 
 export default function LandingPage() {
   return (
     <main className="app-shell overflow-x-hidden">
+      <ScrollProgressBar />
+
       {/* ───────────── Hero ───────────── */}
       <section className="relative flex flex-col items-center justify-center px-4 pt-16 pb-12 text-center sm:pt-20">
         <FloatingParticles />
@@ -93,28 +113,32 @@ export default function LandingPage() {
             <Image
               src="/logo/ehoria-logo-512.png"
               alt="Ehoria"
-              width={180}
-              height={180}
+              width={168}
+              height={168}
               priority
               className="rounded-2xl"
             />
           </StaggerItem>
           <StaggerItem>
-            <h1 className="sr-only">Ehoria — AIで絵本を作ろう</h1>
+            <h1 className="sr-only">Ehoria — 世界にひとつだけの絵本を、AIと魔法で。</h1>
           </StaggerItem>
           <StaggerItem>
-            <p className="app-subtitle mt-2 text-lg">AIで絵本を作ろう</p>
+            <p className="app-subtitle mt-2 text-base">AIで絵本を作ろう</p>
           </StaggerItem>
           <StaggerItem>
-            <p className="app-copy mt-5 max-w-2xl text-2xl font-bold leading-relaxed sm:text-3xl">
-              我が子が主人公になれる絵本を、
-              <br className="hidden sm:inline" />
-              誰でも5分で作れる。
+            <p className="app-copy mt-5 max-w-2xl text-2xl font-bold leading-snug sm:text-4xl">
+              世界にひとつだけの絵本を、
+              <br />
+              <span className="bg-gradient-to-r from-purple-500 via-fuchsia-500 to-violet-500 bg-clip-text text-transparent">
+                AIと魔法で。
+              </span>
             </p>
           </StaggerItem>
           <StaggerItem>
-            <p className="app-copy-muted mt-3 max-w-xl text-base">
-              AIが紡ぐ物語とあたたかい挿絵で、世界にひとつだけの思い出を。
+            <p className="app-copy-muted mt-4 max-w-xl text-base leading-relaxed">
+              お子さまが主人公になって冒険する物語を、誰でも5分で。
+              <br className="hidden sm:inline" />
+              AIが紡ぐ物語とあたたかい挿絵で、忘れられない思い出を。
             </p>
           </StaggerItem>
           <StaggerItem>
@@ -127,245 +151,437 @@ export default function LandingPage() {
           <StaggerItem>
             <p className="app-copy-muted mt-3 text-sm">無料ではじめられる・登録かんたん・クレカ不要</p>
           </StaggerItem>
+        </StaggerContainer>
 
-          {/* ヒーロー画像 */}
-          <StaggerItem>
-            <div className="relative mt-10 w-full max-w-4xl">
-              <div className="overflow-hidden rounded-[28px] shadow-2xl ring-1 ring-violet-200/60 sm:rounded-[36px]">
+        {/* ヒーロー画像（パララックス＋浮遊する魔法の本） */}
+        <Reveal className="relative z-10 mt-10 w-full max-w-4xl" amount={0.1}>
+          <Parallax strength={36}>
+            <div className="overflow-hidden rounded-[28px] shadow-2xl ring-1 ring-violet-200/60 sm:rounded-[36px]">
+              <Image
+                src="/images/lp/hero-family-reading.webp"
+                alt="家族でEhoriaの絵本を読んで楽しむ様子"
+                width={1672}
+                height={941}
+                priority
+                className="h-auto w-full object-cover"
+              />
+            </div>
+          </Parallax>
+          <Float className="pointer-events-none absolute -bottom-8 -right-3 hidden sm:block" distance={16}>
+            <Image
+              src="/images/lp/cutout-magic-book.webp"
+              alt=""
+              aria-hidden
+              width={1254}
+              height={1254}
+              className="w-28 drop-shadow-2xl md:w-36"
+            />
+          </Float>
+        </Reveal>
+      </section>
+
+      {/* ───────────── 問題提起 → 解決 ───────────── */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:py-24">
+        <Reveal className="text-center">
+          <h2 className="text-2xl font-bold text-purple-900 sm:text-4xl">
+            もしも、お子さん自身が
+            <br className="sm:hidden" />
+            絵本の主人公になれたら？
+          </h2>
+        </Reveal>
+        <div className="mt-12 grid items-stretch gap-6 md:grid-cols-2">
+          <Reveal direction="left">
+            <Card className="h-full bg-slate-50/80">
+              <CardContent className="flex h-full flex-col items-center p-8 text-center">
+                <div className="flex h-44 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-6xl grayscale">
+                  📚
+                </div>
+                <h3 className="mt-5 text-lg font-bold text-slate-600">いつもの読み聞かせ</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                  毎晩の読み聞かせは親子の特別な時間。でも、ときには
+                  「また同じ絵本？」と感じてしまうことも。
+                </p>
+              </CardContent>
+            </Card>
+          </Reveal>
+          <Reveal direction="right" delay={0.1}>
+            <Card className="relative h-full overflow-hidden ring-2 ring-violet-300">
+              <CardContent className="flex h-full flex-col items-center p-8 text-center">
+                <div className="w-full overflow-hidden rounded-2xl shadow-md ring-1 ring-violet-200/60">
+                  <Image
+                    src="/images/lp/personalized-book-spread.webp"
+                    alt="お子さまの名前や見た目が反映された絵本の見開き"
+                    width={1672}
+                    height={941}
+                    className="h-44 w-full object-cover"
+                  />
+                </div>
+                <h3 className="mt-5 text-lg font-bold text-purple-900">Ehoria なら</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                  お子さまの名前・今の興味・無限の想像力を組み合わせて、
+                  その子のためだけの新しい物語を数分で紡ぎ出します。
+                </p>
+              </CardContent>
+            </Card>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ───────────── 仕組み（入力 → 絵本） ───────────── */}
+      <section className="bg-gradient-to-b from-violet-50/70 to-transparent py-16 sm:py-24">
+        <div className="mx-auto max-w-5xl px-4">
+          <Reveal className="text-center">
+            <h2 className="text-2xl font-bold text-purple-900 sm:text-4xl">
+              想像力を、美しい物語に紡ぐ。
+            </h2>
+            <p className="mt-3 text-base text-gray-600">
+              難しい操作は一切不要。スマホでいくつかの質問に答えるだけで、
+              プロのようなイラストとやさしい物語が自動で完成します。
+            </p>
+          </Reveal>
+
+          <div className="mt-12 flex flex-col items-center gap-6 md:flex-row md:justify-center md:gap-4">
+            <RevealGroup className="flex flex-col gap-3">
+              {[
+                { emoji: "🧒", label: "お子さんの名前" },
+                { emoji: "🌤️", label: "今日の出来事" },
+                { emoji: "🦕", label: "大好きな恐竜" },
+              ].map((chip) => (
+                <RevealItem key={chip.label}>
+                  <div className="flex items-center gap-3 rounded-full bg-white px-5 py-3 shadow-md ring-1 ring-violet-100">
+                    <span className="text-xl">{chip.emoji}</span>
+                    <span className="text-sm font-semibold text-purple-800">{chip.label}</span>
+                  </div>
+                </RevealItem>
+              ))}
+            </RevealGroup>
+
+            <Reveal direction="none" delay={0.2} className="text-3xl text-violet-300">
+              <span className="hidden md:inline">→</span>
+              <span className="md:hidden">↓</span>
+            </Reveal>
+
+            <Reveal delay={0.3}>
+              <Float distance={10}>
+                <div className="grid size-28 place-items-center rounded-3xl bg-gradient-to-br from-purple-400 to-violet-400 text-center text-sm font-bold text-white shadow-xl">
+                  AIが
+                  <br />
+                  魔法をかける
+                </div>
+              </Float>
+            </Reveal>
+
+            <Reveal direction="none" delay={0.4} className="text-3xl text-violet-300">
+              <span className="hidden md:inline">→</span>
+              <span className="md:hidden">↓</span>
+            </Reveal>
+
+            <Reveal delay={0.5}>
+              <Float distance={12} delay={0.4}>
                 <Image
-                  src="/images/lp/hero-family-reading.webp"
-                  alt="家族でEhoriaの絵本を読んで楽しむ様子"
+                  src="/images/lp/cutout-magic-book.webp"
+                  alt="完成した世界にひとつだけの絵本"
+                  width={1254}
+                  height={1254}
+                  className="w-40 drop-shadow-2xl"
+                />
+              </Float>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── 3つの作り方 ───────────── */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:py-24">
+        <Reveal className="text-center">
+          <h2 className="text-2xl font-bold text-purple-900 sm:text-4xl">
+            その日のペースで選べる、3つの魔法。
+          </h2>
+          <p className="mt-3 text-base text-gray-600">
+            「とにかく簡単に」から「自由にこだわって」まで。今の気分にぴったりの方法で。
+          </p>
+        </Reveal>
+
+        <Reveal className="mx-auto mt-10 max-w-4xl" amount={0.15}>
+          <Parallax strength={24}>
+            <div className="overflow-hidden rounded-[28px] shadow-xl ring-1 ring-violet-200/60">
+              <Image
+                src="/images/lp/three-magic-modes.webp"
+                alt="テンプレート・かんたんカスタム・オリジナルの3つの作成モード"
+                width={1672}
+                height={941}
+                className="h-auto w-full object-cover"
+              />
+            </div>
+          </Parallax>
+        </Reveal>
+
+        <RevealGroup className="mt-10 grid gap-6 sm:grid-cols-3">
+          {modes.map((m) => (
+            <RevealItem key={m.title}>
+              <Lift className="h-full">
+                <Card className="h-full">
+                  <CardContent className="flex h-full flex-col p-6">
+                    <div className="flex items-center gap-3">
+                      <span className="grid size-11 place-items-center rounded-2xl bg-violet-50 text-2xl">
+                        {m.emoji}
+                      </span>
+                      <span
+                        className={`rounded-full bg-gradient-to-r ${m.accent} px-3 py-1 text-xs font-bold text-white`}
+                      >
+                        {m.badge}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-lg font-bold text-purple-900">{m.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-600">{m.description}</p>
+                  </CardContent>
+                </Card>
+              </Lift>
+            </RevealItem>
+          ))}
+        </RevealGroup>
+      </section>
+
+      {/* ───────────── 年齢で育つ ───────────── */}
+      <section className="bg-gradient-to-b from-emerald-50/50 to-transparent py-16 sm:py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <Reveal className="text-center">
+            <h2 className="text-2xl font-bold text-purple-900 sm:text-4xl">
+              成長に合わせて、言葉も物語も一緒に育つ。
+            </h2>
+            <p className="mt-3 text-base text-gray-600">
+              年齢に合わせて、文章のレベルも物語のテーマもAIが自動で調整します。
+            </p>
+          </Reveal>
+
+          <RevealGroup className="mt-12 grid gap-6 sm:grid-cols-3">
+            {ageBands.map((b, i) => (
+              <RevealItem key={b.age}>
+                <Lift className="h-full">
+                  <Card className="h-full">
+                    <CardContent className="flex h-full flex-col items-center p-6 text-center">
+                      <Float distance={8} delay={i * 0.3}>
+                        <span className="text-5xl">{b.emoji}</span>
+                      </Float>
+                      <span className="mt-3 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
+                        {b.age}向け
+                      </span>
+                      <h3 className="mt-3 text-lg font-bold text-purple-900">{b.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-gray-600">{b.example}</p>
+                    </CardContent>
+                  </Card>
+                </Lift>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ───────────── 相棒キャラ ───────────── */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:py-24">
+        <div className="grid items-center gap-10 md:grid-cols-2">
+          <Reveal direction="left">
+            <span className="inline-block rounded-full bg-fuchsia-100 px-3 py-1 text-xs font-bold text-fuchsia-700">
+              いつも隣に
+            </span>
+            <h2 className="mt-3 text-2xl font-bold text-purple-900 sm:text-4xl">
+              どんな物語でも、
+              <br />
+              「自分だけの相棒」が一緒。
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-gray-600">
+              お子さま専用の相棒キャラクターを作成できます。宇宙の冒険でも、
+              森の探検でも、いつも同じお友達が登場することで、物語の世界に
+              深い安心感と愛着が生まれます。
+            </p>
+          </Reveal>
+          <RevealGroup className="grid grid-cols-3 gap-3" amount={0.3}>
+            {[
+              { emoji: "🚀", label: "宇宙" },
+              { emoji: "🌳", label: "森" },
+              { emoji: "🛏️", label: "おうち" },
+            ].map((s, i) => (
+              <RevealItem key={s.label}>
+                <Float distance={10} delay={i * 0.25}>
+                  <Card>
+                    <CardContent className="flex flex-col items-center gap-2 p-5 text-center">
+                      <span className="text-4xl">{s.emoji}</span>
+                      <span className="text-xs font-semibold text-purple-700">{s.label}の冒険</span>
+                    </CardContent>
+                  </Card>
+                </Float>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ───────────── 利用シーン ───────────── */}
+      <section className="bg-gradient-to-b from-violet-50/70 to-transparent py-16 sm:py-24">
+        <div className="mx-auto max-w-5xl px-4">
+          <Reveal className="text-center">
+            <h2 className="text-2xl font-bold text-purple-900 sm:text-4xl">
+              毎日のベッドタイムから、特別な記念日まで。
+            </h2>
+          </Reveal>
+          <RevealGroup className="mt-10 grid gap-6 sm:grid-cols-2">
+            {useCases.map((u) => (
+              <RevealItem key={u.title}>
+                <Lift className="h-full">
+                  <Card className="h-full">
+                    <CardContent className="flex h-full flex-col p-7">
+                      <span className="text-4xl">{u.emoji}</span>
+                      <h3 className="mt-3 text-lg font-bold text-purple-900">{u.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-gray-600">{u.description}</p>
+                    </CardContent>
+                  </Card>
+                </Lift>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ───────────── 成長の記録（本棚） ───────────── */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:py-24">
+        <div className="grid items-center gap-10 md:grid-cols-2">
+          <Reveal direction="left" className="md:order-2">
+            <Parallax strength={28}>
+              <div className="overflow-hidden rounded-[28px] shadow-xl ring-1 ring-violet-200/60">
+                <Image
+                  src="/images/lp/growth-bookshelf.webp"
+                  alt="作った絵本が並んだ成長の本棚"
                   width={1672}
                   height={941}
-                  priority
                   className="h-auto w-full object-cover"
                 />
               </div>
-              {/* 浮かせた切り抜き */}
+            </Parallax>
+          </Reveal>
+          <div className="md:order-1">
+            <Reveal>
+              <span className="inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
+                読むほど、増えていく
+              </span>
+              <h2 className="mt-3 text-2xl font-bold text-purple-900 sm:text-4xl">
+                作った絵本は、
+                <br />
+                かけがえのない成長の記録に。
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-gray-600">
+                数年後に本棚を振り返れば、その時々の興味や成長の軌跡がそのまま残る、
+                家族だけのデジタルアルバムになります。
+              </p>
+            </Reveal>
+            <RevealGroup className="mt-6 space-y-2">
+              {bookshelf.map((b) => (
+                <RevealItem key={b.age}>
+                  <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-violet-100">
+                    <span className="text-2xl">{b.emoji}</span>
+                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold text-purple-700">
+                      {b.age}
+                    </span>
+                    <span className="text-sm font-medium text-purple-900">{b.title}</span>
+                  </div>
+                </RevealItem>
+              ))}
+            </RevealGroup>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── 安心設計 ───────────── */}
+      <section className="mx-auto max-w-5xl px-4 pb-16 sm:pb-24">
+        <Reveal className="text-center">
+          <h2 className="text-2xl font-bold text-purple-900 sm:text-4xl">
+            眠る前の安心感と、家族のデータを守る設計。
+          </h2>
+        </Reveal>
+        <RevealGroup className="mt-10 grid gap-6 sm:grid-cols-2">
+          <RevealItem>
+            <Lift className="h-full">
+              <Card className="h-full">
+                <CardContent className="flex h-full flex-col items-center p-7 text-center">
+                  <span className="text-5xl">😌</span>
+                  <h3 className="mt-3 text-lg font-bold text-purple-900">やさしいデザイン</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                    睡眠前の興奮を抑えるため、画面はすべて目にやさしいパステルカラーで統一。
+                    丸みを帯びた読みやすいフォントを採用しています。
+                  </p>
+                </CardContent>
+              </Card>
+            </Lift>
+          </RevealItem>
+          {trust.map((t) => (
+            <RevealItem key={t.title}>
+              <Lift className="h-full">
+                <Card className="h-full">
+                  <CardContent className="flex h-full flex-col items-center p-7 text-center">
+                    <Float distance={8}>
+                      <Image
+                        src={t.image}
+                        alt={t.title}
+                        width={1254}
+                        height={1254}
+                        className="h-16 w-16 object-contain"
+                      />
+                    </Float>
+                    <h3 className="mt-3 text-lg font-bold text-purple-900">{t.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-600">{t.description}</p>
+                  </CardContent>
+                </Card>
+              </Lift>
+            </RevealItem>
+          ))}
+        </RevealGroup>
+      </section>
+
+      {/* ───────────── 最終CTA ───────────── */}
+      <section className="px-4 pb-20">
+        <Reveal>
+          <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[32px] bg-gradient-to-br from-purple-500 to-violet-500 px-6 py-16 text-center shadow-2xl">
+            <Float className="pointer-events-none absolute -left-6 -top-6" distance={14}>
+              <Image
+                src="/images/lp/cutout-gift-book.webp"
+                alt=""
+                aria-hidden
+                width={1254}
+                height={1254}
+                className="w-28 opacity-90 drop-shadow-xl sm:w-36"
+              />
+            </Float>
+            <Float className="pointer-events-none absolute -bottom-8 -right-6" distance={16} delay={0.5}>
               <Image
                 src="/images/lp/cutout-magic-book.webp"
                 alt=""
                 aria-hidden
                 width={1254}
                 height={1254}
-                className="pointer-events-none absolute -bottom-8 -right-4 hidden w-28 drop-shadow-2xl sm:block md:w-36"
+                className="w-28 opacity-90 drop-shadow-xl sm:w-36"
               />
+            </Float>
+            <div className="relative z-10">
+              <h2 className="text-2xl font-bold text-white sm:text-4xl">
+                さあ、最初のページを開きましょう。
+              </h2>
+              <p className="mt-4 text-base text-violet-50">
+                お子さまの笑顔と、無限の想像力が待っています。
+                <br className="hidden sm:inline" />
+                今すぐ、家族だけの特別な物語を作りはじめませんか？
+              </p>
+              <Link href="/login" className="mt-8 inline-block">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="bg-white px-8 py-6 text-lg text-purple-700 hover:bg-violet-50"
+                >
+                  無料で絵本を作る
+                </Button>
+              </Link>
+              <p className="mt-3 text-sm text-violet-100">登録かんたん・クレカ不要</p>
             </div>
-          </StaggerItem>
-        </StaggerContainer>
-      </section>
-
-      {/* ───────────── 我が子が主人公 ───────────── */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
-        <div className="grid items-center gap-10 md:grid-cols-2">
-          <AnimatedCard>
-            <div className="overflow-hidden rounded-[28px] shadow-xl ring-1 ring-violet-200/60">
-              <Image
-                src="/images/lp/personalized-book-spread.webp"
-                alt="お子さまの名前や見た目が反映された絵本の見開きページ"
-                width={1672}
-                height={941}
-                className="h-auto w-full object-cover"
-              />
-            </div>
-          </AnimatedCard>
-          <div>
-            <span className="inline-block rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-purple-700">
-              世界にひとつだけ
-            </span>
-            <h2 className="mt-3 text-2xl font-bold text-purple-900 sm:text-3xl">
-              名前も、見た目も、好きなものも。
-              <br />
-              絵本の中で“あの子”が動き出す。
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-gray-600">
-              お子さまの名前・年齢・好きなものを物語に反映。お写真を使えば、
-              本人らしさを残したやさしいキャラクターに変換します。読むたびに
-              「これ、ぼく/わたしだ！」と笑顔がこぼれる1冊に。
-            </p>
-            <ul className="mt-6 space-y-2 text-sm text-purple-800">
-              {[
-                "主人公はいつもお子さま自身",
-                "なかよしキャラと一緒に冒険も",
-                "4・8・12ページから選べる読み応え",
-              ].map((t) => (
-                <li key={t} className="flex items-center gap-2">
-                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-violet-400 text-[11px] font-bold text-white">
-                    ✓
-                  </span>
-                  {t}
-                </li>
-              ))}
-            </ul>
           </div>
-        </div>
-      </section>
-
-      {/* ───────────── 3つの作り方 ───────────── */}
-      <section className="bg-gradient-to-b from-violet-50/60 to-transparent py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-purple-900 sm:text-3xl">3つの作り方から選べる</h2>
-            <p className="mt-3 text-base text-gray-600">
-              「とにかく簡単に」から「自由にこだわって」まで。今の気分にぴったりの方法で。
-            </p>
-          </div>
-
-          <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-[28px] shadow-xl ring-1 ring-violet-200/60">
-            <Image
-              src="/images/lp/three-magic-modes.webp"
-              alt="テンプレート・かんたんカスタム・オリジナルの3つの作成モード"
-              width={1672}
-              height={941}
-              className="h-auto w-full object-cover"
-            />
-          </div>
-
-          <StaggerContainer className="mt-10 grid gap-6 sm:grid-cols-3">
-            {modes.map((m) => (
-              <StaggerItem key={m.title}>
-                <AnimatedCard>
-                  <Card className="h-full">
-                    <CardContent className="flex h-full flex-col p-6">
-                      <span
-                        className={`inline-block w-fit rounded-full bg-gradient-to-r ${m.accent} px-3 py-1 text-xs font-bold text-white`}
-                      >
-                        {m.badge}
-                      </span>
-                      <h3 className="mt-3 text-lg font-bold text-purple-900">{m.title}</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-gray-600">{m.description}</p>
-                    </CardContent>
-                  </Card>
-                </AnimatedCard>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
-
-      {/* ───────────── かんたん3ステップ ───────────── */}
-      <section className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-purple-900 sm:text-3xl">作り方はかんたん3ステップ</h2>
-          <p className="mt-3 text-base text-gray-600">スマホひとつで、思い立ったその日に。</p>
-        </div>
-        <StaggerContainer className="mt-10 grid gap-6 sm:grid-cols-3">
-          {steps.map((s) => (
-            <StaggerItem key={s.no}>
-              <Card className="h-full">
-                <CardContent className="flex h-full flex-col items-center p-6 text-center">
-                  <span className="grid size-12 place-items-center rounded-full bg-gradient-to-r from-purple-400 to-violet-400 text-xl font-bold text-white shadow-md">
-                    {s.no}
-                  </span>
-                  <h3 className="mt-4 text-lg font-bold text-purple-900">{s.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-600">{s.description}</p>
-                </CardContent>
-              </Card>
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
-      </section>
-
-      {/* ───────────── 3つの安心ポイント ───────────── */}
-      <section className="mx-auto max-w-6xl px-4 pb-16 sm:pb-20">
-        <StaggerContainer className="grid gap-6 sm:grid-cols-3">
-          {features.map((f) => (
-            <StaggerItem key={f.title}>
-              <AnimatedCard>
-                <Card className="h-full">
-                  <CardContent className="flex h-full flex-col items-center p-6 text-center">
-                    <div
-                      className="rounded-3xl p-2"
-                      style={{ filter: `drop-shadow(0 10px 24px ${f.shadow})` }}
-                    >
-                      <Image
-                        src={f.image}
-                        alt={f.title}
-                        width={1254}
-                        height={1254}
-                        className="h-28 w-28 object-contain"
-                      />
-                    </div>
-                    <h3 className="mt-4 text-lg font-bold text-purple-900">{f.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-600">{f.description}</p>
-                  </CardContent>
-                </Card>
-              </AnimatedCard>
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
-      </section>
-
-      {/* ───────────── 成長の記録 ───────────── */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
-        <div className="grid items-center gap-10 md:grid-cols-2">
-          <div className="order-2 md:order-1">
-            <span className="inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
-              読むほど、増えていく
-            </span>
-            <h2 className="mt-3 text-2xl font-bold text-purple-900 sm:text-3xl">
-              作った絵本は、
-              <br />
-              成長の本棚に。
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-gray-600">
-              できた絵本はマイ本棚にずらりと並びます。誕生日、はじめてのおつかい、
-              できたよ記念——日々の思い出が1冊ずつ積み重なって、お子さまだけの
-              “成長の物語”になっていきます。
-            </p>
-            <Link href="/login" className="mt-6 inline-block">
-              <Button size="lg" variant="outline" className="px-7">
-                本棚を作りはじめる
-              </Button>
-            </Link>
-          </div>
-          <AnimatedCard>
-            <div className="order-1 overflow-hidden rounded-[28px] shadow-xl ring-1 ring-violet-200/60 md:order-2">
-              <Image
-                src="/images/lp/growth-bookshelf.webp"
-                alt="作った絵本が並んだ成長の本棚"
-                width={1672}
-                height={941}
-                className="h-auto w-full object-cover"
-              />
-            </div>
-          </AnimatedCard>
-        </div>
-      </section>
-
-      {/* ───────────── 最終CTA ───────────── */}
-      <section className="px-4 pb-20">
-        <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[32px] bg-gradient-to-br from-purple-500 to-violet-500 px-6 py-14 text-center shadow-2xl">
-          <Image
-            src="/images/lp/cutout-gift-book.webp"
-            alt=""
-            aria-hidden
-            width={1254}
-            height={1254}
-            className="pointer-events-none absolute -left-6 -top-6 w-28 opacity-90 drop-shadow-xl sm:w-36"
-          />
-          <Image
-            src="/images/lp/cutout-magic-book.webp"
-            alt=""
-            aria-hidden
-            width={1254}
-            height={1254}
-            className="pointer-events-none absolute -bottom-8 -right-6 w-28 opacity-90 drop-shadow-xl sm:w-36"
-          />
-          <div className="relative z-10">
-            <h2 className="text-2xl font-bold text-white sm:text-3xl">
-              さあ、はじめての1冊をつくろう。
-            </h2>
-            <p className="mt-3 text-base text-violet-50">
-              無料ではじめられます。登録はかんたん、クレジットカードは不要です。
-            </p>
-            <Link href="/login" className="mt-7 inline-block">
-              <Button size="lg" variant="secondary" className="bg-white px-8 py-6 text-lg text-purple-700 hover:bg-violet-50">
-                無料で絵本を作る
-              </Button>
-            </Link>
-          </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* ───────────── Footer ───────────── */}
