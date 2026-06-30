@@ -4,17 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   collection,
+  getCountFromServer,
   getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
+  where,
 } from "firebase/firestore";
 import { Briefcase, Cpu, Sparkles, RefreshCw, TrendingUp } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { backfillDailyMetricsCallable } from "@/lib/functions";
-import { getPlanDisplayLabel, CREATION_MODE_LABELS } from "@/lib/plans";
+import { getPlanDisplayLabel, CREATION_MODE_LABELS, PLAN_CONFIGS } from "@/lib/plans";
 import { computeSloMetrics, SLO_TARGETS, EMPTY_SLO } from "@/lib/admin-slo-metrics";
 import { computeProviderCostMetrics } from "@/lib/admin-cost-metrics";
 import { computeQualityTrend } from "@/lib/admin-quality-trend";
@@ -126,6 +128,19 @@ interface DailyMetricsRow {
 
 const PERIOD_OPTIONS = [7, 30, 90] as const;
 
+/**
+ * Firestore 集計クエリ（getCountFromServer）で取得する「実数」。
+ * 日次スナップショットの鮮度・createdAt 欠損に依存しない現在値で、
+ * ダッシュボードの見出し（利用者数・MRR など）を実績に一致させるために使う。
+ */
+interface LiveCounts {
+  totalUsers: number;
+  paidStandard: number;
+  paidPremium: number;
+  totalBooks: number;
+  loadedAtMs: number;
+}
+
 /** 円（JPY）を「¥1,480」形式に整形 */
 function formatJpy(n: number): string {
   return `¥${Math.round(n).toLocaleString()}`;
@@ -185,6 +200,7 @@ export default function AdminDashboardPage() {
   const [pagesMap, setPagesMap] = useState<Map<string, PageWithId[]>>(new Map());
   const [sloHistory, setSloHistory] = useState<number[]>([]);
   const [dailyMetrics, setDailyMetrics] = useState<DailyMetricsRow[]>([]);
+  const [liveCounts, setLiveCounts] = useState<LiveCounts | null>(null);
   const [period, setPeriod] = useState<(typeof PERIOD_OPTIONS)[number]>(30);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -316,6 +332,35 @@ export default function AdminDashboardPage() {
         setDailyMetrics(rows);
       })
       .catch(() => setDailyMetrics([]));
+  }, [isAdmin]);
+
+  // Load live actual counts via Firestore aggregation (getCountFromServer).
+  // スナップショット非依存の現在値。利用者数・有料内訳・絵本数を実績と一致させる。
+  useEffect(() => {
+    if (!isAdmin || isDemoMode) return;
+    let cancelled = false;
+    Promise.all([
+      getCountFromServer(collection(db, "users")),
+      getCountFromServer(query(collection(db, "users"), where("productPlan", "==", "standard_paid"))),
+      getCountFromServer(query(collection(db, "users"), where("productPlan", "==", "premium_paid"))),
+      getCountFromServer(collection(db, "books")),
+    ])
+      .then(([usersC, stdC, premC, booksC]) => {
+        if (cancelled) return;
+        setLiveCounts({
+          totalUsers: usersC.data().count,
+          paidStandard: stdC.data().count,
+          paidPremium: premC.data().count,
+          totalBooks: booksC.data().count,
+          loadedAtMs: Date.now(),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setLiveCounts(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [isAdmin]);
 
   const slo = useMemo(
@@ -454,7 +499,7 @@ export default function AdminDashboardPage() {
 
         {lens === "analytics" ? (
           <div className="mt-6">
-            <AnalyticsLens rows={dailyMetrics} period={period} isAdmin={isAdmin} />
+            <AnalyticsLens rows={dailyMetrics} period={period} isAdmin={isAdmin} live={liveCounts} />
           </div>
         ) : loading && !books.length ? (
           <div className="mt-10 flex items-center gap-2 text-violet-400">
@@ -485,10 +530,12 @@ function AnalyticsLens({
   rows,
   period,
   isAdmin,
+  live,
 }: {
   rows: DailyMetricsRow[];
   period: number;
   isAdmin: boolean;
+  live: LiveCounts | null;
 }) {
   const [backfilling, setBackfilling] = useState(false);
   const [backfillMsg, setBackfillMsg] = useState<string | null>(null);
@@ -499,17 +546,34 @@ function AnalyticsLens({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-violet-100 bg-white p-8 text-center">
-        <p className="text-sm text-violet-500">
-          日次メトリクスがまだありません。下のボタンで過去データを集計できます。
-        </p>
-        <BackfillButton
-          isAdmin={isAdmin}
-          backfilling={backfilling}
-          setBackfilling={setBackfilling}
-          backfillMsg={backfillMsg}
-          setBackfillMsg={setBackfillMsg}
-        />
+      <div className="space-y-4">
+        {live ? (
+          <>
+            <SectionTitle title="現在の実数" description="users / books コレクションの集計値" />
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatCard label="利用者数（実数）" value={live.totalUsers.toLocaleString()} unit="人" tone="good" />
+              <StatCard label="絵本累計（実数）" value={live.totalBooks.toLocaleString()} unit="冊" />
+              <StatCard label="有料ユーザー" value={(live.paidStandard + live.paidPremium).toLocaleString()} unit="人" hint={`標準${live.paidStandard}/プレ${live.paidPremium}`} />
+              <StatCard
+                label="推定MRR（現在）"
+                value={formatJpy(live.paidStandard * (PLAN_CONFIGS.standard_paid.priceJpy ?? 0) + live.paidPremium * (PLAN_CONFIGS.premium_paid.priceJpy ?? 0))}
+                tone="good"
+              />
+            </div>
+          </>
+        ) : null}
+        <div className="rounded-2xl border border-violet-100 bg-white p-8 text-center">
+          <p className="text-sm text-violet-500">
+            日次メトリクスの時系列がまだありません。下のボタンで過去データを集計するとグラフが表示されます。
+          </p>
+          <BackfillButton
+            isAdmin={isAdmin}
+            backfilling={backfilling}
+            setBackfilling={setBackfilling}
+            backfillMsg={backfillMsg}
+            setBackfillMsg={setBackfillMsg}
+          />
+        </div>
       </div>
     );
   }
@@ -519,18 +583,40 @@ function AnalyticsLens({
   const newUsersPrevSum = prev.reduce((s, r) => s + r.newUsers, 0);
   const revenueSum = view.reduce((s, r) => s + r.singlePurchaseRevenueJpy, 0);
   const revenuePrevSum = prev.reduce((s, r) => s + r.singlePurchaseRevenueJpy, 0);
-  const totalUsersPrev = prev[prev.length - 1]?.totalUsers ?? 0;
-  const paidTotal = latest.paidUsersStandard + latest.paidUsersPremium;
+  // 実数（live 集計）を優先し、未取得時のみスナップショット値にフォールバックする。
+  const stdPrice = PLAN_CONFIGS.standard_paid.priceJpy ?? 0;
+  const premPrice = PLAN_CONFIGS.premium_paid.priceJpy ?? 0;
+  const totalUsers = live?.totalUsers ?? latest.totalUsers;
+  const paidStandard = live?.paidStandard ?? latest.paidUsersStandard;
+  const paidPremium = live?.paidPremium ?? latest.paidUsersPremium;
+  const paidTotal = paidStandard + paidPremium;
+  const estimatedMrr = live
+    ? paidStandard * stdPrice + paidPremium * premPrice
+    : latest.estimatedMrrJpy;
+  const usesLive = Boolean(live);
+  const snapshotDate = rows[rows.length - 1]?.date;
 
   return (
     <>
-      <SectionTitle title="サマリー" description={`直近 ${period} 日間（前期間比）`} />
+      <div className="flex items-center justify-between gap-2">
+        <SectionTitle title="サマリー" description={`直近 ${period} 日間（前期間比）`} />
+        <span
+          className={cn(
+            "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+            usesLive ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+          )}
+          title={usesLive ? "users / books コレクションの実件数を集計" : "日次スナップショットの最新値"}
+        >
+          {usesLive ? "● 実数（リアルタイム集計）" : "○ スナップショット値"}
+        </span>
+      </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label="累積ユーザー"
-          value={latest.totalUsers.toLocaleString()}
+          label="利用者数（実数）"
+          value={totalUsers.toLocaleString()}
           unit="人"
-          {...deltaBadge(latest.totalUsers, totalUsersPrev)}
+          tone="good"
+          hint={usesLive ? "users コレクション実件数" : `スナップショット ${snapshotDate ?? "—"} 時点`}
         />
         <StatCard
           label="新規ユーザー"
@@ -547,11 +633,17 @@ function AnalyticsLens({
         />
         <StatCard
           label="推定MRR（現在）"
-          value={formatJpy(latest.estimatedMrrJpy)}
+          value={formatJpy(estimatedMrr)}
           tone="good"
-          hint={`有料 ${paidTotal}人（標準${latest.paidUsersStandard}/プレ${latest.paidUsersPremium}）`}
+          hint={`有料 ${paidTotal}人（標準${paidStandard}/プレ${paidPremium}）`}
         />
       </div>
+      {live ? (
+        <p className="mt-2 text-[11px] text-violet-400">
+          実数は users / books コレクションの集計値（{new Date(live.loadedAtMs).toLocaleString("ja-JP", { hour: "2-digit", minute: "2-digit" })} 時点）。
+          絵本累計 {live.totalBooks.toLocaleString()}冊。グラフの時系列は日次スナップショット由来です。
+        </p>
+      ) : null}
 
       <SectionTitle title="ユーザー成長" description="累積ユーザー数の推移" />
       <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">

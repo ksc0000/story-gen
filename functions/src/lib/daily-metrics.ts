@@ -137,8 +137,13 @@ export async function computeAndSaveDailyMetrics(params: {
     const dayStart = jstDayStartMs(dayKey);
     const dayEnd = dayStart + DAY_MS;
 
+    const isLatest = dayKey === latestDayKey;
     const newUsers = users.filter((u) => u.createdAtMs >= dayStart && u.createdAtMs < dayEnd).length;
-    const totalUsers = users.filter((u) => u.createdAtMs > 0 && u.createdAtMs < dayEnd).length;
+    // 最新日は実ユーザー総数（createdAt 欠損ドキュメントも含む全件）に合わせ、
+    // ダッシュボードの実数表示と一致させる。過去日は createdAt ベースの累積推計。
+    const totalUsers = isLatest
+      ? users.length
+      : users.filter((u) => u.createdAtMs > 0 && u.createdAtMs < dayEnd).length;
 
     const dayBooks = books.filter((b) => b.createdAtMs >= dayStart && b.createdAtMs < dayEnd);
     const booksCreated = dayBooks.length;
@@ -151,7 +156,6 @@ export async function computeAndSaveDailyMetrics(params: {
       .filter((s) => s.processedAtMs >= dayStart && s.processedAtMs < dayEnd)
       .reduce((sum, s) => sum + (s.purchaseType ? SINGLE_PURCHASE_PRICES[s.purchaseType] ?? 0 : 0), 0);
 
-    const isLatest = dayKey === latestDayKey;
     const doc: DailyMetricsDoc = {
       date: dayKey,
       dateMs: dayStart,
