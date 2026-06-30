@@ -435,7 +435,7 @@ export default function HomePage() {
                 {remaining <= 0 ? "今月の無料枠を使い切りました 📚" : "もっとたくさん絵本を作りたいですか？ ✨"}
               </p>
               <p className="text-xs text-amber-700 mt-0.5">
-                有料プランで月5〜10冊・高品質生成が使えます
+                有料プランで月8〜15冊・高品質生成が使えます
               </p>
             </div>
             <Link href="/pricing" className="shrink-0">

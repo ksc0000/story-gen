@@ -108,7 +108,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     imageModelProfile: "pro_consistent",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
-    monthlyBookQuota: 5,
+    // 2026-06: 5→8。画像原価 ¥70/冊(8p,保守) × 8 = ¥560 ≈ 売上の38%、上限消化時でも粗利60%超。
+    monthlyBookQuota: 8,
     maxCompanions: 5,
     priceJpy: 1480,
     isPaid: true,
@@ -128,7 +129,8 @@ export const PLAN_CONFIGS: Record<ProductPlan, PlanConfig> = {
     imageModelProfile: "kontext_max",
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai", "photo_story"],
-    monthlyBookQuota: 10,
+    // 2026-06: 10→15。8p想定 ¥70/冊 × 15 = ¥1,050 ≈ 売上の35%、上限消化時でも粗利65%。
+    monthlyBookQuota: 15,
     // プランページ表記が「無制限」のため、実質上限なしの高い値にする。
     maxCompanions: 9999,
     priceJpy: 2980,

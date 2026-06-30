@@ -55,7 +55,7 @@ const PLAN_HIGHLIGHTS: Record<ProductPlan, { emoji: string; title: string; point
     emoji: "⭐",
     title: "思い出をきれいに残したい方に",
     points: [
-      "毎月5冊まで作成可能",
+      "毎月8冊まで作成可能",
       "4 / 8ページで読み応えアップ",
       "「かんたんカスタム」モード対応",
       "なかよしキャラを5体まで登録",
@@ -66,7 +66,7 @@ const PLAN_HIGHLIGHTS: Record<ProductPlan, { emoji: string; title: string; point
     emoji: "💎",
     title: "特別な思い出・ギフト向け",
     points: [
-      "毎月10冊まで作成可能",
+      "毎月15冊まで作成可能",
       "最大12ページのボリューム絵本",
       "写真から物語を作れるPhoto Story",
       "最高画質モデルで細部まで美しく",
