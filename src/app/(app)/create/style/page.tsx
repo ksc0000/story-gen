@@ -16,6 +16,7 @@ import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
 import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook } from "@/lib/demo";
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
+import { validateBookInputLengths } from "@/lib/input-validation";
 import { getStylePickerProfilesForTemplate } from "@/lib/style-exposure";
 import {
   getDefaultProductPlanForCreationMode,
@@ -39,7 +40,10 @@ function StyleSelectionPageContent() {
   const { profile } = useUserProfile(user?.uid);
   const { children } = useChildren(user?.uid);
   const { templates } = useTemplates();
-  const [selected, setSelected] = useState<IllustrationStyle | null>("soft_watercolor");
+  // 保存テンプレからの再利用時は selectedStyleId をプリフィル（可視なスタイルなら維持される）。
+  const [selected, setSelected] = useState<IllustrationStyle | null>(
+    (searchParams.get("selectedStyleId") as IllustrationStyle | null) ?? "soft_watercolor"
+  );
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const hasInteracted = useRef(false);
@@ -83,7 +87,8 @@ function StyleSelectionPageContent() {
   const place = searchParams.get("place");
   const parentMessage = searchParams.get("parentMessage");
   const freeInput = searchParams.get("freeInput");
-  const outfitMode = (searchParams.get("outfitMode") ?? "profile_default") as OutfitMode;
+  // 既定は「テーマに合わせてAIが決める」(theme_auto)。input 等でユーザーが指定すれば上書きされる。
+  const outfitMode = (searchParams.get("outfitMode") ?? "theme_auto") as OutfitMode;
   const customOutfit = searchParams.get("customOutfit");
   const keepSignatureItem = searchParams.get("keepSignatureItem") !== "false";
   const visibleStyleProfiles = useMemo(
@@ -250,6 +255,17 @@ function StyleSelectionPageContent() {
           updatedAtMs: createdAtMs,
           expiresAt,
         });
+
+        // 生成後に「入力テキストが長すぎます」で失敗する前に、ここで知らせる。
+        const lengthCheck = validateBookInputLengths(
+          (bookPayload as { input?: Record<string, unknown> }).input
+        );
+        if (!lengthCheck.valid) {
+          setCreateError(lengthCheck.message ?? "入力内容を確認してください。");
+          setCreating(false);
+          return;
+        }
+
         const bookRef = await addDoc(collection(db, "books"), bookPayload);
         bookId = bookRef.id;
       }
@@ -339,11 +355,21 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
   );
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object") return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
 function stripUndefined<T>(value: T): T {
   if (Array.isArray(value)) {
     return value.map((item) => stripUndefined(item)) as T;
   }
-  if (value && typeof value === "object") {
+  // Only recurse into plain objects. Recursing into class instances such as
+  // Firestore's FieldValue (serverTimestamp) or Timestamp would strip their
+  // prototype and persist a broken plain object like {_methodName:"serverTimestamp"},
+  // which never resolves server-side and breaks date display.
+  if (isPlainObject(value)) {
     return Object.fromEntries(
       Object.entries(value)
         .filter(([, entryValue]) => entryValue !== undefined)

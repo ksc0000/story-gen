@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AnimatedCard } from "@/components/animated-card";
-import { formatDateSafe } from "@/lib/date-utils";
+import { formatDateSafe, toMillisSafe } from "@/lib/date-utils";
 import type { BookDoc } from "@/lib/types";
 
 interface BookCardProps {
@@ -16,6 +16,9 @@ interface BookCardProps {
 
 export function BookCard({ book, onDelete, isDeleting }: BookCardProps) {
   const href = book.status === "generating" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
+  // Prefer createdAtMs (always a clean number); createdAt may be an unresolved
+  // serverTimestamp sentinel on legacy books, which toMillisSafe treats as null.
+  const createdMillis = toMillisSafe(book.createdAtMs ?? book.createdAt);
   return (
     <Link href={href} className="group relative block">
       <AnimatedCard>
@@ -38,8 +41,8 @@ export function BookCard({ book, onDelete, isDeleting }: BookCardProps) {
           </div>
           <CardContent className="p-3">
             <h3 className="truncate text-sm font-medium text-purple-900">{book.title || "生成中..."}</h3>
-            {book.createdAt && (
-              <p className="text-xs text-violet-400">{formatDateSafe(book.createdAt)}</p>
+            {createdMillis !== null && (
+              <p className="text-xs text-violet-400">{formatDateSafe(createdMillis)}</p>
             )}
             {book.status === "generating" && <Badge variant="secondary" className="mt-1 text-xs">生成中</Badge>}
             {book.pdfStatus === "completed" && (

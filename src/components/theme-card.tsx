@@ -9,13 +9,15 @@ interface ThemeCardProps {
   template: TemplateDoc & { id: string };
   selected: boolean;
   onSelect: () => void;
+  /** このストーリーが対応するページ数（例: [4, 8]）。カードに「4P」「8P」タグで表示する。 */
+  availablePageCounts?: number[];
   /** @deprecated No longer used — kept for API compatibility */
   onPreview?: () => void;
   /** @deprecated No longer used — kept for API compatibility */
   categoryName?: string;
 }
 
-export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
+export function ThemeCard({ template, selected, onSelect, availablePageCounts }: ThemeCardProps) {
   const previewImageUrl = template.fixedStory?.previewImageUrl || template.sampleImageUrl;
 
   return (
@@ -53,6 +55,25 @@ export function ThemeCard({ template, selected, onSelect }: ThemeCardProps) {
         {template.isBlankTemplate && !selected && (
           <div className="absolute left-1.5 top-1.5 rounded-full bg-amber-400/90 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white shadow-sm sm:text-[10px]">
             ✏️ 穴埋め
+          </div>
+        )}
+
+        {/* 対応ページ数タグ（4P / 8P / 12P） */}
+        {availablePageCounts && availablePageCounts.length > 0 && (
+          <div
+            className={cn(
+              "absolute left-1.5 flex gap-1",
+              template.isBlankTemplate && !selected ? "top-7" : "top-1.5"
+            )}
+          >
+            {availablePageCounts.map((n) => (
+              <span
+                key={n}
+                className="rounded-full bg-white/85 px-1.5 py-0.5 text-[9px] font-bold leading-none text-purple-700 shadow-sm backdrop-blur-sm sm:text-[10px]"
+              >
+                {n}P
+              </span>
+            ))}
           </div>
         )}
 

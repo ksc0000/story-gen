@@ -85,4 +85,24 @@ describe("sanitizeInput", () => {
   it("rejects childName exceeding max length", () => {
     expect(sanitizeInput({ childName: "あ".repeat(51) }).valid).toBe(false);
   });
+
+  it("rejects free-text fields over 200 chars", () => {
+    expect(sanitizeInput({ childName: "ゆうた", parentMessage: "あ".repeat(201) }).valid).toBe(false);
+  });
+
+  it("allows a long system-generated characterLook (visual description ~250 chars)", () => {
+    // 相棒主人公時に自動生成される visualDescription（>200字）で生成が失敗していた回帰。
+    const look =
+      "A large, tall and slender, deeply-colored, light blue monster with patches of two-tone color wearing a jingling bell collar and a cozy scarf with a mischievous personality who has the ability to cook delicious food for everyone around.";
+    expect(look.length).toBeGreaterThan(200);
+    expect(sanitizeInput({ childName: "ピノ", characterLook: look }).valid).toBe(true);
+  });
+
+  it("still rejects an absurdly long characterLook (> 600 chars)", () => {
+    expect(sanitizeInput({ childName: "ピノ", characterLook: "a".repeat(601) }).valid).toBe(false);
+  });
+
+  it("still NG-checks characterLook", () => {
+    expect(sanitizeInput({ childName: "ピノ", characterLook: "殺す monster" }).valid).toBe(false);
+  });
 });

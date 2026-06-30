@@ -318,6 +318,12 @@ export interface UserDoc {
   email: string;
   plan: UserPlan;
   productPlan?: ProductPlan;
+  /**
+   * 管理者専用のプラン上書き。設定画面の開発パネルから設定し、
+   * resolveProductPlan() が productPlan より優先して採用する。
+   * 全プランの「見える景色」を確認するための開発用フィールド。
+   */
+  planOverride?: ProductPlan;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string | null;
   singleBookCredits?: number;
@@ -501,6 +507,32 @@ export interface CharacterUsage {
   keepSignatureItem: boolean;
 }
 
+/**
+ * ユーザーが保存した「生成設定テンプレート」。絵本ビューアで既存の絵本の設定を
+ * 名前を付けて保存し、作成フローの入口から呼び出して同じ設定で別の絵本を作れる。
+ * 保存先は users/{uid}/savedTemplates/{id}。主人公は再利用時に選び直す。
+ */
+export interface SavedTemplateDoc {
+  name: string;
+  creationMode: CreationMode;
+  theme: string;
+  templateId?: string;
+  selectedStyleId?: IllustrationStyle;
+  selectedStyleName?: string;
+  pageCount?: PageCount;
+  outfitMode?: OutfitMode;
+  customOutfit?: string;
+  keepSignatureItem?: boolean;
+  companionId?: string;
+  companionName?: string;
+  companionVisualDescription?: string;
+  /** 一覧でのサムネイル用（元になった絵本の表紙） */
+  coverImageUrl?: string;
+  sourceBookId?: string;
+  createdAt: Timestamp;
+  createdAtMs: number;
+}
+
 export interface BookDoc {
   userId: string;
   childId?: string | null;
@@ -635,6 +667,8 @@ export interface BookDoc {
   createdAt: Timestamp;
   expiresAt: Timestamp | null;
   public?: boolean;
+  /** 本棚でのお気に入り（ピン留め）。オーナーが切り替える。 */
+  favorite?: boolean;
   seriesId?: string;
   protagonistType?: ProtagonistType;
   pdfStatus?: "not_started" | "processing" | "completed" | "failed";

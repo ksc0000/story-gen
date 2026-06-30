@@ -9,14 +9,23 @@ describe("resolveProductPlan", () => {
 
   it("falls back to standard_paid when productPlan is missing but legacy plan is premium", () => {
     expect(resolveProductPlan({ plan: "premium" })).toBe("standard_paid");
-    // standard プランの月次上限は 5 冊（home の 0/1 表示バグの回帰防止）
-    expect(PLAN_CONFIGS[resolveProductPlan({ plan: "premium" })].monthlyBookQuota).toBe(5);
+    // standard プランの月次上限は 8 冊（2026-06 上限引き上げ。home の 0/1 表示バグの回帰防止）
+    expect(PLAN_CONFIGS[resolveProductPlan({ plan: "premium" })].monthlyBookQuota).toBe(8);
   });
 
   it("falls back to free when neither productPlan nor premium plan is set", () => {
     expect(resolveProductPlan({ plan: "free" })).toBe("free");
     expect(resolveProductPlan(undefined)).toBe("free");
     expect(resolveProductPlan(null)).toBe("free");
+  });
+
+  it("planOverride takes precedence over productPlan (admin dev panel)", () => {
+    expect(
+      resolveProductPlan({ productPlan: "free", plan: "free", planOverride: "premium_paid" })
+    ).toBe("premium_paid");
+    expect(
+      resolveProductPlan({ productPlan: "premium_paid", plan: "premium", planOverride: "free" })
+    ).toBe("free");
   });
 });
 

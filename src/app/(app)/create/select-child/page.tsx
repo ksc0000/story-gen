@@ -14,6 +14,11 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
+import {
+  useSavedTemplates,
+  buildCreateUrlFromTemplate,
+} from "@/lib/hooks/use-saved-templates";
+import type { CreationMode } from "@/lib/types";
 import { childProfileToSummary } from "@/lib/child-profile";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { cn } from "@/lib/utils";
@@ -40,7 +45,13 @@ function SelectChildContent() {
   const { companions, loading: companionsLoading } = useCompanions(user?.uid);
   const { profile } = useUserProfile(user?.uid);
   const { isAdmin } = useAdminClaim();
+  const { templates: savedTemplates } = useSavedTemplates(user?.uid);
   const [choice, setChoice] = useState<ProtagonistChoice>(null);
+
+  // テンプレ起点（保存した生成設定から作成）の判定と引き継ぎパラメータ。
+  const fromTemplate = searchParams.get("tpl") === "1";
+  const tplMode = searchParams.get("mode") as CreationMode | null;
+  const tplName = searchParams.get("tplName");
 
   const productPlan = resolveProductPlan(profile);
   const planConfig = PLAN_CONFIGS[productPlan];
@@ -52,8 +63,37 @@ function SelectChildContent() {
   const isUnlimited = isAdmin || profile?.generationOverride?.bypassMonthlyLimit === true;
   const isGenerationLimitReached = !isUnlimited && remaining <= 0;
 
+  // テンプレ起点のとき、選んだ作り方に応じたプリフィル先ステップを返す。
+  const prefilledStepPath = (mode: CreationMode): string => {
+    if (mode === "photo_story") return "/create/photo-upload";
+    if (mode === "guided_ai" || mode === "original_ai") return "/create/ai-brief";
+    return "/create/input"; // fixed_template
+  };
+
   const handleNext = () => {
     if (!choice) return;
+
+    // テンプレ起点: mode/theme/style/服装/ページ数を引き継ぎ、テーマ・作り方選択を飛ばして
+    // プリフィル済みの入力ステップへ直接進む（主人公だけ選び直す）。
+    if (fromTemplate && tplMode) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("tpl");
+      params.delete("tplName");
+      params.set("mode", tplMode);
+      if (choice.type === "child") {
+        params.set("childId", choice.childId);
+        params.set("protagonistType", "child");
+      } else {
+        // なかよしキャラ主人公: テンプレの相棒設定は破棄し、選んだキャラを主人公にする。
+        params.set("protagonistType", "companion");
+        params.delete("companionId");
+        if (choice.type === "companion_my") params.set("companionId", choice.companionId);
+        params.set("companionName", choice.companionName);
+        params.set("companionVisualDescription", choice.companionVisualDescription);
+      }
+      router.push(`${prefilledStepPath(tplMode)}?${params.toString()}`);
+      return;
+    }
 
     if (choice.type === "child") {
       router.push(`/create/theme?childId=${choice.childId}`);
@@ -82,6 +122,52 @@ function SelectChildContent() {
         <h1 className="text-xl font-bold text-purple-900">誰を主人公にしますか？</h1>
         <p className="mt-1 text-sm text-violet-500">子どもまたはなかよしキャラクターを選べます。</p>
       </div>
+
+      {/* テンプレ起点バナー */}
+      {fromTemplate && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-purple-200 bg-purple-50 px-4 py-3">
+          <p className="text-sm text-purple-700">
+            <span className="font-bold">{tplName || "保存したテンプレート"}</span>
+            <span className="text-violet-500"> の設定で作成中。主人公を選んでください。</span>
+          </p>
+          <Link href="/create/select-child" className="shrink-0 text-xs text-violet-400 hover:underline">
+            解除
+          </Link>
+        </div>
+      )}
+
+      {/* 保存した設定から作る */}
+      {!fromTemplate && savedTemplates.length > 0 && (
+        <div className="mt-5">
+          <h2 className="mb-2 px-1 text-sm font-bold text-purple-900">保存した設定から作る</h2>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {savedTemplates.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => router.push(buildCreateUrlFromTemplate(t))}
+                className="flex w-36 shrink-0 flex-col gap-1 rounded-2xl border border-violet-100 bg-white p-2 text-left transition hover:border-purple-300 hover:shadow-sm"
+              >
+                {t.coverImageUrl ? (
+                  <Image
+                    src={t.coverImageUrl}
+                    alt={t.name}
+                    width={144}
+                    height={108}
+                    className="aspect-[4/3] w-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-violet-50 text-2xl">📖</div>
+                )}
+                <p className="truncate text-xs font-bold text-purple-900">{t.name}</p>
+                {t.selectedStyleName ? (
+                  <p className="truncate text-[10px] text-violet-400">{t.selectedStyleName}</p>
+                ) : null}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {isGenerationLimitReached && (
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-center">
@@ -257,6 +343,16 @@ function SelectChildContent() {
                   })}
                 </div>
               )}
+
+              {/* 新しいなかよしキャラを作る導線 */}
+              <div className="pt-1 text-center">
+                <Link
+                  href={`/companions/create?returnTo=${encodeURIComponent("/create/select-child")}`}
+                  className="text-xs text-violet-400 hover:text-purple-600 hover:underline"
+                >
+                  ＋ 新しいなかよしキャラを作る
+                </Link>
+              </div>
             </div>
           )}
         </div>

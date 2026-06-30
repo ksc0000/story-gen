@@ -1,29 +1,53 @@
 import Link from "next/link";
 import Image from "next/image";
-import { FileText } from "lucide-react";
+import { FileText, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCard } from "@/components/animated-card";
-import { formatDateSafe } from "@/lib/date-utils";
+import { formatDateSafe, toMillisSafe } from "@/lib/date-utils";
+import { cn } from "@/lib/utils";
 import type { BookDoc } from "@/lib/types";
 
 interface BookCardProps {
   book: BookDoc & { id: string };
+  onToggleFavorite?: (book: BookDoc & { id: string }) => void;
 }
 
-export function BookCard({ book }: BookCardProps) {
+export function BookCard({ book, onToggleFavorite }: BookCardProps) {
   const href = book.status === "generating" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
+  // Prefer createdAtMs; createdAt may be an unresolved serverTimestamp sentinel
+  // on legacy books, which toMillisSafe treats as null.
+  const createdMillis = toMillisSafe(book.createdAtMs ?? book.createdAt);
 
   return (
     <Link href={href} className="group relative block">
       <AnimatedCard>
         <Card className="relative overflow-hidden transition-all hover:shadow-md">
           {book.status === "partial_completed" && (
-            <div className="absolute right-2 top-2 z-20">
+            <div className="absolute left-2 top-2 z-20">
               <Badge variant="outline" className="bg-amber-50/90 text-amber-600 border-amber-200 backdrop-blur-sm">
                 一部未完成
               </Badge>
             </div>
+          )}
+          {onToggleFavorite && (
+            <button
+              type="button"
+              aria-label={book.favorite ? "お気に入りを解除" : "お気に入りに追加"}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleFavorite(book);
+              }}
+              className={cn(
+                "absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition",
+                book.favorite
+                  ? "bg-amber-400/90 text-white"
+                  : "bg-white/70 text-violet-400 opacity-0 hover:bg-white group-hover:opacity-100"
+              )}
+            >
+              <Star className={cn("h-4 w-4", book.favorite && "fill-current")} />
+            </button>
           )}
           <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-violet-50 to-purple-100 flex items-center justify-center">
             {book.coverImageUrl ? (
@@ -49,9 +73,9 @@ export function BookCard({ book }: BookCardProps) {
             <h3 className="truncate text-sm font-semibold text-purple-900">
               {book.title || (book.status === "generating" ? "生成中..." : "無題の絵本")}
             </h3>
-            {book.createdAt && (
+            {createdMillis !== null && (
               <p className="mt-1 text-[10px] text-violet-400">
-                {formatDateSafe(book.createdAt)}
+                {formatDateSafe(createdMillis)}
               </p>
             )}
             {book.pdfStatus === "completed" && (

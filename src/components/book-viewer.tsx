@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, Loader2, Sparkles } from "lucide-react";
+import { RefreshCcw, Loader2, Sparkles, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RegenerateConfirmationDialog } from "@/components/regenerate-confirmation-dialog";
 import type { PageDoc, CoverStatus, ReadingStructureVersion } from "@/lib/types";
@@ -35,6 +35,7 @@ interface BookViewerProps {
   isRegeneratingPage?: (index: number) => boolean;
   onRegenerateCover?: () => void;
   isRegeneratingCover?: boolean;
+  onEditPageText?: (index: number, currentText: string) => void;
 }
 
 /** Build reading items: cover+title spread (single sheet) → story pages (when v2 is active). */
@@ -255,7 +256,7 @@ function CoverSheetMobile({
 /* ------------------------------------------------------------------ */
 
 export function BookViewer(props: BookViewerProps) {
-  const { title, onRegeneratePage, isRegeneratingPage } = props;
+  const { title, onRegeneratePage, isRegeneratingPage, onEditPageText } = props;
   const items = buildReadingItems(props);
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -460,7 +461,19 @@ export function BookViewer(props: BookViewerProps) {
                 </div>
                 <div className="flex flex-col justify-center p-8">
                   <p className="whitespace-pre-line text-lg leading-relaxed text-purple-900">{item.page.text.replace(/。(?=\S)/g, "。\n")}</p>
-                  <p className="mt-4 text-sm text-violet-400">{pageLabel}</p>
+                  <div className="mt-4 flex items-center gap-3">
+                    <p className="text-sm text-violet-400">{pageLabel}</p>
+                    {onEditPageText && (
+                      <button
+                        type="button"
+                        onClick={() => onEditPageText(item.storyPageIndex, item.page.text)}
+                        className="inline-flex items-center gap-1 rounded-full border border-violet-200 px-2.5 py-1 text-xs text-violet-500 transition hover:border-purple-300 hover:text-purple-700"
+                      >
+                        <Pencil className="size-3" />
+                        本文を編集
+                      </button>
+                    )}
+                  </div>
                 </div>
               </>
             )}
@@ -565,7 +578,19 @@ export function BookViewer(props: BookViewerProps) {
                 </div>
                 <div className="p-4">
                   <p className="whitespace-pre-line text-base leading-relaxed text-purple-900">{item.page.text.replace(/。(?=\S)/g, "。\n")}</p>
-                  <p className="mt-2 text-sm text-violet-400">{pageLabel}</p>
+                  <div className="mt-2 flex items-center gap-3">
+                    <p className="text-sm text-violet-400">{pageLabel}</p>
+                    {onEditPageText && (
+                      <button
+                        type="button"
+                        onClick={() => onEditPageText(item.storyPageIndex, item.page.text)}
+                        className="inline-flex items-center gap-1 rounded-full border border-violet-200 px-2.5 py-1 text-xs text-violet-500 transition hover:border-purple-300 hover:text-purple-700"
+                      >
+                        <Pencil className="size-3" />
+                        本文を編集
+                      </button>
+                    )}
+                  </div>
                 </div>
               </>
             )}

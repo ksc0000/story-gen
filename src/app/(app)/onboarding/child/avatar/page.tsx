@@ -43,8 +43,7 @@ function ChildAvatarPageContent() {
   const [characterBible, setCharacterBible] = useState<string | null>(null);
   const [revisionRequest, setRevisionRequest] = useState<AvatarRevisionRequest>({});
   const [attemptNumber, setAttemptNumber] = useState<number | null>(null);
-  const [maxAttempts, setMaxAttempts] = useState(5);
-  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
+  const maxAttempts = 5;
   const [hasUnsavedGeneration, setHasUnsavedGeneration] = useState(false);
   const [allowNavigation, setAllowNavigation] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -54,6 +53,16 @@ function ChildAvatarPageContent() {
 
   const selectedCandidate = candidates.find((candidate) => candidate.generationId === selectedCandidateId) ?? null;
   const revisionSummary = useMemo(() => buildRevisionSummary(revisionRequest), [revisionRequest]);
+
+  // これまでに生成した回数（= avatarGenerations の最大 attemptNumber）。
+  // ページ再訪時も過去の生成回数を反映できるよう、候補一覧からも算出する。
+  const usedAttempts = useMemo(() => {
+    const fromCandidates = candidates.reduce((max, candidate) => {
+      const value = (candidate as { attemptNumber?: number }).attemptNumber;
+      return typeof value === "number" ? Math.max(max, value) : max;
+    }, 0);
+    return Math.max(fromCandidates, attemptNumber ?? 0);
+  }, [candidates, attemptNumber]);
 
   useEffect(() => {
     if (!child) return;
@@ -74,7 +83,6 @@ function ChildAvatarPageContent() {
     if (job.status === "completed") {
       if (job.result) {
         setAttemptNumber(job.result.attemptNumber);
-        setRemainingAttempts(maxAttempts - job.result.attemptNumber);
       }
       setHasUnsavedGeneration(true);
       setGenerating(false);
@@ -234,11 +242,18 @@ function ChildAvatarPageContent() {
         {reason === "profile_updated" ? (
           <p className="mt-2 text-xs text-violet-500">プロフィール変更を反映したキャラクター画像の再生成です。</p>
         ) : null}
-        {attemptNumber ? (
-          <p className="mt-2 text-xs text-violet-500">
-            生成 {attemptNumber}/{maxAttempts} 回目{remainingAttempts !== null ? ` ・ 残り${remainingAttempts}回` : ""}
-          </p>
-        ) : null}
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+              usedAttempts >= maxAttempts
+                ? "bg-rose-50 text-rose-600"
+                : "bg-purple-50 text-purple-700"
+            }`}
+          >
+            🎨 {usedAttempts}/{maxAttempts} 回 生成済み
+            {usedAttempts < maxAttempts ? `（残り${maxAttempts - usedAttempts}回）` : "（上限に達しました）"}
+          </span>
+        </div>
       </div>
 
       {child.visualProfile?.approvedImageUrl && (
@@ -344,7 +359,7 @@ function ChildAvatarPageContent() {
                 type="button"
                 variant="outline"
                 onClick={() => generate({ useBaseGeneration: true })}
-                disabled={isRevisionEmpty(revisionRequest) || generating || saving || remainingAttempts === 0}
+                disabled={isRevisionEmpty(revisionRequest) || generating || saving || usedAttempts >= maxAttempts}
                 className="w-full"
               >
                 選択内容で再生成
@@ -366,7 +381,7 @@ function ChildAvatarPageContent() {
               variant={candidates.length > 0 ? "outline" : "default"}
               className="w-full"
               onClick={() => generate({ useBaseGeneration: false })}
-              disabled={generating || saving || remainingAttempts === 0}
+              disabled={generating || saving || usedAttempts >= maxAttempts}
             >
               {generating ? "生成中..." : candidates.length > 0 ? "別案を生成" : "候補を生成する"}
             </Button>

@@ -375,7 +375,10 @@ export async function processAvatarGeneration(params: {
   const finalCorrectionText = structuredCorrectionText;
   const characterBible = buildCharacterBible(child, finalCorrectionText);
   const baseGenerationImageUrl = await getBaseGenerationImageUrl(childRef, request.baseGenerationId);
-  const selectedVariant = selectAvatarVariant(request.variantStyle);
+  // 子どもプロフィールの基本イメージ（アバター）は常に「やさしい水彩」で統一する。
+  // 画風はプロフィール側では選ばせず、絵本生成時にのみスタイル選択を提供する方針のため、
+  // request.variantStyle は無視して soft_watercolor に固定する。
+  const selectedVariant = selectAvatarVariant("soft_watercolor");
 
   const candidates: AvatarCandidate[] = [];
 

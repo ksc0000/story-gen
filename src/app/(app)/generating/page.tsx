@@ -10,7 +10,10 @@ import { GenerationProgress } from "@/components/generation-progress";
 import { FloatingParticles } from "@/components/floating-particles";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { createRetryBook } from "@/lib/retry-book";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { Loader2 } from "lucide-react";
 import type { BookDoc, PageDoc } from "@/lib/types";
 
 function getProgressStep(progress: number, pages: PageDoc[]) {
@@ -133,6 +136,9 @@ function GeneratingContent() {
   const searchParams = useSearchParams();
   const bookId = searchParams.get("id") ?? "";
   const router = useRouter();
+  const { user } = useAuth();
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
   const shouldReduceMotion = useReducedMotion();
   // Firestore onSnapshot は毎更新で新しいオブジェクト参照を返すため、
   // useEffect([book]) が重複発火する。bookId:status をキーに1回だけ送信する。
@@ -200,28 +206,62 @@ function GeneratingContent() {
     </div>
   );
 
-  if (book.status === "failed") return (
-    <PageTransition className="mx-auto max-w-lg px-4 py-16 text-center">
-      <Image src="/images/illustrations/generating.webp" alt="失敗" width={120} height={90} className="mx-auto rounded-xl opacity-50" />
-      <h2 className="mt-4 text-lg font-bold text-purple-900">絵本の生成に失敗しました</h2>
-      <p className="mt-2 text-sm text-violet-500">
-        {getFailureMessage(book)}
-      </p>
-      {book.errorMessage ? (
-        <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left text-sm text-red-700">
-          {book.errorMessage}
+  const handleRetrySameSettings = async () => {
+    if (!user || isRetrying) return;
+    setIsRetrying(true);
+    setRetryError(null);
+    try {
+      trackAnalyticsEvent("retry_book_generation", {
+        creationMode: book.creationMode ?? "guided_ai",
+        templateId: book.templateId ?? book.theme,
+        failureStage: book.failureStage,
+      });
+      const newId = await createRetryBook(book, user.uid);
+      router.push(`/generating?id=${newId}`);
+    } catch (err) {
+      console.error("Failed to retry book generation:", err);
+      setRetryError("再試行を開始できませんでした。少し時間をおいてお試しください。");
+      setIsRetrying(false);
+    }
+  };
+
+  if (book.status === "failed") {
+    const quota = isQuotaExceeded(book);
+    return (
+      <PageTransition className="mx-auto max-w-lg px-4 py-16 text-center">
+        <Image src="/images/illustrations/generating.webp" alt="失敗" width={120} height={90} className="mx-auto rounded-xl opacity-50" />
+        <h2 className="mt-4 text-lg font-bold text-purple-900">絵本の生成に失敗しました</h2>
+        <p className="mt-2 text-sm text-violet-500">
+          {getFailureMessage(book)}
         </p>
-      ) : null}
-      <div className="mt-6 flex justify-center gap-3">
-        {isQuotaExceeded(book) ? (
-          <Link href="/pricing"><Button>プランをアップグレード</Button></Link>
+        {book.errorMessage ? (
+          <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left text-sm text-red-700">
+            {book.errorMessage}
+          </p>
+        ) : null}
+        {retryError ? (
+          <p className="mt-3 text-sm text-rose-500">{retryError}</p>
+        ) : null}
+        {quota ? (
+          <div className="mt-6 flex justify-center gap-3">
+            <Link href="/pricing"><Button>プランをアップグレード</Button></Link>
+            <Link href="/home"><Button variant="outline">本棚に戻る</Button></Link>
+          </div>
         ) : (
-          <Link href="/create/theme"><Button>もう一度試す</Button></Link>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <Button onClick={handleRetrySameSettings} disabled={isRetrying || !user} className="w-full max-w-xs">
+              {isRetrying ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+              同じ内容でもう一度つくる
+            </Button>
+            <div className="flex gap-3">
+              <Link href="/create/select-child"><Button variant="outline" disabled={isRetrying}>条件を変えてつくる</Button></Link>
+              <Link href="/home"><Button variant="ghost" className="text-violet-500" disabled={isRetrying}>本棚に戻る</Button></Link>
+            </div>
+          </div>
         )}
-        <Link href="/home"><Button variant="outline">本棚に戻る</Button></Link>
-      </div>
-    </PageTransition>
-  );
+      </PageTransition>
+    );
+  }
 
   const summary = getGeneratingSummary(book, completedPages, totalPages, pages);
   const hasLongWait = pages.some((p) => (p.imageDurationMs ?? 0) > 90_000);

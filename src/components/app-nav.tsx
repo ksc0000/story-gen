@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -70,6 +70,17 @@ export function AppNav({
           </Link>
         ))}
       </nav>
+
+      {/* Primary CTA: 新しい絵本を作る（常時表示。スマホは＋アイコンのみ、sm以上はラベル付き） */}
+      <Link href="/create/select-child" aria-label="新しい絵本を作る">
+        <Button
+          size="sm"
+          className="h-10 rounded-full bg-purple-600 px-3 text-white shadow-sm hover:bg-purple-700 sm:px-4"
+        >
+          <Plus size={18} className="sm:mr-1" />
+          <span className="hidden sm:inline">新しい絵本を作る</span>
+        </Button>
+      </Link>
 
       {/* Settings/Menu button (always visible) */}
       <button

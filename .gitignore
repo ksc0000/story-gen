@@ -69,3 +69,7 @@ test-results/
 
 # 説明書自動生成ツールの誤フォールバック出力（本来は ~/Documents/ へ出力される）
 story-gen-description/
+
+# 画像評価・スモーク出力（ローカル一時成果物）
+outputs/
+scripts/eval-output/

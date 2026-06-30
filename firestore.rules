@@ -40,10 +40,29 @@ service cloud.firestore {
       ]);
     }
 
+    // 課金・エンタイトルメント系フィールドは Admin SDK（Stripe webhook / 運用スクリプト）と
+    // 管理者のみが変更できる。オーナーが自分のドキュメントから直接これらを書き換えて
+    // プラン昇格・クォータ回避・クレジット自己付与する権限昇格を防ぐ。
+    function ownerCannotChangeEntitlements() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        "plan", "productPlan", "planOverride", "generationOverride",
+        "singleBookCredits", "singlePurchaseCredits",
+        "stripeCustomerId", "stripeSubscriptionId", "monthlyGenerationCount"
+      ]);
+    }
+
     match /users/{userId} {
       allow read: if isAdmin() || isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isAdmin() || isOwner(userId);
+      // 新規ユーザーは無料・クォータ0・エンタイトルメント未設定のみ作成可（サインアップ payload に一致）。
+      allow create: if isOwner(userId)
+        && request.resource.data.plan == "free"
+        && request.resource.data.get("monthlyGenerationCount", 0) == 0
+        && !request.resource.data.keys().hasAny([
+             "productPlan", "planOverride", "generationOverride",
+             "singleBookCredits", "singlePurchaseCredits",
+             "stripeCustomerId", "stripeSubscriptionId"
+           ]);
+      allow update: if isAdmin() || (isOwner(userId) && ownerCannotChangeEntitlements());
       allow delete: if false;
 
       match /children/{childId} {
@@ -63,6 +82,12 @@ service cloud.firestore {
         allow read: if isAdmin() || isOwner(userId);
         allow write: if false;
       }
+
+      // 保存した生成設定テンプレート（オーナーのみ読み書き）。課金・権限には影響しない。
+      match /savedTemplates/{templateId} {
+        allow read: if isAdmin() || isOwner(userId);
+        allow create, update, delete: if isOwner(userId);
+      }
     }
 
     match /books/{bookId} {
@@ -73,7 +98,7 @@ service cloud.firestore {
       allow update: if isAdmin() && onlyAdminReviewFieldsChanged();
       allow update: if isAuthenticated()
                && resource.data.userId == request.auth.uid
-               && request.resource.data.diff(resource.data).changedKeys().hasOnly(["seriesId", "updatedAt", "updatedAtMs", "public"]);
+               && request.resource.data.diff(resource.data).changedKeys().hasOnly(["seriesId", "updatedAt", "updatedAtMs", "public", "favorite"]);
       allow delete: if false;
 
       match /pages/{pageId} {

@@ -209,6 +209,30 @@ describe("buildImagePrompt", () => {
     expect(scenePart).not.toContain("banner");
     expect(scenePart).not.toContain("sign");
   });
+  it("enforces per-page camera variety and scene action fidelity (fixed-template same-framing fix)", () => {
+    const result = buildImagePrompt(
+      "The airplane lifts off, the child pressed back into the seat squeezing their eyes shut",
+      "soft_watercolor",
+      undefined,
+      undefined,
+      { pageNumber: 2, pageVisualRole: "setback_or_question" }
+    );
+    // Action fidelity: the key action/expression must be required, not optional.
+    expect(result).toContain("Action fidelity");
+    expect(result).toContain("squeezed-shut eyes must look closed");
+    // Camera variety must be required and must differ from adjacent pages.
+    expect(result).toContain("Camera & framing for THIS page (required)");
+    expect(result).toContain("visibly different from the previous and next page");
+  });
+  it("rotates the required camera framing across consecutive pages", () => {
+    const p0 = buildImagePrompt("A child at a window", "watercolor", undefined, undefined, { pageNumber: 0 });
+    const p1 = buildImagePrompt("A child at a window", "watercolor", undefined, undefined, { pageNumber: 1 });
+    const hint0 = getDefaultCompositionHint(0);
+    const hint1 = getDefaultCompositionHint(1);
+    expect(hint0).not.toBe(hint1);
+    expect(p0).toContain(`Camera & framing for THIS page (required): ${hint0}.`);
+    expect(p1).toContain(`Camera & framing for THIS page (required): ${hint1}.`);
+  });
   it("includes protagonist presence requirement for payoff and quiet_ending roles", () => {
     const payoffResult = buildImagePrompt("A child finds the star", "watercolor", undefined, undefined, {
       pageVisualRole: "payoff",
@@ -361,20 +385,20 @@ describe("buildImagePrompt", () => {
   });
   it("appends watercolor style keywords", () => {
     expect(buildImagePrompt("A birthday scene", "watercolor")).toContain("watercolor");
-    expect(buildImagePrompt("A birthday scene", "watercolor")).toContain("soft warm colors");
+    expect(buildImagePrompt("A birthday scene", "watercolor")).toContain("pigment blooms");
   });
   it("appends flat style keywords", () => {
-    expect(buildImagePrompt("A birthday scene", "flat")).toContain("flat illustration");
-    expect(buildImagePrompt("A birthday scene", "flat")).toContain("bright clean colors");
+    expect(buildImagePrompt("A birthday scene", "flat")).toContain("flat digital illustration");
+    expect(buildImagePrompt("A birthday scene", "flat")).toContain("solid-filled area of color");
   });
   it("appends crayon style keywords", () => {
-    expect(buildImagePrompt("A birthday scene", "crayon")).toContain("crayon storybook masterpiece");
+    expect(buildImagePrompt("A birthday scene", "crayon")).toContain("wax crayons");
     expect(buildImagePrompt("A birthday scene", "crayon")).toContain("waxy crayon strokes");
   });
   it("uses the style bible for style control instead of mentioning preview references", () => {
     const result = buildImagePrompt("A birthday scene", "toy_3d");
     expect(result).toContain("Illustration style:");
-    expect(result).toContain("rounded 3D toy storybook masterpiece");
+    expect(result).toContain("clay animation aesthetic");
     expect(result).not.toContain("reference image");
   });
   it("adds shared printed-surface no-text guidance for non-fixed prompts", () => {
@@ -939,7 +963,7 @@ describe("prompt length regression (P5-3j)", () => {
     },
   ];
 
-  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 8100 chars", () => {
+  it("worst-case prompt (animals + star + 3-char cast + style bible) stays under 9000 chars", () => {
     const result = buildImagePrompt(
       "A child walks with a fox and a glowing star friend through a sunlit meadow, carrying a dinosaur toy",
       "classic_picture_book",
@@ -958,10 +982,11 @@ describe("prompt length regression (P5-3j)", () => {
         compositionHint: "wide establishing shot from slightly above",
       }
     );
-    expect(result.length).toBeLessThan(8500);
+    // 9000→9350: 構図単調化・動作未描画対策（必須カメラ指示＋action fidelityルール）追加分。
+    expect(result.length).toBeLessThan(9350);
   });
 
-  it("non-animals non-star prompt (base case) stays under 6400 chars", () => {
+  it("non-animals non-star prompt (base case) stays under 6700 chars", () => {
     const result = buildImagePrompt(
       "A child plays in a sunny garden with flowers",
       "watercolor",
@@ -969,8 +994,9 @@ describe("prompt length regression (P5-3j)", () => {
       "soft watercolor picture book palette",
       { imageModelProfile: "pro_consistent", ageBand: "preschool_3_4" }
     );
-    // 閾値を 6300→6400 に小幅調整: #568(水彩descriptor/ネガティブ規則)・#545(キャラ重複ガード)・
-    // #587(構図ヒント) の正当な品質追加が累積したため。引き続きプロンプト肥大は監視する。
-    expect(result.length).toBeLessThan(6400);
+    // 閾値を 6400→6700 に調整: #633 全スタイルのstyleBible強化（スタイル識別力向上のため記述を詳細化）
+    // 6700→7050: ページ間の構図単調化・動作未描画（目を閉じる等）対策の必須カメラ指示＋action fidelityルール追加。
+    // 引き続きプロンプト肥大は監視する。
+    expect(result.length).toBeLessThan(7050);
   });
 });

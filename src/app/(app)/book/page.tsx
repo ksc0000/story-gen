@@ -11,6 +11,7 @@ import { BookViewer, buildReadingItems } from "@/components/book-viewer";
 import { CinematicViewer } from "@/components/cinematic-viewer";
 import { BookNextActions } from "@/components/book-next-actions";
 import { BookSeriesControl } from "@/components/book-series-control";
+import { BookSettingsPanel } from "@/components/book/book-settings-panel";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -58,6 +59,9 @@ function BookContent() {
   const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
   const [titleUpdateError, setTitleUpdateError] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [editingPage, setEditingPage] = useState<{ pageNumber: number; text: string } | null>(null);
+  const [isSavingPageText, setIsSavingPageText] = useState(false);
+  const [pageTextError, setPageTextError] = useState<string | null>(null);
   const [isCinematicOpen, setIsCinematicOpen] = useState(false);
   const [templateDisplayName, setTemplateDisplayName] = useState<string | undefined>();
   const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
@@ -67,9 +71,22 @@ function BookContent() {
     const templateId = book?.templateId;
     if (!templateId) return;
     getDoc(doc(db, "templates", templateId)).then((snap) => {
-      if (snap.exists()) setTemplateDisplayName((snap.data() as { name?: string }).name);
+      if (!snap.exists()) return;
+      const rawName = (snap.data() as { name?: string }).name;
+      if (!rawName) return;
+      // テンプレ名は表示用ラベル（"{childName}と …（8ページ）"）でプレースホルダや
+      // 管理用のページ数サフィックスを含む。シネマティックの主タイトルに使うため、
+      // 実際の子ども名で置換し、未置換プレースホルダと（Nページ）を取り除く。
+      const cleaned = rawName
+        .replace(/\{childName\}/g, book?.input?.childName ?? "")
+        .replace(/\{[^}]*\}/g, "")
+        .replace(/（\s*\d+\s*ページ\s*）/g, "")
+        .replace(/\(\s*\d+\s*pages?\s*\)/gi, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      setTemplateDisplayName(cleaned || undefined);
     });
-  }, [book?.templateId]);
+  }, [book?.templateId, book?.input?.childName]);
 
   useEffect(() => {
     if (!user || !bookId || isDemoMode) return;
@@ -167,6 +184,28 @@ function BookContent() {
       setTitleUpdateError(err instanceof Error ? err.message : "タイトルの更新に失敗しました。");
     } finally {
       setIsUpdatingTitle(false);
+    }
+  }
+
+  async function handleSavePageText() {
+    if (!bookId || !editingPage || isSavingPageText) return;
+    const trimmed = editingPage.text.trim();
+    if (!trimmed) {
+      setPageTextError("本文を入力してください");
+      return;
+    }
+    setIsSavingPageText(true);
+    setPageTextError(null);
+    try {
+      const updatePageText = httpsCallable(functions, "updateBookPageText");
+      await updatePageText({ bookId, pageNumber: editingPage.pageNumber, text: trimmed });
+      setEditingPage(null);
+    } catch (err) {
+      console.error("Failed to update page text:", err);
+      // Cloud Functions の HttpsError.message はユーザー向けメッセージを含む。
+      setPageTextError(err instanceof Error ? err.message : "本文の更新に失敗しました。");
+    } finally {
+      setIsSavingPageText(false);
     }
   }
 
@@ -336,6 +375,10 @@ function BookContent() {
         )}
       </div>
 
+      {isOwner && user && (book.status === "completed" || book.status === "partial_completed") && (
+        <BookSettingsPanel book={book} userId={user.uid} />
+      )}
+
       {isPartial && (
         <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50/50 p-4 sm:flex-row">
           <div className="flex items-center gap-3">
@@ -388,6 +431,12 @@ function BookContent() {
               : undefined
           }
           isRegeneratingPage={(index) => regeneratingPages.has(viewablePages[index].pageNumber)}
+          onEditPageText={
+            isOwner && !isDemoMode && (book.status === "completed" || book.status === "partial_completed")
+              ? (index, currentText) =>
+                  setEditingPage({ pageNumber: viewablePages[index].pageNumber, text: currentText })
+              : undefined
+          }
           onRegenerateCover={
             isOwner && !isDemoMode && (book.status === "completed" || book.status === "partial_completed")
               ? handleRegenerateCover
@@ -395,6 +444,50 @@ function BookContent() {
           }
           isRegeneratingCover={isRegeneratingCover}
         />
+        {/* 本文編集ダイアログ */}
+        {editingPage && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
+            onClick={() => !isSavingPageText && setEditingPage(null)}
+          >
+            <div
+              className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold text-purple-900">本文を編集</h3>
+              <p className="mt-1 text-xs text-violet-400">ページ {editingPage.pageNumber + 1}</p>
+              <textarea
+                value={editingPage.text}
+                onChange={(e) => setEditingPage({ ...editingPage, text: e.target.value })}
+                maxLength={300}
+                rows={5}
+                className="mt-3 w-full rounded-xl border border-violet-200 bg-background px-3 py-2 text-sm leading-relaxed focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                autoFocus
+              />
+              <div className="mt-1 text-right text-[11px] text-violet-300">{editingPage.text.length} / 300</div>
+              {pageTextError && (
+                <p className="mt-1 text-sm text-rose-500">{pageTextError}</p>
+              )}
+              <p className="mt-2 text-[11px] text-violet-400">
+                ※ 本文だけを変更します。挿絵はそのままです（必要なら別途「再生成」してください）。
+              </p>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  className="text-violet-400"
+                  onClick={() => setEditingPage(null)}
+                  disabled={isSavingPageText}
+                >
+                  キャンセル
+                </Button>
+                <Button onClick={handleSavePageText} disabled={isSavingPageText || !editingPage.text.trim()}>
+                  {isSavingPageText ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                  保存する
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Cinematic viewer overlay */}
         {isCinematicOpen && (
           <CinematicViewer

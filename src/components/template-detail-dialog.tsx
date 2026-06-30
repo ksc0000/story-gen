@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,13 @@ export function TemplateDetailDialog({
 }: TemplateDetailDialogProps) {
   const router = useRouter();
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  // Portal to document.body so the fixed overlay escapes any transform ancestor
+  // (e.g. PageTransition), which would otherwise mis-position the centered
+  // desktop dialog. See confirmation-dialog.tsx for the full explanation.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // A page-count variant is locked when the current plan can't generate it.
   const isPageCountLocked = (pageCount: number) =>
@@ -70,7 +78,7 @@ export function TemplateDetailDialog({
     };
   }, [isOpen]);
 
-  if (!template) return null;
+  if (!template || !mounted) return null;
 
   const previewImageUrl = template.fixedStory?.previewImageUrl || template.sampleImageUrl;
   const ageLabel = getAgeLabel(template);
@@ -90,7 +98,7 @@ export function TemplateDetailDialog({
     template.fixedStory?.pages?.length ??
     4;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
@@ -285,6 +293,7 @@ export function TemplateDetailDialog({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

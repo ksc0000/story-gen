@@ -1134,7 +1134,7 @@ export async function processBookGeneration(
       }
     }
     const userPlan = await deps.getUserPlan(bookData.userId);
-    const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan);
+    const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan, isAdminUser);
     const readingProfile = getAgeReadingProfile(mergedInput.childAge);
     const generationMode = normalizedBookData.generationMode ?? "reliable_fast";
 
@@ -1593,6 +1593,9 @@ export async function processBookGeneration(
           scenePolicy: normalizedBookData.scenePolicy,
           categoryGroupId: template.categoryGroupId,
           hasAnimalCharacters: normalizedBookData.theme === "animals",
+          protagonistIsNonHuman:
+            mergedInput.protagonistType === "companion" && Boolean(mergedInput.companionName),
+          nonHumanProtagonistName: mergedInput.companionName,
         }
       );
 
@@ -1795,6 +1798,9 @@ export async function processBookGeneration(
             imageQualityTier: normalizedBookData.imageQualityTier,
             ageBand: readingProfile.ageBand,
             categoryGroupId: template.categoryGroupId,
+            protagonistIsNonHuman:
+              mergedInput.protagonistType === "companion" && Boolean(mergedInput.companionName),
+            nonHumanProtagonistName: mergedInput.companionName,
           }
         )
       : undefined;
@@ -1815,7 +1821,10 @@ export async function processBookGeneration(
         const coverInputImageRefs = buildInputImageRefs(
           normalizedBookData.childProfileSnapshot,
           story.cast,
-          undefined // Cover includes all cast by default in prompt; refs follow logic
+          // 表紙は全キャストを対象に参照画像を集める。undefined を渡すと
+          // buildInputImageRefs のキャスト走査が全スキップされ、相棒（なかよしキャラ）が
+          // 主人公でも表紙にだけ参照画像が効かず、テキストプロンプトだけで描かれてしまう。
+          (story.cast ?? []).map((character) => character.characterId)
         );
         const coverInputImageUrls = coverInputImageRefs.map((ref) => ref.url);
 
@@ -2066,7 +2075,8 @@ function resolveEnableRecurringCharacterReference(generationMode: string): boole
 export function normalizeBookForGeneration(
   bookData: BookData,
   template: TemplateData,
-  userPlan: "free" | "premium"
+  userPlan: "free" | "premium",
+  isAdmin = false
 ): BookData {
   const creationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
   const isSinglePurchase = bookData.isSinglePurchase === true;
@@ -2079,17 +2089,32 @@ export function normalizeBookForGeneration(
 
   let normalizedPlan = requestedProductPlan;
 
-  // 2. Entitlement check (only for non-single-purchase)
-  if (!isSinglePurchase && !canUseProductPlan({ userPlan, productPlan: requestedProductPlan })) {
+  // 2. Entitlement check (only for non-single-purchase).
+  // 正規の有料ユーザー（userPlan=premium）・単品購入・管理者は本分岐に到達しない。
+  if (!isSinglePurchase && !canUseProductPlan({ userPlan, productPlan: requestedProductPlan, isAdmin })) {
     if (creationMode === "fixed_template") {
+      // 固定テンプレは free でも作れるため、無料相当に正規化して継続する。
       normalizedPlan = "free";
       console.log(
         `Paid plan normalized to free for book generation. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
       );
+    } else if (process.env.ENFORCE_AI_MODE_ENTITLEMENT === "true") {
+      // guided_ai / original_ai は有料プラン限定モード（free の allowedCreationModes は
+      // fixed_template のみ）。free へ正規化しても後段の creation-mode 互換チェックで既定の
+      // 有料プランへ戻ってしまうため、無料ユーザーの有料モード要求は明示的に拒否する。
+      // UI もこれらのモードを無料ユーザーに見せないため、ここはサーバー側の防御線。
+      // 既存の互換挙動を壊さないようフラグでgate。実課金開始（billing rollout）時に
+      // ENFORCE_AI_MODE_ENTITLEMENT=true を設定して有効化する。
+      console.error(
+        `Blocked paid-only creation mode for un-entitled user. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
+      );
+      throw new Error(
+        "このAIおまかせ作成は有料プラン限定です。プランをご確認のうえ、もう一度お試しください。"
+      );
     } else {
-      // TODO: Tighten paid-plan entitlement enforcement for guided_ai / original_ai after billing rollout.
-      console.log(
-        `Paid plan requested without entitlement, but kept for compatibility. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
+      // フラグ無効時（rollout 前）は従来どおり互換のため許可するが、監査用に記録する。
+      console.warn(
+        `Paid plan requested without entitlement, kept for compatibility (enforcement disabled). requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
       );
     }
   }
@@ -2904,7 +2929,7 @@ function generateFixedTemplateStoryWithQualityReport(
   };
 }
 
-function buildStoryFromFixedTemplate(
+export function buildStoryFromFixedTemplate(
   fixedStory: FixedStoryTemplate,
   mergedInput: BookInput,
   bookData: BookData,
@@ -2918,24 +2943,52 @@ function buildStoryFromFixedTemplate(
 
   const hasCompanion = Boolean(companionName && companionVisual);
   const companionCharacterId = "companion_character";
+  // なかよしキャラが主人公のとき、固定テンプレは「子どもが主人公」前提なので、
+  // 主人公を相棒に置き換える（全ページに相棒のみ・人間の子どもは登場させない）。
+  const isCompanionProtagonist = mergedInput.protagonistType === "companion" && hasCompanion;
+
+  // 親が入力した「伝えたいメッセージ」。年齢帯によっては最終ページの定型文が
+  // 極端に短く {parentMessage} を含まないため（特に baby_toddler）、ユーザーが
+  // 設定したメッセージが消えてしまう。これを防ぐため最終ページで必ず補う。
+  const lastPageIndex = fixedStory.pages.length - 1;
+  const userParentMessage = (mergedInput.parentMessage ?? "").trim();
 
   const pages = fixedStory.pages.map((page, index) => {
-    const text = applyTemplateReplacements(
+    let text = applyTemplateReplacements(
       page.textTemplatesByAge?.[readingProfile.ageBand]
         ?? page.textTemplatesByAge?.general_child
         ?? page.textTemplate,
       replacements
     );
+
+    // 最終ページ: テンプレートが parentMessage を想定している（いずれかの定型文に
+    // {parentMessage} を含む）のに、選ばれた年齢帯テキストに反映されていない場合は、
+    // ユーザーが入力したメッセージを末尾に補完する（年齢帯による取りこぼし防止）。
+    if (index === lastPageIndex && userParentMessage) {
+      const templateUsesParentMessage =
+        (page.textTemplate?.includes("{parentMessage}") ?? false) ||
+        Object.values(page.textTemplatesByAge ?? {}).some((t) => t?.includes("{parentMessage}"));
+      if (templateUsesParentMessage && !text.includes(userParentMessage)) {
+        text = text ? `${text} ${userParentMessage}` : userParentMessage;
+      }
+    }
+
     const baseImagePrompt = applyTemplateReplacements(page.imagePromptTemplate, replacements);
 
-    // 相棒がいる場合、1ページおき（0, 2, 4...）に登場させる（半数以上）
-    const appearingCharacterIds = ["child_protagonist"];
+    let appearingCharacterIds: string[];
     let imagePrompt = baseImagePrompt;
-    if (hasCompanion && index % 2 === 0) {
-      appearingCharacterIds.push(companionCharacterId);
-      // 固定テンプレートの Scene 記述は相棒に触れないため、相棒を能動的にシーンへ配置する指示を加える。
-      // （cast の一貫性ガイダンスだけでは「補足」扱いになり描かれにくいため、Scene レベルで明示する）
-      imagePrompt = `${baseImagePrompt} Also clearly present in this scene: ${companionName} (${companionVisual}), a friendly companion staying close beside the child and joining the moment naturally. Draw ${companionName} as a visible part of the scene, not in the background.`;
+    if (isCompanionProtagonist) {
+      // 相棒が主人公: 全ページに相棒のみ。人間の子どもは描かない。
+      appearingCharacterIds = [companionCharacterId];
+      imagePrompt = `The protagonist (main character) of this scene is ${companionName} (${companionVisual}), a non-human companion who must be the central figure. There is no human child in this story — do not draw any human child. ${baseImagePrompt}`;
+    } else {
+      // 相棒がいる場合、1ページおき（0, 2, 4...）に脇役として登場させる（半数以上）
+      appearingCharacterIds = ["child_protagonist"];
+      if (hasCompanion && index % 2 === 0) {
+        appearingCharacterIds.push(companionCharacterId);
+        // 固定テンプレートの Scene 記述は相棒に触れないため、相棒を能動的にシーンへ配置する指示を加える。
+        imagePrompt = `${baseImagePrompt} Also clearly present in this scene: ${companionName} (${companionVisual}), a friendly companion staying close beside the child and joining the moment naturally. Draw ${companionName} as a visible part of the scene, not in the background.`;
+      }
     }
 
     return {
@@ -2951,7 +3004,7 @@ function buildStoryFromFixedTemplate(
     cast.push({
       characterId: companionCharacterId,
       displayName: companionName!,
-      role: "buddy",
+      role: isCompanionProtagonist ? "protagonist" : "buddy",
       characterKind: "magical_creature",
       visualBible: companionVisual!,
       nonHuman: true,

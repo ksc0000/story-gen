@@ -152,6 +152,10 @@ function InputPageContent() {
   const childId = searchParams.get("childId") ?? "";
   const mode = (searchParams.get("mode") as CreationMode | null) ?? "guided_ai";
   const preselectedCompanionId = searchParams.get("companionId");
+  // 主人公がなかよしキャラの場合は childId が無く、protagonistType=companion で渡ってくる。
+  const protagonistType = searchParams.get("protagonistType");
+  const companionName = searchParams.get("companionName") ?? "";
+  const isCompanionProtagonist = protagonistType === "companion";
   const router = useRouter();
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
@@ -192,7 +196,7 @@ function InputPageContent() {
   const [familyMembers, setFamilyMembers] = useState("");
   const [place, setPlace] = useState("");
   const [parentMessage, setParentMessage] = useState("");
-  const [outfitMode, setOutfitMode] = useState<OutfitMode>("profile_default");
+  const [outfitMode, setOutfitMode] = useState<OutfitMode>("theme_auto");
   const [customOutfit, setCustomOutfit] = useState("");
   const [keepSignatureItem, setKeepSignatureItem] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -210,7 +214,9 @@ function InputPageContent() {
     memoryToRecreate,
     storyRequest,
   });
-  const canProceed = Boolean(childId && child && theme) && (creationMode !== "fixed_template" || missingTemplateFields.length === 0);
+  // 主人公は「子ども（childId+child）」または「なかよしキャラ（protagonistType=companion）」のいずれか。
+  const hasProtagonist = Boolean((childId && child) || isCompanionProtagonist);
+  const canProceed = Boolean(hasProtagonist && theme) && (creationMode !== "fixed_template" || missingTemplateFields.length === 0);
 
 
   useEffect(() => {
@@ -229,6 +235,9 @@ function InputPageContent() {
     params.set("productPlan", productPlan);
     params.set("outfitMode", outfitMode);
     params.set("keepSignatureItem", String(keepSignatureItem));
+    // 保存テンプレ由来のスタイルを style 画面へ引き継ぐ（プリフィル用）。
+    const selectedStyleIdParam = searchParams.get("selectedStyleId");
+    if (selectedStyleIdParam) params.set("selectedStyleId", selectedStyleIdParam);
     if (creationMode !== "fixed_template") {
       params.set("pageCount", String(pageCount));
     }
@@ -240,8 +249,9 @@ function InputPageContent() {
     if (parentMessage) params.set("parentMessage", parentMessage);
     if (customOutfit) params.set("customOutfit", customOutfit);
 
+    // 主人公種別と なかよしキャラ情報を引き継ぐ（companion主人公の判定が style 以降で必要）。
+    if (protagonistType) params.set("protagonistType", protagonistType);
     const companionId = searchParams.get("companionId");
-    const companionName = searchParams.get("companionName");
     const companionVisualDescription = searchParams.get("companionVisualDescription");
     if (companionId) params.set("companionId", companionId);
     if (companionName) params.set("companionName", companionName);
@@ -266,13 +276,15 @@ function InputPageContent() {
       <div className="mt-6 space-y-5 rounded-2xl border border-violet-100 bg-white p-5 shadow-sm">
           {/* ── 主人公 & テーマ確認 ── */}
           <div className="flex items-center gap-3 rounded-2xl bg-purple-50 px-4 py-3 text-sm">
-            <span className="text-base">👤</span>
+            <span className="text-base">{isCompanionProtagonist ? "⭐" : "👤"}</span>
             <span className="text-violet-700">
-              {childrenLoading
-                ? "主人公を確認中..."
-                : child
-                  ? `${child.nickname || child.displayName}${child.age ? `（${child.age}歳）` : ""}`
-                  : "主人公が選択されていません"}
+              {isCompanionProtagonist
+                ? `${companionName || "なかよしキャラ"}（なかよしキャラが主人公）`
+                : childrenLoading
+                  ? "主人公を確認中..."
+                  : child
+                    ? `${child.nickname || child.displayName}${child.age ? `（${child.age}歳）` : ""}`
+                    : "主人公が選択されていません"}
             </span>
             {template ? (
               <>

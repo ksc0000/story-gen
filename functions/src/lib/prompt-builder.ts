@@ -32,6 +32,13 @@ const VISUAL_STORYTELLING_RULES = [
 
 const GLOBAL_NEGATIVE_CHARACTER_PROMPT = "Negative character guardrail: do not add extra people, unrequested children, unrequested animals, ghost companions, crowds, or random background figures. Do not draw the protagonist twice in the same scene. No character duplication. No unmentioned pets.";
 
+// The single most-reported quality failure for fixed-template books: the page's
+// key action/expression (e.g. "closes their eyes", "looks down", "falls over")
+// is described in the Scene but not drawn, and every page collapses into the same
+// framing. This forces the action/expression to be the primary, unmistakable subject.
+const SCENE_ACTION_FIDELITY_RULE =
+  "Action fidelity (critical): draw the exact action, gaze direction, and facial expression named in the Scene as the clearest element — closed/squeezed-shut eyes must look closed, a downward or sideways look must point that way, and falling, reaching, pointing, or hugging must be obvious at a glance. Do not replace the described action with a generic front-facing smile.";
+
 const STORY_QUALITY_RULES = [
   "Do not generate overly thin pages.",
   "Each page should contain enough story substance for the target age.",
@@ -210,6 +217,27 @@ function getPageVisualRoleGuidance(role: PageVisualRole): string {
     default:
       return "Page visual role: action. Keep the scene dynamic, story-driven, and visually distinct from previous pages using varied camera angles.";
   }
+}
+
+/**
+ * Scene/base prompts (especially fixed-template cover/page prompts authored by
+ * hand) sometimes embed an art-medium or style phrase inline (e.g. "soft
+ * watercolor style", "3D clay", "flat illustration"). These fight the book's
+ * SELECTED styleBible and cause the cover/pages to look like a different style.
+ * Strip such inline style words so `Illustration style: <selected styleBible>`
+ * is the single source of style truth.
+ */
+export function stripInlineStyleWords(value: string): string {
+  if (!value) return value;
+  return value
+    .replace(
+      /\b(soft\s+)?(water\s?colou?r|pastel|crayon|gouache|oil[-\s]?painting|oil\s+paint|pencil\s+sketch|colou?red\s+pencil|pen[-\s]and[-\s]ink|ink\s+wash|charcoal|acrylic|claymation|clay|stop[-\s]motion|3\s?-?d(?:\s+render(?:ed)?)?|cg|cgi|anime|manga|cel[-\s]?shaded|flat\s+(?:vector\s+)?illustration|vector\s+art|pop[-\s]?art|paper\s+collage|cut[-\s]paper|storybook\s+painting)(\s+(?:art|style|illustration|painting|drawing|aesthetic|look|texture))?\b/gi,
+      ""
+    )
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([,.])/g, "$1")
+    .replace(/,\s*,/g, ",")
+    .trim();
 }
 
 function sanitizeImagePromptText(value: string): string {
@@ -805,6 +833,8 @@ export function buildCoverImagePrompt(
     imageQualityTier?: ImageQualityTier;
     ageBand?: AgeBand;
     categoryGroupId?: string;
+    protagonistIsNonHuman?: boolean;
+    nonHumanProtagonistName?: string;
   }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
@@ -813,9 +843,14 @@ export function buildCoverImagePrompt(
   const profileScenePrompt = stripStyleDirectivesFromProfilePrompt(options?.childProfileBasePrompt);
   const profileIdentityForGuidance = extractProfileIdentityForPageScene(options?.childProfileBasePrompt);
   const sanitizedBasePrompt = sanitizeSceneAgainstChildConstraints(
-    sanitizeImagePromptText(baseCoverPrompt),
+    sanitizeImagePromptText(stripInlineStyleWords(baseCoverPrompt)),
     profileScenePrompt
   );
+  // なかよしキャラが主人公の場合、テンプレ由来の「子ども」前提を打ち消し、非人間の主人公を中心に描く。
+  const npName = options?.nonHumanProtagonistName || "the companion";
+  const characterCountRule = options?.protagonistIsNonHuman
+    ? `Global character count rule: the single protagonist is ${npName}, a NON-HUMAN companion, and must be the central character. There is NO human child in this story. Do not draw any human child or human protagonist. Any mention of a "child" in the scene refers to ${npName}, the non-human companion.`
+    : "Global character count rule: there is exactly one human child protagonist: child_protagonist.";
 
   const consistency = buildCharacterConsistencyGuidance(characterBible);
   const castIds = options.cast?.map((c) => c.characterId);
@@ -870,7 +905,7 @@ export function buildCoverImagePrompt(
     castGuidance,
     modelSpecificGuidance,
     emotionGuidance,
-    "Global character count rule: there is exactly one human child protagonist: child_protagonist.",
+    characterCountRule,
     "Do not create additional human children unless storyCast explicitly includes another human_child character.",
     "Magical friends must not be drawn as human children unless characterKind is human_child.",
     "If a non-human magical creature appears, preserve its non-human silhouette.",
@@ -908,6 +943,8 @@ export function buildImagePrompt(
     categoryGroupId?: string;
     hasAnimalCharacters?: boolean;
     hasStarCharacter?: boolean;
+    protagonistIsNonHuman?: boolean;
+    nonHumanProtagonistName?: string;
   }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
@@ -928,18 +965,25 @@ export function buildImagePrompt(
   // the background and the book styleBible drives the style.
   const profileIdentityForGuidance = extractProfileIdentityForPageScene(options?.childProfileBasePrompt);
   const sanitizedBasePrompt = sanitizeSceneAgainstChildConstraints(
-    sanitizeImagePromptText(basePrompt),
+    sanitizeImagePromptText(stripInlineStyleWords(basePrompt)),
     profileScenePrompt
     ,
     scenePolicy
   );
+  // なかよしキャラ主人公のページは、テンプレ由来の「子ども」前提を打ち消す。
+  const npName = options?.nonHumanProtagonistName || "the companion";
+  const characterCountRule = options?.protagonistIsNonHuman
+    ? `Global character count rule: the single protagonist is ${npName}, a NON-HUMAN companion, and must be the central character. There is NO human child in this story. Do not draw any human child or human protagonist. Any mention of a "child" in the scene refers to ${npName}, the non-human companion.`
+    : "Global character count rule: there is exactly one human child protagonist: child_protagonist.";
   const consistency = buildCharacterConsistencyGuidance(characterBible);
 
   const compositionGuidance = [
     getPageVisualRoleGuidance(pageVisualRole),
-    `Composition variety: ${compositionHint}.`,
+    `Camera & framing for THIS page (required): ${compositionHint}.`,
+    "Keep camera distance and angle visibly different from the previous and next page; never repeat the same framing on consecutive pages.",
     "Avoid front-facing portrait composition unless the page genuinely needs it.",
     "Use a clear focal point with cinematic picture-book framing.",
+    SCENE_ACTION_FIDELITY_RULE,
   ].join(" ");
 
   const backgroundGuidance = [
@@ -1020,14 +1064,16 @@ export function buildImagePrompt(
     castGuidance,
     modelSpecificGuidance,
     emotionGuidance,
-    "Global character count rule: there is exactly one human child protagonist: child_protagonist.",
+    characterCountRule,
     "Do not create additional human children unless storyCast explicitly includes another human_child character.",
     "Magical friends must not be drawn as human children unless characterKind is human_child.",
     "If a non-human magical creature appears, preserve its non-human silhouette.",
     "Do not clone the protagonist. Do not draw the protagonist twice in the same image unless the page explicitly requires a reflection, memory, or picture-within-picture.",
     options?.appearingCharacterIds?.length
       ? `Strict character list for this page: ${options.appearingCharacterIds.join(", ")}. Draw ONLY these characters. Do not add any other people or creatures.`
-      : "Strict character list for this page: child_protagonist. Draw ONLY the protagonist. Do not add any other people or creatures.",
+      : options?.protagonistIsNonHuman
+        ? `Strict character list for this page: ${npName} (non-human companion). Draw ONLY the protagonist. Do not add any other people or creatures.`
+        : "Strict character list for this page: child_protagonist. Draw ONLY the protagonist. Do not add any other people or creatures.",
     GLOBAL_NEGATIVE_CHARACTER_PROMPT,
     `Visual storytelling rules: ${VISUAL_STORYTELLING_RULES}`,
     visualContinuityGuard,

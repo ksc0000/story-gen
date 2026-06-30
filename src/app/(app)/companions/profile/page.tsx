@@ -15,8 +15,10 @@ import {
   getSpeciesLabel,
   getPersonalityLabels,
   getAbilityLabel,
-  SIZE_OPTIONS,
-  COLOR_OPTIONS,
+  getColorLabel,
+  getColorDepthLabel,
+  getBodyTypeLabel,
+  getSizeLabel,
 } from "../companions-utils";
 
 function CompanionProfileContent() {
@@ -114,10 +116,20 @@ function CompanionProfileContent() {
   }
 
   const personalityLabels = getPersonalityLabels(companion.personality ?? []);
-  const sizeLabel = SIZE_OPTIONS.find((o) => o.value === companion.size)?.label ?? companion.size;
-  const colorLabel = COLOR_OPTIONS.find((o) => o.value === companion.colorMain)?.label ?? companion.colorMain;
+  const sizeLabel = getSizeLabel(companion.size);
+  const colorLabel = getColorLabel(companion.colorMain);
+  const colorDepthLabel = getColorDepthLabel(companion.colorDepth);
+  const bodyTypeLabel = getBodyTypeLabel(companion.bodyType);
   const speciesEmoji = getSpeciesEmoji(companion.species);
   const speciesLabel = getSpeciesLabel(companion.species);
+  const abilityLabel = getAbilityLabel(companion.specialAbility);
+  // 種族・サイズ・色などの「作成時の入力内容」をプロフィール風に整理（システム文言・HEXは出さない）
+  const profileFacts: { label: string; value: string }[] = [
+    { label: "しゅるい", value: speciesLabel },
+    { label: "おおきさ", value: sizeLabel },
+    { label: "いろ", value: [colorDepthLabel, colorLabel].filter(Boolean).join("") },
+    { label: "からだつき", value: bodyTypeLabel },
+  ].filter((f) => f.value);
 
   return (
     <PageTransition className="mx-auto max-w-lg px-4 py-8">
@@ -189,7 +201,7 @@ function CompanionProfileContent() {
       {/* 名前 */}
       <h1 className="mt-5 text-center text-3xl font-bold text-purple-900">{companion.name}</h1>
       <p className="mt-1 text-center text-sm text-violet-400">
-        {sizeLabel}の{colorLabel}{speciesLabel}
+        {[sizeLabel, `${colorDepthLabel}${colorLabel}`, speciesLabel].filter(Boolean).join("　")}
       </p>
 
       {/* 性格バッジ */}
@@ -207,11 +219,26 @@ function CompanionProfileContent() {
         </div>
       )}
 
+      {/* プロフィール（作成時の入力内容を整理して表示） */}
+      {profileFacts.length > 0 && (
+        <div className="mt-5 overflow-hidden rounded-2xl border border-violet-100 bg-white">
+          <p className="border-b border-violet-50 px-4 py-2 text-xs font-semibold text-violet-400">プロフィール</p>
+          <dl className="divide-y divide-violet-50">
+            {profileFacts.map((fact) => (
+              <div key={fact.label} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                <dt className="text-violet-400">{fact.label}</dt>
+                <dd className="font-medium text-purple-800">{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+
       {/* とくいなこと */}
-      {companion.specialAbility && (
+      {abilityLabel && abilityLabel !== "ひみつ" && (
         <div className="mt-5 rounded-2xl bg-gradient-to-br from-purple-50 to-violet-50 px-4 py-3 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-violet-400">とくいなこと</p>
-          <p className="mt-1 text-base font-medium text-purple-800">{getAbilityLabel(companion.specialAbility)}</p>
+          <p className="mt-1 text-base font-medium text-purple-800">{abilityLabel}</p>
         </div>
       )}
 

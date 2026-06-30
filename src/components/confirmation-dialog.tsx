@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertTriangle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -36,6 +37,15 @@ export function ConfirmationDialog({
   icon,
 }: ConfirmationDialogProps) {
   const [inputValue, setInputValue] = useState("");
+  // Portal target. Rendering into document.body escapes any ancestor with a
+  // `transform` (e.g. PageTransition's framer-motion translate), which would
+  // otherwise become the containing block for our `position: fixed` overlay and
+  // push the centered desktop dialog off to the side. Mobile bottom-sheet layout
+  // hid the bug because it is full-width.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Reset input when dialog opens/closes
   useEffect(() => {
@@ -58,7 +68,9 @@ export function ConfirmationDialog({
 
   const isConfirmDisabled = isLoading || (confirmPhrase ? inputValue !== confirmPhrase : false);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
@@ -154,6 +166,7 @@ export function ConfirmationDialog({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

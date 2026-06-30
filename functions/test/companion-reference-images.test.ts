@@ -42,4 +42,20 @@ describe("buildInputImageRefs companion inclusion", () => {
     const refs = buildInputImageRefs(childSnapshot, companionCast, ["child_protagonist"]);
     expect(refs.some((r) => r.characterId === "companion_character")).toBe(false);
   });
+
+  // 表紙: 相棒（なかよしキャラ）が主人公で子ども参照が無くても、全キャストIDを渡せば
+  // 相棒の参照画像が表紙に効く（プロンプトだけで描かれない）。
+  it("includes the companion reference for the cover when all cast ids are passed", () => {
+    const refs = buildInputImageRefs(undefined, companionCast, ["companion_character"]);
+    expect(
+      refs.some((r) => r.characterId === "companion_character" && r.url.includes("companion-ref"))
+    ).toBe(true);
+  });
+
+  // 回帰ガード: appearingCharacterIds=undefined だと全キャスト参照がスキップされる罠。
+  // 表紙生成はこの undefined ではなく cast の characterId 配列を渡さなければならない。
+  it("skips all cast references when appearingCharacterIds is undefined", () => {
+    const refs = buildInputImageRefs(undefined, companionCast, undefined);
+    expect(refs).toHaveLength(0);
+  });
 });

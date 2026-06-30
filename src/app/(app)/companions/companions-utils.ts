@@ -319,3 +319,33 @@ export function getAbilityLabel(ability: string | undefined): string {
   if (!ability) return "ひみつ";
   return ABILITY_OPTIONS.find((o) => o.value === ability)?.label ?? ability;
 }
+
+/**
+ * 色の日本語ラベルを返す。colorMain は HEX（例: #000000）で保存されているため
+ * value と hex の両方で照合する。見つからない場合は生の値（#000000 等）を
+ * ユーザーに見せないよう空文字を返す。
+ */
+export function getColorLabel(color: string | undefined): string {
+  if (!color) return "";
+  const normalized = color.toLowerCase();
+  return (
+    COLOR_OPTIONS.find(
+      (o) => o.value === color || o.hex.toLowerCase() === normalized
+    )?.label ?? ""
+  );
+}
+
+export function getColorDepthLabel(colorDepth: string | undefined): string {
+  if (!colorDepth) return "";
+  return COLOR_DEPTH_OPTIONS.find((o) => o.value === colorDepth)?.label ?? "";
+}
+
+export function getBodyTypeLabel(bodyType: string | undefined): string {
+  if (!bodyType) return "";
+  return BODY_TYPE_OPTIONS.find((o) => o.value === bodyType)?.label ?? "";
+}
+
+export function getSizeLabel(size: string | undefined): string {
+  if (!size) return "";
+  return SIZE_OPTIONS.find((o) => o.value === size)?.label ?? "";
+}

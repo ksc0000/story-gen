@@ -34,6 +34,10 @@ const NG_WORDS: string[] = [
 
 const MAX_NAME_LENGTH = 50;
 const MAX_TEXT_LENGTH = 200;
+// characterLook はユーザーの自由入力ではなく、アプリが生成する構造化ビジュアル記述
+// （例: なかよしキャラ主人公時の visualDescription、~250字）が入るため、自由入力より
+// 緩い上限にする。これを 200 字で弾くと、選択肢が多い相棒で生成が失敗していた。
+const MAX_VISUAL_DESCRIPTION_LENGTH = 600;
 
 export interface NGWordResult {
   safe: boolean;
@@ -70,12 +74,25 @@ export function sanitizeInput(input: BookInput): SanitizeResult {
     return { valid: false, reason: "名前が長すぎます" };
   }
 
+  // characterLook は構造化ビジュアル記述なので別枠（緩い上限）で検証する。
+  if (typeof input.characterLook === "string") {
+    if (input.characterLook.length > MAX_VISUAL_DESCRIPTION_LENGTH) {
+      return { valid: false, reason: "入力テキストが長すぎます" };
+    }
+    const ngLook = containsNGWords(input.characterLook);
+    if (!ngLook.safe) {
+      return {
+        valid: false,
+        reason: `不適切な表現が含まれています: ${ngLook.matchedWords.join(", ")}`,
+      };
+    }
+  }
+
   const fieldsToCheck = [
     input.childName,
     input.favorites,
     input.lessonToTeach,
     input.memoryToRecreate,
-    input.characterLook,
     input.signatureItem,
     input.colorMood,
     input.place,

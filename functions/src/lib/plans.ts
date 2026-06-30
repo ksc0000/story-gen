@@ -56,7 +56,8 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai"],
     generationMode: "reliable_fast",
-    monthlyBookQuota: 5,
+    // 2026-06: 5→8。上限消化(8p)でも画像原価は売上の約38%、粗利60%超。
+    monthlyBookQuota: 8,
     priceJpy: 1480,
     enabled: true,
   },
@@ -69,7 +70,8 @@ export const SERVER_PLAN_CONFIGS: Record<ProductPlan, ServerPlanConfig> = {
     characterConsistencyMode: "all_pages",
     allowedCreationModes: ["fixed_template", "guided_ai", "original_ai", "photo_story"],
     generationMode: "quality",
-    monthlyBookQuota: 10,
+    // 2026-06: 10→15。8p想定で画像原価は売上の約35%、粗利65%。
+    monthlyBookQuota: 15,
     priceJpy: 2980,
     enabled: true,
   },
