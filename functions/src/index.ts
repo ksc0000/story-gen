@@ -25,6 +25,7 @@ export { onAvatarJobCreated } from "./generate-avatar-job";
 export { generateTemplate } from "./generate-template";
 export { onCompanionImageJobCreated } from "./generate-companion-image";
 export { generateStoryPitch } from "./generate-story-pitch";
+export { analyzeChildPhoto } from "./analyze-child-photo";
 export { onBookCompletion_triggerLLMAutoReview } from "./auto-review";
 export { submitAppFeedback } from "./submit-app-feedback";
 export { updateBookTitle } from "./update-book-title";
