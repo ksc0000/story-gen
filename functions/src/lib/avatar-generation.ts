@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
-import type { AvatarRevisionRequest, ChildProfileData, IllustrationStyle, AvatarCandidate, ImageModelProfile } from "./types";
+import type { AvatarRevisionRequest, ChildProfileData, IllustrationStyle, AvatarCandidate, ImageModelProfile, LikenessStrength } from "./types";
 import { getStyleReferenceImagePath } from "./prompt-builder";
 import { ReplicateImageClient, resolveReplicateModel } from "./replicate";
 import { logGenerationEvent } from "./generation-event-logger";
@@ -196,6 +196,22 @@ export function buildReferenceImageRoles(params: {
   });
 }
 
+/**
+ * 似せ具合の指示文。写真参照がある初回生成でのみ意味を持つ。
+ * kontext_max は参照に忠実なので、絵本寄り〜本人寄りの幅をプロンプトで制御する。
+ */
+export function likenessClause(strength: LikenessStrength | undefined): string {
+  switch (strength) {
+    case "close":
+      return "Likeness preference: keep a clear resemblance to the reference photo's key features — eye shape, hairstyle and hair color, and overall facial impression — while still rendering a gentle, non-photorealistic picture-book child.";
+    case "storybook":
+      return "Likeness preference: use the reference photo only as loose inspiration; prioritize a soft, generic and idealized storybook look over a close resemblance.";
+    case "balanced":
+    default:
+      return "Likeness preference: balance a natural resemblance to the reference photo with a soft, warm picture-book style.";
+  }
+}
+
 export function buildReferenceImageInstruction(referenceImageRoles: ReferenceImageDescriptor[]): string {
   if (referenceImageRoles.length === 0) return "";
 
@@ -337,6 +353,7 @@ export async function processAvatarGeneration(params: {
     baseGenerationId?: string;
     variantStyle?: IllustrationStyle;
     usePhoto?: boolean;
+    likenessStrength?: LikenessStrength;
   };
 }): Promise<{
   batchId: string;
@@ -393,12 +410,16 @@ export async function processAvatarGeneration(params: {
     styleReferenceImageUrl,
   });
   const inputImageUrls = referenceImageRoles.map((item) => item.url);
+  // 写真参照ありのときだけ似せ具合の指示を付ける（参照が無ければ無意味）。
+  const referenceInstruction = childPhotoUrl
+    ? `${buildReferenceImageInstruction(referenceImageRoles)} ${likenessClause(request.likenessStrength)}`
+    : buildReferenceImageInstruction(referenceImageRoles);
   const prompt = buildChildCharacterPrompt(
     child,
     selectedVariant.style,
     finalCorrectionText,
     previousPrompt,
-    buildReferenceImageInstruction(referenceImageRoles)
+    referenceInstruction
   );
 
   // 写真参照ありのアバターは kontext_max（参照特化）で似顔精度を高める。
