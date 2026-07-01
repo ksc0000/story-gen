@@ -160,6 +160,43 @@ export async function analyzeChildPhotoCallable(input: {
   return result.data;
 }
 
+// ---------------------------------------------------------------------------
+// 組織（エンタープライズ）
+// ---------------------------------------------------------------------------
+
+export type OrgRole = "org_admin" | "teacher";
+
+export async function createOrganizationCallable(
+  name: string
+): Promise<{ orgId: string; inviteCode: string; role: OrgRole }> {
+  const callable = await getCallable<
+    { name: string },
+    { orgId: string; inviteCode: string; role: OrgRole }
+  >("createOrganization");
+  const result = await callable({ name });
+  return result.data;
+}
+
+export async function joinOrganizationByCodeCallable(input: {
+  code: string;
+  displayName?: string;
+}): Promise<{ orgId: string; orgName: string; role: OrgRole }> {
+  const callable = await getCallable<
+    { code: string; displayName?: string },
+    { orgId: string; orgName: string; role: OrgRole }
+  >("joinOrganizationByCode");
+  const result = await callable(input);
+  return result.data;
+}
+
+export async function rotateInviteCodeCallable(): Promise<{ inviteCode: string }> {
+  const callable = await getCallable<Record<string, never>, { inviteCode: string }>(
+    "rotateInviteCode"
+  );
+  const result = await callable({});
+  return result.data;
+}
+
 export async function bootstrapAdminCallable(): Promise<BootstrapAdminResult> {
   const callable = await getCallable<Record<string, never>, BootstrapAdminResult>(
     "bootstrapAdmin"
