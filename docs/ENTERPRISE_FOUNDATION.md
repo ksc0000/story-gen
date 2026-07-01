@@ -50,7 +50,7 @@ match /organizations/{orgId} {
 |---|---|---|
 | **E1** | 組織・メンバー・ロール・招待コード参加・組織スコープのルール | ✅ 実装 |
 | **E2** | クラス＆園児名簿。`organizations/{orgId}/classes/{classId}/students/{studentId}`。組織メンバーが直接CRUD（ルールで隔離）。`/organization` にクラス一覧＋追加、`/organization/class?orgId&classId` に名簿。 | ✅ 実装 |
-| E3 | 一括生成（クラス全員分の行事絵本を名前入りで） | 未 |
+| **E3** | 一括生成。`bulkGenerateClassBooks` callable（org_admin のみ）が名簿全員分の固定テンプレ絵本を作成。組織スポンサー(`orgId`付き)の絵本は generateBook で個人クォータ非消費。安全弁: 1回40人・組織月100冊(`organizations/{orgId}/usage/{YYYY-MM}.bulkBooks`)。組織メンバーは `orgId` 一致の books/pages を閲覧可。 | ✅ 実装 |
 | E4 | 法人請求（Stripe法人顧客・席/従量・エンタイトルメント強制） | 未 |
 
 E4 の課金方式（席課金／園児数／従量／定額）は未確定。E1〜E3 は課金非依存で構築する。
