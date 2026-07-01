@@ -250,6 +250,22 @@ function OrgHome({ orgId, role }: { orgId: string; role?: OrgRole }) {
 
       {isAdmin ? (
         <Card>
+          <CardContent className="p-0">
+            <Link
+              href={`/organization/billing?orgId=${orgId}`}
+              className="flex items-center justify-between p-4 transition hover:bg-violet-50/50"
+            >
+              <span className="flex items-center gap-2 font-semibold text-purple-900">
+                <Building2 className="size-4 text-violet-400" /> プランと請求
+              </span>
+              <ChevronRight className="size-5 text-violet-300" />
+            </Link>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {isAdmin ? (
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <KeyRound className="size-4 text-purple-500" /> 先生を招待する

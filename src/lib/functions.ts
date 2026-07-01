@@ -197,6 +197,18 @@ export async function rotateInviteCodeCallable(): Promise<{ inviteCode: string }
   return result.data;
 }
 
+export async function createOrgCheckoutSessionCallable(input: {
+  orgId: string;
+  orgPlan: "enterprise_standard" | "enterprise_pro";
+}): Promise<{ url: string | null; configured: boolean }> {
+  const callable = await getCallable<
+    { orgId: string; orgPlan: string },
+    { url: string | null; configured: boolean }
+  >("createOrgCheckoutSession");
+  const result = await callable(input);
+  return result.data;
+}
+
 export async function bulkGenerateClassBooksCallable(input: {
   orgId: string;
   classId: string;

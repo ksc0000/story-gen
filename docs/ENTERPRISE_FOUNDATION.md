@@ -51,6 +51,13 @@ match /organizations/{orgId} {
 | **E1** | 組織・メンバー・ロール・招待コード参加・組織スコープのルール | ✅ 実装 |
 | **E2** | クラス＆園児名簿。`organizations/{orgId}/classes/{classId}/students/{studentId}`。組織メンバーが直接CRUD（ルールで隔離）。`/organization` にクラス一覧＋追加、`/organization/class?orgId&classId` に名簿。 | ✅ 実装 |
 | **E3** | 一括生成。`bulkGenerateClassBooks` callable（org_admin のみ）が名簿全員分の固定テンプレ絵本を作成。組織スポンサー(`orgId`付き)の絵本は generateBook で個人クォータ非消費。安全弁: 1回40人・組織月100冊(`organizations/{orgId}/usage/{YYYY-MM}.bulkBooks`)。組織メンバーは `orgId` 一致の books/pages を閲覧可。 | ✅ 実装 |
-| E4 | 法人請求（Stripe法人顧客・席/従量・エンタイトルメント強制） | 未 |
+| **E4** | 法人請求（定額）＋プラン制上限。組織プラン `enterprise_trial/standard/pro`（`ORG_PLAN_CONFIGS`）。一括生成の上限は組織プラン駆動。`createOrgCheckoutSession`（org_admin・Stripe未設定なら `configured:false` で「準備中」）。stripeWebhook が org サブスクイベントで `organizations.plan` を更新。**実課金は Stripe 商品/価格・Webhook登録後に有効化**（現状は保留）。 | ✅ 実装（インフラ） |
 
-E4 の課金方式（席課金／園児数／従量／定額）は未確定。E1〜E3 は課金非依存で構築する。
+## 実課金を有効化する手順（E4）
+
+1. Stripe ダッシュボードで法人プランの商品/価格を作成（`enterprise_standard` / `enterprise_pro`、定額サブスク）。
+2. 環境変数を設定: `STRIPE_PRICE_ID_ENTERPRISE_STANDARD`, `STRIPE_PRICE_ID_ENTERPRISE_PRO`。
+3. Stripe Webhook を登録（`stripeWebhook` のURL、イベント: checkout.session.completed / customer.subscription.updated / customer.subscription.deleted）。
+4. `ORG_PLAN_CONFIGS` の価格・上限を確定値に更新。
+
+`STRIPE_PRICE_ID_ENTERPRISE_*` 未設定の間は `createOrgCheckoutSession` が `configured:false` を返し、UI は「準備中」を表示する（実決済は発生しない）。
