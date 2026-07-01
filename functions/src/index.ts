@@ -31,3 +31,4 @@ export { submitAppFeedback } from "./submit-app-feedback";
 export { updateBookTitle } from "./update-book-title";
 export { updateBookPageText } from "./update-page-text";
 export { generateBookPdf } from "./generate-book-pdf";
+export { createOrganization, joinOrganizationByCode, rotateInviteCode } from "./organizations";

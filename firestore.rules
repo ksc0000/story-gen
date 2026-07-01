@@ -11,6 +11,11 @@ service cloud.firestore {
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
+    // 組織（エンタープライズ）: orgId / orgRole は Cloud Functions が custom claim に付与する。
+    // 書き込みはすべて callable(admin SDK) 経由のため、ここでは所属チェック（閲覧）のみ定義する。
+    function isOrgMember(orgId) {
+      return isAuthenticated() && request.auth.token.orgId == orgId;
+    }
     function isBookOwner(bookId) {
       return isAuthenticated() &&
         get(/databases/$(database)/documents/books/$(bookId)).data.userId == request.auth.uid;
@@ -164,6 +169,18 @@ service cloud.firestore {
     match /templates/{templateId} {
       allow read: if isAuthenticated();
       allow write: if false;
+    }
+
+    // 組織（エンタープライズ）: 作成・参加・メンバー管理はすべて Cloud Functions
+    // (admin SDK) 経由。クライアントからの直接書き込みは禁止し、閲覧のみ許可する。
+    match /organizations/{orgId} {
+      allow read: if isAdmin() || isOrgMember(orgId);
+      allow write: if false;
+
+      match /members/{memberUid} {
+        allow read: if isAdmin() || isOrgMember(orgId);
+        allow write: if false;
+      }
     }
 
     match /companions/{companionId} {

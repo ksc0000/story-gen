@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { httpsCallable } from "firebase/functions";
-import { Settings, UserX, ChevronRight, LogOut, ArrowLeft } from "lucide-react";
+import { Settings, UserX, ChevronRight, LogOut, ArrowLeft, Building2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -82,6 +82,22 @@ export default function SettingsPage() {
 
         {/* Admin-only developer panel (plan override + unlimited companions) */}
         <AdminPlanPanel />
+
+        {/* 園・団体（エンタープライズ） */}
+        <Card className="border-violet-100 shadow-sm">
+          <CardContent className="p-0">
+            <Link
+              href="/organization"
+              className="flex w-full items-center justify-between p-4 transition hover:bg-violet-50/50"
+            >
+              <div className="flex items-center gap-3 text-purple-900">
+                <Building2 className="size-5 text-violet-400" />
+                <span className="font-semibold">園・団体（エンタープライズ）</span>
+              </div>
+              <ChevronRight className="size-5 text-violet-300" />
+            </Link>
+          </CardContent>
+        </Card>
 
         {/* General Actions */}
         <Card className="border-violet-100 shadow-sm">

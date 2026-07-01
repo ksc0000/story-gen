@@ -313,6 +313,26 @@ export interface CouponDoc {
   createdAtMs: number;
 }
 
+/** エンタープライズ（園・施設）のロール */
+export type OrgRole = "org_admin" | "teacher";
+
+export interface Organization {
+  id?: string;
+  name: string;
+  ownerUid: string;
+  plan: string;
+  status: "active" | "suspended";
+  /** 招待コード（org_admin のみ閲覧を想定） */
+  inviteCode?: string;
+  memberCount?: number;
+}
+
+export interface OrgMember {
+  id?: string; // = uid
+  role: OrgRole;
+  displayName: string;
+}
+
 export interface UserDoc {
   displayName: string;
   email: string;
@@ -332,6 +352,9 @@ export interface UserDoc {
     photo_story?: number;
   };
   activeChildId?: string | null;
+  /** エンタープライズ: 所属組織とロール（Cloud Functions が設定） */
+  orgId?: string;
+  orgRole?: OrgRole;
   createdAt: Timestamp;
   monthlyGenerationCount: number;
   generationOverride?: {
