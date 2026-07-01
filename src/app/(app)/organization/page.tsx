@@ -1,8 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, onSnapshot, collection, query, orderBy } from "firebase/firestore";
-import { Building2, Users, Copy, RefreshCw, Loader2, Sparkles, KeyRound } from "lucide-react";
+import Link from "next/link";
+import {
+  doc,
+  onSnapshot,
+  collection,
+  query,
+  orderBy,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import {
+  Building2,
+  Users,
+  Copy,
+  RefreshCw,
+  Loader2,
+  Sparkles,
+  KeyRound,
+  GraduationCap,
+  Plus,
+  ChevronRight,
+} from "lucide-react";
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +37,7 @@ import {
   joinOrganizationByCodeCallable,
   rotateInviteCodeCallable,
 } from "@/lib/functions";
-import type { Organization, OrgMember, OrgRole } from "@/lib/types";
+import type { Organization, OrgMember, OrgClass, OrgRole } from "@/lib/types";
 
 function roleLabel(role?: OrgRole): string {
   return role === "org_admin" ? "管理者" : role === "teacher" ? "先生" : "";
@@ -256,6 +276,8 @@ function OrgHome({ orgId, role }: { orgId: string; role?: OrgRole }) {
         </Card>
       ) : null}
 
+      <ClassesSection orgId={orgId} />
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -281,8 +303,79 @@ function OrgHome({ orgId, role }: { orgId: string; role?: OrgRole }) {
       </Card>
 
       <p className="text-center text-xs text-violet-400">
-        クラス名簿・一括生成・法人請求は今後のアップデートで提供予定です。
+        一括生成・法人請求は今後のアップデートで提供予定です。
       </p>
     </div>
+  );
+}
+
+function ClassesSection({ orgId }: { orgId: string }) {
+  const [classes, setClasses] = useState<OrgClass[]>([]);
+  const [newName, setNewName] = useState("");
+  const [adding, setAdding] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const unsub = onSnapshot(
+      query(collection(db, "organizations", orgId, "classes"), orderBy("name", "asc")),
+      (snap) => setClasses(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as OrgClass))
+    );
+    return unsub;
+  }, [orgId]);
+
+  const addClass = async () => {
+    const name = newName.trim();
+    if (!name || adding) return;
+    setAdding(true);
+    try {
+      await addDoc(collection(db, "organizations", orgId, "classes"), {
+        name,
+        studentCount: 0,
+        createdBy: user?.uid ?? null,
+        createdAt: serverTimestamp(),
+      });
+      setNewName("");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <GraduationCap className="size-4 text-purple-500" /> クラス（{classes.length}）
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {classes.map((c) => (
+          <Link
+            key={c.id}
+            href={`/organization/class?orgId=${orgId}&classId=${c.id}`}
+            className="flex items-center justify-between rounded-2xl border border-violet-100 px-4 py-3 transition hover:bg-violet-50/50"
+          >
+            <span className="text-sm font-medium text-purple-900">{c.name}</span>
+            <span className="flex items-center gap-2 text-xs text-violet-400">
+              {c.studentCount ?? 0}人
+              <ChevronRight className="size-4 text-violet-300" />
+            </span>
+          </Link>
+        ))}
+        <div className="flex items-center gap-2 pt-1">
+          <Input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="ひまわり組"
+            maxLength={40}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") addClass();
+            }}
+          />
+          <Button variant="outline" onClick={addClass} disabled={!newName.trim() || adding}>
+            {adding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
