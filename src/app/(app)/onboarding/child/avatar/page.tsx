@@ -12,7 +12,7 @@ import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { db } from "@/lib/firebase";
-import type { AvatarRevisionRequest, AvatarCandidate } from "@/lib/types";
+import type { AvatarRevisionRequest, AvatarCandidate, LikenessStrength } from "@/lib/types";
 import { useAvatarGenerationJob } from "@/lib/hooks/use-avatar-generation-job";
 import { useAvatarCandidates } from "@/lib/hooks/use-avatar-candidates";
 
@@ -50,6 +50,7 @@ function ChildAvatarPageContent() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [usePhoto, setUsePhoto] = useState(true);
+  const [likenessStrength, setLikenessStrength] = useState<LikenessStrength>("balanced");
 
   const selectedCandidate = candidates.find((candidate) => candidate.generationId === selectedCandidateId) ?? null;
   const revisionSummary = useMemo(() => buildRevisionSummary(revisionRequest), [revisionRequest]);
@@ -164,6 +165,7 @@ function ChildAvatarPageContent() {
         childId,
         revisionRequest: request,
         usePhoto: shouldUsePhoto,
+        ...(shouldUsePhoto ? { likenessStrength } : {}),
         ...(options?.useBaseGeneration && selectedCandidate?.generationId ? { baseGenerationId: selectedCandidate.generationId } : {}),
       });
       setCurrentJobId(jobId);
@@ -294,6 +296,35 @@ function ChildAvatarPageContent() {
                 </span>
               </span>
             </label>
+          ) : null}
+
+          {child.photoUrl && usePhoto ? (
+            <div className="rounded-2xl border border-purple-100 bg-white p-4">
+              <p className="text-sm font-semibold text-purple-900">似せ具合</p>
+              <p className="mt-0.5 text-xs text-violet-500">写真にどれくらい寄せるかを選べます。</p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {[
+                  { value: "storybook" as const, label: "絵本寄り", hint: "やわらかく" },
+                  { value: "balanced" as const, label: "標準", hint: "おすすめ" },
+                  { value: "close" as const, label: "本人寄り", hint: "似せる" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setLikenessStrength(opt.value)}
+                    disabled={generating}
+                    className={`rounded-xl border px-2 py-2 text-center transition ${
+                      likenessStrength === opt.value
+                        ? "border-purple-400 bg-purple-50 text-purple-700"
+                        : "border-violet-100 text-violet-500 hover:border-purple-300"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">{opt.label}</span>
+                    <span className="block text-[10px] text-violet-400">{opt.hint}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : null}
 
           {generating ? (

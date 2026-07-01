@@ -325,6 +325,9 @@ export interface CompanionImageJob {
   updatedAt: FirebaseFirestore.FieldValue;
 }
 
+/** 写真参照ありアバターの似せ具合。storybook=絵本寄り / balanced=標準 / close=本人寄り */
+export type LikenessStrength = "storybook" | "balanced" | "close";
+
 export interface ChildAvatarGenerationJob {
   userId: string;
   childId: string;
@@ -335,6 +338,8 @@ export interface ChildAvatarGenerationJob {
     variantStyle?: IllustrationStyle;
     /** お子さんの写真を本人らしさの参照画像として使うかどうか */
     usePhoto?: boolean;
+    /** 似せ具合（写真参照ありのときのみ有効。既定 balanced） */
+    likenessStrength?: LikenessStrength;
   };
   result?: {
     batchId: string;

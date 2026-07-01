@@ -8,7 +8,7 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { ChildAvatarGenerationJob, IllustrationStyle, AvatarRevisionRequest } from "@/lib/types";
+import type { ChildAvatarGenerationJob, IllustrationStyle, AvatarRevisionRequest, LikenessStrength } from "@/lib/types";
 
 export function useAvatarGenerationJob(jobId: string | null) {
   const [job, setJob] = useState<ChildAvatarGenerationJob | null>(null);
@@ -66,6 +66,7 @@ export function useAvatarGenerationJob(jobId: string | null) {
       baseGenerationId?: string;
       variantStyle?: IllustrationStyle;
       usePhoto?: boolean;
+      likenessStrength?: LikenessStrength;
     }) => {
       try {
         const sanitizedRevisionRequest = params.revisionRequest
@@ -84,6 +85,7 @@ export function useAvatarGenerationJob(jobId: string | null) {
             baseGenerationId: params.baseGenerationId || null,
             variantStyle: params.variantStyle || null,
             usePhoto: params.usePhoto ?? false,
+            likenessStrength: params.likenessStrength || null,
           },
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),

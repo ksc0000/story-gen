@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSensitiveError, selectAvatarVariant } from "../src/lib/avatar-generation";
+import { normalizeSensitiveError, selectAvatarVariant, likenessClause } from "../src/lib/avatar-generation";
 
 describe("selectAvatarVariant", () => {
   it("defaults to soft_watercolor when variantStyle is omitted", () => {
@@ -31,5 +31,22 @@ describe("normalizeSensitiveError", () => {
     expect(normalizeSensitiveError(new Error("socket ETIMEDOUT while waiting"))).toBe(
       "画像生成に時間がかかっています。生成結果が保存されている場合があります。少し待ってから候補一覧を再読み込みしてください。"
     );
+  });
+});
+
+describe("likenessClause", () => {
+  it("emphasizes resemblance for 'close'", () => {
+    const c = likenessClause("close");
+    expect(c.toLowerCase()).toContain("resemblance");
+    expect(c.toLowerCase()).toContain("non-photorealistic");
+  });
+
+  it("de-emphasizes resemblance for 'storybook'", () => {
+    expect(likenessClause("storybook").toLowerCase()).toContain("loose inspiration");
+  });
+
+  it("defaults to a balanced clause for balanced/undefined", () => {
+    expect(likenessClause("balanced").toLowerCase()).toContain("balance");
+    expect(likenessClause(undefined).toLowerCase()).toContain("balance");
   });
 });

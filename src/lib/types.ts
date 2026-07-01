@@ -437,6 +437,9 @@ export type AvatarCandidate = {
   prompt: string;
 };
 
+/** 写真参照ありアバターの似せ具合。storybook=絵本寄り / balanced=標準 / close=本人寄り */
+export type LikenessStrength = "storybook" | "balanced" | "close";
+
 export interface ChildAvatarGenerationJob {
   id?: string;
   userId: string;
@@ -447,6 +450,7 @@ export interface ChildAvatarGenerationJob {
     baseGenerationId?: string;
     variantStyle?: IllustrationStyle;
     usePhoto?: boolean;
+    likenessStrength?: LikenessStrength;
   };
   result?: {
     batchId: string;
