@@ -14,21 +14,30 @@ import {
   increment,
   serverTimestamp,
 } from "firebase/firestore";
-import { GraduationCap, Loader2, Plus, Trash2, UserRound } from "lucide-react";
+import { GraduationCap, Loader2, Plus, Trash2, UserRound, Wand2 } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { useTemplates } from "@/lib/hooks/use-templates";
+import { bulkGenerateClassBooksCallable } from "@/lib/functions";
 import type { OrgClass, OrgStudent } from "@/lib/types";
+
+function getTemplateBaseId(t: { id: string; variantOf?: string }) {
+  return t.variantOf ?? t.id.replace(/-\d+p$/, "");
+}
 
 function ClassRosterContent() {
   const params = useSearchParams();
   const orgId = params.get("orgId") ?? "";
   const classId = params.get("classId") ?? "";
   const { user } = useAuth();
+  const { profile } = useUserProfile(user?.uid);
+  const isOrgAdmin = profile?.orgRole === "org_admin";
 
   const [cls, setCls] = useState<OrgClass | null>(null);
   const [students, setStudents] = useState<OrgStudent[]>([]);
@@ -183,10 +192,115 @@ function ClassRosterContent() {
         ) : null}
       </div>
 
-      <p className="mt-6 text-center text-xs text-violet-400">
-        次のアップデートで、このクラス全員分の絵本を一括生成できるようになります。
-      </p>
+      {isOrgAdmin && students.length > 0 ? (
+        <div className="mt-6">
+          <BulkGenerateSection orgId={orgId} classId={classId} studentCount={students.length} />
+        </div>
+      ) : null}
     </PageTransition>
+  );
+}
+
+function BulkGenerateSection({
+  orgId,
+  classId,
+  studentCount,
+}: {
+  orgId: string;
+  classId: string;
+  studentCount: number;
+}) {
+  const { templates } = useTemplates();
+  const [templateId, setTemplateId] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // 固定テンプレートのみ。行事系（思い出・季節）に絞り、ベースIDで重複排除。
+  const options = (() => {
+    const seen = new Set<string>();
+    const list: { id: string; name: string }[] = [];
+    for (const t of templates) {
+      if ((t.creationMode ?? "guided_ai") !== "fixed_template") continue;
+      const cat = t.categoryGroupId ?? "";
+      if (cat !== "memories" && cat !== "seasonal-events") continue;
+      const base = getTemplateBaseId(t);
+      if (seen.has(base)) continue;
+      seen.add(base);
+      list.push({ id: t.id, name: t.name });
+    }
+    return list;
+  })();
+
+  const handleGenerate = async () => {
+    if (!templateId || busy) return;
+    if (!window.confirm(`このクラスの${studentCount}人分の絵本を一括生成します。よろしいですか？`)) return;
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    try {
+      const r = await bulkGenerateClassBooksCallable({
+        orgId,
+        classId,
+        templateId,
+        message: message.trim() || undefined,
+      });
+      setResult(
+        `${r.created}冊の生成を開始しました。作成した絵本は「絵本一覧」に順次表示されます（今月あと${r.remainingThisMonth}冊）。`
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "一括生成に失敗しました。");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="border-purple-200">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Wand2 className="size-4 text-purple-500" /> クラス全員の絵本を作る
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-xs text-violet-500">
+          行事テンプレートを選ぶと、名簿の{studentCount}人それぞれの名前で絵本を一括生成します（管理者のみ）。
+        </p>
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-violet-500">テンプレート</label>
+          <select
+            value={templateId}
+            onChange={(e) => setTemplateId(e.target.value)}
+            className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-purple-900"
+          >
+            <option value="">選択してください</option>
+            {options.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-violet-500">みんなへのメッセージ（任意・最終ページに入ります）</label>
+          <Input
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="ご卒園おめでとう！"
+            maxLength={200}
+          />
+        </div>
+        {error ? <p className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p> : null}
+        {result ? (
+          <p className="rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-700">{result}</p>
+        ) : null}
+        <Button className="w-full" onClick={handleGenerate} disabled={!templateId || busy}>
+          {busy ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Wand2 className="mr-2 size-4" />}
+          {studentCount}人分を一括生成する
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 

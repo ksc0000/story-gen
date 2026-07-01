@@ -197,6 +197,20 @@ export async function rotateInviteCodeCallable(): Promise<{ inviteCode: string }
   return result.data;
 }
 
+export async function bulkGenerateClassBooksCallable(input: {
+  orgId: string;
+  classId: string;
+  templateId: string;
+  message?: string;
+}): Promise<{ created: number; remainingThisMonth: number }> {
+  const callable = await getCallable<
+    { orgId: string; classId: string; templateId: string; message?: string },
+    { created: number; remainingThisMonth: number }
+  >("bulkGenerateClassBooks", { timeout: 60000 });
+  const result = await callable(input);
+  return result.data;
+}
+
 export async function bootstrapAdminCallable(): Promise<BootstrapAdminResult> {
   const callable = await getCallable<Record<string, never>, BootstrapAdminResult>(
     "bootstrapAdmin"

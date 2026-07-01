@@ -32,3 +32,4 @@ export { updateBookTitle } from "./update-book-title";
 export { updateBookPageText } from "./update-page-text";
 export { generateBookPdf } from "./generate-book-pdf";
 export { createOrganization, joinOrganizationByCode, rotateInviteCode } from "./organizations";
+export { bulkGenerateClassBooks } from "./bulk-generate";

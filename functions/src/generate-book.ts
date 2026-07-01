@@ -1148,10 +1148,13 @@ export async function processBookGeneration(
     });
 
     // Step 3: Check quota and credits (skip in development)
+    // エンタープライズ一括生成（組織スポンサー）の絵本は、個人の月次クォータ・クレジットを
+    // 消費しない。上限は一括生成 callable 側（1回人数・組織月次）で担保している。
+    const isOrgSponsored = Boolean(bookData.orgId);
     let quotaExceeded = false;
     let hasSingleBookCredits = false;
 
-    if (process.env.NODE_ENV !== "development") {
+    if (!isOrgSponsored && process.env.NODE_ENV !== "development") {
       const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
       quotaExceeded = !canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount, isAdmin: isAdminUser });
 
@@ -1981,8 +1984,8 @@ export async function processBookGeneration(
 
     if (bookStatus !== "failed") {
       // Consumption logic: Prefer monthly quota, then single credits.
-      if (isAdminUser) {
-        // 管理者のテスト生成は月次カウント・クレジットを一切消費しない。
+      if (isAdminUser || isOrgSponsored) {
+        // 管理者のテスト生成・組織スポンサーの一括生成は個人の月次カウント/クレジットを消費しない。
       } else if (process.env.NODE_ENV !== "development") {
         const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
         const canUseMonthly = canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });

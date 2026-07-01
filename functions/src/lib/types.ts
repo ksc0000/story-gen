@@ -376,6 +376,11 @@ export interface BookData {
   childId?: string | null;
   childProfileSnapshot?: ChildProfileSnapshot;
   characterUsage?: CharacterUsage;
+  /** エンタープライズ一括生成（E3）: 組織スポンサーの絵本。個人クォータを消費しない。 */
+  orgId?: string;
+  classId?: string;
+  studentId?: string;
+  orgSponsored?: boolean;
   title: string;
   theme: string;
   categoryGroupId?: string;
