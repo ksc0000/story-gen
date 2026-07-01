@@ -47,6 +47,42 @@ async function setOrgClaims(uid: string, orgId: string, orgRole: OrgRole): Promi
   });
 }
 
+/** custom claims から orgId / orgRole を取り除く（他の claim は保持）。 */
+async function clearOrgClaims(uid: string): Promise<void> {
+  const user = await getAuth().getUser(uid);
+  const claims = { ...(user.customClaims ?? {}) } as Record<string, unknown>;
+  delete claims.orgId;
+  delete claims.orgRole;
+  await getAuth().setCustomUserClaims(uid, claims);
+}
+
+/** メンバーを組織から切り離す（members削除・memberCount減・user解除・claim除去）。冪等。 */
+async function detachMember(
+  db: admin.firestore.Firestore,
+  orgId: string,
+  uid: string
+): Promise<void> {
+  const orgRef = db.collection("organizations").doc(orgId);
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  await db.runTransaction(async (tx) => {
+    const memberRef = orgRef.collection("members").doc(uid);
+    const m = await tx.get(memberRef);
+    if (!m.exists) return;
+    tx.delete(memberRef);
+    tx.update(orgRef, { memberCount: admin.firestore.FieldValue.increment(-1), updatedAt: now });
+    tx.set(
+      db.collection("users").doc(uid),
+      {
+        orgId: admin.firestore.FieldValue.delete(),
+        orgRole: admin.firestore.FieldValue.delete(),
+        updatedAt: now,
+      },
+      { merge: true }
+    );
+  });
+  await clearOrgClaims(uid);
+}
+
 async function assertNotInOrg(db: admin.firestore.Firestore, uid: string): Promise<void> {
   const userSnap = await db.collection("users").doc(uid).get();
   const existingOrgId = userSnap.exists ? (userSnap.data()?.orgId as string | undefined) : undefined;
@@ -210,5 +246,70 @@ export const rotateInviteCode = onCall(
     });
     logger.info("Invite code rotated", { orgId, uid });
     return { inviteCode };
+  }
+);
+
+// ---------------------------------------------------------------------------
+// leaveOrganization（本人が組織から抜ける）
+// ---------------------------------------------------------------------------
+
+export const leaveOrganization = onCall(
+  { region: "asia-northeast1", timeoutSeconds: 30 },
+  async (request): Promise<{ ok: true }> => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Authentication required");
+
+    const orgId = request.auth?.token.orgId as string | undefined;
+    if (!orgId) throw new HttpsError("failed-precondition", "組織に所属していません。");
+
+    const db = admin.firestore();
+    const orgSnap = await db.collection("organizations").doc(orgId).get();
+    if (orgSnap.exists && orgSnap.data()?.ownerUid === uid) {
+      throw new HttpsError(
+        "failed-precondition",
+        "団体の作成者は退会できません。運用を続ける場合は別の管理者へ引き継いでください。"
+      );
+    }
+    await detachMember(db, orgId, uid);
+    logger.info("Left organization", { orgId, uid });
+    return { ok: true };
+  }
+);
+
+// ---------------------------------------------------------------------------
+// removeOrgMember（管理者が他メンバーを削除）
+// ---------------------------------------------------------------------------
+
+export const removeOrgMember = onCall(
+  { region: "asia-northeast1", timeoutSeconds: 30 },
+  async (request): Promise<{ ok: true }> => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Authentication required");
+
+    const orgId = request.auth?.token.orgId as string | undefined;
+    const orgRole = request.auth?.token.orgRole as OrgRole | undefined;
+    if (!orgId || orgRole !== "org_admin") {
+      throw new HttpsError("permission-denied", "メンバーを削除できるのは管理者のみです。");
+    }
+
+    const targetUid = ((request.data as { targetUid?: string })?.targetUid ?? "").trim();
+    if (!targetUid) throw new HttpsError("invalid-argument", "対象のメンバーを指定してください。");
+    if (targetUid === uid) {
+      throw new HttpsError("failed-precondition", "自分自身は「退会」から抜けてください。");
+    }
+
+    const db = admin.firestore();
+    const orgSnap = await db.collection("organizations").doc(orgId).get();
+    if (orgSnap.exists && orgSnap.data()?.ownerUid === targetUid) {
+      throw new HttpsError("failed-precondition", "団体の作成者は削除できません。");
+    }
+    // 対象が本当にこの組織のメンバーか確認。
+    const targetUserSnap = await db.collection("users").doc(targetUid).get();
+    if (!targetUserSnap.exists || targetUserSnap.data()?.orgId !== orgId) {
+      throw new HttpsError("failed-precondition", "対象はこの団体のメンバーではありません。");
+    }
+    await detachMember(db, orgId, targetUid);
+    logger.info("Removed org member", { orgId, targetUid, by: uid });
+    return { ok: true };
   }
 );

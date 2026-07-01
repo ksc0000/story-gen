@@ -22,6 +22,8 @@ import {
   GraduationCap,
   Plus,
   ChevronRight,
+  UserMinus,
+  LogOut,
 } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -36,6 +38,8 @@ import {
   createOrganizationCallable,
   joinOrganizationByCodeCallable,
   rotateInviteCodeCallable,
+  leaveOrganizationCallable,
+  removeOrgMemberCallable,
 } from "@/lib/functions";
 import type { Organization, OrgMember, OrgClass, OrgRole } from "@/lib/types";
 
@@ -194,6 +198,7 @@ function OrgHome({ orgId, role }: { orgId: string; role?: OrgRole }) {
   const [members, setMembers] = useState<OrgMember[]>([]);
   const [copied, setCopied] = useState(false);
   const [rotating, setRotating] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     // rules は custom claim を参照するため、初回に ID トークンを更新してから購読する。
@@ -231,6 +236,29 @@ function OrgHome({ orgId, role }: { orgId: string; role?: OrgRole }) {
       await rotateInviteCodeCallable();
     } finally {
       setRotating(false);
+    }
+  };
+
+  const handleRemoveMember = async (targetUid: string, name: string) => {
+    if (!window.confirm(`${name} さんを団体から削除しますか？`)) return;
+    try {
+      await removeOrgMemberCallable(targetUid);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "削除に失敗しました。");
+    }
+  };
+
+  const handleLeave = async () => {
+    if (leaving) return;
+    if (!window.confirm("この団体から退会しますか？")) return;
+    setLeaving(true);
+    try {
+      await leaveOrganizationCallable();
+      await user?.getIdToken(true); // claim 反映
+      window.location.href = "/organization";
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "退会に失敗しました。");
+      setLeaving(false);
     }
   };
 
@@ -301,26 +329,59 @@ function OrgHome({ orgId, role }: { orgId: string; role?: OrgRole }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {members.map((m) => (
-            <div
-              key={m.id}
-              className="flex items-center justify-between rounded-2xl border border-violet-100 px-4 py-3"
-            >
-              <span className="text-sm font-medium text-purple-900">{m.displayName}</span>
-              <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold text-purple-700">
-                {roleLabel(m.role)}
-              </span>
-            </div>
-          ))}
+          {members.map((m) => {
+            const isOwnerMember = org?.ownerUid === m.id;
+            const isSelf = user?.uid === m.id;
+            const canRemove = isAdmin && !isOwnerMember && !isSelf;
+            return (
+              <div
+                key={m.id}
+                className="flex items-center justify-between rounded-2xl border border-violet-100 px-4 py-3"
+              >
+                <span className="text-sm font-medium text-purple-900">
+                  {m.displayName}
+                  {isSelf ? "（あなた）" : ""}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold text-purple-700">
+                    {roleLabel(m.role)}
+                  </span>
+                  {canRemove ? (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMember(m.id!, m.displayName)}
+                      className="text-violet-300 transition hover:text-red-500"
+                      aria-label="削除"
+                    >
+                      <UserMinus className="size-4" />
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
           {members.length === 0 ? (
             <p className="text-sm text-violet-400">読み込み中...</p>
           ) : null}
         </CardContent>
       </Card>
 
-      <p className="text-center text-xs text-violet-400">
-        一括生成・法人請求は今後のアップデートで提供予定です。
-      </p>
+      {/* 退会（作成者以外） */}
+      {org && user && org.ownerUid !== user.uid ? (
+        <Card>
+          <CardContent className="p-0">
+            <button
+              type="button"
+              onClick={handleLeave}
+              disabled={leaving}
+              className="flex w-full items-center justify-center gap-2 p-4 text-sm font-semibold text-red-500 transition hover:bg-red-50/50 disabled:opacity-50"
+            >
+              {leaving ? <Loader2 className="size-4 animate-spin" /> : <LogOut className="size-4" />}
+              この団体から退会する
+            </button>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

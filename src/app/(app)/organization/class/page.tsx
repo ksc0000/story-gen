@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   doc,
   onSnapshot,
@@ -13,8 +13,9 @@ import {
   updateDoc,
   increment,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
-import { GraduationCap, Loader2, Plus, Trash2, UserRound, Wand2 } from "lucide-react";
+import { GraduationCap, Loader2, Plus, Trash2, UserRound, Wand2, Pencil } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,7 @@ function getTemplateBaseId(t: { id: string; variantOf?: string }) {
 
 function ClassRosterContent() {
   const params = useSearchParams();
+  const router = useRouter();
   const orgId = params.get("orgId") ?? "";
   const classId = params.get("classId") ?? "";
   const { user } = useAuth();
@@ -106,6 +108,28 @@ function ClassRosterContent() {
     });
   };
 
+  const renameClass = async () => {
+    const next = window.prompt("クラス名を変更", cls?.name ?? "");
+    const trimmed = (next ?? "").trim();
+    if (!trimmed || trimmed === cls?.name) return;
+    await updateDoc(doc(db, "organizations", orgId, "classes", classId), {
+      name: trimmed.slice(0, 40),
+      updatedAt: serverTimestamp(),
+    });
+  };
+
+  const deleteClass = async () => {
+    if (!window.confirm("このクラスと名簿をすべて削除しますか？（元に戻せません）")) return;
+    // 名簿の園児をまとめて削除してからクラスを削除する。
+    const batch = writeBatch(db);
+    for (const s of students) {
+      if (s.id) batch.delete(doc(db, "organizations", orgId, "classes", classId, "students", s.id));
+    }
+    batch.delete(doc(db, "organizations", orgId, "classes", classId));
+    await batch.commit();
+    router.push(`/organization`);
+  };
+
   if (!orgId || !classId) {
     return (
       <PageTransition className="mx-auto max-w-2xl px-4 py-8 text-center text-violet-500">
@@ -123,7 +147,29 @@ function ClassRosterContent() {
       <div className="mb-6 flex items-center gap-2">
         <GraduationCap className="size-6 text-purple-600" />
         <h1 className="text-2xl font-bold text-purple-900">{cls?.name ?? "クラス"}</h1>
-        <span className="ml-auto text-sm text-violet-400">{students.length}人</span>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-sm text-violet-400">{students.length}人</span>
+          {isOrgAdmin ? (
+            <>
+              <button
+                type="button"
+                onClick={renameClass}
+                className="text-violet-300 transition hover:text-purple-600"
+                aria-label="クラス名を変更"
+              >
+                <Pencil className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={deleteClass}
+                className="text-violet-300 transition hover:text-red-500"
+                aria-label="クラスを削除"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
 
       <Card className="mb-4">

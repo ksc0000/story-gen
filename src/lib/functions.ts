@@ -197,6 +197,18 @@ export async function rotateInviteCodeCallable(): Promise<{ inviteCode: string }
   return result.data;
 }
 
+export async function leaveOrganizationCallable(): Promise<{ ok: true }> {
+  const callable = await getCallable<Record<string, never>, { ok: true }>("leaveOrganization");
+  const result = await callable({});
+  return result.data;
+}
+
+export async function removeOrgMemberCallable(targetUid: string): Promise<{ ok: true }> {
+  const callable = await getCallable<{ targetUid: string }, { ok: true }>("removeOrgMember");
+  const result = await callable({ targetUid });
+  return result.data;
+}
+
 export async function createOrgCheckoutSessionCallable(input: {
   orgId: string;
   orgPlan: "enterprise_standard" | "enterprise_pro";
