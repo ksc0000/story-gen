@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
-import type { AvatarRevisionRequest, ChildProfileData, IllustrationStyle, AvatarCandidate } from "./types";
+import type { AvatarRevisionRequest, ChildProfileData, IllustrationStyle, AvatarCandidate, ImageModelProfile } from "./types";
 import { getStyleReferenceImagePath } from "./prompt-builder";
 import { ReplicateImageClient, resolveReplicateModel } from "./replicate";
 import { logGenerationEvent } from "./generation-event-logger";
@@ -401,11 +401,16 @@ export async function processAvatarGeneration(params: {
     buildReferenceImageInstruction(referenceImageRoles)
   );
 
+  // 写真参照ありのアバターは kontext_max（参照特化）で似顔精度を高める。
+  // 写真なし（修正・ベース画像ベース）は従来どおり pro_consistent (flux-2-pro)。
+  const avatarProfile: ImageModelProfile = childPhotoUrl ? "kontext_max" : "pro_consistent";
+
   const avatarStartMs = Date.now();
   const avatarPurpose = structuredCorrectionText ? "child_avatar_revision" : "child_avatar";
   const imageBuffer = await imageClient.generateImage(prompt, {
     purpose: avatarPurpose,
     inputImageUrls,
+    imageModelProfile: avatarProfile,
   });
   const durationMs = Date.now() - avatarStartMs;
 
@@ -413,8 +418,8 @@ export async function processAvatarGeneration(params: {
     eventName: "page_image_succeeded",
     bookId: `avatar-${childId}`, // Conventional ID for avatar generations
     pageIndex: -200, // Conventional negative index for avatars
-    imageModelProfile: "pro_consistent", // Avatars always use pro_consistent
-    imageModel: resolveReplicateModel({ purpose: avatarPurpose }),
+    imageModelProfile: avatarProfile,
+    imageModel: resolveReplicateModel({ purpose: avatarPurpose, imageModelProfile: avatarProfile }),
     provider: "replicate",
     durationMs,
     attemptCount: 1,

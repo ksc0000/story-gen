@@ -114,6 +114,11 @@ export function resolveReplicateModel(params: {
   imageModelProfile?: ImageModelProfile;
 }): ReplicateModelName {
   if (params.purpose === "child_avatar" || params.purpose === "child_avatar_revision") {
+    // 写真参照ありのアバターは似顔精度重視で kontext_max（参照特化）に切り替える。
+    // 写真なし（修正・ベース画像ベース）は従来どおり flux-2-pro。
+    if (params.imageModelProfile === "kontext_max") {
+      return FLUX_KONTEXT_MAX_MODEL;
+    }
     return FLUX_PRO_MODEL;
   }
 
@@ -159,15 +164,15 @@ export function buildReplicateInput(params: {
     };
   }
 
-  if (params.model === FLUX_KONTEXT_PRO_MODEL) {
+  if (params.model === FLUX_KONTEXT_PRO_MODEL || params.model === FLUX_KONTEXT_MAX_MODEL) {
     return {
       prompt: params.prompt,
       aspect_ratio: "4:3",
       output_format: "png",
       ...(dedupedInputImageUrls.length > 0
         ? {
-            // FLUX Kontext Pro officially supports single input_image for reference.
-            // When multiple images (child + prev page) are provided, we use input_images (plural).
+            // FLUX Kontext (Pro / Max) officially supports single input_image for reference.
+            // When multiple images (child photo + style reference) are provided, we use input_images (plural).
             ...(dedupedInputImageUrls.length === 1
               ? { input_image: dedupedInputImageUrls[0] }
               : { input_images: dedupedInputImageUrls.slice(0, 2) }),

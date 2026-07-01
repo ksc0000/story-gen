@@ -62,7 +62,8 @@ describe("resolveReplicateModel", () => {
     ).toBe("black-forest-labs/flux-1.1-pro");
   });
 
-  it("keeps child avatar generation on flux-2-pro regardless of requested profile", () => {
+  it("keeps child avatar on flux-2-pro by default and for non-kontext profiles", () => {
+    expect(resolveReplicateModel({ purpose: "child_avatar" })).toBe("black-forest-labs/flux-2-pro");
     expect(
       resolveReplicateModel({
         purpose: "child_avatar",
@@ -70,6 +71,40 @@ describe("resolveReplicateModel", () => {
         imageModelProfile: "klein_base",
       })
     ).toBe("black-forest-labs/flux-2-pro");
+  });
+
+  it("routes photo-based child avatar (kontext_max) to flux-kontext-max for likeness", () => {
+    expect(
+      resolveReplicateModel({ purpose: "child_avatar", imageModelProfile: "kontext_max" })
+    ).toBe("black-forest-labs/flux-kontext-max");
+    expect(
+      resolveReplicateModel({ purpose: "child_avatar_revision", imageModelProfile: "kontext_max" })
+    ).toBe("black-forest-labs/flux-kontext-max");
+  });
+});
+
+describe("buildReplicateInput: kontext_max reference handling", () => {
+  it("uses single input_image for one reference", () => {
+    const input = buildReplicateInput({
+      model: "black-forest-labs/flux-kontext-max",
+      prompt: "a storybook child",
+      inputImageUrls: ["https://example.com/photo.jpg"],
+    }) as Record<string, unknown>;
+    expect(input.input_image).toBe("https://example.com/photo.jpg");
+    expect(input.input_images).toBeUndefined();
+  });
+
+  it("uses input_images (max 2) for multiple references", () => {
+    const input = buildReplicateInput({
+      model: "black-forest-labs/flux-kontext-max",
+      prompt: "a storybook child",
+      inputImageUrls: ["https://example.com/photo.jpg", "https://example.com/style.webp"],
+    }) as Record<string, unknown>;
+    expect(input.input_images).toEqual([
+      "https://example.com/photo.jpg",
+      "https://example.com/style.webp",
+    ]);
+    expect(input.input_image).toBeUndefined();
   });
 });
 
@@ -259,7 +294,7 @@ describe("buildReplicateInput", () => {
     });
   });
 
-  it("builds kontext max input using default format (input_images)", () => {
+  it("builds kontext max input using the kontext reference format (single input_image)", () => {
     expect(
       buildReplicateInput({
         model: "black-forest-labs/flux-kontext-max",
@@ -270,7 +305,7 @@ describe("buildReplicateInput", () => {
       prompt: "test prompt",
       aspect_ratio: "4:3",
       output_format: "png",
-      input_images: ["https://example.com/1.png"],
+      input_image: "https://example.com/1.png",
     });
   });
 
