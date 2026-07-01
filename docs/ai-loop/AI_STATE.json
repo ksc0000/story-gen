@@ -237,6 +237,7 @@
     "PR #638: feat: 写真アバターの似せ具合コントロール（Phase 3） (merged)",
     "PR #639: feat: エンタープライズ基盤 E1（組織・メンバー・招待コード） (merged)",
     "PR #640: feat: エンタープライズ E2（クラス＆園児名簿） (merged)",
+    "PR #641: feat: エンタープライズ E3（クラス一括生成） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
