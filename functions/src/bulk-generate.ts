@@ -2,9 +2,10 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { getIllustrationStyleProfile } from "./lib/illustration-styles";
+import { getOrgPlanConfig } from "./lib/plans";
 import type { OrgRole } from "./organizations";
 
-// 安全弁（E4課金が未実装のためのコスト上限）。
+// トライアルの既定上限（プラン未設定時のフォールバック）。上限は組織プランで決まる。
 export const MAX_STUDENTS_PER_RUN = 40;
 export const ORG_MONTHLY_BOOK_CAP = 100;
 
@@ -48,6 +49,13 @@ export const bulkGenerateClassBooks = onCall(
 
     const db = admin.firestore();
 
+    // 組織プランで上限を決める（定額プラン: trial/standard/pro）。
+    const orgSnap = await db.collection("organizations").doc(orgId).get();
+    if (!orgSnap.exists) throw new HttpsError("not-found", "組織が見つかりません。");
+    const planConfig = getOrgPlanConfig(orgSnap.data()?.plan as string | undefined);
+    const maxPerRun = planConfig.studentsPerRun;
+    const monthlyCap = planConfig.monthlyBooks;
+
     // テンプレート検証（固定テンプレートのみ）。
     const templateSnap = await db.collection("templates").doc(templateId).get();
     if (!templateSnap.exists) {
@@ -73,15 +81,15 @@ export const bulkGenerateClassBooks = onCall(
       .collection("classes")
       .doc(classId)
       .collection("students")
-      .limit(MAX_STUDENTS_PER_RUN + 1)
+      .limit(maxPerRun + 1)
       .get();
     if (studentsSnap.empty) {
       throw new HttpsError("failed-precondition", "このクラスに園児が登録されていません。");
     }
-    if (studentsSnap.size > MAX_STUDENTS_PER_RUN) {
+    if (studentsSnap.size > maxPerRun) {
       throw new HttpsError(
         "failed-precondition",
-        `一度に生成できるのは${MAX_STUDENTS_PER_RUN}人までです。クラスを分けてお試しください。`
+        `一度に生成できるのは${maxPerRun}人までです（現在のプラン）。クラスを分けるか、プランをアップグレードしてください。`
       );
     }
     const students = studentsSnap.docs;
@@ -91,11 +99,11 @@ export const bulkGenerateClassBooks = onCall(
     const usageRef = db.collection("organizations").doc(orgId).collection("usage").doc(yearMonth);
     const usageSnap = await usageRef.get();
     const usedThisMonth = (usageSnap.exists ? (usageSnap.data()?.bulkBooks as number | undefined) : 0) ?? 0;
-    if (usedThisMonth + students.length > ORG_MONTHLY_BOOK_CAP) {
-      const remaining = Math.max(0, ORG_MONTHLY_BOOK_CAP - usedThisMonth);
+    if (usedThisMonth + students.length > monthlyCap) {
+      const remaining = Math.max(0, monthlyCap - usedThisMonth);
       throw new HttpsError(
         "resource-exhausted",
-        `今月の一括生成の上限（${ORG_MONTHLY_BOOK_CAP}冊）に達します。今月あと${remaining}冊まで作成できます。`
+        `今月の一括生成の上限（${monthlyCap}冊）に達します。今月あと${remaining}冊まで作成できます。`
       );
     }
 
@@ -160,7 +168,7 @@ export const bulkGenerateClassBooks = onCall(
     logger.info("Bulk class books created", { orgId, classId, templateId, count: students.length, uid });
     return {
       created: students.length,
-      remainingThisMonth: Math.max(0, ORG_MONTHLY_BOOK_CAP - usedThisMonth - students.length),
+      remainingThisMonth: Math.max(0, monthlyCap - usedThisMonth - students.length),
     };
   }
 );

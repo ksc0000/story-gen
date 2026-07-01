@@ -93,3 +93,27 @@ export function getDefaultProductPlanForCreationMode(creationMode: CreationMode)
 export function getPlanConfig(productPlan: ProductPlan): ServerPlanConfig {
   return SERVER_PLAN_CONFIGS[productPlan];
 }
+
+// ─── エンタープライズ（法人）プラン: 定額 ───────────────────────────────
+export type OrgPlan = "enterprise_trial" | "enterprise_standard" | "enterprise_pro";
+
+export interface OrgPlanConfig {
+  plan: OrgPlan;
+  label: string;
+  priceJpy: number; // 0 = 無料トライアル
+  /** 一括生成: 1回あたりの人数上限 */
+  studentsPerRun: number;
+  /** 一括生成: 組織の月次冊数上限 */
+  monthlyBooks: number;
+}
+
+// 価格は暫定値。実課金有効化時に Stripe 商品と合わせて調整する。
+export const ORG_PLAN_CONFIGS: Record<OrgPlan, OrgPlanConfig> = {
+  enterprise_trial: { plan: "enterprise_trial", label: "トライアル", priceJpy: 0, studentsPerRun: 40, monthlyBooks: 100 },
+  enterprise_standard: { plan: "enterprise_standard", label: "スタンダード", priceJpy: 9800, studentsPerRun: 80, monthlyBooks: 500 },
+  enterprise_pro: { plan: "enterprise_pro", label: "プロ", priceJpy: 29800, studentsPerRun: 200, monthlyBooks: 2000 },
+};
+
+export function getOrgPlanConfig(plan: string | undefined): OrgPlanConfig {
+  return ORG_PLAN_CONFIGS[(plan as OrgPlan)] ?? ORG_PLAN_CONFIGS.enterprise_trial;
+}

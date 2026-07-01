@@ -78,6 +78,70 @@ export const createCheckoutSession = onCall(
   }
 );
 
+// ─── createOrgCheckoutSession（法人プラン: 定額サブスク） ─────────────────────
+// 価格IDは env（未設定なら実課金は無効＝UI側は「準備中」表示）。
+const ORG_STRIPE_PRICE_IDS: Record<string, string> = {
+  enterprise_standard: process.env.STRIPE_PRICE_ID_ENTERPRISE_STANDARD ?? "",
+  enterprise_pro: process.env.STRIPE_PRICE_ID_ENTERPRISE_PRO ?? "",
+};
+
+export const createOrgCheckoutSession = onCall(
+  {
+    region: "asia-northeast1",
+    secrets: [stripeSecretKey],
+  },
+  async (request): Promise<{ url: string | null; configured: boolean }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "ログインが必要です");
+    }
+    const { orgId, orgPlan } = request.data as {
+      orgId: string;
+      orgPlan: "enterprise_standard" | "enterprise_pro";
+    };
+    // 当該組織の管理者のみ。
+    if (request.auth.token.orgId !== orgId || request.auth.token.orgRole !== "org_admin") {
+      throw new HttpsError("permission-denied", "アップグレードは団体の管理者のみ実行できます。");
+    }
+
+    const priceId = ORG_STRIPE_PRICE_IDS[orgPlan];
+    if (!priceId) {
+      // Stripe 商品未設定（実課金は保留中）。UI に「準備中」を返す。
+      return { url: null, configured: false };
+    }
+
+    const email = request.auth.token.email;
+    const stripe = new Stripe(stripeSecretKey.value());
+    const db = admin.firestore();
+
+    const orgRef = db.collection("organizations").doc(orgId);
+    const orgSnap = await orgRef.get();
+    if (!orgSnap.exists) throw new HttpsError("not-found", "組織が見つかりません。");
+    let customerId: string | undefined = orgSnap.data()?.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: email ?? undefined,
+        name: (orgSnap.data()?.name as string | undefined) ?? undefined,
+        metadata: { orgId },
+      });
+      customerId = customer.id;
+      await orgRef.set({ stripeCustomerId: customerId }, { merge: true });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: "subscription",
+      payment_method_types: ["card"],
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${SITE_URL}/organization?upgraded=1`,
+      cancel_url: `${SITE_URL}/organization/billing?orgId=${orgId}`,
+      metadata: { orgId, orgPlan },
+      subscription_data: { metadata: { orgId, orgPlan } },
+    });
+
+    return { url: session.url, configured: true };
+  }
+);
+
 // ─── createSinglePurchaseCheckout ──────────────────────────────────────────────
 export const createSinglePurchaseCheckout = onCall(
   {
@@ -168,6 +232,20 @@ export const stripeWebhook = onRequest(
       case "checkout.session.completed": {
         const uid: string | undefined = obj.metadata?.uid;
 
+        // 法人（組織）プランのチェックアウト完了。
+        if (obj.metadata?.orgId && obj.metadata?.orgPlan) {
+          await db.collection("organizations").doc(obj.metadata.orgId).set(
+            {
+              plan: obj.metadata.orgPlan,
+              status: "active",
+              stripeSubscriptionId: obj.subscription ?? null,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+          break;
+        }
+
         // Handle single purchase
         if (obj.metadata?.kind === "single_purchase") {
           if (!uid) break;
@@ -214,6 +292,23 @@ export const stripeWebhook = onRequest(
       }
 
       case "customer.subscription.updated": {
+        // 法人（組織）サブスクの状態変化。
+        if (obj.metadata?.orgId) {
+          const orgRef = db.collection("organizations").doc(obj.metadata.orgId);
+          if (obj.status === "active" && obj.metadata?.orgPlan) {
+            await orgRef.set(
+              { plan: obj.metadata.orgPlan, status: "active", stripeSubscriptionId: obj.id },
+              { merge: true }
+            );
+          } else if (["canceled", "unpaid", "past_due"].includes(obj.status)) {
+            await orgRef.set(
+              { plan: "enterprise_trial", stripeSubscriptionId: null },
+              { merge: true }
+            );
+          }
+          break;
+        }
+
         const uid: string | undefined = obj.metadata?.uid;
         const productPlan: string | undefined = obj.metadata?.productPlan;
         if (!uid) break;
@@ -233,6 +328,15 @@ export const stripeWebhook = onRequest(
       }
 
       case "customer.subscription.deleted": {
+        // 法人（組織）サブスク解約 → トライアルに戻す。
+        if (obj.metadata?.orgId) {
+          await db.collection("organizations").doc(obj.metadata.orgId).set(
+            { plan: "enterprise_trial", stripeSubscriptionId: null },
+            { merge: true }
+          );
+          break;
+        }
+
         const uid: string | undefined = obj.metadata?.uid;
         if (uid) {
           await db.collection("users").doc(uid).set(
