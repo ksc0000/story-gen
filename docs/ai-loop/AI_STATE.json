@@ -235,6 +235,7 @@
     "PR #636: feat: 写真からプロフィール自動生成（Phase 1: Vision下書き） (merged)",
     "PR #637: feat: 写真アバターの似顔精度アップ（Phase 2: flux-kontext-max） (merged)",
     "PR #638: feat: 写真アバターの似せ具合コントロール（Phase 3） (merged)",
+    "PR #639: feat: エンタープライズ基盤 E1（組織・メンバー・招待コード） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
