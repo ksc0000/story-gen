@@ -181,6 +181,17 @@ service cloud.firestore {
         allow read: if isAdmin() || isOrgMember(orgId);
         allow write: if false;
       }
+
+      // クラス・園児名簿（E2）: 同じ組織のメンバーが CRUD 可能。他組織は不可視。
+      match /classes/{classId} {
+        allow read: if isAdmin() || isOrgMember(orgId);
+        allow create, update, delete: if isOrgMember(orgId);
+
+        match /students/{studentId} {
+          allow read: if isAdmin() || isOrgMember(orgId);
+          allow create, update, delete: if isOrgMember(orgId);
+        }
+      }
     }
 
     match /companions/{companionId} {

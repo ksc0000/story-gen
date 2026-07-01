@@ -333,6 +333,25 @@ export interface OrgMember {
   displayName: string;
 }
 
+/** クラス（E2）。organizations/{orgId}/classes/{classId} */
+export interface OrgClass {
+  id?: string;
+  name: string;
+  year?: string;
+  studentCount?: number;
+  createdBy?: string;
+}
+
+/** 園児名簿（E2）。organizations/{orgId}/classes/{classId}/students/{studentId} */
+export interface OrgStudent {
+  id?: string;
+  name: string;
+  age?: number | null;
+  genderExpression?: "boy" | "girl" | "neutral" | "unspecified";
+  note?: string;
+  createdBy?: string;
+}
+
 export interface UserDoc {
   displayName: string;
   email: string;

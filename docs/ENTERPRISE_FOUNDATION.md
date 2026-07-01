@@ -49,7 +49,7 @@ match /organizations/{orgId} {
 | Phase | 内容 | 状態 |
 |---|---|---|
 | **E1** | 組織・メンバー・ロール・招待コード参加・組織スコープのルール | ✅ 実装 |
-| E2 | クラス＆園児名簿（園所有の子ども）、先生の名簿管理 | 未 |
+| **E2** | クラス＆園児名簿。`organizations/{orgId}/classes/{classId}/students/{studentId}`。組織メンバーが直接CRUD（ルールで隔離）。`/organization` にクラス一覧＋追加、`/organization/class?orgId&classId` に名簿。 | ✅ 実装 |
 | E3 | 一括生成（クラス全員分の行事絵本を名前入りで） | 未 |
 | E4 | 法人請求（Stripe法人顧客・席/従量・エンタイトルメント強制） | 未 |
 
