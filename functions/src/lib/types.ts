@@ -288,6 +288,8 @@ export interface ChildProfileData {
   generationSettings: ChildGenerationSettings;
   /** ユーザーがアップロードしたお子さんの写真。アバター生成の本人らしさ参照に使う */
   photoUrl?: string;
+  /** 追加の参考写真（Phase 4）。photoUrl とあわせて複数枚を参照に使う。 */
+  photoUrls?: string[];
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;
   active: boolean;

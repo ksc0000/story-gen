@@ -29,6 +29,40 @@ describe("buildReferenceImageRoles", () => {
     });
     expect(roles).toHaveLength(1);
   });
+
+  it("includes multiple child_photo entries for primary + extra photos (Phase 4)", () => {
+    const roles = buildReferenceImageRoles({
+      childPhotoUrl: "https://example.com/primary.jpg",
+      childPhotoUrls: ["https://example.com/extra1.jpg", "https://example.com/extra2.jpg"],
+      styleReferenceImageUrl: "https://example.com/style.png",
+    });
+    const photoUrls = roles.filter((r) => r.role === "child_photo").map((r) => r.url);
+    expect(photoUrls).toEqual([
+      "https://example.com/primary.jpg",
+      "https://example.com/extra1.jpg",
+      "https://example.com/extra2.jpg",
+    ]);
+    // 先頭が主写真、その後に追加写真、最後に style。
+    expect(roles[0].url).toBe("https://example.com/primary.jpg");
+    expect(roles[roles.length - 1].role).toBe("style_reference");
+  });
+
+  it("works with only extra photos (no primary)", () => {
+    const roles = buildReferenceImageRoles({
+      childPhotoUrls: ["https://example.com/a.jpg"],
+    });
+    expect(roles).toEqual([{ role: "child_photo", url: "https://example.com/a.jpg" }]);
+  });
+});
+
+describe("buildReferenceImageInstruction with multiple child photos", () => {
+  it("notes that multiple parent photos are the same child", () => {
+    const instruction = buildReferenceImageInstruction([
+      { role: "child_photo", url: "https://example.com/1.jpg" },
+      { role: "child_photo", url: "https://example.com/2.jpg" },
+    ]);
+    expect(instruction).toMatch(/SAME child/i);
+  });
 });
 
 describe("buildReferenceImageInstruction with child_photo", () => {

@@ -154,17 +154,20 @@ export function fixedSandboxBackgroundPrompt(): string {
 
 export function buildReferenceImageRoles(params: {
   childPhotoUrl?: string;
+  /** 追加の参考写真（Phase 4）。主写真に続けて同一人物の別写真として使う。 */
+  childPhotoUrls?: string[];
   baseGenerationImageUrl?: string;
   approvedImageUrl?: string;
   styleReferenceImageUrl?: string;
 }): ReferenceImageDescriptor[] {
   const descriptors: ReferenceImageDescriptor[] = [];
 
-  if (params.childPhotoUrl) {
-    descriptors.push({
-      role: "child_photo",
-      url: params.childPhotoUrl,
-    });
+  // 主写真＋追加写真をすべて child_photo として並べる（重複は後段で除去）。
+  const photoUrls = [params.childPhotoUrl, ...(params.childPhotoUrls ?? [])].filter(
+    (u): u is string => Boolean(u)
+  );
+  for (const url of photoUrls) {
+    descriptors.push({ role: "child_photo", url });
   }
 
   if (params.baseGenerationImageUrl) {
@@ -219,6 +222,12 @@ export function buildReferenceImageInstruction(referenceImageRoles: ReferenceIma
     "Reference image usage rules:",
     "The input reference images are ordered and must be used with different roles.",
   ];
+  // 複数の「親提供の写真」がある場合は同一人物として扱うよう明示する。
+  if (referenceImageRoles.filter((d) => d.role === "child_photo").length >= 2) {
+    lines.push(
+      "Multiple parent-provided photos are of the SAME child (different angles/moments). Combine them to capture a single consistent likeness — do not blend them into different people."
+    );
+  }
 
   referenceImageRoles.forEach((descriptor, index) => {
     const imageNumber = index + 1;
@@ -402,16 +411,21 @@ export async function processAvatarGeneration(params: {
   const styleReferenceImageUrl = toPublicUrl(getStyleReferenceImagePath(selectedVariant.style));
   // 写真参照は初回生成（ベース画像なし）でのみ本人らしさのヒントとして使う。
   // 修正生成では承認済み／ベース画像を優先し、写真は混ぜない（顔がぶれるのを防ぐ）。
-  const childPhotoUrl = request.usePhoto && !baseGenerationImageUrl ? child.photoUrl : undefined;
+  const usePhotoRef = request.usePhoto && !baseGenerationImageUrl;
+  const childPhotoUrl = usePhotoRef ? child.photoUrl : undefined;
+  // Phase 4: 追加の参考写真も同一人物として渡す（似せ精度アップ）。
+  const childPhotoUrls = usePhotoRef ? (child.photoUrls ?? []) : [];
   const referenceImageRoles = buildReferenceImageRoles({
     childPhotoUrl,
+    childPhotoUrls,
     baseGenerationImageUrl,
     approvedImageUrl: child.visualProfile?.approvedImageUrl,
     styleReferenceImageUrl,
   });
   const inputImageUrls = referenceImageRoles.map((item) => item.url);
+  const hasPhotoRef = Boolean(childPhotoUrl) || childPhotoUrls.length > 0;
   // 写真参照ありのときだけ似せ具合の指示を付ける（参照が無ければ無意味）。
-  const referenceInstruction = childPhotoUrl
+  const referenceInstruction = hasPhotoRef
     ? `${buildReferenceImageInstruction(referenceImageRoles)} ${likenessClause(request.likenessStrength)}`
     : buildReferenceImageInstruction(referenceImageRoles);
   const prompt = buildChildCharacterPrompt(
@@ -424,7 +438,7 @@ export async function processAvatarGeneration(params: {
 
   // 写真参照ありのアバターは kontext_max（参照特化）で似顔精度を高める。
   // 写真なし（修正・ベース画像ベース）は従来どおり pro_consistent (flux-2-pro)。
-  const avatarProfile: ImageModelProfile = childPhotoUrl ? "kontext_max" : "pro_consistent";
+  const avatarProfile: ImageModelProfile = hasPhotoRef ? "kontext_max" : "pro_consistent";
 
   const avatarStartMs = Date.now();
   const avatarPurpose = structuredCorrectionText ? "child_avatar_revision" : "child_avatar";
