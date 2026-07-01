@@ -134,6 +134,32 @@ export async function generateStoryPitchCallable(
   return result.data;
 }
 
+// ---------------------------------------------------------------------------
+// analyzeChildPhoto（写真 → プロフィール下書き）
+// ---------------------------------------------------------------------------
+
+export type GenderExpression = "boy" | "girl" | "neutral" | "unspecified";
+
+export interface ChildProfileDraft {
+  characterLook: string;
+  outfit: string;
+  colorMood: string;
+  ageGuess: number | null;
+  genderExpression: GenderExpression;
+}
+
+export async function analyzeChildPhotoCallable(input: {
+  imageBase64: string;
+  mimeType: string;
+}): Promise<ChildProfileDraft> {
+  const callable = await getCallable<
+    { imageBase64: string; mimeType: string },
+    ChildProfileDraft
+  >("analyzeChildPhoto", { timeout: 60000 });
+  const result = await callable(input);
+  return result.data;
+}
+
 export async function bootstrapAdminCallable(): Promise<BootstrapAdminResult> {
   const callable = await getCallable<Record<string, never>, BootstrapAdminResult>(
     "bootstrapAdmin"
