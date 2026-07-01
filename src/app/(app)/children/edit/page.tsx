@@ -46,9 +46,22 @@ function ChildEditPageContent() {
         payload.photoUrl = photoUrl;
       }
 
+      // 追加の参考写真（Phase 4）: 保持URL＋新規アップロードをまとめて反映。
+      const finalExtraUrls: string[] = [...values.extraKeptUrls];
+      for (let i = 0; i < values.extraNewFiles.length; i++) {
+        const extraRef = ref(storage, `childPhotos/${user.uid}/${childId}/extra_${Date.now()}_${i}.jpg`);
+        const snap = await uploadBytes(extraRef, values.extraNewFiles[i]);
+        finalExtraUrls.push(await getDownloadURL(snap.ref));
+      }
+      const prevExtras = child.photoUrls ?? [];
+      const extrasChanged =
+        finalExtraUrls.length !== prevExtras.length ||
+        finalExtraUrls.some((u, i) => u !== prevExtras[i]);
+      (payload as { photoUrls?: string[] }).photoUrls = finalExtraUrls;
+
       const needsAvatarRefresh = hasAvatarAffectingChanges(child, payload);
       await updateDoc(doc(db, "users", user.uid, "children", childId), payload);
-      if (needsAvatarRefresh || values.photoFile) {
+      if (needsAvatarRefresh || values.photoFile || extrasChanged) {
         const regenerate = window.confirm("この内容でキャラクター画像を生成しなおしますか？");
         if (regenerate) {
           const jobId = await startJob({

@@ -33,6 +33,17 @@ export default function ChildOnboardingPage() {
       });
       await updateDoc(doc(db, "users", user.uid), { activeChildId: childRef.id });
 
+      // 追加の参考写真（Phase 4）をアップロード。
+      const extraUrls: string[] = [...values.extraKeptUrls];
+      for (let i = 0; i < values.extraNewFiles.length; i++) {
+        const extraRef = ref(storage, `childPhotos/${user.uid}/${childRef.id}/extra_${Date.now()}_${i}.jpg`);
+        const snap = await uploadBytes(extraRef, values.extraNewFiles[i]);
+        extraUrls.push(await getDownloadURL(snap.ref));
+      }
+      if (extraUrls.length > 0) {
+        await updateDoc(childRef, { photoUrls: extraUrls });
+      }
+
       if (values.photoFile) {
         const storageRef = ref(storage, `childPhotos/${user.uid}/${childRef.id}/original.jpg`);
         const snapshot = await uploadBytes(storageRef, values.photoFile);

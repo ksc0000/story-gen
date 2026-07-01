@@ -466,6 +466,8 @@ export interface ChildProfileDoc {
   visualProfile: ChildVisualProfile;
   generationSettings: ChildGenerationSettings;
   photoUrl?: string;
+  /** 追加の参考写真（似せ精度アップ・Phase 4）。主写真 photoUrl とあわせてアバター生成に使う。 */
+  photoUrls?: string[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
   active: boolean;

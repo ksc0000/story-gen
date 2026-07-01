@@ -6,6 +6,7 @@ import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PhotoUploadInput } from "@/components/photo-upload-input";
+import { ExtraPhotosInput } from "@/components/extra-photos-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { analyzeChildPhotoCallable } from "@/lib/functions";
@@ -32,6 +33,9 @@ type ChildProfileFormValues = {
   defaultPageCount: PageCount;
   photoUrl?: string;
   photoFile: File | null;
+  /** 追加の参考写真（Phase 4）: 既存の保持URL＋新規ファイル。 */
+  extraKeptUrls: string[];
+  extraNewFiles: File[];
 };
 
 interface ChildProfileFormProps {
@@ -60,6 +64,8 @@ const defaultValues: ChildProfileFormValues = {
   defaultStyle: "soft_watercolor",
   defaultPageCount: 8,
   photoFile: null,
+  extraKeptUrls: [],
+  extraNewFiles: [],
 };
 
 export function ChildProfileForm({ initialChild, submitLabel, saving = false, onSubmit }: ChildProfileFormProps) {
@@ -83,6 +89,7 @@ export function ChildProfileForm({ initialChild, submitLabel, saving = false, on
     defaultStyle: initialChild?.generationSettings?.defaultStyle ?? "soft_watercolor",
     defaultPageCount: initialChild?.generationSettings?.defaultPageCount ?? 8,
     photoUrl: initialChild?.photoUrl,
+    extraKeptUrls: initialChild?.photoUrls ?? [],
   }), [initialChild]);
 
   const [values, setValues] = useState(initialValues);
@@ -241,6 +248,27 @@ export function ChildProfileForm({ initialChild, submitLabel, saving = false, on
               {autofillMsg ? (
                 <p className="rounded-xl bg-violet-50 px-3 py-2 text-xs text-violet-600">{autofillMsg}</p>
               ) : null}
+            </div>
+          ) : null}
+
+          {values.photoFile || values.photoUrl ? (
+            <div className="border-t border-violet-100 pt-3">
+              <p className="text-sm font-semibold text-purple-900">参考写真を追加（任意）</p>
+              <p className="mb-2 mt-0.5 text-xs text-violet-400">
+                別角度の写真を足すと、キャラクターの似せ具合が上がりやすくなります（最大2枚）。
+              </p>
+              <ExtraPhotosInput
+                keptUrls={values.extraKeptUrls}
+                newFiles={values.extraNewFiles}
+                max={2}
+                onChange={({ keptUrls, newFiles }) =>
+                  setValues((current) => ({
+                    ...current,
+                    extraKeptUrls: keptUrls,
+                    extraNewFiles: newFiles,
+                  }))
+                }
+              />
             </div>
           ) : null}
         </CardContent>
