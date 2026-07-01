@@ -54,6 +54,8 @@ function BookContent() {
   const [coverRegenerationError, setCoverRegenerationError] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
+  const [giftMessage, setGiftMessage] = useState<string | null>(null);
+  const [giftSaved, setGiftSaved] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
@@ -157,6 +159,36 @@ function BookContent() {
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
     });
+  }
+
+  async function handleSaveGiftMessage() {
+    if (!bookId || !isOwner) return;
+    const value = (giftMessage ?? "").trim().slice(0, 200);
+    try {
+      await updateDoc(doc(db, "books", bookId), { giftMessage: value, updatedAt: serverTimestamp() });
+      setGiftSaved(true);
+      setTimeout(() => setGiftSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save gift message:", err);
+    }
+  }
+
+  async function handleShareGift() {
+    const url = `${window.location.origin}/share?id=${bookId}`;
+    const shareData = {
+      title: book?.title ? `${book.title}｜Ehoriaの絵本` : "Ehoriaの絵本",
+      text: "世界にひとつだけの絵本をお届けします。",
+      url,
+    };
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // キャンセル時などはコピーにフォールバック。
+      }
+    }
+    handleCopyLink();
   }
 
   async function handleRegenerateAll() {
@@ -371,6 +403,44 @@ function BookContent() {
               </Button>
             )}
             {user && <BookSeriesControl bookId={bookId} userId={user.uid} seriesId={book.seriesId} />}
+          </div>
+        )}
+
+        {isOwner && !isDemoMode && book.public && (
+          <div className="mt-3 rounded-2xl border border-violet-100 bg-violet-50/40 p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold text-purple-900">
+              🎁 ギフトとして贈る
+            </p>
+            <p className="mt-1 text-xs text-violet-500">
+              贈る相手へのひとことを添えて、リンクを送りましょう。相手はログイン不要で絵本を開けます。
+            </p>
+            <textarea
+              value={giftMessage ?? book.giftMessage ?? ""}
+              onChange={(e) => setGiftMessage(e.target.value)}
+              placeholder="○○ちゃんへ おたんじょうび おめでとう！ — ぱぱ・まま より"
+              maxLength={200}
+              rows={2}
+              className="mt-3 w-full resize-none rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-200"
+            />
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveGiftMessage}
+                className="rounded-full border-purple-200 text-purple-700"
+              >
+                {giftSaved ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4 text-emerald-500" /> 保存しました
+                  </>
+                ) : (
+                  "メッセージを保存"
+                )}
+              </Button>
+              <Button size="sm" onClick={handleShareGift} className="rounded-full px-4">
+                <Share2 className="mr-2 h-4 w-4" /> ギフトを贈る
+              </Button>
+            </div>
           </div>
         )}
       </div>

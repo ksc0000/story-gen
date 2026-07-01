@@ -713,6 +713,8 @@ export interface BookDoc {
   createdAt: Timestamp;
   expiresAt: Timestamp | null;
   public?: boolean;
+  /** ギフト共有: 贈り主から受け取る人への短いメッセージ（共有ページに表示）。 */
+  giftMessage?: string;
   /** 本棚でのお気に入り（ピン留め）。オーナーが切り替える。 */
   favorite?: boolean;
   seriesId?: string;

@@ -50,6 +50,14 @@ function ShareBookContent() {
 
   return (
     <PageTransition className="mx-auto max-w-4xl px-4 py-8">
+      {book.giftMessage ? (
+        <div className="mx-auto mb-6 max-w-xl rounded-3xl border border-pink-100 bg-gradient-to-b from-pink-50 to-violet-50 p-6 text-center shadow-sm">
+          <p className="text-sm font-semibold text-pink-500">🎁 あなたへ、絵本の贈り物です</p>
+          <p className="mt-3 whitespace-pre-wrap text-base leading-relaxed text-purple-900">
+            {book.giftMessage}
+          </p>
+        </div>
+      ) : null}
       <h1 className="text-center text-2xl font-bold text-purple-900">{book.title}</h1>
 
       <div className="mt-6">
