@@ -12,6 +12,7 @@ import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
+import { useToast } from "@/components/ui/toast";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { useCompanions } from "../use-companions-hook";
 import {
@@ -64,6 +65,7 @@ function CreateCompanionContent() {
   const { profile } = useUserProfile(user?.uid);
   const { isAdmin } = useAdminClaim();
   const { companions, addCompanion, loading: companionsLoading } = useCompanions(user?.uid);
+  const toast = useToast();
 
   const [step, setStep] = useState<Step>("species");
   const [species, setSpecies] = useState<CompanionSpecies | "">("");
@@ -186,7 +188,7 @@ function CreateCompanionContent() {
       }
     } catch (err) {
       console.error(err);
-      alert("保存に失敗しました");
+      toast.error("保存に失敗しました");
       setIsSubmitting(false);
     }
   };

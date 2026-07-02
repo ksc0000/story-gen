@@ -34,6 +34,8 @@ import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { useConfirm } from "@/components/ui/use-confirm";
+import { useToast } from "@/components/ui/toast";
 import {
   createOrganizationCallable,
   joinOrganizationByCodeCallable,
@@ -194,6 +196,8 @@ function NoOrgView({ displayName }: { displayName?: string }) {
 
 function OrgHome({ orgId, role }: { orgId: string; role?: OrgRole }) {
   const { user } = useAuth();
+  const confirm = useConfirm();
+  const toast = useToast();
   const [org, setOrg] = useState<Organization | null>(null);
   const [members, setMembers] = useState<OrgMember[]>([]);
   const [copied, setCopied] = useState(false);
@@ -240,24 +244,41 @@ function OrgHome({ orgId, role }: { orgId: string; role?: OrgRole }) {
   };
 
   const handleRemoveMember = async (targetUid: string, name: string) => {
-    if (!window.confirm(`${name} さんを団体から削除しますか？`)) return;
+    if (
+      !(await confirm({
+        title: "メンバーを削除",
+        description: `${name} さんを団体から削除しますか？`,
+        confirmLabel: "削除する",
+        variant: "destructive",
+      }))
+    )
+      return;
     try {
       await removeOrgMemberCallable(targetUid);
+      toast.success(`${name} さんを削除しました`);
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : "削除に失敗しました。");
+      toast.error(e instanceof Error ? e.message : "削除に失敗しました。");
     }
   };
 
   const handleLeave = async () => {
     if (leaving) return;
-    if (!window.confirm("この団体から退会しますか？")) return;
+    if (
+      !(await confirm({
+        title: "団体から退会",
+        description: "この団体から退会しますか？",
+        confirmLabel: "退会する",
+        variant: "destructive",
+      }))
+    )
+      return;
     setLeaving(true);
     try {
       await leaveOrganizationCallable();
       await user?.getIdToken(true); // claim 反映
       window.location.href = "/organization";
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : "退会に失敗しました。");
+      toast.error(e instanceof Error ? e.message : "退会に失敗しました。");
       setLeaving(false);
     }
   };

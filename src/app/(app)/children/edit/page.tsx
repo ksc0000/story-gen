@@ -11,6 +11,7 @@ import { ChildProfileForm, type ChildProfileFormValues } from "@/components/chil
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { db, storage } from "@/lib/firebase";
 import { buildChildProfilePayload } from "@/lib/child-profile";
 import type { ChildProfileDoc } from "@/lib/types";
@@ -26,6 +27,7 @@ function ChildEditPageContent() {
   const [saved, setSaved] = useState(false);
   const child = useMemo(() => children.find((item) => item.id === childId) ?? null, [childId, children]);
   const { startJob } = useAvatarGenerationJob(null);
+  const confirm = useConfirm();
 
   useEffect(() => {
     if (!loading && !childId) {
@@ -62,7 +64,12 @@ function ChildEditPageContent() {
       const needsAvatarRefresh = hasAvatarAffectingChanges(child, payload);
       await updateDoc(doc(db, "users", user.uid, "children", childId), payload);
       if (needsAvatarRefresh || values.photoFile || extrasChanged) {
-        const regenerate = window.confirm("この内容でキャラクター画像を生成しなおしますか？");
+        const regenerate = await confirm({
+          title: "キャラクター画像を再生成",
+          description: "この内容でキャラクター画像を生成しなおしますか？",
+          confirmLabel: "生成しなおす",
+          cancelLabel: "そのまま保存",
+        });
         if (regenerate) {
           const jobId = await startJob({
             userId: user.uid,

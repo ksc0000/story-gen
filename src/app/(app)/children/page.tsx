@@ -10,6 +10,7 @@ import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { useToast } from "@/components/ui/toast";
 import { childProfileToSummary } from "@/lib/child-profile";
 import { PLAN_CONFIGS } from "@/lib/plans";
 import { useState } from "react";
@@ -19,6 +20,7 @@ import { functions } from "@/lib/firebase";
 
 export default function ChildrenPage() {
   const { user } = useAuth();
+  const toast = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [childToDelete, setChildToDelete] = useState<{ id: string; name: string } | null>(null);
   const { profile, loading: loadingProfile } = useUserProfile(user?.uid);
@@ -43,7 +45,7 @@ export default function ChildrenPage() {
       setChildToDelete(null);
     } catch (err) {
       console.error("Failed to delete child profile:", err);
-      alert("削除に失敗しました。もう一度お試しください。");
+      toast.error("削除に失敗しました。もう一度お試しください。");
     } finally {
       setDeletingId(null);
     }
