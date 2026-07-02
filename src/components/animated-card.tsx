@@ -12,6 +12,15 @@ interface AnimatedCardProps {
 }
 
 export function AnimatedCard({ children, className, onClick, enable3D = true }: AnimatedCardProps) {
+  // タッチ端末では hover 演出を全て無効化する。iOS Safari は mouseenter で
+  // DOM が変化する要素（glare 挿入等）への1タップ目を hover 扱いにして
+  // クリックを発火させないため、有効のままだとタップが2回必要になる。
+  const [canHover] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  );
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
 
@@ -39,10 +48,10 @@ export function AnimatedCard({ children, className, onClick, enable3D = true }: 
 
   return (
     <motion.div
-      onMouseMove={onMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={onMouseLeave}
-      whileHover={cardHover}
+      onMouseMove={canHover ? onMouseMove : undefined}
+      onMouseEnter={canHover ? () => setIsHovered(true) : undefined}
+      onMouseLeave={canHover ? onMouseLeave : undefined}
+      whileHover={canHover ? cardHover : undefined}
       whileTap={cardTap}
       style={{
         perspective: 1000,
@@ -53,7 +62,7 @@ export function AnimatedCard({ children, className, onClick, enable3D = true }: 
       onClick={onClick}
     >
       {/* Glare effect */}
-      {enable3D && isHovered && (
+      {canHover && enable3D && isHovered && (
         <motion.div
           className="pointer-events-none absolute inset-0 z-10"
           style={{

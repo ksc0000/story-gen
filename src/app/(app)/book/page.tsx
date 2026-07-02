@@ -353,7 +353,7 @@ function BookContent() {
                   setIsEditingTitle(true);
                   setTitleUpdateError(null);
                 }}
-                className="rounded-full p-1 text-violet-400 opacity-0 transition hover:bg-purple-50 hover:text-purple-600 group-hover:opacity-100"
+                className="rounded-full p-1 text-violet-400 transition hover:bg-purple-50 hover:text-purple-600 [@media(hover:hover)]:opacity-0 group-hover:opacity-100"
                 title="タイトルを編集"
               >
                 <Pencil className="h-4 w-4" />

@@ -1,6 +1,12 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  // hover: 系をホバー対応デバイス（マウス等）に限定する。
+  // タッチ端末で「1タップ目=hover、2タップ目=click」になる iOS Safari の
+  // ダブルタップ問題を防ぐ（本棚カード等）。
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
