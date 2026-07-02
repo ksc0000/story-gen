@@ -16,6 +16,7 @@ import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { useToast } from "@/components/ui/toast";
 import { db, functions } from "@/lib/firebase";
 import { isDemoMode } from "@/lib/demo";
 import { trackAnalyticsEvent } from "@/lib/analytics";
@@ -27,6 +28,7 @@ function BookContent() {
   const bookId = searchParams.get("id") ?? "";
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
+  const toast = useToast();
   const { book, pages, loading } = useGenerationProgress(bookId);
   const [feedback, setFeedback] = useState<{
     rating: "great" | "okay" | "redo";
@@ -288,7 +290,7 @@ function BookContent() {
       await generatePdf({ bookId });
     } catch (err) {
       console.error("Failed to generate PDF:", err);
-      window.alert("PDFの作成に失敗しました。しばらく時間をおいて再度お試しください。");
+      toast.error("PDFの作成に失敗しました。しばらく時間をおいて再度お試しください。");
     } finally {
       setIsGeneratingPdf(false);
     }

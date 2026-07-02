@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
+import { EnterpriseGate } from "@/components/enterprise-gate";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { createOrgCheckoutSessionCallable } from "@/lib/functions";
@@ -168,14 +169,16 @@ function BillingContent() {
 
 export default function OrgBillingPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="grid min-h-[50vh] place-items-center text-violet-400">
-          <Loader2 className="size-6 animate-spin" />
-        </div>
-      }
-    >
-      <BillingContent />
-    </Suspense>
+    <EnterpriseGate>
+      <Suspense
+        fallback={
+          <div className="grid min-h-[50vh] place-items-center text-violet-400">
+            <Loader2 className="size-6 animate-spin" />
+          </div>
+        }
+      >
+        <BillingContent />
+      </Suspense>
+    </EnterpriseGate>
   );
 }

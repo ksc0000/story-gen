@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
+import { useConfirm } from "@/components/ui/use-confirm";
 import { ILLUSTRATION_STYLE_PROFILES } from "@/lib/illustration-styles";
 import {
   testImageModelsCallable,
@@ -103,6 +104,7 @@ function sortResults(results: TestImageModelsResult["results"]) {
 export default function AdminImageModelTestsPage() {
   const { user, loading } = useAuth();
   const { checkingAdmin, isAdmin } = useAdminClaim();
+  const confirm = useConfirm();
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
   const [purpose, setPurpose] = useState<ImagePurpose>("book_page");
   const [inputImageUrlsText, setInputImageUrlsText] = useState("");
@@ -143,9 +145,11 @@ export default function AdminImageModelTestsPage() {
       styleIds.push(p.id);
     }
     if (
-      !window.confirm(
-        `${styleIds.length} スタイルのプレビューを gpt-image-2(high) で1件ずつ再生成します。数分かかり、画像生成コストが発生します。続けますか？`
-      )
+      !(await confirm({
+        title: "スタイルプレビューを再生成",
+        description: `${styleIds.length} スタイルのプレビューを gpt-image-2(high) で1件ずつ再生成します。数分かかり、画像生成コストが発生します。続けますか？`,
+        confirmLabel: "再生成する",
+      }))
     ) {
       return;
     }

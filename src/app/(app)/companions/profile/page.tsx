@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageTransition } from "@/components/page-transition";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useConfirm } from "@/components/ui/use-confirm";
+import { useToast } from "@/components/ui/toast";
 import { useCompanions } from "../use-companions-hook";
 import {
   getSpeciesEmoji,
@@ -28,6 +30,8 @@ function CompanionProfileContent() {
   const { user } = useAuth();
   const { companions, loading, error, deleteCompanion } = useCompanions(user?.uid);
   const [deleting, setDeleting] = useState(false);
+  const confirm = useConfirm();
+  const toast = useToast();
 
   const companion = companions.find((c) => c.id === id);
 
@@ -37,14 +41,22 @@ function CompanionProfileContent() {
   const hasFailed = genStatus === "failed";
 
   const handleDelete = async () => {
-    if (!window.confirm(`「${companion?.name}」を削除しますか？`)) return;
+    if (
+      !(await confirm({
+        title: "なかよしキャラを削除",
+        description: `「${companion?.name}」を削除しますか？`,
+        confirmLabel: "削除する",
+        variant: "destructive",
+      }))
+    )
+      return;
     setDeleting(true);
     try {
       await deleteCompanion(id);
       router.replace("/companions");
     } catch (err) {
       console.error(err);
-      alert("削除に失敗しました");
+      toast.error("削除に失敗しました");
       setDeleting(false);
     }
   };
@@ -70,7 +82,7 @@ function CompanionProfileContent() {
       await batch.commit();
     } catch (err) {
       console.error(err);
-      alert("画像生成を開始できませんでした");
+      toast.error("画像生成を開始できませんでした");
     }
   };
 

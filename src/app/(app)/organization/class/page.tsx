@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   doc,
   onSnapshot,
@@ -13,17 +13,21 @@ import {
   updateDoc,
   increment,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
-import { GraduationCap, Loader2, Plus, Trash2, UserRound, Wand2 } from "lucide-react";
+import { GraduationCap, Loader2, Plus, Trash2, UserRound, Wand2, Pencil } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
+import { EnterpriseGate } from "@/components/enterprise-gate";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useTemplates } from "@/lib/hooks/use-templates";
+import { useConfirm } from "@/components/ui/use-confirm";
+import { useToast } from "@/components/ui/toast";
 import { bulkGenerateClassBooksCallable } from "@/lib/functions";
 import type { OrgClass, OrgStudent } from "@/lib/types";
 
@@ -33,11 +37,14 @@ function getTemplateBaseId(t: { id: string; variantOf?: string }) {
 
 function ClassRosterContent() {
   const params = useSearchParams();
+  const router = useRouter();
   const orgId = params.get("orgId") ?? "";
   const classId = params.get("classId") ?? "";
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
   const isOrgAdmin = profile?.orgRole === "org_admin";
+  const confirm = useConfirm();
+  const toast = useToast();
 
   const [cls, setCls] = useState<OrgClass | null>(null);
   const [students, setStudents] = useState<OrgStudent[]>([]);
@@ -46,6 +53,9 @@ function ClassRosterContent() {
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [adding, setAdding] = useState(false);
+
+  const [renaming, setRenaming] = useState(false);
+  const [nameEdit, setNameEdit] = useState("");
 
   useEffect(() => {
     if (!orgId || !classId) return;
@@ -96,14 +106,63 @@ function ClassRosterContent() {
     }
   };
 
-  const removeStudent = async (studentId?: string) => {
+  const removeStudent = async (studentId?: string, studentName?: string) => {
     if (!studentId) return;
-    if (!window.confirm("この園児を名簿から削除しますか？")) return;
+    if (
+      !(await confirm({
+        title: "園児を削除",
+        description: `${studentName ?? "この園児"}さんを名簿から削除しますか？`,
+        confirmLabel: "削除する",
+        variant: "destructive",
+      }))
+    )
+      return;
     await deleteDoc(doc(db, "organizations", orgId, "classes", classId, "students", studentId));
     await updateDoc(doc(db, "organizations", orgId, "classes", classId), {
       studentCount: increment(-1),
       updatedAt: serverTimestamp(),
     });
+    toast.success("園児を削除しました");
+  };
+
+  const startRename = () => {
+    setNameEdit(cls?.name ?? "");
+    setRenaming(true);
+  };
+
+  const saveRename = async () => {
+    const trimmed = nameEdit.trim();
+    if (!trimmed || trimmed === cls?.name) {
+      setRenaming(false);
+      return;
+    }
+    await updateDoc(doc(db, "organizations", orgId, "classes", classId), {
+      name: trimmed.slice(0, 40),
+      updatedAt: serverTimestamp(),
+    });
+    setRenaming(false);
+    toast.success("クラス名を変更しました");
+  };
+
+  const deleteClass = async () => {
+    if (
+      !(await confirm({
+        title: "クラスを削除",
+        description: "このクラスと名簿をすべて削除しますか？この操作は元に戻せません。",
+        confirmLabel: "削除する",
+        variant: "destructive",
+      }))
+    )
+      return;
+    // 名簿の園児をまとめて削除してからクラスを削除する。
+    const batch = writeBatch(db);
+    for (const s of students) {
+      if (s.id) batch.delete(doc(db, "organizations", orgId, "classes", classId, "students", s.id));
+    }
+    batch.delete(doc(db, "organizations", orgId, "classes", classId));
+    await batch.commit();
+    toast.success("クラスを削除しました");
+    router.push(`/organization`);
   };
 
   if (!orgId || !classId) {
@@ -121,9 +180,46 @@ function ClassRosterContent() {
     <PageTransition className="mx-auto max-w-2xl px-4 py-6">
       <BackButton className="mb-3" />
       <div className="mb-6 flex items-center gap-2">
-        <GraduationCap className="size-6 text-purple-600" />
-        <h1 className="text-2xl font-bold text-purple-900">{cls?.name ?? "クラス"}</h1>
-        <span className="ml-auto text-sm text-violet-400">{students.length}人</span>
+        <GraduationCap className="size-6 shrink-0 text-purple-600" />
+        {renaming ? (
+          <Input
+            value={nameEdit}
+            onChange={(e) => setNameEdit(e.target.value)}
+            maxLength={40}
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveRename();
+              if (e.key === "Escape") setRenaming(false);
+            }}
+            onBlur={saveRename}
+            className="h-9 max-w-xs text-lg font-bold"
+          />
+        ) : (
+          <h1 className="text-2xl font-bold text-purple-900">{cls?.name ?? "クラス"}</h1>
+        )}
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-sm text-violet-400">{students.length}人</span>
+          {isOrgAdmin && !renaming ? (
+            <>
+              <button
+                type="button"
+                onClick={startRename}
+                className="text-violet-300 transition hover:text-purple-600"
+                aria-label="クラス名を変更"
+              >
+                <Pencil className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={deleteClass}
+                className="text-violet-300 transition hover:text-red-500"
+                aria-label="クラスを削除"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
 
       <Card className="mb-4">
@@ -177,7 +273,7 @@ function ClassRosterContent() {
             </div>
             <button
               type="button"
-              onClick={() => removeStudent(s.id)}
+              onClick={() => removeStudent(s.id, s.name)}
               className="text-violet-300 transition hover:text-red-500"
               aria-label="削除"
             >
@@ -211,6 +307,7 @@ function BulkGenerateSection({
   studentCount: number;
 }) {
   const { templates } = useTemplates();
+  const confirm = useConfirm();
   const [templateId, setTemplateId] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -235,7 +332,14 @@ function BulkGenerateSection({
 
   const handleGenerate = async () => {
     if (!templateId || busy) return;
-    if (!window.confirm(`このクラスの${studentCount}人分の絵本を一括生成します。よろしいですか？`)) return;
+    if (
+      !(await confirm({
+        title: "絵本を一括生成",
+        description: `このクラスの${studentCount}人分の絵本を一括生成します。よろしいですか？`,
+        confirmLabel: "生成する",
+      }))
+    )
+      return;
     setBusy(true);
     setError(null);
     setResult(null);
@@ -306,14 +410,16 @@ function BulkGenerateSection({
 
 export default function ClassRosterPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="grid min-h-[50vh] place-items-center text-violet-400">
-          <Loader2 className="size-6 animate-spin" />
-        </div>
-      }
-    >
-      <ClassRosterContent />
-    </Suspense>
+    <EnterpriseGate>
+      <Suspense
+        fallback={
+          <div className="grid min-h-[50vh] place-items-center text-violet-400">
+            <Loader2 className="size-6 animate-spin" />
+          </div>
+        }
+      >
+        <ClassRosterContent />
+      </Suspense>
+    </EnterpriseGate>
   );
 }

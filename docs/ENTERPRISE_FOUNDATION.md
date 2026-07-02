@@ -61,3 +61,8 @@ match /organizations/{orgId} {
 4. `ORG_PLAN_CONFIGS` の価格・上限を確定値に更新。
 
 `STRIPE_PRICE_ID_ENTERPRISE_*` 未設定の間は `createOrgCheckoutSession` が `configured:false` を返し、UI は「準備中」を表示する（実決済は発生しない）。
+
+## 運用（ops）
+
+- `leaveOrganization`（本人が退会・作成者は不可）／`removeOrgMember({targetUid})`（管理者が削除・作成者/自分は不可）。detachMember が members削除・memberCount減・users解除・custom claim除去を実施。退会/削除後はクライアントで `getIdToken(true)`。
+- クラスの名称変更・削除は組織メンバーのクライアント書込（ルールで許可）。削除時は名簿の園児をバッチ削除してからクラスを削除。UI は管理者に限定表示。

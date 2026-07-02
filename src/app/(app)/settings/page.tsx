@@ -12,6 +12,7 @@ import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { AdminPlanPanel } from "@/components/settings/admin-plan-panel";
 import { functions } from "@/lib/firebase";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { ENTERPRISE_OPEN } from "@/lib/enterprise";
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth();
@@ -83,7 +84,7 @@ export default function SettingsPage() {
         {/* Admin-only developer panel (plan override + unlimited companions) */}
         <AdminPlanPanel />
 
-        {/* 園・団体（エンタープライズ） */}
+        {/* 団体契約（エンタープライズ）。一般公開まで「準備中」バッジを表示（enterprise.ts 参照） */}
         <Card className="border-violet-100 shadow-sm">
           <CardContent className="p-0">
             <Link
@@ -92,7 +93,12 @@ export default function SettingsPage() {
             >
               <div className="flex items-center gap-3 text-purple-900">
                 <Building2 className="size-5 text-violet-400" />
-                <span className="font-semibold">園・団体（エンタープライズ）</span>
+                <span className="font-semibold">団体契約</span>
+                {!ENTERPRISE_OPEN ? (
+                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-500">
+                    準備中
+                  </span>
+                ) : null}
               </div>
               <ChevronRight className="size-5 text-violet-300" />
             </Link>

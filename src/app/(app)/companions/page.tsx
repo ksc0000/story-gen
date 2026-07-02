@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useConfirm } from "@/components/ui/use-confirm";
+import { useToast } from "@/components/ui/toast";
 import { useCompanions } from "./use-companions-hook";
 import {
   getSpeciesEmoji,
@@ -23,15 +25,26 @@ export default function CompanionsPage() {
   const { user } = useAuth();
   const { companions, loading, error, deleteCompanion } = useCompanions(user?.uid);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const confirm = useConfirm();
+  const toast = useToast();
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("本当にこのなかよしキャラを削除しますか？")) return;
+    if (
+      !(await confirm({
+        title: "なかよしキャラを削除",
+        description: "本当にこのなかよしキャラを削除しますか？",
+        confirmLabel: "削除する",
+        variant: "destructive",
+      }))
+    )
+      return;
     setDeletingId(id);
     try {
       await deleteCompanion(id);
+      toast.success("なかよしキャラを削除しました");
     } catch (err) {
       console.error(err);
-      alert("削除に失敗しました");
+      toast.error("削除に失敗しました");
     } finally {
       setDeletingId(null);
     }

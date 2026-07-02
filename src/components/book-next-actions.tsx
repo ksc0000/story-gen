@@ -5,6 +5,7 @@ import { Share2, Sparkles, FileText, Download, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import type { BookDoc } from "@/lib/types";
 
@@ -26,8 +27,9 @@ export function BookNextActions({
   onGeneratePdf,
   isGeneratingPdf,
 }: BookNextActionsProps) {
+  const toast = useToast();
   const handleComingSoon = () => {
-    window.alert("近日公開予定です");
+    toast.info("近日公開予定です");
   };
 
   const isPaidPlan =
