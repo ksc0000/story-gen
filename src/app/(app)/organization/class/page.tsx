@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
+import { EnterpriseGate } from "@/components/enterprise-gate";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useTemplates } from "@/lib/hooks/use-templates";
@@ -409,14 +410,16 @@ function BulkGenerateSection({
 
 export default function ClassRosterPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="grid min-h-[50vh] place-items-center text-violet-400">
-          <Loader2 className="size-6 animate-spin" />
-        </div>
-      }
-    >
-      <ClassRosterContent />
-    </Suspense>
+    <EnterpriseGate>
+      <Suspense
+        fallback={
+          <div className="grid min-h-[50vh] place-items-center text-violet-400">
+            <Loader2 className="size-6 animate-spin" />
+          </div>
+        }
+      >
+        <ClassRosterContent />
+      </Suspense>
+    </EnterpriseGate>
   );
 }

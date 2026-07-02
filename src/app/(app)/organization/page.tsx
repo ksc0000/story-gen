@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
+import { EnterpriseGate } from "@/components/enterprise-gate";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useConfirm } from "@/components/ui/use-confirm";
@@ -50,6 +51,14 @@ function roleLabel(role?: OrgRole): string {
 }
 
 export default function OrganizationPage() {
+  return (
+    <EnterpriseGate>
+      <OrganizationPageContent />
+    </EnterpriseGate>
+  );
+}
+
+function OrganizationPageContent() {
   const { user } = useAuth();
   const { profile, loading } = useUserProfile(user?.uid);
 
@@ -66,7 +75,7 @@ export default function OrganizationPage() {
       <BackButton className="mb-3" />
       <div className="mb-6 flex items-center gap-2">
         <Building2 className="size-6 text-purple-600" />
-        <h1 className="text-2xl font-bold text-purple-900">園・団体（エンタープライズ）</h1>
+        <h1 className="text-2xl font-bold text-purple-900">団体契約</h1>
       </div>
       {profile?.orgId ? (
         <OrgHome orgId={profile.orgId} role={profile.orgRole} />
