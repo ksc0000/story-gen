@@ -43,7 +43,9 @@ export function BookCard({ book, onToggleFavorite }: BookCardProps) {
                 "absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition",
                 book.favorite
                   ? "bg-amber-400/90 text-white"
-                  : "bg-white/70 text-violet-400 opacity-0 hover:bg-white group-hover:opacity-100"
+                  : // タッチ端末では常時表示（hover が無いと出せないため）。
+                    // hover 対応デバイスのみ「ホバーで出現」にする。
+                    "bg-white/70 text-violet-400 [@media(hover:hover)]:opacity-0 hover:bg-white group-hover:opacity-100"
               )}
             >
               <Star className={cn("h-4 w-4", book.favorite && "fill-current")} />
