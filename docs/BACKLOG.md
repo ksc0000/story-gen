@@ -7,11 +7,18 @@
 
 ## 製本（オンデマンド印刷）— 方針調査済み・実装前に業者決定
 - 方針: 生成した絵本から**印刷用データを作成 → オンデマンド印刷業者にAPI発注 → ユーザーへ配送**。PDFダウンロードは提供しない（物理本の価値を保つ）。
-- 推奨業者: **Gelato**
-  - 子ども向け書籍/フォトブックの製品ライン、RESTful API（Order Flow・Webhook）、**日本国内で現地生産**（平均5〜6日配送）、無在庫ドロップシップ。
-  - 参考: https://www.gelato.com/products/childrens-books , https://www.gelato.com/order-flow , https://www.gelato.com/print-on-demand/japan
-- 代替: Lulu / Prodigi / Peecho（API可だが日本は海外拠点で日数・送料増）、国内高品質の TOLOT/Photoback/しまうまプリント（公開APIなし→手動/サイト誘導）。
-- 実装前に決めること:
-  1. 業者（Gelato で自動化 or 国内サービスへ誘導）
-  2. Gelato の場合、アカウント/APIキーの取得（ユーザー側）＋技術検証（サンプル1冊をAPI発注できるか）
-- 実装イメージ（Gelato採用時）: 絵本完成 → サーバで印刷用PDF/画像（表紙+本文・断ち落とし込み）生成 → Gelato API 発注（住所・仕様）→ Webhookでステータス反映 → 既存 Stripe で決済。
+- 状態: **比較検討のみ（業者未決定）**。実装は業者決定後。
+- 選択肢（品質/自動化/国産/コスト）:
+  - **A. プレミアムPOD（API自動化・海外拠点）**
+    - Prodigi … レイフラット/ハードカバー・光沢/マット、API、無在庫、世界配送。Gelatoより上質寄り。日本は海外拠点で日数/送料増。
+    - Blurb … 20年の実績、児童書/写真集、ラックス紙、API。プレミアム定番。
+  - **B. 日本の高品質フォトブック（国産・自社工場・公開APIなし）**
+    - マイブック（アスカネット）… 最高クラス品質、1冊から。/ 富士フイルム フォトブック … 画質・信頼。/ Photoback … 上質マット・デザイン性。→ 自動化しづらい（専用エディタ/サイト誘導）。
+  - **C. 国産×法人連携（OEM/受託）＝リッチ路線の本命**
+    - アスカネット PPS（プロフェッショナル・パブリッシング・サービス）… フォトブックOEM/受託。自社サービスに組込可。要商談・契約。
+    - 印刷/製本会社と直接契約（少部数書籍・上製本）… 最高の作り込み。ロット/入稿仕様/運用の手間。
+  - **D. Gelato** … 国内生産・低コスト・API自動化。品質は「良い」レンジ。
+- 指針: 自動化＋上質→Prodigi/Blurb ／ 国産最高品質→アスカネット等OEM（商談要） ／ コスト優先→Gelato。
+- 参考: Prodigi https://www.prodigi.com/products/photo-books/layflat-photo-book/ , Blurb https://www.blurb.com/ , マイブック https://www.mybook.co.jp/ , アスカネットPPS https://www.asukanet.co.jp/contents/product/pps.html , 富士フイルム https://f-photobook.jp/ , Photoback https://www.photoback.jp/ , Gelato https://www.gelato.com/order-flow
+- 実装前に決めること: ①業者（自動化か国産OEMか）②アカウント/契約（ユーザー側）③本の仕様（サイズ・カバー・ページ）と価格。
+- 実装イメージ（API業者採用時）: 絵本完成 → サーバで印刷用PDF/画像（表紙+本文・断ち落とし込み）生成 → 業者API発注（住所・仕様）→ Webhookでステータス反映 → 既存 Stripe で決済。PDFはユーザーに配布しない（製本価値を保つ）。
