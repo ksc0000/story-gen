@@ -56,17 +56,17 @@ Output Format (Strict JSON):
   "description": "Short description in Japanese",
   "icon": "One emoji",
   "genre": "Genre in English (e.g., Adventure, Bedtime)",
-  "visualDirection": "Visual style guide in English (e.g., Soft watercolor, Bright pop)",
+  "visualDirection": "Visual mood/subject direction in English (e.g., Cozy snowy forest mood, Bright playful energy). NEVER include art-medium or style words (watercolor, pastel, 3D, anime, flat illustration, etc.) — the user-selected illustration style controls rendering.",
   "systemPrompt": "A prompt for the AI when this template is used in non-fixed mode (Japanese)",
   "fixedStory": {
     "titleTemplate": "Title with {childName}",
-    "coverImagePromptTemplate": "Detailed English prompt for cover image generation, including {childName} and {characterLook}. Do not include text in the image.",
+    "coverImagePromptTemplate": "Detailed English prompt for cover image generation, including {childName} and {characterLook}. Do not include text in the image. Do not include art-medium or style words (watercolor, pastel, 3D, anime, etc.).",
     "titleSpreadTextTemplate": "Introduction text for the title spread",
     "openingNarrationTemplate": "Opening narration text",
     "pages": [
       {
         "textTemplate": "Page text (Japanese) with placeholders",
-        "imagePromptTemplate": "Detailed English image generation prompt for this page, describing scene, child action, and surroundings. Avoid text.",
+        "imagePromptTemplate": "Detailed English image generation prompt for this page, describing scene, child action, and surroundings. Avoid text. Do not include art-medium or style words (watercolor, pastel, 3D, anime, etc.).",
         "pageVisualRole": "one of opening_establishing, discovery, action, emotional_closeup, object_detail, setback_or_question, payoff, quiet_ending"
       }
     ]

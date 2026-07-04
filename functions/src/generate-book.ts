@@ -35,6 +35,8 @@ import {
   appendQualityRetryInstruction,
   buildFinalCharacterBible,
   buildCharacterConsistencyRules,
+  stripInlineStyleWords,
+  sanitizeStoryStyleBible,
 } from "./lib/prompt-builder";
 import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates, getParseErrorDiagnostics } from "./lib/gemini";
 import {
@@ -2375,7 +2377,9 @@ function buildRecurringCharacterReferencePrompt(
       ? `Negative rules: ${character.negativeCharacterRules.join("; ")}.`
       : "",
     `Illustration style: ${styleProfile.styleBible}`,
-    story.styleBible ? `Story-specific style consistency: ${story.styleBible}` : "",
+    story.styleBible
+      ? `Story-specific style consistency: ${sanitizeStoryStyleBible(story.styleBible, bookData.style)}`
+      : "",
     "wordless reference illustration, no written text, no captions, no labels, no signage, no watermark.",
   ]
     .filter(Boolean)
@@ -3077,10 +3081,16 @@ function buildFixedCharacterBible(bookData: BookData, input: BookInput): string 
 
 function buildFixedStyleBible(bookData: BookData, template: TemplateData): string {
   const styleProfile = getIllustrationStyleProfile(bookData.style);
+  // visualDirection はテンプレ作者が雰囲気説明に画材語（soft watercolor 等）を
+  // 混ぜがちで、そのまま連結すると選択スタイルと矛盾し全ページの絵柄が壊れる。
+  // スタイルの決定権は選択された styleProfile のみに持たせる。
+  const visualDirection = template.visualDirection
+    ? stripInlineStyleWords(template.visualDirection)
+    : "";
   return [
     `Use a consistent ${styleProfile.name} picture book rendering across every page.`,
     styleProfile.styleBible,
-    template.visualDirection ? `Visual direction: ${template.visualDirection}` : "",
+    visualDirection ? `Visual direction: ${visualDirection}` : "",
     "Keep lighting soft, compositions clear, and the mood safe and gentle for young children.",
   ]
     .filter(Boolean)

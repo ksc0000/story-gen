@@ -222,3 +222,64 @@ describe("buildStoryFromFixedTemplate: parentMessage on last page", () => {
     expect(story.pages[story.pages.length - 1].text).toBe("おしまい。");
   });
 });
+
+describe("buildStoryFromFixedTemplate: styleBible が選択スタイルと矛盾しない", () => {
+  // 回帰: テンプレの visualDirection に画材語（soft watercolor 等）が
+  // 埋め込まれていても、styleBible に混入して選択スタイルを壊さないこと。
+  // （本番事例: pencil_sketch 選択なのに watercolor 語が全プロンプトに混入）
+  const fixedStory: FixedStoryTemplate = {
+    titleTemplate: "{childName}のてぶくろ",
+    pages: [
+      { textTemplate: "ゆきのもり。", imagePromptTemplate: "A mitten in the snow" },
+    ],
+  };
+  const input = { childName: "ゆうた" } as BookInput;
+
+  it("visualDirection の画材語を除去しつつ雰囲気説明は残す", () => {
+    const bookData = { style: "pencil_sketch", childProfileSnapshot: undefined } as unknown as BookData;
+    const template = {
+      name: "てぶくろ",
+      creationMode: "fixed_template",
+      visualDirection:
+        "Cozy snowy forest picture-book mood: a warm dropped mitten in the snow, soft watercolor storybook style.",
+    } as unknown as TemplateData;
+
+    const story = buildStoryFromFixedTemplate(fixedStory, input, bookData, template, {
+      ageBand: "general_child",
+    });
+
+    expect(story.styleBible).not.toMatch(/watercolor/i);
+    // 雰囲気説明（被写体の方向性）は保持される
+    expect(story.styleBible).toContain("Cozy snowy forest");
+    // 選択スタイル（鉛筆スケッチ）の記述が主導権を持つ
+    expect(story.styleBible).toMatch(/pencil/i);
+  });
+
+  it("実テンプレ fixed-classic-mitten でも watercolor が混入しない", () => {
+    const bookData = { style: "pencil_sketch", childProfileSnapshot: undefined } as unknown as BookData;
+    const mitten = SEED_TEMPLATES["fixed-classic-mitten"];
+    const story = buildStoryFromFixedTemplate(
+      mitten.fixedStory as FixedStoryTemplate,
+      input,
+      bookData,
+      mitten as unknown as TemplateData,
+      { ageBand: "general_child" }
+    );
+    expect(story.styleBible).not.toMatch(/watercolor/i);
+    expect(story.styleBible).toMatch(/pencil/i);
+  });
+
+  it("選択スタイルが watercolor の場合は watercolor 記述が残る", () => {
+    const bookData = { style: "soft_watercolor", childProfileSnapshot: undefined } as unknown as BookData;
+    const template = {
+      name: "てぶくろ",
+      creationMode: "fixed_template",
+      visualDirection: "Cozy snowy forest mood, soft watercolor storybook style.",
+    } as unknown as TemplateData;
+    const story = buildStoryFromFixedTemplate(fixedStory, input, bookData, template, {
+      ageBand: "general_child",
+    });
+    // styleProfile 由来の watercolor 記述（正当）は保持される
+    expect(story.styleBible).toMatch(/watercolor/i);
+  });
+});
