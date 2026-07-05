@@ -11,6 +11,7 @@ import { isDemoMode, deleteDemoBook } from "@/lib/demo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookCard } from "@/components/book-card";
+import { BookPreviewDialog } from "@/components/book-preview-dialog";
 import { HeroBook3D } from "@/components/hero-book-3d";
 import { PageTransition } from "@/components/page-transition";
 import { StaggerContainer } from "@/components/stagger-container";
@@ -26,6 +27,7 @@ import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
 import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
 import { ILLUSTRATION_STYLE_PROFILES } from "@/lib/illustration-styles";
+import type { BookDoc } from "@/lib/types";
 
 const CREATION_MODE_LABELS: Record<string, string> = {
   all: "すべてのモード",
@@ -159,6 +161,7 @@ export default function HomePage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [selectedBook, setSelectedBook] = useState<(BookDoc & { id: string }) | null>(null);
   const { profile } = useUserProfile(user?.uid);
   const { children, loading: childrenLoading, activeChild } = useChildren(user?.uid);
   const { isAdmin } = useAdminClaim();
@@ -554,6 +557,7 @@ export default function HomePage() {
                             book={book}
                             onDelete={book.userId === user?.uid ? () => handleDeleteBook(book.id, book.title || "") : undefined}
                             isDeleting={deletingId === book.id}
+                            onSelect={setSelectedBook}
                           />
                         </StaggerItem>
                       ))}
@@ -575,6 +579,7 @@ export default function HomePage() {
                             book={book}
                             onDelete={book.userId === user?.uid ? () => handleDeleteBook(book.id, book.title || "") : undefined}
                             isDeleting={deletingId === book.id}
+                            onSelect={setSelectedBook}
                           />
                         </StaggerItem>
                       ))}
@@ -586,6 +591,8 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      <BookPreviewDialog book={selectedBook} onClose={() => setSelectedBook(null)} />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={handleOpenChange}>
         <AlertDialogContent>
