@@ -23,7 +23,7 @@
     "smoke:upload-reference": "node scripts/setup-smoke-reference.js",
     "template:sync:check": "node scripts/sync-fixed-template-seeds.js",
     "template:sync:write": "node scripts/sync-fixed-template-seeds.js --write",
-    "build": "next build",
+    "build": "NODE_OPTIONS='--network-family-autoselection-attempt-timeout=3000' next build",
     "build:clean": "npm run clean && npm run build",
     "deploy:hosting": "npm run build:clean && firebase deploy --only hosting",
     "start": "next start",
