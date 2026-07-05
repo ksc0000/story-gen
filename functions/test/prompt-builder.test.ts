@@ -1049,3 +1049,27 @@ describe("sanitizeStoryStyleBible", () => {
     expect(consistencySection).not.toMatch(/watercolor/i);
   });
 });
+
+describe("buildStyleReferenceImageNote (画風参照の役割分離)", () => {
+  it("スタイル参照ありのとき本人=identity / 見本=art style の分離指示を含める", () => {
+    const prompt = buildImagePrompt("A snowy scene", "pencil_sketch", "child bible", "style bible", {
+      hasStyleReferenceImage: true,
+    });
+    expect(prompt).toMatch(/IDENTITY reference/i);
+    expect(prompt).toMatch(/ART STYLE reference/i);
+    // 選択スタイル名が見本側の指示に含まれる
+    expect(prompt).toContain("やさしい鉛筆スケッチ");
+  });
+
+  it("スタイル参照なしのときは分離指示を出さない", () => {
+    const prompt = buildImagePrompt("A snowy scene", "pencil_sketch", "child bible", "style bible", {});
+    expect(prompt).not.toMatch(/ART STYLE reference/i);
+  });
+
+  it("表紙プロンプトでもスタイル参照ありで分離指示を含める", () => {
+    const prompt = buildCoverImagePrompt("A mitten", "pencil_sketch", "child bible", "style bible", {
+      hasStyleReferenceImage: true,
+    });
+    expect(prompt).toMatch(/ART STYLE reference/i);
+  });
+});

@@ -25,6 +25,7 @@ import type {
   ImageModelProfile,
   CoverStatus,
   QualityRecommendedFix,
+  IllustrationStyle,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import {
@@ -37,6 +38,7 @@ import {
   buildCharacterConsistencyRules,
   stripInlineStyleWords,
   sanitizeStoryStyleBible,
+  getStyleReferenceImagePath,
 } from "./lib/prompt-builder";
 import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates, getParseErrorDiagnostics } from "./lib/gemini";
 import {
@@ -1408,8 +1410,11 @@ export async function processBookGeneration(
         selectedStyleName: selectedStyleProfile.name,
         styleBible: story.styleBible,
         stylePreviewImageUrl: selectedStyleProfile.previewImageUrl,
-        stylePreviewUsedAsReference: false,
-        inputImageRoles: hasAnyCharacterReference ? ["character_reference"] : [],
+        stylePreviewUsedAsReference: Boolean(resolveStyleReferenceUrl(normalizedBookData.style)),
+        inputImageRoles: [
+          ...(hasAnyCharacterReference ? ["character_reference" as const] : []),
+          ...(resolveStyleReferenceUrl(normalizedBookData.style) ? ["style_reference" as const] : []),
+        ],
         storyTextRewriteUsed: storyResult.rewriteMetadata?.storyTextRewriteUsed,
         storyTextRewriteModel: storyResult.rewriteMetadata?.storyTextRewriteModel,
         storyTextRewriteAttempts: storyResult.rewriteMetadata?.storyTextRewriteAttempts,
@@ -1560,7 +1565,8 @@ export async function processBookGeneration(
             story.cast,
             storyPage.appearingCharacterIds,
             prevPageImageUrl,
-            sourcePhotoUrl
+            sourcePhotoUrl,
+            resolveStyleReferenceUrl(normalizedBookData.style)
           )
         : [];
       const inputImageUrls = inputImageRefs.map((ref) => ref.url);
@@ -1601,6 +1607,7 @@ export async function processBookGeneration(
           protagonistIsNonHuman:
             mergedInput.protagonistType === "companion" && Boolean(mergedInput.companionName),
           nonHumanProtagonistName: mergedInput.companionName,
+          hasStyleReferenceImage: inputImageRefs.some((ref) => ref.source === "stylePreviewImageUrl"),
         }
       );
 
@@ -1785,6 +1792,8 @@ export async function processBookGeneration(
 
     // Step 8.5: Generate cover image (independent of page results)
     const baseCoverPrompt = story.coverImagePrompt ?? normalizedBookData.coverImagePrompt;
+    // 表紙にもスタイル見本を画風参照として渡す（ページと同じロジック）。
+    const coverStyleReferenceUrl = resolveStyleReferenceUrl(normalizedBookData.style);
     const coverImagePrompt = baseCoverPrompt
       ? buildCoverImagePrompt(
           baseCoverPrompt,
@@ -1806,6 +1815,7 @@ export async function processBookGeneration(
             protagonistIsNonHuman:
               mergedInput.protagonistType === "companion" && Boolean(mergedInput.companionName),
             nonHumanProtagonistName: mergedInput.companionName,
+            hasStyleReferenceImage: Boolean(coverStyleReferenceUrl),
           }
         )
       : undefined;
@@ -1829,7 +1839,10 @@ export async function processBookGeneration(
           // 表紙は全キャストを対象に参照画像を集める。undefined を渡すと
           // buildInputImageRefs のキャスト走査が全スキップされ、相棒（なかよしキャラ）が
           // 主人公でも表紙にだけ参照画像が効かず、テキストプロンプトだけで描かれてしまう。
-          (story.cast ?? []).map((character) => character.characterId)
+          (story.cast ?? []).map((character) => character.characterId),
+          undefined,
+          undefined,
+          coverStyleReferenceUrl
         );
         const coverInputImageUrls = coverInputImageRefs.map((ref) => ref.url);
 
@@ -2171,12 +2184,28 @@ export function normalizeBookForGeneration(
 }
 
 
+/**
+ * 選択スタイルに応じた「画風のお手本」画像URLを返す。
+ * 登録アバターは常に soft_watercolor で描かれるため、水彩系スタイルはアバターと
+ * 一致し見本参照が不要（undefined）。それ以外のスタイルでは見本画像を参照に加え、
+ * 画像モデルがアバターの水彩タッチに引っ張られるのを打ち消して選択スタイルへ寄せる。
+ */
+export function resolveStyleReferenceUrl(style: IllustrationStyle): string | undefined {
+  if (style === "soft_watercolor" || style === "watercolor") return undefined;
+  return getStyleReferenceImagePath(style);
+}
+
 export function buildInputImageRefs(
   childProfileSnapshot: BookData["childProfileSnapshot"] | undefined,
   cast: GeneratedStory["cast"],
   appearingCharacterIds?: string[],
   prevPageImageUrl?: string,
-  sourcePhotoUrl?: string
+  sourcePhotoUrl?: string,
+  // 選択スタイルの見本画像URL。登録アバターは常に「やさしい水彩」で描かれており、
+  // 参照画像として渡すと画像モデルが水彩の絵柄まで真似てしまい選択スタイルを上書きする。
+  // 画風のお手本として style_reference に見本画像を1枚加えることで、選択スタイル側へ引き戻す。
+  // photo_story（sourcePhotoUrl あり）では style_reference が本人写真で埋まるため加えない。
+  styleReferenceUrl?: string
 ): Array<{
   role: InputImageRole;
   characterId?: string;
@@ -2193,6 +2222,13 @@ export function buildInputImageRefs(
       ? {
           role: "style_reference" as const, // High priority for photo_story mode consistency
           url: sourcePhotoUrl,
+        }
+      : undefined,
+    styleReferenceUrl && !sourcePhotoUrl
+      ? {
+          role: "style_reference" as const,
+          url: toPublicUrl(styleReferenceUrl),
+          source: "stylePreviewImageUrl" as const,
         }
       : undefined,
     childProfileSnapshot?.visualProfile.referenceImageUrl
@@ -2268,10 +2304,13 @@ export function buildInputImageRefs(
     if (ref && !prioritized.includes(ref)) prioritized.push(ref);
   };
 
-  // photo_story の元写真（style_reference）は顔の一貫性に必須なので最優先で残す。
-  pushUnique(deduped.find((ref) => ref.role === "style_reference"));
-  // 主人公の参照を1枚。
+  // photo_story の元写真（style_reference かつ本人写真）は顔の一貫性に必須なので最優先で残す。
+  pushUnique(deduped.find((ref) => ref.role === "style_reference" && ref.source !== "stylePreviewImageUrl"));
+  // 主人公の参照を1枚（本人らしさの土台）。
   pushUnique(deduped.find((ref) => ref.characterId === "child_protagonist"));
+  // スタイル見本（style_reference かつ見本画像）を1枚。選択スタイルへ絵柄を引き戻す役割。
+  // 相棒参照より優先する（相棒の見た目は visualBible のテキストでも担保されるため）。
+  pushUnique(deduped.find((ref) => ref.source === "stylePreviewImageUrl"));
   // 相棒など主人公以外のキャラ参照を1枚。
   pushUnique(deduped.find((ref) => ref.characterId && ref.characterId !== "child_protagonist"));
   // 余った枠を元の優先順で埋める（相棒がいない通常の絵本は従来どおり子ども参照2枚になる）。

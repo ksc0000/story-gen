@@ -856,6 +856,20 @@ function buildCastGuidance(
     .join(" ");
 }
 
+/**
+ * スタイル見本画像を参照として渡すときのプロンプト注記。
+ * 2枚の参照画像の役割（本人＝アイデンティティのみ / 見本＝画風のみ）を明確に分離し、
+ * 本人アバターの水彩タッチに引っ張られず、見本画像の絵柄・画材・線・質感・色調に
+ * 合わせて描かせる。
+ */
+export function buildStyleReferenceImageNote(
+  hasStyleReferenceImage: boolean | undefined,
+  styleName: string
+): string {
+  if (!hasStyleReferenceImage) return "";
+  return `Reference image roles (important): one reference image is the child's IDENTITY reference — copy only the child's face, hairstyle, outfit, and proportions from it, and IGNORE its art style. A separate reference image is the ART STYLE reference showing the target ${styleName} look — match its medium, line quality, brushwork, texture, shading, and color treatment. The final illustration MUST be rendered in the art-style reference's style, not the identity reference's style.`;
+}
+
 export function buildCoverImagePrompt(
   baseCoverPrompt: string,
   style: IllustrationStyle,
@@ -870,6 +884,7 @@ export function buildCoverImagePrompt(
     categoryGroupId?: string;
     protagonistIsNonHuman?: boolean;
     nonHumanProtagonistName?: string;
+    hasStyleReferenceImage?: boolean;
   }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
@@ -930,12 +945,15 @@ export function buildCoverImagePrompt(
   // ため、合成時に必ず選択スタイル基準で浄化する（再生成の救済にも効く）。
   const cleanStyleBible = sanitizeStoryStyleBible(styleBible, style);
 
+  const styleReferenceNote = buildStyleReferenceImageNote(options?.hasStyleReferenceImage, styleProfile.name);
+
   // P5-fix: reordered to prioritize composition, style, and scene first (following buildImagePrompt success pattern).
   return [
     "Book cover: text-free, no letters, no logos, no watermarks",
     coverCompositionGuidance,
     `Illustration style: ${styleProfile.styleBible}`,
     cleanStyleBible ? `Story-specific style consistency: ${cleanStyleBible}` : "",
+    styleReferenceNote,
     styleProfile.negativeStyleRules?.length
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
@@ -984,6 +1002,7 @@ export function buildImagePrompt(
     hasStarCharacter?: boolean;
     protagonistIsNonHuman?: boolean;
     nonHumanProtagonistName?: string;
+    hasStyleReferenceImage?: boolean;
   }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
@@ -1083,6 +1102,7 @@ export function buildImagePrompt(
   const characterRefStyleNote = options?.childProfileBasePrompt
     ? "Character reference style adaptation: The character reference image may have been rendered in a different illustration style. Render the character in the book's illustration style above — preserve only identity (face shape, hair style and color, age impression, key features) from the reference, not the art style of the reference image."
     : "";
+  const styleReferenceNote = buildStyleReferenceImageNote(options?.hasStyleReferenceImage, styleProfile.name);
 
   const cleanStyleBible = sanitizeStoryStyleBible(styleBible, style);
 
@@ -1091,6 +1111,7 @@ export function buildImagePrompt(
     `Illustration style: ${styleProfile.styleBible}`,
     cleanStyleBible ? `Story-specific style consistency: ${cleanStyleBible}` : "",
     characterRefStyleNote,
+    styleReferenceNote,
     styleProfile.negativeStyleRules?.length
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
