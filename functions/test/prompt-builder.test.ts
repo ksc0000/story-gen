@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath, getDefaultPageVisualRole, getDefaultCompositionHint } from "../src/lib/prompt-builder";
+import { buildSystemPrompt, buildUserPrompt, buildImagePrompt, buildCoverImagePrompt, buildP5SimplifiedPagePrompt, buildVisualContinuityGuard, buildStarCharacterGuard, getStyleReferenceImagePath, getDefaultPageVisualRole, getDefaultCompositionHint, sanitizeStoryStyleBible } from "../src/lib/prompt-builder";
 import type { TemplateData } from "../src/lib/types";
 
 const mockTemplate: TemplateData = {
@@ -27,6 +27,23 @@ describe("buildSystemPrompt", () => {
   });
   it("includes style-specific illustration instruction", () => {
     expect(buildSystemPrompt(mockTemplate, "soft_watercolor")).toContain("水彩");
+  });
+  it("strips art-medium words from template visualDirection so it cannot fight the selected style", () => {
+    // 回帰: visualDirection の画材語が Gemini 経由で styleBible/imagePrompt に
+    // 写経され、選択スタイル（例: pencil_sketch）を壊していた。
+    const templateWithStyleWords: TemplateData = {
+      ...mockTemplate,
+      visualDirection:
+        "Cozy snowy forest picture-book mood, soft watercolor storybook style, bright pop energy.",
+    };
+    const result = buildSystemPrompt(templateWithStyleWords, "pencil_sketch");
+    // ビジュアル方向セクション内から画材語が除去されている
+    // （プロンプト全体には「スタイル語禁止」の説明文の例示として watercolor が含まれる）
+    const section = result.split("## カテゴリのビジュアル方向")[1]?.split("##")[0] ?? "";
+    expect(section).not.toMatch(/watercolor/i);
+    // 雰囲気説明は保持される
+    expect(section).toContain("Cozy snowy forest");
+    expect(section).toContain("bright pop energy");
   });
   it("includes image prompt variety guidance", () => {
     const result = buildSystemPrompt(mockTemplate, "watercolor");
@@ -998,5 +1015,37 @@ describe("prompt length regression (P5-3j)", () => {
     // 6700→7050: ページ間の構図単調化・動作未描画（目を閉じる等）対策の必須カメラ指示＋action fidelityルール追加。
     // 引き続きプロンプト肥大は監視する。
     expect(result.length).toBeLessThan(7050);
+  });
+});
+
+describe("sanitizeStoryStyleBible", () => {
+  it("選択スタイルに属さない画材語を除去する（pencil選択時のwatercolor混入）", () => {
+    const polluted =
+      "Use a consistent やさしい鉛筆スケッチ rendering. Visual direction: Cozy snowy forest mood, soft watercolor storybook style. Keep lighting soft.";
+    const result = sanitizeStoryStyleBible(polluted, "pencil_sketch");
+    expect(result).not.toMatch(/watercolor/i);
+    expect(result).toContain("Cozy snowy forest");
+  });
+
+  it("選択スタイル自身の画材語は保持する", () => {
+    const legit = "Soft watercolor washes with airy edges across every page.";
+    const result = sanitizeStoryStyleBible(legit, "soft_watercolor");
+    expect(result).toMatch(/watercolor/i);
+  });
+
+  it("undefined はそのまま返す", () => {
+    expect(sanitizeStoryStyleBible(undefined, "pencil_sketch")).toBeUndefined();
+  });
+
+  it("buildCoverImagePrompt 経由でも混入 styleBible が浄化される", () => {
+    const prompt = buildCoverImagePrompt(
+      "A mitten in the snow",
+      "pencil_sketch",
+      undefined,
+      "Visual direction: cozy mood, soft watercolor storybook style.",
+      {}
+    );
+    const consistencySection = prompt.split("Story-specific style consistency:")[1]?.split("Style guardrails")[0] ?? "";
+    expect(consistencySection).not.toMatch(/watercolor/i);
   });
 });

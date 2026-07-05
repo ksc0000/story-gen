@@ -70,14 +70,10 @@ export function StylePicker({ selected, onSelect, styles }: StylePickerProps) {
   );
 
   return (
-    /* Mobile: horizontal snap-scroll carousel; sm+: CSS grid */
-    <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 sm:[scroll-snap-type:none] lg:grid-cols-5">
+    /* テンプレ選択と同じ縦スクロールのグリッド（モバイル2列 → 3列 → 5列） */
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       {visibleStyles.map((s) => (
-        <AnimatedCard
-          key={s.id}
-          onClick={() => onSelect(s.id)}
-          className="w-[44vw] max-w-[180px] flex-none snap-center sm:w-auto sm:max-w-none"
-        >
+        <AnimatedCard key={s.id} onClick={() => onSelect(s.id)}>
           <Card className={`h-full cursor-pointer overflow-hidden transition ${selected === s.id ? "ring-2 ring-purple-500 border-purple-400 shadow-lg" : "shadow-sm sm:shadow-none"}`}>
             <CardContent className="flex h-full flex-col p-0 text-center">
               <div className="relative aspect-[2/3] w-full overflow-hidden bg-violet-50">

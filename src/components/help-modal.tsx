@@ -48,7 +48,7 @@ export function HelpModal({ open, onClose, content }: HelpModalProps) {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-lg rounded-t-3xl bg-white pb-[env(safe-area-inset-bottom,16px)] shadow-xl"
+            className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-lg rounded-t-3xl bg-white pb-[calc(env(safe-area-inset-bottom,0px)+12px)] shadow-xl"
           >
             {/* Header bar */}
             <div className="flex items-center justify-between px-5 pb-2 pt-4">

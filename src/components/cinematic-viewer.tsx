@@ -391,7 +391,7 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
 
       {/* ── Bottom controls ───────────────────────────────────── */}
       {!showEndCard && (
-        <div className="absolute bottom-0 left-0 right-0 z-20 flex flex-col items-center gap-2 px-6 pb-[env(safe-area-inset-bottom,16px)] pt-3 bg-gradient-to-t from-black/70 to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 z-20 flex flex-col items-center gap-2 px-6 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3 bg-gradient-to-t from-black/70 to-transparent">
           <AnimatePresence>
             {hintVisible && (
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="text-[11px] text-white/40 text-center">

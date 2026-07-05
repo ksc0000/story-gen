@@ -227,13 +227,43 @@ function getPageVisualRoleGuidance(role: PageVisualRole): string {
  * Strip such inline style words so `Illustration style: <selected styleBible>`
  * is the single source of style truth.
  */
+const INLINE_STYLE_WORD_REGEX =
+  /\b(soft\s+)?(water\s?colou?r|pastel|crayon|gouache|oil[-\s]?painting|oil\s+paint|pencil\s+sketch|colou?red\s+pencil|pen[-\s]and[-\s]ink|ink\s+wash|charcoal|acrylic|claymation|clay|stop[-\s]motion|3\s?-?d(?:\s+render(?:ed)?)?|cg|cgi|anime|manga|cel[-\s]?shaded|flat\s+(?:vector\s+)?illustration|vector\s+art|pop[-\s]?art|paper\s+collage|cut[-\s]paper|storybook\s+painting)(\s+(?:art|style|illustration|painting|drawing|aesthetic|look|texture))?\b/gi;
+
 export function stripInlineStyleWords(value: string): string {
   if (!value) return value;
   return value
-    .replace(
-      /\b(soft\s+)?(water\s?colou?r|pastel|crayon|gouache|oil[-\s]?painting|oil\s+paint|pencil\s+sketch|colou?red\s+pencil|pen[-\s]and[-\s]ink|ink\s+wash|charcoal|acrylic|claymation|clay|stop[-\s]motion|3\s?-?d(?:\s+render(?:ed)?)?|cg|cgi|anime|manga|cel[-\s]?shaded|flat\s+(?:vector\s+)?illustration|vector\s+art|pop[-\s]?art|paper\s+collage|cut[-\s]paper|storybook\s+painting)(\s+(?:art|style|illustration|painting|drawing|aesthetic|look|texture))?\b/gi,
-      ""
-    )
+    .replace(INLINE_STYLE_WORD_REGEX, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([,.])/g, "$1")
+    .replace(/,\s*,/g, ",")
+    .trim();
+}
+
+/**
+ * story.styleBible（Gemini 生成 or 固定テンプレ合成、既存絵本では Firestore に
+ * 保存済み）から「選択スタイルに属さない画材語」だけを除去する。
+ * テンプレ visualDirection 等から混入した他スタイルの語（例: pencil_sketch
+ * 選択時の "soft watercolor"）が cover/page プロンプトで選択スタイルと
+ * 矛盾するのを、全合成点共通の choke point で防ぐ。
+ * 選択スタイル自身の画材語（styleProfile.styleBible に含まれる語）は保持する。
+ */
+export function sanitizeStoryStyleBible(
+  styleBible: string | undefined,
+  style: IllustrationStyle
+): string | undefined {
+  if (!styleBible) return styleBible;
+  const allowed = getIllustrationStyleProfile(style).styleBible.toLowerCase();
+  const sanitized = styleBible.replace(
+    INLINE_STYLE_WORD_REGEX,
+    (match, _soft, medium: string) => {
+      // 画材語の主要トークンが選択スタイルの記述に含まれていれば正当な語として残す。
+      const tokens = medium.toLowerCase().split(/[\s-]+/).filter((t) => t.length > 2);
+      const belongsToSelectedStyle = tokens.some((t) => allowed.includes(t));
+      return belongsToSelectedStyle ? match : "";
+    }
+  );
+  return sanitized
     .replace(/\s{2,}/g, " ")
     .replace(/\s+([,.])/g, "$1")
     .replace(/,\s*,/g, ",")
@@ -495,8 +525,13 @@ export function buildSystemPrompt(
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
   const childName = input?.childName || "{childName}";
-  const visualDirection = template.visualDirection
-    ? `\n## カテゴリのビジュアル方向\n${template.visualDirection}\n`
+  // visualDirection の画材語（watercolor 等）は選択スタイルと矛盾するため除去。
+  // Gemini がこの文言を styleBible / imagePrompt に写経してスタイルが壊れるのを防ぐ。
+  const strippedVisualDirection = template.visualDirection
+    ? stripInlineStyleWords(template.visualDirection)
+    : "";
+  const visualDirection = strippedVisualDirection
+    ? `\n## カテゴリのビジュアル方向（雰囲気・被写体の方向性。画風・画材はここではなく選択スタイルに従う）\n${strippedVisualDirection}\n`
     : "";
   const resolvedReadingProfile = readingProfile;
   const ageReadingGuidance = resolvedReadingProfile
@@ -891,12 +926,16 @@ export function buildCoverImagePrompt(
     hasAnimalCharactersInCast(options?.cast ?? []);
   const visualContinuityGuard = buildVisualContinuityGuard({ hasAnimalCharacters });
 
+  // 既存絵本の保存済み styleBible にも他スタイル語が混入している可能性がある
+  // ため、合成時に必ず選択スタイル基準で浄化する（再生成の救済にも効く）。
+  const cleanStyleBible = sanitizeStoryStyleBible(styleBible, style);
+
   // P5-fix: reordered to prioritize composition, style, and scene first (following buildImagePrompt success pattern).
   return [
     "Book cover: text-free, no letters, no logos, no watermarks",
     coverCompositionGuidance,
     `Illustration style: ${styleProfile.styleBible}`,
-    styleBible ? `Story-specific style consistency: ${styleBible}` : "",
+    cleanStyleBible ? `Story-specific style consistency: ${cleanStyleBible}` : "",
     styleProfile.negativeStyleRules?.length
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
@@ -1045,10 +1084,12 @@ export function buildImagePrompt(
     ? "Character reference style adaptation: The character reference image may have been rendered in a different illustration style. Render the character in the book's illustration style above — preserve only identity (face shape, hair style and color, age impression, key features) from the reference, not the art style of the reference image."
     : "";
 
+  const cleanStyleBible = sanitizeStoryStyleBible(styleBible, style);
+
   return [
     compositionGuidance,
     `Illustration style: ${styleProfile.styleBible}`,
-    styleBible ? `Story-specific style consistency: ${styleBible}` : "",
+    cleanStyleBible ? `Story-specific style consistency: ${cleanStyleBible}` : "",
     characterRefStyleNote,
     styleProfile.negativeStyleRules?.length
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
