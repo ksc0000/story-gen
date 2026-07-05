@@ -20,7 +20,7 @@ export function BookCard({ book, onToggleFavorite }: BookCardProps) {
   const createdMillis = toMillisSafe(book.createdAtMs ?? book.createdAt);
 
   return (
-    <Link href={href} className="group relative block">
+    <Link href={href} className="group relative block touch-manipulation">
       <AnimatedCard>
         <Card className="relative overflow-hidden transition-all hover:shadow-md">
           {book.status === "partial_completed" && (

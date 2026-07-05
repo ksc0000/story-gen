@@ -20,7 +20,7 @@ export function BookCard({ book, onDelete, isDeleting }: BookCardProps) {
   // serverTimestamp sentinel on legacy books, which toMillisSafe treats as null.
   const createdMillis = toMillisSafe(book.createdAtMs ?? book.createdAt);
   return (
-    <Link href={href} className="group relative block">
+    <Link href={href} className="group relative block touch-manipulation">
       <AnimatedCard>
         <Card className="relative overflow-hidden">
           <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe] flex items-center justify-center">
@@ -58,7 +58,7 @@ export function BookCard({ book, onDelete, isDeleting }: BookCardProps) {
         <Button
           variant="destructive"
           size="icon-xs"
-          className="absolute right-2 top-2 z-20 h-7 w-7 rounded-full bg-white/80 opacity-0 transition-opacity hover:bg-white group-hover:opacity-100 disabled:opacity-100 sm:h-8 sm:w-8"
+          className="absolute right-2 top-2 z-20 h-7 w-7 rounded-full bg-white/80 transition-opacity hover:bg-white [@media(hover:hover)]:opacity-0 group-hover:opacity-100 disabled:opacity-100 sm:h-8 sm:w-8"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
