@@ -243,6 +243,7 @@
     "PR #644: feat: 複数枚の参考写真対応（Phase 4・似せ精度アップ） (merged)",
     "PR #645: feat: Toast/確認ダイアログ統一 + 団体運用機能 + 団体契約の準備中ゲート (merged)",
     "PR #646: fix(mobile): 本棚カードが1タップで開かない問題を修正 (merged)",
+    "PR #647: fix(hosting): HTML 1時間キャッシュ撤廃（デプロイ即時反映）+ タッチUI補修 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
