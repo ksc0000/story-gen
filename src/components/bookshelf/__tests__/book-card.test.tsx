@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BookCard } from "@/components/bookshelf/book-card";
 import { Timestamp } from "firebase/firestore";
@@ -94,5 +94,15 @@ describe("BookCard", () => {
 
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "/generating?id=book-1");
+  });
+
+  it("calls onSelect instead of rendering a link when provided", () => {
+    const onSelect = vi.fn();
+    render(<BookCard book={mockBook} onSelect={onSelect} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Test Bookを開く" }));
+
+    expect(onSelect).toHaveBeenCalledWith(mockBook);
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });

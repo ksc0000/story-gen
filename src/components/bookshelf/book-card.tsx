@@ -11,16 +11,17 @@ import type { BookDoc } from "@/lib/types";
 interface BookCardProps {
   book: BookDoc & { id: string };
   onToggleFavorite?: (book: BookDoc & { id: string }) => void;
+  onSelect?: (book: BookDoc & { id: string }) => void;
 }
 
-export function BookCard({ book, onToggleFavorite }: BookCardProps) {
+export function BookCard({ book, onToggleFavorite, onSelect }: BookCardProps) {
   const href = book.status === "generating" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
   // Prefer createdAtMs; createdAt may be an unresolved serverTimestamp sentinel
   // on legacy books, which toMillisSafe treats as null.
   const createdMillis = toMillisSafe(book.createdAtMs ?? book.createdAt);
 
-  return (
-    <Link href={href} className="group relative block touch-manipulation">
+  const cardContent = (
+    <>
       <AnimatedCard>
         <Card className="relative overflow-hidden transition-all hover:shadow-md">
           {book.status === "partial_completed" && (
@@ -29,27 +30,6 @@ export function BookCard({ book, onToggleFavorite }: BookCardProps) {
                 一部未完成
               </Badge>
             </div>
-          )}
-          {onToggleFavorite && (
-            <button
-              type="button"
-              aria-label={book.favorite ? "お気に入りを解除" : "お気に入りに追加"}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleFavorite(book);
-              }}
-              className={cn(
-                "absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition",
-                book.favorite
-                  ? "bg-amber-400/90 text-white"
-                  : // タッチ端末では常時表示（hover が無いと出せないため）。
-                    // hover 対応デバイスのみ「ホバーで出現」にする。
-                    "bg-white/70 text-violet-400 [@media(hover:hover)]:opacity-0 hover:bg-white group-hover:opacity-100"
-              )}
-            >
-              <Star className={cn("h-4 w-4", book.favorite && "fill-current")} />
-            </button>
           )}
           <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-violet-50 to-purple-100 flex items-center justify-center">
             {book.coverImageUrl ? (
@@ -89,6 +69,46 @@ export function BookCard({ book, onToggleFavorite }: BookCardProps) {
           </CardContent>
         </Card>
       </AnimatedCard>
-    </Link>
+    </>
+  );
+
+  return (
+    <div className="group relative block">
+      {onToggleFavorite && (
+        <button
+          type="button"
+          aria-label={book.favorite ? "お気に入りを解除" : "お気に入りに追加"}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleFavorite(book);
+          }}
+          className={cn(
+            "absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition",
+            book.favorite
+              ? "bg-amber-400/90 text-white"
+              : // タッチ端末では常時表示（hover が無いと出せないため）。
+                // hover 対応デバイスのみ「ホバーで出現」にする。
+                "bg-white/70 text-violet-400 [@media(hover:hover)]:opacity-0 hover:bg-white group-hover:opacity-100"
+          )}
+        >
+          <Star className={cn("h-4 w-4", book.favorite && "fill-current")} />
+        </button>
+      )}
+      {onSelect ? (
+        <button
+          type="button"
+          onClick={() => onSelect(book)}
+          className="block w-full touch-manipulation text-left"
+          aria-label={`${book.title || "無題の絵本"}を開く`}
+        >
+          {cardContent}
+        </button>
+      ) : (
+        <Link href={href} className="block touch-manipulation">
+          {cardContent}
+        </Link>
+      )}
+    </div>
   );
 }
