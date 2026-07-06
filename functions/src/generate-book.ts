@@ -39,7 +39,9 @@ import {
   stripInlineStyleWords,
   sanitizeStoryStyleBible,
   getStyleReferenceImagePath,
+  resolveProtagonist,
 } from "./lib/prompt-builder";
+import type { ProtagonistDescriptor } from "./lib/prompt-builder";
 import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates, getParseErrorDiagnostics } from "./lib/gemini";
 import {
   ReplicateImageClient,
@@ -1392,6 +1394,14 @@ export async function processBookGeneration(
 
     const { qualityReport } = storyResult;
     const selectedStyleProfile = getIllustrationStyleProfile(normalizedBookData.style);
+    // 登場人物解決の単一の真実の源（docs/CHARACTER_RESOLUTION.md）。
+    // 主人公の種別・呼称を1度だけ確定し、以後の画像プロンプト片へ渡す。
+    const protagonistDescriptor = resolveProtagonist({
+      cast: story.cast,
+      childName: mergedInput.childName,
+      companionName: mergedInput.companionName,
+      protagonistType: mergedInput.protagonistType,
+    });
     const hasAnyCharacterReference =
       childHasReferenceImages ||
       (story.cast ?? []).some(
@@ -1608,6 +1618,7 @@ export async function processBookGeneration(
             mergedInput.protagonistType === "companion" && Boolean(mergedInput.companionName),
           nonHumanProtagonistName: mergedInput.companionName,
           hasStyleReferenceImage: inputImageRefs.some((ref) => ref.source === "stylePreviewImageUrl"),
+          protagonist: protagonistDescriptor,
         }
       );
 
@@ -1816,6 +1827,7 @@ export async function processBookGeneration(
               mergedInput.protagonistType === "companion" && Boolean(mergedInput.companionName),
             nonHumanProtagonistName: mergedInput.companionName,
             hasStyleReferenceImage: Boolean(coverStyleReferenceUrl),
+            protagonist: protagonistDescriptor,
           }
         )
       : undefined;
@@ -3059,6 +3071,13 @@ export function buildStoryFromFixedTemplate(
     });
   }
 
+  const protagonist = resolveProtagonist({
+    cast,
+    childName: mergedInput.childName,
+    companionName,
+    protagonistType: mergedInput.protagonistType,
+  });
+
   return {
     title: applyTemplateReplacements(fixedStory.titleTemplate, replacements),
     coverImagePrompt: fixedStory.coverImagePromptTemplate
@@ -3070,7 +3089,7 @@ export function buildStoryFromFixedTemplate(
     openingNarration: fixedStory.openingNarrationTemplate
       ? applyTemplateReplacements(fixedStory.openingNarrationTemplate, replacements)
       : undefined,
-    characterBible: buildFixedCharacterBible(bookData, mergedInput),
+    characterBible: buildFixedCharacterBible(bookData, mergedInput, protagonist),
     styleBible: buildFixedStyleBible(bookData, template),
     narrativeDevice: undefined,
     pages,
@@ -3102,15 +3121,21 @@ export function applyTemplateReplacements(template: string, replacements: Record
   return template.replace(/\{(\w+)\}/g, (_, key: string) => replacements[key] ?? "");
 }
 
-function buildFixedCharacterBible(bookData: BookData, input: BookInput): string {
+function buildFixedCharacterBible(
+  bookData: BookData,
+  input: BookInput,
+  protagonist?: ProtagonistDescriptor
+): string {
+  const isNonHuman = protagonist?.kind === "non_human_companion";
   const childProfile = bookData.childProfileSnapshot;
+  // 相棒主人公では登録児（人間）の見た目情報を混ぜない（別人＝人間の子が描かれる元）。
   const appearance = [
-    childProfile?.visualProfile.characterBible,
-    input.characterLook ? `Appearance: ${input.characterLook}.` : "",
-    input.signatureItem ? `Signature item: ${input.signatureItem}.` : "",
-    input.childAge ? `Age impression: ${input.childAge} years old.` : "",
+    isNonHuman ? "" : childProfile?.visualProfile.characterBible,
+    isNonHuman ? "" : input.characterLook ? `Appearance: ${input.characterLook}.` : "",
+    isNonHuman ? "" : input.signatureItem ? `Signature item: ${input.signatureItem}.` : "",
+    isNonHuman ? "" : input.childAge ? `Age impression: ${input.childAge} years old.` : "",
     `Keep the protagonist as ${input.childName}, a warm child-friendly picture book hero.`,
-    buildCharacterConsistencyRules(bookData),
+    buildCharacterConsistencyRules({ ...bookData, protagonist }),
   ]
     .filter(Boolean)
     .join(" ");
