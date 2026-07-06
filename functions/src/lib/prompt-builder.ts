@@ -754,12 +754,99 @@ export function buildFinalCharacterBible(params: {
   ].filter(Boolean).join(" ");
 }
 
+// ─── Protagonist resolution（登場人物解決の単一の真実の源）─────────────
+// docs/CHARACTER_RESOLUTION.md 参照。主人公の「種別・呼称・同一性ルール・参照画像の
+// 使い方」を1箇所で解決し、以後のプロンプト片は全てこの descriptor から導出する。
+// これにより「相棒が主人公なのに the child が混入」といった矛盾を構造的に防ぐ。
+
+export type ProtagonistKind = "human_child" | "non_human_companion";
+
+export interface ProtagonistDescriptor {
+  kind: ProtagonistKind;
+  displayName: string;
+  /** プロンプトで主人公を指す語。全片がこれを使う */
+  noun: string;
+  /** このシーンに人間の子を描いてよいか（相棒主人公は false） */
+  allowsHumanChildInScene: boolean;
+}
+
+export function resolveProtagonist(params: {
+  cast?: StoryCharacter[];
+  childName?: string;
+  companionName?: string;
+  protagonistType?: "child" | "companion" | string;
+}): ProtagonistDescriptor {
+  const protagonistCast = params.cast?.find((c) => c.role === "protagonist");
+  const isNonHumanProtagonist =
+    params.protagonistType === "companion" ||
+    Boolean(
+      protagonistCast &&
+        protagonistCast.nonHuman === true &&
+        protagonistCast.characterKind !== "human_child"
+    );
+
+  if (isNonHumanProtagonist) {
+    const name = protagonistCast?.displayName || params.companionName || "the companion";
+    const bible = protagonistCast?.visualBible ? ` (${protagonistCast.visualBible})` : "";
+    return {
+      kind: "non_human_companion",
+      displayName: name,
+      noun: `${name}${bible}`,
+      allowsHumanChildInScene: false,
+    };
+  }
+
+  const childName = params.childName || "the child";
+  return {
+    kind: "human_child",
+    displayName: childName,
+    noun: "the child",
+    allowsHumanChildInScene: true,
+  };
+}
+
+/**
+ * 固定テンプレの画像プロンプトは human_child 主人公前提で "the child" 等を焼き込んでいる
+ * （seed-templates の REF_ISOLATION 句含む）。相棒主人公のときはこれらが矛盾の元になるため、
+ * 生成時にシーン文へ「主人公は非人間である」旨を明示し、参照画像=子ども顔という誤指示を
+ * 打ち消す前置きを付与する。文字列の全置換は誤爆リスクが高いので、強い前置き＋既存の
+ * counter-guard で上書きする方針（descriptor.noun を主語として明示）。
+ */
+export function buildNonHumanProtagonistSceneOverride(
+  descriptor: ProtagonistDescriptor
+): string {
+  if (descriptor.kind !== "non_human_companion") return "";
+  return (
+    `The protagonist (main character) of this scene is ${descriptor.noun}, a non-human companion who must be the central figure. ` +
+    `There is no human child in this story — do not draw any human child. ` +
+    `Any reference to "a child", "the child", or the reference image's "child" in the wording below actually refers to ${descriptor.displayName}, the non-human companion; ` +
+    `do NOT render a human child, and use the character reference image only for ${descriptor.displayName}'s appearance, not to introduce a human child.`
+  );
+}
+
 export function buildCharacterConsistencyRules(params: {
+  protagonist?: ProtagonistDescriptor;
   childProfileSnapshot?: ChildProfileSnapshot;
   childAge?: number;
 }): string {
   const visual = params.childProfileSnapshot?.visualProfile;
   const age = params.childProfileSnapshot?.age ?? params.childAge;
+
+  // 相棒（非人間）主人公では human_child 前提の同一性句を出さない。
+  // 髪型・顔の形など人間身体前提の指示は矛盾の元になる。
+  if (params.protagonist?.kind === "non_human_companion") {
+    const name = params.protagonist.displayName;
+    return [
+      "Character consistency rules:",
+      `The protagonist ${name} (a non-human companion) must be the same character on every page.`,
+      "Preserve its non-human silhouette, colors, and signature features; do not turn it into a human child.",
+      "Keep the same body shape, colors, and distinctive items across all pages.",
+      `If ${name} is seen from behind, from the side, or far away, preserve its silhouette and recognizable features.`,
+      "Do not redesign the protagonist between pages.",
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
 
   return [
     "Character consistency rules:",
@@ -798,7 +885,20 @@ export function buildOutfitRule(
   return `Outfit rule: use this custom outfit: ${usage.customOutfit || visual?.outfit || "a cute child-safe outfit"}. ${signatureRule}`;
 }
 
-function buildCharacterConsistencyGuidance(characterBible?: string): string {
+function buildCharacterConsistencyGuidance(
+  characterBible?: string,
+  protagonist?: ProtagonistDescriptor
+): string {
+  if (protagonist?.kind === "non_human_companion") {
+    const name = protagonist.displayName;
+    return [
+      characterBible ? `Character consistency: ${characterBible}` : "",
+      `Character consistency rules: keep ${name} (a non-human companion) as the same character across all pages — same non-human silhouette, colors, and distinctive items. Do not turn it into a human child.`,
+      `If ${name} is seen from behind, in side view, or far away, preserve its silhouette and recognizable features.`,
+      "Keep identity consistent, but change pose, camera angle, distance, action, background, and focal point according to this page.",
+      "Do not repeat the same pose or same framing from previous pages.",
+    ].filter(Boolean).join(" ");
+  }
   return [
     characterBible ? `Character consistency: ${characterBible}` : "",
     "Character consistency rules: same child character across all pages, same age impression, same hairstyle, same face shape, same body proportions, same outfit unless the outfit rule says otherwise, keep the signature item when appropriate.",
@@ -885,6 +985,7 @@ export function buildCoverImagePrompt(
     protagonistIsNonHuman?: boolean;
     nonHumanProtagonistName?: string;
     hasStyleReferenceImage?: boolean;
+    protagonist?: ProtagonistDescriptor;
   }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
@@ -902,7 +1003,10 @@ export function buildCoverImagePrompt(
     ? `Global character count rule: the single protagonist is ${npName}, a NON-HUMAN companion, and must be the central character. There is NO human child in this story. Do not draw any human child or human protagonist. Any mention of a "child" in the scene refers to ${npName}, the non-human companion.`
     : "Global character count rule: there is exactly one human child protagonist: child_protagonist.";
 
-  const consistency = buildCharacterConsistencyGuidance(characterBible);
+  const consistency = buildCharacterConsistencyGuidance(characterBible, options?.protagonist);
+  const sceneProtagonistOverride = options?.protagonist
+    ? buildNonHumanProtagonistSceneOverride(options.protagonist)
+    : "";
   const castIds = options.cast?.map((c) => c.characterId);
   const castGuidance = buildCastGuidance(options?.cast, castIds);
 
@@ -957,6 +1061,8 @@ export function buildCoverImagePrompt(
     styleProfile.negativeStyleRules?.length
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
+    // 相棒主人公のとき、固定テンプレの "the child" 系記述より前に非人間主人公を明示。
+    sceneProtagonistOverride,
     `Scene: ${sanitizedBasePrompt}`,
     consistency,
     castGuidance,
@@ -1003,6 +1109,7 @@ export function buildImagePrompt(
     protagonistIsNonHuman?: boolean;
     nonHumanProtagonistName?: string;
     hasStyleReferenceImage?: boolean;
+    protagonist?: ProtagonistDescriptor;
   }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
@@ -1033,7 +1140,10 @@ export function buildImagePrompt(
   const characterCountRule = options?.protagonistIsNonHuman
     ? `Global character count rule: the single protagonist is ${npName}, a NON-HUMAN companion, and must be the central character. There is NO human child in this story. Do not draw any human child or human protagonist. Any mention of a "child" in the scene refers to ${npName}, the non-human companion.`
     : "Global character count rule: there is exactly one human child protagonist: child_protagonist.";
-  const consistency = buildCharacterConsistencyGuidance(characterBible);
+  const consistency = buildCharacterConsistencyGuidance(characterBible, options?.protagonist);
+  const sceneProtagonistOverride = options?.protagonist
+    ? buildNonHumanProtagonistSceneOverride(options.protagonist)
+    : "";
 
   const compositionGuidance = [
     getPageVisualRoleGuidance(pageVisualRole),
@@ -1115,6 +1225,8 @@ export function buildImagePrompt(
     styleProfile.negativeStyleRules?.length
       ? `Style guardrails: ${styleProfile.negativeStyleRules.join(" ")}`
       : "",
+    // 相棒主人公のとき、固定テンプレの "the child" 系記述より前に非人間主人公を明示。
+    sceneProtagonistOverride,
     `Scene: ${sanitizedBasePrompt}`,
     // Child-animal boundary placed immediately after the scene so FLUX weights it early.
     // Previously placed only at the end of the prompt (in visualContinuityGuard), which
