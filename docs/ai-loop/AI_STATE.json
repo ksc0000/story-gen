@@ -247,6 +247,7 @@
     "PR #649: feat(bookshelf): カードタップで表紙ポップアップ→「絵本を読む」導線 + ビルド安定化 (merged)",
     "PR #650: fix(home): ホームの本棚にも表紙ポップアップを適用 (merged)",
     "PR #651: fix(style): スタイル見本を画風参照として渡し、水彩アバターの絵柄追従を打ち消す (merged)",
+    "PR #652: fix(generation): 登場人物解決を単一の真実の源に集約（相棒主人公の人間児混入を防止） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
