@@ -41,7 +41,10 @@ export type StoryQualityThreshold = {
 
 const STORY_QUALITY_THRESHOLDS: Record<AgeBand, StoryQualityThreshold> = {
   baby_toddler: {
-    minCharsPerPage: 6,
+    // age-reading-profile の「15〜35文字程度」と整合させる。
+    // 旧値6字では電文的キャプション（例:「あまい、においだ。」9字）を見逃し、
+    // 0〜2歳絵本に必要な名前の呼びかけ・オノマトペ・反復の余地も無かった。
+    minCharsPerPage: 15,
     minSentencesPerPage: 1,
     allowShortFinalPage: true,
     requireNarrativeDevice: false,

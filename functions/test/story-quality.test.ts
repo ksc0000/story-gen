@@ -58,7 +58,29 @@ describe("validateGeneratedStoryQuality", () => {
     ],
   };
 
-  it("allows short toddler stories with warnings only", () => {
+  it("allows toddler stories at the 15-char floor (name + onomatopoeia style)", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        narrativeDevice: undefined,
+        pages: [
+          {
+            // 0〜2歳の床（15字）を満たす反復＋オノマトペの文（age-reading-profile 準拠）
+            text: "すなが さらさら。ゆうたくん、さらさら たのしいね。",
+            imagePrompt: "simple sandbox scene with soft beige sand and a gentle child-safe mood",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(2),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.ok).toBe(true);
+  });
+
+  it("rejects telegraphic toddler captions below the 15-char floor", () => {
+    // 回帰: 旧床6字では「すな、さらさら。」(8字) のような電文的キャプションが
+    // ok:true で素通りし、0〜2歳絵本の読みごたえが担保できなかった。
     const report = validateGeneratedStoryQuality({
       story: {
         ...baseStory,
@@ -69,7 +91,8 @@ describe("validateGeneratedStoryQuality", () => {
       creationMode: "guided_ai",
     });
 
-    expect(report.ok).toBe(true);
+    expect(report.ok).toBe(false);
+    expect(report.issues.some((i) => i.code === "summary.average_chars_low" && i.severity === "error")).toBe(true);
   });
 
   it("treats preschool single-sentence pages as errors", () => {
