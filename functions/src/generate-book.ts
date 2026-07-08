@@ -28,6 +28,7 @@ import type {
   IllustrationStyle,
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
+import { sendBookCompletionPush } from "./lib/push-notifications";
 import {
   buildSystemPrompt,
   buildImagePrompt,
@@ -3431,6 +3432,21 @@ export const generateBook = onDocumentCreated(
           status,
           ...statusPatch,
         });
+        // 生成完了/失敗のプッシュ通知（補助機能）。失敗しても生成フローには影響させない。
+        try {
+          await sendBookCompletionPush({
+            db,
+            messaging: admin.messaging(),
+            bookId,
+            status,
+          });
+        } catch (err) {
+          logger.warn("book_completion_push_failed", {
+            bookId,
+            status,
+            message: err instanceof Error ? err.message.slice(0, 200) : String(err),
+          });
+        }
       },
 
       updateBookFailure: async (bookId: string, message: string) => {

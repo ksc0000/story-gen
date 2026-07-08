@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { PageTransition } from "@/components/page-transition";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { AdminPlanPanel } from "@/components/settings/admin-plan-panel";
+import { InstallAppCard } from "@/components/install-app-card";
 import { functions } from "@/lib/firebase";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { ENTERPRISE_OPEN } from "@/lib/enterprise";
@@ -83,6 +84,9 @@ export default function SettingsPage() {
 
         {/* Admin-only developer panel (plan override + unlimited companions) */}
         <AdminPlanPanel />
+
+        {/* PWA: アプリとして使う（ホーム画面追加＋通知の入口） */}
+        <InstallAppCard />
 
         {/* 団体契約（エンタープライズ）。一般公開まで「準備中」バッジを表示（enterprise.ts 参照） */}
         <Card className="border-violet-100 shadow-sm">
