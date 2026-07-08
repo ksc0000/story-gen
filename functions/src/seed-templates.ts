@@ -1328,7 +1328,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{familyMembers}といっしょに、かざりつけのじゅんびをたのしくすすめます。",
-          baby_toddler: "ふうせん ぽん。いっしょに じゅんび。",
+          baby_toddler: "ふうせん ぽん、ぽん。みんなで じゅんび、たのしいね。",
           preschool_3_4:
             "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。おへやが すこしずつ きらきらに なります。",
           early_reader_5_6:
@@ -1343,7 +1343,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "ケーキとろうそくを見つけた{childName}の目は、きらきらかがやきました。",
-          baby_toddler: "ケーキ みつけた。ろうそく きらり。",
+          baby_toddler: "ケーキ みつけた！ ろうそく きらきら、きらきら。",
           preschool_3_4:
             "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。うれしい こえが ふわっと ひろがります。",
           early_reader_5_6:
@@ -1480,7 +1480,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。",
-          baby_toddler: "{place}に ついたよ。いりぐち、おおきい。",
+          baby_toddler: "{childName}、{place}に とうちゃく。わくわく。",
           preschool_3_4:
             "{childName}は、{familyMembers}といっしょに{place}のいりぐちに つきました。たかい ゲートを みあげて、こころが はずみます。",
           early_reader_5_6:
@@ -1495,7 +1495,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "おおきな どうぶつを みつけた{childName}は、声も でないほど びっくりしました。",
-          baby_toddler: "ぞうさん、おおきい。びっくり。",
+          baby_toddler: "ぞうさん、おおきい！ {childName}、びっくり。",
           preschool_3_4:
             "おおきな どうぶつを みつけた{childName}は、声も でないほど びっくりしました。でも、すぐに もっと みたくて まえへ すすみます。",
           early_reader_5_6:
@@ -1817,7 +1817,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "きょう みつけた とくべつな はっぱ。だいじに てにもって、にこにこ。",
-          baby_toddler: "はっぱ、みつけた。きれいにね。",
+          baby_toddler: "きれいな はっぱ、みつけた。だいじ、だいじ。",
           preschool_3_4:
             "きょう みつけた とくべつな はっぱ。だいじに てに もって、にこにこ。",
           early_reader_5_6:
@@ -2192,7 +2192,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "おともだちが「いっしょにあそびたいな」といいました。",
-          baby_toddler: "いっしょに あそぼ。どうしよう。",
+          baby_toddler: "「いっしょに あそぼ」。{childName}、どうしようかな。",
           preschool_3_4:
             "おともだちが「いっしょにあそびたいな」と いいました。{childName}は すこしだけ まよいます。",
           early_reader_5_6:
@@ -2296,7 +2296,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "おつきさまが「きょうもだいじょうぶ」と見まもってくれているようでした。",
-          baby_toddler: "だいじょうぶ、って おつきさま。",
+          baby_toddler: "「だいじょうぶだよ」。おつきさま、にっこり。",
           preschool_3_4:
             "おつきさまが「きょうも だいじょうぶ」と 見まもってくれているようでした。",
           early_reader_5_6:
@@ -2446,7 +2446,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、ふとんの中にもぐりこみました。まぶたがそっとおもくなってきます。おやすみなさい。",
-          baby_toddler: "ふとんに もぐって。まぶた おもい。おやすみ。",
+          baby_toddler: "おふとんに もぐって、まぶた とろん。おやすみ。",
           preschool_3_4:
             "{childName}は、ふとんの なかに もぐりこみました。まぶたが そっと おもくなってきます。おやすみなさい。",
           early_reader_5_6:
@@ -2520,7 +2520,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "ロケットにのりこんで、{childName}のそうぞうのうちゅうがひろがります。",
-          baby_toddler: "ロケット のって、しゅっぱつ。",
+          baby_toddler: "ロケットに のって、しゅっぱつ、しゅっぱつ！",
           preschool_3_4:
             "ロケットに のりこんで、{childName}の そうぞうの うちゅうが ひろがります。",
           early_reader_5_6:
@@ -2625,7 +2625,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "ロケットにのりこんで、カウントダウン！ ３、２、１、はっしゃ！",
-          baby_toddler: "ロケット のったよ。しゅっぱつ！",
+          baby_toddler: "さん、に、いち、はっしゃ！ ロケット、しゅっぱつ！",
           preschool_3_4:
             "ロケットに のりこんで、カウントダウン！ ３、２、１、はっしゃ！",
           early_reader_5_6:
@@ -2685,7 +2685,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "そろそろ おうちに かえりましょう。ロケットは ゆっくり ちじょうへ おりていきます。",
-          baby_toddler: "おうち、かえろう。ゆっくりね。",
+          baby_toddler: "そろそろ おうちへ。ロケット、ゆっくり ゆっくり。",
           preschool_3_4:
             "そろそろ おうちに かえりましょう。ロケットは ゆっくり ちじょうへ おりていきます。",
           early_reader_5_6:
@@ -2760,7 +2760,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "レインコートをきて、{childName}はそっとそとへでました。みずたまりがまるで宝ものみたいです。",
-          baby_toddler: "レインコート きて、そとへ ぴょこん。",
+          baby_toddler: "レインコート きて、そとへ ぴょこん。あめ、わくわく。",
           preschool_3_4:
             "レインコートをきて、{childName}は そっと そとへでました。みずたまりが きらきら しています。",
           early_reader_5_6:
@@ -2790,7 +2790,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "おうちにもどって、{childName}は「雨の日もたのしかったね」とにっこりしました。{parentMessage}",
-          baby_toddler: "ただいま。あめのひ、たのしかったね。{parentMessage}",
+          baby_toddler: "ただいま。あめのひも たのしいね。{parentMessage}",
           preschool_3_4:
             "おうちにもどって、{childName}は「雨の日も たのしかったね」と にっこりしました。さいごに、{parentMessage}",
           early_reader_5_6:
@@ -2854,7 +2854,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、できそうなおてつだいを見つけました。小さなかごをもって、タオルをはこびます。",
-          baby_toddler: "おてつだい みつけた。はこぶよ。",
+          baby_toddler: "おてつだい、みつけた。{childName}、はこぶよ。",
           preschool_3_4:
             "{childName}は、できそうな おてつだいを 見つけました。ちいさな かごをもって、タオルを はこびます。",
           early_reader_5_6:
@@ -2884,7 +2884,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は「またおてつだいしたいな」と思いました。{parentMessage}",
-          baby_toddler: "また おてつだい したいな。{parentMessage}",
+          baby_toddler: "{childName}、にこにこ。「また したいな」。{parentMessage}",
           preschool_3_4:
             "{childName}は「また おてつだい したいな」と おもいました。さいごに、{parentMessage}",
           early_reader_5_6:
@@ -2947,7 +2947,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "青いシートを広げてお花見ピクニック。ピンクの花びらがお弁当に飛んできました。",
-          baby_toddler: "シート ひろげて ぴくにっく！",
+          baby_toddler: "シートを ひろげて、ぴくにっく。はなびら ふわり。",
           preschool_3_4:
             "あおい シートを ひろげて おはなみ ぴくにっく。ピンクの はなびらが とんで きました。",
           early_reader_5_6:
@@ -2975,7 +2975,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "帰り道、{childName}の手にはピンクの花びらがそっと残っていました。{parentMessage}",
-          baby_toddler: "はなびら おてて に。{parentMessage}",
+          baby_toddler: "おててに はなびら、ひとひら。{parentMessage}",
           preschool_3_4:
             "かえりみち、{childName}の てには ピンクの はなびらが のこっていました。{parentMessage}",
           early_reader_5_6:
@@ -3038,7 +3038,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "ひしもちとあられをお供えしました。ピンク・白・緑のきれいな色です。",
-          baby_toddler: "もも いろ おもち、かわいい！",
+          baby_toddler: "ひなあられ、ピンク しろ みどり。かわいいね。",
           preschool_3_4:
             "ひしもちと あられを おそなえ しました。ピンク・しろ・みどりの きれいな いろです。",
           early_reader_5_6:
@@ -3052,7 +3052,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}はおひなさまと目が合って、やさしい気持ちになりました。",
-          baby_toddler: "おひなさま、みてるよ。やさしい。",
+          baby_toddler: "おひなさまと めが あった。にっこり、やさしいね。",
           preschool_3_4:
             "{childName}は おひなさまと めが あって、やさしい きもちに なりました。",
           early_reader_5_6:
@@ -3066,7 +3066,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}の健やかな成長を、おひなさまが優しく見守っています。{parentMessage}",
-          baby_toddler: "おひなさま、みてるね。{parentMessage}",
+          baby_toddler: "おひなさま、みてくれてるね。{parentMessage}",
           preschool_3_4:
             "{childName}の すこやかな せいちょうを、おひなさまが やさしく みまもっています。{parentMessage}",
           early_reader_5_6:
@@ -3115,7 +3115,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は空を見上げました。こいのぼりが大きく泳いでいます！",
-          baby_toddler: "こいのぼり、おおきい！わーい！",
+          baby_toddler: "こいのぼり、おおきい！ {childName}、わーい わーい。",
           preschool_3_4:
             "{childName}は そらを みあげました。こいのぼりが おおきく およいでいます！",
           early_reader_5_6:
@@ -3143,7 +3143,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "かぶとをかぶった{childName}はとても勇ましく見えました。",
-          baby_toddler: "かぶと、つよそう！かっこいい！",
+          baby_toddler: "かぶとの {childName}、つよそう！ かっこいい！",
           preschool_3_4:
             "かぶとを かぶった {childName}は とても ゆうましく みえました。",
           early_reader_5_6:
@@ -3157,7 +3157,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}が元気に大きくなれますように。こいのぼりが空を泳ぎます。{parentMessage}",
-          baby_toddler: "こいのぼり、げんきでね。{parentMessage}",
+          baby_toddler: "こいのぼりさん、またね。げんきに およいでね。",
           preschool_3_4:
             "{childName}が げんきに おおきく なれますように。こいのぼりが そらを およぎます。{parentMessage}",
           early_reader_5_6:
@@ -3206,7 +3206,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は笹の葉にお願いを書いた短冊をかざりました。",
-          baby_toddler: "ほし きれい。たんざく かわいい。",
+          baby_toddler: "たんざく ゆらゆら。おほしさま、きれいだね。",
           preschool_3_4:
             "{childName}は ささの はに おねがいを かいた たんざくを かざりました。",
           early_reader_5_6:
@@ -3248,7 +3248,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}の願い事が、きっと星まで届きますように。{parentMessage}",
-          baby_toddler: "ほしさん、とどけー！{parentMessage}",
+          baby_toddler: "ほしさん、おねがい とどけー！{parentMessage}",
           preschool_3_4:
             "{childName}の ねがいごとが、きっと ほしまで とどきますように。{parentMessage}",
           early_reader_5_6:
@@ -3339,7 +3339,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "楽しいお祭りの夜。{childName}の心にあかい提灯の灯りが残りました。{parentMessage}",
-          baby_toddler: "まつり、たのしかった！{parentMessage}",
+          baby_toddler: "おまつり わいわい、たのしかったね。{parentMessage}",
           preschool_3_4:
             "たのしい おまつりの よる。あかい ちょうちんの あかりが こころに のこりました。{parentMessage}",
           early_reader_5_6:
@@ -3402,7 +3402,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "どーん！大きな花火が夜空に咲きました！",
-          baby_toddler: "どーん！はなび、おおきい！きれい！",
+          baby_toddler: "どーん！ おおきな はなび。{childName}、わあ！",
           preschool_3_4:
             "どーん！おおきな はなびが よぞらに さきました！",
           early_reader_5_6:
@@ -3430,7 +3430,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "花火の夜はずっとずっと忘れない。{parentMessage}",
-          baby_toddler: "はなび、きれかった。{parentMessage}",
+          baby_toddler: "ぱちぱち はなび、きれいだったね。{parentMessage}",
           preschool_3_4:
             "はなびの よるは ずっとずっと わすれない。{parentMessage}",
           early_reader_5_6:
@@ -3507,7 +3507,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は友だちと一緒に仮装パレードをしました！",
-          baby_toddler: "おともだちと いっしょ！えへへ。",
+          baby_toddler: "おともだちと パレード。わいわい、えへへ。",
           preschool_3_4:
             "{childName}は ともだちと いっしょに かそう パレードを しました！",
           early_reader_5_6:
@@ -3521,7 +3521,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "ハロウィンの夜は楽しかったね。またくるよ、オレンジのかぼちゃ。{parentMessage}",
-          baby_toddler: "かぼちゃ、またね！{parentMessage}",
+          baby_toddler: "かぼちゃさん、またね。ばいばーい。{parentMessage}",
           preschool_3_4:
             "ハロウィンの よるは たのしかったね。またくるよ、オレンジの かぼちゃ。{parentMessage}",
           early_reader_5_6:
@@ -3598,7 +3598,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "おうちでおせちとお雑煮をいただきました。おいしくて温かい！",
-          baby_toddler: "おぞうに、あたたかい！おいしい！",
+          baby_toddler: "おぞうに ほかほか。あったかくて おいしい！",
           preschool_3_4:
             "おうちで おせちと おぞうにを いただきました。おいしくて あたたかい！",
           early_reader_5_6:
@@ -3612,7 +3612,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "新しい一年が始まりました。{childName}にとって良い一年になりますように。{parentMessage}",
-          baby_toddler: "あたらしい とし、おめでとう！{parentMessage}",
+          baby_toddler: "{childName}、あけまして おめでとう！{parentMessage}",
           preschool_3_4:
             "あたらしい いちねんが はじまりました。{childName}にとって よい いちねんに なりますように。{parentMessage}",
           early_reader_5_6:
@@ -10037,7 +10037,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}はお友だちと一緒に遊んで、笑顔になりました。",
-          baby_toddler: "おともだち！いっしょに あそぼ！",
+          baby_toddler: "おともだちと あそぼ。{childName}、にこにこ。",
           preschool_3_4:
             "{childName}は おともだちと いっしょに あそんで、えがおに なりました。",
           early_reader_5_6:
@@ -10051,7 +10051,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "よくがんばった{childName}。明日も一緒に遊ぼうね。{parentMessage}",
-          baby_toddler: "がんばったね！えらい！{parentMessage}",
+          baby_toddler: "よく がんばったね。{childName}、えらいね。{parentMessage}",
           preschool_3_4:
             "よく がんばった {childName}。あしたも いっしょに あそぼうね。{parentMessage}",
           early_reader_5_6:
@@ -10114,7 +10114,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "入学式で{childName}は新しいお友だちと出会いました。",
-          baby_toddler: "おともだち、いっぱい！わーい！",
+          baby_toddler: "あたらしい おともだち、いっぱい。わーい わーい。",
           preschool_3_4:
             "にゅうがくしきで {childName}は あたらしい おともだちと であいました。",
           early_reader_5_6:
@@ -10191,7 +10191,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は初めて赤ちゃんを見てびっくりしました。こんなに小さいの！",
-          baby_toddler: "あかちゃん、ちっちゃい！かわいい。",
+          baby_toddler: "あかちゃん、ちっちゃいね。{childName}、びっくり。",
           preschool_3_4:
             "{childName}は はじめて あかちゃんを みて びっくりしました。こんなに ちいさいの！",
           early_reader_5_6:
@@ -10205,7 +10205,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "赤ちゃんが{childName}の指を握りました。あたたかくて、うれしい！",
-          baby_toddler: "あかちゃん、てつないだ！あったかい。",
+          baby_toddler: "あかちゃんと おてて ぎゅっ。あったかいね。",
           preschool_3_4:
             "あかちゃんが {childName}の ゆびを にぎりました。あたたかくて、うれしい！",
           early_reader_5_6:
@@ -10233,7 +10233,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "二人でいっしょに大きくなろうね。{parentMessage}",
-          baby_toddler: "いっしょに おおきくなろうね。{parentMessage}",
+          baby_toddler: "ふたりで いっしょに、おおきく なろうね。{parentMessage}",
           preschool_3_4:
             "ふたりで いっしょに おおきく なろうね。{parentMessage}",
           early_reader_5_6:
@@ -10324,7 +10324,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "はじめての飛行機、{childName}は大空を飛んだ！{parentMessage}",
-          baby_toddler: "そら とんだよ！すごい！{parentMessage}",
+          baby_toddler: "おそらを とんだね。すごいね、すごいね。{parentMessage}",
           preschool_3_4:
             "はじめての ひこうき、{childName}は おおぞらを とんだ！{parentMessage}",
           early_reader_5_6:
@@ -10415,7 +10415,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "よくがんばった{childName}。諦めない心がすごい！{parentMessage}",
-          baby_toddler: "がんばった！えらい！{parentMessage}",
+          baby_toddler: "さいごまで がんばったね。えらいね。{parentMessage}",
           preschool_3_4:
             "よく がんばった {childName}。あきらめない こころが すごい！{parentMessage}",
           early_reader_5_6:
@@ -10506,7 +10506,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "よくできた{childName}！頑張った姿が金の星みたいに輝いていたよ。{parentMessage}",
-          baby_toddler: "じょうずだった！えらい！{parentMessage}",
+          baby_toddler: "じょうずだったね。きらきら してたよ。{parentMessage}",
           preschool_3_4:
             "よく できた {childName}！がんばった すがたが きんの ほしみたいに かがやいていたよ。{parentMessage}",
           early_reader_5_6:
@@ -10583,7 +10583,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は昔の小さかった自分の写真を見て、にっこりしました。",
-          baby_toddler: "むかし ちっちゃかった、いまは おおきい！",
+          baby_toddler: "むかしは ちっちゃい。いまは おおきい！ すごいね。",
           preschool_3_4:
             "{childName}は むかしの ちいさかった じぶんの しゃしんを みて、にっこりしました。",
           early_reader_5_6:
@@ -10597,7 +10597,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "これからもどんどん大きくなってね、{childName}。{parentMessage}",
-          baby_toddler: "もっと おおきく なあれ！{parentMessage}",
+          baby_toddler: "もっと もっと、おおきく なあれ！{parentMessage}",
           preschool_3_4:
             "これからも どんどん おおきく なってね、{childName}。{parentMessage}",
           early_reader_5_6:
@@ -10674,7 +10674,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "黄色いひまわりと緑の葉っぱ。色には名前があるんだね！",
-          baby_toddler: "きいろい はな！みどりの は！",
+          baby_toddler: "きいろい はな、みどりの は。きれいだね。",
           preschool_3_4:
             "きいろい ひまわりと みどりの はっぱ。いろには なまえが あるんだね！",
           early_reader_5_6:
@@ -10688,7 +10688,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "世界はいろんな色でいっぱい。{childName}はどんな色が好き？{parentMessage}",
-          baby_toddler: "にじ きれい！すき！{parentMessage}",
+          baby_toddler: "にじ、きれいだね。{childName}、どの いろ すき？{parentMessage}",
           preschool_3_4:
             "せかいは いろんな いろで いっぱい。{childName}は どんな いろが すき？{parentMessage}",
           early_reader_5_6:
@@ -10751,7 +10751,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "2つの蝶々、3つの花。{childName}はどんどんかぞえました！",
-          baby_toddler: "ちょうちょ ふたつ！はな みっつ！",
+          baby_toddler: "ちょうちょ ふたつ、おはな みっつ。かぞえよう。",
           preschool_3_4:
             "2つの ちょうちょ、3つの はな。{childName}は どんどん かぞえました！",
           early_reader_5_6:
@@ -10765,7 +10765,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は丸い石を10個並べました。とお！できた！",
-          baby_toddler: "いし ならべて、とお！やった！",
+          baby_toddler: "いし ならべて、とお！ できた、できた！",
           preschool_3_4:
             "{childName}は まるい いしを 10こ ならべました。とお！できた！",
           early_reader_5_6:
@@ -10779,7 +10779,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "かずを知るともっとたくさんのことがわかる。{parentMessage}",
-          baby_toddler: "かず、たのしい！{parentMessage}",
+          baby_toddler: "いち、に、さん。かぞえるの、たのしいね。{parentMessage}",
           preschool_3_4:
             "かずを しると もっと たくさんのことが わかる。{parentMessage}",
           early_reader_5_6:
@@ -10870,7 +10870,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "どうぶつの声を知ると、もっとなかよしになれるね。{parentMessage}",
-          baby_toddler: "どうぶつ、なかよし！{parentMessage}",
+          baby_toddler: "どうぶつさんと なかよし。またね、またね。{parentMessage}",
           preschool_3_4:
             "どうぶつの こえを しると、もっと なかよしに なれるね。{parentMessage}",
           early_reader_5_6:
@@ -10919,7 +10919,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "春になりました。桜が咲いて、あたたかいです。",
-          baby_toddler: "はる！さくら さいた！あたたかい。",
+          baby_toddler: "はるだ。さくら さいた。ぽかぽか、あたたかい。",
           preschool_3_4:
             "はるに なりました。さくらが さいて、あたたかいです。",
           early_reader_5_6:
@@ -10947,7 +10947,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "秋になると葉っぱが赤や黄色に変わりました。ふしぎだな！",
-          baby_toddler: "あき！は っぱ あかい！きいろ！",
+          baby_toddler: "あきの はっぱ、あかい、きいろい。きれいだね。",
           preschool_3_4:
             "あきに なると はっぱが あかや きいろに かわりました。ふしぎだな！",
           early_reader_5_6:
@@ -10961,7 +10961,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "冬は雪が降ってきた！四季を通して自然は変わるんだね。{parentMessage}",
-          baby_toddler: "ゆき！しろい！さむい！{parentMessage}",
+          baby_toddler: "ゆきだ、まっしろ。つめたいね。{parentMessage}",
           preschool_3_4:
             "ふゆは ゆきが ふってきた！しきを とおして しぜんは かわるんだね。{parentMessage}",
           early_reader_5_6:
@@ -11010,7 +11010,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は丸いものをさがしました。タイヤも時計も丸い！",
-          baby_toddler: "まる！タイヤ まる！おかね まる！",
+          baby_toddler: "タイヤも とけいも、まる。まるまる、いっぱい。",
           preschool_3_4:
             "{childName}は まるい ものを さがしました。タイヤも とけいも まるい！",
           early_reader_5_6:
@@ -11038,7 +11038,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は三角形のお山と屋根を見つけました！",
-          baby_toddler: "やま さんかく！やね さんかく！",
+          baby_toddler: "おやまも やねも、さんかく。みつけた、みつけた！",
           preschool_3_4:
             "{childName}は さんかくの おやまと やねを みつけました！",
           early_reader_5_6:
@@ -11052,7 +11052,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "かたちを知ると、世界がもっとよく見えてくる。{parentMessage}",
-          baby_toddler: "かたち みつけた！たのしかった！{parentMessage}",
+          baby_toddler: "かたちさがし、たのしかったね。{parentMessage}",
           preschool_3_4:
             "かたちを しると、せかいが もっと よく みえてくる。{parentMessage}",
           early_reader_5_6:
@@ -11283,7 +11283,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は巨大な足跡を発見しました。きょうりゅうのあしあとです！",
-          baby_toddler: "おおきい あしあと、びっくり！",
+          baby_toddler: "おおきな あしあと！ {childName}、びっくり。",
           preschool_3_4:
             "{childName}は きょだいな あしあとを みつけました。きょうりゅうの あしあとです！",
           early_reader_5_6:
@@ -11297,7 +11297,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "草食恐竜のブラキオサウルスが{childName}に首をのばして挨拶しました。",
-          baby_toddler: "きょうりゅう、おおきい！なかよし！",
+          baby_toddler: "きょうりゅうさん、おおきい！ こんにちは。",
           preschool_3_4:
             "くさを たべている おおきな きょうりゅうが、{childName}に くびを のばして あいさつ しました。",
           early_reader_5_6:
@@ -11311,7 +11311,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "きょうりゅうの子どもと{childName}は一緒に走って遊びました！",
-          baby_toddler: "いっしょに はしろう！たのしい！",
+          baby_toddler: "きょうりゅうさんと かけっこ。たのしいね、たのしいね。",
           preschool_3_4:
             "きょうりゅうの こどもと {childName}は いっしょに はしって あそびました！",
           early_reader_5_6:
@@ -11325,7 +11325,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は恐竜たちに手を振って帰り道につきました。{parentMessage}",
-          baby_toddler: "きょうりゅう、またね！{parentMessage}",
+          baby_toddler: "きょうりゅうさん、またね。ばいばーい。{parentMessage}",
           preschool_3_4:
             "{childName}は きょうりゅうたちに てを ふって かえりみちに つきました。{parentMessage}",
           early_reader_5_6:
@@ -11374,7 +11374,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}はキャンディの門の前に立ちました。あまいにおいがします。",
-          baby_toddler: "あまい においー！きゃんでぃ！",
+          baby_toddler: "あまい におい。{childName}、くんくん くんくん。",
           preschool_3_4:
             "{childName}は キャンディの もんの まえに たちました。あまい においが します。",
           early_reader_5_6:
@@ -11416,7 +11416,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}はキャンディのおみやげを持って帰りました。{parentMessage}",
-          baby_toddler: "キャンディ もって かえろう！{parentMessage}",
+          baby_toddler: "キャンディ もって、にこにこ かえろう。{parentMessage}",
           preschool_3_4:
             "{childName}は キャンディの おみやげを もって かえりました。{parentMessage}",
           early_reader_5_6:
@@ -11556,7 +11556,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}が夜中に目を覚ますと、部屋のおもちゃが動いていました。",
-          baby_toddler: "おもちゃ うごいた！びっくり！",
+          baby_toddler: "よなかに おもちゃが うごいた！ びっくり！",
           preschool_3_4:
             "{childName}が よなかに めを さますと、へやの おもちゃが うごいていました。",
           early_reader_5_6:
@@ -11570,7 +11570,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "おもちゃたちが{childName}をパーティーに招待してくれました！",
-          baby_toddler: "パーティー、はいって！わーい！",
+          baby_toddler: "「パーティーに どうぞ」。{childName}、わーい！",
           preschool_3_4:
             "おもちゃたちが {childName}を パーティーに しょうたいして くれました！",
           early_reader_5_6:
@@ -11584,7 +11584,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}はおもちゃたちと一緒に踊りました！たのしくてたまりません。",
-          baby_toddler: "いっしょに おどろう、たのしい！",
+          baby_toddler: "おもちゃさんと おどろう。くるくる、たのしい！",
           preschool_3_4:
             "{childName}は おもちゃたちと いっしょに おどりました！たのしくて たまりません。",
           early_reader_5_6:
@@ -11598,7 +11598,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "朝が来て、おもちゃたちは元の場所に戻りました。{parentMessage}",
-          baby_toddler: "おはよう、おもちゃ ねんね。{parentMessage}",
+          baby_toddler: "あさだよ。おもちゃさん、おやすみ、またね。{parentMessage}",
           preschool_3_4:
             "あさが きて、おもちゃたちは もとの ばしょに もどりました。{parentMessage}",
           early_reader_5_6:
@@ -11689,7 +11689,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "ひとりでできた{childName}はとても輝いています。{parentMessage}",
-          baby_toddler: "できた！えらい！すごい！{parentMessage}",
+          baby_toddler: "ひとりで できたね。すごい、すごい！{parentMessage}",
           preschool_3_4:
             "ひとりで できた {childName}は とても かがやいています。{parentMessage}",
           early_reader_5_6:
@@ -11738,7 +11738,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は自分でシャツを選びました。きいろいボタンがかわいい！",
-          baby_toddler: "シャツ きる！じぶんで！かわいい！",
+          baby_toddler: "シャツ えらんで、じぶんで きるよ。えいっ。",
           preschool_3_4:
             "{childName}は じぶんで シャツを えらびました。きいろい ボタンが かわいい！",
           early_reader_5_6:
@@ -11780,7 +11780,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "自分でできた{childName}はもう立派なお兄ちゃん・お姉ちゃんです。{parentMessage}",
-          baby_toddler: "じぶんで できた！えらい！{parentMessage}",
+          baby_toddler: "じぶんで できたね。えっへん、すごいでしょ。{parentMessage}",
           preschool_3_4:
             "じぶんで できた {childName}は もう りっぱな おにいちゃん・おねえちゃんです。{parentMessage}",
           early_reader_5_6:
@@ -11829,7 +11829,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}はお皿の野菜をじっと見ました。たべられるかな？",
-          baby_toddler: "みどりの やさい。じっとみてる。",
+          baby_toddler: "みどりの やさいさんと、にらめっこ。じーっ。",
           preschool_3_4:
             "{childName}は おさらの やさいを じっと みました。たべられるかな？",
           early_reader_5_6:
@@ -11843,7 +11843,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "ブロッコリーさんが「おいしいよ！」と言っているみたいです。",
-          baby_toddler: "ブロッコリー、おいしいよ！はっぱ！",
+          baby_toddler: "ブロッコリーさん、にこにこ。「おいしいよ」だって。",
           preschool_3_4:
             "ブロッコリーさんが 「おいしいよ！」と いっているみたいです。",
           early_reader_5_6:
@@ -11871,7 +11871,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "やさいを食べた{childName}はもっと強くなれます。{parentMessage}",
-          baby_toddler: "やさい たべた！つよくなる！{parentMessage}",
+          baby_toddler: "やさい たべたら、げんき もりもり！{parentMessage}",
           preschool_3_4:
             "やさいを たべた {childName}は もっと つよく なれます。{parentMessage}",
           early_reader_5_6:
@@ -11920,7 +11920,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は自分で起きて、顔を洗いました。すっきり！",
-          baby_toddler: "かお あらった！すっきり！おはよう！",
+          baby_toddler: "おかお じゃぶじゃぶ。すっきり、おはよう！",
           preschool_3_4:
             "{childName}は じぶんで おきて、かおを あらいました。すっきり！",
           early_reader_5_6:
@@ -11948,7 +11948,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "着替えも準備も全部できた！{childName}はドアを開けました。",
-          baby_toddler: "きがえ できた！いってきます！",
+          baby_toddler: "おきがえ できた！ 「いってきまーす！」",
           preschool_3_4:
             "きがえも じゅんびも ぜんぶ できた！{childName}は ドアを あけました。",
           early_reader_5_6:
@@ -11962,7 +11962,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "自分でできた朝は、気持ちいい！{parentMessage}",
-          baby_toddler: "じぶんで できた！えらい！{parentMessage}",
+          baby_toddler: "じぶんで できた あさは、きもちいいね。{parentMessage}",
           preschool_3_4:
             "じぶんで できた あさは、きもちいい！{parentMessage}",
           early_reader_5_6:
@@ -12025,7 +12025,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "れんしゅう、れんしゅう！{childName}はあきらめません。",
-          baby_toddler: "れんしゅう！もういっかい！あきらめない！",
+          baby_toddler: "れんしゅう、れんしゅう。もういっかい、えいっ！",
           preschool_3_4:
             "れんしゅう、れんしゅう！{childName}は あきらめません。",
           early_reader_5_6:
@@ -12039,7 +12039,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "まめがつかめた！{childName}は「できた！！」と叫びました！",
-          baby_toddler: "まめ、つかめた！やった！できた！！",
+          baby_toddler: "まめ、つかめた！ できた、できた！",
           preschool_3_4:
             "まめが つかめた！{childName}は 「できた！！」と さけびました！",
           early_reader_5_6:
@@ -12053,7 +12053,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "お箸を使える{childName}は、もう立派なお兄ちゃん・お姉ちゃんです。{parentMessage}",
-          baby_toddler: "おはし、つかえた！えらい！{parentMessage}",
+          baby_toddler: "おはし つかえたね。えらいね。{parentMessage}",
           preschool_3_4:
             "おはしを つかえる {childName}は、もう りっぱな おにいちゃん・おねえちゃんです。{parentMessage}",
           early_reader_5_6:
@@ -12102,7 +12102,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は一人で遊んでいる子を見つけました。声をかけてみたいな。",
-          baby_toddler: "あのこ、なにしてる？いっしょにあそぶ？",
+          baby_toddler: "あのこ、なに してるのかな。あそびたいな。",
           preschool_3_4:
             "{childName}は ひとりで あそんでいる こを みつけました。こえを かけてみたいな。",
           early_reader_5_6:
@@ -12130,7 +12130,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "二人は手をつないで一緒に遊びました。とても楽しかった！",
-          baby_toddler: "てつないで、いっしょに！うれしい！",
+          baby_toddler: "てを つないで、いっしょに あそぼ。うれしいね。",
           preschool_3_4:
             "ふたりは てを つないで いっしょに あそびました。とても たのしかった！",
           early_reader_5_6:
@@ -12144,7 +12144,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "勇気を出して声をかけてよかった。{childName}に大切なともだちができました。{parentMessage}",
-          baby_toddler: "ともだち できた！うれしい！{parentMessage}",
+          baby_toddler: "ともだち できた！ うれしいね、うれしいね。{parentMessage}",
           preschool_3_4:
             "ゆうきを だして こえを かけてよかった。{childName}に たいせつな ともだちが できました。{parentMessage}",
           early_reader_5_6:
@@ -12207,7 +12207,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "小さなライオンが「ぼくもいっしょだよ！」と言いました。",
-          baby_toddler: "らいおん、いっしょ！こわくない！",
+          baby_toddler: "ライオンさんが いっしょ。もう こわくないよ。",
           preschool_3_4:
             "ちいさな ライオンが 「ぼくも いっしょだよ！」と いいました。",
           early_reader_5_6:
@@ -12235,7 +12235,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "ゆうきを出した{childName}はゴールドの星のようにかがやいています。{parentMessage}",
-          baby_toddler: "ゆうき だした！すごい！{parentMessage}",
+          baby_toddler: "ゆうき だせたね。ぴかぴか、かっこいい！{parentMessage}",
           preschool_3_4:
             "ゆうきを だした {childName}は ゴールドの ほしのように かがやいています。{parentMessage}",
           early_reader_5_6:
@@ -12284,7 +12284,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}はお友だちを泣かせてしまいました。胸がもやもやします。",
-          baby_toddler: "ともだち、ないてる。どうしよう。",
+          baby_toddler: "おともだち、えーん。{childName}、どうしよう。",
           preschool_3_4:
             "{childName}は おともだちを なかせてしまいました。むねが もやもや します。",
           early_reader_5_6:
@@ -12326,7 +12326,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "ごめんなさいが言えた{childName}のこころはにじのようにかがやいています。{parentMessage}",
-          baby_toddler: "ごめんなさい、なかよし！にじ！{parentMessage}",
+          baby_toddler: "なかなおり できた。にじが でたね。{parentMessage}",
           preschool_3_4:
             "ごめんなさいが いえた {childName}の こころは にじのように かがやいています。{parentMessage}",
           early_reader_5_6:
@@ -12375,7 +12375,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}はまどの外を見て目をまるくしました。しろい！ふしぎ！",
-          baby_toddler: "しろい！なに？！ふしぎ！ゆき！",
+          baby_toddler: "まどの そと、まっしろ！ ゆきだ、ゆきだ！",
           preschool_3_4:
             "{childName}は まどの そとを みて めを まるくしました。しろい！ふしぎ！",
           early_reader_5_6:
@@ -12417,7 +12417,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "はじめての雪を楽しんだ{childName}。この日のことは一生わすれません。{parentMessage}",
-          baby_toddler: "ゆき、たのしかった！またあそぼ！{parentMessage}",
+          baby_toddler: "ゆき、たのしかったね。また あそぼうね。{parentMessage}",
           preschool_3_4:
             "はじめての ゆきを たのしんだ {childName}。この ひのことは ずっと おぼえています。{parentMessage}",
           early_reader_5_6:
@@ -12466,7 +12466,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は公園に来ました。木の葉が赤くなっています！",
-          baby_toddler: "あかい はっぱ！きれい！こうえん！",
+          baby_toddler: "あかい はっぱ、いっぱい。あきの こうえんだ。",
           preschool_3_4:
             "{childName}は こうえんに きました。きのはが あかく なっています！",
           early_reader_5_6:
@@ -12480,7 +12480,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}はいちばん赤くてきれいなもみじを見つけました。これだ！",
-          baby_toddler: "あかい！きれい！もみじ！これ！",
+          baby_toddler: "まっかな もみじ、みつけた！ いちばん きれい！",
           preschool_3_4:
             "{childName}は いちばん あかくて きれいな もみじを みつけました。これだ！",
           early_reader_5_6:
@@ -12508,7 +12508,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "もみじを大切に持って帰った{childName}。あきのいろがかがやいています。{parentMessage}",
-          baby_toddler: "もみじ、かえった！たからもの！{parentMessage}",
+          baby_toddler: "もみじの たからもの、もって かえろう。{parentMessage}",
           preschool_3_4:
             "もみじを たいせつに もって かえった {childName}。あきのいろが かがやいています。{parentMessage}",
           early_reader_5_6:
@@ -12557,7 +12557,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}は虫かごをもってくさむらに入りました。いるかな？",
-          baby_toddler: "むしかご もって、くさむらへ。むしさん、どこかな？",
+          baby_toddler: "むしかご もって、そーっと くさむらへ。むしさん、いるかな。",
           preschool_3_4:
             "{childName}は むしかごを もって くさむらに はいりました。いるかな？",
           early_reader_5_6:
@@ -12585,7 +12585,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "つかまえた！{childName}の虫かごにバッタが入りました！",
-          baby_toddler: "つかまえた！バッタ、はいった！やった！",
+          baby_toddler: "つかまえた！ バッタさん、はいった！ やったー！",
           preschool_3_4:
             "つかまえた！{childName}の むしかごに バッタが はいりました！",
           early_reader_5_6:
@@ -12599,7 +12599,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "バッタをよく見てから、{childName}はそっと逃がしてあげました。またね！{parentMessage}",
-          baby_toddler: "バッタ、みた！さようなら！またね！{parentMessage}",
+          baby_toddler: "バッタさん、ばいばい。またね、またね。{parentMessage}",
           preschool_3_4:
             "バッタを よく みてから、{childName}は そっと にがしてあげました。またね！{parentMessage}",
           early_reader_5_6:
@@ -12676,7 +12676,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}はいちばんすきなお花を見つけました。「これがいちばんきれい！」",
-          baby_toddler: "これ！いちばん！きれい！すき！",
+          baby_toddler: "いちばん すきな おはな、みつけた！ これ、すき！",
           preschool_3_4:
             "{childName}は いちばん すきな おはなを みつけました。「これが いちばん きれい！」",
           early_reader_5_6:
@@ -12690,7 +12690,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "おはなばたけの{childName}はひまわりのようにかがやいています。{parentMessage}",
-          baby_toddler: "おはな、きれかった！また いく！{parentMessage}",
+          baby_toddler: "おはな、きれいだったね。また いこうね。{parentMessage}",
           preschool_3_4:
             "おはなばたけの {childName}は ひまわりのように かがやいています。{parentMessage}",
           early_reader_5_6:
@@ -12739,7 +12739,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}はてのひらにごはんをのせました。あたたかい！",
-          baby_toddler: "ごはん、のせた！あたたかい！てのひら！",
+          baby_toddler: "てのひらに ごはん。ほかほか、あったかい。",
           preschool_3_4:
             "{childName}は てのひらに ごはんを のせました。あたたかい！",
           early_reader_5_6:
@@ -12767,7 +12767,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "のりをまいたらできあがり！{childName}がつくったおにぎりです！",
-          baby_toddler: "のり、まいた！できた！おにぎり！",
+          baby_toddler: "のりを ぺたり。{childName}の おにぎり、できあがり！",
           preschool_3_4:
             "のりを まいたら できあがり！{childName}が つくった おにぎりです！",
           early_reader_5_6:
@@ -12781,7 +12781,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "じぶんでつくったおにぎりはとくべつにおいしい！{parentMessage}",
-          baby_toddler: "おいしい！じぶんで つくった！{parentMessage}",
+          baby_toddler: "じぶんで つくった おにぎり、おいしいね！{parentMessage}",
           preschool_3_4:
             "じぶんで つくった おにぎりは とくべつに おいしい！{parentMessage}",
           early_reader_5_6:
@@ -12858,7 +12858,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "もげた！{childName}は大きなりんごを両手で持ちました！",
-          baby_toddler: "もげた！おおきい！りょうてで もった！",
+          baby_toddler: "もげた！ おおきい りんご、りょうてで ぎゅっ。",
           preschool_3_4:
             "もげた！{childName}は おおきな りんごを りょうてで もちました！",
           early_reader_5_6:
@@ -12921,7 +12921,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
       pages: [
         buildAgeSpecificPage({
           textTemplate: "{childName}はプールのふちに立ちました。水が青くてきれい！",
-          baby_toddler: "プール！あおい！きれい！はいる？",
+          baby_toddler: "プールの みず、あおくて きらきら。はいれるかな。",
           preschool_3_4:
             "{childName}は プールの ふちに たちました。みずが あおくて きれい！",
           early_reader_5_6:
@@ -12935,7 +12935,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}はゆっくり水に入りました。つめたい！でも、きもちいい！",
-          baby_toddler: "みずに はいった！つめたい！きもちいい！",
+          baby_toddler: "ちゃぷん。つめたい！ でも きもちいい！",
           preschool_3_4:
             "{childName}は ゆっくり みずに はいりました。つめたい！でも、きもちいい！",
           early_reader_5_6:
@@ -12963,7 +12963,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "はじめてのプールで大はしゃぎの{childName}。また来たい！{parentMessage}",
-          baby_toddler: "プール、たのしかった！また きたい！{parentMessage}",
+          baby_toddler: "プール、たのしかったね。また こようね。{parentMessage}",
           preschool_3_4:
             "はじめての プールで おおはしゃぎの {childName}。また きたい！{parentMessage}",
           early_reader_5_6:
@@ -13026,7 +13026,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "たおれても、たおれても、{childName}はまた立ち上がります！",
-          baby_toddler: "ころんだ！でも、またのる！あきらめない！",
+          baby_toddler: "ころんでも、えいっ。なんども なんども のるよ。",
           preschool_3_4:
             "たおれても、たおれても、{childName}は また たちあがります！",
           early_reader_5_6:
@@ -13040,7 +13040,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "こげた！ひとりで！{childName}は風のように走りました！",
-          baby_toddler: "こげた！ひとりで！かぜみたい！",
+          baby_toddler: "こげた！ ひとりで！ かぜみたいに びゅーん！",
           preschool_3_4:
             "こげた！ひとりで！{childName}は かぜのように はしりました！",
           early_reader_5_6:
@@ -13054,7 +13054,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "何度転んでも諦めなかった{childName}。かぜぐるまのようにかがやいています。{parentMessage}",
-          baby_toddler: "のれた！すごい！かっこいい！{parentMessage}",
+          baby_toddler: "じてんしゃ のれたね。かっこいいね！{parentMessage}",
           preschool_3_4:
             "なんど ころんでも あきらめなかった {childName}。かぜぐるまのように かがやいています。{parentMessage}",
           early_reader_5_6:
@@ -13183,7 +13183,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "やった！できた！{childName}はとびきりのえがおになりました。{parentMessage}",
-          baby_toddler: "やった！できた！{parentMessage}",
+          baby_toddler: "やったー、できたー！ {childName}、にこにこ。{parentMessage}",
           preschool_3_4:
             "やった！できた！{childName}はとびきりのえがおになりました。{parentMessage}",
           early_reader_5_6:
@@ -13417,7 +13417,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "{childName}と{storyRequest}はいつも一緒。どこへ行くときも。",
-          baby_toddler: "{storyRequest}！いっしょ！ずっと！",
+          baby_toddler: "だいすきな {storyRequest}と、いつも いっしょ。",
           preschool_3_4:
             "{childName}と{storyRequest}はいつも一緒。どこへ行くときも。",
           early_reader_5_6:
@@ -13433,7 +13433,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "だいすきなものがある。それだけで、今日もしあわせです。{parentMessage}",
-          baby_toddler: "だいすき！しあわせ！{parentMessage}",
+          baby_toddler: "だいすきが あるって、しあわせだね。{parentMessage}",
           preschool_3_4:
             "だいすきなものがある。それだけで、今日もしあわせです。{parentMessage}",
           early_reader_5_6:
@@ -13691,7 +13691,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "大好きな人たちとの、大切な思い出ができました。{parentMessage}",
-          baby_toddler: "たのしかった！ありがとう！{parentMessage}",
+          baby_toddler: "たのしかったね。ありがとう、ありがとう。{parentMessage}",
           preschool_3_4:
             "大好きな人たちとの、大切な思い出ができました。{parentMessage}",
           early_reader_5_6:
@@ -13840,7 +13840,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "また{storyRequest}へ行こうね。{parentMessage}",
-          baby_toddler: "またいこうね！たのしかった！{parentMessage}",
+          baby_toddler: "また いこうね。たのしかったね。{parentMessage}",
           preschool_3_4: "また{storyRequest}へ行こうね。{parentMessage}",
           early_reader_5_6:
             "また{storyRequest}へ行こうね。次はもっといろんなことを見つけよう。{parentMessage}",
@@ -13940,7 +13940,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "夢を持つって、すてきなことです。{parentMessage}",
-          baby_toddler: "ゆめ！すてき！{parentMessage}",
+          baby_toddler: "ゆめが あるって、すてきだね。{parentMessage}",
           preschool_3_4:
             "夢を持つって、すてきなことです。{parentMessage}",
           early_reader_5_6:
@@ -14008,7 +14008,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{familyMembers}といっしょに、かざりつけのじゅんびをたのしくすすめます。",
-          baby_toddler: "ふうせん ぽん。いっしょに じゅんび。",
+          baby_toddler: "ふうせん ぽん、ぽん。みんなで じゅんび、たのしいね。",
           preschool_3_4:
             "{familyMembers}といっしょに、かざりつけの じゅんびを たのしく すすめます。おへやが すこしずつ きらきらに なります。",
           early_reader_5_6:
@@ -14023,7 +14023,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "ケーキとろうそくを見つけた{childName}の目は、きらきらかがやきました。",
-          baby_toddler: "ケーキ みつけた。ろうそく きらり。",
+          baby_toddler: "ケーキ みつけた！ ろうそく きらきら、きらきら。",
           preschool_3_4:
             "ケーキと ろうそくを 見つけた{childName}の 目は、きらきら かがやきました。うれしい こえが ふわっと ひろがります。",
           early_reader_5_6:
@@ -14292,7 +14292,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "さいごは パパや ママに しいあげの はみがきを してもらって、ピッカピカ。",
-          baby_toddler: "さいごは しいあげ。ピッカピカ。",
+          baby_toddler: "さいごは しあげ。ピッカピカ、ぴっかぴか。",
           preschool_3_4: "さいごは パパや ママに しいあげを してもらって、ピッカピカ。",
           pageVisualRole: "quiet_ending",
           imagePromptTemplate: withBrushTeethImagePromptGuardrail("Wide shot: A parent helping the child with finishing touches on brushing. A tender, caring moment in the bathroom. Soft watercolor style."),
@@ -14436,7 +14436,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "{childName}は、ふとんの中にもぐりこみました。まぶたがそっとおもくなってきます。おやすみなさい。",
-          baby_toddler: "ふとんに もぐって。まぶた おもい。おやすみ。",
+          baby_toddler: "おふとんに もぐって、まぶた とろん。おやすみ。",
           preschool_3_4:
             "{childName}は、ふとんの なかに もぐりこみました。まぶたが そっと おもくなってきます。おやすみなさい。",
           early_reader_5_6:
@@ -14465,7 +14465,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         }),
         buildAgeSpecificPage({
           textTemplate: "おつきさまが 「また あしたね」と やさしく わらってくれました。",
-          baby_toddler: "おつきさま、にっこり。また あした。",
+          baby_toddler: "おつきさま、にっこり。「また あしたね」。",
           preschool_3_4: "おつきさまが 「また あしたね」と やさしく わらってくれました。",
           pageVisualRole: "emotional_closeup",
           imagePromptTemplate: withBedtimeGoodDay8pImagePromptGuardrail("Close-up: The child's face lit by gentle moonlight, with a peaceful smile. Soft watercolor style."),
@@ -15069,7 +15069,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "「よーい、どん！」うさぎは ぴゅーんと さきへ。{childName}は いっぽ いっぽ こつこつ あるきだしました。",
-          baby_toddler: "よーい どん！ うさぎ ぴゅーん。",
+          baby_toddler: "よーい どん！ うさぎさん、ぴゅーん。はやい！",
           preschool_3_4:
             "「よーい、どん！」うさぎは ぴゅーんと さきへ いきました。{childName}は いっぽ いっぽ こつこつ あるきだしました。",
           early_reader_5_6:
@@ -15266,7 +15266,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "しまに つくと、{childName}は ゆうきを だして はなしました。おには 「ごめんね」と かくした ものを かえし、みんな なかよく おうちへ かえりました。{parentMessage}",
-          baby_toddler: "おに ごめんね。なかよし。{parentMessage}",
+          baby_toddler: "おにさん、なかなおり。よかったね。{parentMessage}",
           preschool_3_4:
             "しまに つくと、{childName}は ゆうきを だして はなしました。おには 「ごめんね」と かくした ものを かえし、みんな なかよく おうちへ かえりました。{parentMessage}",
           early_reader_5_6:
@@ -15400,7 +15400,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "さいごに きじも なかまに なって、みんなで しまへ むかいました。",
-          baby_toddler: "きじも！ みんなで しゅっぱつ。",
+          baby_toddler: "きじさんも なかま。みんなで しゅっぱつ！",
           preschool_3_4:
             "さいごに きじも なかまに なって、みんなで しまへ むかいました。",
           early_reader_5_6:
@@ -15432,7 +15432,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "おには 「ごめんね」と かくした ものを かえしました。みんな なかよく おうちへ かえり、むらの ひとに よろこばれました。{parentMessage}",
-          baby_toddler: "おに ごめんね。なかよし。{parentMessage}",
+          baby_toddler: "おにさん、「ごめんね」。みんな にっこり。{parentMessage}",
           preschool_3_4:
             "おには 「ごめんね」と かくした ものを かえしました。みんな なかよく おうちへ かえり、むらの ひとに よろこばれました。{parentMessage}",
           early_reader_5_6:
@@ -15635,7 +15635,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "ふたりめ、さんにんめにも、{childName}は てぶくろや ぼうしを かけてあげました。",
-          baby_toddler: "ふたりめも、さんにんめも どうぞ。",
+          baby_toddler: "ふたりめにも、さんにんめにも、どうぞ、どうぞ。",
           preschool_3_4:
             "ふたりめ、さんにんめにも、{childName}は てぶくろや ぼうしを かけてあげました。",
           early_reader_5_6:
@@ -15784,7 +15784,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "おもちゃも、くまの ぬいぐるみも、ねむそう。{childName}は 「みんな、おやすみ」と いいました。",
-          baby_toddler: "おもちゃ、くまさん、おやすみ。",
+          baby_toddler: "おもちゃも くまさんも、おやすみなさい。",
           preschool_3_4:
             "おもちゃも、くまの ぬいぐるみも、ねむそう。{childName}は 「みんな、おやすみ」と いいました。",
           early_reader_5_6:
@@ -16067,7 +16067,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "おには びっくりして にげだし、まほうの こづちを おとしました。それを ふると、{childName}は おおきく りっぱに なりました。「ちいさくても やれば できる！」{parentMessage}",
-          baby_toddler: "おに げ。こづち ふると おおきく！{parentMessage}",
+          baby_toddler: "おにが にげた！ こづち ふったら おおきく！{parentMessage}",
           preschool_3_4:
             "おには びっくりして にげだし、まほうの こづちを おとしました。それを ふると、{childName}は おおきく りっぱに なりました。「ちいさくても やれば できる！」{parentMessage}",
           early_reader_5_6:
@@ -16233,7 +16233,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "こづちを ふると、{childName}は ぐんぐん おおきく りっぱに なりました。「ちいさくても、ゆうきが あれば やれる！」{parentMessage}",
-          baby_toddler: "こづち ふって おおきく！ やったね。{parentMessage}",
+          baby_toddler: "こづちを ふったら、ぐんぐん おおきく！ やったね。{parentMessage}",
           preschool_3_4:
             "こづちを ふると、{childName}は ぐんぐん おおきく りっぱに なりました。「ちいさくても、ゆうきが あれば やれる！」{parentMessage}",
           early_reader_5_6:
@@ -16318,7 +16318,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "「もっと たべてね」。{childName}は おむすびを やさしく わけてあげました。ねずみたちは うたって おどって おおよろこび。",
-          baby_toddler: "おむすび どうぞ。ねずみ うれしい。",
+          baby_toddler: "「おむすび どうぞ」。ねずみさん、うれしいね。",
           preschool_3_4:
             "「もっと たべてね」。{childName}は おむすびを わけてあげました。ねずみたちは うたって おどって おおよろこび。",
           early_reader_5_6:
@@ -16334,7 +16334,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "ねずみたちは おれいに、ちいさな たからものを {childName}に わたしました。やさしく わけあうと、しあわせが かえってくるのですね。{parentMessage}",
-          baby_toddler: "ねずみ ありがとう。たからもの！{parentMessage}",
+          baby_toddler: "ねずみさんから たからもの。ありがとう！{parentMessage}",
           preschool_3_4:
             "ねずみたちは おれいに、ちいさな たからものを {childName}に わたしました。やさしく わけあうと、しあわせが かえってくるのですね。{parentMessage}",
           early_reader_5_6:
@@ -16484,7 +16484,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "「ありがとう」と、ねずみたちは ちいさな たからものを {childName}に わたしました。",
-          baby_toddler: "ねずみ ありがとう。たからもの！",
+          baby_toddler: "「ありがとう」。ねずみさんから、たからもの！",
           preschool_3_4:
             "「ありがとう」と、ねずみたちは ちいさな たからものを {childName}に わたしました。",
           early_reader_5_6:
@@ -16601,7 +16601,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "やさしく した ことは、めぐって かえってくるのですね。{childName}と つるは、ずっと なかよしに なりました。{parentMessage}",
-          baby_toddler: "つると なかよし。ありがとう。{parentMessage}",
+          baby_toddler: "つるさんと なかよし。やさしいね。{parentMessage}",
           preschool_3_4:
             "やさしく した ことは、めぐって かえってくるのですね。{childName}と つるは、ずっと なかよしに なりました。{parentMessage}",
           early_reader_5_6:
@@ -16767,7 +16767,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "やさしく した ことは、めぐって かえってくるのですね。{childName}と つるは ずっと なかよしに なりました。{parentMessage}",
-          baby_toddler: "つると なかよし。{parentMessage}",
+          baby_toddler: "つるさんと なかよし、なかよし。{parentMessage}",
           preschool_3_4:
             "やさしく した ことは、めぐって かえってくるのですね。{childName}と つるは ずっと なかよしに なりました。{parentMessage}",
           early_reader_5_6:
@@ -16820,7 +16820,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "こぶたたちは わらと きで、あっというまに おうちを つくりました。{childName}は れんがで、こつこつ じょうぶな おうちを つくります。",
-          baby_toddler: "わら、き、れんが。おうち つくろう。",
+          baby_toddler: "わらと きと れんが。おうちを つくろう！",
           preschool_3_4:
             "こぶたたちは わらと きで、あっというまに おうちを つくりました。{childName}は れんがで、こつこつ じょうぶな おうちを つくります。",
           early_reader_5_6:
@@ -16836,7 +16836,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "そこへ おおきな おおかみが やってきて、ふうっと いきを ふきました。わらと きの おうちは とんでしまいました。",
-          baby_toddler: "おおかみ ふうっ。おうち とんだ！",
+          baby_toddler: "おおかみが ふうっ！ おうちが とんだ！",
           preschool_3_4:
             "そこへ おおきな おおかみが やってきて、ふうっと いきを ふきました。わらと きの おうちは とんでしまいました。",
           early_reader_5_6:
@@ -16852,7 +16852,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "こぶたたちは {childName}の れんがの おうちに かけこみました。おおかみが ふうふう しても、おうちは びくともしません。",
-          baby_toddler: "れんがの おうち、びくともしない！",
+          baby_toddler: "れんがの おうちは、びくとも しないよ。",
           preschool_3_4:
             "こぶたたちは {childName}の れんがの おうちに かけこみました。おおかみが ふうふう しても、おうちは びくともしません。",
           early_reader_5_6:
@@ -16868,7 +16868,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "とうとう おおかみは あきらめて かえっていきました。「こつこつ つくると、みんなを まもれるね」。{childName}は にっこり。{parentMessage}",
-          baby_toddler: "おおかみ あきらめた。みんな ぶじ。{parentMessage}",
+          baby_toddler: "おおかみ、あきらめた。みんな ぶじだね。{parentMessage}",
           preschool_3_4:
             "とうとう おおかみは あきらめて かえっていきました。「こつこつ つくると、みんなを まもれるね」。{childName}は にっこり。{parentMessage}",
           early_reader_5_6:
@@ -16986,7 +16986,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "そこへ おおきな おおかみが やってきて、わらの おうちを ふうっ。おうちは とんで、1ぴきめの こぶたは にげだしました。",
-          baby_toddler: "おおかみ ふうっ。わら とんだ！",
+          baby_toddler: "おおかみが ふうっ！ わらの おうち、とんだ！",
           preschool_3_4:
             "そこへ おおきな おおかみが やってきて、わらの おうちを ふうっ。おうちは とんで、1ぴきめの こぶたは にげだしました。",
           early_reader_5_6:
@@ -17002,7 +17002,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "つぎに きの おうちも ふうっと とんで、2ひきの こぶたは {childName}の れんがの おうちへ かけこみました。",
-          baby_toddler: "きの おうちも とんだ！ にげろ。",
+          baby_toddler: "きの おうちも とんだ！ にげろ、にげろ！",
           preschool_3_4:
             "つぎに きの おうちも ふうっと とんで、2ひきの こぶたは {childName}の れんがの おうちへ かけこみました。",
           early_reader_5_6:
@@ -17034,7 +17034,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "とうとう おおかみは あきらめて かえっていきました。「こつこつ つくると、みんなを まもれるね」。{childName}は にっこり。{parentMessage}",
-          baby_toddler: "おおかみ あきらめた。みんな ぶじ。{parentMessage}",
+          baby_toddler: "おおかみ、あきらめた。みんな ぶじだね。{parentMessage}",
           preschool_3_4:
             "とうとう おおかみは あきらめて かえっていきました。「こつこつ つくると、みんなを まもれるね」。{childName}は にっこり。{parentMessage}",
           early_reader_5_6:
@@ -17253,7 +17253,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "ふくろうや、もっと おおきな どうぶつまで やってきました。てぶくろは ふしぎと のびて いきます。",
-          baby_toddler: "もっと いっぱい！ のびる てぶくろ。",
+          baby_toddler: "もっと いっぱい！ てぶくろ、のびる のびる。",
           preschool_3_4:
             "ふくろうや、もっと おおきな どうぶつまで やってきました。てぶくろは ふしぎと のびて いきます。",
           early_reader_5_6:
@@ -17301,7 +17301,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "「みんなで あたたまろうね」。わけあうと、あたたかさは もっと ふえるのですね。{parentMessage}",
-          baby_toddler: "みんなで あったか。{parentMessage}",
+          baby_toddler: "みんなで あったか、あったか。{parentMessage}",
           preschool_3_4:
             "「みんなで あたたまろうね」。わけあうと、あたたかさは もっと ふえるのですね。{parentMessage}",
           early_reader_5_6:
@@ -17568,7 +17568,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "「いっしょに たべよう」。そなえると あんしん、わけあうと あたたかい。{parentMessage}",
-          baby_toddler: "いっしょに たべよう。{parentMessage}",
+          baby_toddler: "「いっしょに たべよう」。あったかいね。{parentMessage}",
           preschool_3_4:
             "「いっしょに たべよう」。そなえると あんしん、わけあうと あたたかい。{parentMessage}",
           early_reader_5_6:
@@ -17621,7 +17621,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "もりで、{childName}は おなかを すかせた おじいさんに おべんとうを わけて あげました。おじいさんは おれいに きんいろの がちょうを くれました。",
-          baby_toddler: "わけて あげた。きんの がちょう。",
+          baby_toddler: "おじいさんに 「どうぞ」。きんの がちょう、もらった。",
           preschool_3_4:
             "もりで、{childName}は おなかを すかせた おじいさんに おべんとうを わけて あげました。おじいさんは おれいに きんいろの がちょうを くれました。",
           early_reader_5_6:
@@ -17637,7 +17637,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "きんの はねが ほしくて、ひとりが そっと さわると…ぴたっ！てが くっついて はなれません。",
-          baby_toddler: "さわると ぴたっ！ くっついた。",
+          baby_toddler: "さわったら、ぴたっ！ てが くっついた！",
           preschool_3_4:
             "きんの はねが ほしくて、ひとりが そっと さわると…ぴたっ！てが くっついて はなれません。",
           early_reader_5_6:
@@ -17888,7 +17888,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "{childName}は おんがくたいを つくろうと たびに でました。みちで ロバに であい、「いっしょに いこう」。",
-          baby_toddler: "たびに でた。ロバと いっしょ。",
+          baby_toddler: "ロバさんと いっしょに、たびに でよう。",
           preschool_3_4:
             "{childName}は おんがくたいを つくろうと たびに でました。みちで ロバに であい、「いっしょに いこう」。",
           early_reader_5_6:
@@ -17904,7 +17904,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "つぎに いぬ、ねこ、にわとりも なかまに。みんなで うたいながら あるきます。",
-          baby_toddler: "いぬ ねこ にわとり、なかま。",
+          baby_toddler: "いぬさん ねこさん にわとりさん、みんな なかま。",
           preschool_3_4:
             "つぎに いぬ、ねこ、にわとりも なかまに。みんなで うたいながら あるきます。",
           early_reader_5_6:
@@ -17936,7 +17936,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "みんなで かさなって、「せーの」で だいごうそう！おおきな おとに びっくりして、こわがりの どろぼうたちは あわてて にげて いきました。ちからを あわせると おおきな ことが できる！{parentMessage}",
-          baby_toddler: "せーの！ おおきな おと。みんな すごい。{parentMessage}",
+          baby_toddler: "せーの！ おおきな おと。みんな すごいね。{parentMessage}",
           preschool_3_4:
             "みんなで かさなって、「せーの」で だいごうそう！おおきな おとに びっくりして、こわがりの どろぼうたちは あわてて にげて いきました。ちからを あわせると おおきな ことが できる！{parentMessage}",
           early_reader_5_6:
@@ -18022,7 +18022,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "つぎに いぬ、それから ねこ、さいごに にわとりも なかまに なりました。",
-          baby_toddler: "いぬ ねこ にわとり、なかま。",
+          baby_toddler: "いぬさん ねこさん にわとりさん、なかまに なった。",
           preschool_3_4:
             "つぎに いぬ、それから ねこ、さいごに にわとりも なかまに なりました。",
           early_reader_5_6:
@@ -18102,7 +18102,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "おおきな おとに びっくりして、どろぼうたちは あわてて にげて いきました。ひとりでは むりでも、ちからを あわせれば おおきな ことが できる！{parentMessage}",
-          baby_toddler: "どろぼう にげた。みんな すごい。{parentMessage}",
+          baby_toddler: "どろぼう にげた！ みんな、すごいね。{parentMessage}",
           preschool_3_4:
             "おおきな おとに びっくりして、どろぼうたちは あわてて にげて いきました。ひとりでは むりでも、ちからを あわせれば おおきな ことが できる！{parentMessage}",
           early_reader_5_6:
@@ -18155,7 +18155,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "{childName}は てのひらの ちいさな たねを、そっと つちに うえました。「おおきく なあれ」。",
-          baby_toddler: "たねを うえた。おおきく なあれ。",
+          baby_toddler: "ちいさな たね。おおきく なあれ、なあれ。",
           preschool_3_4:
             "{childName}は てのひらの ちいさな たねを、そっと つちに うえました。「おおきく なあれ」。",
           early_reader_5_6:
@@ -18203,7 +18203,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "やがて たねは、{childName}より ずっと おおきな きに なりました。こつこつ つづけたから だね。{parentMessage}",
-          baby_toddler: "おおきな き！ やったね。{parentMessage}",
+          baby_toddler: "おおきな きに なった！ やったね。{parentMessage}",
           preschool_3_4:
             "やがて たねは、{childName}より ずっと おおきな きに なりました。こつこつ つづけたから だね。{parentMessage}",
           early_reader_5_6:
@@ -18369,7 +18369,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "{childName}は おおきな きの かげで ひとやすみ。あきらめず こつこつ つづけたから だね。{parentMessage}",
-          baby_toddler: "きの かげ。やったね。{parentMessage}",
+          baby_toddler: "おおきな きの かげで、ひとやすみ。{parentMessage}",
           preschool_3_4:
             "{childName}は おおきな きの かげで ひとやすみ。あきらめず こつこつ つづけたから だね。{parentMessage}",
           early_reader_5_6:
@@ -18422,7 +18422,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "{childName}は ちいさな きしゃの うんてんしゅ。おもちゃを のせて、おかの むこうの ともだちへ しゅっぱつ！",
-          baby_toddler: "きしゃ しゅっぱつ！ おもちゃ のせて。",
+          baby_toddler: "きしゃ、しゅっぱつ！ おもちゃを のせて、ぽっぽー。",
           preschool_3_4:
             "{childName}は ちいさな きしゃの うんてんしゅ。おもちゃを のせて、おかの むこうの ともだちへ しゅっぱつ！",
           early_reader_5_6:
@@ -18470,7 +18470,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "こつこつ がんばって、とうとう おかの てっぺんへ！ともだちに おもちゃを とどけ、みんな おおよろこび。あきらめず つづけたら、できたね。{parentMessage}",
-          baby_toddler: "てっぺん ついた！ できたね。{parentMessage}",
+          baby_toddler: "てっぺんに ついた！ やったね、やったね。{parentMessage}",
           preschool_3_4:
             "こつこつ がんばって、とうとう おかの てっぺんへ！ともだちに おもちゃを とどけ、みんな おおよろこび。あきらめず つづけたら、できたね。{parentMessage}",
           early_reader_5_6:
@@ -18636,7 +18636,7 @@ export const SEED_TEMPLATES: Record<string, TemplateData> = {
         buildAgeSpecificPage({
           textTemplate:
             "さかを くだって、ともだちに おもちゃを とどけると みんな おおよろこび。あきらめず つづけたら、できたね。{parentMessage}",
-          baby_toddler: "おもちゃ とどけた！ できたね。{parentMessage}",
+          baby_toddler: "おもちゃ とどけた！ できたね、できたね。{parentMessage}",
           preschool_3_4:
             "さかを くだって、ともだちに おもちゃを とどけると みんな おおよろこび。あきらめず つづけたら、できたね。{parentMessage}",
           early_reader_5_6:
