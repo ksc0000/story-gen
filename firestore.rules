@@ -93,6 +93,13 @@ service cloud.firestore {
         allow read: if isAdmin() || isOwner(userId);
         allow create, update, delete: if isOwner(userId);
       }
+
+      // 生成完了プッシュ通知の FCM トークン（オーナーのみ読み書き）。
+      // 送信は Cloud Functions（admin SDK）が行う。課金・権限には影響しない。
+      match /fcmTokens/{tokenId} {
+        allow read: if isAdmin() || isOwner(userId);
+        allow create, update, delete: if isOwner(userId);
+      }
     }
 
     match /books/{bookId} {

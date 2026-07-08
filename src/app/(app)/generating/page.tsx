@@ -7,6 +7,7 @@ import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { GenerationProgress } from "@/components/generation-progress";
+import { NotificationOptIn } from "@/components/notification-opt-in";
 import { FloatingParticles } from "@/components/floating-particles";
 import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
@@ -309,6 +310,7 @@ function GeneratingContent() {
               この画面を閉じても、本棚から確認できます。
             </p>
         </div>
+        <NotificationOptIn />
         <div className="mt-4 text-center">
           <Link href="/home" className="text-sm text-violet-500 hover:underline">本棚に戻る</Link>
         </div>
