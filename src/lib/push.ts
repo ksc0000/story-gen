@@ -64,17 +64,22 @@ function buildSwUrl(): string {
   return `${SW_PATH}?${params.toString()}`;
 }
 
+export interface EnablePushResult {
+  token: string | null;
+  /** 失敗時の診断用理由（ユーザー向け文言ではない） */
+  reason?: string;
+}
+
 /**
  * 通知許可を要求し、FCM トークンを取得して Firestore に保存する。
- * 成功時はトークン文字列、拒否/失敗時は null を返す。
  * 必ずユーザー操作（ボタンタップ）から呼ぶこと。
  */
-export async function enableBookCompletionPush(uid: string): Promise<string | null> {
+export async function enableBookCompletionPush(uid: string): Promise<EnablePushResult> {
   const state = await getPushSupportState();
-  if (state !== "supported") return null;
+  if (state !== "supported") return { token: null, reason: `support:${state}` };
 
   const permission = await Notification.requestPermission();
-  if (permission !== "granted") return null;
+  if (permission !== "granted") return { token: null, reason: `permission:${permission}` };
 
   try {
     const registration = await navigator.serviceWorker.register(buildSwUrl());
@@ -89,7 +94,7 @@ export async function enableBookCompletionPush(uid: string): Promise<string | nu
       serviceWorkerRegistration: registration,
       ...(vapidKey ? { vapidKey } : {}),
     });
-    if (!token) return null;
+    if (!token) return { token: null, reason: "getToken:empty" };
 
     // トークンをドキュメントIDにして保存（同一端末の重複を自然に排除）
     await setDoc(
@@ -102,10 +107,11 @@ export async function enableBookCompletionPush(uid: string): Promise<string | nu
       },
       { merge: true }
     );
-    return token;
+    return { token };
   } catch (err) {
     console.error("Failed to enable push notifications:", err);
-    return null;
+    const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+    return { token: null, reason: message.slice(0, 200) };
   }
 }
 

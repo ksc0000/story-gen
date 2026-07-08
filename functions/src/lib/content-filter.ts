@@ -38,6 +38,8 @@ const MAX_TEXT_LENGTH = 200;
 // （例: なかよしキャラ主人公時の visualDescription、~250字）が入るため、自由入力より
 // 緩い上限にする。これを 200 字で弾くと、選択肢が多い相棒で生成が失敗していた。
 const MAX_VISUAL_DESCRIPTION_LENGTH = 600;
+// storyRequest（AIブリーフ+承認済みあらすじ）用の緩い上限。
+const MAX_STORY_REQUEST_LENGTH = 2000;
 
 export interface NGWordResult {
   safe: boolean;
@@ -106,6 +108,25 @@ export function sanitizeInput(input: BookInput): SanitizeResult {
       return { valid: false, reason: "入力テキストが長すぎます" };
     }
 
+    const ngResult = containsNGWords(field);
+    if (!ngResult.safe) {
+      return {
+        valid: false,
+        reason: `不適切な表現が含まれています: ${ngResult.matchedWords.join(", ")}`,
+      };
+    }
+  }
+
+  // storyRequest は AIブリーフ（あらすじピッチ承認後の起承転結全文）を含む
+  // アプリ生成の長文フィールドのため、自由入力より緩い上限で検査する。
+  // freeInput（UI 上限200字）も NG ワード検査の対象に含める。
+  const longTextFields = [input.storyRequest, input.freeInput].filter(
+    (f): f is string => typeof f === "string"
+  );
+  for (const field of longTextFields) {
+    if (field.length > MAX_STORY_REQUEST_LENGTH) {
+      return { valid: false, reason: "おはなしのリクエストが長すぎます" };
+    }
     const ngResult = containsNGWords(field);
     if (!ngResult.safe) {
       return {

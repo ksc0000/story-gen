@@ -65,7 +65,12 @@ export async function sendBookCompletionPush(params: {
     .collection("fcmTokens")
     .get();
   const tokens = tokensSnap.docs.map((d) => d.id);
-  if (tokens.length === 0) return;
+  if (tokens.length === 0) {
+    // 観測性: 「通知が来ない」調査時に、送信スキップ（トークン未登録）と
+    // 送信失敗を区別できるようにする。
+    logger.info("book_completion_push_skipped_no_tokens", { bookId, status });
+    return;
+  }
 
   const content = buildBookPushContent(status, bookId, book.title);
 

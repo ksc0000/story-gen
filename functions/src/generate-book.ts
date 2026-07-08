@@ -1667,13 +1667,20 @@ export async function processBookGeneration(
       // Option C: drop reference images on retry when pro_consistent is used — the
       // combination most likely to trigger Replicate safety rejections.
       // P5-3f safer_retry override preserved as an additional path for other cases.
+      // ただしスタイル見本（無害なイラスト）だけは残す: 全参照を落とすと
+      // フォールバック生成の絵柄が選択スタイルから大きく外れる（本番事例:
+      // OpenAI課金上限で全ページfallback → 表紙がステッカー調に崩れた）。
+      const stepBStyleRefUrl = resolveStyleReferenceUrl(normalizedBookData.style);
       const stepBConfig =
         (isSaferRetryEnabled(imageModelProfile) || deps.p5ModelUnification === "safer_retry") &&
         storyPage.imagePrompt &&
         storyPage.imagePrompt.length >= 10
           ? {
-              prompt: buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style, { hasAnimalCharacters: normalizedBookData.theme === "animals" }),
-              inputImageUrls: [] as string[],
+              prompt: buildP5SimplifiedPagePrompt(storyPage.imagePrompt, normalizedBookData.style, {
+                hasAnimalCharacters: normalizedBookData.theme === "animals",
+                hasStyleReferenceImage: Boolean(stepBStyleRefUrl),
+              }),
+              inputImageUrls: stepBStyleRefUrl ? [toPublicUrl(stepBStyleRefUrl)] : ([] as string[]),
             }
           : undefined;
 
@@ -1833,12 +1840,16 @@ export async function processBookGeneration(
         )
       : undefined;
 
+    // 表紙の Step B もスタイル見本参照だけは残す（ページ側と同じ理由）。
     const coverStepBConfig =
       coverImagePrompt &&
       (isSaferRetryEnabled(normalizedBookData.imageModelProfile || "klein_fast") || deps.p5ModelUnification === "safer_retry")
         ? {
-            prompt: buildP5SimplifiedPagePrompt(baseCoverPrompt ?? "", normalizedBookData.style, { hasAnimalCharacters: normalizedBookData.theme === "animals" }),
-            inputImageUrls: [] as string[],
+            prompt: buildP5SimplifiedPagePrompt(baseCoverPrompt ?? "", normalizedBookData.style, {
+              hasAnimalCharacters: normalizedBookData.theme === "animals",
+              hasStyleReferenceImage: Boolean(coverStyleReferenceUrl),
+            }),
+            inputImageUrls: coverStyleReferenceUrl ? [toPublicUrl(coverStyleReferenceUrl)] : ([] as string[]),
           }
         : undefined;
 

@@ -34,8 +34,16 @@ export function NotificationOptIn() {
       setSupport(state);
       if (state === "supported" && isPushPermissionGranted()) {
         setGranted(true);
-        // 許可済み端末はトークンを静かに最新化（失効対策）
-        if (user?.uid) void enableBookCompletionPush(user.uid);
+        // 許可済み端末はトークンを静かに最新化（失効対策）。
+        // 失敗したら「閉じても大丈夫」を出し続けるのは嘘になるため表示を戻す。
+        if (user?.uid) {
+          void enableBookCompletionPush(user.uid).then((result) => {
+            if (!result.token) {
+              console.warn("push token refresh failed:", result.reason);
+              setGranted(false);
+            }
+          });
+        }
       }
     });
     return () => {
@@ -75,14 +83,16 @@ export function NotificationOptIn() {
     if (busy) return;
     setBusy(true);
     try {
-      const token = await enableBookCompletionPush(user.uid);
-      if (token) {
+      const result = await enableBookCompletionPush(user.uid);
+      if (result.token) {
         setGranted(true);
         toast.success("完成したら通知でお知らせします");
       } else if (isPushPermissionDenied()) {
         toast.info("通知はブラウザの設定からいつでも有効にできます");
       } else {
-        toast.error("通知の設定に失敗しました");
+        // 診断しやすいよう失敗理由の要約を添える（例: AbortError 等）
+        const hint = result.reason ? `（${result.reason.slice(0, 60)}）` : "";
+        toast.error(`通知の設定に失敗しました${hint}`);
       }
     } finally {
       setBusy(false);

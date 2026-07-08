@@ -6,6 +6,9 @@
 const MAX_NAME_LENGTH = 50;
 const MAX_TEXT_LENGTH = 200;
 const MAX_VISUAL_DESCRIPTION_LENGTH = 600;
+// storyRequest は AIブリーフ（あらすじピッチ承認後の「起承転結」全文）を含む
+// アプリ生成の長文フィールド。200字制限だとおまかせ生成がほぼ必ず弾かれる。
+const MAX_STORY_REQUEST_LENGTH = 2000;
 
 // アプリが自動生成する構造化ビジュアル記述は自由入力より長くなるため緩い上限。
 const LONG_FIELDS = new Set(["characterLook", "companionVisualDescription"]);
@@ -24,6 +27,13 @@ export function validateBookInputLengths(
     if (key === "childName") {
       if (value.length > MAX_NAME_LENGTH) {
         return { valid: false, message: `お名前は${MAX_NAME_LENGTH}文字以内で入力してください。` };
+      }
+    } else if (key === "storyRequest") {
+      if (value.length > MAX_STORY_REQUEST_LENGTH) {
+        return {
+          valid: false,
+          message: "おはなしのリクエストが長すぎます。内容を少し短くしてください。",
+        };
       }
     } else if (LONG_FIELDS.has(key)) {
       if (value.length > MAX_VISUAL_DESCRIPTION_LENGTH) {

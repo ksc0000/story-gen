@@ -1327,13 +1327,22 @@ export function buildVisualContinuityGuard({
 export function buildP5SimplifiedPagePrompt(
   scenePrompt: string,
   style: IllustrationStyle,
-  options?: { hasAnimalCharacters?: boolean; hasStarCharacter?: boolean }
+  options?: {
+    hasAnimalCharacters?: boolean;
+    hasStarCharacter?: boolean;
+    hasStyleReferenceImage?: boolean;
+  }
 ): string {
   const styleProfile = getIllustrationStyleProfile(style);
   const guard = buildVisualContinuityGuard({ hasAnimalCharacters: options?.hasAnimalCharacters ?? false });
   const starGuard = options?.hasStarCharacter ? buildStarCharacterGuard() : "";
+  // Step B でスタイル見本画像を1枚渡すときは、その役割（画風のみ模倣）を明示する。
+  const styleRefNote = options?.hasStyleReferenceImage
+    ? `The attached reference image shows the target ${styleProfile.name} art style — match its medium, line quality, texture, and color treatment. Do not copy its subject or composition.`
+    : "";
   return [
     `Illustration style: ${styleProfile.styleBible}`,
+    styleRefNote,
     `Scene: ${scenePrompt.replace(/\s+/g, " ").trim()}`,
     "Avoid distorted hands, extra fingers, malformed faces, duplicated limbs, adult-looking children, uncanny expressions, and unreadable text.",
     guard,
