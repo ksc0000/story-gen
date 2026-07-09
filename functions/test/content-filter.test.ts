@@ -106,3 +106,38 @@ describe("sanitizeInput", () => {
     expect(sanitizeInput({ childName: "ピノ", characterLook: "殺す monster" }).valid).toBe(false);
   });
 });
+
+describe("storyRequest / freeInput の検査（あらすじピッチ対応）", () => {
+  it("200字超〜2000字以内の storyRequest を許容する", () => {
+    const result = sanitizeInput({
+      childName: "はるくん",
+      storyRequest: "起承転結のながいあらすじ。".repeat(50), // ~650字
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  it("2000字を超える storyRequest は弾く", () => {
+    const result = sanitizeInput({
+      childName: "はるくん",
+      storyRequest: "あ".repeat(2001),
+    });
+    expect(result.valid).toBe(false);
+  });
+
+  it("storyRequest の NG ワードを検出する", () => {
+    const result = sanitizeInput({
+      childName: "はるくん",
+      storyRequest: "たのしい ぼうけんの おはなし。kill する场面。",
+    });
+    expect(result.valid).toBe(false);
+    expect(result.reason).toContain("不適切な表現");
+  });
+
+  it("freeInput の NG ワードも検出する", () => {
+    const result = sanitizeInput({
+      childName: "はるくん",
+      freeInput: "violence がある おはなし",
+    });
+    expect(result.valid).toBe(false);
+  });
+});
