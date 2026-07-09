@@ -86,7 +86,7 @@ describe("OpenAIImageClient", () => {
 
   describe("generateImage (text-to-image)", () => {
     it("calls images.generate and returns buffer from b64_json", async () => {
-      const fakeB64 = Buffer.from("fake-image-data").toString("base64");
+      const fakeB64 = Buffer.alloc(200 * 1024, "a").toString("base64");
       mockGenerate.mockResolvedValue({
         data: [{ b64_json: fakeB64 }],
       });
@@ -95,7 +95,7 @@ describe("OpenAIImageClient", () => {
       const result = await client.generateImage("a crayon illustration of a cat");
 
       expect(result).toBeInstanceOf(Buffer);
-      expect(result.toString()).toBe("fake-image-data");
+      expect(result.subarray(0, 1).toString()).toBe("a");
       expect(mockGenerate).toHaveBeenCalledOnce();
       expect(mockGenerate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -111,7 +111,7 @@ describe("OpenAIImageClient", () => {
     });
 
     it("downloads from url if b64_json is not present", async () => {
-      const fakeImageBuffer = Buffer.from("downloaded-image");
+      const fakeImageBuffer = Buffer.alloc(200 * 1024, "b");
       mockGenerate.mockResolvedValue({
         data: [{ url: "https://example.com/image.png" }],
       });
@@ -145,7 +145,7 @@ describe("OpenAIImageClient", () => {
 
   describe("generateImage (gpt-image-2 reference images via Images edit API)", () => {
     it("routes gpt-image-2 reference images through images.edit, not responses.create", async () => {
-      const fakeB64 = Buffer.from("edit-image-data").toString("base64");
+      const fakeB64 = Buffer.alloc(200 * 1024, "c").toString("base64");
       mockEdit.mockResolvedValue({ data: [{ b64_json: fakeB64 }] });
       const fetchSpy = vi
         .fn()
@@ -157,7 +157,7 @@ describe("OpenAIImageClient", () => {
         inputImageUrls: ["https://example.com/child-ref.png"],
       });
 
-      expect(result.toString()).toBe("edit-image-data");
+      expect(result.subarray(0, 1).toString()).toBe("c");
       expect(mockEdit).toHaveBeenCalledOnce();
       expect(mockResponsesCreate).not.toHaveBeenCalled();
 
@@ -175,7 +175,7 @@ describe("OpenAIImageClient", () => {
 
   describe("generateImage (with reference images)", () => {
     it("calls responses.create when inputImageUrls are provided", async () => {
-      const fakeB64 = Buffer.from("ref-image-data").toString("base64");
+      const fakeB64 = Buffer.alloc(200 * 1024, "d").toString("base64");
       mockResponsesCreate.mockResolvedValue({
         output: [{ type: "image_generation_call", result: fakeB64 }],
       });
@@ -186,7 +186,7 @@ describe("OpenAIImageClient", () => {
       });
 
       expect(result).toBeInstanceOf(Buffer);
-      expect(result.toString()).toBe("ref-image-data");
+      expect(result.subarray(0, 1).toString()).toBe("d");
       expect(mockResponsesCreate).toHaveBeenCalledOnce();
 
       const call = mockResponsesCreate.mock.calls[0][0];
@@ -213,7 +213,7 @@ describe("OpenAIImageClient", () => {
     });
 
     it("hardening: system instruction and prompt wrap are applied (T6-53)", async () => {
-      const fakeB64 = Buffer.from("data").toString("base64");
+      const fakeB64 = Buffer.alloc(200 * 1024, "e").toString("base64");
       mockResponsesCreate.mockResolvedValue({
         output: [{ type: "image_generation_call", result: fakeB64 }],
       });
@@ -236,7 +236,7 @@ describe("OpenAIImageClient", () => {
     });
 
     it("limits reference images to 14", async () => {
-      const fakeB64 = Buffer.from("data").toString("base64");
+      const fakeB64 = Buffer.alloc(200 * 1024, "e").toString("base64");
       mockResponsesCreate.mockResolvedValue({
         output: [{ type: "image_generation_call", result: fakeB64 }],
       });

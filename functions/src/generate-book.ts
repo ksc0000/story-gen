@@ -29,6 +29,7 @@ import type {
 } from "./lib/types";
 import { sanitizeInput } from "./lib/content-filter";
 import { sendBookCompletionPush } from "./lib/push-notifications";
+import { assertPlausibleImageBuffer } from "./lib/image-sanity";
 import {
   buildSystemPrompt,
   buildImagePrompt,
@@ -3389,6 +3390,8 @@ export const generateBook = onDocumentCreated(
       openaiApiKey: openaiApiKey.value(),
 
       uploadImage: async (bookId: string, pageNumber: number, buffer: Buffer) => {
+        // 黒/単色画像を保存しない最終関門（発生源側ガードの保険）。
+        assertPlausibleImageBuffer(buffer, `upload:page-${pageNumber}`);
         const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");
         const filename = `books/${bookId}/page-${pageNumber}.png`;
         const file = bucket.file(filename);
@@ -3405,6 +3408,8 @@ export const generateBook = onDocumentCreated(
       },
 
       uploadCoverImage: async (bookId: string, buffer: Buffer) => {
+        // 黒/単色画像を保存しない最終関門（発生源側ガードの保険）。
+        assertPlausibleImageBuffer(buffer, "upload:cover");
         const bucket = storage.bucket("story-gen-8a769.firebasestorage.app");
         const filename = `books/${bookId}/cover.png`;
         const file = bucket.file(filename);
