@@ -1,4 +1,5 @@
 import OpenAI, { toFile } from "openai";
+import { assertPlausibleImageBuffer } from "./image-sanity";
 import type {
   ImageClient,
   ImageModelProfile,
@@ -201,10 +202,13 @@ export class OpenAIImageClient implements ImageClient {
     }
   ): Promise<Buffer> {
     const inputImageUrls = options?.inputImageUrls ?? [];
-    if (inputImageUrls.length > 0) {
-      return this.generateWithReferenceImages(prompt, inputImageUrls);
-    }
-    return this.generateTextToImage(prompt);
+    const buffer =
+      inputImageUrls.length > 0
+        ? await this.generateWithReferenceImages(prompt, inputImageUrls)
+        : await this.generateTextToImage(prompt);
+    // OpenAI はセーフティ介入時に黒一色画像を正常応答で返すことがある。
+    // ここで失敗として投げ、既存のリトライ/フォールバック機構に載せる。
+    return assertPlausibleImageBuffer(buffer, `openai:${this.opts.model}`);
   }
 
   private async generateTextToImage(prompt: string): Promise<Buffer> {
