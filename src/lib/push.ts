@@ -71,15 +71,54 @@ export interface EnablePushResult {
 }
 
 /**
+ * 通知設定の結果を users/{uid}/pushDiagnostics/latest に記録する（best-effort）。
+ * トーストは画面幅で切れて全文が読めないため、失敗理由の全文と端末状況を
+ * サーバー側から確認できるようにする。失敗しても呼び出し元には影響させない。
+ */
+async function recordPushDiagnostics(
+  uid: string,
+  outcome: "success" | "failure",
+  reason: string | undefined
+): Promise<void> {
+  try {
+    await setDoc(
+      doc(db, "users", uid, "pushDiagnostics", "latest"),
+      {
+        outcome,
+        reason: reason ? reason.slice(0, 1000) : null,
+        standalone: isStandalone(),
+        permission:
+          typeof window !== "undefined" && "Notification" in window
+            ? Notification.permission
+            : "unavailable",
+        online: typeof navigator !== "undefined" ? navigator.onLine : null,
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 300) : "",
+        updatedAt: serverTimestamp(),
+      },
+      { merge: false }
+    );
+  } catch {
+    // 診断記録自体の失敗は無視（通知設定の成否に影響させない）
+  }
+}
+
+/**
  * 通知許可を要求し、FCM トークンを取得して Firestore に保存する。
  * 必ずユーザー操作（ボタンタップ）から呼ぶこと。
  */
 export async function enableBookCompletionPush(uid: string): Promise<EnablePushResult> {
   const state = await getPushSupportState();
-  if (state !== "supported") return { token: null, reason: `support:${state}` };
+  if (state !== "supported") {
+    // needs-install / unsupported は仕様通りの分岐なので診断記録は不要
+    return { token: null, reason: `support:${state}` };
+  }
 
   const permission = await Notification.requestPermission();
-  if (permission !== "granted") return { token: null, reason: `permission:${permission}` };
+  if (permission !== "granted") {
+    // fire-and-forget: オフライン時に setDoc が解決せず UI をブロックしないため
+    void recordPushDiagnostics(uid, "failure", `permission:${permission}`);
+    return { token: null, reason: `permission:${permission}` };
+  }
 
   try {
     const registration = await navigator.serviceWorker.register(buildSwUrl());
@@ -94,7 +133,10 @@ export async function enableBookCompletionPush(uid: string): Promise<EnablePushR
       serviceWorkerRegistration: registration,
       ...(vapidKey ? { vapidKey } : {}),
     });
-    if (!token) return { token: null, reason: "getToken:empty" };
+    if (!token) {
+      void recordPushDiagnostics(uid, "failure", "getToken:empty");
+      return { token: null, reason: "getToken:empty" };
+    }
 
     // トークンをドキュメントIDにして保存（同一端末の重複を自然に排除）
     await setDoc(
@@ -107,10 +149,12 @@ export async function enableBookCompletionPush(uid: string): Promise<EnablePushR
       },
       { merge: true }
     );
+    void recordPushDiagnostics(uid, "success", undefined);
     return { token };
   } catch (err) {
     console.error("Failed to enable push notifications:", err);
     const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+    void recordPushDiagnostics(uid, "failure", message);
     return { token: null, reason: message.slice(0, 200) };
   }
 }

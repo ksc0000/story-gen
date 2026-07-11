@@ -25,7 +25,7 @@
     "template:sync:write": "node scripts/sync-fixed-template-seeds.js --write",
     "build": "NODE_OPTIONS='--network-family-autoselection-attempt-timeout=3000' next build",
     "build:clean": "npm run clean && npm run build",
-    "deploy:hosting": "npm run build:clean && firebase deploy --only hosting",
+    "deploy:hosting": "npm run build:clean && node scripts/verify-build-config.js && firebase deploy --only hosting",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
