@@ -90,8 +90,9 @@ export function NotificationOptIn() {
       } else if (isPushPermissionDenied()) {
         toast.info("通知はブラウザの設定からいつでも有効にできます");
       } else {
-        // 診断しやすいよう失敗理由の要約を添える（例: AbortError 等）
-        const hint = result.reason ? `（${result.reason.slice(0, 60)}）` : "";
+        // 診断しやすいよう失敗理由の要約を添える（例: AbortError 等）。
+        // 全文は users/{uid}/pushDiagnostics/latest に記録済み。
+        const hint = result.reason ? `（${result.reason.slice(0, 120)}）` : "";
         toast.error(`通知の設定に失敗しました${hint}`);
       }
     } finally {

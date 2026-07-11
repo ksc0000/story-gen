@@ -100,6 +100,14 @@ service cloud.firestore {
         allow read: if isAdmin() || isOwner(userId);
         allow create, update, delete: if isOwner(userId);
       }
+
+      // 通知設定の診断記録（トースト全文が読めない環境での障害調査用）。
+      // オーナーが書き込み、運営（admin）が読む。課金・権限には影響しない。
+      match /pushDiagnostics/{docId} {
+        allow read: if isAdmin() || isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if false;
+      }
     }
 
     match /books/{bookId} {
