@@ -115,7 +115,8 @@ export async function enableBookCompletionPush(uid: string): Promise<EnablePushR
 
   const permission = await Notification.requestPermission();
   if (permission !== "granted") {
-    await recordPushDiagnostics(uid, "failure", `permission:${permission}`);
+    // fire-and-forget: オフライン時に setDoc が解決せず UI をブロックしないため
+    void recordPushDiagnostics(uid, "failure", `permission:${permission}`);
     return { token: null, reason: `permission:${permission}` };
   }
 
@@ -133,7 +134,7 @@ export async function enableBookCompletionPush(uid: string): Promise<EnablePushR
       ...(vapidKey ? { vapidKey } : {}),
     });
     if (!token) {
-      await recordPushDiagnostics(uid, "failure", "getToken:empty");
+      void recordPushDiagnostics(uid, "failure", "getToken:empty");
       return { token: null, reason: "getToken:empty" };
     }
 
@@ -148,12 +149,12 @@ export async function enableBookCompletionPush(uid: string): Promise<EnablePushR
       },
       { merge: true }
     );
-    await recordPushDiagnostics(uid, "success", undefined);
+    void recordPushDiagnostics(uid, "success", undefined);
     return { token };
   } catch (err) {
     console.error("Failed to enable push notifications:", err);
     const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-    await recordPushDiagnostics(uid, "failure", message);
+    void recordPushDiagnostics(uid, "failure", message);
     return { token: null, reason: message.slice(0, 200) };
   }
 }
