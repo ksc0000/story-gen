@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getAgeReadingProfile } from "../src/lib/age-reading-profile";
+import {
+  getAgeReadingProfile,
+  resolveEffectiveReadingAge,
+  DEFAULT_COMPANION_READING_AGE,
+} from "../src/lib/age-reading-profile";
 import { buildSystemPrompt } from "../src/lib/prompt-builder";
 import type { TemplateData } from "../src/lib/types";
 
@@ -32,6 +36,35 @@ describe("getAgeReadingProfile", () => {
 
   it("maps age 8 to early_elementary_7_8", () => {
     expect(getAgeReadingProfile(8).ageBand).toBe("early_elementary_7_8");
+  });
+});
+
+describe("resolveEffectiveReadingAge", () => {
+  it("prefers the explicit childAge when present", () => {
+    expect(resolveEffectiveReadingAge({ childAge: 2, protagonistType: "companion" })).toBe(2);
+    expect(resolveEffectiveReadingAge({ childAge: 7 })).toBe(7);
+  });
+
+  it("uses the companion default when childAge is missing for a companion protagonist", () => {
+    expect(resolveEffectiveReadingAge({ protagonistType: "companion" })).toBe(
+      DEFAULT_COMPANION_READING_AGE
+    );
+    expect(resolveEffectiveReadingAge({ childAge: null, protagonistType: "companion" })).toBe(
+      DEFAULT_COMPANION_READING_AGE
+    );
+  });
+
+  it("stays undefined (general_child) for a child protagonist without an age", () => {
+    expect(resolveEffectiveReadingAge({ protagonistType: "child" })).toBeUndefined();
+    expect(resolveEffectiveReadingAge({})).toBeUndefined();
+  });
+
+  it("does not fall back to the kanji-heavy general_child text for companion protagonists", () => {
+    // 相棒（ペット等）主人公は childAge が渡らない。general_child にフォールバックすると
+    // 漢字混じりの汎用テキストになるため、ひらがな主体の preschool_3_4 になること。
+    const age = resolveEffectiveReadingAge({ protagonistType: "companion" });
+    expect(age).toBe(DEFAULT_COMPANION_READING_AGE);
+    expect(getAgeReadingProfile(age).ageBand).toBe("preschool_3_4");
   });
 
   it("strengthens preschool guidance beyond toddler sound play", () => {

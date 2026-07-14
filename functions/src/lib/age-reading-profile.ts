@@ -100,6 +100,35 @@ const AGE_READING_PROFILES: Record<AgeBand, AgeReadingProfile> = {
   },
 };
 
+/**
+ * 相棒（ペット等）が主人公の絵本で、子どもの年齢が渡らないとき（childAge 未指定）の
+ * 既定読み年齢。general_child（漢字混じりの汎用テキスト）へフォールバックさせず、
+ * 幼児向けのひらがな主体プロファイル（preschool_3_4）を使うためのもの。
+ * 背景: 相棒主人公の本は幼児が読む前提なのに、年齢欠落で漢字だらけの本文になっていた。
+ */
+export const DEFAULT_COMPANION_READING_AGE = 4;
+
+/**
+ * 実際に本文選択へ使う読み年齢を解決する。
+ * - childAge があればそれを最優先。
+ * - 無い場合、相棒（companion）主人公なら幼児向けの既定年齢を用いる
+ *   （general_child の漢字テキストへ落ちるのを防ぐ）。
+ * - それ以外（年齢未入力の子ども主人公など）は undefined のまま
+ *   （従来どおり general_child が選ばれる）。
+ */
+export function resolveEffectiveReadingAge(input: {
+  childAge?: number | null;
+  protagonistType?: string;
+}): number | undefined {
+  if (typeof input.childAge === "number" && !Number.isNaN(input.childAge)) {
+    return input.childAge;
+  }
+  if (input.protagonistType === "companion") {
+    return DEFAULT_COMPANION_READING_AGE;
+  }
+  return undefined;
+}
+
 export function getAgeReadingProfile(age?: number): AgeReadingProfile {
   if (age === undefined || age === null || Number.isNaN(age)) {
     return AGE_READING_PROFILES.general_child;
