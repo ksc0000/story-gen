@@ -254,6 +254,7 @@
     "PR #656: fix: 不具合3件の修正（200文字エラー/フォールバック時スタイル維持/通知の観測性） (merged)",
     "PR #657: fix(generation): 黒一色画像を「成功」として保存しない健全性ガード (merged)",
     "PR #658: fix(push): 通知設定失敗の理由全文を Firestore に記録する診断機構 (merged)",
+    "PR #659: fix(generation): 相棒主人公の絵本が漢字だらけになる問題を修正 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
