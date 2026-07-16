@@ -59,7 +59,11 @@ import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE, resolveOpenAIModelLa
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
 import { canUseProductPlan } from "./lib/entitlements";
 import { canGenerateBookThisMonth } from "./lib/usage";
-import { getAgeReadingProfile, type AgeReadingProfile } from "./lib/age-reading-profile";
+import {
+  getAgeReadingProfile,
+  resolveEffectiveReadingAge,
+  type AgeReadingProfile,
+} from "./lib/age-reading-profile";
 import {
   validateGeneratedStoryQuality,
   toFirestoreStoryQualityReport,
@@ -1143,7 +1147,7 @@ export async function processBookGeneration(
     }
     const userPlan = await deps.getUserPlan(bookData.userId);
     const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan, isAdminUser);
-    const readingProfile = getAgeReadingProfile(mergedInput.childAge);
+    const readingProfile = getAgeReadingProfile(resolveEffectiveReadingAge(mergedInput));
     const generationMode = normalizedBookData.generationMode ?? "reliable_fast";
 
     await deps.updateBookStoryGenerationMetadata(bookId, {
