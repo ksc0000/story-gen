@@ -2728,7 +2728,7 @@ function collectPageTextQualityWarnings(
     .map((issue) => issue.code);
 }
 
-function shouldRewriteStoryText(
+export function shouldRewriteStoryText(
   _bookData: BookData,
   report: StoryQualityReport
 ): boolean {
@@ -2739,6 +2739,10 @@ function shouldRewriteStoryText(
       "unnatural_japanese_risk",
       "text_too_generic",
       "sentence_too_short_for_age",
+      // 読み聞かせ pacing (#598): 語尾3連続の単調検出は精度が高い
+      // (良質テンプレ本文3958件での発火率0.2%を実測) ため、検出止まりに
+      // せずリライト誘導まで繋ぐ。リライト指示側に緩急ガイドあり。
+      "monotonous_sentence_endings",
       "missing_story_goal",
       "missing_main_quest_object",
       "main_quest_drift",

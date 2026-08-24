@@ -1163,6 +1163,7 @@ export class GeminiClient implements LLMClient {
       "Reduce excessive onomatopoeia and avoid baby-talk neologisms (e.g., \"-rin\" suffixes, or adding \"o-\" to everything like \"o-meme\", \"o-tete\").",
       "Use descriptive verbs and adjectives instead of relying on simple sounds to convey mood or action.",
       "Ensure sentence endings are varied and rhythmic (avoid repeating \"-shita\" or \"-datta\" excessively).",
+      "Read-aloud pacing: mix longer descriptive sentences with short punchy ones so a parent reading aloud gets natural breathing rhythm. Place a short emphatic sentence (e.g. 「みつけた！」「わあ、すごい。」) at moments of emotion or discovery. Never make every sentence the same length and cadence.",
       "For ages 5+, include logical connections (cause and effect) to add depth to the narrative.",
       "Use narrative connectives such as 「すると」「でも」「やがて」「ところが」 to create story flow and progression within and between pages.",
       "Write in a picture-book narrator style: sentence endings like 「〜のです」「〜でした」「〜ましたが」「〜ましょう」give a warm storytelling voice.",
