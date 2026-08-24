@@ -45,10 +45,10 @@ export interface DailyMetricsDoc {
   booksCompleted: number;
   // ── 売上 ──
   singlePurchaseRevenueJpy: number; // 当日の単品購入売上（遡及可能）
-  // ── 現在値スナップショット（最新日のみ正確）──
-  paidUsersStandard: number;
-  paidUsersPremium: number;
-  estimatedMrrJpy: number;
+  // ── 現在値スナップショット（最新日のみ書き込まれる。過去日は当時の記録を保持）──
+  paidUsersStandard?: number;
+  paidUsersPremium?: number;
+  estimatedMrrJpy?: number;
   source: string;
 }
 
@@ -165,10 +165,16 @@ export async function computeAndSaveDailyMetrics(params: {
       booksCreated,
       booksCompleted,
       singlePurchaseRevenueJpy,
-      // 有料内訳・MRR は「現在値」のため最新日のみ実値、過去日は 0
-      paidUsersStandard: isLatest ? paidStandard : 0,
-      paidUsersPremium: isLatest ? paidPremium : 0,
-      estimatedMrrJpy: isLatest ? estimatedMrrJpy : 0,
+      // 有料内訳・MRR は「現在値」しか取れないため、最新日のみ書き込む。
+      // 過去日はフィールドごと省略し、merge:true でその日に記録された値を保持する。
+      // （以前は 0 で上書きしていたため、毎晩の再計算で前日以前の MRR が消えていた）
+      ...(isLatest
+        ? {
+            paidUsersStandard: paidStandard,
+            paidUsersPremium: paidPremium,
+            estimatedMrrJpy,
+          }
+        : {}),
       source,
     };
 

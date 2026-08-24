@@ -4,7 +4,9 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
 export const cleanupExpired = onSchedule(
-  { schedule: "0 18 * * *", timeZone: "Asia/Tokyo", retryCount: 3, region: "asia-northeast1" },
+  { schedule: "0 4 * * *", timeZone: "Asia/Tokyo", retryCount: 3, region: "asia-northeast1" },
+  // 毎日 04:00 JST。SLO/メトリクス/品質スナップショット(03:00〜03:45 JST)が
+  // 当日分を集計し終えてから削除する。
   async () => {
     const db = getFirestore();
     const bucket = getStorage().bucket();
@@ -35,8 +37,11 @@ export const cleanupExpired = onSchedule(
           await batch.commit();
 
           try {
-            const [files] = await bucket.getFiles({ prefix: `books/${bookId}/pages/` });
-            if (files.length > 0) { await Promise.all(files.map((file) => file.delete())); }
+            // 画像は books/{bookId}/page-N.png / cover.png、PDF は
+            // books/{bookId}/outputs/book.pdf に保存される。
+            // 以前は存在しない `books/{bookId}/pages/` を指していたため、
+            // Firestore だけ消えて Storage のファイルが残り続けていた。
+            await bucket.deleteFiles({ prefix: `books/${bookId}/` });
           } catch (storageError) {
             logger.warn(`Failed to delete storage files for book ${bookId}`, { storageError });
           }

@@ -1,5 +1,5 @@
 import { logger } from "firebase-functions/v2";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { computeSloMetrics } from "./slo-metrics";
 import type { BookData, PageData } from "./types";
 
@@ -66,6 +66,29 @@ function getISOYearWeek(d: Date): { year: number; week: number } {
   return { year: isoYear, week };
 }
 
+/** 集計ウィンドウの長さ（ms）。ここに無い window は「全期間」扱い。 */
+const WINDOW_DURATION_MS: Record<string, number> = {
+  daily: 24 * 60 * 60 * 1000,
+  weekly: 7 * 24 * 60 * 60 * 1000,
+};
+
+/**
+ * Resolve the inclusive start of the aggregation window.
+ *
+ * Returns `null` for an unknown window, which means "no time filter"
+ * (the historical behaviour, kept for ad-hoc/manual snapshots).
+ *
+ * NOTE: これが無いと daily も weekly も「直近 sampleSize 冊」を見るだけになり、
+ * 毎日まったく同じ値が保存されてトレンド／リグレッション検知が機能しない。
+ */
+export function resolveWindowStartMs(
+  window: string,
+  nowMs: number,
+): number | null {
+  const durationMs = WINDOW_DURATION_MS[window];
+  return durationMs === undefined ? null : nowMs - durationMs;
+}
+
 /**
  * Build the Firestore document payload from computed metrics.
  * Pure function — no side effects.
@@ -77,6 +100,7 @@ export function buildSnapshotDoc(
   nowMs: number,
 ) {
   const snapshotKey = buildSnapshotKey(config.window, nowMs);
+  const windowStartMs = resolveWindowStartMs(config.window, nowMs);
   return {
     ...metrics,
     snapshotKey,
@@ -87,6 +111,9 @@ export function buildSnapshotDoc(
     sampleSize: config.sampleSize,
     sampleUnit: "books",
     window: config.window,
+    // 集計対象期間（null = 全期間）。トレンド表示時にどの範囲の値かを判別するため。
+    windowStartMs,
+    windowEndMs: nowMs,
   };
 }
 
@@ -122,21 +149,33 @@ export async function saveSloSnapshot(
   config: SnapshotConfig,
 ): Promise<SnapshotResult> {
   const db = getFirestore();
+  const nowMs = Date.now();
 
   logger.info(`Starting ${config.window} SLO snapshot`, {
     source: config.source,
     sampleSize: config.sampleSize,
   });
 
-  // 1. Fetch recent books
-  const booksSnap = await db
+  // 1. Fetch books created inside the aggregation window.
+  //    Inequality + orderBy on the same field → single-field index is enough.
+  const windowStartMs = resolveWindowStartMs(config.window, nowMs);
+  let booksQuery: FirebaseFirestore.Query = db
     .collection("books")
-    .orderBy("createdAt", "desc")
-    .limit(config.sampleSize)
-    .get();
+    .orderBy("createdAt", "desc");
+  if (windowStartMs !== null) {
+    booksQuery = booksQuery.where(
+      "createdAt",
+      ">=",
+      Timestamp.fromMillis(windowStartMs),
+    );
+  }
+  const booksSnap = await booksQuery.limit(config.sampleSize).get();
 
   if (booksSnap.empty) {
-    logger.info("No books found, skipping snapshot");
+    logger.info("No books in window, skipping snapshot", {
+      window: config.window,
+      windowStartMs,
+    });
     return {
       saved: false,
       totalBooks: 0,
@@ -216,7 +255,6 @@ export async function saveSloSnapshot(
   const metrics = computeSloMetrics(books, pagesMap);
 
   // 4. Save snapshot (idempotent: deterministic doc ID via snapshotKey)
-  const nowMs = Date.now();
   const doc = buildSnapshotDoc(metrics, config, nowMs);
   const itemsRef = db
     .collection("adminMetrics")

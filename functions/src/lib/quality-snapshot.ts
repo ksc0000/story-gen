@@ -1,7 +1,7 @@
 import { logger } from "firebase-functions/v2";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { computeQualityMetrics } from "./quality-metrics";
-import { buildSnapshotKey } from "./slo-snapshot";
+import { buildSnapshotKey, resolveWindowStartMs } from "./slo-snapshot";
 import type { BookData } from "./types";
 
 /* ------------------------------------------------------------------ */
@@ -31,6 +31,7 @@ export function buildQualitySnapshotDoc(
   nowMs: number,
 ) {
   const snapshotKey = buildSnapshotKey(config.window, nowMs);
+  const windowStartMs = resolveWindowStartMs(config.window, nowMs);
   return {
     ...metrics,
     snapshotKey,
@@ -39,6 +40,9 @@ export function buildQualitySnapshotDoc(
     sampleSize: config.sampleSize,
     sampleUnit: "reviewed_books",
     window: config.window,
+    // 集計対象期間（null = 全期間）。
+    windowStartMs,
+    windowEndMs: nowMs,
   };
 }
 
@@ -50,23 +54,31 @@ export async function saveQualitySnapshot(
   config: QualitySnapshotConfig,
 ): Promise<QualitySnapshotResult> {
   const db = getFirestore();
+  const nowMs = Date.now();
 
   logger.info(`Starting ${config.window} Quality snapshot`, {
     source: config.source,
     sampleSize: config.sampleSize,
   });
 
-  // 1. Fetch reviewed books
-  // We fetch books ordered by qualityReviewedAtMs.
-  // Firestore single-field index is enough for this.
-  const booksSnap = await db
+  // 1. Fetch books reviewed inside the aggregation window.
+  // Inequality + orderBy on the same field → single-field index is enough.
+  // ウィンドウを掛けないと「全期間の直近 sampleSize 件」を毎週同じように
+  // 集計してしまい、週次スナップショットが常に同じ値になる。
+  const windowStartMs = resolveWindowStartMs(config.window, nowMs);
+  let booksQuery: FirebaseFirestore.Query = db
     .collection("books")
-    .orderBy("qualityReviewedAtMs", "desc")
-    .limit(config.sampleSize)
-    .get();
+    .orderBy("qualityReviewedAtMs", "desc");
+  if (windowStartMs !== null) {
+    booksQuery = booksQuery.where("qualityReviewedAtMs", ">=", windowStartMs);
+  }
+  const booksSnap = await booksQuery.limit(config.sampleSize).get();
 
   if (booksSnap.empty) {
-    logger.info("No reviewed books found, skipping snapshot");
+    logger.info("No reviewed books in window, skipping snapshot", {
+      window: config.window,
+      windowStartMs,
+    });
     return {
       saved: false,
       totalReviewed: 0,
@@ -103,7 +115,6 @@ export async function saveQualitySnapshot(
   const metrics = computeQualityMetrics(books);
 
   // 3. Save snapshot
-  const nowMs = Date.now();
   const docData = buildQualitySnapshotDoc(metrics, config, nowMs);
   const itemsRef = db
     .collection("adminMetrics")

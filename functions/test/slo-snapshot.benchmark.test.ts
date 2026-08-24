@@ -8,6 +8,9 @@ vi.mock("firebase-admin/firestore", () => {
     FieldValue: {
       serverTimestamp: vi.fn(),
     },
+    Timestamp: {
+      fromMillis: (ms: number) => ({ toMillis: () => ms }),
+    },
   };
 });
 
@@ -39,15 +42,17 @@ describe("saveSloSnapshot benchmark", () => {
 
     mockDb.collection.mockImplementation((colName) => {
       if (colName === "books") {
-        return {
-          orderBy: () => ({
-            limit: () => ({
-              get: async () => {
-                await new Promise((resolve) => setTimeout(resolve, 50));
-                return booksSnap;
-              },
-            }),
+        const limitStage = {
+          limit: () => ({
+            get: async () => {
+              await new Promise((resolve) => setTimeout(resolve, 50));
+              return booksSnap;
+            },
           }),
+        };
+        return {
+          // saveSloSnapshot narrows by window: orderBy(...).where(...).limit(...)
+          orderBy: () => ({ ...limitStage, where: () => limitStage }),
           doc: (bookId) => ({
             collection: (subColName) => ({
               get: async () => {
