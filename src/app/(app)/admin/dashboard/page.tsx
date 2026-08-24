@@ -279,15 +279,20 @@ export default function AdminDashboardPage() {
   // Load daily SLO snapshot history for the system sparkline (readable rate trend).
   useEffect(() => {
     if (!isAdmin || isDemoMode) return;
+    // items には daily / weekly / 管理者の手動スナップショットが混在する。
+    // 日次トレンドの折れ線に週次や手動サンプルが混ざらないよう daily だけを拾う。
+    // （複合インデックスを増やさないため、多めに取ってクライアント側で絞る）
     const q = query(
       collection(db, "adminMetrics", "sloSnapshots", "items"),
       orderBy("createdAtMs", "desc"),
-      limit(14)
+      limit(60)
     );
     getDocs(q)
       .then((snap) => {
         const rates = snap.docs
-          .map((d) => d.data() as { bookReadableRate?: number })
+          .map((d) => d.data() as { window?: string; bookReadableRate?: number })
+          .filter((d) => d.window === "daily")
+          .slice(0, 14)
           .map((d) => d.bookReadableRate ?? 0)
           .reverse();
         setSloHistory(rates);

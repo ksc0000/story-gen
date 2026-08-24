@@ -3,7 +3,9 @@ import { logger } from "firebase-functions/v2";
 import { getFirestore } from "firebase-admin/firestore";
 
 export const resetMonthlyQuota = onSchedule(
-  { schedule: "5 15 1 * *", timeZone: "Asia/Tokyo", retryCount: 3, region: "asia-northeast1" },
+  { schedule: "5 0 1 * *", timeZone: "Asia/Tokyo", retryCount: 3, region: "asia-northeast1" },
+  // 毎月1日 00:05 JST。以前は 15:05 JST に走っており、月初の 00:00〜15:05 の間は
+  // 前月の生成回数が残ったままで、無料/有料ユーザーが不当にブロックされていた。
   async () => {
     const db = getFirestore();
 
