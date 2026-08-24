@@ -257,6 +257,7 @@
     "PR #659: fix(generation): 相棒主人公の絵本が漢字だらけになる問題を修正 (merged)",
     "PR #660: fix(scheduled-jobs): 定期ジョブが出す結果の誤りを修正（ウィンドウ未適用・MRR消失・Storage残留・時刻ずれ） (merged)",
     "PR #661: feat(quality): 読み聞かせ向けpacing改善 — 緩急指針＋語尾単調のリライト誘導 (merged)",
+    "PR #662: docs(marketing): X投稿画像の制作プレイブックと再現パイプラインを追加 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
