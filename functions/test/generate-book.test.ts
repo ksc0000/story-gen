@@ -6,6 +6,7 @@ import {
   classifyFallbackReasonClass,
   normalizeStoryCastWithChildProfile,
   shouldFailBookForQuality,
+  shouldRewriteStoryText,
   gateImageModelProfile,
   sanitizeForbiddenQuestObjects,
   normalizeBookForGeneration,
@@ -1563,6 +1564,51 @@ describe("shouldFailBookForQuality", () => {
         "premium_paid"
       )
     ).toBe(true);
+  });
+});
+
+describe("shouldRewriteStoryText (#598 read-aloud pacing)", () => {
+  const summary = {
+    pageCount: 4,
+    averageCharsPerPage: 90,
+    averageSentencesPerPage: 3,
+    minCharsPerPage: 70,
+    minSentencesPerPage: 3,
+  };
+  const bookData = {} as Parameters<typeof shouldRewriteStoryText>[0];
+
+  it("triggers rewrite for monotonous sentence endings", () => {
+    expect(
+      shouldRewriteStoryText(bookData, {
+        ok: true,
+        issues: [
+          {
+            severity: "warning",
+            code: "monotonous_sentence_endings",
+            message: "語尾が単調",
+            pageIndex: 0,
+          },
+        ],
+        summary,
+      })
+    ).toBe(true);
+  });
+
+  it("does not trigger rewrite for non-listed warnings", () => {
+    expect(
+      shouldRewriteStoryText(bookData, {
+        ok: true,
+        issues: [
+          {
+            severity: "warning",
+            code: "missing_scene_detail",
+            message: "warn",
+            pageIndex: 0,
+          },
+        ],
+        summary,
+      })
+    ).toBe(false);
   });
 });
 
