@@ -742,4 +742,255 @@ describe("validateGeneratedStoryQuality", () => {
 
     expect(report.issues.some((issue) => issue.code === "composition_hint.monotone")).toBe(true);
   });
+
+  describe("cast consistency & unauthorized character heuristics", () => {
+    it("flags cast members that share a display name under different characterIds", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: [
+            {
+              characterId: "buddy_01",
+              displayName: "ひかりのともだち",
+              role: "magical_friend",
+              visualBible: "small glowing golden spirit child",
+            },
+            {
+              characterId: "buddy_02",
+              displayName: "ひかりの ともだち",
+              role: "magical_friend",
+              visualBible: "small glowing golden spirit child, second appearance",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "cast_duplicate_like_character")).toBe(true);
+    });
+
+    it("does not flag a single cast member reused across pages as duplicate-like", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: [
+            {
+              characterId: "buddy_01",
+              displayName: "ひかりのともだち",
+              role: "magical_friend",
+              visualBible: "small glowing golden spirit child",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "cast_duplicate_like_character")).toBe(false);
+    });
+
+    it("flags a recurring cast member missing identity anchors (signatureItems / doNotChange)", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: [
+            {
+              characterId: "buddy_01",
+              displayName: "ひかりのともだち",
+              role: "magical_friend",
+              visualBible: "small glowing golden spirit child",
+            },
+          ],
+          pages: [
+            { ...baseStory.pages[0], appearingCharacterIds: ["buddy_01"] },
+            { ...baseStory.pages[1], appearingCharacterIds: ["buddy_01"] },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "cast_missing_identity_anchors")).toBe(true);
+    });
+
+    it("does not flag a recurring cast member that has signatureItems and doNotChange", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: [
+            {
+              characterId: "buddy_01",
+              displayName: "ひかりのともだち",
+              role: "magical_friend",
+              visualBible: "small glowing golden spirit child",
+              signatureItems: ["tiny purple top hat"],
+              doNotChange: ["Do not remove the tiny purple top hat"],
+            },
+          ],
+          pages: [
+            { ...baseStory.pages[0], appearingCharacterIds: ["buddy_01"] },
+            { ...baseStory.pages[1], appearingCharacterIds: ["buddy_01"] },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "cast_missing_identity_anchors")).toBe(false);
+    });
+
+    it("flags appearingCharacterIds that reference a characterId absent from cast", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: [
+            {
+              characterId: "buddy_01",
+              displayName: "ひかりのともだち",
+              role: "magical_friend",
+              visualBible: "small glowing golden spirit child",
+            },
+          ],
+          pages: [
+            { ...baseStory.pages[0], appearingCharacterIds: ["buddy_99"] },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "cast_unknown_character_id")).toBe(true);
+    });
+
+    it("flags cast defined but pages hinting at a buddy character missing appearingCharacterIds", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: [
+            {
+              characterId: "buddy_01",
+              displayName: "ひかりのともだち",
+              role: "magical_friend",
+              visualBible: "small glowing golden spirit child",
+            },
+          ],
+          pages: [
+            {
+              ...baseStory.pages[0],
+              imagePrompt: "wide shot of the child and their magical buddy in a cozy room",
+              appearingCharacterIds: undefined,
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "missing_appearing_character_ids")).toBe(true);
+    });
+
+    it("flags recurring buddy/animal hints across pages when no cast is defined", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: undefined,
+          pages: [
+            { ...baseStory.pages[0], imagePrompt: "wide shot of the child and their magical buddy in a cozy room" },
+            { ...baseStory.pages[1], imagePrompt: "medium shot with the friend animal playing near toys and books" },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "cast_missing_for_recurring_character")).toBe(true);
+    });
+
+    it("flags an unauthorized human mentioned in imagePrompt with no human cast member", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: undefined,
+          pages: [
+            {
+              ...baseStory.pages[0],
+              imagePrompt: "wide establishing shot of a cozy room with a boy playing near the window",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "unauthorized_human_in_prompt")).toBe(true);
+    });
+
+    it("does not flag a human mentioned in imagePrompt when child_protagonist appears on the page", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: undefined,
+          pages: [
+            {
+              ...baseStory.pages[0],
+              imagePrompt: "wide establishing shot of a cozy room with a boy playing near the window",
+              appearingCharacterIds: ["child_protagonist"],
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "unauthorized_human_in_prompt")).toBe(false);
+    });
+
+    it("flags an unauthorized animal mentioned in imagePrompt with no matching animal cast member", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: undefined,
+          pages: [
+            {
+              ...baseStory.pages[0],
+              imagePrompt: "wide establishing shot of a cozy room with a friendly dog resting near the window",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "unauthorized_animal_in_prompt")).toBe(true);
+    });
+
+    it("does not flag an animal mentioned in imagePrompt when an authorized animal cast member appears on the page", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          cast: [
+            {
+              characterId: "dog_01",
+              displayName: "ぽち",
+              role: "animal",
+              characterKind: "animal",
+              visualBible: "small brown dog with floppy ears",
+            },
+          ],
+          pages: [
+            {
+              ...baseStory.pages[0],
+              imagePrompt: "wide establishing shot of a cozy room with a friendly dog resting near the window",
+              appearingCharacterIds: ["dog_01"],
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "unauthorized_animal_in_prompt")).toBe(false);
+    });
+  });
 });
