@@ -326,6 +326,14 @@ export function validateGeneratedStoryQuality(params: {
           pageIndex,
         });
       }
+      if (heuristics.flatSentenceRhythm) {
+        issues.push({
+          severity: "warning",
+          code: "flat_sentence_rhythm",
+          message: "文の長さがほぼ均一で、読み聞かせの緩急が弱い可能性があります。感情が動く瞬間などに短い一文を混ぜてください。",
+          pageIndex,
+        });
+      }
     }
   });
 
@@ -634,6 +642,7 @@ type JapaneseTextHeuristics = {
   textTooGeneric: boolean;
   sentenceTooShortForAge: boolean;
   monotonousSentenceEndings: boolean;
+  flatSentenceRhythm: boolean;
   hasClosingTone: boolean;
 };
 
@@ -676,6 +685,19 @@ function analyzeJapaneseTextHeuristics(
     }
   }
 
+  // 読み聞かせの緩急（prompt-builder の JAPANESE_STORY_TEXT_RULES 参照）: 長い文と
+  // 短い文が混ざらず、全文がほぼ同じ長さだと抑揚がなくなる。0〜2歳は元々短い一文が
+  // 前提のため対象外。「そこそこ長さがあるのに全文が均一な長さ」のページだけを拾う。
+  const sentenceLengths = sentences.map((s) => s.length);
+  const isBabyToddler = options?.ageBand === "baby_toddler";
+  let flatSentenceRhythm = false;
+  if (!isBabyToddler && sentenceLengths.length >= 3) {
+    const maxLen = Math.max(...sentenceLengths);
+    const minLen = Math.min(...sentenceLengths);
+    const avgLen = sentenceLengths.reduce((sum, len) => sum + len, 0) / sentenceLengths.length;
+    flatSentenceRhythm = avgLen >= 12 && maxLen - minLen <= 3;
+  }
+
   const hasClosingTone = /(あした|おやすみ|わらって|しあわせ|きもち|ずっと|これから|おしまい|またね|ありがとう|にっこり|ほっと|あんしん|ゆめ|ねむ|おうちに)/.test(text);
   const isOlderChild =
     options?.ageBand === "early_reader_5_6" ||
@@ -709,6 +731,7 @@ function analyzeJapaneseTextHeuristics(
     sentenceTooShortForAge:
       countJapaneseTextChars(text) < 40 || countSentences(text) <= 2,
     monotonousSentenceEndings,
+    flatSentenceRhythm,
     hasClosingTone,
   };
 }

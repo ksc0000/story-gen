@@ -204,6 +204,66 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "monotonous_sentence_endings")).toBe(true);
   });
 
+  it("flags flat sentence rhythm when every sentence is nearly the same length", () => {
+    // 読み聞かせの緩急（長短ミックス）が無く、全文がほぼ同じ長さのページ。
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "ゆうたくんは こうえんに いきました。おともだちと ボールを けりました。とても たのしい じかんでした。",
+            imagePrompt: "wide shot of a child playing ball with friends in a park, gentle spring details",
+            compositionHint: "wide shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(6),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "flat_sentence_rhythm" && issue.pageIndex === 0)).toBe(true);
+  });
+
+  it("does not flag flat sentence rhythm when sentence lengths vary (short punchy line mixed in)", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        pages: [
+          {
+            text: "ゆうたくんは こうえんの すみずみまで さがしまわりました。みつけた！ちいさな きらきらひかる いしを てにとって、うれしくて とびはねました。",
+            imagePrompt: "wide shot of a child finding a shiny stone in a park, gentle spring details",
+            compositionHint: "wide shot",
+          },
+          baseStory.pages[1],
+        ],
+      },
+      readingProfile: getAgeReadingProfile(6),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "flat_sentence_rhythm")).toBe(false);
+  });
+
+  it("never flags flat sentence rhythm for baby/toddler pages", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        narrativeDevice: undefined,
+        pages: [
+          {
+            text: "わんわん きたよ。にゃんにゃん きたよ。もこもこ きたよ。",
+            imagePrompt: "simple animal parade scene with soft pastel colors",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(2),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "flat_sentence_rhythm")).toBe(false);
+  });
+
   it("detects story goal drift and forbidden quest objects in weak premium text", () => {
     const report = validateGeneratedStoryQuality({
       story: {
