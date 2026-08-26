@@ -21,6 +21,7 @@ import { db, functions } from "@/lib/firebase";
 import { isDemoMode } from "@/lib/demo";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
+import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
 import type { BookFeedbackDoc, PageDoc } from "@/lib/types";
 
 function BookContent() {
@@ -146,10 +147,14 @@ function BookContent() {
         updatedAt: serverTimestamp(),
       });
       if (isPublic) {
+        toast.success("公開設定に変更しました。共有リンクをコピーしました。");
         handleCopyLink();
+      } else {
+        toast.info("非公開に設定しました。");
       }
     } catch (err) {
       console.error("Failed to toggle share:", err);
+      toast.error(getUserFriendlyErrorMessage(err, "共有設定の変更に失敗しました。"));
     } finally {
       setIsSharing(false);
     }
@@ -160,6 +165,9 @@ function BookContent() {
     navigator.clipboard.writeText(url).then(() => {
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
+    }).catch((err) => {
+      console.error("Failed to copy link:", err);
+      toast.error(getUserFriendlyErrorMessage(err, "リンクのコピーに失敗しました。"));
     });
   }
 
@@ -169,9 +177,11 @@ function BookContent() {
     try {
       await updateDoc(doc(db, "books", bookId), { giftMessage: value, updatedAt: serverTimestamp() });
       setGiftSaved(true);
+      toast.success("メッセージを保存しました。");
       setTimeout(() => setGiftSaved(false), 2000);
     } catch (err) {
       console.error("Failed to save gift message:", err);
+      toast.error(getUserFriendlyErrorMessage(err, "メッセージの保存に失敗しました。"));
     }
   }
 
@@ -213,9 +223,10 @@ function BookContent() {
       const updateTitle = httpsCallable(functions, "updateBookTitle");
       await updateTitle({ bookId, newTitle: newTitle.trim() });
       setIsEditingTitle(false);
+      toast.success("タイトルを更新しました。");
     } catch (err) {
       console.error("Failed to update title:", err);
-      setTitleUpdateError(err instanceof Error ? err.message : "タイトルの更新に失敗しました。");
+      setTitleUpdateError(getUserFriendlyErrorMessage(err, "タイトルの更新に失敗しました。"));
     } finally {
       setIsUpdatingTitle(false);
     }
@@ -234,10 +245,10 @@ function BookContent() {
       const updatePageText = httpsCallable(functions, "updateBookPageText");
       await updatePageText({ bookId, pageNumber: editingPage.pageNumber, text: trimmed });
       setEditingPage(null);
+      toast.success("本文を保存しました。");
     } catch (err) {
       console.error("Failed to update page text:", err);
-      // Cloud Functions の HttpsError.message はユーザー向けメッセージを含む。
-      setPageTextError(err instanceof Error ? err.message : "本文の更新に失敗しました。");
+      setPageTextError(getUserFriendlyErrorMessage(err, "本文の更新に失敗しました。"));
     } finally {
       setIsSavingPageText(false);
     }
@@ -256,7 +267,7 @@ function BookContent() {
       await regenerate({ bookId, pageNumber: page.pageNumber });
     } catch (err) {
       console.error("Failed to regenerate page:", err);
-      const message = err instanceof Error ? err.message : "再生成に失敗しました。";
+      const message = getUserFriendlyErrorMessage(err, "再生成に失敗しました。");
       setRegenerationErrors((prev) => ({ ...prev, [page.pageNumber]: message }));
     } finally {
       setRegeneratingPages((prev) => {
@@ -276,7 +287,7 @@ function BookContent() {
       await regenerate({ bookId });
     } catch (err) {
       console.error("Failed to regenerate cover:", err);
-      setCoverRegenerationError(err instanceof Error ? err.message : "表紙の再生成に失敗しました。");
+      setCoverRegenerationError(getUserFriendlyErrorMessage(err, "表紙の再生成に失敗しました。"));
     } finally {
       setIsRegeneratingCover(false);
     }
@@ -326,7 +337,7 @@ function BookContent() {
               </Button>
             </div>
             {titleUpdateError && (
-              <p className="text-center text-sm text-rose-500">{titleUpdateError}</p>
+              <p role="alert" className="text-center text-sm text-rose-500">{titleUpdateError}</p>
             )}
             <div className="flex justify-center gap-2">
               <Button
@@ -538,7 +549,7 @@ function BookContent() {
               />
               <div className="mt-1 text-right text-[11px] text-violet-300">{editingPage.text.length} / 300</div>
               {pageTextError && (
-                <p className="mt-1 text-sm text-rose-500">{pageTextError}</p>
+                <p role="alert" className="mt-1 text-sm text-rose-500">{pageTextError}</p>
               )}
               <p className="mt-2 text-[11px] text-violet-400">
                 ※ 本文だけを変更します。挿絵はそのままです（必要なら別途「再生成」してください）。
@@ -585,7 +596,7 @@ function BookContent() {
           />
         )}
         {coverRegenerationError && (
-          <p className="mt-2 text-center text-sm text-rose-500">{coverRegenerationError}</p>
+          <p role="alert" className="mt-2 text-center text-sm text-rose-500">{coverRegenerationError}</p>
         )}
       </div>
 
@@ -660,7 +671,7 @@ function BookContent() {
                     </p>
                   </div>
                   {error && (
-                    <div className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-600">
+                    <div role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-600">
                       {error}
                     </div>
                   )}
@@ -788,7 +799,7 @@ function BookContent() {
           </div>
 
           {feedbackError ? (
-            <p className="mt-3 text-sm text-rose-600">{feedbackError}</p>
+            <p role="alert" className="mt-3 text-sm text-rose-600">{feedbackError}</p>
           ) : null}
           {!canSubmitFeedback ? (
             <p className="mt-3 text-sm text-violet-600">
@@ -848,8 +859,8 @@ function BookContent() {
                   });
                 } catch (error) {
                   console.error("Failed to save book feedback:", error);
-                  const message = error instanceof Error ? error.message : "Unknown error";
-                  setFeedbackError(`フィードバックの保存に失敗しました: ${message}`);
+                  const message = getUserFriendlyErrorMessage(error, "フィードバックの保存に失敗しました。");
+                  setFeedbackError(message);
                 } finally {
                   setFeedbackSaving(false);
                 }

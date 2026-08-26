@@ -18,6 +18,7 @@ import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
+import { getUserFriendlyError } from "@/lib/user-error-mapping";
 
 function SelectTemplateContent() {
   const { user } = useAuth();
@@ -203,9 +204,17 @@ function SelectTemplateContent() {
           {loading || categoryLoading ? (
             <p className="mt-8 text-center text-violet-400">読み込み中...</p>
           ) : error ? (
-            <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
-              <p className="font-semibold">テンプレートの読み込みに失敗しました</p>
-              <p className="mt-2 text-sm">{error.message}</p>
+            <div role="alert" className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700 space-y-3">
+              <p className="font-semibold">テーマの読み込みに失敗しました</p>
+              <p className="text-sm">{getUserFriendlyError(error).message}</p>
+              <div className="flex justify-center gap-3 pt-1">
+                <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+                  再試行
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => updateCategory("all")} className="text-purple-700">
+                  すべてのカテゴリを見る
+                </Button>
+              </div>
             </div>
           ) : filteredTemplates.length === 0 ? (
             <div className="mt-8 rounded-3xl border border-dashed border-violet-200 bg-violet-50 p-8 text-center text-violet-600">
