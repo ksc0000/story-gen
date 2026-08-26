@@ -165,8 +165,8 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
         <span className="text-sm font-medium text-white/80 truncate max-w-[60vw]">{title}</span>
         <div className="flex items-center gap-2">
           {!showEndCard && <span className="text-xs text-white/50">{label}</span>}
-          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label="閉じる">
-            <X className="size-4" />
+          <button onClick={onClose} className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label="閉じる">
+            <X className="size-5" />
           </button>
         </div>
       </div>
@@ -209,10 +209,10 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
                 {/* B&W toggle button */}
                 <button
                   onClick={() => setIsTextInverted((v) => !v)}
-                  className={`absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full transition-colors ${isTextInverted ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-white/10 text-white/60 hover:bg-white/20"}`}
+                  className={`absolute right-4 top-4 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors ${isTextInverted ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-white/10 text-white/60 hover:bg-white/20"}`}
                   aria-label="文字の明暗を切り替え"
                 >
-                  <SunMoon className="size-4" />
+                  <SunMoon className="size-5" />
                 </button>
                 <AnimatePresence mode="wait">
                   {item.kind === "cover_title_spread" ? (
@@ -357,17 +357,17 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
             >
               <button
                 onClick={() => { setShowEndCard(false); go(0, -1); }}
-                className="flex w-full items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm text-white hover:bg-white/20 transition"
+                className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm text-white hover:bg-white/20 transition"
               >
                 <RotateCcw className="size-4" />
                 さいしょからよむ
               </button>
-              <button onClick={onClose} className="flex w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm text-white/80 hover:bg-white/15 transition">
+              <button onClick={onClose} className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm text-white/80 hover:bg-white/15 transition">
                 <BookOpen className="size-4" />
                 絵本ビューに戻る
               </button>
               {onFeedback && (
-                <button onClick={() => { onClose(); onFeedback(); }} className="flex w-full items-center justify-center gap-2 rounded-full bg-violet-500/80 px-6 py-3 text-sm font-medium text-white hover:bg-violet-500 transition">
+                <button onClick={() => { onClose(); onFeedback(); }} className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-full bg-violet-500/80 px-6 py-3 text-sm font-medium text-white hover:bg-violet-500 transition">
                   <MessageCircle className="size-4" />
                   感想を送る
                 </button>
@@ -380,11 +380,11 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
       {/* ── Desktop side arrows ───────────────────────────────── */}
       {!showEndCard && (
         <>
-          <button onClick={goPrev} disabled={current === 0} className="absolute left-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition disabled:opacity-0" aria-label="前のページ">
-            <ChevronLeft className="size-5" />
+          <button onClick={goPrev} disabled={current === 0} className="absolute left-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition disabled:opacity-0" aria-label="前のページ">
+            <ChevronLeft className="size-6" />
           </button>
-          <button onClick={goNext} className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label="次のページ">
-            <ChevronRight className="size-5" />
+          <button onClick={goNext} className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label="次のページ">
+            <ChevronRight className="size-6" />
           </button>
         </>
       )}
@@ -400,13 +400,20 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
             )}
           </AnimatePresence>
           <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-1.5 overflow-hidden max-w-[60vw]">
+            <div className="flex items-center gap-1 overflow-x-auto py-1 max-w-[60vw]">
               {items.map((_, i) => (
-                <button key={i} onClick={() => go(i, i > current ? 1 : -1)} className={`h-1.5 rounded-full transition-all ${i === current ? "w-5 bg-white" : "w-1.5 bg-white/35 hover:bg-white/60"}`} aria-label={`ページ ${i + 1}`} />
+                <button
+                  key={i}
+                  onClick={() => go(i, i > current ? 1 : -1)}
+                  className="flex h-11 min-w-[28px] items-center justify-center px-1"
+                  aria-label={`ページ ${i + 1}`}
+                >
+                  <span className={`h-1.5 rounded-full transition-all ${i === current ? "w-5 bg-white" : "w-1.5 bg-white/35 hover:bg-white/60"}`} />
+                </button>
               ))}
             </div>
-            <button onClick={() => setIsPlaying((p) => !p)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label={isPlaying ? "一時停止" : "自動再生"}>
-              {isPlaying ? <Pause className="size-4" /> : <Play className="size-4 translate-x-0.5" />}
+            <button onClick={() => setIsPlaying((p) => !p)} className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label={isPlaying ? "一時停止" : "自動再生"}>
+              {isPlaying ? <Pause className="size-5" /> : <Play className="size-5 translate-x-0.5" />}
             </button>
           </div>
         </div>

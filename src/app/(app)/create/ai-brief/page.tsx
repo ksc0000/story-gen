@@ -216,14 +216,14 @@ function ModeToggle({
   onChange: (m: InputMode) => void;
 }) {
   return (
-    <div className="flex rounded-full border border-violet-200 bg-violet-50 p-0.5">
+    <div className="flex rounded-full border border-violet-200 bg-violet-50 p-1">
       {(["chat", "free"] as InputMode[]).map((m) => (
         <button
           key={m}
           type="button"
           onClick={() => onChange(m)}
           className={cn(
-            "flex-1 rounded-full px-4 py-1.5 text-xs font-semibold transition-all",
+            "flex h-11 min-h-[44px] flex-1 items-center justify-center rounded-full px-4 text-xs font-semibold transition-all",
             mode === m
               ? "bg-white text-purple-700 shadow-sm"
               : "text-violet-400 hover:text-violet-600"
@@ -264,7 +264,7 @@ function ChatHistoryItem({
           <button
             type="button"
             onClick={onBack}
-            className="text-[11px] text-violet-300 transition-colors hover:text-violet-500"
+            className="flex min-h-[44px] min-w-[44px] items-center px-2 text-[11px] text-violet-300 transition-colors hover:text-violet-500"
           >
             変更
           </button>
@@ -711,7 +711,7 @@ function AiBriefPageContent() {
                   <button
                     type="button"
                     onClick={() => handleGoBackTo(questionSequence.length - 1)}
-                    className="text-xs text-violet-400 transition hover:text-violet-600"
+                    className="flex min-h-[44px] items-center text-xs text-violet-400 transition hover:text-violet-600"
                   >
                     ← 前の質問に戻る
                   </button>
@@ -724,7 +724,7 @@ function AiBriefPageContent() {
                       setSummaryReady(false);
                       setPitchState({ status: "idle" });
                     }}
-                    className="text-xs text-violet-400 transition hover:text-violet-600"
+                    className="flex min-h-[44px] items-center text-xs text-violet-400 transition hover:text-violet-600"
                   >
                     最初からやり直す
                   </button>
@@ -756,7 +756,7 @@ function AiBriefPageContent() {
                     <button
                       type="button"
                       onClick={() => handleGoBackTo(chatStep - 1)}
-                      className="shrink-0 rounded-full border border-violet-100 px-2.5 py-1 text-[11px] text-violet-400 transition hover:border-violet-300 hover:text-violet-600"
+                      className="inline-flex h-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-violet-100 px-3 text-[11px] text-violet-400 transition hover:border-violet-300 hover:text-violet-600"
                     >
                       ← 戻る
                     </button>
@@ -774,7 +774,7 @@ function AiBriefPageContent() {
                           key={ex.label}
                           type="button"
                           onClick={() => setFreeInputValue(ex.value)}
-                          className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-[11px] font-medium text-violet-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 active:scale-95"
+                          className="flex h-11 min-h-[44px] items-center rounded-full border border-violet-100 bg-violet-50 px-3.5 text-xs font-medium text-violet-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 active:scale-95"
                         >
                           ＋ {ex.label}
                         </button>
@@ -796,7 +796,7 @@ function AiBriefPageContent() {
                       <button
                         type="button"
                         onClick={() => handleTextConfirm(currentQuestion.id)}
-                        className="rounded-xl bg-purple-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-600"
+                        className="flex h-11 min-h-[44px] items-center justify-center rounded-xl bg-purple-500 px-6 text-sm font-semibold text-white transition hover:bg-purple-600"
                       >
                         次へ
                       </button>
@@ -820,7 +820,7 @@ function AiBriefPageContent() {
                       type="button"
                       disabled={!freeInputValue.trim()}
                       onClick={() => handleTextConfirm(currentQuestion.id)}
-                      className="w-full rounded-xl bg-purple-500 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-600 disabled:opacity-40"
+                      className="flex h-11 min-h-[44px] w-full items-center justify-center rounded-xl bg-purple-500 text-sm font-semibold text-white transition hover:bg-purple-600 disabled:opacity-40"
                     >
                       次の質問へ →
                     </button>
@@ -834,7 +834,7 @@ function AiBriefPageContent() {
                           key={chip.value}
                           type="button"
                           onClick={() => handleChipSelect(currentQuestion.id, chip.value)}
-                          className="flex items-center gap-2 rounded-xl border border-violet-100 bg-violet-50 px-3 py-2.5 text-left text-sm font-medium text-violet-700 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 active:scale-95"
+                          className="flex min-h-[44px] items-center gap-2 rounded-xl border border-violet-100 bg-violet-50 px-3 py-2.5 text-left text-sm font-medium text-violet-700 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 active:scale-95"
                         >
                           <span className="text-base">{chip.emoji}</span>
                           <span className="text-xs leading-tight">{chip.label}</span>
@@ -849,7 +849,7 @@ function AiBriefPageContent() {
                           <button
                             type="button"
                             onClick={() => setShowFreeInput(true)}
-                            className="w-full rounded-xl border border-dashed border-violet-200 py-2 text-xs text-violet-400 transition hover:border-purple-300 hover:text-purple-500"
+                            className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-dashed border-violet-200 text-xs text-violet-400 transition hover:border-purple-300 hover:text-purple-500"
                           >
                             ✍️ 自由に書く
                           </button>
@@ -876,7 +876,7 @@ function AiBriefPageContent() {
                                 <button
                                   type="button"
                                   onClick={() => { setShowFreeInput(false); setFreeInputValue(""); }}
-                                  className="flex-1 rounded-xl border border-violet-200 py-2 text-xs text-violet-400"
+                                  className="flex h-11 min-h-[44px] flex-1 items-center justify-center rounded-xl border border-violet-200 text-xs text-violet-400"
                                 >
                                   チップから選ぶ
                                 </button>
@@ -884,7 +884,7 @@ function AiBriefPageContent() {
                                   type="button"
                                   disabled={!freeInputValue.trim()}
                                   onClick={() => handleTextConfirm(currentQuestion.id)}
-                                  className="flex-1 rounded-xl bg-purple-500 py-2 text-xs font-semibold text-white disabled:opacity-40"
+                                  className="flex h-11 min-h-[44px] flex-1 items-center justify-center rounded-xl bg-purple-500 text-xs font-semibold text-white disabled:opacity-40"
                                 >
                                   決定 →
                                 </button>
@@ -975,7 +975,7 @@ function AiBriefPageContent() {
                   disabled={isGeneratingAny || pitchState.status === "shown"}
                   onClick={() => setProtagonistType(opt.value)}
                   className={cn(
-                    "flex flex-1 flex-col items-center gap-1.5 rounded-xl border py-3.5 text-sm font-semibold transition-all",
+                    "flex flex-1 flex-col items-center justify-center gap-1.5 rounded-xl border py-3.5 min-h-[64px] text-sm font-semibold transition-all",
                     protagonistType === opt.value
                       ? "border-purple-400 bg-purple-50 text-purple-700 ring-2 ring-purple-200"
                       : "border-violet-100 bg-white text-violet-500 hover:border-purple-300",
@@ -1076,7 +1076,7 @@ function AiBriefPageContent() {
                   disabled={isGeneratingAny || pitchState.status === "shown"}
                   onClick={() => setPageCount(opt.value)}
                   className={cn(
-                    "flex-1 rounded-xl border py-3 text-center transition-all",
+                    "flex-1 rounded-xl border py-3 text-center min-h-[48px] transition-all flex flex-col items-center justify-center",
                     pageCount === opt.value
                       ? "border-purple-400 bg-purple-50 ring-2 ring-purple-200"
                       : "border-violet-100 bg-white hover:border-purple-300",
@@ -1193,14 +1193,14 @@ function AiBriefPageContent() {
                         : prev
                     )
                   }
-                  className="flex-1 rounded-xl border border-violet-200 py-2 text-sm font-medium text-violet-500 transition hover:border-purple-300 hover:text-purple-600"
+                  className="flex h-11 min-h-[44px] flex-1 items-center justify-center rounded-xl border border-violet-200 text-sm font-medium text-violet-500 transition hover:border-purple-300 hover:text-purple-600"
                 >
                   もう少し変えたい 💬
                 </button>
                 <button
                   type="button"
                   onClick={() => setPitchState({ status: "idle" })}
-                  className="flex-1 rounded-xl border border-violet-200 py-2 text-sm font-medium text-violet-400 transition hover:border-violet-300"
+                  className="flex h-11 min-h-[44px] flex-1 items-center justify-center rounded-xl border border-violet-200 text-sm font-medium text-violet-400 transition hover:border-violet-300"
                 >
                   最初からやり直す ↩
                 </button>
@@ -1238,7 +1238,7 @@ function AiBriefPageContent() {
                           pitchState.status === "shown" &&
                           requestPitch(pitchState.refinementText)
                         }
-                        className="w-full rounded-xl bg-purple-500 py-2 text-sm font-semibold text-white transition hover:bg-purple-600 disabled:opacity-50"
+                        className="flex h-11 min-h-[44px] w-full items-center justify-center rounded-xl bg-purple-500 text-sm font-semibold text-white transition hover:bg-purple-600 disabled:opacity-50"
                       >
                         変えてみる →
                       </button>
