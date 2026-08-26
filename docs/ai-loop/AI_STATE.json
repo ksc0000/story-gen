@@ -260,6 +260,7 @@
     "PR #662: docs(marketing): X投稿画像の制作プレイブックと再現パイプラインを追加 (merged)",
     "PR #663: test(quality): cast整合性・不正キャラクター混入ヒューリスティクスのテストを追加 (merged)",
     "PR #664: feat(quality): 読み聞かせの緩急不足を検出する品質ゲートを追加 (merged)",
+    "PR #678: Fix LP body content remaining invisible on mobile viewports (merged)",
     "PR #680: fix(ci): @claudeレビューworkflowのモデルIDを実在するclaude-sonnet-5に修正 (merged)",
     "PR #683: ci: ANTHROPIC_API_KEY診断用の手動workflowを追加（一時的） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
