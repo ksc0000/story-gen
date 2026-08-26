@@ -16,6 +16,7 @@ import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
 import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
+import { useVisualViewport } from "@/lib/hooks/use-visual-viewport";
 import type {
   CreationMode,
   FixedStoryPageTemplate,
@@ -148,6 +149,7 @@ function getMissingTemplateFields(params: {
 
 function InputPageContent() {
   const searchParams = useSearchParams();
+  const { scrollInputIntoView, keyboardOffset } = useVisualViewport();
   const theme = searchParams.get("theme") ?? "";
   const childId = searchParams.get("childId") ?? "";
   const mode = (searchParams.get("mode") as CreationMode | null) ?? "guided_ai";
@@ -302,6 +304,7 @@ function InputPageContent() {
                 id="storyRequest"
                 value={storyRequest}
                 onChange={(e) => setStoryRequest(e.target.value)}
+                onFocus={(e) => scrollInputIntoView(e.target)}
                 placeholder="自由に書いてOKです。主人公、場所、気持ち、起きてほしいことなどをまとめて書けます。"
                 className="mt-1 min-h-40 w-full rounded-2xl border border-violet-200 bg-background px-3 py-3 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
                 rows={6}
@@ -324,6 +327,7 @@ function InputPageContent() {
                     id="storyRequest-blank"
                     value={storyRequest}
                     onChange={(e) => setStoryRequest(e.target.value)}
+                    onFocus={(e) => scrollInputIntoView(e.target)}
                     placeholder={template?.blankExample ?? "例：入れたいことを書いてください"}
                     className="mt-1 text-base"
                     maxLength={50}
@@ -354,13 +358,13 @@ function InputPageContent() {
               {shouldShowTemplateField("place", requiredInputs, optionalInputs) ? (
                 <div>
                   <Label htmlFor="place-fixed" className="text-purple-800">どこでの思い出？</Label>
-                  <Input id="place-fixed" value={place} onChange={(e) => setPlace(e.target.value)} placeholder="例：上野動物園、近所の公園" className="mt-1" maxLength={200} />
+                  <Input id="place-fixed" value={place} onChange={(e) => setPlace(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder="例：上野動物園、近所の公園" className="mt-1" maxLength={200} />
                 </div>
               ) : null}
               {shouldShowTemplateField("familyMembers", requiredInputs, optionalInputs) ? (
                 <div>
                   <Label htmlFor="familyMembers-fixed" className="text-purple-800">だれと一緒だった？</Label>
-                  <Input id="familyMembers-fixed" value={familyMembers} onChange={(e) => setFamilyMembers(e.target.value)} placeholder="例：ママ、パパ、おばあちゃん" className="mt-1" maxLength={200} />
+                  <Input id="familyMembers-fixed" value={familyMembers} onChange={(e) => setFamilyMembers(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder="例：ママ、パパ、おばあちゃん" className="mt-1" maxLength={200} />
                 </div>
               ) : null}
               <div>
@@ -369,6 +373,7 @@ function InputPageContent() {
                   id="parentMessage-fixed"
                   value={parentMessage}
                   onChange={(e) => setParentMessage(e.target.value)}
+                  onFocus={(e) => scrollInputIntoView(e.target)}
                   placeholder="例：また一緒に行こうね"
                   className="mt-1 w-full rounded-2xl border border-violet-200 bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
                   rows={3}
@@ -381,7 +386,7 @@ function InputPageContent() {
             /* guided_ai */
             <div>
               <Label htmlFor="storyRequest" className="text-purple-800">{primaryFieldLabel}</Label>
-              <Input id="storyRequest" value={storyRequest} onChange={(e) => setStoryRequest(e.target.value)} placeholder={storyPlaceholder} className="mt-1" maxLength={200} />
+              <Input id="storyRequest" value={storyRequest} onChange={(e) => setStoryRequest(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder={storyPlaceholder} className="mt-1" maxLength={200} />
             </div>
           )}
 
@@ -465,7 +470,7 @@ function InputPageContent() {
                   ))}
                 </div>
                 {outfitMode === "user_custom" ? (
-                  <Input id="customOutfit" value={customOutfit} onChange={(e) => setCustomOutfit(e.target.value)} placeholder="例：赤いパーカー、黄色い長靴" className="mt-2" maxLength={200} />
+                  <Input id="customOutfit" value={customOutfit} onChange={(e) => setCustomOutfit(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder="例：赤いパーカー、黄色い長靴" className="mt-2" maxLength={200} />
                 ) : null}
               </div>
 
@@ -480,15 +485,15 @@ function InputPageContent() {
                 <>
                   <div>
                     <Label htmlFor="lesson" className="text-purple-800">教えたいこと</Label>
-                    <Input id="lesson" value={lessonToTeach} onChange={(e) => setLessonToTeach(e.target.value)} placeholder="例：はみがきをがんばる" className="mt-1" maxLength={200} />
+                    <Input id="lesson" value={lessonToTeach} onChange={(e) => setLessonToTeach(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder="例：はみがきをがんばる" className="mt-1" maxLength={200} />
                   </div>
                   <div>
                     <Label htmlFor="place-optional" className="text-purple-800">場所</Label>
-                    <Input id="place-optional" value={place} onChange={(e) => setPlace(e.target.value)} placeholder="例：上野動物園、近所の公園" className="mt-1" maxLength={200} />
+                    <Input id="place-optional" value={place} onChange={(e) => setPlace(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder="例：上野動物園、近所の公園" className="mt-1" maxLength={200} />
                   </div>
                   <div>
                     <Label htmlFor="familyMembers" className="text-purple-800">一緒に登場させたい人</Label>
-                    <Input id="familyMembers" value={familyMembers} onChange={(e) => setFamilyMembers(e.target.value)} placeholder="例：ママ、パパ、おばあちゃん" className="mt-1" maxLength={200} />
+                    <Input id="familyMembers" value={familyMembers} onChange={(e) => setFamilyMembers(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder="例：ママ、パパ、おばあちゃん" className="mt-1" maxLength={200} />
                   </div>
                   <div>
                     <Label htmlFor="memory" className="text-purple-800">再現したい思い出</Label>
@@ -496,6 +501,7 @@ function InputPageContent() {
                       id="memory"
                       value={memoryToRecreate}
                       onChange={(e) => setMemoryToRecreate(e.target.value)}
+                      onFocus={(e) => scrollInputIntoView(e.target)}
                       placeholder="例：おばあちゃんの家に遊びに行った"
                       className="mt-1 w-full rounded-2xl border border-violet-200 bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
                       rows={3}
@@ -508,6 +514,7 @@ function InputPageContent() {
                       id="parentMessage"
                       value={parentMessage}
                       onChange={(e) => setParentMessage(e.target.value)}
+                      onFocus={(e) => scrollInputIntoView(e.target)}
                       placeholder="例：これからもたくさん一緒に冒険しようね"
                       className="mt-1 w-full rounded-2xl border border-violet-200 bg-background px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
                       rows={3}
@@ -527,7 +534,10 @@ function InputPageContent() {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3">
+      <div
+        style={{ bottom: `${keyboardOffset}px` }}
+        className="fixed left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3 transition-[bottom] duration-150 ease-out"
+      >
         <div className="mx-auto max-w-lg">
           <Button size="lg" className="w-full" disabled={!canProceed} onClick={handleNext}>
             次へ
