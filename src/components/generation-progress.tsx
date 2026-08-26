@@ -20,9 +20,9 @@ export function GenerationProgress({ book, pages }: GenerationProgressProps) {
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
+      <div className="text-center" role="status" aria-live="polite">
         <div className="em-loading__ring-wrap mb-4">
-          <svg width="100" height="100" viewBox="0 0 100 100">
+          <svg width="100" height="100" viewBox="0 0 100 100" aria-hidden="true">
             <circle cx="50" cy="50" r="45" className="em-loading__ring-track" />
             <motion.circle
               cx="50" cy="50" r="45"
@@ -31,12 +31,12 @@ export function GenerationProgress({ book, pages }: GenerationProgressProps) {
               strokeDashoffset={283 - (283 * percent) / 100}
             />
           </svg>
-          <div className="em-loading__percent">{percent}%</div>
+          <div className="em-loading__percent" aria-label={`進捗 ${percent}%`}>{percent}%</div>
         </div>
         <h2 className="em-loading__title">{currentStatus}</h2>
         <div className="flex items-center justify-center gap-2 mt-4">
-          <Progress value={percent} className="h-2 w-48" />
-          <span className="text-xs font-bold text-purple-600"><span>{completed}</span> / <span>{total}</span> ページ</span>
+          <Progress value={percent} className="h-2 w-48" aria-label={`絵本生成進捗: ${percent}%`} />
+          <span className="text-xs font-bold text-purple-700"><span>{completed}</span> / <span>{total}</span> ページ</span>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -55,21 +55,21 @@ export function GenerationProgress({ book, pages }: GenerationProgressProps) {
               ) : page?.status === "generating" ? (
                 <div className="text-center">
                   <motion.div
-                    className="mx-auto h-8 w-8 rounded-full border-2 border-purple-300 border-t-purple-500"
+                    className="mx-auto h-8 w-8 rounded-full border-2 border-purple-300 border-t-purple-600"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                   />
-                  <p className="mt-2 text-xs text-violet-400">描いています...</p>
+                  <p className="mt-2 text-xs font-medium text-violet-700">描いています...</p>
                 </div>
               ) : page?.status === "failed" ? (
                 <div className="text-center">
-                  <div className="text-2xl text-red-300">×</div>
-                  <p className="mt-1 text-xs text-red-400">失敗</p>
+                  <div className="text-2xl text-red-600">×</div>
+                  <p className="mt-1 text-xs font-semibold text-red-700">失敗</p>
                 </div>
               ) : (
                 <div className="text-center">
-                  <div className="text-2xl text-violet-200">○</div>
-                  <p className="mt-1 text-xs text-violet-300">{i + 1}</p>
+                  <div className="text-2xl text-violet-400">○</div>
+                  <p className="mt-1 text-xs font-medium text-violet-700">{i + 1}</p>
                 </div>
               )}
             </motion.div>

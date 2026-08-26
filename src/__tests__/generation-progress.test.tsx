@@ -119,6 +119,12 @@ describe("GenerationProgress — thumbnail rendering", () => {
     expect(screen.queryByAltText("ページ 1")).not.toBeInTheDocument();
   });
 
+  it("has status role and aria-live attribute for accessibility", () => {
+    render(<GenerationProgress book={makeBook(4)} pages={[]} />);
+    const statusRegion = screen.getByRole("status");
+    expect(statusRegion).toHaveAttribute("aria-live", "polite");
+  });
+
   it("does not render image for failed page — shows × marker", () => {
     const pages = [makePage(0, { status: "failed", imageUrl: "https://example.com/p0.png" })];
     render(<GenerationProgress book={makeBook(1)} pages={pages} />);

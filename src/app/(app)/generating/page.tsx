@@ -109,14 +109,14 @@ function TriviaRotation() {
 
   if (shouldReduceMotion) {
     return (
-      <p className="mt-4 text-xs text-violet-400">
+      <p className="mt-4 text-xs font-medium text-violet-700">
         豆知識: {TRIVIA[0]}
       </p>
     );
   }
 
   return (
-    <div className="mt-4 flex min-h-[2.5rem] items-center justify-center px-4 text-center">
+    <div className="mt-4 flex min-h-[2.5rem] items-center justify-center px-4 text-center" role="status" aria-live="polite">
       <AnimatePresence mode="wait">
         <motion.p
           key={index}
@@ -124,7 +124,7 @@ function TriviaRotation() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.5 }}
-          className="text-xs text-violet-400"
+          className="text-xs font-medium text-violet-700"
         >
           豆知識: {TRIVIA[index]}
         </motion.p>
@@ -285,10 +285,10 @@ function GeneratingContent() {
               {summary.title ? (
                 <p className="mt-1 text-base font-semibold text-purple-700">「{summary.title}」</p>
               ) : null}
-              <p className="mt-1 text-sm text-violet-500">{summary.step}</p>
+              <p className="mt-1 text-sm font-semibold text-violet-700">{summary.step}</p>
               <TriviaRotation />
               {hasLongWait ? (
-                <p className="mt-1 text-xs text-amber-600">一部画像の仕上げに時間がかかっています</p>
+                <p className="mt-1 text-xs font-medium text-amber-800">一部画像の仕上げに時間がかかっています</p>
               ) : null}
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -306,13 +306,13 @@ function GeneratingContent() {
               />
             </div>
             <div className="mt-6"><GenerationProgress book={book} pages={pages} /></div>
-            <p className="mt-4 text-center text-sm text-violet-500">
+            <p className="mt-4 text-center text-sm font-medium text-violet-700">
               この画面を閉じても、本棚から確認できます。
             </p>
         </div>
         <NotificationOptIn />
         <div className="mt-4 text-center">
-          <Link href="/home" className="text-sm text-violet-500 hover:underline">本棚に戻る</Link>
+          <Link href="/home" className="text-sm font-semibold text-violet-700 hover:underline">本棚に戻る</Link>
         </div>
       </div>
     </PageTransition>
@@ -322,8 +322,8 @@ function GeneratingContent() {
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl bg-violet-50 p-3 text-left">
-      <p className="text-xs font-medium text-violet-500">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-purple-900">{value}</p>
+      <p className="text-xs font-semibold text-violet-700">{label}</p>
+      <p className="mt-1 text-sm font-bold text-purple-950">{value}</p>
     </div>
   );
 }

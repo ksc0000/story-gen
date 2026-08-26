@@ -52,7 +52,7 @@
   --em-bg-surface:     #ffffff;
   --em-text-primary:   #4c1d95;
   --em-text-secondary: #6d28d9;
-  --em-text-dim:       #8b5cf6;
+  --em-text-dim:       #7c3aed;
   --em-glass-bg:       rgba(255,255,255,.55);
   --em-glass-border:   rgba(167,139,250,.30);
   --em-accent-primary: #a78bfa;
@@ -780,7 +780,7 @@ body {
 }
 
 .em-caption {
-  font-size: .7rem;
+  font-size: .75rem;
   color: var(--em-text-dim);
   letter-spacing: .08em;
 }

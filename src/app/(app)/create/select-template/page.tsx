@@ -154,7 +154,7 @@ function SelectTemplateContent() {
       <div className="mt-6">
         <div className="text-center mb-4">
           <h1 className="text-lg font-bold text-purple-900 md:text-xl">テーマを選ぶ</h1>
-          <p className="mt-1 text-xs text-violet-500 md:text-sm">
+          <p className="mt-1 text-xs font-medium text-violet-700 md:text-sm">
             読み聞かせしたいシーンや季節に合わせて選べます。
           </p>
         </div>
@@ -220,7 +220,11 @@ function SelectTemplateContent() {
                     <h2 className="text-sm font-semibold text-purple-900">{group.groupIcon} {group.groupName}</h2>
                     <span className="text-xs text-violet-500">{group.templates.length}件</span>
                   </div>
-                  <StaggerContainer className="grid grid-cols-3 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+                  <StaggerContainer
+                    role="radiogroup"
+                    aria-label={`${group.groupName}のテーマを選択`}
+                    className="grid grid-cols-3 gap-2 sm:grid-cols-3 xl:grid-cols-4"
+                  >
                     {group.templates.map((template) => (
                       <StaggerItem key={template.id}>
                         <ThemeCard
@@ -237,7 +241,11 @@ function SelectTemplateContent() {
               ))}
             </div>
           ) : (
-            <StaggerContainer className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+            <StaggerContainer
+              role="radiogroup"
+              aria-label="テーマを選択"
+              className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-3 xl:grid-cols-4"
+            >
               {filteredTemplates.map((template) => (
                 <StaggerItem key={template.id}>
                   <ThemeCard
