@@ -1053,4 +1053,128 @@ describe("validateGeneratedStoryQuality", () => {
       expect(report.issues.some((issue) => issue.code === "unauthorized_animal_in_prompt")).toBe(false);
     });
   });
+
+  describe("duplicate imagePrompt & scene-safety heuristics", () => {
+    it("flags an error when every page shares the exact same imagePrompt", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: baseStory.pages.map((page) => ({
+            ...page,
+            imagePrompt: "wide establishing shot of a cozy room with a child playing",
+          })),
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.ok).toBe(false);
+      expect(report.issues.some((issue) => issue.code === "image_prompt.all_identical" && issue.severity === "error")).toBe(true);
+    });
+
+    it("flags a warning when half or more pages share the same imagePrompt", () => {
+      const sharedPrompt = "wide establishing shot of a cozy room with a child playing";
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: [
+            { ...baseStory.pages[0], imagePrompt: sharedPrompt },
+            { ...baseStory.pages[1], imagePrompt: sharedPrompt },
+            { ...baseStory.pages[0], text: baseStory.pages[0].text, imagePrompt: "medium shot with action, the child playing near a window with soft afternoon light" },
+            { ...baseStory.pages[1], text: baseStory.pages[1].text, imagePrompt: "close-up detail shot of small hands holding a toy near a warm lamp" },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "image_prompt.low_diversity" && issue.severity === "warning")).toBe(true);
+      expect(report.issues.some((issue) => issue.code === "image_prompt.all_identical")).toBe(false);
+    });
+
+    it("does not flag duplicate imagePrompts when every page's scene is distinct", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: [
+            { ...baseStory.pages[0], imagePrompt: "wide establishing shot of a cozy room with family and a child" },
+            { ...baseStory.pages[1], imagePrompt: "medium shot with action, the child finding a tiny star near toys" },
+            { ...baseStory.pages[0], text: baseStory.pages[0].text, imagePrompt: "close-up detail shot of small hands holding a glowing star" },
+            { ...baseStory.pages[1], text: baseStory.pages[1].text, imagePrompt: "wide back view of the child walking toward a sunset window" },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "image_prompt.all_identical")).toBe(false);
+      expect(report.issues.some((issue) => issue.code === "image_prompt.low_diversity")).toBe(false);
+    });
+
+    it("flags an imagePrompt referencing an age-inappropriate or dangerous object", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: [
+            {
+              ...baseStory.pages[0],
+              imagePrompt: "wide shot of a child standing near a busy road with cars passing by",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "unsafe_scene_object" && issue.severity === "warning")).toBe(true);
+    });
+
+    it("does not flag a safe, child-appropriate imagePrompt", () => {
+      const report = validateGeneratedStoryQuality({
+        story: baseStory,
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "unsafe_scene_object")).toBe(false);
+    });
+
+    it("flags a closing page missing warmth/reassurance vocabulary", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: [
+            baseStory.pages[0],
+            {
+              ...baseStory.pages[1],
+              text: "つぎの日も、ぼくたちは公園へ行きました。ボールで遊んで、お昼ごはんを食べました。",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "closing.missing_warmth")).toBe(true);
+    });
+
+    it("does not flag a closing page with warmth/reassurance vocabulary", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: [
+            baseStory.pages[0],
+            {
+              ...baseStory.pages[1],
+              text: "ほしはまた、やさしくひかりました。ぼくはにっこりわらって、あんしんしてねむりにつきました。またね。",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "closing.missing_warmth")).toBe(false);
+    });
+  });
 });
