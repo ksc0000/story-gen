@@ -265,6 +265,7 @@
     "PR #676: fix(uiux): low-contrast caption & selection card accessibility improvements (merged)",
     "PR #677: feat(ui): 4-stage progress and elapsed time on book generating screen (merged)",
     "PR #678: Fix LP body content remaining invisible on mobile viewports (merged)",
+    "PR #679: [UIUX] Touch target size update (minimum 44px) (merged)",
     "PR #680: fix(ci): @claudeレビューworkflowのモデルIDを実在するclaude-sonnet-5に修正 (merged)",
     "PR #683: ci: ANTHROPIC_API_KEY診断用の手動workflowを追加（一時的） (merged)",
     "PR #684: test(quality): storyGoal/mainQuestObject 整合性ヒューリスティクスのテストを追加 (merged)",
