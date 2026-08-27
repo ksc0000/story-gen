@@ -18,6 +18,7 @@ import { isDemoMode, saveDemoBook, loadDemoBook, updateDemoBook, type DemoBook }
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import { validateBookInputLengths } from "@/lib/input-validation";
 import { getStylePickerProfilesForTemplate } from "@/lib/style-exposure";
+import { useVisualViewport } from "@/lib/hooks/use-visual-viewport";
 import {
   getDefaultProductPlanForCreationMode,
   PLAN_CONFIGS,
@@ -35,6 +36,7 @@ import type {
 
 function StyleSelectionPageContent() {
   const searchParams = useSearchParams();
+  const { keyboardOffset } = useVisualViewport();
   const router = useRouter();
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
@@ -330,7 +332,10 @@ function StyleSelectionPageContent() {
           <p className="mt-1 break-words">{createError}</p>
         </div>
       ) : null}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3">
+      <div
+        style={{ bottom: `${keyboardOffset}px` }}
+        className="fixed left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3 transition-[bottom] duration-150 ease-out"
+      >
         <div className="mx-auto max-w-lg">
           <Button
             size="lg"

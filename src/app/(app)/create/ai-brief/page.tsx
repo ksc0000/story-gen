@@ -10,6 +10,7 @@ import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
+import { useVisualViewport } from "@/lib/hooks/use-visual-viewport";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import {
   generateStoryPitchCallable,
@@ -216,14 +217,14 @@ function ModeToggle({
   onChange: (m: InputMode) => void;
 }) {
   return (
-    <div className="flex rounded-full border border-violet-200 bg-violet-50 p-0.5">
+    <div className="flex rounded-full border border-violet-200 bg-violet-50 p-1">
       {(["chat", "free"] as InputMode[]).map((m) => (
         <button
           key={m}
           type="button"
           onClick={() => onChange(m)}
           className={cn(
-            "flex-1 rounded-full px-4 py-1.5 text-xs font-semibold transition-all",
+            "flex h-11 min-h-[44px] flex-1 items-center justify-center rounded-full px-4 text-xs font-semibold transition-all",
             mode === m
               ? "bg-white text-purple-700 shadow-sm"
               : "text-violet-400 hover:text-violet-600"
@@ -264,7 +265,7 @@ function ChatHistoryItem({
           <button
             type="button"
             onClick={onBack}
-            className="text-[11px] text-violet-300 transition-colors hover:text-violet-500"
+            className="flex min-h-[44px] min-w-[44px] items-center px-2 text-[11px] text-violet-300 transition-colors hover:text-violet-500"
           >
             変更
           </button>
@@ -283,6 +284,7 @@ function AiBriefPageContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const { children, loading: childrenLoading } = useChildren(user?.uid);
+  const { shouldAutoFocus, scrollInputIntoView, keyboardOffset } = useVisualViewport();
 
   const childId = searchParams.get("childId");
   const theme = searchParams.get("theme") ?? "";
@@ -711,7 +713,7 @@ function AiBriefPageContent() {
                   <button
                     type="button"
                     onClick={() => handleGoBackTo(questionSequence.length - 1)}
-                    className="text-xs text-violet-400 transition hover:text-violet-600"
+                    className="flex min-h-[44px] items-center text-xs text-violet-400 transition hover:text-violet-600"
                   >
                     ← 前の質問に戻る
                   </button>
@@ -724,7 +726,7 @@ function AiBriefPageContent() {
                       setSummaryReady(false);
                       setPitchState({ status: "idle" });
                     }}
-                    className="text-xs text-violet-400 transition hover:text-violet-600"
+                    className="flex min-h-[44px] items-center text-xs text-violet-400 transition hover:text-violet-600"
                   >
                     最初からやり直す
                   </button>
@@ -747,8 +749,8 @@ function AiBriefPageContent() {
                 {/* ボットアイコン + 質問文 + 戻るボタン */}
                 <div className="flex items-start justify-between gap-2 mb-4">
                   <div className="flex items-start gap-2">
-                    <span className="text-xl">🤖</span>
-                    <p className="pt-0.5 text-base font-semibold text-purple-900">
+                    <span className="text-xl" aria-hidden="true">🤖</span>
+                    <p id={`question-label-${currentQuestion.id}`} className="pt-0.5 text-base font-semibold text-purple-900">
                       {currentQuestion.text}
                     </p>
                   </div>
@@ -756,7 +758,7 @@ function AiBriefPageContent() {
                     <button
                       type="button"
                       onClick={() => handleGoBackTo(chatStep - 1)}
-                      className="shrink-0 rounded-full border border-violet-100 px-2.5 py-1 text-[11px] text-violet-400 transition hover:border-violet-300 hover:text-violet-600"
+                      className="inline-flex h-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-violet-100 px-3 text-[11px] text-violet-400 transition hover:border-violet-300 hover:text-violet-600"
                     >
                       ← 戻る
                     </button>
@@ -774,14 +776,17 @@ function AiBriefPageContent() {
                           key={ex.label}
                           type="button"
                           onClick={() => setFreeInputValue(ex.value)}
-                          className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-[11px] font-medium text-violet-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 active:scale-95"
+                          className="flex h-11 min-h-[44px] items-center rounded-full border border-violet-100 bg-violet-50 px-3.5 text-xs font-medium text-violet-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 active:scale-95"
                         >
                           ＋ {ex.label}
                         </button>
                       ))}
                     </div>
                     <textarea
-                      autoFocus
+                      id={`input-${currentQuestion.id}`}
+                      aria-labelledby={`question-label-${currentQuestion.id}`}
+                      autoFocus={shouldAutoFocus}
+                      onFocus={(e) => scrollInputIntoView(e.target)}
                       value={freeInputValue}
                       onChange={(e) => setFreeInputValue(e.target.value)}
                       placeholder={currentQuestion.textPlaceholder ?? "自由に入力してください（空欄で次へ）"}
@@ -796,7 +801,7 @@ function AiBriefPageContent() {
                       <button
                         type="button"
                         onClick={() => handleTextConfirm(currentQuestion.id)}
-                        className="rounded-xl bg-purple-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-600"
+                        className="flex h-11 min-h-[44px] items-center justify-center rounded-xl bg-purple-500 px-6 text-sm font-semibold text-white transition hover:bg-purple-600"
                       >
                         次へ
                       </button>
@@ -805,8 +810,11 @@ function AiBriefPageContent() {
                 ) : currentQuestion.textOnly ? (
                   <div className="space-y-2">
                     <input
+                      id={`input-${currentQuestion.id}`}
+                      aria-labelledby={`question-label-${currentQuestion.id}`}
                       type="text"
-                      autoFocus
+                      autoFocus={shouldAutoFocus}
+                      onFocus={(e) => scrollInputIntoView(e.target)}
                       value={freeInputValue}
                       onChange={(e) => setFreeInputValue(e.target.value)}
                       onKeyDown={(e) => {
@@ -820,7 +828,7 @@ function AiBriefPageContent() {
                       type="button"
                       disabled={!freeInputValue.trim()}
                       onClick={() => handleTextConfirm(currentQuestion.id)}
-                      className="w-full rounded-xl bg-purple-500 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-600 disabled:opacity-40"
+                      className="flex h-11 min-h-[44px] w-full items-center justify-center rounded-xl bg-purple-500 text-sm font-semibold text-white transition hover:bg-purple-600 disabled:opacity-40"
                     >
                       次の質問へ →
                     </button>
@@ -834,7 +842,7 @@ function AiBriefPageContent() {
                           key={chip.value}
                           type="button"
                           onClick={() => handleChipSelect(currentQuestion.id, chip.value)}
-                          className="flex items-center gap-2 rounded-xl border border-violet-100 bg-violet-50 px-3 py-2.5 text-left text-sm font-medium text-violet-700 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 active:scale-95"
+                          className="flex min-h-[44px] items-center gap-2 rounded-xl border border-violet-100 bg-violet-50 px-3 py-2.5 text-left text-sm font-medium text-violet-700 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 active:scale-95"
                         >
                           <span className="text-base">{chip.emoji}</span>
                           <span className="text-xs leading-tight">{chip.label}</span>
@@ -849,7 +857,7 @@ function AiBriefPageContent() {
                           <button
                             type="button"
                             onClick={() => setShowFreeInput(true)}
-                            className="w-full rounded-xl border border-dashed border-violet-200 py-2 text-xs text-violet-400 transition hover:border-purple-300 hover:text-purple-500"
+                            className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-dashed border-violet-200 text-xs text-violet-400 transition hover:border-purple-300 hover:text-purple-500"
                           >
                             ✍️ 自由に書く
                           </button>
@@ -861,8 +869,11 @@ function AiBriefPageContent() {
                               className="space-y-2"
                             >
                               <input
+                                id={`input-custom-${currentQuestion.id}`}
+                                aria-labelledby={`question-label-${currentQuestion.id}`}
                                 type="text"
-                                autoFocus
+                                autoFocus={shouldAutoFocus}
+                                onFocus={(e) => scrollInputIntoView(e.target)}
                                 value={freeInputValue}
                                 onChange={(e) => setFreeInputValue(e.target.value)}
                                 onKeyDown={(e) => {
@@ -876,7 +887,7 @@ function AiBriefPageContent() {
                                 <button
                                   type="button"
                                   onClick={() => { setShowFreeInput(false); setFreeInputValue(""); }}
-                                  className="flex-1 rounded-xl border border-violet-200 py-2 text-xs text-violet-400"
+                                  className="flex h-11 min-h-[44px] flex-1 items-center justify-center rounded-xl border border-violet-200 text-xs text-violet-400"
                                 >
                                   チップから選ぶ
                                 </button>
@@ -884,7 +895,7 @@ function AiBriefPageContent() {
                                   type="button"
                                   disabled={!freeInputValue.trim()}
                                   onClick={() => handleTextConfirm(currentQuestion.id)}
-                                  className="flex-1 rounded-xl bg-purple-500 py-2 text-xs font-semibold text-white disabled:opacity-40"
+                                  className="flex h-11 min-h-[44px] flex-1 items-center justify-center rounded-xl bg-purple-500 text-xs font-semibold text-white disabled:opacity-40"
                                 >
                                   決定 →
                                 </button>
@@ -975,7 +986,7 @@ function AiBriefPageContent() {
                   disabled={isGeneratingAny || pitchState.status === "shown"}
                   onClick={() => setProtagonistType(opt.value)}
                   className={cn(
-                    "flex flex-1 flex-col items-center gap-1.5 rounded-xl border py-3.5 text-sm font-semibold transition-all",
+                    "flex flex-1 flex-col items-center justify-center gap-1.5 rounded-xl border py-3.5 min-h-[64px] text-sm font-semibold transition-all",
                     protagonistType === opt.value
                       ? "border-purple-400 bg-purple-50 text-purple-700 ring-2 ring-purple-200"
                       : "border-violet-100 bg-white text-violet-500 hover:border-purple-300",
@@ -1004,10 +1015,15 @@ function AiBriefPageContent() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
+                    <label htmlFor="free-child-name" className="text-xs text-violet-600 font-medium">
+                      お子さんのお名前
+                    </label>
                     <input
+                      id="free-child-name"
                       type="text"
                       value={protagonistName}
                       onChange={(e) => setProtagonistName(e.target.value)}
+                      onFocus={(e) => scrollInputIntoView(e.target)}
                       disabled={isGeneratingAny || pitchState.status === "shown"}
                       placeholder="お子さんのお名前（例：そうたろう）"
                       className="w-full rounded-xl border border-violet-200 px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 disabled:opacity-60"
@@ -1027,13 +1043,18 @@ function AiBriefPageContent() {
 
             {protagonistType === "original_character" && (
               <div className="mt-3">
+                <label htmlFor="free-character-name" className="text-xs text-violet-600 font-medium">
+                  主人公の名前
+                </label>
                 <input
+                  id="free-character-name"
                   type="text"
                   value={protagonistName}
                   onChange={(e) => setProtagonistName(e.target.value)}
+                  onFocus={(e) => scrollInputIntoView(e.target)}
                   disabled={isGeneratingAny || pitchState.status === "shown"}
                   placeholder="主人公の名前（例：ルナ、そらくん）"
-                  className="w-full rounded-xl border border-violet-200 px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 disabled:opacity-60"
+                  className="mt-1 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 disabled:opacity-60"
                   maxLength={20}
                 />
               </div>
@@ -1042,15 +1063,18 @@ function AiBriefPageContent() {
 
           {/* ストーリーブリーフ */}
           <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-            <p className="mb-1 text-sm font-semibold text-purple-900">
+            <label htmlFor="story-brief-textarea" className="mb-1 block text-sm font-semibold text-purple-900">
               どんな絵本にしたいですか？
-            </p>
-            <p className="mb-3 text-xs text-violet-400">
+            </label>
+            <p id="story-brief-hint" className="mb-3 text-xs text-violet-400">
               登場人物・場所・気持ち・伝えたいことなど、自由に書いてください
             </p>
             <textarea
+              id="story-brief-textarea"
+              aria-describedby="story-brief-hint"
               value={storyBrief}
               onChange={(e) => setStoryBrief(e.target.value)}
+              onFocus={(e) => scrollInputIntoView(e.target)}
               disabled={isGeneratingAny || pitchState.status === "shown"}
               placeholder={STORY_BRIEF_PLACEHOLDERS[placeholderIndex]}
               className="min-h-36 w-full resize-none rounded-xl border border-violet-200 px-3 py-2.5 text-sm leading-relaxed focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 disabled:opacity-60"
@@ -1076,7 +1100,7 @@ function AiBriefPageContent() {
                   disabled={isGeneratingAny || pitchState.status === "shown"}
                   onClick={() => setPageCount(opt.value)}
                   className={cn(
-                    "flex-1 rounded-xl border py-3 text-center transition-all",
+                    "flex-1 rounded-xl border py-3 text-center min-h-[48px] transition-all flex flex-col items-center justify-center",
                     pageCount === opt.value
                       ? "border-purple-400 bg-purple-50 ring-2 ring-purple-200"
                       : "border-violet-100 bg-white hover:border-purple-300",
@@ -1193,14 +1217,14 @@ function AiBriefPageContent() {
                         : prev
                     )
                   }
-                  className="flex-1 rounded-xl border border-violet-200 py-2 text-sm font-medium text-violet-500 transition hover:border-purple-300 hover:text-purple-600"
+                  className="flex h-11 min-h-[44px] flex-1 items-center justify-center rounded-xl border border-violet-200 text-sm font-medium text-violet-500 transition hover:border-purple-300 hover:text-purple-600"
                 >
                   もう少し変えたい 💬
                 </button>
                 <button
                   type="button"
                   onClick={() => setPitchState({ status: "idle" })}
-                  className="flex-1 rounded-xl border border-violet-200 py-2 text-sm font-medium text-violet-400 transition hover:border-violet-300"
+                  className="flex h-11 min-h-[44px] flex-1 items-center justify-center rounded-xl border border-violet-200 text-sm font-medium text-violet-400 transition hover:border-violet-300"
                 >
                   最初からやり直す ↩
                 </button>
@@ -1218,6 +1242,8 @@ function AiBriefPageContent() {
                     <div className="mt-3 space-y-2 rounded-xl border border-violet-100 bg-violet-50 p-3">
                       <p className="text-xs font-medium text-violet-600">どこを変えますか？</p>
                       <textarea
+                        id="refinement-text"
+                        aria-label="修正のリクエスト"
                         value={pitchState.refinementText}
                         onChange={(e) =>
                           setPitchState((prev) =>
@@ -1226,6 +1252,15 @@ function AiBriefPageContent() {
                               : prev
                           )
                         }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                            e.preventDefault();
+                            if (pitchState.status === "shown" && pitchState.refinementText.trim()) {
+                              requestPitch(pitchState.refinementText);
+                            }
+                          }
+                        }}
+                        onFocus={(e) => scrollInputIntoView(e.target)}
                         placeholder="例：結末をもっとハッピーにして、主人公の冒険をもっと長くして"
                         className="w-full resize-none rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
                         rows={3}
@@ -1238,7 +1273,7 @@ function AiBriefPageContent() {
                           pitchState.status === "shown" &&
                           requestPitch(pitchState.refinementText)
                         }
-                        className="w-full rounded-xl bg-purple-500 py-2 text-sm font-semibold text-white transition hover:bg-purple-600 disabled:opacity-50"
+                        className="flex h-11 min-h-[44px] w-full items-center justify-center rounded-xl bg-purple-500 text-sm font-semibold text-white transition hover:bg-purple-600 disabled:opacity-50"
                       >
                         変えてみる →
                       </button>
@@ -1262,7 +1297,10 @@ function AiBriefPageContent() {
           // チャットモード: 概要カード表示後にのみ表示
           // フリーモード: 常に表示
           (inputMode === "free" || summaryReady) && (
-            <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3">
+            <div
+              style={{ bottom: `${keyboardOffset}px` }}
+              className="fixed left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3 transition-[bottom] duration-150 ease-out"
+            >
               <div className="mx-auto max-w-lg">
                 <Button
                   size="lg"

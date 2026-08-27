@@ -33,12 +33,12 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
             )}
             <div className="flex flex-col items-center">
               <motion.div
-                className={`flex items-center justify-center rounded-full transition-all ${
+                className={`flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-all ${
                   isActive
-                    ? "h-10 w-10 bg-gradient-to-r from-purple-400 to-violet-400 text-white shadow-[0_2px_8px_rgba(167,139,250,0.4)] text-base font-bold"
+                    ? "bg-gradient-to-r from-purple-400 to-violet-400 text-white shadow-[0_2px_8px_rgba(167,139,250,0.4)] text-base font-bold"
                     : isDone
-                    ? "h-8 w-8 bg-violet-100 text-violet-600 text-sm font-medium"
-                    : "h-8 w-8 bg-gray-100 text-gray-400 text-sm font-medium"
+                    ? "bg-violet-100 text-violet-600 text-sm font-semibold"
+                    : "bg-gray-100 text-gray-400 text-sm font-semibold"
                 }`}
                 animate={isActive ? { scale: [1, 1.05, 1] } : {}}
                 transition={isActive ? { duration: 0.5, ease: "easeOut" } : {}}
