@@ -264,6 +264,7 @@
     "PR #678: Fix LP body content remaining invisible on mobile viewports (merged)",
     "PR #680: fix(ci): @claudeレビューworkflowのモデルIDを実在するclaude-sonnet-5に修正 (merged)",
     "PR #683: ci: ANTHROPIC_API_KEY診断用の手動workflowを追加（一時的） (merged)",
+    "PR #684: test(quality): storyGoal/mainQuestObject 整合性ヒューリスティクスのテストを追加 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
