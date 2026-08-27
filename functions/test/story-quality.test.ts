@@ -1053,4 +1053,198 @@ describe("validateGeneratedStoryQuality", () => {
       expect(report.issues.some((issue) => issue.code === "unauthorized_animal_in_prompt")).toBe(false);
     });
   });
+
+  describe("story goal / main quest consistency heuristics", () => {
+    it("flags missing storyGoal and mainQuestObject for 3+ age bands", () => {
+      const report = validateGeneratedStoryQuality({
+        story: { ...baseStory, storyGoal: undefined, mainQuestObject: undefined },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "missing_story_goal")).toBe(true);
+      expect(report.issues.some((issue) => issue.code === "missing_main_quest_object")).toBe(true);
+    });
+
+    it("does not flag missing_story_goal or missing_main_quest_object once both are set", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          storyGoal: "ちいさな星をみつけて、おうちにかざる",
+          mainQuestObject: "ちいさな星",
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "missing_story_goal")).toBe(false);
+      expect(report.issues.some((issue) => issue.code === "missing_main_quest_object")).toBe(false);
+    });
+
+    it("flags a page whose text doesn't connect to storyGoal or mainQuestObject", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          storyGoal: "赤い凧をとりもどす",
+          mainQuestObject: "赤い凧",
+          pages: [
+            {
+              text: "きょうは たのしい日です。おへやには やさしいひかりが さして、みんなの えがおが ひろがりました。",
+              imagePrompt: "wide establishing shot of a cozy room with family and a child",
+              compositionHint: "wide establishing shot",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(
+        report.issues.some(
+          (issue) => issue.code === "page_text_not_connected_to_story_goal" && issue.pageIndex === 0
+        )
+      ).toBe(true);
+    });
+
+    it("flags a forbidden quest object mentioned in text without becoming the goal", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          storyGoal: "ちいさな星をみつけて、おうちに持ち帰る",
+          mainQuestObject: "ちいさな星",
+          forbiddenQuestObjects: ["あめだま"],
+          pages: [
+            {
+              text: "ぼくは ちいさな星をみつけて、うれしくなりました。ポケットには あめだまも ひとつ はいっています。",
+              imagePrompt: "wide shot of a child holding a tiny star in a cozy room",
+              compositionHint: "wide shot",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "forbidden_object_mentioned")).toBe(true);
+      expect(report.issues.some((issue) => issue.code === "forbidden_object_became_goal")).toBe(false);
+    });
+
+    it("flags a forbidden object used as the goal and the resulting main quest drift", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          storyGoal: "赤い凧をとりもどす",
+          mainQuestObject: "赤い凧",
+          forbiddenQuestObjects: ["あめだま"],
+          pages: [
+            {
+              text: "あめだまは どこかな。ぼくは たなの したを のぞきこんで さがしました。",
+              imagePrompt: "wide shot of a child searching under a shelf in a cozy room",
+              compositionHint: "wide shot",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "forbidden_object_became_goal")).toBe(true);
+      expect(report.issues.some((issue) => issue.code === "main_quest_drift")).toBe(true);
+    });
+
+    it("flags persistent forbidden-object drift when it recurs across consecutive pages", () => {
+      const driftText = "あめだまは どこかな。ぼくは さがしまわりました。";
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          storyGoal: "赤い凧をとりもどす",
+          mainQuestObject: "赤い凧",
+          forbiddenQuestObjects: ["あめだま"],
+          pages: [
+            {
+              text: driftText,
+              imagePrompt: "wide shot of a child searching in a cozy room",
+              compositionHint: "wide shot",
+            },
+            {
+              text: driftText,
+              imagePrompt: "medium shot with action, the child searching under furniture",
+              compositionHint: "medium shot with action",
+            },
+            {
+              text: "赤い凧が みつかりました。ぼくは にっこり わらいました。",
+              imagePrompt: "close-up detail shot of a child holding a red kite happily",
+              compositionHint: "close-up detail shot",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "forbidden_object_became_goal_persistent")).toBe(true);
+      expect(report.issues.some((issue) => issue.code === "main_quest_drift_persistent")).toBe(true);
+    });
+
+    it("flags a non-opening page missing the narrativeDevice visual motif or repeated phrase", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          storyGoal: "小さな星を見つける",
+          mainQuestObject: "小さな星",
+          narrativeDevice: {
+            repeatedPhrase: "だいじょうぶ、いっしょにいるよ",
+            visualMotif: "ひかるほし",
+            setup: "最初に見つけた小さな星",
+            payoff: "最後にもう一度星が光る",
+          },
+          pages: [
+            {
+              text: "きょうは あさから あめが ふっていました。まどのそとを ながめて、少し さみしい きもちに なりました。",
+              imagePrompt: "wide shot of a child looking out a rainy window in a cozy room",
+              compositionHint: "wide shot",
+              pageVisualRole: "action",
+            },
+          ],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.issues.some((issue) => issue.code === "missing_visual_motif_in_text")).toBe(true);
+    });
+  });
+
+  describe("edge cases", () => {
+    it("returns only a pages.empty error when the story has no pages", () => {
+      const report = validateGeneratedStoryQuality({
+        story: { ...baseStory, pages: [] },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.ok).toBe(false);
+      expect(report.issues).toEqual([
+        { severity: "error", code: "pages.empty", message: "生成された絵本にページがありません。" },
+      ]);
+    });
+
+    it("flags a page with empty text", () => {
+      const report = validateGeneratedStoryQuality({
+        story: {
+          ...baseStory,
+          pages: [{ ...baseStory.pages[0], text: "   " }, baseStory.pages[1]],
+        },
+        readingProfile: getAgeReadingProfile(5),
+        creationMode: "guided_ai",
+      });
+
+      expect(report.ok).toBe(false);
+      expect(
+        report.issues.some(
+          (issue) => issue.code === "text.empty" && issue.severity === "error" && issue.pageIndex === 0
+        )
+      ).toBe(true);
+    });
+  });
 });
