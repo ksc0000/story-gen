@@ -193,7 +193,7 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsTextInverted((v) => !v)}
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                className={`flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors ${
                   isTextInverted ? "bg-white text-gray-900" : "bg-white/15 text-white hover:bg-white/25"
                 }`}
                 aria-label="文字の明暗を切り替え"
@@ -201,7 +201,7 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
                 <SunMoon className="size-4" />
               </button>
               {!showEndCard && <span className="text-xs text-white/50">{label}</span>}
-              <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label="閉じる">
+              <button onClick={onClose} className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label="閉じる">
                 <X className="size-4" />
               </button>
             </div>
@@ -415,14 +415,14 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
           <button
             onClick={(e) => { e.stopPropagation(); goPrev(); }}
             disabled={current === 0}
-            className="absolute left-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition disabled:opacity-0"
+            className="absolute left-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition disabled:opacity-0"
             aria-label="前のページ"
           >
             <ChevronLeft className="size-5" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); goNext(); }}
-            className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition"
+            className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition"
             aria-label="次のページ"
           >
             <ChevronRight className="size-5" />
@@ -451,10 +451,10 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
             <div className="flex w-full items-center justify-between">
               <div className="flex items-center gap-1.5 overflow-hidden max-w-[60vw]">
                 {items.map((_, i) => (
-                  <button key={i} onClick={() => go(i, i > current ? 1 : -1)} className={`h-1.5 rounded-full transition-all ${i === current ? "w-5 bg-white" : "w-1.5 bg-white/35 hover:bg-white/60"}`} aria-label={`ページ ${i + 1}`} />
+                  <button key={i} onClick={(e) => { e.stopPropagation(); go(i, i > current ? 1 : -1); }} className="flex min-h-[44px] min-w-[24px] items-center justify-center" aria-label={`ページ ${i + 1}`}><span className={`h-1.5 rounded-full transition-all ${i === current ? "w-5 bg-white" : "w-1.5 bg-white/35"}`} /></button>
                 ))}
               </div>
-              <button onClick={() => setIsPlaying((p) => !p)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label={isPlaying ? "一時停止" : "自動再生"}>
+              <button onClick={() => setIsPlaying((p) => !p)} className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label={isPlaying ? "一時停止" : "自動再生"}>
                 {isPlaying ? <Pause className="size-4" /> : <Play className="size-4 translate-x-0.5" />}
               </button>
             </div>
