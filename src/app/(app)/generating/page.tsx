@@ -14,20 +14,13 @@ import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { createRetryBook } from "@/lib/retry-book";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { getGenerationStages } from "@/lib/generation-progress-utils";
 import { Loader2 } from "lucide-react";
 import type { BookDoc, PageDoc } from "@/lib/types";
 
-function getProgressStep(progress: number, pages: PageDoc[]) {
-  const completedPages = pages.filter((p) => p.status === "completed" || p.status === "fallback_completed").length;
-  const totalPages = pages.length;
-
-  if (progress < 20) return "本文を作っています";
-  if (progress < 35) return "キャラクターを整えています";
-  if (totalPages > 0 && completedPages < totalPages) {
-    return `画像を生成しています ${completedPages}/${totalPages}`;
-  }
-  if (progress < 80) return "ページのイラストを描いています";
-  return "仕上げています";
+function getProgressStep(book: BookDoc, pages: PageDoc[]) {
+  const { statusText } = getGenerationStages(book, pages);
+  return statusText;
 }
 
 function getGeneratingSummary(book: BookDoc, completedPages: number, totalPages: number, pages: PageDoc[]) {
@@ -46,7 +39,7 @@ function getGeneratingSummary(book: BookDoc, completedPages: number, totalPages:
     title: book.title?.trim() || null,
     completedPages,
     totalPages,
-    step: getProgressStep(book.progress ?? 0, pages),
+    step: getProgressStep(book, pages),
   };
 }
 
@@ -109,14 +102,14 @@ function TriviaRotation() {
 
   if (shouldReduceMotion) {
     return (
-      <p className="mt-4 text-xs font-medium text-violet-700">
+      <p className="mt-4 text-xs text-violet-400">
         豆知識: {TRIVIA[0]}
       </p>
     );
   }
 
   return (
-    <div className="mt-4 flex min-h-[2.5rem] items-center justify-center px-4 text-center" role="status" aria-live="polite">
+    <div className="mt-4 flex min-h-[2.5rem] items-center justify-center px-4 text-center">
       <AnimatePresence mode="wait">
         <motion.p
           key={index}
@@ -124,7 +117,7 @@ function TriviaRotation() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.5 }}
-          className="text-xs font-medium text-violet-700"
+          className="text-xs text-violet-400"
         >
           豆知識: {TRIVIA[index]}
         </motion.p>
@@ -285,10 +278,10 @@ function GeneratingContent() {
               {summary.title ? (
                 <p className="mt-1 text-base font-semibold text-purple-700">「{summary.title}」</p>
               ) : null}
-              <p className="mt-1 text-sm font-semibold text-violet-700">{summary.step}</p>
+              <p className="mt-1 text-sm text-violet-500">{summary.step}</p>
               <TriviaRotation />
               {hasLongWait ? (
-                <p className="mt-1 text-xs font-medium text-amber-800">一部画像の仕上げに時間がかかっています</p>
+                <p className="mt-1 text-xs text-amber-600">一部画像の仕上げに時間がかかっています</p>
               ) : null}
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -306,14 +299,21 @@ function GeneratingContent() {
               />
             </div>
             <div className="mt-6"><GenerationProgress book={book} pages={pages} /></div>
-            <p className="mt-4 text-center text-sm font-medium text-violet-700">
-              この画面を閉じても、本棚から確認できます。
-            </p>
+            <div className="mt-6 flex flex-col items-center gap-3 border-t border-violet-100 pt-5 text-center">
+              <Link href="/home" className="w-full max-w-xs">
+                <Button
+                  size="lg"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-sm"
+                >
+                  閉じて本棚で確認する
+                </Button>
+              </Link>
+              <p className="text-xs font-medium text-violet-700">
+                画面を閉じてもバックグラウンドで作成が継続され、完成すると本棚に表示されます。
+              </p>
+            </div>
         </div>
         <NotificationOptIn />
-        <div className="mt-4 text-center">
-          <Link href="/home" className="text-sm font-semibold text-violet-700 hover:underline">本棚に戻る</Link>
-        </div>
       </div>
     </PageTransition>
   );
@@ -322,8 +322,8 @@ function GeneratingContent() {
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl bg-violet-50 p-3 text-left">
-      <p className="text-xs font-semibold text-violet-700">{label}</p>
-      <p className="mt-1 text-sm font-bold text-purple-950">{value}</p>
+      <p className="text-xs font-medium text-violet-500">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-purple-900">{value}</p>
     </div>
   );
 }

@@ -187,7 +187,7 @@ export default function LandingPage() {
         </StaggerContainer>
 
         {/* ヒーロー画像（パララックス＋浮遊する魔法の本） */}
-        <Reveal className="relative z-10 mt-10 w-full max-w-4xl" amount={0.1}>
+        <Reveal className="relative z-10 mt-10 w-full max-w-4xl" amount={0.1} animateOnMount>
           <Parallax strength={36}>
             <div className="overflow-hidden rounded-[28px] shadow-2xl ring-1 ring-violet-200/60 sm:rounded-[36px]">
               <Image
