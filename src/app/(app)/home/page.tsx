@@ -24,6 +24,7 @@ import { useChildren } from "@/lib/hooks/use-children";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { cn } from "@/lib/utils";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
+import { getUserFriendlyError } from "@/lib/user-error-mapping";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
 import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
 import { ILLUSTRATION_STYLE_PROFILES } from "@/lib/illustration-styles";
@@ -452,9 +453,14 @@ export default function HomePage() {
         {loading ? (
           <p className="mt-8 text-center text-violet-400">読み込み中...</p>
         ) : error ? (
-          <div className="mt-8 rounded-2xl border border-red-200 bg-red-50/90 p-6 text-center text-red-700">
+          <div role="alert" className="mt-8 rounded-2xl border border-red-200 bg-red-50/90 p-6 text-center text-red-700 space-y-3">
             <p className="font-semibold">本棚の読み込みに失敗しました</p>
-            <p className="mt-2 text-sm">{error.message}</p>
+            <p className="text-sm">{getUserFriendlyError(error).message}</p>
+            <div className="flex justify-center pt-1">
+              <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+                再読み込み
+              </Button>
+            </div>
           </div>
         ) : books.length === 0 ? (
           <div className="mt-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">

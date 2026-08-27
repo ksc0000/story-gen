@@ -14,6 +14,7 @@ import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { createRetryBook } from "@/lib/retry-book";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
 import { getGenerationStages } from "@/lib/generation-progress-utils";
 import { Loader2 } from "lucide-react";
 import type { BookDoc, PageDoc } from "@/lib/types";
@@ -221,21 +222,24 @@ function GeneratingContent() {
 
   if (book.status === "failed") {
     const quota = isQuotaExceeded(book);
+    const mappedErrorMessage = book.errorMessage
+      ? getUserFriendlyErrorMessage(book.errorMessage, getFailureMessage(book))
+      : getFailureMessage(book);
+
     return (
       <PageTransition className="mx-auto max-w-lg px-4 py-16 text-center">
-        <Image src="/images/illustrations/generating.webp" alt="失敗" width={120} height={90} className="mx-auto rounded-xl opacity-50" />
-        <h2 className="mt-4 text-lg font-bold text-purple-900">絵本の生成に失敗しました</h2>
-        <p className="mt-2 text-sm text-violet-500">
-          {getFailureMessage(book)}
-        </p>
-        {book.errorMessage ? (
-          <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left text-sm text-red-700">
-            {book.errorMessage}
+        <div role="alert" aria-live="assertive">
+          <Image src="/images/illustrations/generating.webp" alt="失敗" width={120} height={90} className="mx-auto rounded-xl opacity-50" />
+          <h2 className="mt-4 text-lg font-bold text-purple-900">絵本の生成に失敗しました</h2>
+          <p className="mt-2 text-sm text-violet-500">
+            {mappedErrorMessage}
           </p>
-        ) : null}
-        {retryError ? (
-          <p className="mt-3 text-sm text-rose-500">{retryError}</p>
-        ) : null}
+          {retryError ? (
+            <p className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              {getUserFriendlyErrorMessage(retryError, "再試行を開始できませんでした。少し時間をおいてお試しください。")}
+            </p>
+          ) : null}
+        </div>
         {quota ? (
           <div className="mt-6 flex justify-center gap-3">
             <Link href="/pricing"><Button>プランをアップグレード</Button></Link>

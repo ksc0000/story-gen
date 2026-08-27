@@ -13,6 +13,7 @@ import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useToast } from "@/components/ui/toast";
 import { childProfileToSummary } from "@/lib/child-profile";
 import { PLAN_CONFIGS } from "@/lib/plans";
+import { getUserFriendlyError } from "@/lib/user-error-mapping";
 import { useState } from "react";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { httpsCallable } from "firebase/functions";
@@ -76,7 +77,19 @@ export default function ChildrenPage() {
       {loading ? (
         <p className="mt-8 text-center text-violet-400">読み込み中...</p>
       ) : error ? (
-        <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">{error.message}</div>
+        <div role="alert" className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700 space-y-3">
+          <p className="font-medium">{getUserFriendlyError(error).message}</p>
+          <div className="flex justify-center gap-3 pt-1">
+            <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+              再試行
+            </Button>
+            <Link href="/home">
+              <Button size="sm" variant="ghost" className="text-purple-700">
+                本棚へ戻る
+              </Button>
+            </Link>
+          </div>
+        </div>
       ) : children.length === 0 ? (
         <Card className="mt-8">
           <CardContent className="p-8 text-center">

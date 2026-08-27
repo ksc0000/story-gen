@@ -22,6 +22,7 @@ import type { CreationMode } from "@/lib/types";
 import { childProfileToSummary } from "@/lib/child-profile";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { cn } from "@/lib/utils";
+import { getUserFriendlyError } from "@/lib/user-error-mapping";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
 import {
   getSpeciesEmoji,
@@ -182,8 +183,18 @@ function SelectChildContent() {
       {loading || companionsLoading ? (
         <p className="mt-10 text-center text-violet-400">読み込み中...</p>
       ) : error ? (
-        <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-700">
-          {error.message}
+        <div role="alert" className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-700 space-y-3">
+          <p className="font-medium">{getUserFriendlyError(error).message}</p>
+          <div className="flex justify-center gap-3 pt-1">
+            <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+              再読み込み
+            </Button>
+            <Link href="/home">
+              <Button size="sm" variant="ghost" className="text-violet-600">
+                本棚へ戻る
+              </Button>
+            </Link>
+          </div>
         </div>
       ) : children.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-violet-200 bg-violet-50 p-8 text-center">
