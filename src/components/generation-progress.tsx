@@ -123,11 +123,12 @@ export function GenerationProgress({ book, pages }: GenerationProgressProps) {
       {/* Progress Ring & Status */}
       <div
         className="text-center"
+        role="status"
         aria-live="polite"
         aria-atomic="true"
       >
         <div className="em-loading__ring-wrap mb-4">
-          <svg width="100" height="100" viewBox="0 0 100 100">
+          <svg width="100" height="100" viewBox="0 0 100 100" aria-hidden="true">
             <circle cx="50" cy="50" r="45" className="em-loading__ring-track" />
             <motion.circle
               cx="50"
@@ -140,7 +141,7 @@ export function GenerationProgress({ book, pages }: GenerationProgressProps) {
               strokeDashoffset={283 - (283 * percent) / 100}
             />
           </svg>
-          <div className="em-loading__percent">{percent}%</div>
+          <div className="em-loading__percent" aria-label={`進捗 ${percent}%`}>{percent}%</div>
         </div>
 
         <h2 className="em-loading__title text-lg font-bold text-purple-900">
@@ -162,11 +163,12 @@ export function GenerationProgress({ book, pages }: GenerationProgressProps) {
         <div className="mt-4 flex items-center justify-center gap-2">
           <Progress
             value={percent}
+            aria-label={`絵本生成進捗: ${percent}%`}
             className={`h-2 w-48 ${
               isIndeterminate ? "animate-pulse" : ""
             }`}
           />
-          <span className="text-xs font-bold text-purple-600">
+          <span className="text-xs font-bold text-purple-700">
             <span>{completedPages}</span> / <span>{totalPages}</span> ページ
           </span>
         </div>

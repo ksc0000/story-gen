@@ -308,7 +308,7 @@ function GeneratingContent() {
                   閉じて本棚で確認する
                 </Button>
               </Link>
-              <p className="text-xs text-violet-500">
+              <p className="text-xs font-medium text-violet-700">
                 画面を閉じてもバックグラウンドで作成が継続され、完成すると本棚に表示されます。
               </p>
             </div>
