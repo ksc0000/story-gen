@@ -268,6 +268,7 @@
     "PR #679: [UIUX] Touch target size update (minimum 44px) (merged)",
     "PR #680: fix(ci): @claudeレビューworkflowのモデルIDを実在するclaude-sonnet-5に修正 (merged)",
     "PR #681: fix(uiux): prevent mobile keyboard conflict, control autoFocus, and add label associations (merged)",
+    "PR #682: standardize user error mapping and recovery flows (merged)",
     "PR #683: ci: ANTHROPIC_API_KEY診断用の手動workflowを追加（一時的） (merged)",
     "PR #684: test(quality): storyGoal/mainQuestObject 整合性ヒューリスティクスのテストを追加 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
