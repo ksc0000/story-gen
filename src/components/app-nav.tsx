@@ -74,8 +74,8 @@ export function AppNav({
       {/* Primary CTA: 新しい絵本を作る（常時表示。スマホは＋アイコンのみ、sm以上はラベル付き） */}
       <Link href="/create/select-child" aria-label="新しい絵本を作る">
         <Button
-          size="sm"
-          className="h-10 rounded-full bg-purple-600 px-3 text-white shadow-sm hover:bg-purple-700 sm:px-4"
+          size="default"
+          className="h-11 min-h-[44px] min-w-[44px] rounded-full bg-purple-600 px-3.5 text-white shadow-sm hover:bg-purple-700 sm:px-4"
         >
           <Plus size={18} className="sm:mr-1" />
           <span className="hidden sm:inline">新しい絵本を作る</span>
@@ -88,7 +88,7 @@ export function AppNav({
         aria-label="メニューを開く"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-violet-200/60 bg-white/60 text-violet-600 backdrop-blur transition hover:bg-white/80"
+        className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-violet-200/60 bg-white/60 text-violet-600 backdrop-blur transition hover:bg-white/80"
       >
         {open ? <X size={20} /> : <Menu size={20} />}
       </button>
@@ -116,9 +116,9 @@ export function AppNav({
                 type="button"
                 aria-label="メニューを閉じる"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-violet-500 hover:bg-violet-100/60"
+                className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-violet-500 hover:bg-violet-100/60"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
@@ -131,7 +131,7 @@ export function AppNav({
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className={`rounded-xl px-3 py-3 text-base font-semibold transition ${
+                className={`flex min-h-[44px] items-center rounded-xl px-3 py-3 text-base font-semibold transition ${
                   pathname.startsWith(link.href)
                     ? "bg-violet-100/70 text-purple-700"
                     : link.accent
@@ -156,7 +156,7 @@ export function AppNav({
                 setOpen(false);
                 onSignOut();
               }}
-              className="mt-auto flex items-center gap-2 rounded-xl px-3 py-3 text-base font-semibold text-rose-500 transition hover:bg-rose-50"
+              className="mt-auto flex min-h-[44px] items-center gap-2 rounded-xl px-3 py-3 text-base font-semibold text-rose-500 transition hover:bg-rose-50"
             >
               <LogOut size={18} /> ログアウト
             </button>

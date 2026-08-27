@@ -33,9 +33,9 @@ export function BackButton({
       type="button"
       onClick={handleBack}
       aria-label={label}
-      className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold text-violet-500 transition hover:bg-violet-100/60 hover:text-purple-700 ${className}`}
+      className={`inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold text-violet-500 transition hover:bg-violet-100/60 hover:text-purple-700 ${className}`}
     >
-      <ArrowLeft size={16} />
+      <ArrowLeft size={18} />
       {label}
     </button>
   );
