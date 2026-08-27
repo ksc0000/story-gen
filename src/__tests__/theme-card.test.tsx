@@ -110,7 +110,49 @@ describe("ThemeCard", () => {
     expect(onSelect).toHaveBeenCalled();
   });
 
-  it("shows checkmark badge when selected", () => {
+  it("supports radio semantics and aria-checked attribute", () => {
+    const { rerender } = render(
+      <ThemeCard
+        template={mockTemplate}
+        selected={false}
+        onSelect={() => {}}
+      />
+    );
+
+    const radio = screen.getByRole("radio");
+    expect(radio).toHaveAttribute("aria-checked", "false");
+    expect(radio).toHaveAttribute("tabindex", "0");
+
+    rerender(
+      <ThemeCard
+        template={mockTemplate}
+        selected={true}
+        onSelect={() => {}}
+      />
+    );
+
+    expect(radio).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("triggers onSelect on Enter and Space keypress", () => {
+    const onSelect = vi.fn();
+    render(
+      <ThemeCard
+        template={mockTemplate}
+        selected={false}
+        onSelect={onSelect}
+      />
+    );
+
+    const radio = screen.getByRole("radio");
+    fireEvent.keyDown(radio, { key: "Enter" });
+    expect(onSelect).toHaveBeenCalledTimes(1);
+
+    fireEvent.keyDown(radio, { key: " " });
+    expect(onSelect).toHaveBeenCalledTimes(2);
+  });
+
+  it("shows checkmark badge and text label when selected", () => {
     render(
       <ThemeCard
         template={mockTemplate}

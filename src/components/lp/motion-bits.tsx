@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import {
   motion,
@@ -30,21 +30,38 @@ export function Reveal({
   delay = 0,
   className,
   amount = 0.3,
+  animateOnMount = false,
 }: {
   children: ReactNode;
   direction?: Direction;
   delay?: number;
   className?: string;
   amount?: number;
+  animateOnMount?: boolean;
 }) {
   const reduce = useReducedMotion();
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (animateOnMount || inView) return;
+    const timer = setTimeout(() => {
+      setInView(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [animateOnMount, inView]);
+
   if (reduce) return <div className={className}>{children}</div>;
+
+  const isVisible = animateOnMount || inView;
+
   return (
     <motion.div
       className={className}
       initial={{ opacity: 0, ...offset[direction] }}
-      whileInView={{ opacity: 1, x: 0, y: 0 }}
+      animate={isVisible ? { opacity: 1, x: 0, y: 0 } : undefined}
+      whileInView={!isVisible ? { opacity: 1, x: 0, y: 0 } : undefined}
       viewport={{ once: true, amount }}
+      onViewportEnter={() => setInView(true)}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay }}
     >
       {children}
@@ -66,20 +83,37 @@ export function RevealGroup({
   children,
   className,
   amount = 0.2,
+  animateOnMount = false,
 }: {
   children: ReactNode;
   className?: string;
   amount?: number;
+  animateOnMount?: boolean;
 }) {
   const reduce = useReducedMotion();
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (animateOnMount || inView) return;
+    const timer = setTimeout(() => {
+      setInView(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [animateOnMount, inView]);
+
   if (reduce) return <div className={className}>{children}</div>;
+
+  const isVisible = animateOnMount || inView;
+
   return (
     <motion.div
       className={className}
       variants={staggerParent}
       initial="hidden"
-      whileInView="visible"
+      animate={isVisible ? "visible" : undefined}
+      whileInView={!isVisible ? "visible" : undefined}
       viewport={{ once: true, amount }}
+      onViewportEnter={() => setInView(true)}
     >
       {children}
     </motion.div>

@@ -47,10 +47,12 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
   const [dir, setDir] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showEndCard, setShowEndCard] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const [hintVisible, setHintVisible] = useState(true);
   const [rotateHintVisible, setRotateHintVisible] = useState(true);
   const [isTextInverted, setIsTextInverted] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLandscape = useIsLandscape();
   const total = items.length;
@@ -111,15 +113,26 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
 
   const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
     touchStartXRef.current = e.changedTouches[0]?.clientX ?? null;
+    touchStartYRef.current = e.changedTouches[0]?.clientY ?? null;
   };
   const handleTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
-    const start = touchStartXRef.current;
-    const end = e.changedTouches[0]?.clientX;
+    const startX = touchStartXRef.current;
+    const startY = touchStartYRef.current;
+    const endX = e.changedTouches[0]?.clientX;
+    const endY = e.changedTouches[0]?.clientY;
     touchStartXRef.current = null;
-    if (start == null || end == null) return;
-    const delta = end - start;
-    if (delta < -60) goNext();
-    else if (delta > 60) goPrev();
+    touchStartYRef.current = null;
+    if (startX == null || endX == null) return;
+    const deltaX = endX - startX;
+    const deltaY = endY != null && startY != null ? endY - startY : 0;
+    if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX < 0) goNext();
+      else goPrev();
+    }
+  };
+
+  const handleContainerClick = () => {
+    setShowControls((prev) => !prev);
   };
 
   const item = items[current];
@@ -135,7 +148,12 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
     : `${item.storyPageIndex + 1} / ${items.filter((i) => i.kind === "story_page").length}`;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div
+      className="fixed inset-0 z-50 bg-black select-none"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onClick={handleContainerClick}
+    >
 
       {/* ── Rotate hint (3s, portrait only) ───────────────────── */}
       <AnimatePresence>
@@ -161,15 +179,35 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
       </AnimatePresence>
 
       {/* ── Top bar ───────────────────────────────────────────── */}
-      <div className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/70 to-transparent">
-        <span className="text-sm font-medium text-white/80 truncate max-w-[60vw]">{title}</span>
-        <div className="flex items-center gap-2">
-          {!showEndCard && <span className="text-xs text-white/50">{label}</span>}
-          <button onClick={onClose} className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label="閉じる">
-            <X className="size-5" />
-          </button>
-        </div>
-      </div>
+      <AnimatePresence>
+        {showControls && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.25 }}
+            className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)+12px)] bg-gradient-to-b from-black/80 via-black/40 to-transparent"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="text-sm font-medium text-white/80 truncate max-w-[50vw]">{title}</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsTextInverted((v) => !v)}
+                className={`flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors ${
+                  isTextInverted ? "bg-white text-gray-900" : "bg-white/15 text-white hover:bg-white/25"
+                }`}
+                aria-label="文字の明暗を切り替え"
+              >
+                <SunMoon className="size-4" />
+              </button>
+              {!showEndCard && <span className="text-xs text-white/50">{label}</span>}
+              <button onClick={onClose} className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label="閉じる">
+                <X className="size-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Main content ──────────────────────────────────────── */}
       <div className="absolute inset-0 flex">
@@ -206,14 +244,6 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
 
               {/* Right: text panel */}
               <div className={`relative flex h-full w-1/2 flex-col items-center justify-center px-8 transition-colors duration-300 ${isTextInverted ? "bg-white" : "bg-[#0d0d14]"}`}>
-                {/* B&W toggle button */}
-                <button
-                  onClick={() => setIsTextInverted((v) => !v)}
-                  className={`absolute right-4 top-4 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors ${isTextInverted ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-white/10 text-white/60 hover:bg-white/20"}`}
-                  aria-label="文字の明暗を切り替え"
-                >
-                  <SunMoon className="size-5" />
-                </button>
                 <AnimatePresence mode="wait">
                   {item.kind === "cover_title_spread" ? (
                     <motion.div
@@ -293,39 +323,41 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
       {/* ── Portrait text overlay ─────────────────────────────── */}
       {!isLandscape && !showEndCard && (
         <div className="absolute bottom-0 left-0 right-0 z-10 px-6 pb-24">
-          <AnimatePresence mode="wait">
-            {item.kind === "cover_title_spread" ? (
-              <motion.div
-                key={`cover-portrait-${current}`}
-                variants={textVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="text-center"
-              >
-                {originalTitle && (
-                  <p className="text-3xl font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] md:text-4xl" style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
-                    {originalTitle}
+          <div className={`p-4 rounded-2xl transition-colors duration-300 ${isTextInverted ? "bg-white/90 text-gray-900 shadow-lg backdrop-blur-md" : ""}`}>
+            <AnimatePresence mode="wait">
+              {item.kind === "cover_title_spread" ? (
+                <motion.div
+                  key={`cover-portrait-${current}`}
+                  variants={textVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="text-center"
+                >
+                  {originalTitle && (
+                    <p className={`text-3xl font-bold md:text-4xl ${isTextInverted ? "text-gray-900" : "text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"}`} style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
+                      {originalTitle}
+                    </p>
+                  )}
+                  <p className={`mt-1 text-base md:text-lg ${isTextInverted ? "text-gray-700" : "text-white/80 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"}`} style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
+                    {title}
                   </p>
-                )}
-                <p className="mt-1 text-base text-white/80 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] md:text-lg" style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}>
-                  {title}
-                </p>
-              </motion.div>
-            ) : displayText ? (
-              <motion.p
-                key={current}
-                variants={textVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="whitespace-pre-line text-center text-lg font-medium leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] md:text-xl"
-                style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}
-              >
-                {displayText.replace(/。(?=\S)/g, "。\n")}
-              </motion.p>
-            ) : null}
-          </AnimatePresence>
+                </motion.div>
+              ) : displayText ? (
+                <motion.p
+                  key={current}
+                  variants={textVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className={`whitespace-pre-line text-center text-lg font-medium leading-relaxed md:text-xl ${isTextInverted ? "text-gray-900" : "text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"}`}
+                  style={{ fontFamily: "var(--font-body), 'Noto Sans JP', sans-serif" }}
+                >
+                  {displayText.replace(/。(?=\S)/g, "。\n")}
+                </motion.p>
+              ) : null}
+            </AnimatePresence>
+          </div>
         </div>
       )}
 
@@ -357,17 +389,17 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
             >
               <button
                 onClick={() => { setShowEndCard(false); go(0, -1); }}
-                className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm text-white hover:bg-white/20 transition"
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm text-white hover:bg-white/20 transition"
               >
                 <RotateCcw className="size-4" />
                 さいしょからよむ
               </button>
-              <button onClick={onClose} className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm text-white/80 hover:bg-white/15 transition">
+              <button onClick={onClose} className="flex w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm text-white/80 hover:bg-white/15 transition">
                 <BookOpen className="size-4" />
                 絵本ビューに戻る
               </button>
               {onFeedback && (
-                <button onClick={() => { onClose(); onFeedback(); }} className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-full bg-violet-500/80 px-6 py-3 text-sm font-medium text-white hover:bg-violet-500 transition">
+                <button onClick={() => { onClose(); onFeedback(); }} className="flex w-full items-center justify-center gap-2 rounded-full bg-violet-500/80 px-6 py-3 text-sm font-medium text-white hover:bg-violet-500 transition">
                   <MessageCircle className="size-4" />
                   感想を送る
                 </button>
@@ -378,46 +410,57 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
       </AnimatePresence>
 
       {/* ── Desktop side arrows ───────────────────────────────── */}
-      {!showEndCard && (
+      {!showEndCard && showControls && (
         <>
-          <button onClick={goPrev} disabled={current === 0} className="absolute left-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition disabled:opacity-0" aria-label="前のページ">
-            <ChevronLeft className="size-6" />
+          <button
+            onClick={(e) => { e.stopPropagation(); goPrev(); }}
+            disabled={current === 0}
+            className="absolute left-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition disabled:opacity-0"
+            aria-label="前のページ"
+          >
+            <ChevronLeft className="size-5" />
           </button>
-          <button onClick={goNext} className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label="次のページ">
-            <ChevronRight className="size-6" />
+          <button
+            onClick={(e) => { e.stopPropagation(); goNext(); }}
+            className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 md:flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition"
+            aria-label="次のページ"
+          >
+            <ChevronRight className="size-5" />
           </button>
         </>
       )}
 
       {/* ── Bottom controls ───────────────────────────────────── */}
-      {!showEndCard && (
-        <div className="absolute bottom-0 left-0 right-0 z-20 flex flex-col items-center gap-2 px-6 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3 bg-gradient-to-t from-black/70 to-transparent">
-          <AnimatePresence>
-            {hintVisible && (
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="text-[11px] text-white/40 text-center">
-                スワイプ / ← → / スペースで操作 · Esc で閉じる
-              </motion.p>
-            )}
-          </AnimatePresence>
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-1 overflow-x-auto py-1 max-w-[60vw]">
-              {items.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => go(i, i > current ? 1 : -1)}
-                  className="flex h-11 min-w-[28px] items-center justify-center px-1"
-                  aria-label={`ページ ${i + 1}`}
-                >
-                  <span className={`h-1.5 rounded-full transition-all ${i === current ? "w-5 bg-white" : "w-1.5 bg-white/35 hover:bg-white/60"}`} />
-                </button>
-              ))}
+      <AnimatePresence>
+        {!showEndCard && showControls && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.25 }}
+            className="absolute bottom-0 left-0 right-0 z-20 flex flex-col items-center gap-2 px-6 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <AnimatePresence>
+              {hintVisible && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="text-[11px] text-white/40 text-center">
+                  画面タップでUI切替 / スワイプ / ← → / スペースで操作 · Esc で閉じる
+                </motion.p>
+              )}
+            </AnimatePresence>
+            <div className="flex w-full items-center justify-between">
+              <div className="flex items-center gap-1.5 overflow-hidden max-w-[60vw]">
+                {items.map((_, i) => (
+                  <button key={i} onClick={(e) => { e.stopPropagation(); go(i, i > current ? 1 : -1); }} className="flex min-h-[44px] min-w-[24px] items-center justify-center" aria-label={`ページ ${i + 1}`}><span className={`h-1.5 rounded-full transition-all ${i === current ? "w-5 bg-white" : "w-1.5 bg-white/35"}`} /></button>
+                ))}
+              </div>
+              <button onClick={() => setIsPlaying((p) => !p)} className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label={isPlaying ? "一時停止" : "自動再生"}>
+                {isPlaying ? <Pause className="size-4" /> : <Play className="size-4 translate-x-0.5" />}
+              </button>
             </div>
-            <button onClick={() => setIsPlaying((p) => !p)} className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition" aria-label={isPlaying ? "一時停止" : "自動再生"}>
-              {isPlaying ? <Pause className="size-5" /> : <Play className="size-5 translate-x-0.5" />}
-            </button>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
