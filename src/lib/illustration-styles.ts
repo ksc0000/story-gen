@@ -4,7 +4,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "soft_watercolor",
     name: "やさしい水彩",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Fsoft_watercolor.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/soft_watercolor.webp",
     styleBible:
       "Japanese children's picture book in soft watercolor paint. Translucent watercolor washes layered on white paper — gentle pigment blooms, wet-on-wet color bleeds, paper grain showing through. Soft pencil under-drawing visible beneath the washes. Colors are pale and muted: dusty pinks, sage greens, warm creams. Edges of shapes bleed softly into one another. The overall feel is hand-painted, intimate, and tender.",
     negativeStyleRules: [
@@ -18,7 +18,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "fluffy_pastel",
     name: "ふんわりパステル",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Ffluffy_pastel.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/fluffy_pastel.webp",
     styleBible:
       "Children's picture book with a soft, dreamy pastel aesthetic. Rounded, plush-looking forms like stuffed animals or soft toys. Cotton-candy pastel palette: baby pink, mint, lavender, peach, sky blue. Edges are soft and diffused, as if drawn with pastel chalk or a soft brush. Backgrounds feel airy and cloud-like. Every element looks squeezable and gentle — nothing angular or harsh.",
     negativeStyleRules: [
@@ -32,7 +32,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "crayon",
     name: "クレヨンで描いた絵本",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Fcrayon.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/crayon.webp",
     styleBible:
       "Children's picture book drawn entirely in wax crayons. Thick, waxy crayon strokes visible in every area. Bold chunky outlines drawn with a black or dark crayon, slightly uneven. Color fills are uneven and streaky with white paper tooth showing through the crayon pressure. The texture feels like a child's drawing done with real Crayola-style crayons. Warm, hand-made, imperfect energy.",
     negativeStyleRules: [
@@ -46,7 +46,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "flat_illustration",
     name: "シンプルフラット",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Fflat_illustration.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/flat_illustration.webp",
     styleBible:
       "Modern flat digital illustration for children's picture book. Every shape is a clean, solid-filled area of color — like vector art or a clean 2D digital illustration. Bold simple outlines. No watercolor washes, no paint texture, no paper grain, no brush strokes, no wet bleeds. Colors are vivid and solid. Shadows are minimal — at most a single flat shadow shape. The overall look is clean, graphic, and modern like a high-quality picture book app illustration.",
     negativeStyleRules: [
@@ -61,7 +61,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "anime_storybook",
     name: "わくわくアニメ風",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Fanime_storybook.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/anime_storybook.webp",
     styleBible:
       "Children's picture book in a clean anime illustration style. Characters have large expressive eyes with sparkle highlights, clean bold outlines, and smooth cel-shaded coloring (flat color areas with one or two simple shadow tones). The look is like a high-quality Japanese anime children's show — vivid saturated colors, dynamic poses, lively facial expressions. Backgrounds are detailed and painterly but slightly softer than the characters.",
     negativeStyleRules: [
@@ -75,7 +75,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "classic_picture_book",
     name: "クラシック絵本",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Fclassic_picture_book.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/classic_picture_book.webp",
     styleBible:
       "Classic Western-style storybook illustration, like mid-20th century Golden Age picture books (think Beatrix Potter or classic Grimm fairy tale illustrations). Detailed pen-and-ink linework with rich gouache or oil-like painterly coloring. Warm amber, forest green, and earthy tones. Textures feel hand-painted with visible brushwork. Compositions are cozy and timeless — detailed but not chaotic.",
     negativeStyleRules: [
@@ -89,7 +89,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "toy_3d",
     name: "ぷっくり3Dトイ風",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Ftoy_3d.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/toy_3d.webp",
     styleBible:
       "3D rendered children's picture book with a toy or clay animation aesthetic. Characters and objects look like physical miniature figurines or Claymation models — slightly rounded, plump forms with soft subsurface-like lighting. Studio lighting with gentle shadows. Colors are bright and plastic-like but not harsh. The overall feeling is like a stop-motion animated film or a 3D Pixar-style storybook.",
     negativeStyleRules: [
@@ -103,7 +103,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "paper_collage",
     name: "紙あそびコラージュ",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Fpaper_collage.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/paper_collage.webp",
     styleBible:
       "Children's picture book made of layered cut paper collage, like Eric Carle's illustration style. Every element looks like it was cut from colored tissue paper, construction paper, or painted newsprint and layered together. Visible paper edges, slight shadow from paper layers, visible paper grain and texture. Bold simple shapes built from overlapping paper pieces. Warm, craft-project feeling.",
     negativeStyleRules: [
@@ -117,7 +117,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "pencil_sketch",
     name: "やさしい鉛筆スケッチ",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Fpencil_sketch.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/pencil_sketch.webp",
     styleBible:
       "Children's picture book drawn in soft pencil on white paper. Delicate pencil lines with varying pressure — light hatching for shadows, gentle cross-hatching for textures. Mostly black-and-white with very subtle warm color tints added like a light wash over pencil. The paper is white and prominent. The feeling is like a beautiful illustrated journal or a classic pencil-illustrated storybook.",
     negativeStyleRules: [
@@ -131,7 +131,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "colorful_pop",
     name: "カラフルポップ",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Fcolorful_pop.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/colorful_pop.webp",
     styleBible:
       "Children's picture book with bold pop-art energy. Highly saturated, vivid colors — electric yellow, hot pink, bright cyan, vivid red-orange. Clean bold black outlines around every shape. Flat or simply-shaded color fills. Punchy, high-contrast, energetic composition like a retro pop poster or a graphic children's book. Everything pops and feels joyful.",
     negativeStyleRules: [
@@ -145,7 +145,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "watercolor",
     name: "やさしい水彩",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Fsoft_watercolor.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/soft_watercolor.webp",
     styleBible:
       "Japanese children's picture book in soft watercolor paint. Translucent watercolor washes layered on white paper — gentle pigment blooms, wet-on-wet color bleeds, paper grain showing through. Soft pencil under-drawing visible beneath the washes. Colors are pale and muted: dusty pinks, sage greens, warm creams. Edges of shapes bleed softly into one another. The overall feel is hand-painted, intimate, and tender.",
     negativeStyleRules: [
@@ -159,7 +159,7 @@ export const ILLUSTRATION_STYLE_PROFILES: IllustrationStyleProfile[] = [
   {
     id: "flat",
     name: "シンプルフラット",
-    previewImageUrl: "https://firebasestorage.googleapis.com/v0/b/story-gen-8a769.firebasestorage.app/o/style-previews%2Fflat_illustration.png?alt=media&token=stylepreview-gptimage2-v1",
+    previewImageUrl: "/images/styles/flat_illustration.webp",
     styleBible:
       "Modern flat digital illustration for children's picture book. Every shape is a clean, solid-filled area of color — like vector art or a clean 2D digital illustration. Bold simple outlines. No watercolor washes, no paint texture, no paper grain, no brush strokes, no wet bleeds. Colors are vivid and solid. Shadows are minimal — at most a single flat shadow shape. The overall look is clean, graphic, and modern like a high-quality picture book app illustration.",
     negativeStyleRules: [
