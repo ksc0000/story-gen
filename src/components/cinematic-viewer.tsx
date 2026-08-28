@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, Pause, ChevronLeft, ChevronRight, BookOpen, MessageCircle, RotateCcw, SunMoon } from "lucide-react";
+import { ViewerImage } from "./viewer-image";
+import { preloadNextReadingItemImage } from "@/lib/image-preload";
 import type { ReadingItem } from "./book-viewer";
 
 interface CinematicViewerProps {
@@ -88,6 +90,10 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
     if (showEndCard) { setShowEndCard(false); return; }
     setCurrent((c) => { if (c <= 0) return c; setDir(-1); return c - 1; });
   }, [showEndCard]);
+
+  useEffect(() => {
+    preloadNextReadingItemImage(items, current);
+  }, [items, current]);
 
   useEffect(() => {
     if (!isPlaying) { if (timerRef.current) clearTimeout(timerRef.current); return; }
@@ -226,20 +232,24 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
               {/* Left: image */}
               <div className="relative h-full w-1/2 shrink-0 overflow-hidden">
                 {imageUrl ? (
-                  <motion.img
+                  <ViewerImage
                     src={imageUrl}
                     alt={`${title} ページ${current + 1}`}
+                    dark
+                    isCinematic
                     className="h-full w-full object-cover"
-                    initial={{ scale: 1.05 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: AUTOPLAY_INTERVAL_MS / 1000 + 0.5, ease: "linear" }}
+                    motionProps={{
+                      initial: { scale: 1.05 },
+                      animate: { scale: 1 },
+                      transition: { duration: AUTOPLAY_INTERVAL_MS / 1000 + 0.5, ease: "linear" },
+                    }}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center bg-purple-950">
                     <span className="text-6xl opacity-30">📖</span>
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/30" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/30 pointer-events-none" />
               </div>
 
               {/* Right: text panel */}
@@ -301,20 +311,24 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
               className="absolute inset-0"
             >
               {imageUrl ? (
-                <motion.img
+                <ViewerImage
                   src={imageUrl}
                   alt={`${title} ページ${current + 1}`}
+                  dark
+                  isCinematic
                   className="h-full w-full object-cover"
-                  initial={{ scale: 1.06 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: AUTOPLAY_INTERVAL_MS / 1000 + 0.5, ease: "linear" }}
+                  motionProps={{
+                    initial: { scale: 1.06 },
+                    animate: { scale: 1 },
+                    transition: { duration: AUTOPLAY_INTERVAL_MS / 1000 + 0.5, ease: "linear" },
+                  }}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center bg-purple-950">
                   <span className="text-6xl opacity-30">📖</span>
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent pointer-events-none" />
             </motion.div>
           </AnimatePresence>
         )}
