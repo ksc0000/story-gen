@@ -12,15 +12,33 @@ import { PageTransition } from "@/components/page-transition";
 import { AnimatedCard } from "@/components/animated-card";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+import { useState } from "react";
+import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
+
 export default function LoginPage() {
   const { user, loading, signInWithGoogle } = useAuth();
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
       router.replace("/home");
     }
   }, [user, loading, router]);
+
+  const handleSignIn = async () => {
+    setErrorMessage(null);
+    setIsSigningIn(true);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      const msg = getUserFriendlyErrorMessage(err);
+      setErrorMessage(msg);
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -54,8 +72,26 @@ export default function LoginPage() {
               <p className="app-subtitle text-sm">AIで絵本を作ろう</p>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
+              {errorMessage && (
+                <div
+                  role="alert"
+                  className="rounded-lg bg-red-50 p-3.5 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                >
+                  <p>{errorMessage}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSignIn}
+                    disabled={isSigningIn}
+                    className="mt-2.5 w-full border-red-200 bg-white text-red-700 hover:bg-red-50 hover:text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+                  >
+                    もう一度試す
+                  </Button>
+                </div>
+              )}
               <Button
-                onClick={signInWithGoogle}
+                onClick={handleSignIn}
+                disabled={isSigningIn}
                 variant="outline"
                 className="w-full py-6 text-base"
               >
@@ -67,6 +103,9 @@ export default function LoginPage() {
                 </svg>
                 Googleでログイン
               </Button>
+              <p className="text-center text-xs font-medium text-purple-700/80 dark:text-purple-300/80">
+                月3冊まで無料・クレジットカード不要
+              </p>
               <p className="text-center text-xs text-gray-400">
                 ログインすることで
                 <Link href="/legal/terms" className="underline hover:text-purple-500">
