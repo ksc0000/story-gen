@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,16 +11,30 @@ import { FloatingParticles } from "@/components/floating-particles";
 import { PageTransition } from "@/components/page-transition";
 import { AnimatedCard } from "@/components/animated-card";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { validateReturnTo, getAndClearReturnTo, saveReturnTo } from "@/lib/return-to";
 
-export default function LoginPage() {
+function LoginContent() {
   const { user, loading, signInWithGoogle } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Save returnTo from query param if provided
+  useEffect(() => {
+    const queryReturnTo = searchParams.get("returnTo");
+    if (queryReturnTo) {
+      saveReturnTo(queryReturnTo);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/home");
+      const queryReturnTo = searchParams.get("returnTo");
+      const storedReturnTo = getAndClearReturnTo();
+      const returnToCandidate = queryReturnTo || storedReturnTo;
+      const targetUrl = validateReturnTo(returnToCandidate, "/home");
+      router.replace(targetUrl);
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, searchParams]);
 
   if (loading) {
     return (
@@ -83,5 +97,17 @@ export default function LoginPage() {
         </AnimatedCard>
       </PageTransition>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <main className="app-shell flex min-h-screen items-center justify-center">
+        <p className="text-violet-600">読み込み中...</p>
+      </main>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

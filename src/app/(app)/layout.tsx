@@ -1,22 +1,32 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { DreamyBackground } from "@/components/dreamy-background";
 import { AppNav } from "@/components/app-nav";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { saveReturnTo } from "@/lib/return-to";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/login");
+      const search = searchParams?.toString();
+      const fullPath = search ? `${pathname}?${search}` : pathname;
+      if (fullPath && fullPath !== "/" && fullPath !== "/login") {
+        saveReturnTo(fullPath);
+        router.replace(`/login?returnTo=${encodeURIComponent(fullPath)}`);
+      } else {
+        router.replace("/login");
+      }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname, searchParams]);
 
   if (loading) {
     return (
