@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
@@ -22,6 +22,19 @@ export default function ChildOnboardingPage() {
   const [registeredChildId, setRegisteredChildId] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const { startJob } = useAvatarGenerationJob(null);
+  const [showGuide, setShowGuide] = useState(false);
+
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem("ehon_onboarding_guide_seen");
+      if (!seen) {
+        setShowGuide(true);
+        localStorage.setItem("ehon_onboarding_guide_seen", "true");
+      }
+    } catch {
+      // Ignore localStorage read/write errors in restricted environments
+    }
+  }, []);
 
   const handleSubmit = async (values: ChildProfileFormValues) => {
     if (!user) return;
@@ -75,6 +88,46 @@ export default function ChildOnboardingPage() {
           一度登録すると、毎回名前や見た目を入力しなくても、その子らしい絵本を作りやすくなります。
         </p>
       </div>
+
+      {showGuide && (
+        <div data-testid="onboarding-guide" className="mb-8 overflow-hidden rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/80 via-white to-violet-50/60 p-5 shadow-sm backdrop-blur-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-sm">💡</span>
+            <h2 className="text-sm font-bold text-purple-900">EhonAIへようこそ！サービスのご案内</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 text-xs text-purple-800">
+            <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
+              <span className="text-base">🎁</span>
+              <div>
+                <span className="font-semibold text-purple-900 block">月3冊まで無料</span>
+                <span className="text-violet-500">クレジットカード登録不要で始められます</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
+              <span className="text-base">💳</span>
+              <div>
+                <span className="font-semibold text-purple-900 block">クレカ不要</span>
+                <span className="text-violet-500">お試しは無料ですぐにご利用可能</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
+              <span className="text-base">🎨</span>
+              <div>
+                <span className="font-semibold text-purple-900 block">キャラクター生成は任意 (30秒〜1分)</span>
+                <span className="text-violet-500">お子さん専用AIイラストを生成できます</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
+              <span className="text-base">⏱️</span>
+              <div>
+                <span className="font-semibold text-purple-900 block">絵本完成まで約2〜5分</span>
+                <span className="text-violet-500">ストーリーと絵本画像を自動生成します</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ChildProfileForm submitLabel="登録" saving={saving} onSubmit={handleSubmit} />
 
       <AnimatePresence>
