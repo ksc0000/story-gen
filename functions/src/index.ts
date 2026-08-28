@@ -28,6 +28,7 @@ export { generateStoryPitch } from "./generate-story-pitch";
 export { analyzeChildPhoto } from "./analyze-child-photo";
 export { onBookCompletion_triggerLLMAutoReview } from "./auto-review";
 export { submitAppFeedback } from "./submit-app-feedback";
+export { shareOgp } from "./share-ogp";
 export { updateBookTitle } from "./update-book-title";
 export { updateBookPageText } from "./update-page-text";
 export { generateBookPdf } from "./generate-book-pdf";
