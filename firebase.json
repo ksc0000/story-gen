@@ -24,6 +24,13 @@
         }
       },
       {
+        "source": "/share/**",
+        "function": {
+          "functionId": "shareOgp",
+          "region": "asia-northeast1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
