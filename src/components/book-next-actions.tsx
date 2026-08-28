@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Share2, Sparkles, FileText, Download, Loader2 } from "lucide-react";
+import { Share2, Sparkles, FileText, Download, Loader2, Copy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ interface BookNextActionsProps {
   book: BookDoc;
   isDemoMode: boolean;
   onToggleShare: () => void;
+  onCopyLink?: () => void;
   isSharing: boolean;
   onGeneratePdf?: () => void;
   isGeneratingPdf?: boolean;
@@ -23,6 +24,7 @@ export function BookNextActions({
   book,
   isDemoMode,
   onToggleShare,
+  onCopyLink,
   isSharing,
   onGeneratePdf,
   isGeneratingPdf,
@@ -49,10 +51,10 @@ export function BookNextActions({
           感動が冷めないうちに、次のおすすめアクションはいかがですか？
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {/* 共有する */}
+          {/* 共有導線 (公開時はリンクをコピー, 未公開時はWeb公開して共有) */}
           <Button
             variant={book.public ? "outline" : "default"}
-            onClick={onToggleShare}
+            onClick={book.public ? onCopyLink : onToggleShare}
             disabled={isSharing || isDemoMode}
             className={cn(
               "h-12 w-full justify-start rounded-2xl px-4",
@@ -61,10 +63,17 @@ export function BookNextActions({
           >
             {isSharing ? (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            ) : book.public ? (
+              <>
+                <Copy className="mr-2 h-4 w-4" />
+                リンクをコピー
+              </>
             ) : (
-              <Share2 className="mr-2 h-4 w-4" />
+              <>
+                <Share2 className="mr-2 h-4 w-4" />
+                Web公開して共有
+              </>
             )}
-            共有する
           </Button>
 
           {/* もう1冊作る */}
