@@ -137,4 +137,29 @@ describe("BookViewer Keyboard Navigation", () => {
     fireEvent.keyDown(window, { key: "ArrowRight" });
     expectPage(2);
   });
+
+  it("renders 'このページを編集' button and opens edit menu when provided with callbacks", () => {
+    const onEditPageText = vi.fn();
+    const onRegeneratePage = vi.fn();
+
+    render(
+      <BookViewer
+        pages={mockPages}
+        title="Test"
+        onEditPageText={onEditPageText}
+        onRegeneratePage={onRegeneratePage}
+      />
+    );
+
+    const editBtns = screen.getAllByRole("button", { name: /このページを編集/i });
+    expect(editBtns.length).toBeGreaterThan(0);
+
+    fireEvent.click(editBtns[0]);
+
+    expect(screen.getByRole("heading", { name: "このページを編集" })).toBeDefined();
+    expect(screen.getByText("本文を編集")).toBeDefined();
+    expect(screen.getByText("イラストを再生成")).toBeDefined();
+    expect(screen.getByText(/本文のみを変更します/i)).toBeDefined();
+    expect(screen.getByText(/このページのイラストのみをAIで描き直します/i)).toBeDefined();
+  });
 });
