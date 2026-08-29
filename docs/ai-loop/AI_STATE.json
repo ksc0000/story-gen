@@ -277,6 +277,7 @@
     "PR #717: feat(share): 共有ページの絵本別OGP — Functions SSRでメタ注入 (#697) (merged)",
     "PR #719: fix(share): OGP SSRのrewrite優先度問題を修正 (merged)",
     "PR #720: docs(ux): 初回体験・作成フロー再設計 (#705 #673) (merged)",
+    "PR #729: fix(ci): デプロイworkflow復旧 — 型エラー修正とApp Checkサイトキー追加 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
