@@ -80,6 +80,7 @@ const mockItems: ReadingItem[] = [
     page: {
       pageNumber: 0,
       text: "テスト本文1",
+      imagePrompt: "a watercolor scene of a child playing",
       imageUrl: "https://example.com/1.png",
       status: "completed",
     },
@@ -90,6 +91,7 @@ const mockItems: ReadingItem[] = [
     page: {
       pageNumber: 1,
       text: "テスト本文2",
+      imagePrompt: "a watercolor scene of a child sleeping",
       imageUrl: "https://example.com/2.png",
       status: "completed",
     },
