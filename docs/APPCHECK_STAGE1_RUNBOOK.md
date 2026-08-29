@@ -8,6 +8,16 @@
 - ✅ `enforceAppCheck: true` は全コードに存在しない（Stage 3まで導入しない）
 - ❌ reCAPTCHA v3 キー未登録・環境変数未設定 ← **これだけが欠けている**
 
+## 進捗 (2026-08-29)
+- ✅ reCAPTCHA v3キー作成済み (ラベル: ehoria-app-check)
+- ✅ サイトキーを `.env.local` と GitHub secret `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` に登録
+- ✅ deploy.yml のビルドenvに追加、本番反映済み（reCAPTCHAスクリプトのロードを実機確認）
+- ⏳ **残: Firebase Console でのシークレット登録（下記Step 2）** — 完了までApp Checkは403を返す（監視モードのため実害なし）
+
+### この作業中に発見・修正した本番バグ2件
+1. **自動デプロイが8/28以降全失敗**: `cinematic-viewer.test.tsx` の型エラーで `tsc --noEmit` が停止していた → #729で修正、自動デプロイ復旧
+2. **GitHub secret `NEXT_PUBLIC_FIREBASE_APP_ID` に measurementId(`G-GBBQBFPDVN`) が入っていた** → 自動デプロイのたびにAnalyticsのInstallations 400とApp Checkの宛先誤りが発生。正しいappIdに修正済み。他5項目(apiKey/authDomain/projectId/storageBucket/messagingSenderId/measurementId)は照合して正常
+
 ## Stage 1 有効化手順（ユーザー作業・約5分）
 1. https://www.google.com/recaptcha/admin/create で reCAPTCHA **v3** キーを作成
    - ラベル: `ehoria-app-check`
