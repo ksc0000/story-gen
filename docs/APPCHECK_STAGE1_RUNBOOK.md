@@ -18,7 +18,29 @@
 1. **自動デプロイが8/28以降全失敗**: `cinematic-viewer.test.tsx` の型エラーで `tsc --noEmit` が停止していた → #729で修正、自動デプロイ復旧
 2. **GitHub secret `NEXT_PUBLIC_FIREBASE_APP_ID` に measurementId(`G-GBBQBFPDVN`) が入っていた** → 自動デプロイのたびにAnalyticsのInstallations 400とApp Checkの宛先誤りが発生。正しいappIdに修正済み。他5項目(apiKey/authDomain/projectId/storageBucket/messagingSenderId/measurementId)は照合して正常
 
-## Stage 1 有効化手順（ユーザー作業・約5分）
+## ⚠️ 方式変更: reCAPTCHA v3 → reCAPTCHA Enterprise (2026-08-29)
+クラシック reCAPTCHA は 2024 Q3 以降キーの新規発行が停止し、2026 Q1 に移行が完了。
+Firebase Console の v3 登録フォーム（秘密鍵の入力欄）は無効化されており、**新規登録は Enterprise のみ**。
+- コードは両対応済み（`NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` があれば Enterprise、無ければ従来の v3）
+- **Enterprise はサイトキーのみ。シークレットは存在しない**
+- 料金: 組織あたり月 10,000 アセスメント無料。Blaze のため超過分は 10,001〜100,000 で $8 固定。
+  **トークンTTLを延ばすほどアセスメント数が減る**（既定1時間 → 開きっぱなしのタブ1つで約24回/日）。
+  Ehoria の規模では TTL を長め（例: 7日）にすれば無料枠内で十分収まる見込み
+- 電話番号認証との既知バグ（firebase-js-sdk#9405）は Ehoria が Google ログインのみのため影響なし
+
+### Enterprise キー作成手順（ユーザー作業）
+1. https://console.cloud.google.com/security/recaptcha?project=story-gen-8a769 （Fraud Defense）
+   → 必要なら reCAPTCHA Enterprise API を有効化
+2. 「キーを作成」: 表示名 `appcheck-web-prod` / プラットフォーム **ウェブサイト**
+3. **「チェックボックスチャレンジを使用」はオフのまま**（App Check はスコアベース必須）
+4. ドメイン: `ehoria.app` と `story-gen-8a769.web.app`。**localhost は追加しない**（開発はデバッグトークンを使う）
+5. WAF/Cloud Armor 連携は有効にしない
+6. 作成後の**サイトキー**（`6L`で始まる公開値）を控える
+7. Firebase Console → App Check → アプリ → **reCAPTCHA Enterprise**（⊕ の方）→ サイトキーを貼って保存
+   - トークンTTLはコスト削減のため長め推奨
+   - **「適用/Enforce」は押さない**
+
+## Stage 1 有効化手順（ユーザー作業・約5分）※以下はv3時代の手順。参考用に残置
 1. https://www.google.com/recaptcha/admin/create で reCAPTCHA **v3** キーを作成
    - ラベル: `ehoria-app-check`
    - ドメイン: `ehoria.app` と `story-gen-8a769.web.app` と `localhost`
