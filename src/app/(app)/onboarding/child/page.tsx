@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChildProfileForm, type ChildProfileFormValues } from "@/components/child-profile-form";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useChildren } from "@/lib/hooks/use-children";
 import { db, storage } from "@/lib/firebase";
 import { buildChildProfilePayload } from "@/lib/child-profile";
 import { useAvatarGenerationJob } from "@/lib/hooks/use-avatar-generation-job";
@@ -18,9 +19,11 @@ import { useAvatarGenerationJob } from "@/lib/hooks/use-avatar-generation-job";
 export default function ChildOnboardingPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { children } = useChildren(user?.uid);
   const [saving, setSaving] = useState(false);
   const [registeredChildId, setRegisteredChildId] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [isFirstRegistration, setIsFirstRegistration] = useState(false);
   const { startJob } = useAvatarGenerationJob(null);
   const [showGuide, setShowGuide] = useState(false);
 
@@ -56,6 +59,10 @@ export default function ChildOnboardingPage() {
       if (extraUrls.length > 0) {
         await updateDoc(childRef, { photoUrls: extraUrls });
       }
+
+      // 登録前のchildrenの数で初回登録（1人目）かを判定
+      const isFirst = children.length === 0;
+      setIsFirstRegistration(isFirst);
 
       if (values.photoFile) {
         const storageRef = ref(storage, `childPhotos/${user.uid}/${childRef.id}/original.jpg`);
@@ -128,7 +135,7 @@ export default function ChildOnboardingPage() {
         </div>
       )}
 
-      <ChildProfileForm submitLabel="登録" saving={saving} onSubmit={handleSubmit} />
+      <ChildProfileForm isInitial submitLabel="登録して絵本を作る" saving={saving} onSubmit={handleSubmit} />
 
       <AnimatePresence>
         {registeredChildId && (
@@ -159,7 +166,7 @@ export default function ChildOnboardingPage() {
                     size="lg"
                     className="w-full"
                     onClick={() => {
-                      const url = `/onboarding/child/avatar?childId=${registeredChildId}${activeJobId ? `&jobId=${activeJobId}` : ""}`;
+                      const url = `/onboarding/child/avatar?childId=${registeredChildId}${activeJobId ? `&jobId=${activeJobId}` : ""}${isFirstRegistration ? "&isFirst=1" : ""}`;
                       router.push(url);
                     }}
                   >
@@ -169,9 +176,9 @@ export default function ChildOnboardingPage() {
                     variant="outline"
                     size="lg"
                     className="w-full"
-                    onClick={() => router.push("/home")}
+                    onClick={() => router.push(isFirstRegistration ? "/create/select-child" : "/home")}
                   >
-                    本棚に戻る
+                    {isFirstRegistration ? "絵本をつくりはじめる" : "本棚に戻る"}
                   </Button>
                 </div>
               </div>

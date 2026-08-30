@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import ChildOnboardingPage from "@/app/(app)/onboarding/child/page.tsx";
+import ChildOnboardingPage from "@/app/(app)/onboarding/child/page";
 
 // Mock dependencies
 vi.mock("next/navigation", () => ({
@@ -13,6 +13,11 @@ vi.mock("@/lib/hooks/use-auth", () => ({
   useAuth: () => ({
     user: { uid: "test-user-id" },
   }),
+}));
+
+// #712 のマージで page が useChildren(Firestore) を使うようになったため必要
+vi.mock("@/lib/hooks/use-children", () => ({
+  useChildren: () => ({ children: [], loading: false, error: null }),
 }));
 
 vi.mock("@/lib/hooks/use-avatar-generation-job", () => ({
