@@ -29,7 +29,7 @@ beforeEach(() => {
 
 function renderWithProviders(ui: React.ReactElement) {
   return render(
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider>
       {ui}
     </ThemeProvider>
   );
