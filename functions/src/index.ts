@@ -4,6 +4,7 @@ if (getApps().length === 0) initializeApp();
 
 export { generateBook } from "./generate-book";
 export { deleteBook } from "./delete-book";
+export { createBook } from "./create-book";
 export { deleteChildProfile } from "./delete-child-profile";
 export { deleteUserAccount } from "./delete-user-account";
 export { cleanupExpired } from "./cleanup-expired";
