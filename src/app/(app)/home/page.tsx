@@ -361,95 +361,7 @@ export default function HomePage() {
         </div>
         {isAdmin ? <p className="mt-2 text-sm text-violet-500">管理者向け: Book品質レビューと画像モデル比較を利用できます</p> : null}
 
-        {/* なかよしキャラ widget */}
-        <div className="mt-5">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-lg">🐾</span>
-              <span className="text-sm font-semibold text-purple-800">なかよしキャラ</span>
-            </div>
-            <Link href="/companions" className="text-xs text-violet-500 hover:underline">
-              すべて見る →
-            </Link>
-          </div>
-          {companionsLoading ? null : companions.length === 0 ? (
-            <Link href="/companions/create" className="block">
-              <div className="flex items-center gap-3 rounded-2xl border border-dashed border-purple-200 bg-white/60 px-4 py-3 hover:bg-white/90 hover:border-purple-300 transition-all">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">✨</div>
-                <div>
-                  <p className="text-sm font-medium text-purple-800">なかよしキャラを作ろう！</p>
-                  <p className="text-xs text-violet-400">動物などのなかよしキャラクターをかんたんに作れます</p>
-                </div>
-                <span className="ml-auto text-violet-300 text-lg">＋</span>
-              </div>
-            </Link>
-          ) : (
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              {companions.map((companion) => (
-                <Link
-                  key={companion.id}
-                  href={`/companions/profile?id=${companion.id}`}
-                  className="flex shrink-0 items-center gap-2 rounded-2xl border border-purple-100 bg-white/70 px-3 py-2 hover:bg-white hover:border-purple-200 transition-all"
-                >
-                  {companion.generatedImageUrl ? (
-                    <Image
-                      src={companion.generatedImageUrl}
-                      alt={companion.name}
-                      width={36}
-                      height={36}
-                      className="h-9 w-9 shrink-0 rounded-xl object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">
-                      {getSpeciesEmoji(companion.species)}
-                    </div>
-                  )}
-                  <span className="text-sm font-medium text-purple-800 whitespace-nowrap">{companion.name}</span>
-                </Link>
-              ))}
-              <Link
-                href="/companions/create"
-                className="flex shrink-0 h-[52px] w-[52px] items-center justify-center rounded-2xl border border-dashed border-purple-200 bg-white/60 hover:bg-white hover:border-purple-300 transition-all text-violet-400 text-xl"
-              >
-                ＋
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Feedback widget */}
-        <div className="mt-5">
-          <Link href="/feedback" className="block">
-            <div className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-white/60 px-4 py-3 hover:bg-white/90 hover:border-violet-200 transition-all">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">💬</div>
-              <div>
-                <p className="text-sm font-medium text-purple-800">フィードバックを送る</p>
-                <p className="text-xs text-violet-400">アプリへのご意見・ご要望をお聞かせください</p>
-              </div>
-              <span className="ml-auto text-violet-300 text-lg">→</span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Upgrade banner for free plan users */}
-        {profile && profile.plan === "free" && (
-          <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50/80 px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div>
-              <p className="font-semibold text-amber-800 text-sm">
-                {remaining <= 0 ? "今月の無料枠を使い切りました 📚" : "もっとたくさん絵本を作りたいですか？ ✨"}
-              </p>
-              <p className="text-xs text-amber-700 mt-0.5">
-                有料プランで月8〜15冊・高品質生成が使えます
-              </p>
-            </div>
-            <Link href="/pricing" className="shrink-0">
-              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white border-0">
-                プランを見る
-              </Button>
-            </Link>
-          </div>
-        )}
-
+        {/* Picture books bookshelf section */}
         {loading ? (
           <p className="mt-8 text-center text-violet-400">読み込み中...</p>
         ) : error ? (
@@ -463,7 +375,7 @@ export default function HomePage() {
             </div>
           </div>
         ) : books.length === 0 ? (
-          <div className="mt-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="mt-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
             <HeroBook3D />
             <p className="mt-4 text-violet-500 font-medium">まだ絵本がありません。最初の一冊を作りましょう！</p>
           </div>
@@ -594,6 +506,95 @@ export default function HomePage() {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* なかよしキャラ widget */}
+        <div className="mt-10">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg">🐾</span>
+              <span className="text-sm font-semibold text-purple-800">なかよしキャラ</span>
+            </div>
+            <Link href="/companions" className="text-xs text-violet-500 hover:underline">
+              すべて見る →
+            </Link>
+          </div>
+          {companionsLoading ? null : companions.length === 0 ? (
+            <Link href="/companions/create" className="block">
+              <div className="flex items-center gap-3 rounded-2xl border border-dashed border-purple-200 bg-white/60 px-4 py-3 hover:bg-white/90 hover:border-purple-300 transition-all">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">✨</div>
+                <div>
+                  <p className="text-sm font-medium text-purple-800">なかよしキャラを作ろう！</p>
+                  <p className="text-xs text-violet-400">動物などのなかよしキャラクターをかんたんに作れます</p>
+                </div>
+                <span className="ml-auto text-violet-300 text-lg">＋</span>
+              </div>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {companions.map((companion) => (
+                <Link
+                  key={companion.id}
+                  href={`/companions/profile?id=${companion.id}`}
+                  className="flex shrink-0 items-center gap-2 rounded-2xl border border-purple-100 bg-white/70 px-3 py-2 hover:bg-white hover:border-purple-200 transition-all"
+                >
+                  {companion.generatedImageUrl ? (
+                    <Image
+                      src={companion.generatedImageUrl}
+                      alt={companion.name}
+                      width={36}
+                      height={36}
+                      className="h-9 w-9 shrink-0 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">
+                      {getSpeciesEmoji(companion.species)}
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-purple-800 whitespace-nowrap">{companion.name}</span>
+                </Link>
+              ))}
+              <Link
+                href="/companions/create"
+                className="flex shrink-0 h-[52px] w-[52px] items-center justify-center rounded-2xl border border-dashed border-purple-200 bg-white/60 hover:bg-white hover:border-purple-300 transition-all text-violet-400 text-xl"
+              >
+                ＋
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Feedback widget */}
+        <div className="mt-5">
+          <Link href="/feedback" className="block">
+            <div className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-white/60 px-4 py-3 hover:bg-white/90 hover:border-violet-200 transition-all">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">💬</div>
+              <div>
+                <p className="text-sm font-medium text-purple-800">フィードバックを送る</p>
+                <p className="text-xs text-violet-400">アプリへのご意見・ご要望をお聞かせください</p>
+              </div>
+              <span className="ml-auto text-violet-300 text-lg">→</span>
+            </div>
+          </Link>
+        </div>
+
+        {/* Upgrade banner for free plan users */}
+        {profile && profile.plan === "free" && (
+          <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50/80 px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div>
+              <p className="font-semibold text-amber-800 text-sm">
+                {remaining <= 0 ? "今月の無料枠を使い切りました 📚" : "もっとたくさん絵本を作りたいですか？ ✨"}
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                有料プランで月8〜15冊・高品質生成が使えます
+              </p>
+            </div>
+            <Link href="/pricing" className="shrink-0">
+              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white border-0">
+                プランを見る
+              </Button>
+            </Link>
           </div>
         )}
       </div>
