@@ -269,10 +269,14 @@ function InputPageContent() {
         ? "どんな絵本にしたい？"
         : "今回の絵本で描きたいこと";
 
+  const isFixedInput = creationMode === "fixed_template";
+  const inputStep = isFixedInput ? 5 : 4;
+  const inputTotalSteps = isFixedInput ? 6 : 5;
+
   return (
     <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
       <BackButton className="mb-3" />
-      <StepIndicator currentStep={2} />
+      <StepIndicator currentStep={inputStep} totalSteps={inputTotalSteps} />
       <h1 className="mt-6 text-center text-xl font-bold text-purple-900">内容を入力してください</h1>
 
       <div className="mt-6 space-y-5 rounded-2xl border border-violet-100 bg-white p-5 shadow-sm">
