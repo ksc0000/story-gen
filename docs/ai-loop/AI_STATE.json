@@ -273,6 +273,7 @@
     "PR #684: test(quality): storyGoal/mainQuestObject 整合性ヒューリスティクスのテストを追加 (merged)",
     "PR #685: fix(a11y): StaggerContainerにrole/aria-labelを受け渡せるように修正 (merged)",
     "PR #686: test(quality): style-exposureのテストカバレッジを追加 (merged)",
+    "PR #688: feat(cinematic-viewer): calculate autoplay interval proportionally to character count (merged)",
     "PR #689: docs(security): App Check段階導入ランブック(Stage1監視)を追加 (merged)",
     "PR #712: Redirect to book creation after first child onboarding (merged)",
     "PR #713: Restore returnTo destination post-login with open redirect validation (merged)",
