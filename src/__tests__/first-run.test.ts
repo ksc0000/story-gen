@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { isFirstRun, getRecommendedTemplates, buildFirstRunBookPayload } from "@/lib/first-run";
-import type { TemplateDoc } from "@/lib/types";
+import type { TemplateDoc, ChildProfileDoc } from "@/lib/types";
 
 describe("first-run logic", () => {
   describe("isFirstRun", () => {
@@ -24,6 +24,8 @@ describe("first-run logic", () => {
         description: "Desc 1",
         icon: "📕",
         creationMode: "fixed_template",
+        systemPrompt: "",
+        active: true,
         order: 3,
         recommendedAgeMin: 3,
         recommendedAgeMax: 4,
@@ -34,6 +36,8 @@ describe("first-run logic", () => {
         description: "Desc 2",
         icon: "📗",
         creationMode: "fixed_template",
+        systemPrompt: "",
+        active: true,
         order: 1,
         recommendedAgeMin: 3,
         recommendedAgeMax: 6,
@@ -44,6 +48,8 @@ describe("first-run logic", () => {
         description: "Desc 3",
         icon: "📘",
         creationMode: "fixed_template",
+        systemPrompt: "",
+        active: true,
         order: 2,
         recommendedAgeMin: 5,
         recommendedAgeMax: 8,
@@ -54,6 +60,8 @@ describe("first-run logic", () => {
         description: "Desc 4",
         icon: "📙",
         creationMode: "fixed_template",
+        systemPrompt: "",
+        active: true,
         order: 4,
         recommendedAgeMin: 3,
         recommendedAgeMax: 4,
@@ -64,6 +72,8 @@ describe("first-run logic", () => {
         description: "Guided",
         icon: "✨",
         creationMode: "guided_ai",
+        systemPrompt: "",
+        active: true,
         order: 0,
       },
     ];
@@ -89,14 +99,17 @@ describe("first-run logic", () => {
         description: "Zoo desc",
         icon: "🦁",
         creationMode: "fixed_template",
+        systemPrompt: "",
+        active: true,
         categoryGroupId: "favorite-worlds",
+        order: 1,
         fixedStory: {
-          style: "soft_watercolor",
+          titleTemplate: "テストのおはなし",
           pages: [
-            { text: "Page 1", imagePrompt: "Prompt 1" },
-            { text: "Page 2", imagePrompt: "Prompt 2" },
-            { text: "Page 3", imagePrompt: "Prompt 3" },
-            { text: "Page 4", imagePrompt: "Prompt 4" },
+            { textTemplate: "Page 1", imagePromptTemplate: "Prompt 1" },
+            { textTemplate: "Page 2", imagePromptTemplate: "Prompt 2" },
+            { textTemplate: "Page 3", imagePromptTemplate: "Prompt 3" },
+            { textTemplate: "Page 4", imagePromptTemplate: "Prompt 4" },
           ],
         },
       };
@@ -109,7 +122,9 @@ describe("first-run logic", () => {
           nickname: "Taro-kun",
           age: 4,
           personality: { favoriteThings: ["dinosaur"] },
-        },
+          // buildFirstRunBookPayload が参照するのは id/表示名/年齢/favoriteThings のみ。
+          // ChildProfileDoc 全体を組むとテストの意図が埋もれるため部分フィクスチャとする。
+        } as unknown as ChildProfileDoc & { id: string },
         template,
       });
 

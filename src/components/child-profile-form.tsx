@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type React from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PhotoUploadInput } from "@/components/photo-upload-input";
@@ -42,6 +42,7 @@ interface ChildProfileFormProps {
   initialChild?: Partial<ChildProfileDoc> | null;
   submitLabel: string;
   saving?: boolean;
+  isInitial?: boolean;
   onSubmit: (values: ChildProfileFormValues) => Promise<void>;
 }
 
@@ -68,7 +69,17 @@ const defaultValues: ChildProfileFormValues = {
   extraNewFiles: [],
 };
 
-export function ChildProfileForm({ initialChild, submitLabel, saving = false, onSubmit }: ChildProfileFormProps) {
+export function ChildProfileForm({ initialChild, submitLabel, saving = false, isInitial = false, onSubmit }: ChildProfileFormProps) {
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    personality: !isInitial,
+    appearance: !isInitial,
+    photo: !isInitial,
+  });
+
+  const toggleSection = (section: string) => {
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const initialValues = useMemo<ChildProfileFormValues>(() => ({
     ...defaultValues,
     displayName: initialChild?.displayName ?? "",
@@ -148,6 +159,13 @@ export function ChildProfileForm({ initialChild, submitLabel, saving = false, on
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {isInitial ? (
+        <div className="flex items-center gap-2.5 rounded-2xl border border-violet-200 bg-violet-50/80 p-4 text-sm font-medium text-violet-800 shadow-sm">
+          <Info className="size-5 shrink-0 text-violet-500" />
+          <span>名前と年齢だけでも始められます。あとからいつでも編集できます</span>
+        </div>
+      ) : null}
+
       <Card>
         <CardHeader>
           <CardTitle>基本情報</CardTitle>
@@ -185,93 +203,162 @@ export function ChildProfileForm({ initialChild, submitLabel, saving = false, on
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>好きなこと・性格</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field label="性格" value={values.traits} onChange={(value) => update("traits", value)} placeholder="やさしい、好奇心旺盛" />
-          <Field label="好きな遊び" value={values.favoritePlay} onChange={(value) => update("favoritePlay", value)} placeholder="電車ごっこ" />
-          <Field label="好きなもの" value={values.favoriteThings} onChange={(value) => update("favoriteThings", value)} placeholder="恐竜、新幹線、いちご" />
-          <Field label="苦手なもの" value={values.dislikes} onChange={(value) => update("dislikes", value)} placeholder="大きな音" />
-          <Field label="すてきなところ" value={values.strengths} onChange={(value) => update("strengths", value)} placeholder="ありがとうが言える" />
-          <Field label="いま応援したいこと" value={values.currentChallenge} onChange={(value) => update("currentChallenge", value)} placeholder="歯みがきを自分でする" />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>絵本キャラクターの見た目</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field label="見た目" value={values.characterLook} onChange={(value) => update("characterLook", value)} placeholder="短い黒髪、丸いほっぺ" />
-          <Field label="よく着る服" value={values.outfit} onChange={(value) => update("outfit", value)} placeholder="青いオーバーオール" />
-          <Field label="毎回出したい持ち物" value={values.signatureItem} onChange={(value) => update("signatureItem", value)} placeholder="黄色い帽子" />
-          <Field label="色や雰囲気" value={values.colorMood} onChange={(value) => update("colorMood", value)} placeholder="やさしいパステル" />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>お子さんの写真（任意）</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <PhotoUploadInput
-            value={values.photoUrl}
-            onChange={(file) =>
-              setValues((current) => ({ ...current, photoFile: file }))
-            }
-          />
-          {values.photoFile || values.photoUrl ? (
-            <div className="space-y-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleAutofillFromPhoto}
-                disabled={analyzing}
-              >
-                {analyzing ? (
-                  <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
-                    写真を読み取っています...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 size-4" />
-                    写真から見た目を自動入力
-                  </>
-                )}
-              </Button>
-              <p className="text-xs text-violet-400">
-                髪型・顔立ち・年齢などの「見た目」項目だけAIが下書きします。お名前や性格は入力されません。写真はそのまま絵本に載りません。
-              </p>
-              {autofillMsg ? (
-                <p className="rounded-xl bg-violet-50 px-3 py-2 text-xs text-violet-600">{autofillMsg}</p>
+        <CardHeader
+          className={isInitial ? "cursor-pointer select-none" : undefined}
+          onClick={isInitial ? () => toggleSection("personality") : undefined}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <CardTitle>好きなこと・性格</CardTitle>
+              {isInitial ? (
+                <span className="rounded-full bg-violet-100/80 px-2.5 py-0.5 text-xs font-normal text-violet-600">
+                  あとで設定可
+                </span>
               ) : null}
             </div>
-          ) : null}
+            {isInitial ? (
+              <button
+                type="button"
+                aria-label={openSections.personality ? "「好きなこと・性格」をたたむ" : "「好きなこと・性格」を開く"}
+                className="text-violet-500 hover:text-purple-700"
+              >
+                {openSections.personality ? <ChevronUp className="size-5" /> : <ChevronDown className="size-5" />}
+              </button>
+            ) : null}
+          </div>
+        </CardHeader>
+        {openSections.personality ? (
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <Field label="性格" value={values.traits} onChange={(value) => update("traits", value)} placeholder="やさしい、好奇心旺盛" />
+            <Field label="好きな遊び" value={values.favoritePlay} onChange={(value) => update("favoritePlay", value)} placeholder="電車ごっこ" />
+            <Field label="好きなもの" value={values.favoriteThings} onChange={(value) => update("favoriteThings", value)} placeholder="恐竜、新幹線、いちご" />
+            <Field label="苦手なもの" value={values.dislikes} onChange={(value) => update("dislikes", value)} placeholder="大きな音" />
+            <Field label="すてきなところ" value={values.strengths} onChange={(value) => update("strengths", value)} placeholder="ありがとうが言える" />
+            <Field label="いま応援したいこと" value={values.currentChallenge} onChange={(value) => update("currentChallenge", value)} placeholder="歯みがきを自分でする" />
+          </CardContent>
+        ) : null}
+      </Card>
 
-          {values.photoFile || values.photoUrl ? (
-            <div className="border-t border-violet-100 pt-3">
-              <p className="text-sm font-semibold text-purple-900">参考写真を追加（任意）</p>
-              <p className="mb-2 mt-0.5 text-xs text-violet-400">
-                別角度の写真を足すと、キャラクターの似せ具合が上がりやすくなります（最大2枚）。
-              </p>
-              <ExtraPhotosInput
-                keptUrls={values.extraKeptUrls}
-                newFiles={values.extraNewFiles}
-                max={2}
-                onChange={({ keptUrls, newFiles }) =>
-                  setValues((current) => ({
-                    ...current,
-                    extraKeptUrls: keptUrls,
-                    extraNewFiles: newFiles,
-                  }))
-                }
-              />
+      <Card>
+        <CardHeader
+          className={isInitial ? "cursor-pointer select-none" : undefined}
+          onClick={isInitial ? () => toggleSection("appearance") : undefined}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <CardTitle>絵本キャラクターの見た目</CardTitle>
+              {isInitial ? (
+                <span className="rounded-full bg-violet-100/80 px-2.5 py-0.5 text-xs font-normal text-violet-600">
+                  あとで設定可
+                </span>
+              ) : null}
             </div>
-          ) : null}
-        </CardContent>
+            {isInitial ? (
+              <button
+                type="button"
+                aria-label={openSections.appearance ? "「絵本キャラクターの見た目」をたたむ" : "「絵本キャラクターの見た目」を開く"}
+                className="text-violet-500 hover:text-purple-700"
+              >
+                {openSections.appearance ? <ChevronUp className="size-5" /> : <ChevronDown className="size-5" />}
+              </button>
+            ) : null}
+          </div>
+        </CardHeader>
+        {openSections.appearance ? (
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <Field label="見た目" value={values.characterLook} onChange={(value) => update("characterLook", value)} placeholder="短い黒髪、丸いほっぺ" />
+            <Field label="よく着る服" value={values.outfit} onChange={(value) => update("outfit", value)} placeholder="青いオーバーオール" />
+            <Field label="毎回出したい持ち物" value={values.signatureItem} onChange={(value) => update("signatureItem", value)} placeholder="黄色い帽子" />
+            <Field label="色や雰囲気" value={values.colorMood} onChange={(value) => update("colorMood", value)} placeholder="やさしいパステル" />
+          </CardContent>
+        ) : null}
+      </Card>
+
+      <Card>
+        <CardHeader
+          className={isInitial ? "cursor-pointer select-none" : undefined}
+          onClick={isInitial ? () => toggleSection("photo") : undefined}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <CardTitle>お子さんの写真（任意）</CardTitle>
+              {isInitial ? (
+                <span className="rounded-full bg-violet-100/80 px-2.5 py-0.5 text-xs font-normal text-violet-600">
+                  あとで設定可
+                </span>
+              ) : null}
+            </div>
+            {isInitial ? (
+              <button
+                type="button"
+                aria-label={openSections.photo ? "「お子さんの写真（任意）」をたたむ" : "「お子さんの写真（任意）」を開く"}
+                className="text-violet-500 hover:text-purple-700"
+              >
+                {openSections.photo ? <ChevronUp className="size-5" /> : <ChevronDown className="size-5" />}
+              </button>
+            ) : null}
+          </div>
+        </CardHeader>
+        {openSections.photo ? (
+          <CardContent className="space-y-3">
+            <PhotoUploadInput
+              value={values.photoUrl}
+              onChange={(file) =>
+                setValues((current) => ({ ...current, photoFile: file }))
+              }
+            />
+            {values.photoFile || values.photoUrl ? (
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleAutofillFromPhoto}
+                  disabled={analyzing}
+                >
+                  {analyzing ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      写真を読み取っています...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 size-4" />
+                      写真から見た目を自動入力
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-violet-400">
+                  髪型・顔立ち・年齢などの「見た目」項目だけAIが下書きします。お名前や性格は入力されません。写真はそのまま絵本に載りません。
+                </p>
+                {autofillMsg ? (
+                  <p className="rounded-xl bg-violet-50 px-3 py-2 text-xs text-violet-600">{autofillMsg}</p>
+                ) : null}
+              </div>
+            ) : null}
+
+            {values.photoFile || values.photoUrl ? (
+              <div className="border-t border-violet-100 pt-3">
+                <p className="text-sm font-semibold text-purple-900">参考写真を追加（任意）</p>
+                <p className="mb-2 mt-0.5 text-xs text-violet-400">
+                  別角度の写真を足すと、キャラクターの似せ具合が上がりやすくなります（最大2枚）。
+                </p>
+                <ExtraPhotosInput
+                  keptUrls={values.extraKeptUrls}
+                  newFiles={values.extraNewFiles}
+                  max={2}
+                  onChange={({ keptUrls, newFiles }) =>
+                    setValues((current) => ({
+                      ...current,
+                      extraKeptUrls: keptUrls,
+                      extraNewFiles: newFiles,
+                    }))
+                  }
+                />
+              </div>
+            ) : null}
+          </CardContent>
+        ) : null}
       </Card>
 
       {error ? <p className="rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
