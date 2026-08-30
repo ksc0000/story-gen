@@ -285,6 +285,7 @@
     "PR #732: docs(security): App Check Stage1(監視モード)稼働開始 (merged)",
     "PR #740: fix(ux): ホームで絵本一覧を作成CTAの直下へ移動 (#733) (merged)",
     "PR #741: perf(images): なかよしキャラの模様画像を21MB→48KBに (#698) (merged)",
+    "PR #743: feat(api): 絵本作成のCallable API を追加 (#734 Phase 1) (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
