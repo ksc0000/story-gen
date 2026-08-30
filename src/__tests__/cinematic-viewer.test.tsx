@@ -163,7 +163,7 @@ describe("CinematicViewer UI and safe area tests", () => {
 describe("getAutoplayIntervalMs calculation logic", () => {
   it("returns cover fixed interval (4500ms) for cover title spread or undefined item", () => {
     expect(getAutoplayIntervalMs()).toBe(AUTOPLAY_COVER_MS);
-    expect(getAutoplayIntervalMs({ kind: "cover_title_spread", imageUrl: "https://example.com/cover.png" })).toBe(AUTOPLAY_COVER_MS);
+    expect(getAutoplayIntervalMs({ kind: "cover_title_spread", imageUrl: "https://example.com/cover.png", title: "テスト絵本" })).toBe(AUTOPLAY_COVER_MS);
   });
 
   it("clamps short text (<= 9 chars) to minimum interval (3000ms)", () => {
@@ -171,7 +171,7 @@ describe("getAutoplayIntervalMs calculation logic", () => {
     const emptyItem: ReadingItem = {
       kind: "story_page",
       storyPageIndex: 0,
-      page: { pageNumber: 0, text: "", status: "completed" },
+      page: { pageNumber: 0, text: "", status: "completed", imageUrl: "https://example.com/p.png", imagePrompt: "a gentle watercolor scene" },
     };
     expect(getAutoplayIntervalMs(emptyItem)).toBe(AUTOPLAY_MIN_MS);
 
@@ -179,7 +179,7 @@ describe("getAutoplayIntervalMs calculation logic", () => {
     const shortItem: ReadingItem = {
       kind: "story_page",
       storyPageIndex: 0,
-      page: { pageNumber: 0, text: "あいうえおかきくけ", status: "completed" },
+      page: { pageNumber: 0, text: "あいうえおかきくけ", status: "completed", imageUrl: "https://example.com/p.png", imagePrompt: "a gentle watercolor scene" },
     };
     expect(getAutoplayIntervalMs(shortItem)).toBe(AUTOPLAY_MIN_MS);
   });
@@ -190,7 +190,7 @@ describe("getAutoplayIntervalMs calculation logic", () => {
     const item30: ReadingItem = {
       kind: "story_page",
       storyPageIndex: 0,
-      page: { pageNumber: 0, text: text30, status: "completed" },
+      page: { pageNumber: 0, text: text30, status: "completed", imageUrl: "https://example.com/p.png", imagePrompt: "a gentle watercolor scene" },
     };
     expect(getAutoplayIntervalMs(item30)).toBe(4150);
   });
@@ -201,7 +201,7 @@ describe("getAutoplayIntervalMs calculation logic", () => {
     const item100: ReadingItem = {
       kind: "story_page",
       storyPageIndex: 0,
-      page: { pageNumber: 0, text: text100, status: "completed" },
+      page: { pageNumber: 0, text: text100, status: "completed", imageUrl: "https://example.com/p.png", imagePrompt: "a gentle watercolor scene" },
     };
     expect(getAutoplayIntervalMs(item100)).toBe(8000);
   });
@@ -212,7 +212,7 @@ describe("getAutoplayIntervalMs calculation logic", () => {
     const item150: ReadingItem = {
       kind: "story_page",
       storyPageIndex: 0,
-      page: { pageNumber: 0, text: text150, status: "completed" },
+      page: { pageNumber: 0, text: text150, status: "completed", imageUrl: "https://example.com/p.png", imagePrompt: "a gentle watercolor scene" },
     };
     expect(getAutoplayIntervalMs(item150)).toBe(AUTOPLAY_MAX_MS);
   });
