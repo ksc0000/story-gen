@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,8 +9,15 @@ import { AppNav } from "@/components/app-nav";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { saveReturnTo } from "@/lib/return-to";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, signOut } = useAuth();
+/**
+ * 未ログイン時にログインへ退避し、戻り先(returnTo)を保存する。
+ *
+ * `useSearchParams()` は static export では Suspense 境界の中でしか使えず、
+ * レイアウト直下で呼ぶと (app) 配下の全ページのプリレンダリングが失敗する。
+ * そのため副作用だけを持つ子コンポーネントに切り出し、Suspense で包んでいる。
+ */
+function AuthRedirectGuard() {
+  const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -28,17 +35,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, router, pathname, searchParams]);
 
+  return null;
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading, signOut } = useAuth();
+
+  // AuthRedirectGuard は未ログイン時にこそ動く必要があるため、
+  // loading / !user の早期 return より前に、常に描画されるよう外側へ置く。
+  const guard = (
+    <Suspense fallback={null}>
+      <AuthRedirectGuard />
+    </Suspense>
+  );
+
   if (loading) {
     return (
-      <div className="app-shell flex min-h-screen items-center justify-center">
-        <p className="text-violet-600">読み込み中...</p>
-      </div>
+      <>
+        {guard}
+        <div className="app-shell flex min-h-screen items-center justify-center">
+          <p className="text-violet-600">読み込み中...</p>
+        </div>
+      </>
     );
   }
-  if (!user) return null;
+  if (!user) return guard;
 
   return (
-    <div className="app-shell">
+    <>
+      {guard}
+      <div className="app-shell">
       <DreamyBackground />
       <header className="app-header">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between gap-2 px-4">
@@ -60,7 +86,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           (em-bg is position:fixed z-index:0, which paints over non-positioned
           block elements on iOS Safari. A z-index≥1 here fixes the invisible
           content bug on iPhone.) */}
-      <main className="relative z-[1]">{children}</main>
-    </div>
+        <main className="relative z-[1]">{children}</main>
+      </div>
+    </>
   );
 }
