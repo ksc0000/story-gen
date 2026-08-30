@@ -82,7 +82,7 @@ export default function ChildOnboardingPage() {
           一度登録すると、毎回名前や見た目を入力しなくても、その子らしい絵本を作りやすくなります。
         </p>
       </div>
-      <ChildProfileForm submitLabel="登録" saving={saving} onSubmit={handleSubmit} />
+      <ChildProfileForm isInitial submitLabel="登録して絵本を作る" saving={saving} onSubmit={handleSubmit} />
 
       <AnimatePresence>
         {registeredChildId && (
