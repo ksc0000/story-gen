@@ -46,7 +46,6 @@ import {
 import type { ProtagonistDescriptor } from "./lib/prompt-builder";
 import { GeminiClient, GeminiServiceUnavailableError, resolveStoryModelCandidates, getParseErrorDiagnostics } from "./lib/gemini";
 import {
-  ReplicateImageClient,
   resolveImageModelProfile,
   resolveReplicateModel,
   resolveImageFallbackProfiles,
@@ -55,7 +54,7 @@ import {
   withImageTimeout,
   ImageTimeoutError,
 } from "./lib/replicate";
-import { OpenAIImageClient, OPENAI_IMAGE_CANDIDATE_PROFILE, resolveOpenAIModelLabel, resolveOpenAIModelLabelForProfile } from "./lib/openai-image";
+import { OPENAI_IMAGE_CANDIDATE_PROFILE, resolveOpenAIModelLabel, resolveOpenAIModelLabelForProfile } from "./lib/openai-image";
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
 import { canUseProductPlan } from "./lib/entitlements";
 import { canGenerateBookThisMonth } from "./lib/usage";
@@ -3291,14 +3290,35 @@ const openaiApiKey = defineSecret("OPENAI_API_KEY");
  * via PROFILE_PROVIDER_MAP routing in generatePageImageWithFallback. (P3-15)
  */
 function createImageClient(imageModelProfile?: ImageModelProfile): ImageClient {
-  if (imageModelProfile === "openai_image_candidate") {
-    const key = openaiApiKey.value();
-    if (!key) {
-      throw new Error("OPENAI_API_KEY secret is not configured");
-    }
-    return new OpenAIImageClient(key, OPENAI_IMAGE_CANDIDATE_PROFILE);
-  }
-  return new ReplicateImageClient(replicateApiToken.value());
+  const defaultProfile = imageModelProfile ?? "pro_consistent";
+  return {
+    async generateImage(prompt, options) {
+      const profile = options?.imageModelProfile ?? defaultProfile;
+      let capturedBuffer: Buffer | undefined;
+      const adapter = createImageAdapter({
+        imageModelProfile: profile,
+        replicateApiToken: replicateApiToken.value(),
+        openaiApiKey: openaiApiKey.value(),
+        replicateUploader: async (buffer) => {
+          capturedBuffer = buffer;
+          return "in-memory-buffer";
+        },
+        openaiUploader: async (buffer) => {
+          capturedBuffer = buffer;
+          return "in-memory-buffer";
+        },
+      });
+      await adapter.generateImage({
+        prompt,
+        imageModelProfile: profile,
+        inputImageUrls: options?.inputImageUrls,
+      });
+      if (!capturedBuffer) {
+        throw new Error("ImageProvider adapter did not produce an image buffer");
+      }
+      return capturedBuffer;
+    },
+  };
 }
 
 export const generateBook = onDocumentCreated(

@@ -2,7 +2,8 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
-import { ReplicateImageClient, resolveReplicateModel } from "./lib/replicate";
+import { resolveReplicateModel } from "./lib/replicate";
+import { createImageAdapter } from "./lib/image-adapter-factory";
 import { normalizeSensitiveError } from "./lib/avatar-generation";
 import { logGenerationEvent } from "./lib/generation-event-logger";
 import type { CompanionImageJob, CompanionData } from "./lib/types";
@@ -61,21 +62,37 @@ export const onCompanionImageJobCreated = onDocumentCreated(
       }
 
       const prompt = buildCompanionPrompt(companion);
-      const imageClient = new ReplicateImageClient(replicateApiToken.value());
+      const generationId = randomUUID();
+
+      const adapter = createImageAdapter({
+        imageModelProfile: "pro_consistent",
+        replicateApiToken: replicateApiToken.value(),
+        openaiApiKey: "",
+        replicateUploader: async (buffer) => {
+          return uploadCompanionImage(
+            storage,
+            jobData.userId,
+            jobData.companionId,
+            generationId,
+            buffer
+          );
+        },
+      });
 
       const companionStartMs = Date.now();
-      const imageBuffer = await imageClient.generateImage(prompt, {
-        purpose: "book_page",
+      const result = await adapter.generateImage({
+        prompt,
         imageModelProfile: "pro_consistent",
       });
-      const durationMs = Date.now() - companionStartMs;
+      const durationMs = result.durationMs ?? (Date.now() - companionStartMs);
+      const imageUrl = result.imageUrl;
 
       logGenerationEvent({
         eventName: "page_image_succeeded",
         bookId: `companion-${jobData.companionId}`,
         pageIndex: -300, // Conventional negative index for companions
         imageModelProfile: "pro_consistent",
-        imageModel: resolveReplicateModel({
+        imageModel: result.modelLabel || resolveReplicateModel({
           purpose: "book_page",
           imageModelProfile: "pro_consistent",
         }),
@@ -84,15 +101,6 @@ export const onCompanionImageJobCreated = onDocumentCreated(
         attemptCount: 1,
         fallbackUsed: false,
       });
-
-      const generationId = randomUUID();
-      const imageUrl = await uploadCompanionImage(
-        storage,
-        jobData.userId,
-        jobData.companionId,
-        generationId,
-        imageBuffer
-      );
 
       await Promise.all([
         companionRef.update({

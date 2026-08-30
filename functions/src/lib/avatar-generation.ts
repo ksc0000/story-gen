@@ -2,7 +2,8 @@ import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
 import type { AvatarRevisionRequest, ChildProfileData, IllustrationStyle, AvatarCandidate, ImageModelProfile, LikenessStrength } from "./types";
 import { getStyleReferenceImagePath } from "./prompt-builder";
-import { ReplicateImageClient, resolveReplicateModel } from "./replicate";
+import { resolveReplicateModel } from "./replicate";
+import { createImageAdapter } from "./image-adapter-factory";
 import { logGenerationEvent } from "./generation-event-logger";
 
 export const MAX_ATTEMPTS_PER_CHILD = 5;
@@ -396,7 +397,6 @@ export async function processAvatarGeneration(params: {
   const nextAttempt = currentAttempt + 1;
   const batchId = db.collection("_").doc().id;
   const previousPrompt = child.visualProfile?.basePrompt;
-  const imageClient = new ReplicateImageClient(replicateApiToken);
   const structuredCorrectionText = buildStructuredCorrectionText(request.revisionRequest);
   const finalCorrectionText = structuredCorrectionText;
   const characterBible = buildCharacterBible(child, finalCorrectionText);
@@ -440,28 +440,41 @@ export async function processAvatarGeneration(params: {
   // 写真なし（修正・ベース画像ベース）は従来どおり pro_consistent (flux-2-pro)。
   const avatarProfile: ImageModelProfile = hasPhotoRef ? "kontext_max" : "pro_consistent";
 
+  const generationId = db.collection("_").doc().id;
+
+  const adapter = createImageAdapter({
+    imageModelProfile: avatarProfile,
+    replicateApiToken,
+    openaiApiKey: "",
+    replicateUploader: async (buffer) => {
+      return uploadAvatarImage(storage, userId, childId, generationId, buffer);
+    },
+  });
+
   const avatarStartMs = Date.now();
   const avatarPurpose = structuredCorrectionText ? "child_avatar_revision" : "child_avatar";
-  const imageBuffer = await imageClient.generateImage(prompt, {
-    purpose: avatarPurpose,
+  const result = await adapter.generateImage({
+    prompt,
     inputImageUrls,
     imageModelProfile: avatarProfile,
+    metadata: {
+      characterId: childId,
+    },
   });
-  const durationMs = Date.now() - avatarStartMs;
+  const durationMs = result.durationMs ?? (Date.now() - avatarStartMs);
+  const imageUrl = result.imageUrl;
 
   logGenerationEvent({
     eventName: "page_image_succeeded",
     bookId: `avatar-${childId}`, // Conventional ID for avatar generations
     pageIndex: -200, // Conventional negative index for avatars
     imageModelProfile: avatarProfile,
-    imageModel: resolveReplicateModel({ purpose: avatarPurpose, imageModelProfile: avatarProfile }),
+    imageModel: result.modelLabel || resolveReplicateModel({ purpose: avatarPurpose, imageModelProfile: avatarProfile }),
     provider: "replicate",
     durationMs,
     attemptCount: 1,
     fallbackUsed: false,
   });
-  const generationId = db.collection("_").doc().id;
-  const imageUrl = await uploadAvatarImage(storage, userId, childId, generationId, imageBuffer);
 
   await childRef.collection("avatarGenerations").doc(generationId).set({
     batchId,
