@@ -1,10 +1,14 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { FileText, Star } from "lucide-react";
+import { DownloadCheck, FileText, Star, WifiOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCard } from "@/components/animated-card";
 import { formatDateSafe, toMillisSafe } from "@/lib/date-utils";
+import { getOfflineBook } from "@/lib/offline-book-storage";
 import { cn } from "@/lib/utils";
 import type { BookDoc } from "@/lib/types";
 
@@ -12,13 +16,23 @@ interface BookCardProps {
   book: BookDoc & { id: string };
   onToggleFavorite?: (book: BookDoc & { id: string }) => void;
   onSelect?: (book: BookDoc & { id: string }) => void;
+  isOffline?: boolean;
 }
 
-export function BookCard({ book, onToggleFavorite, onSelect }: BookCardProps) {
+export function BookCard({ book, onToggleFavorite, onSelect, isOffline = false }: BookCardProps) {
+  const [isDownloaded, setIsDownloaded] = useState(false);
   const href = book.status === "generating" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
-  // Prefer createdAtMs; createdAt may be an unresolved serverTimestamp sentinel
-  // on legacy books, which toMillisSafe treats as null.
   const createdMillis = toMillisSafe(book.createdAtMs ?? book.createdAt);
+
+  useEffect(() => {
+    let active = true;
+    getOfflineBook(book.id).then((rec) => {
+      if (active) setIsDownloaded(rec !== null);
+    });
+    return () => {
+      active = false;
+    };
+  }, [book.id]);
 
   const cardContent = (
     <>
@@ -31,14 +45,30 @@ export function BookCard({ book, onToggleFavorite, onSelect }: BookCardProps) {
               </Badge>
             </div>
           )}
+
+          {isDownloaded && (
+            <div className="absolute left-2 top-2 z-20 flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
+              <DownloadCheck className="h-3 w-3" />
+              オフライン可
+            </div>
+          )}
+
+          {isOffline && !isDownloaded && (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-900/60 p-2 text-center text-white backdrop-blur-[2px]">
+              <WifiOff className="h-6 w-6 text-slate-300" />
+              <span className="mt-1 text-[11px] font-medium text-slate-200">未保存</span>
+              <span className="text-[9px] text-slate-300">オフライン不可</span>
+            </div>
+          )}
+
           <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-violet-50 to-purple-100 flex items-center justify-center">
             {book.coverImageUrl ? (
               <>
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={book.coverImageUrl}
                   alt={book.title || "絵本の表紙"}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </>
@@ -60,12 +90,14 @@ export function BookCard({ book, onToggleFavorite, onSelect }: BookCardProps) {
                 {formatDateSafe(createdMillis)}
               </p>
             )}
-            {book.pdfStatus === "completed" && (
-              <Badge variant="outline" className="mt-1 border-purple-100 bg-purple-50/50 text-[9px] text-purple-600 h-4 px-1.5">
-                <FileText className="mr-1 h-2 w-2" />
-                PDF
-              </Badge>
-            )}
+            <div className="mt-1 flex flex-wrap items-center gap-1">
+              {book.pdfStatus === "completed" && (
+                <Badge variant="outline" className="border-purple-100 bg-purple-50/50 text-[9px] text-purple-600 h-4 px-1.5">
+                  <FileText className="mr-1 h-2 w-2" />
+                  PDF
+                </Badge>
+              )}
+            </div>
           </CardContent>
         </Card>
       </AnimatedCard>
@@ -87,9 +119,7 @@ export function BookCard({ book, onToggleFavorite, onSelect }: BookCardProps) {
             "absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition",
             book.favorite
               ? "bg-amber-400/90 text-white"
-              : // タッチ端末では常時表示（hover が無いと出せないため）。
-                // hover 対応デバイスのみ「ホバーで出現」にする。
-                "bg-white/70 text-violet-400 [@media(hover:hover)]:opacity-0 hover:bg-white group-hover:opacity-100"
+              : "bg-white/70 text-violet-400 [@media(hover:hover)]:opacity-0 hover:bg-white group-hover:opacity-100"
           )}
         >
           <Star className={cn("h-4 w-4", book.favorite && "fill-current")} />
