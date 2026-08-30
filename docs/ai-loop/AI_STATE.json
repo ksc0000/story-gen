@@ -274,6 +274,7 @@
     "PR #685: fix(a11y): StaggerContainerにrole/aria-labelを受け渡せるように修正 (merged)",
     "PR #686: test(quality): style-exposureのテストカバレッジを追加 (merged)",
     "PR #689: docs(security): App Check段階導入ランブック(Stage1監視)を追加 (merged)",
+    "PR #716: Add free plan reassurance copy and login error handling to login page (merged)",
     "PR #717: feat(share): 共有ページの絵本別OGP — Functions SSRでメタ注入 (#697) (merged)",
     "PR #719: fix(share): OGP SSRのrewrite優先度問題を修正 (merged)",
     "PR #720: docs(ux): 初回体験・作成フロー再設計 (#705 #673) (merged)",
