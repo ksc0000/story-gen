@@ -52,6 +52,9 @@ function ChildAvatarPageContent() {
   const [usePhoto, setUsePhoto] = useState(true);
   const [likenessStrength, setLikenessStrength] = useState<LikenessStrength>("balanced");
 
+  const isFirstChild = searchParams.get("isFirst") === "1" || (!loadingChildren && children.length <= 1);
+  const redirectTarget = isFirstChild ? "/create/select-child" : "/home";
+
   const selectedCandidate = candidates.find((candidate) => candidate.generationId === selectedCandidateId) ?? null;
   const revisionSummary = useMemo(() => buildRevisionSummary(revisionRequest), [revisionRequest]);
 
@@ -202,7 +205,7 @@ function ChildAvatarPageContent() {
       await batch.commit();
       setHasUnsavedGeneration(false);
       setAllowNavigation(true);
-      router.replace("/home");
+      router.replace(redirectTarget);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(`保存に失敗しました: ${message}`);
@@ -354,6 +357,17 @@ function ChildAvatarPageContent() {
               <p className="mt-2 text-sm text-violet-500">
                 AIがあなたのリクエストに合わせて特別な1枚を制作中です。<br />30秒〜1分ほどかかることがあります。
               </p>
+              <Button
+                type="button"
+                size="lg"
+                className="mt-6 font-bold"
+                onClick={() => {
+                  setAllowNavigation(true);
+                  router.push(redirectTarget);
+                }}
+              >
+                絵本をつくりはじめる
+              </Button>
             </div>
           ) : candidates.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-3">
@@ -398,7 +412,7 @@ function ChildAvatarPageContent() {
             </div>
           ) : null}
 
-          <button type="button" onClick={() => confirmAndNavigate("/home")} className="block w-full text-center text-sm text-violet-500 hover:underline">
+          <button type="button" onClick={() => confirmAndNavigate(redirectTarget)} className="block w-full text-center text-sm text-violet-500 hover:underline">
             あとで設定する
           </button>
         </CardContent>
