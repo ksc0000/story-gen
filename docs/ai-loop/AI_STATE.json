@@ -276,6 +276,7 @@
     "PR #689: docs(security): App Check段階導入ランブック(Stage1監視)を追加 (merged)",
     "PR #712: Redirect to book creation after first child onboarding (merged)",
     "PR #713: Restore returnTo destination post-login with open redirect validation (merged)",
+    "PR #715: Reduce load on initial child profile onboarding form (merged)",
     "PR #716: Add free plan reassurance copy and login error handling to login page (merged)",
     "PR #717: feat(share): 共有ページの絵本別OGP — Functions SSRでメタ注入 (#697) (merged)",
     "PR #719: fix(share): OGP SSRのrewrite優先度問題を修正 (merged)",
