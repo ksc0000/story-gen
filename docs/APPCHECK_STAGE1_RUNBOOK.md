@@ -2,6 +2,20 @@
 
 3段階導入の第1段階。**強制(enforce)は一切行わず**、正規クライアントのトークン送信率を計測する。
 
+# ✅ Stage 1 稼働開始 (2026-08-30)
+- プロバイダ: **reCAPTCHA Enterprise**（キー `appcheck-web-prod` / サイトキー `6Lc7R6At...dwuSJ`）
+- TTL **7日**、アプリのリスク 中(0.5)、強制は**オフ**
+- 本番検証済み: トークン交換 200 OK（ttl 604800s）・LPのコンソールエラー **0件**
+- 登録直後は数十秒〜数分の反映待ちで 400 が出るが、待てば解消する（今回実際に発生）
+
+## 観測方法（1〜2週間）
+Firebase Console → App Check → **API** タブで、Firestore / Cloud Functions / Storage ごとの
+「検証済み / 未検証」リクエスト比率を見る。
+- **判定基準: 検証済み ≥ 99% が1週間継続 → Stage 2 へ**
+- 未検証が多い場合の主因: 旧バンドルのキャッシュ / Bot / デバッグトークン未設定のCI
+- コスト監視: Google Cloud → Fraud Defense → 評価試験。**無料枠は組織あたり月1万アセスメント**。
+  TTL7日にしてあるため、通常利用では大きく下回る見込み
+
 ## 現状（2026-08-28 監査結果）
 - ✅ クライアント初期化は実装済み: `src/lib/firebase.ts` — `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` があれば `ReCaptchaV3Provider` で initializeAppCheck。開発時はデバッグトークン対応済み
 - ✅ 一部callable関数は `consumeAppCheckToken: true` 済み（enforceは無いのでトークン無しでも通る＝監視段階と互換）
