@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
@@ -11,17 +11,36 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChildProfileForm, type ChildProfileFormValues } from "@/components/child-profile-form";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useBooks } from "@/lib/hooks/use-books";
+import { useChildren } from "@/lib/hooks/use-children";
 import { db, storage } from "@/lib/firebase";
 import { buildChildProfilePayload } from "@/lib/child-profile";
 import { useAvatarGenerationJob } from "@/lib/hooks/use-avatar-generation-job";
+import { isFirstRun } from "@/lib/first-run";
 
 export default function ChildOnboardingPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { books } = useBooks(user?.uid);
+  const { children } = useChildren(user?.uid);
   const [saving, setSaving] = useState(false);
   const [registeredChildId, setRegisteredChildId] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [isFirstRegistration, setIsFirstRegistration] = useState(false);
   const { startJob } = useAvatarGenerationJob(null);
+  const [showGuide, setShowGuide] = useState(false);
+
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem("ehon_onboarding_guide_seen");
+      if (!seen) {
+        setShowGuide(true);
+        localStorage.setItem("ehon_onboarding_guide_seen", "true");
+      }
+    } catch {
+      // Ignore localStorage read/write errors in restricted environments
+    }
+  }, []);
 
   const handleSubmit = async (values: ChildProfileFormValues) => {
     if (!user) return;
@@ -44,6 +63,10 @@ export default function ChildOnboardingPage() {
         await updateDoc(childRef, { photoUrls: extraUrls });
       }
 
+      // 登録前のchildrenの数で初回登録（1人目）かを判定
+      const isFirst = children.length === 0;
+      setIsFirstRegistration(isFirst);
+
       if (values.photoFile) {
         const storageRef = ref(storage, `childPhotos/${user.uid}/${childRef.id}/original.jpg`);
         const snapshot = await uploadBytes(storageRef, values.photoFile);
@@ -56,8 +79,11 @@ export default function ChildOnboardingPage() {
           childId: childRef.id,
         });
         setActiveJobId(jobId);
+      }
 
-        setRegisteredChildId(childRef.id);
+      // 初回判定: 0冊かつ子どもの数が登録前時点で1人以下（今回登録が1人目）の場合、おすすめテンプレへ直行
+      if (isFirstRun(books.length, children.length)) {
+        router.push(`/create/select-template?recommended=1&childId=${childRef.id}`);
       } else {
         setRegisteredChildId(childRef.id);
       }
@@ -75,7 +101,47 @@ export default function ChildOnboardingPage() {
           一度登録すると、毎回名前や見た目を入力しなくても、その子らしい絵本を作りやすくなります。
         </p>
       </div>
-      <ChildProfileForm submitLabel="登録" saving={saving} onSubmit={handleSubmit} />
+
+      {showGuide && (
+        <div data-testid="onboarding-guide" className="mb-8 overflow-hidden rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/80 via-white to-violet-50/60 p-5 shadow-sm backdrop-blur-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-sm">💡</span>
+            <h2 className="text-sm font-bold text-purple-900">EhonAIへようこそ！サービスのご案内</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 text-xs text-purple-800">
+            <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
+              <span className="text-base">🎁</span>
+              <div>
+                <span className="font-semibold text-purple-900 block">月3冊まで無料</span>
+                <span className="text-violet-500">クレジットカード登録不要で始められます</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
+              <span className="text-base">💳</span>
+              <div>
+                <span className="font-semibold text-purple-900 block">クレカ不要</span>
+                <span className="text-violet-500">お試しは無料ですぐにご利用可能</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
+              <span className="text-base">🎨</span>
+              <div>
+                <span className="font-semibold text-purple-900 block">キャラクター生成は任意 (30秒〜1分)</span>
+                <span className="text-violet-500">お子さん専用AIイラストを生成できます</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
+              <span className="text-base">⏱️</span>
+              <div>
+                <span className="font-semibold text-purple-900 block">絵本完成まで約2〜5分</span>
+                <span className="text-violet-500">ストーリーと絵本画像を自動生成します</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ChildProfileForm isInitial submitLabel="登録して絵本を作る" saving={saving} onSubmit={handleSubmit} />
 
       <AnimatePresence>
         {registeredChildId && (
@@ -106,7 +172,7 @@ export default function ChildOnboardingPage() {
                     size="lg"
                     className="w-full"
                     onClick={() => {
-                      const url = `/onboarding/child/avatar?childId=${registeredChildId}${activeJobId ? `&jobId=${activeJobId}` : ""}`;
+                      const url = `/onboarding/child/avatar?childId=${registeredChildId}${activeJobId ? `&jobId=${activeJobId}` : ""}${isFirstRegistration ? "&isFirst=1" : ""}`;
                       router.push(url);
                     }}
                   >
@@ -116,9 +182,9 @@ export default function ChildOnboardingPage() {
                     variant="outline"
                     size="lg"
                     className="w-full"
-                    onClick={() => router.push("/home")}
+                    onClick={() => router.push(isFirstRegistration ? "/create/select-child" : "/home")}
                   >
-                    本棚に戻る
+                    {isFirstRegistration ? "絵本をつくりはじめる" : "本棚に戻る"}
                   </Button>
                 </div>
               </div>

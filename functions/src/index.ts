@@ -4,6 +4,7 @@ if (getApps().length === 0) initializeApp();
 
 export { generateBook } from "./generate-book";
 export { deleteBook } from "./delete-book";
+export { createBook } from "./create-book";
 export { deleteChildProfile } from "./delete-child-profile";
 export { deleteUserAccount } from "./delete-user-account";
 export { cleanupExpired } from "./cleanup-expired";
@@ -28,6 +29,7 @@ export { generateStoryPitch } from "./generate-story-pitch";
 export { analyzeChildPhoto } from "./analyze-child-photo";
 export { onBookCompletion_triggerLLMAutoReview } from "./auto-review";
 export { submitAppFeedback } from "./submit-app-feedback";
+export { shareOgp } from "./share-ogp";
 export { updateBookTitle } from "./update-book-title";
 export { updateBookPageText } from "./update-page-text";
 export { generateBookPdf } from "./generate-book-pdf";
