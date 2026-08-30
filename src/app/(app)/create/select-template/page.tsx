@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { collection, addDoc } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/components/step-indicator";
@@ -15,21 +16,45 @@ import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCategoryGroups } from "@/lib/hooks/use-category-groups";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { useChildren } from "@/lib/hooks/use-children";
+import { useBooks } from "@/lib/hooks/use-books";
+import { db } from "@/lib/firebase";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { getRecommendedTemplates, buildFirstRunBookPayload, isFirstRun } from "@/lib/first-run";
 import { cn } from "@/lib/utils";
 import { getUserFriendlyError } from "@/lib/user-error-mapping";
 
 function SelectTemplateContent() {
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
+  const { children, loading: childrenLoading } = useChildren(user?.uid);
+  const { books, loading: booksLoading } = useBooks(user?.uid);
   const { templates, loading, error } = useTemplates();
   const { categoryGroups, loading: categoryLoading } = useCategoryGroups();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailTemplateId, setDetailTemplateId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const childId = searchParams.get("childId");
+  const isRecommendedQuery = searchParams.get("recommended") === "1";
+
+  const [hasUserSwitchedTrack, setHasUserSwitchedTrack] = useState(false);
+  const [isTrackA, setIsTrackA] = useState<boolean>(isRecommendedQuery);
+
+  useEffect(() => {
+    if (isRecommendedQuery) {
+      setIsTrackA(true);
+      return;
+    }
+    if (!booksLoading && !childrenLoading && !hasUserSwitchedTrack) {
+      setIsTrackA(isFirstRun(books.length, children.length));
+    }
+  }, [booksLoading, childrenLoading, books.length, children.length, isRecommendedQuery, hasUserSwitchedTrack]);
+
   const selectedCategoryGroupId = searchParams.get("category") ?? "all";
   const categoryGroupMap = useMemo(
     () => new Map(categoryGroups.map((group) => [group.id, group])),
@@ -124,10 +149,66 @@ function SelectTemplateContent() {
       });
   }, [categoryGroupMap, filteredTemplates, selectedCategoryGroupId]);
 
+  const selectedChild = useMemo(
+    () => children.find((c) => c.id === childId) ?? children[0] ?? null,
+    [children, childId]
+  );
+
+  const recommendedTemplates = useMemo(
+    () => getRecommendedTemplates(templates, selectedChild?.age),
+    [templates, selectedChild?.age]
+  );
+
+  useEffect(() => {
+    if (isTrackA && recommendedTemplates.length > 0 && !recommendedTemplates.some((t) => t.id === selectedId)) {
+      setSelectedId(recommendedTemplates[0].id);
+    }
+  }, [isTrackA, recommendedTemplates, selectedId]);
+
+  const productPlan = resolveProductPlan(profile);
+  const quota = PLAN_CONFIGS[productPlan]?.monthlyBookQuota ?? 1;
+  const consumed = profile?.monthlyGenerationCount ?? 0;
+  const remaining = Math.max(0, quota - consumed);
+
   const updateCategory = (category: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("category", category);
     router.replace(`/create/select-template?${params.toString()}`);
+  };
+
+  const handleStartTrackA = async (templateToUse?: typeof templates[0]) => {
+    const targetTemplate = templateToUse ?? templates.find((t) => t.id === selectedId);
+    if (!targetTemplate || !user) return;
+
+    setCreating(true);
+    setCreateError(null);
+
+    try {
+      trackAnalyticsEvent("first_run_track_selected", { track: "A" });
+      trackAnalyticsEvent("first_run_completed", {
+        templateId: targetTemplate.id,
+      });
+
+      const bookPayload = buildFirstRunBookPayload({
+        userId: user.uid,
+        child: selectedChild,
+        template: targetTemplate,
+      });
+
+      const bookRef = await addDoc(collection(db, "books"), bookPayload);
+      router.push(`/generating?id=${bookRef.id}`);
+    } catch (err) {
+      console.error("Failed to start Track A generation:", err);
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setCreateError(`作成を開始できませんでした: ${message}`);
+      setCreating(false);
+    }
+  };
+
+  const switchToTrackB = () => {
+    trackAnalyticsEvent("first_run_track_selected", { track: "B" });
+    setHasUserSwitchedTrack(true);
+    setIsTrackA(false);
   };
 
   const handleNext = (overrideId?: string) => {
@@ -146,6 +227,112 @@ function SelectTemplateContent() {
 
     router.push(`/create/select-companion?${params.toString()}`);
   };
+
+  if (isTrackA) {
+    return (
+      <PageTransition className="mx-auto max-w-4xl px-4 py-4 pb-28 md:py-8 md:pb-32">
+        <BackButton className="mb-3" />
+        <StepIndicator currentStep={1} totalSteps={4} />
+
+        <div className="mt-6 text-center">
+          <span className="inline-block rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+            おまかせでつくる ✨
+          </span>
+          <h1 className="mt-2 text-xl font-bold text-purple-900 md:text-2xl">
+            {selectedChild ? `${selectedChild.nickname || selectedChild.displayName}さんにおすすめの絵本` : "おすすめの絵本"}
+          </h1>
+          <p className="mt-1 text-xs font-medium text-violet-600 md:text-sm">
+            お子様の年齢に合わせた人気テーマから選ぶだけで、すぐに絵本を作成できます。
+          </p>
+
+          <div className="mt-3 inline-block rounded-xl border border-purple-200 bg-purple-50/80 px-4 py-1.5 text-xs text-purple-800">
+            💡 無料プランの1冊を使って作成します（今月あと {remaining} 冊）
+          </div>
+        </div>
+
+        {createError && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-center text-xs text-red-600">
+            {createError}
+          </div>
+        )}
+
+        {loading ? (
+          <p className="mt-8 text-center text-violet-400">読み込み中...</p>
+        ) : error ? (
+          <div role="alert" className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700 space-y-3">
+            <p className="font-semibold">テーマの読み込みに失敗しました</p>
+            <p className="text-sm">{getUserFriendlyError(error).message}</p>
+          </div>
+        ) : (
+          <div className="mt-6">
+            <StaggerContainer
+              role="radiogroup"
+              aria-label="おすすめテーマを選択"
+              className="grid grid-cols-1 gap-4 sm:grid-cols-3"
+            >
+              {recommendedTemplates.map((template) => (
+                <StaggerItem key={template.id}>
+                  <ThemeCard
+                    template={template}
+                    selected={selectedId === template.id}
+                    onSelect={() => {
+                      setSelectedId(template.id);
+                      setDetailTemplateId(template.id);
+                    }}
+                    availablePageCounts={getAvailablePageCounts(template)}
+                  />
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+
+            <div className="mt-8 text-center">
+              <button
+                type="button"
+                onClick={switchToTrackB}
+                className="text-xs text-violet-500 underline hover:text-purple-700"
+              >
+                もっと他のテーマやこだわり設定を見る（こだわり作成） →
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-purple-100 bg-white/95 backdrop-blur-sm px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3">
+          <div className="mx-auto max-w-lg">
+            <Button
+              size="lg"
+              className="w-full"
+              disabled={!selectedId || creating}
+              onClick={() => handleStartTrackA()}
+            >
+              {creating ? "作成を開始中..." : "この絵本を作る！"}
+            </Button>
+          </div>
+        </div>
+
+        <TemplateDetailDialog
+          template={detailTemplateId ? (templates.find((t) => t.id === detailTemplateId) ?? null) : null}
+          variants={detailTemplateId ? (() => {
+            const t = templates.find((t) => t.id === detailTemplateId);
+            return t ? (templateVariantsMap.get(getTemplateBaseId(t)) ?? []) : [];
+          })() : []}
+          allowedPageCounts={
+            PLAN_CONFIGS[
+              resolveProductPlan(profile)
+            ]?.allowedPageCounts
+          }
+          isOpen={detailTemplateId !== null}
+          onClose={() => setDetailTemplateId(null)}
+          onConfirm={(confirmedId) => {
+            setSelectedId(confirmedId);
+            setDetailTemplateId(null);
+            const confirmedTemplate = templates.find((t) => t.id === confirmedId);
+            handleStartTrackA(confirmedTemplate);
+          }}
+        />
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition className="mx-auto max-w-6xl px-4 py-4 pb-28 md:py-8 md:pb-32">

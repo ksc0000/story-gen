@@ -16,6 +16,11 @@ vi.mock("@/lib/hooks/use-auth", () => ({
 }));
 
 // #712 のマージで page が useChildren(Firestore) を使うようになったため必要
+// #726 で page が useBooks(Firestore) を使うようになったため必要
+vi.mock("@/lib/hooks/use-books", () => ({
+  useBooks: () => ({ books: [], loading: false, error: null }),
+}));
+
 vi.mock("@/lib/hooks/use-children", () => ({
   useChildren: () => ({ children: [], loading: false, error: null }),
 }));
