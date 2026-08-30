@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,21 +11,33 @@ import { FloatingParticles } from "@/components/floating-particles";
 import { PageTransition } from "@/components/page-transition";
 import { AnimatedCard } from "@/components/animated-card";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-import { useState } from "react";
+import { validateReturnTo, getAndClearReturnTo, saveReturnTo } from "@/lib/return-to";
 import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
 
-export default function LoginPage() {
+function LoginContent() {
   const { user, loading, signInWithGoogle } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
+  // Save returnTo from query param if provided
+  useEffect(() => {
+    const queryReturnTo = searchParams.get("returnTo");
+    if (queryReturnTo) {
+      saveReturnTo(queryReturnTo);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/home");
+      const queryReturnTo = searchParams.get("returnTo");
+      const storedReturnTo = getAndClearReturnTo();
+      const returnToCandidate = queryReturnTo || storedReturnTo;
+      const targetUrl = validateReturnTo(returnToCandidate, "/home");
+      router.replace(targetUrl);
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, searchParams]);
 
   const handleSignIn = async () => {
     setErrorMessage(null);
@@ -122,5 +134,17 @@ export default function LoginPage() {
         </AnimatedCard>
       </PageTransition>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <main className="app-shell flex min-h-screen items-center justify-center">
+        <p className="text-violet-600">読み込み中...</p>
+      </main>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

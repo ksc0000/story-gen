@@ -9,6 +9,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({
     replace: vi.fn(),
   }),
+  // #713 で LoginContent が returnTo の解決に useSearchParams を使うようになったため必要
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 beforeEach(() => {
