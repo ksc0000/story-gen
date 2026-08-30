@@ -2,8 +2,7 @@ import { serverTimestamp, Timestamp } from "firebase/firestore";
 import type {
   ChildProfileDoc,
   ChildProfileSnapshot,
-  TemplateDoc,
-} from "@/lib/types";
+  TemplateDoc, IllustrationStyle } from "@/lib/types";
 import { getAgeReadingDisplayProfile } from "@/lib/age-reading-profile";
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import { getDefaultProductPlanForCreationMode, PLAN_CONFIGS } from "@/lib/plans";
@@ -128,7 +127,10 @@ export function buildFirstRunBookPayload({
         visualProfile: { version: 1 },
       };
 
-  const selectedStyle = template.fixedStory?.style ?? "soft_watercolor";
+  // TemplateDoc / FixedStoryTemplate にスタイル指定のフィールドは存在しないため、
+  // Track A では既定スタイル(soft_watercolor)で作成する。
+  // 将来テンプレートごとの既定スタイルを持たせる場合はここで解決する。
+  const selectedStyle: IllustrationStyle = "soft_watercolor";
   const selectedStyleProfile = getIllustrationStyleProfile(selectedStyle);
   const productPlanParam = getDefaultProductPlanForCreationMode("fixed_template");
   const selectedPlanConfig = PLAN_CONFIGS[productPlanParam] ?? PLAN_CONFIGS.free;
