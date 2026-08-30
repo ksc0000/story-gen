@@ -43,6 +43,9 @@ function SelectCompanionContent() {
 
   const childId = searchParams.get("childId");
   const mode = (searchParams.get("mode") as CreationMode | null) ?? "guided_ai";
+  const isFixed = mode === "fixed_template";
+  const currentStep = isFixed ? 4 : 3;
+  const totalSteps = isFixed ? 6 : 5;
   const protagonistType = searchParams.get("protagonistType");
 
   // If companion was already chosen as protagonist in select-child, skip this screen
@@ -106,7 +109,7 @@ function SelectCompanionContent() {
   return (
     <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
       <BackButton className="mb-3" />
-      <StepIndicator currentStep={1} />
+      <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
 
       <div className="mt-6 text-center">
         <h1 className="text-xl font-bold text-purple-900">なかよしキャラを選びましょう</h1>

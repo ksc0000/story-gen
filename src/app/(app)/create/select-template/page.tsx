@@ -337,7 +337,7 @@ function SelectTemplateContent() {
   return (
     <PageTransition className="mx-auto max-w-6xl px-4 py-4 pb-28 md:py-8 md:pb-32">
       <BackButton className="mb-3" />
-      <StepIndicator currentStep={1} />
+      <StepIndicator currentStep={3} totalSteps={6} />
 
       <div className="mt-6">
         <div className="text-center mb-4">
