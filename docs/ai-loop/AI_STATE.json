@@ -283,6 +283,7 @@
     "PR #719: fix(share): OGP SSRのrewrite優先度問題を修正 (merged)",
     "PR #720: docs(ux): 初回体験・作成フロー再設計 (#705 #673) (merged)",
     "PR #725: fix(create): display actual step numbers and total steps in creation flow (merged)",
+    "PR #726: feat(first-run): implement Track A 4-screen direct route (merged)",
     "PR #727: test(quality): daily-metrics のJST日境界計算にテストを追加 (merged)",
     "PR #728: test(quality): stale-detection のクリーンアップ判定ロジックにテストを追加 (merged)",
     "PR #729: fix(ci): デプロイworkflow復旧 — 型エラー修正とApp Checkサイトキー追加 (merged)",
