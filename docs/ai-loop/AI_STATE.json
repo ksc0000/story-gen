@@ -296,6 +296,7 @@
     "PR #743: feat(api): 絵本作成のCallable API を追加 (#734 Phase 1) (merged)",
     "PR #746: fix(test): login.test.tsx の型エラーを修正（自動デプロイ復旧） (merged)",
     "PR #747: fix(build): (app)レイアウトのuseSearchParamsをSuspense境界に隔離 (merged)",
+    "PR #748: fix(test): cinematic-viewer テストフィクスチャの型不足を補完（main復旧） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
