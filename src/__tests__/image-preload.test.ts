@@ -41,6 +41,7 @@ describe("image-preload utility", () => {
           text: "Sample page",
           imageUrl: "https://example.com/page1.jpg",
           status: "completed",
+          imagePrompt: "a gentle watercolor scene",
         },
       };
       expect(getReadingItemImageUrl(item)).toBe("https://example.com/page1.jpg");
@@ -54,6 +55,8 @@ describe("image-preload utility", () => {
           pageNumber: 0,
           text: "Sample page without image",
           status: "generating",
+          imageUrl: "",
+          imagePrompt: "a gentle watercolor scene",
         },
       };
       expect(getReadingItemImageUrl(item)).toBeNull();
@@ -185,6 +188,7 @@ describe("image-preload utility", () => {
             text: "Page 1",
             imageUrl: "https://example.com/page1.png",
             status: "completed",
+          imagePrompt: "a gentle watercolor scene",
           },
         },
       ];

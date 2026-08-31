@@ -1,5 +1,6 @@
 import { render, fireEvent, screen, cleanup } from "@testing-library/react";
-import React, { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import React from "react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { BookViewer, buildReadingItems, SWIPE_OFFSET_THRESHOLD, SWIPE_VELOCITY_THRESHOLD } from "@/components/book-viewer";
 import type { PageDoc } from "@/lib/types";
 import type { ReactNode, HTMLAttributes } from "react";
@@ -54,7 +55,7 @@ vi.mock("framer-motion", async () => {
           void _transition;
           void _custom;
           // eslint-disable-next-line @next/next/no-img-element
-          return <img ref={ref} src={src} alt={alt} {...(validProps as HTMLAttributes<HTMLImageElement>)} />;
+          return <img ref={ref} src={src as string | undefined} alt={(alt as string) ?? ""} {...(validProps as HTMLAttributes<HTMLImageElement>)} />;
         }
       ),
     },

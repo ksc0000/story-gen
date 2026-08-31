@@ -1,6 +1,6 @@
 import { render, fireEvent, screen, cleanup } from "@testing-library/react";
-import React, { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { CinematicViewer } from "@/components/cinematic-viewer";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { CinematicViewer, getAutoplayIntervalMs, AUTOPLAY_BASE_MS, AUTOPLAY_COVER_MS, AUTOPLAY_MIN_MS, AUTOPLAY_MAX_MS } from "@/components/cinematic-viewer";
 import type { ReadingItem } from "@/components/book-viewer";
 import type { ReactNode, HTMLAttributes } from "react";
 
@@ -71,7 +71,7 @@ vi.mock("framer-motion", async () => {
           void _transition;
           void _custom;
           // eslint-disable-next-line @next/next/no-img-element
-          return <img ref={ref} src={src} alt={alt} {...(validProps as HTMLAttributes<HTMLImageElement>)} />;
+          return <img ref={ref} src={src as string | undefined} alt={(alt as string) ?? ""} {...(validProps as HTMLAttributes<HTMLImageElement>)} />;
         }
       ),
     },
@@ -86,6 +86,7 @@ const mockItems: ReadingItem[] = [
     page: {
       pageNumber: 0,
       text: "テスト本文1",
+      imagePrompt: "a watercolor scene of a child playing",
       imageUrl: "https://example.com/1.png",
       status: "completed",
     },
@@ -96,6 +97,7 @@ const mockItems: ReadingItem[] = [
     page: {
       pageNumber: 1,
       text: "テスト本文2",
+      imagePrompt: "a watercolor scene of a child sleeping",
       imageUrl: "https://example.com/2.png",
       status: "completed",
     },
@@ -188,5 +190,63 @@ describe("CinematicViewer UI and safe area tests", () => {
 
     fireEvent.click(retryBtn);
     expect(screen.getByText("絵を準備中...")).toBeInTheDocument();
+  });
+});
+
+describe("getAutoplayIntervalMs calculation logic", () => {
+  it("returns cover fixed interval (4500ms) for cover title spread or undefined item", () => {
+    expect(getAutoplayIntervalMs()).toBe(AUTOPLAY_COVER_MS);
+    expect(getAutoplayIntervalMs({ kind: "cover_title_spread", imageUrl: "https://example.com/cover.png", title: "テスト絵本" })).toBe(AUTOPLAY_COVER_MS);
+  });
+
+  it("clamps short text (<= 9 chars) to minimum interval (3000ms)", () => {
+    // 0 chars: base 2500 -> clamped to 3000
+    const emptyItem: ReadingItem = {
+      kind: "story_page",
+      storyPageIndex: 0,
+      page: { pageNumber: 0, text: "", status: "completed", imageUrl: "https://example.com/p.png", imagePrompt: "a gentle watercolor scene" },
+    };
+    expect(getAutoplayIntervalMs(emptyItem)).toBe(AUTOPLAY_MIN_MS);
+
+    // 9 chars: 2500 + 9 * 55 = 2995ms -> clamped to 3000ms
+    const shortItem: ReadingItem = {
+      kind: "story_page",
+      storyPageIndex: 0,
+      page: { pageNumber: 0, text: "あいうえおかきくけ", status: "completed", imageUrl: "https://example.com/p.png", imagePrompt: "a gentle watercolor scene" },
+    };
+    expect(getAutoplayIntervalMs(shortItem)).toBe(AUTOPLAY_MIN_MS);
+  });
+
+  it("calculates expected interval for short-medium text (~30 chars)", () => {
+    // 30 chars: 2500 + 30 * 55 = 4150ms
+    const text30 = "あ".repeat(30);
+    const item30: ReadingItem = {
+      kind: "story_page",
+      storyPageIndex: 0,
+      page: { pageNumber: 0, text: text30, status: "completed", imageUrl: "https://example.com/p.png", imagePrompt: "a gentle watercolor scene" },
+    };
+    expect(getAutoplayIntervalMs(item30)).toBe(4150);
+  });
+
+  it("calculates expected interval for medium text (100 chars)", () => {
+    // 100 chars: 2500 + 100 * 55 = 8000ms
+    const text100 = "あ".repeat(100);
+    const item100: ReadingItem = {
+      kind: "story_page",
+      storyPageIndex: 0,
+      page: { pageNumber: 0, text: text100, status: "completed", imageUrl: "https://example.com/p.png", imagePrompt: "a gentle watercolor scene" },
+    };
+    expect(getAutoplayIntervalMs(item100)).toBe(8000);
+  });
+
+  it("clamps long text (>= 137 chars) to maximum interval (10000ms)", () => {
+    // 150 chars: 2500 + 150 * 55 = 10750ms -> clamped to 10000ms
+    const text150 = "あ".repeat(150);
+    const item150: ReadingItem = {
+      kind: "story_page",
+      storyPageIndex: 0,
+      page: { pageNumber: 0, text: text150, status: "completed", imageUrl: "https://example.com/p.png", imagePrompt: "a gentle watercolor scene" },
+    };
+    expect(getAutoplayIntervalMs(item150)).toBe(AUTOPLAY_MAX_MS);
   });
 });

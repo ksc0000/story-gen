@@ -4,7 +4,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaV3Provider, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 import { isDemoMode } from "./demo";
 
@@ -38,9 +38,21 @@ if (typeof window !== "undefined" && !isDemoMode) {
     (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN =
       process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_DEBUG_TOKEN ?? true;
   }
-  if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+  // App Check: Enterprise キーがあればそちらを使う。
+  // クラシック reCAPTCHA は 2024 年以降キーの新規発行が止まっており、
+  // Firebase Console 側も v3 の登録フォームを無効化しているため Enterprise が正路。
+  // 両対応にしてあるのは、コードのデプロイと Console 側の登録を別々に行えるようにするため
+  // （プロバイダとキーが食い違うと appCheck/recaptcha-error になる）。
+  const enterpriseSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY;
+  const legacySiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  if (enterpriseSiteKey) {
     initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
+      provider: new ReCaptchaEnterpriseProvider(enterpriseSiteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } else if (legacySiteKey) {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(legacySiteKey),
       isTokenAutoRefreshEnabled: true,
     });
   }
