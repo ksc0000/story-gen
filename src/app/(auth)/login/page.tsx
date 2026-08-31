@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,16 +11,46 @@ import { FloatingParticles } from "@/components/floating-particles";
 import { PageTransition } from "@/components/page-transition";
 import { AnimatedCard } from "@/components/animated-card";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { validateReturnTo, getAndClearReturnTo, saveReturnTo } from "@/lib/return-to";
+import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
 
-export default function LoginPage() {
+function LoginContent() {
   const { user, loading, signInWithGoogle } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
+  // Save returnTo from query param if provided
+  useEffect(() => {
+    const queryReturnTo = searchParams.get("returnTo");
+    if (queryReturnTo) {
+      saveReturnTo(queryReturnTo);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/home");
+      const queryReturnTo = searchParams.get("returnTo");
+      const storedReturnTo = getAndClearReturnTo();
+      const returnToCandidate = queryReturnTo || storedReturnTo;
+      const targetUrl = validateReturnTo(returnToCandidate, "/home");
+      router.replace(targetUrl);
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, searchParams]);
+
+  const handleSignIn = async () => {
+    setErrorMessage(null);
+    setIsSigningIn(true);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      const msg = getUserFriendlyErrorMessage(err);
+      setErrorMessage(msg);
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -54,8 +84,26 @@ export default function LoginPage() {
               <p className="app-subtitle text-sm">AIで絵本を作ろう</p>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
+              {errorMessage && (
+                <div
+                  role="alert"
+                  className="rounded-lg bg-red-50 p-3.5 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                >
+                  <p>{errorMessage}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSignIn}
+                    disabled={isSigningIn}
+                    className="mt-2.5 w-full border-red-200 bg-white text-red-700 hover:bg-red-50 hover:text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+                  >
+                    もう一度試す
+                  </Button>
+                </div>
+              )}
               <Button
-                onClick={signInWithGoogle}
+                onClick={handleSignIn}
+                disabled={isSigningIn}
                 variant="outline"
                 className="w-full py-6 text-base"
               >
@@ -67,6 +115,9 @@ export default function LoginPage() {
                 </svg>
                 Googleでログイン
               </Button>
+              <p className="text-center text-xs font-medium text-purple-700/80 dark:text-purple-300/80">
+                月3冊まで無料・クレジットカード不要
+              </p>
               <p className="text-center text-xs text-gray-400">
                 ログインすることで
                 <Link href="/legal/terms" className="underline hover:text-purple-500">
@@ -83,5 +134,17 @@ export default function LoginPage() {
         </AnimatedCard>
       </PageTransition>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <main className="app-shell flex min-h-screen items-center justify-center">
+        <p className="text-violet-600">読み込み中...</p>
+      </main>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
