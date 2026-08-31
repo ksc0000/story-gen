@@ -8,8 +8,8 @@ import type { BookDoc } from "@/lib/types";
 
 /**
  * 本棚カードをタップしたときの表紙プレビューポップアップ。
- * 水彩フレーム画像の中央窓に実際の表紙を埋め込み、明示的な CTA から
- * 絵本ビューア（生成中は進捗画面）へ遷移する。/home と /bookshelf で共用。
+ * 水彩フレーム画像の中央窓に実際の表紙を埋め込み、明示的な CTA または
+ * 表紙画像タップから絵本ビューア（生成中は進捗画面）へ遷移する。/home と /bookshelf で共用。
  */
 export function BookPreviewDialog({
   book,
@@ -61,51 +61,62 @@ export function BookPreviewDialog({
           <X className="h-4 w-4" />
         </button>
 
-        <div className="mx-auto max-w-[260px] sm:max-w-[300px]">
-          <div className="relative aspect-[3/4] overflow-hidden rounded-[1.6rem] shadow-xl shadow-purple-900/20">
-            <Image
-              src="/images/bookshelf/cover-popup-frame.webp"
-              alt=""
-              fill
-              sizes="300px"
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-x-[21%] bottom-[25%] top-[24%] overflow-hidden rounded-xl bg-white shadow-inner">
-              {book.coverImageUrl ? (
-                <Image
-                  src={book.coverImageUrl}
-                  alt={`${title}の表紙`}
-                  fill
-                  sizes="180px"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-violet-50 to-purple-100 text-violet-300">
-                  <Image src="/images/icons/book.webp" alt="" width={64} height={64} className="opacity-60" />
-                  {book.status === "generating" && (
-                    <span className="text-xs font-medium text-violet-400">生成中...</span>
-                  )}
-                </div>
-              )}
-            </div>
+        {/* ヘッダー＆最上部CTA（位置を上に配置して押しやすく改善） */}
+        <div className="pl-1 pr-8 text-center sm:pl-2">
+          <h2 id="book-preview-title" className="text-lg font-bold leading-snug text-purple-950">
+            {title}
+          </h2>
+          <p className="mt-0.5 text-xs text-violet-500">
+            表紙をひらいて、物語の世界へ。
+          </p>
+          <div className="mt-3">
+            <Link
+              href={href}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-purple-400 to-violet-400 px-6 text-sm font-semibold text-white shadow-[0_4px_0_rgb(139,92,246),0_8px_16px_rgba(167,139,250,0.35)] transition hover:from-purple-500 hover:to-violet-500 active:translate-y-[2px] active:shadow-[0_2px_0_rgb(109,40,217),0_4px_8px_rgba(167,139,250,0.25)]"
+              onClick={onClose}
+            >
+              <BookOpen className="h-4 w-4" />
+              {ctaLabel}
+            </Link>
           </div>
         </div>
 
-        <div className="mt-5 text-center">
-          <h2 id="book-preview-title" className="text-lg font-bold text-purple-950">
-            {title}
-          </h2>
-          <p className="mt-1 text-sm text-violet-500">
-            表紙をひらいて、物語の世界へ。
-          </p>
+        {/* 表紙画像（タップで読書開始可能） */}
+        <div className="mt-4 mx-auto max-w-[240px] sm:max-w-[280px]">
           <Link
             href={href}
-            className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-purple-400 to-violet-400 px-7 text-sm font-semibold text-white shadow-[0_4px_0_rgb(139,92,246),0_8px_16px_rgba(167,139,250,0.35)] transition hover:from-purple-500 hover:to-violet-500 active:translate-y-[2px] active:shadow-[0_2px_0_rgb(109,40,217),0_4px_8px_rgba(167,139,250,0.25)]"
             onClick={onClose}
+            className="group relative block rounded-[1.6rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+            aria-label={`${title}の表紙 (${ctaLabel})`}
           >
-            <BookOpen className="h-4 w-4" />
-            {ctaLabel}
+            <div className="relative aspect-[3/4] overflow-hidden rounded-[1.6rem] shadow-xl shadow-purple-900/20 transition-transform duration-200 group-hover:scale-[1.02] active:scale-[0.98]">
+              <Image
+                src="/images/bookshelf/cover-popup-frame.webp"
+                alt=""
+                fill
+                sizes="300px"
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-x-[21%] bottom-[25%] top-[24%] overflow-hidden rounded-xl bg-white shadow-inner">
+                {book.coverImageUrl ? (
+                  <Image
+                    src={book.coverImageUrl}
+                    alt={`${title}の表紙`}
+                    fill
+                    sizes="180px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-violet-50 to-purple-100 text-violet-300">
+                    <Image src="/images/icons/book.webp" alt="" width={64} height={64} className="opacity-60" />
+                    {book.status === "generating" && (
+                      <span className="text-xs font-medium text-violet-400">生成中...</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </Link>
         </div>
       </div>
