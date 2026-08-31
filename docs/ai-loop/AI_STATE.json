@@ -275,6 +275,7 @@
     "PR #686: test(quality): style-exposureのテストカバレッジを追加 (merged)",
     "PR #688: feat(cinematic-viewer): calculate autoplay interval proportionally to character count (merged)",
     "PR #689: docs(security): App Check段階導入ランブック(Stage1監視)を追加 (merged)",
+    "PR #709: Make title and page edit operations easily discoverable on mobile/desktop (merged)",
     "PR #710: 絵本ビューア: 画像ロード状態表示と次ページのプリロード実装 (merged)",
     "PR #711: [UIUX] Allow direct reading from book preview cover tap and reposition CTA to top (merged)",
     "PR #712: Redirect to book creation after first child onboarding (merged)",
