@@ -106,21 +106,14 @@ export default function ChildOnboardingPage() {
         <div data-testid="onboarding-guide" className="mb-8 overflow-hidden rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/80 via-white to-violet-50/60 p-5 shadow-sm backdrop-blur-sm">
           <div className="flex items-center gap-2 mb-3">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-sm">💡</span>
-            <h2 className="text-sm font-bold text-purple-900">EhonAIへようこそ！サービスのご案内</h2>
+            <h2 className="text-sm font-bold text-purple-900">Ehoria へようこそ！はじめる前に</h2>
           </div>
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 text-xs text-purple-800">
             <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
               <span className="text-base">🎁</span>
               <div>
                 <span className="font-semibold text-purple-900 block">月3冊まで無料</span>
-                <span className="text-violet-500">クレジットカード登録不要で始められます</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
-              <span className="text-base">💳</span>
-              <div>
-                <span className="font-semibold text-purple-900 block">クレカ不要</span>
-                <span className="text-violet-500">お試しは無料ですぐにご利用可能</span>
+                <span className="text-violet-500">クレジットカードの登録は要りません</span>
               </div>
             </div>
             <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2.5 border border-purple-100/60 shadow-xs">
