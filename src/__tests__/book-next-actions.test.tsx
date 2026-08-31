@@ -12,8 +12,8 @@ const mockBookPrivate = {
   theme: "adventure",
   status: "completed",
   pageCount: 4,
-  createdAt: {} as any,
-  updatedAt: {} as any,
+  createdAt: {} as unknown as BookDoc["createdAt"],
+  updatedAt: {} as unknown as BookDoc["updatedAt"],
   public: false,
 } as unknown as BookDoc & { id: string };
 
