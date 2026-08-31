@@ -53,6 +53,8 @@ function SelectChildContent() {
   const fromTemplate = searchParams.get("tpl") === "1";
   const tplMode = searchParams.get("mode") as CreationMode | null;
   const tplName = searchParams.get("tplName");
+  const currentMode = tplMode || (searchParams.get("mode") as CreationMode | null);
+  const totalSteps = currentMode && currentMode !== "fixed_template" ? 5 : 6;
 
   const productPlan = resolveProductPlan(profile);
   const planConfig = PLAN_CONFIGS[productPlan];
@@ -117,7 +119,7 @@ function SelectChildContent() {
   return (
     <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
       <BackButton className="mb-3" />
-      <StepIndicator currentStep={1} />
+      <StepIndicator currentStep={1} totalSteps={totalSteps} />
 
       <div className="mt-6 text-center">
         <h1 className="text-xl font-bold text-purple-900">誰を主人公にしますか？</h1>

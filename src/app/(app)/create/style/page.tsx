@@ -289,10 +289,14 @@ function StyleSelectionPageContent() {
     }
   };
 
+  const isFixedStyle = mode === "fixed_template";
+  const styleStep = isFixedStyle ? 6 : 5;
+  const styleTotalSteps = isFixedStyle ? 6 : 5;
+
   return (
     <PageTransition className="mx-auto max-w-5xl px-4 pb-28 pt-8">
       <BackButton className="mb-3" />
-      <StepIndicator currentStep={3} />
+      <StepIndicator currentStep={styleStep} totalSteps={styleTotalSteps} />
       <h1 className="mt-6 text-center text-xl font-bold text-purple-900">絵のタッチを選んでね</h1>
       <p className="mt-2 text-center text-sm text-violet-500">
         {childName ? `${childName}を主人公にします。` : "主人公が未選択です。"}

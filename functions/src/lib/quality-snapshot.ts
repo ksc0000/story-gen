@@ -46,6 +46,24 @@ export function buildQualitySnapshotDoc(
   };
 }
 
+/**
+ * Build the final write payload with correct timestamp semantics.
+ * - New doc: sets both createdAtMs and updatedAtMs to nowMs.
+ * - Existing doc: preserves existing createdAtMs, updates updatedAtMs.
+ * Pure function — no side effects.
+ */
+export function buildQualitySnapshotWritePayload(
+  doc: ReturnType<typeof buildQualitySnapshotDoc>,
+  nowMs: number,
+  existingCreatedAtMs: number | undefined,
+) {
+  return {
+    ...doc,
+    createdAtMs: existingCreatedAtMs ?? nowMs,
+    updatedAtMs: nowMs,
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /*  Shared snapshot runner                                             */
 /* ------------------------------------------------------------------ */
@@ -130,15 +148,16 @@ export async function saveQualitySnapshot(
     : undefined;
   const isNew = !existingSnap.exists;
 
-  const payload = {
-    ...docData,
-    createdAtMs: existingCreatedAtMs ?? nowMs,
-    updatedAtMs: nowMs,
-    updatedAt: FieldValue.serverTimestamp(),
-    ...(isNew ? { createdAt: FieldValue.serverTimestamp() } : {}),
-  };
+  const payload = buildQualitySnapshotWritePayload(docData, nowMs, existingCreatedAtMs);
 
-  await docRef.set(payload, { merge: true });
+  await docRef.set(
+    {
+      ...payload,
+      updatedAt: FieldValue.serverTimestamp(),
+      ...(isNew ? { createdAt: FieldValue.serverTimestamp() } : {}),
+    },
+    { merge: true },
+  );
 
   logger.info(`${config.window} Quality snapshot saved`, {
     source: config.source,

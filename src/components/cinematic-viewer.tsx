@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, Pause, ChevronLeft, ChevronRight, BookOpen, MessageCircle, RotateCcw, SunMoon } from "lucide-react";
+import { ViewerImage } from "./viewer-image";
+import { preloadNextReadingItemImage } from "@/lib/image-preload";
 import type { ReadingItem } from "./book-viewer";
 
 interface CinematicViewerProps {
@@ -14,9 +16,35 @@ interface CinematicViewerProps {
   onFeedback?: () => void;
 }
 
-const AUTOPLAY_INTERVAL_MS = 4500;
+/**
+ * 自動再生の送り間隔に関する定数（ミリ秒）
+ * 読み聞かせ速度の目安（ひらがな主体で1文字約55ms）に基づき、
+ * 基本時間 + 文字数 × 単価 で動的にページ閲覧時間を計算する。
+ */
+export const AUTOPLAY_BASE_MS = 2500;
+export const AUTOPLAY_PER_CHAR_MS = 55;
+export const AUTOPLAY_MIN_MS = 3000;
+export const AUTOPLAY_MAX_MS = 10000;
+export const AUTOPLAY_COVER_MS = 4500;
+
 const HINT_VISIBLE_MS = 4000;
 const ROTATE_HINT_MS = 3000;
+
+/**
+ * ページの文字数に応じて自動送り間隔（ミリ秒）を算出する。
+ * 表紙や未定義アイテムは固定時間 (4.5秒) を返し、
+ * 本文ページは文字数比例 (base 2.5s + 1文字55ms) で最小3秒〜最大10秒にクランプする。
+ */
+export function getAutoplayIntervalMs(item?: ReadingItem): number {
+  if (!item || item.kind === "cover_title_spread") {
+    return AUTOPLAY_COVER_MS;
+  }
+
+  const text = item.page.text ?? "";
+  const calculated = AUTOPLAY_BASE_MS + text.length * AUTOPLAY_PER_CHAR_MS;
+
+  return Math.min(Math.max(calculated, AUTOPLAY_MIN_MS), AUTOPLAY_MAX_MS);
+}
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
@@ -89,11 +117,18 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
     setCurrent((c) => { if (c <= 0) return c; setDir(-1); return c - 1; });
   }, [showEndCard]);
 
+  const item = items[current];
+  const currentInterval = getAutoplayIntervalMs(item);
+
+  useEffect(() => {
+    preloadNextReadingItemImage(items, current);
+  }, [items, current]);
+
   useEffect(() => {
     if (!isPlaying) { if (timerRef.current) clearTimeout(timerRef.current); return; }
-    timerRef.current = setTimeout(goNext, AUTOPLAY_INTERVAL_MS);
+    timerRef.current = setTimeout(goNext, currentInterval);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [isPlaying, current, goNext]);
+  }, [isPlaying, currentInterval, goNext]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -135,7 +170,6 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
     setShowControls((prev) => !prev);
   };
 
-  const item = items[current];
   if (!item) return null;
 
   const imageUrl = item.kind === "cover_title_spread" ? item.imageUrl : item.page.imageUrl ?? null;
@@ -226,20 +260,24 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
               {/* Left: image */}
               <div className="relative h-full w-1/2 shrink-0 overflow-hidden">
                 {imageUrl ? (
-                  <motion.img
+                  <ViewerImage
                     src={imageUrl}
                     alt={`${title} ページ${current + 1}`}
+                    dark
+                    isCinematic
                     className="h-full w-full object-cover"
-                    initial={{ scale: 1.05 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: AUTOPLAY_INTERVAL_MS / 1000 + 0.5, ease: "linear" }}
+                    motionProps={{
+                      initial: { scale: 1.05 },
+                      animate: { scale: 1 },
+                      transition: { duration: currentInterval / 1000 + 0.5, ease: "linear" },
+                    }}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center bg-purple-950">
                     <span className="text-6xl opacity-30">📖</span>
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/30" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/30 pointer-events-none" />
               </div>
 
               {/* Right: text panel */}
@@ -301,20 +339,24 @@ export function CinematicViewer({ items, initialIndex = 0, title, originalTitle,
               className="absolute inset-0"
             >
               {imageUrl ? (
-                <motion.img
+                <ViewerImage
                   src={imageUrl}
                   alt={`${title} ページ${current + 1}`}
+                  dark
+                  isCinematic
                   className="h-full w-full object-cover"
-                  initial={{ scale: 1.06 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: AUTOPLAY_INTERVAL_MS / 1000 + 0.5, ease: "linear" }}
+                  motionProps={{
+                    initial: { scale: 1.06 },
+                    animate: { scale: 1 },
+                    transition: { duration: currentInterval / 1000 + 0.5, ease: "linear" },
+                  }}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center bg-purple-950">
                   <span className="text-6xl opacity-30">📖</span>
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent pointer-events-none" />
             </motion.div>
           </AnimatePresence>
         )}

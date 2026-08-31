@@ -1,6 +1,67 @@
-import { describe, it, expect } from "vitest";
-import { buildReadingItems, SWIPE_OFFSET_THRESHOLD, SWIPE_VELOCITY_THRESHOLD } from "@/components/book-viewer";
+import { render, fireEvent, screen, cleanup } from "@testing-library/react";
+import React from "react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { BookViewer, buildReadingItems, SWIPE_OFFSET_THRESHOLD, SWIPE_VELOCITY_THRESHOLD } from "@/components/book-viewer";
 import type { PageDoc } from "@/lib/types";
+import type { ReactNode, HTMLAttributes } from "react";
+
+// Mock framer-motion to avoid animation issues in tests
+vi.mock("framer-motion", async () => {
+  const React = await import("react");
+  return {
+    motion: {
+      div: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => {
+        const {
+          animate: _animate,
+          exit: _exit,
+          initial: _initial,
+          variants: _variants,
+          transition: _transition,
+          custom: _custom,
+          drag: _drag,
+          dragConstraints: _dragConstraints,
+          dragElastic: _dragElastic,
+          onDragEnd: _onDragEnd,
+          ...validProps
+        } = props;
+        void _animate;
+        void _exit;
+        void _initial;
+        void _variants;
+        void _transition;
+        void _custom;
+        void _drag;
+        void _dragConstraints;
+        void _dragElastic;
+        void _onDragEnd;
+        return <div {...(validProps as HTMLAttributes<HTMLDivElement>)}>{children}</div>;
+      },
+      // eslint-disable-next-line react/display-name
+      img: React.forwardRef<HTMLImageElement, { src?: string; alt?: string; [key: string]: unknown }>(
+        ({ src, alt, ...props }, ref) => {
+          const {
+            animate: _animate,
+            exit: _exit,
+            initial: _initial,
+            variants: _variants,
+            transition: _transition,
+            custom: _custom,
+            ...validProps
+          } = props;
+          void _animate;
+          void _exit;
+          void _initial;
+          void _variants;
+          void _transition;
+          void _custom;
+          // eslint-disable-next-line @next/next/no-img-element
+          return <img ref={ref} src={src as string | undefined} alt={(alt as string) ?? ""} {...(validProps as HTMLAttributes<HTMLImageElement>)} />;
+        }
+      ),
+    },
+    AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
+  };
+});
 
 function makePage(pageNumber: number, overrides?: Partial<PageDoc>): PageDoc {
   return {
@@ -202,5 +263,51 @@ describe("swipe thresholds", () => {
 
   it("offset threshold is less than velocity threshold", () => {
     expect(SWIPE_OFFSET_THRESHOLD).toBeLessThan(SWIPE_VELOCITY_THRESHOLD);
+  });
+});
+
+describe("BookViewer image loading, skeleton, error retry, and decoding='async'", () => {
+  beforeEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("renders loading skeleton ('絵を準備中...') and img with decoding='async'", () => {
+    render(<BookViewer pages={basePages} title="テスト絵本" />);
+
+    // Skeleton indicator present while loading
+    const skeletons = screen.getAllByText("絵を準備中...");
+    expect(skeletons.length).toBeGreaterThan(0);
+
+    // img has decoding="async" attribute
+    const images = document.querySelectorAll("img");
+    expect(images.length).toBeGreaterThan(0);
+    images.forEach((img) => {
+      expect(img.getAttribute("decoding")).toBe("async");
+    });
+  });
+
+  it("shows error fallback with retry button when image load fails", () => {
+    render(<BookViewer pages={basePages} title="テスト絵本" />);
+
+    const images = document.querySelectorAll("img");
+    expect(images.length).toBeGreaterThan(0);
+
+    // Trigger onError on the image
+    fireEvent.error(images[0]);
+
+    // Error message and retry button appear
+    const errorMsg = screen.getAllByText("画像を読み込めませんでした");
+    expect(errorMsg.length).toBeGreaterThan(0);
+
+    const retryBtn = screen.getAllByRole("button", { name: "再試行" });
+    expect(retryBtn.length).toBeGreaterThan(0);
+
+    // Clicking retry resets to loading state
+    fireEvent.click(retryBtn[0]);
+    expect(screen.getAllByText("絵を準備中...").length).toBeGreaterThan(0);
   });
 });
