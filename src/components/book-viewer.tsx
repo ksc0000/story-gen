@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, Loader2, Sparkles, Pencil } from "lucide-react";
+import { RefreshCcw, Loader2, Sparkles, Pencil, Edit3, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RegenerateConfirmationDialog } from "@/components/regenerate-confirmation-dialog";
 import { ViewerImage } from "@/components/viewer-image";
@@ -127,10 +127,12 @@ export const SWIPE_VELOCITY_THRESHOLD = 500;
 
 function CoverSheetDesktop({
   item,
+  onOpenMenu,
   onRegenerate,
   isRegenerating,
 }: {
   item: Extract<ReadingItem, { kind: "cover_title_spread" }>;
+  onOpenMenu?: () => void;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
 }) {
@@ -183,6 +185,20 @@ function CoverSheetDesktop({
         {!item.titleSpreadText && !item.openingNarration && (
           <p className="mt-5 text-sm text-violet-500">この絵本のはじまり</p>
         )}
+        {onOpenMenu && (
+          <div className="mt-6 flex items-center justify-between">
+            <p className="text-sm text-violet-400">表紙・タイトル</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenMenu}
+              className="rounded-full border-purple-200 text-xs text-purple-700 hover:bg-purple-50"
+            >
+              <Edit3 className="mr-1.5 h-3.5 w-3.5" />
+              このページを編集
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -190,10 +206,12 @@ function CoverSheetDesktop({
 
 function CoverSheetMobile({
   item,
+  onOpenMenu,
   onRegenerate,
   isRegenerating,
 }: {
   item: Extract<ReadingItem, { kind: "cover_title_spread" }>;
+  onOpenMenu?: () => void;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
 }) {
@@ -246,6 +264,20 @@ function CoverSheetMobile({
         {!item.titleSpreadText && !item.openingNarration && (
           <p className="mt-3 text-xs text-violet-500">この絵本のはじまり</p>
         )}
+        {onOpenMenu && (
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <p className="text-xs text-violet-400">表紙・タイトル</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenMenu}
+              className="rounded-full border-purple-200 text-xs text-purple-700 hover:bg-purple-50"
+            >
+              <Edit3 className="mr-1.5 h-3.5 w-3.5" />
+              このページを編集
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -262,6 +294,7 @@ export function BookViewer(props: BookViewerProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pageToRegenerate, setPageToRegenerate] = useState<number | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   /** 1 = forward (next), -1 = backward (prev). Used for animation direction. */
   const directionRef = useRef(1);
@@ -389,6 +422,7 @@ export function BookViewer(props: BookViewerProps) {
             {item.kind === "cover_title_spread" && (
               <CoverSheetDesktop
                 item={item}
+                onOpenMenu={props.onRegenerateCover ? () => setIsMenuOpen(true) : undefined}
                 onRegenerate={
                   props.onRegenerateCover
                     ? () => {
@@ -466,19 +500,20 @@ export function BookViewer(props: BookViewerProps) {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col justify-center p-8">
+                <div className="flex flex-col justify-between p-8">
                   <p className="whitespace-pre-line text-lg leading-relaxed text-purple-900">{item.page.text.replace(/。(?=\S)/g, "。\n")}</p>
-                  <div className="mt-4 flex items-center gap-3">
+                  <div className="mt-6 flex items-center justify-between gap-3">
                     <p className="text-sm text-violet-400">{pageLabel}</p>
-                    {onEditPageText && (
-                      <button
-                        type="button"
-                        onClick={() => onEditPageText(item.storyPageIndex, item.page.text)}
-                        className="inline-flex items-center gap-1 rounded-full border border-violet-200 px-2.5 py-1 text-xs text-violet-500 transition hover:border-purple-300 hover:text-purple-700"
+                    {(onEditPageText || onRegeneratePage) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsMenuOpen(true)}
+                        className="rounded-full border-purple-200 text-xs text-purple-700 hover:bg-purple-50"
                       >
-                        <Pencil className="size-3" />
-                        本文を編集
-                      </button>
+                        <Edit3 className="mr-1.5 h-3.5 w-3.5" />
+                        このページを編集
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -509,6 +544,7 @@ export function BookViewer(props: BookViewerProps) {
             {item.kind === "cover_title_spread" && (
               <CoverSheetMobile
                 item={item}
+                onOpenMenu={props.onRegenerateCover ? () => setIsMenuOpen(true) : undefined}
                 onRegenerate={
                   props.onRegenerateCover
                     ? () => {
@@ -588,17 +624,18 @@ export function BookViewer(props: BookViewerProps) {
                 </div>
                 <div className="p-4">
                   <p className="whitespace-pre-line text-base leading-relaxed text-purple-900">{item.page.text.replace(/。(?=\S)/g, "。\n")}</p>
-                  <div className="mt-2 flex items-center gap-3">
+                  <div className="mt-3 flex items-center justify-between gap-2">
                     <p className="text-sm text-violet-400">{pageLabel}</p>
-                    {onEditPageText && (
-                      <button
-                        type="button"
-                        onClick={() => onEditPageText(item.storyPageIndex, item.page.text)}
-                        className="inline-flex items-center gap-1 rounded-full border border-violet-200 px-2.5 py-1 text-xs text-violet-500 transition hover:border-purple-300 hover:text-purple-700"
+                    {(onEditPageText || onRegeneratePage) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsMenuOpen(true)}
+                        className="rounded-full border-purple-200 text-xs text-purple-700 hover:bg-purple-50"
                       >
-                        <Pencil className="size-3" />
-                        本文を編集
-                      </button>
+                        <Edit3 className="mr-1.5 h-3.5 w-3.5" />
+                        このページを編集
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -636,6 +673,102 @@ export function BookViewer(props: BookViewerProps) {
           }
         }}
       />
+
+      {/* このページを編集 - Unified Action Menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-md rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-purple-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <Edit3 className="h-5 w-5 text-purple-600" />
+                  <h3 className="text-lg font-bold text-purple-900">このページを編集</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="rounded-full p-1 text-violet-400 hover:bg-violet-50 hover:text-purple-700"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {item.kind === "story_page" && onEditPageText && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      onEditPageText(item.storyPageIndex, item.page.text);
+                    }}
+                    className="flex w-full flex-col gap-1 rounded-2xl border border-violet-100 bg-violet-50/50 p-4 text-left transition hover:border-purple-300 hover:bg-violet-50"
+                  >
+                    <div className="flex items-center gap-2 font-bold text-purple-900">
+                      <Pencil className="h-4 w-4 text-purple-600" />
+                      <span>本文を編集</span>
+                    </div>
+                    <p className="text-xs text-violet-600">
+                      ※ 本文のみを変更します。挿絵はそのまま維持されます。
+                    </p>
+                  </button>
+                )}
+
+                {item.kind === "story_page" && onRegeneratePage && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setPageToRegenerate(item.storyPageIndex);
+                      setIsConfirmOpen(true);
+                    }}
+                    disabled={isRegeneratingPage?.(item.storyPageIndex)}
+                    className="flex w-full flex-col gap-1 rounded-2xl border border-purple-100 bg-purple-50/50 p-4 text-left transition hover:border-purple-300 hover:bg-purple-50 disabled:opacity-50"
+                  >
+                    <div className="flex items-center gap-2 font-bold text-purple-900">
+                      <RefreshCcw className="h-4 w-4 text-purple-600" />
+                      <span>イラストを再生成</span>
+                    </div>
+                    <p className="text-xs text-purple-600">
+                      ※ このページのイラストのみをAIで描き直します。（1〜2分かかります）
+                    </p>
+                  </button>
+                )}
+
+                {item.kind === "cover_title_spread" && props.onRegenerateCover && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setPageToRegenerate(-1);
+                      setIsConfirmOpen(true);
+                    }}
+                    disabled={props.isRegeneratingCover}
+                    className="flex w-full flex-col gap-1 rounded-2xl border border-purple-100 bg-purple-50/50 p-4 text-left transition hover:border-purple-300 hover:bg-purple-50 disabled:opacity-50"
+                  >
+                    <div className="flex items-center gap-2 font-bold text-purple-900">
+                      <RefreshCcw className="h-4 w-4 text-purple-600" />
+                      <span>表紙イラストを再生成</span>
+                    </div>
+                    <p className="text-xs text-purple-600">
+                      ※ 表紙のイラストのみをAIで描き直します。（1〜2分かかります）
+                    </p>
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
