@@ -298,6 +298,7 @@
     "PR #747: fix(build): (app)レイアウトのuseSearchParamsをSuspense境界に隔離 (merged)",
     "PR #748: fix(test): cinematic-viewer テストフィクスチャの型不足を補完（main復旧） (merged)",
     "PR #749: test(quality): quality-snapshot の書き込みペイロード生成にテストカバレッジを追加 (merged)",
+    "PR #750: fix(copy): オンボーディング案内の旧名称と重複コピーを修正 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
