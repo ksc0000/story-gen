@@ -30,24 +30,22 @@ vi.mock("next/link", () => ({
 }));
 
 describe("BookPreviewDialog", () => {
-  const mockCompletedBook: BookDoc & { id: string } = {
+  // BookPreviewDialog が参照するのは id/title/status/coverImageUrl のみ。
+  // BookDoc 全体を組むとテストの意図が埋もれるため部分フィクスチャとする。
+  const mockCompletedBook = {
     id: "book-completed-1",
     userId: "user-1",
     title: "きらきら星のぼうけん",
     status: "completed",
     coverImageUrl: "https://example.com/cover.jpg",
-    createdAt: null,
-    updatedAt: null,
-  };
+  } as unknown as BookDoc & { id: string };
 
-  const mockGeneratingBook: BookDoc & { id: string } = {
+  const mockGeneratingBook = {
     id: "book-generating-2",
     userId: "user-1",
     title: "魔法の森のなぞ",
     status: "generating",
-    createdAt: null,
-    updatedAt: null,
-  };
+  } as unknown as BookDoc & { id: string };
 
   it("returns null when book is null", () => {
     const { container } = render(<BookPreviewDialog book={null} onClose={() => {}} />);
