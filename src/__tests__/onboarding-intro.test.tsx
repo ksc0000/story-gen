@@ -54,7 +54,8 @@ describe("ChildOnboardingPage - Onboarding Notice", () => {
     const notice = screen.getByTestId("onboarding-guide");
     expect(notice).toBeInTheDocument();
     expect(screen.getByText("月3冊まで無料")).toBeInTheDocument();
-    expect(screen.getByText("クレカ不要")).toBeInTheDocument();
+    // 「クレカ不要」は「月3冊まで無料」と内容が重複していたため統合済み（説明文側で言及）
+    expect(screen.getByText("クレジットカードの登録は要りません")).toBeInTheDocument();
     expect(screen.getByText("キャラクター生成は任意 (30秒〜1分)")).toBeInTheDocument();
     expect(screen.getByText("絵本完成まで約2〜5分")).toBeInTheDocument();
 
