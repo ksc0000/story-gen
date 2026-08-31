@@ -275,6 +275,7 @@
     "PR #686: test(quality): style-exposureのテストカバレッジを追加 (merged)",
     "PR #688: feat(cinematic-viewer): calculate autoplay interval proportionally to character count (merged)",
     "PR #689: docs(security): App Check段階導入ランブック(Stage1監視)を追加 (merged)",
+    "PR #711: [UIUX] Allow direct reading from book preview cover tap and reposition CTA to top (merged)",
     "PR #712: Redirect to book creation after first child onboarding (merged)",
     "PR #713: Restore returnTo destination post-login with open redirect validation (merged)",
     "PR #714: feat(onboarding): 初回フロー冒頭の価値・所要時間の事前提示 (merged)",
