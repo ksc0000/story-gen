@@ -4,74 +4,80 @@ import { CinematicViewer, getAutoplayIntervalMs, AUTOPLAY_BASE_MS, AUTOPLAY_COVE
 import type { ReadingItem } from "@/components/book-viewer";
 import type { ReactNode, HTMLAttributes } from "react";
 
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => {
-      const {
-        animate: _animate,
-        exit: _exit,
-        initial: _initial,
-        variants: _variants,
-        transition: _transition,
-        custom: _custom,
-        drag: _drag,
-        dragConstraints: _dragConstraints,
-        dragElastic: _dragElastic,
-        onDragEnd: _onDragEnd,
-        ...validProps
-      } = props;
-      void _animate;
-      void _exit;
-      void _initial;
-      void _variants;
-      void _transition;
-      void _custom;
-      void _drag;
-      void _dragConstraints;
-      void _dragElastic;
-      void _onDragEnd;
-      return <div {...(validProps as HTMLAttributes<HTMLDivElement>)}>{children}</div>;
+vi.mock("framer-motion", async () => {
+  const React = await import("react");
+  return {
+    motion: {
+      div: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => {
+        const {
+          animate: _animate,
+          exit: _exit,
+          initial: _initial,
+          variants: _variants,
+          transition: _transition,
+          custom: _custom,
+          drag: _drag,
+          dragConstraints: _dragConstraints,
+          dragElastic: _dragElastic,
+          onDragEnd: _onDragEnd,
+          ...validProps
+        } = props;
+        void _animate;
+        void _exit;
+        void _initial;
+        void _variants;
+        void _transition;
+        void _custom;
+        void _drag;
+        void _dragConstraints;
+        void _dragElastic;
+        void _onDragEnd;
+        return <div {...(validProps as HTMLAttributes<HTMLDivElement>)}>{children}</div>;
+      },
+      p: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => {
+        const {
+          animate: _animate,
+          exit: _exit,
+          initial: _initial,
+          variants: _variants,
+          transition: _transition,
+          custom: _custom,
+          ...validProps
+        } = props;
+        void _animate;
+        void _exit;
+        void _initial;
+        void _variants;
+        void _transition;
+        void _custom;
+        return <p {...(validProps as HTMLAttributes<HTMLParagraphElement>)}>{children}</p>;
+      },
+      // eslint-disable-next-line react/display-name
+      img: React.forwardRef<HTMLImageElement, { src?: string; alt?: string; [key: string]: unknown }>(
+        ({ src, alt, ...props }, ref) => {
+          const {
+            animate: _animate,
+            exit: _exit,
+            initial: _initial,
+            variants: _variants,
+            transition: _transition,
+            custom: _custom,
+            ...validProps
+          } = props;
+          void _animate;
+          void _exit;
+          void _initial;
+          void _variants;
+          void _transition;
+          void _custom;
+          // eslint-disable-next-line @next/next/no-img-element
+          return <img ref={ref} src={src as string | undefined} alt={(alt as string) ?? ""} {...(validProps as HTMLAttributes<HTMLImageElement>)} />;
+        }
+      ),
     },
-    p: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => {
-      const {
-        animate: _animate,
-        exit: _exit,
-        initial: _initial,
-        variants: _variants,
-        transition: _transition,
-        custom: _custom,
-        ...validProps
-      } = props;
-      void _animate;
-      void _exit;
-      void _initial;
-      void _variants;
-      void _transition;
-      void _custom;
-      return <p {...(validProps as HTMLAttributes<HTMLParagraphElement>)}>{children}</p>;
-    },
-    img: ({ src, alt, ...props }: { src?: string; alt?: string; [key: string]: unknown }) => {
-      const {
-        animate: _animate,
-        exit: _exit,
-        initial: _initial,
-        variants: _variants,
-        transition: _transition,
-        custom: _custom,
-        ...validProps
-      } = props;
-      void _animate;
-      void _exit;
-      void _initial;
-      void _variants;
-      void _transition;
-      void _custom;
-      // eslint-disable-next-line @next/next/no-img-element
-      return <img src={src} alt={alt} {...(validProps as HTMLAttributes<HTMLImageElement>)} />;
-    },
-  },
-  AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
-}));
+    AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
+  };
+});
 
 const mockItems: ReadingItem[] = [
   {
@@ -157,6 +163,33 @@ describe("CinematicViewer UI and safe area tests", () => {
 
     fireEvent.click(contrastBtn);
     expect(textEl.className).toContain("text-gray-900");
+  });
+
+  it("renders image with decoding='async' and loading skeleton indicator", () => {
+    const handleClose = vi.fn();
+    render(<CinematicViewer items={mockItems} title="テストタイトル" onClose={handleClose} />);
+
+    expect(screen.getByText("絵を準備中...")).toBeInTheDocument();
+
+    const images = document.querySelectorAll("img");
+    expect(images.length).toBeGreaterThan(0);
+    expect(images[0].getAttribute("decoding")).toBe("async");
+  });
+
+  it("handles image error and displays retry button", () => {
+    const handleClose = vi.fn();
+    render(<CinematicViewer items={mockItems} title="テストタイトル" onClose={handleClose} />);
+
+    const images = document.querySelectorAll("img");
+    fireEvent.error(images[0]);
+
+    expect(screen.getByText("画像を読み込めませんでした")).toBeInTheDocument();
+
+    const retryBtn = screen.getByRole("button", { name: "再試行" });
+    expect(retryBtn).toBeInTheDocument();
+
+    fireEvent.click(retryBtn);
+    expect(screen.getByText("絵を準備中...")).toBeInTheDocument();
   });
 });
 
