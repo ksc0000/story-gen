@@ -397,12 +397,12 @@ function BookContent() {
               ) : book.public ? (
                 <>
                   <Globe className="mr-2 h-4 w-4" />
-                  公開中
+                  公開を停止
                 </>
               ) : (
                 <>
-                  <Share2 className="mr-2 h-4 w-4" />
-                  共有する
+                  <Globe className="mr-2 h-4 w-4" />
+                  Web公開する
                 </>
               )}
             </Button>
@@ -617,6 +617,7 @@ function BookContent() {
           book={book}
           isDemoMode={isDemoMode}
           onToggleShare={handleToggleShare}
+          onCopyLink={handleCopyLink}
           isSharing={isSharing}
           onGeneratePdf={handleGeneratePdf}
           isGeneratingPdf={isGeneratingPdf}
