@@ -29,7 +29,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postbuild": "rm -rf out/share && echo 'postbuild: removed out/share (OGP SSR rewrite precedence)'"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

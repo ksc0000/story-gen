@@ -16,7 +16,9 @@ type AnalyticsEventName =
   | "view_quality_sample"
   | "submit_ai_brief"
   | "submit_app_feedback"
-  | "lp_cta_click";
+  | "lp_cta_click"
+  | "first_run_track_selected"
+  | "first_run_completed";
 
 type AnalyticsPayload = Record<string, string | number | boolean | undefined>;
 

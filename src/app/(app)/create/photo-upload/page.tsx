@@ -156,7 +156,7 @@ function PhotoUploadPageContent() {
   return (
     <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
       <BackButton className="mb-3" />
-      <StepIndicator currentStep={2} />
+      <StepIndicator currentStep={4} totalSteps={5} />
       <h1 className="mt-6 text-center text-xl font-bold text-purple-900">写真をアップロード</h1>
       <p className="mt-2 text-center text-sm text-violet-500">
         思い出の写真を3〜5枚選んでください。

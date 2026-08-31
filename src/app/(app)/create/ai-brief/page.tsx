@@ -603,7 +603,7 @@ function AiBriefPageContent() {
   return (
     <PageTransition className="mx-auto max-w-lg px-4 pb-28 pt-8">
       <BackButton className="mb-3" />
-      <StepIndicator currentStep={2} />
+      <StepIndicator currentStep={4} totalSteps={5} />
 
       <div className="mt-6 text-center">
         <h1 className="text-xl font-bold text-purple-900">どんな絵本を作りますか？</h1>
