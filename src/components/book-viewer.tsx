@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCcw, Loader2, Sparkles, Pencil, Edit3, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RegenerateConfirmationDialog } from "@/components/regenerate-confirmation-dialog";
+import { ViewerImage } from "@/components/viewer-image";
+import { preloadNextReadingItemImage } from "@/lib/image-preload";
 import type { PageDoc, CoverStatus, ReadingStructureVersion } from "@/lib/types";
 import type { Variants } from "framer-motion";
 
@@ -137,8 +139,7 @@ function CoverSheetDesktop({
   return (
     <div className="grid grid-cols-2 gap-0">
       <div className="relative aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <ViewerImage
           src={item.imageUrl}
           alt={`${item.title} - 表紙`}
           className="h-full w-full object-cover"
@@ -217,8 +218,7 @@ function CoverSheetMobile({
   return (
     <div className="bg-white">
       <div className="relative aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <ViewerImage
           src={item.imageUrl}
           alt={`${item.title} - 表紙`}
           className="h-full w-full object-cover"
@@ -346,6 +346,10 @@ export function BookViewer(props: BookViewerProps) {
   );
 
   useEffect(() => {
+    preloadNextReadingItemImage(items, currentPage);
+  }, [items, currentPage]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if typing in an input/textarea/select
       const target = e.target as HTMLElement;
@@ -435,8 +439,11 @@ export function BookViewer(props: BookViewerProps) {
                 <div className="relative aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
                   {item.page.imageUrl ? (
                     <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="pointer-events-none h-full w-full object-cover" />
+                      <ViewerImage
+                        src={item.page.imageUrl}
+                        alt={`${title} - ページ${item.storyPageIndex + 1}`}
+                        className="pointer-events-none h-full w-full object-cover"
+                      />
                       {onRegeneratePage && (
                         <Button
                           variant="outline"
@@ -554,8 +561,11 @@ export function BookViewer(props: BookViewerProps) {
                 <div className="relative aspect-[3/4] bg-gradient-to-br from-[#f3e8ff] to-[#e0f2fe]">
                   {item.page.imageUrl ? (
                     <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.page.imageUrl} alt={`${title} - ページ${item.storyPageIndex + 1}`} className="pointer-events-none h-full w-full object-cover" />
+                      <ViewerImage
+                        src={item.page.imageUrl}
+                        alt={`${title} - ページ${item.storyPageIndex + 1}`}
+                        className="pointer-events-none h-full w-full object-cover"
+                      />
                       {onRegeneratePage && (
                         <Button
                           variant="outline"

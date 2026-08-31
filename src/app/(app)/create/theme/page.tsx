@@ -103,6 +103,7 @@ function ThemeModeSelectContent() {
   const searchParams = useSearchParams();
   const childId = searchParams.get("childId");
   const selectedMode = (searchParams.get("mode") as CreationMode | null) ?? "fixed_template";
+  const totalSteps = selectedMode === "fixed_template" ? 6 : 5;
 
   const handleNext = () => {
     trackAnalyticsEvent("select_story_theme", { creationMode: selectedMode });
@@ -122,7 +123,7 @@ function ThemeModeSelectContent() {
   return (
     <PageTransition className="mx-auto max-w-6xl px-4 py-4 pb-28 md:py-8 md:pb-32">
       <BackButton className="mb-3" />
-      <StepIndicator currentStep={1} />
+      <StepIndicator currentStep={2} totalSteps={totalSteps} />
 
       <div className="mt-6 space-y-4">
         <div className="text-center">

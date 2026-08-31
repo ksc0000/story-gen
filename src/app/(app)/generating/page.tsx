@@ -16,7 +16,8 @@ import { createRetryBook } from "@/lib/retry-book";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
 import { getGenerationStages } from "@/lib/generation-progress-utils";
-import { Loader2 } from "lucide-react";
+import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
+import { Loader2, Sparkles } from "lucide-react";
 import type { BookDoc, PageDoc } from "@/lib/types";
 
 function getProgressStep(book: BookDoc, pages: PageDoc[]) {
@@ -139,6 +140,7 @@ function GeneratingContent() {
   // useEffect([book]) が重複発火する。bookId:status をキーに1回だけ送信する。
   const reportedStatusRef = useRef<string | null>(null);
   const { book, pages, loading } = useGenerationProgress(bookId);
+  const { companions, loading: companionsLoading } = useCompanions(user?.uid);
   const completedPages = pages.filter((page) => page.status === "completed" || page.status === "fallback_completed").length;
   const totalPages = book?.pageCount ?? Math.max(pages.length, 1);
 
@@ -303,6 +305,31 @@ function GeneratingContent() {
               />
             </div>
             <div className="mt-6"><GenerationProgress book={book} pages={pages} /></div>
+            {!companionsLoading && companions.length === 0 ? (
+              <div data-testid="companion-cross-sell-card" className="mt-6 rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/80 to-pink-50/50 p-5 text-left shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-purple-700">
+                      <Sparkles className="size-4 text-purple-500" />
+                      <span>おすすめ</span>
+                    </div>
+                    <h3 className="text-base font-bold text-purple-900">
+                      待っている間に、なかよしキャラを作ってみませんか？
+                    </h3>
+                    <p className="text-xs leading-relaxed text-violet-600">
+                      絵本に登場させる動物や妖精などのオリジナルキャラクターを作成できます。
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <Link href={`/companions/create?returnTo=${encodeURIComponent(`/generating?id=${bookId}`)}`}>
+                    <Button variant="outline" className="w-full border-purple-200 bg-white font-semibold text-purple-900 hover:bg-purple-50">
+                      なかよしキャラを作る
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ) : null}
             <div className="mt-6 flex flex-col items-center gap-3 border-t border-violet-100 pt-5 text-center">
               <Link href="/home" className="w-full max-w-xs">
                 <Button
