@@ -3,7 +3,9 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { BookNextActions } from "@/components/book-next-actions";
 import type { BookDoc } from "@/lib/types";
 
-const mockBookPrivate: BookDoc = {
+// BookNextActions が参照するのは id/public/status など一部のみ。
+// BookDoc 全体を組むとテストの意図が埋もれるため部分フィクスチャとする。
+const mockBookPrivate = {
   id: "book-1",
   userId: "user-1",
   title: "テスト絵本",
@@ -13,9 +15,9 @@ const mockBookPrivate: BookDoc = {
   createdAt: {} as any,
   updatedAt: {} as any,
   public: false,
-};
+} as unknown as BookDoc & { id: string };
 
-const mockBookPublic: BookDoc = {
+const mockBookPublic = {
   ...mockBookPrivate,
   public: true,
 };
