@@ -151,7 +151,7 @@ async function main() {
     selectedStyleId: "crayon",
     selectedStyleName: "クレヨンで描いた絵本",
     styleBible: CRAYON_STYLE_BIBLE_V2,
-    stylePreviewImageUrl: "/images/styles/crayon.png",
+    stylePreviewImageUrl: "/images/styles/crayon.webp",
     stylePreviewUsedAsReference: false,
     pageCount: 8,
     creationMode: "guided_ai",

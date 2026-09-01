@@ -29,70 +29,70 @@ const STYLE_PROFILE_REGISTRY = {
   soft_watercolor: {
     id: "soft_watercolor",
     name: "やさしい水彩",
-    previewImageUrl: "/images/styles/soft_watercolor.png",
+    previewImageUrl: "/images/styles/soft_watercolor.webp",
     styleBible:
       "Japanese children's picture book watercolor style, soft warm colors, pale colors, gentle pigment blooms, hand-painted paper texture, cozy lighting, tender child-friendly atmosphere.",
   },
   fluffy_pastel: {
     id: "fluffy_pastel",
     name: "ふんわりパステル",
-    previewImageUrl: "/images/styles/fluffy_pastel.png",
+    previewImageUrl: "/images/styles/fluffy_pastel.webp",
     styleBible:
       "Fluffy pastel picture book style, soft rounded forms, airy colors, gentle edges, cute toddler-friendly design, plush and comforting mood.",
   },
   crayon: {
     id: "crayon",
     name: "クレヨンで描いた絵本",
-    previewImageUrl: "/images/styles/crayon.png",
+    previewImageUrl: "/images/styles/crayon.webp",
     styleBible:
       "Crayon storybook style, warm hand-drawn strokes, waxy texture, playful childlike marks, colorful but gentle page design.",
   },
   flat_illustration: {
     id: "flat_illustration",
     name: "シンプルフラット",
-    previewImageUrl: "/images/styles/flat_illustration.png",
+    previewImageUrl: "/images/styles/flat_illustration.webp",
     styleBible:
       "Simple flat illustration style, bright clean colors, readable shapes, minimal shadows, modern child-friendly picture book layout.",
   },
   anime_storybook: {
     id: "anime_storybook",
     name: "わくわくアニメ風",
-    previewImageUrl: "/images/styles/anime_storybook.png",
+    previewImageUrl: "/images/styles/anime_storybook.webp",
     styleBible:
       "Anime-inspired picture book style, expressive faces, sparkling eyes, lively framing, vivid but soft family-safe colors, warm fantasy energy.",
   },
   classic_picture_book: {
     id: "classic_picture_book",
     name: "クラシック絵本",
-    previewImageUrl: "/images/styles/classic_picture_book.png",
+    previewImageUrl: "/images/styles/classic_picture_book.webp",
     styleBible:
       "Classic picture book illustration, traditional fairytale warmth, detailed linework, painterly textures, timeless storybook atmosphere.",
   },
   toy_3d: {
     id: "toy_3d",
     name: "ぷっくり3Dトイ風",
-    previewImageUrl: "/images/styles/toy_3d.png",
+    previewImageUrl: "/images/styles/toy_3d.webp",
     styleBible:
       "Rounded 3D toy storybook style, clay-like forms, playful miniature diorama feeling, soft plastic texture, bright child-safe lighting.",
   },
   paper_collage: {
     id: "paper_collage",
     name: "紙あそびコラージュ",
-    previewImageUrl: "/images/styles/paper_collage.png",
+    previewImageUrl: "/images/styles/paper_collage.webp",
     styleBible:
       "Paper cut collage picture book style, layered handmade paper textures, tactile edges, warm craft feeling, playful child-friendly composition.",
   },
   pencil_sketch: {
     id: "pencil_sketch",
     name: "やさしい鉛筆スケッチ",
-    previewImageUrl: "/images/styles/pencil_sketch.png",
+    previewImageUrl: "/images/styles/pencil_sketch.webp",
     styleBible:
       "Gentle pencil sketch picture book style, delicate line art, subtle color tinting, nostalgic quiet mood, soft hand-drawn feeling.",
   },
   colorful_pop: {
     id: "colorful_pop",
     name: "カラフルポップ",
-    previewImageUrl: "/images/styles/colorful_pop.png",
+    previewImageUrl: "/images/styles/colorful_pop.webp",
     styleBible:
       "Colorful pop picture book style, vivid joyful colors, friendly rounded forms, playful graphic energy, clear child-safe staging.",
   },

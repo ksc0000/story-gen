@@ -70,7 +70,7 @@ async function main() {
     selectedStyleId: "crayon",
     selectedStyleName: "クレヨンで描いた絵本",
     styleBible: "Crayon storybook style, warm hand-drawn strokes, waxy texture, playful childlike marks, colorful but gentle page design.",
-    stylePreviewImageUrl: "/images/styles/crayon.png",
+    stylePreviewImageUrl: "/images/styles/crayon.webp",
     stylePreviewUsedAsReference: false,
     pageCount: 8,
     creationMode: "guided_ai",

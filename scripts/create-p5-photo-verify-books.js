@@ -69,14 +69,14 @@ const STYLE_PROFILES = {
   soft_watercolor: {
     id: "soft_watercolor",
     name: "やさしい水彩",
-    previewImageUrl: "/images/styles/soft_watercolor.png",
+    previewImageUrl: "/images/styles/soft_watercolor.webp",
     styleBible:
       "Japanese children's picture book watercolor style, soft warm colors, pale colors, gentle pigment blooms, hand-painted paper texture, cozy lighting, tender child-friendly atmosphere.",
   },
   classic_picture_book: {
     id: "classic_picture_book",
     name: "クラシック絵本",
-    previewImageUrl: "/images/styles/classic_picture_book.png",
+    previewImageUrl: "/images/styles/classic_picture_book.webp",
     styleBible:
       "Classic picture book illustration, traditional fairytale warmth, detailed linework, painterly textures, timeless storybook atmosphere.",
   },

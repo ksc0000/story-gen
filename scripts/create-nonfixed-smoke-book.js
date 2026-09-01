@@ -18,21 +18,21 @@ const STYLE_PROFILE_REGISTRY = {
   crayon: {
     id: "crayon",
     name: "クレヨンで描いた絵本",
-    previewImageUrl: "/images/styles/crayon.png",
+    previewImageUrl: "/images/styles/crayon.webp",
     styleBible:
       "Crayon storybook style, warm hand-drawn strokes, waxy texture, playful childlike marks, colorful but gentle page design.",
   },
   soft_watercolor: {
     id: "soft_watercolor",
     name: "やさしい水彩",
-    previewImageUrl: "/images/styles/soft_watercolor.png",
+    previewImageUrl: "/images/styles/soft_watercolor.webp",
     styleBible:
       "Japanese children's picture book watercolor style, soft warm colors, pale colors, gentle pigment blooms, hand-painted paper texture, cozy lighting, tender child-friendly atmosphere.",
   },
   anime_storybook: {
     id: "anime_storybook",
     name: "わくわくアニメ風",
-    previewImageUrl: "/images/styles/anime_storybook.png",
+    previewImageUrl: "/images/styles/anime_storybook.webp",
     styleBible:
       "Anime-inspired picture book style, expressive faces, sparkling eyes, lively framing, vivid but soft family-safe colors, warm fantasy energy.",
   },
