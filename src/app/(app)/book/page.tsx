@@ -263,12 +263,14 @@ function BookContent() {
       return next;
     });
     try {
+      toast.info(`ページ ${page.pageNumber + 1} のイラスト再生成を開始しました。完了まで1〜2分お待ちください。`);
       const regenerate = httpsCallable(functions, "regeneratePageImage");
       await regenerate({ bookId, pageNumber: page.pageNumber });
     } catch (err) {
       console.error("Failed to regenerate page:", err);
       const message = getUserFriendlyErrorMessage(err, "再生成に失敗しました。");
       setRegenerationErrors((prev) => ({ ...prev, [page.pageNumber]: message }));
+      toast.error(message);
     } finally {
       setRegeneratingPages((prev) => {
         const next = new Set(prev);
@@ -283,11 +285,14 @@ function BookContent() {
     setIsRegeneratingCover(true);
     setCoverRegenerationError(null);
     try {
+      toast.info("表紙イラストの再生成を開始しました。完了まで1〜2分お待ちください。");
       const regenerate = httpsCallable(functions, "regenerateCoverImage");
       await regenerate({ bookId });
     } catch (err) {
       console.error("Failed to regenerate cover:", err);
-      setCoverRegenerationError(getUserFriendlyErrorMessage(err, "表紙の再生成に失敗しました。"));
+      const message = getUserFriendlyErrorMessage(err, "表紙の再生成に失敗しました。");
+      setCoverRegenerationError(message);
+      toast.error(message);
     } finally {
       setIsRegeneratingCover(false);
     }
@@ -339,6 +344,9 @@ function BookContent() {
             {titleUpdateError && (
               <p role="alert" className="text-center text-sm text-rose-500">{titleUpdateError}</p>
             )}
+            <p className="text-center text-xs text-violet-400">
+              ※ 絵本のタイトルのみを変更します（本文や挿絵は変更されません）。
+            </p>
             <div className="flex justify-center gap-2">
               <Button
                 size="sm"
@@ -355,20 +363,23 @@ function BookContent() {
             </div>
           </div>
         ) : (
-          <div className="group relative flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <h1 className="text-center text-2xl font-bold text-purple-900">{book.title}</h1>
             {isOwner && !isDemoMode && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => {
                   setNewTitle(book.title);
                   setIsEditingTitle(true);
                   setTitleUpdateError(null);
                 }}
-                className="rounded-full p-1 text-violet-400 transition hover:bg-purple-50 hover:text-purple-600 [@media(hover:hover)]:opacity-0 group-hover:opacity-100"
+                className="h-8 rounded-full border-purple-200 px-3 text-xs text-purple-700 hover:bg-purple-50 hover:text-purple-800 gap-1 shrink-0"
                 title="タイトルを編集"
               >
-                <Pencil className="h-4 w-4" />
-              </button>
+                <Pencil className="h-3.5 w-3.5" />
+                <span>編集</span>
+              </Button>
             )}
           </div>
         )}
@@ -386,12 +397,12 @@ function BookContent() {
               ) : book.public ? (
                 <>
                   <Globe className="mr-2 h-4 w-4" />
-                  公開中
+                  公開を停止
                 </>
               ) : (
                 <>
-                  <Share2 className="mr-2 h-4 w-4" />
-                  共有する
+                  <Globe className="mr-2 h-4 w-4" />
+                  Web公開する
                 </>
               )}
             </Button>
@@ -606,6 +617,7 @@ function BookContent() {
           book={book}
           isDemoMode={isDemoMode}
           onToggleShare={handleToggleShare}
+          onCopyLink={handleCopyLink}
           isSharing={isSharing}
           onGeneratePdf={handleGeneratePdf}
           isGeneratingPdf={isGeneratingPdf}

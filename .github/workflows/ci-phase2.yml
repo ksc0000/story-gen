@@ -59,6 +59,12 @@ jobs:
       - name: Install functions dependencies
         run: cd functions && npm ci
 
+      - name: Type check (frontend + tests)
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
       - name: Run hygiene guard
         run: npm run guard:hygiene
 
