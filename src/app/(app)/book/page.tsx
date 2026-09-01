@@ -5,7 +5,20 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { Share2, Check, Copy, Globe, Sparkles, Loader2, Pencil, X, Clapperboard } from "lucide-react";
+import {
+  Share2,
+  Check,
+  Copy,
+  Globe,
+  Sparkles,
+  Loader2,
+  Pencil,
+  X,
+  Clapperboard,
+  Download,
+  Trash2,
+  WifiOff,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookViewer, buildReadingItems } from "@/components/book-viewer";
 import { CinematicViewer } from "@/components/cinematic-viewer";
@@ -22,6 +35,13 @@ import { isDemoMode } from "@/lib/demo";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
+import {
+  downloadBookForOffline,
+  getOfflineBook,
+  isOfflineBookOutdated,
+  removeOfflineBook,
+  type OfflineBookData,
+} from "@/lib/offline-book-storage";
 import type { BookFeedbackDoc, PageDoc } from "@/lib/types";
 
 function BookContent() {
@@ -30,7 +50,12 @@ function BookContent() {
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
   const toast = useToast();
-  const { book, pages, loading } = useGenerationProgress(bookId);
+  const { book, pages, loading, isOfflineUnavailable, isOffline } = useGenerationProgress(bookId);
+
+  const [offlineRecord, setOfflineRecord] = useState<OfflineBookData | null>(null);
+  const [isDownloadingOffline, setIsDownloadingOffline] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+
   const [feedback, setFeedback] = useState<{
     rating: "great" | "okay" | "redo";
     childLikenessRating: number;
@@ -73,15 +98,23 @@ function BookContent() {
   const isOwner = Boolean(user && book && book.userId === user.uid);
 
   useEffect(() => {
+    if (!bookId) return;
+    let active = true;
+    getOfflineBook(bookId).then((rec) => {
+      if (active) setOfflineRecord(rec);
+    });
+    return () => {
+      active = false;
+    };
+  }, [bookId, book, pages]);
+
+  useEffect(() => {
     const templateId = book?.templateId;
     if (!templateId) return;
     getDoc(doc(db, "templates", templateId)).then((snap) => {
       if (!snap.exists()) return;
       const rawName = (snap.data() as { name?: string }).name;
       if (!rawName) return;
-      // テンプレ名は表示用ラベル（"{childName}と …（8ページ）"）でプレースホルダや
-      // 管理用のページ数サフィックスを含む。シネマティックの主タイトルに使うため、
-      // 実際の子ども名で置換し、未置換プレースホルダと（Nページ）を取り除く。
       const cleaned = rawName
         .replace(/\{childName\}/g, book?.input?.childName ?? "")
         .replace(/\{[^}]*\}/g, "")
@@ -112,18 +145,41 @@ function BookContent() {
     });
   }, [bookId, user]);
 
-  if (!bookId || loading) return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <p className="text-violet-500">読み込み中...</p>
-    </div>
-  );
+  if (isOfflineUnavailable) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+          <WifiOff className="h-8 w-8" />
+        </div>
+        <h2 className="mt-4 text-xl font-bold text-slate-800">オフラインです</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          この絵本は端末に保存されていません。オンライン時に「オフラインで読む」をタップして保存すると、電波がない場所でも読めるようになります。
+        </p>
+        <div className="mt-6 flex justify-center gap-3">
+          <Link href="/bookshelf">
+            <Button variant="outline">本棚に戻る</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  if (!book) return (
-    <div className="mx-auto max-w-lg px-4 py-16 text-center">
-      <p className="text-violet-500">絵本が見つかりません</p>
-      <Link href="/home" className="mt-4 inline-block"><Button variant="outline">本棚に戻る</Button></Link>
-    </div>
-  );
+  if (!bookId || loading)
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-violet-500">読み込み中...</p>
+      </div>
+    );
+
+  if (!book)
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <p className="text-violet-500">絵本が見つかりません</p>
+        <Link href="/home" className="mt-4 inline-block">
+          <Button variant="outline">本棚に戻る</Button>
+        </Link>
+      </div>
+    );
 
   const viewablePages = pages
     .filter((p) => p.status === "completed" || p.status === "fallback_completed" || p.status === "image_failed")
@@ -136,6 +192,36 @@ function BookContent() {
   const generatingPages = pages.filter((p) => p.status === "generating");
 
   const isPartial = book.status === "partial_completed";
+  const isOutdated = isOfflineBookOutdated(book, viewablePages, offlineRecord);
+
+  async function handleDownloadOffline() {
+    if (!book) return;
+    setIsDownloadingOffline(true);
+    setDownloadProgress(0);
+    try {
+      const rec = await downloadBookForOffline(book, viewablePages, (prog) => {
+        setDownloadProgress(prog);
+      });
+      setOfflineRecord(rec);
+      toast.success("オフライン保存が完了しました！");
+    } catch (err) {
+      console.error("Failed to download book for offline:", err);
+      toast.error(getUserFriendlyErrorMessage(err, "オフライン保存に失敗しました。"));
+    } finally {
+      setIsDownloadingOffline(false);
+    }
+  }
+
+  async function handleRemoveOffline() {
+    if (!book) return;
+    try {
+      await removeOfflineBook(book.id);
+      setOfflineRecord(null);
+      toast.info("オフライン保存を解除しました。");
+    } catch (err) {
+      console.error("Failed to remove offline book:", err);
+    }
+  }
 
   async function handleToggleShare() {
     if (!book || !isOwner) return;
@@ -207,9 +293,6 @@ function BookContent() {
     if (!bookId || failedPages.length === 0) return;
     for (const page of failedPages) {
       if (!regeneratingPages.has(page.pageNumber)) {
-        // Use individual await to avoid overloading the function/concurrency if many
-        // but since it's 4-12 pages usually, it's fine.
-        // We call them sequentially or in parallel? Sequential is safer for UI feedback.
         await handleRegeneratePage(page);
       }
     }
@@ -384,7 +467,7 @@ function BookContent() {
           </div>
         )}
         {isOwner && !isDemoMode && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <Button
               variant={book.public ? "outline" : "default"}
               size="sm"
@@ -406,6 +489,69 @@ function BookContent() {
                 </>
               )}
             </Button>
+
+            {!isOffline && (
+              <>
+                {offlineRecord ? (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadOffline}
+                      disabled={isDownloadingOffline}
+                      className="rounded-full border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                    >
+                      {isDownloadingOffline ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          保存中 ({downloadProgress}%)
+                        </>
+                      ) : isOutdated ? (
+                        <>
+                          <Download className="mr-1.5 h-3.5 w-3.5" />
+                          更新版をオフライン保存
+                        </>
+                      ) : (
+                        <>
+                          <Check className="mr-1.5 h-3.5 w-3.5" />
+                          オフライン保存済み
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={handleRemoveOffline}
+                      title="オフライン保存を解除"
+                      className="text-slate-400 hover:text-rose-500"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadOffline}
+                    disabled={isDownloadingOffline}
+                    className="rounded-full border-violet-200 text-violet-700 hover:bg-violet-50"
+                  >
+                    {isDownloadingOffline ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        保存中 ({downloadProgress}%)
+                      </>
+                    ) : (
+                      <>
+                        <Download className="mr-1.5 h-3.5 w-3.5" />
+                        オフラインで読む
+                      </>
+                    )}
+                  </Button>
+                )}
+              </>
+            )}
+
             {book.public && (
               <Button
                 variant="outline"

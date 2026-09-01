@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { Search, Star } from "lucide-react";
+import { Search, Star, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BookCard } from "@/components/bookshelf/book-card";
@@ -31,7 +31,7 @@ const SORT_LABELS: Record<SortMode, string> = {
 
 export default function BookshelfPage() {
   const { user } = useAuth();
-  const { books, loading, error } = useBooks(user?.uid);
+  const { books, loading, error, isOffline } = useBooks(user?.uid);
   const { children } = useChildren(user?.uid);
 
   const [search, setSearch] = useState("");
@@ -90,6 +90,18 @@ export default function BookshelfPage() {
         <p className="mt-2 text-violet-500">これまでにつくった絵本</p>
       </header>
 
+      {isOffline && (
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-800 p-4 text-white shadow-md">
+          <WifiOff className="h-5 w-5 shrink-0 text-amber-400" />
+          <div className="text-sm">
+            <p className="font-semibold text-slate-100">オフラインモードで表示中</p>
+            <p className="text-xs text-slate-300">
+              「オフライン保存済み」の絵本のみ閲覧できます。ネットワーク接続時に全絵本が読み込まれます。
+            </p>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -107,13 +119,21 @@ export default function BookshelfPage() {
       ) : books.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <HeroBook3D />
-          <p className="mt-6 text-lg font-medium text-purple-800">まだ絵本がありません</p>
-          <p className="mt-1 text-sm text-violet-500">最初の一冊を一緒につくってみませんか？</p>
-          <Link href="/create/select-child" className="mt-8">
-            <Button size="lg" className="px-8 text-lg shadow-lg shadow-purple-200">
-              新しい絵本をつくる
-            </Button>
-          </Link>
+          <p className="mt-6 text-lg font-medium text-purple-800">
+            {isOffline ? "オフライン保存された絵本がありません" : "まだ絵本がありません"}
+          </p>
+          <p className="mt-1 text-sm text-violet-500">
+            {isOffline
+              ? "オンライン時に絵本ページで「オフラインで読む」を保存してください。"
+              : "最初の一冊を一緒につくってみませんか？"}
+          </p>
+          {!isOffline && (
+            <Link href="/create/select-child" className="mt-8">
+              <Button size="lg" className="px-8 text-lg shadow-lg shadow-purple-200">
+                新しい絵本をつくる
+              </Button>
+            </Link>
+          )}
         </div>
       ) : (
         <div className="space-y-5">
@@ -206,19 +226,26 @@ export default function BookshelfPage() {
             <StaggerContainer className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {visibleBooks.map((book) => (
                 <StaggerItem key={book.id}>
-                  <BookCard book={book} onToggleFavorite={handleToggleFavorite} onSelect={setSelectedBook} />
+                  <BookCard
+                    book={book}
+                    onToggleFavorite={handleToggleFavorite}
+                    onSelect={setSelectedBook}
+                    isOffline={isOffline}
+                  />
                 </StaggerItem>
               ))}
             </StaggerContainer>
           )}
 
-          <div className="flex justify-center pt-4">
-            <Link href="/create/select-child">
-              <Button size="lg" variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
-                新しい絵本をつくる
-              </Button>
-            </Link>
-          </div>
+          {!isOffline && (
+            <div className="flex justify-center pt-4">
+              <Link href="/create/select-child">
+                <Button size="lg" variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
+                  新しい絵本をつくる
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       )}
       <BookPreviewDialog book={selectedBook} onClose={() => setSelectedBook(null)} />

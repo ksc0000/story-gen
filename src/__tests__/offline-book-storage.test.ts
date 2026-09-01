@@ -1,0 +1,166 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import {
+  computeBookVersionToken,
+  isOfflineBookOutdated,
+  downloadBookForOffline,
+  getOfflineBook,
+  removeOfflineBook,
+  getOfflineBookIds,
+  getAllOfflineBooks,
+  OFFLINE_DATA_CACHE,
+  OFFLINE_IMAGE_CACHE,
+} from "@/lib/offline-book-storage";
+import type { BookDoc, PageDoc } from "@/lib/types";
+
+// Mock ServiceWorker & CacheStorage API in node environment for testing
+const mockCachesMap = new Map<string, ReturnType<typeof createMockCache>>();
+
+function createMockCache() {
+  const store = new Map<string, Response>();
+  return {
+    put: vi.fn(async (key: string | Request, response: Response) => {
+      const url = typeof key === "string" ? key : key.url;
+      store.set(url, response.clone());
+    }),
+    match: vi.fn(async (key: string | Request) => {
+      const url = typeof key === "string" ? key : key.url;
+      const res = store.get(url);
+      return res ? res.clone() : undefined;
+    }),
+    delete: vi.fn(async (key: string | Request) => {
+      const url = typeof key === "string" ? key : key.url;
+      return store.delete(url);
+    }),
+  };
+}
+
+describe("offline-book-storage", () => {
+  const sampleBook: BookDoc & { id: string } = {
+    id: "book-123",
+    userId: "user-1",
+    title: "テストの絵本",
+    theme: "bedtime",
+    style: "soft_watercolor",
+    pageCount: 4,
+    status: "completed",
+    progress: 100,
+    coverImageUrl: "https://example.com/cover.webp",
+    input: { childName: "たろう" },
+    createdAt: {} as unknown as BookDoc["createdAt"],
+    expiresAt: null,
+    updatedAtMs: 1700000000000,
+  };
+
+  const samplePages: (PageDoc & { id: string })[] = [
+    {
+      id: "page-0",
+      pageNumber: 0,
+      text: "たろうの ぼうけんが はじまるよ。",
+      imageUrl: "https://example.com/page0.webp",
+      imagePrompt: "prompt 0",
+      status: "completed",
+    },
+    {
+      id: "page-1",
+      pageNumber: 1,
+      text: "もりで くまと であいました。",
+      imageUrl: "https://example.com/page1.webp",
+      imagePrompt: "prompt 1",
+      status: "completed",
+    },
+  ];
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    mockCachesMap.clear();
+
+    const dataCache = createMockCache();
+    const imageCache = createMockCache();
+    mockCachesMap.set(OFFLINE_DATA_CACHE, dataCache);
+    mockCachesMap.set(OFFLINE_IMAGE_CACHE, imageCache);
+
+    global.caches = {
+      open: vi.fn(async (name: string) => {
+        if (!mockCachesMap.has(name)) {
+          mockCachesMap.set(name, createMockCache());
+        }
+        return mockCachesMap.get(name) as unknown as Cache;
+      }),
+      match: vi.fn(),
+      delete: vi.fn(),
+      has: vi.fn(),
+      keys: vi.fn(),
+    } as unknown as CacheStorage;
+
+    global.navigator = {
+      ...global.navigator,
+      serviceWorker: {
+        register: vi.fn(async () => ({ ready: Promise.resolve() })),
+        ready: Promise.resolve(),
+      } as unknown as ServiceWorkerContainer,
+    };
+
+    global.fetch = vi.fn(async () => {
+      return new Response("dummy image content", { status: 200 });
+    }) as unknown as typeof fetch;
+  });
+
+  describe("computeBookVersionToken & isOfflineBookOutdated", () => {
+    it("computes deterministic version token", () => {
+      const token1 = computeBookVersionToken(sampleBook, samplePages);
+      const token2 = computeBookVersionToken(sampleBook, samplePages);
+      expect(token1).toBe(token2);
+    });
+
+    it("detects when online book or page text has changed", () => {
+      const token = computeBookVersionToken(sampleBook, samplePages);
+      const offlineRecord = {
+        book: sampleBook,
+        pages: samplePages,
+        versionToken: token,
+        cachedAtMs: Date.now(),
+      };
+
+      expect(isOfflineBookOutdated(sampleBook, samplePages, offlineRecord)).toBe(false);
+
+      const modifiedPages = [
+        { ...samplePages[0], text: "文章が更新されたよ。" },
+        samplePages[1],
+      ];
+      expect(isOfflineBookOutdated(sampleBook, modifiedPages, offlineRecord)).toBe(true);
+
+      const modifiedBook = { ...sampleBook, updatedAtMs: 1700000000999 };
+      expect(isOfflineBookOutdated(modifiedBook, samplePages, offlineRecord)).toBe(true);
+    });
+  });
+
+  describe("downloadBookForOffline and retrieval", () => {
+    it("saves book data and images into Cache Storage", async () => {
+      const progressFn = vi.fn();
+      const record = await downloadBookForOffline(sampleBook, samplePages, progressFn);
+
+      expect(record.book.id).toBe("book-123");
+      expect(record.pages.length).toBe(2);
+      expect(progressFn).toHaveBeenCalled();
+
+      const cached = await getOfflineBook("book-123");
+      expect(cached).not.toBeNull();
+      expect(cached?.book.title).toBe("テストの絵本");
+
+      const ids = await getOfflineBookIds();
+      expect(ids).toContain("book-123");
+
+      const all = await getAllOfflineBooks();
+      expect(all.length).toBe(1);
+    });
+
+    it("removes offline book cleanly", async () => {
+      await downloadBookForOffline(sampleBook, samplePages);
+      expect(await getOfflineBook("book-123")).not.toBeNull();
+
+      await removeOfflineBook("book-123");
+      expect(await getOfflineBook("book-123")).toBeNull();
+      expect(await getOfflineBookIds()).not.toContain("book-123");
+    });
+  });
+});
