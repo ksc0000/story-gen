@@ -54,7 +54,7 @@ import {
   withImageTimeout,
   ImageTimeoutError,
 } from "./lib/replicate";
-import { OPENAI_IMAGE_CANDIDATE_PROFILE, resolveOpenAIModelLabel, resolveOpenAIModelLabelForProfile } from "./lib/openai-image";
+import { resolveOpenAIModelLabel, resolveOpenAIModelLabelForProfile } from "./lib/openai-image";
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
 import { canUseProductPlan } from "./lib/entitlements";
 import { canGenerateBookThisMonth } from "./lib/usage";
