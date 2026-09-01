@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { DownloadCheck, FileText, Star, WifiOff } from "lucide-react";
+import { CheckCircle2, FileText, Star, WifiOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCard } from "@/components/animated-card";
@@ -48,7 +48,7 @@ export function BookCard({ book, onToggleFavorite, onSelect, isOffline = false }
 
           {isDownloaded && (
             <div className="absolute left-2 top-2 z-20 flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
-              <DownloadCheck className="h-3 w-3" />
+              <CheckCircle2 className="h-3 w-3" />
               オフライン可
             </div>
           )}

@@ -13,7 +13,7 @@ import {
 import type { BookDoc, PageDoc } from "@/lib/types";
 
 // Mock ServiceWorker & CacheStorage API in node environment for testing
-const mockCachesMap = new Map<string, Map<string, Response>>();
+const mockCachesMap = new Map<string, ReturnType<typeof createMockCache>>();
 
 function createMockCache() {
   const store = new Map<string, Response>();
@@ -46,7 +46,7 @@ describe("offline-book-storage", () => {
     progress: 100,
     coverImageUrl: "https://example.com/cover.webp",
     input: { childName: "たろう" },
-    createdAt: {} as any,
+    createdAt: {} as unknown as BookDoc["createdAt"],
     expiresAt: null,
     updatedAtMs: 1700000000000,
   };
@@ -76,33 +76,33 @@ describe("offline-book-storage", () => {
 
     const dataCache = createMockCache();
     const imageCache = createMockCache();
-    mockCachesMap.set(OFFLINE_DATA_CACHE, dataCache as any);
-    mockCachesMap.set(OFFLINE_IMAGE_CACHE, imageCache as any);
+    mockCachesMap.set(OFFLINE_DATA_CACHE, dataCache);
+    mockCachesMap.set(OFFLINE_IMAGE_CACHE, imageCache);
 
     global.caches = {
       open: vi.fn(async (name: string) => {
         if (!mockCachesMap.has(name)) {
-          mockCachesMap.set(name, createMockCache() as any);
+          mockCachesMap.set(name, createMockCache());
         }
-        return mockCachesMap.get(name) as any;
+        return mockCachesMap.get(name) as unknown as Cache;
       }),
       match: vi.fn(),
       delete: vi.fn(),
       has: vi.fn(),
       keys: vi.fn(),
-    } as any;
+    } as unknown as CacheStorage;
 
     global.navigator = {
       ...global.navigator,
       serviceWorker: {
         register: vi.fn(async () => ({ ready: Promise.resolve() })),
         ready: Promise.resolve(),
-      } as any,
+      } as unknown as ServiceWorkerContainer,
     };
 
-    global.fetch = vi.fn(async (url: any) => {
+    global.fetch = vi.fn(async () => {
       return new Response("dummy image content", { status: 200 });
-    }) as any;
+    }) as unknown as typeof fetch;
   });
 
   describe("computeBookVersionToken & isOfflineBookOutdated", () => {

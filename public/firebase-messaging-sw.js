@@ -85,22 +85,16 @@ self.addEventListener("fetch", (event) => {
     url.hostname.includes("firebasestorage.googleapis.com");
 
   if (isImage) {
+    // キャッシュへの書き込みはここでは行わない。
+    // 「明示的にオフライン保存した絵本のみ」をキャッシュする方針(#739)のため、
+    // 書き込みは offline-book-storage.ts の downloadBookForOffline() だけが行う。
+    // ここは読み取り専用: キャッシュにあれば返し、無ければネットワークへ。
     event.respondWith(
       caches.match(request, { cacheName: IMAGE_CACHE_NAME }).then((cachedResponse) => {
         if (cachedResponse) return cachedResponse;
-        return fetch(request)
-          .then((networkResponse) => {
-            // 画像がオフライン保存対象ドメインの場合、自動で一時キャッシュするオプション（best-effort）
-            if (networkResponse && (networkResponse.ok || networkResponse.type === "opaque")) {
-              const clone = networkResponse.clone();
-              caches.open(IMAGE_CACHE_NAME).then((cache) => cache.put(request, clone));
-            }
-            return networkResponse;
-          })
-          .catch(() => {
-            // オフライン時にキャッシュが無い場合
-            return cachedResponse || new Response("", { status: 404, statusText: "Offline Image Not Found" });
-          });
+        return fetch(request).catch(
+          () => new Response("", { status: 404, statusText: "Offline Image Not Found" })
+        );
       })
     );
     return;
@@ -110,11 +104,15 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request).catch(async () => {
-        // オフライン時にページが見つからない場合、キャッシュされている最後のページか 200 オフラインレスポンスを試みる
+        // オフライン時: キャッシュ済みHTMLがあれば返す。無ければ簡易オフライン応答
+        // （再fetchはオフラインでは必ず失敗し respondWith が reject するため行わない）
         const cache = await caches.open(DATA_CACHE_NAME);
         const cachedHtml = await cache.match(request);
         if (cachedHtml) return cachedHtml;
-        return fetch(request);
+        return new Response(
+          "<!doctype html><meta charset=utf-8><title>オフライン</title><p style='font-family:sans-serif;padding:2rem'>オフラインです。接続を確認してください。</p>",
+          { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
+        );
       })
     );
   }
