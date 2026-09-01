@@ -4,12 +4,12 @@ import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 import { randomUUID } from "crypto";
 import {
-  ReplicateImageClient,
   resolveImageFallbackProfiles,
   withImageTimeout,
   ImageTimeoutError,
   resolveReplicateModel,
 } from "./lib/replicate";
+import { createImageAdapter } from "./lib/image-adapter-factory";
 import {
   logGenerationEvent,
   resolveProviderFromProfile,
@@ -135,12 +135,11 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
       });
     }
 
-    const imageClient = new ReplicateImageClient(replicateApiToken.value());
     const primaryProfile = (pageData.imageModelProfile ?? "pro_consistent") as ImageModelProfile;
     const inputImageUrls = (pageData.inputImageRefs ?? []).map((ref) => ref.url);
 
     const fallbackProfiles = resolveImageFallbackProfiles(primaryProfile);
-    let imageBuffer: Buffer | undefined;
+    let regeneratedImageUrl: string | undefined;
     let usedProfile = primaryProfile;
     let fallbackUsed = false;
     let attemptCount = 0;
@@ -148,20 +147,44 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
     let failureReason: string | undefined;
     let success = false;
 
+    const storage = admin.storage();
+    const bucket = storage.bucket();
+
     outer: for (const profile of fallbackProfiles) {
       const maxRetries = 2;
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         attemptCount++;
         try {
-          imageBuffer = await withImageTimeout(
-            imageClient.generateImage(pageData.imagePrompt, {
-              purpose: pageData.imagePurpose,
-              imageQualityTier: pageData.imageQualityTier,
+          const adapter = createImageAdapter({
+            imageModelProfile: profile,
+            replicateApiToken: replicateApiToken.value(),
+            openaiApiKey: "",
+            replicateUploader: async (buffer) => {
+              const filename = `books/${bookId}/page-${pageData.pageNumber}-regen-${Date.now()}.png`;
+              const file = bucket.file(filename);
+              const downloadToken = randomUUID();
+              await file.save(buffer, {
+                contentType: "image/png",
+                metadata: { metadata: { firebaseStorageDownloadTokens: downloadToken } },
+              });
+              return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
+            },
+          });
+
+          const result = await withImageTimeout(
+            adapter.generateImage({
+              prompt: pageData.imagePrompt,
               imageModelProfile: profile,
               inputImageUrls,
+              metadata: {
+                bookId,
+                pageIndex: pageData.pageNumber,
+              },
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+
+          regeneratedImageUrl = result.imageUrl;
           usedProfile = profile;
           fallbackUsed = profile !== primaryProfile;
           success = true;
@@ -212,7 +235,7 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
 
     const durationMs = Date.now() - startMs;
 
-    if (!success || !imageBuffer) {
+    if (!success || !regeneratedImageUrl) {
       const failurePatch: Record<string, unknown> = {
         status: "image_failed" as PageStatus,
         imageFailureReason: failureReason ?? "unknown",
@@ -247,16 +270,7 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
       throw new HttpsError("internal", `画像生成に失敗しました: ${failureReason}`);
     }
 
-    const storage = admin.storage();
-    const bucket = storage.bucket();
-    const filename = `books/${bookId}/page-${pageData.pageNumber}-regen-${Date.now()}.png`;
-    const file = bucket.file(filename);
-    const downloadToken = randomUUID();
-    await file.save(imageBuffer, {
-      contentType: "image/png",
-      metadata: { metadata: { firebaseStorageDownloadTokens: downloadToken } },
-    });
-    const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
+    const imageUrl = regeneratedImageUrl;
 
     const newPageStatus: PageStatus = fallbackUsed ? "fallback_completed" : "completed";
 

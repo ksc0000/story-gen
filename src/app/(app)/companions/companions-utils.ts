@@ -68,14 +68,14 @@ export const COLOR_DEPTH_OPTIONS: { value: string; label: string; en: string }[]
 
 /** 体の模様（単一選択）。en が空文字のものは説明に含めない（＝無地）。 */
 export const PATTERN_OPTIONS: { value: string; label: string; emoji: string; en: string; imageUrl?: string }[] = [
-  { value: "plain", label: "むじ", emoji: "⬜", en: "", imageUrl: "/images/companions/patterns/plain.png" },
-  { value: "spotted", label: "水玉", emoji: "🔵", en: "with playful round polka-dot spots", imageUrl: "/images/companions/patterns/spotted.png" },
-  { value: "striped", label: "しま", emoji: "🦓", en: "with soft stripes", imageUrl: "/images/companions/patterns/striped.png" },
-  { value: "patched", label: "ぶち", emoji: "🐄", en: "with patches of two-tone color", imageUrl: "/images/companions/patterns/patched.png" },
-  { value: "star", label: "星", emoji: "⭐", en: "with little star-shaped markings", imageUrl: "/images/companions/patterns/star.png" },
-  { value: "heart", label: "ハート", emoji: "💖", en: "with small heart-shaped markings", imageUrl: "/images/companions/patterns/heart.png" },
-  { value: "swirl", label: "うずまき", emoji: "🌀", en: "with gentle swirl patterns", imageUrl: "/images/companions/patterns/swirl.png" },
-  { value: "gradient", label: "グラデ", emoji: "🌈", en: "with a soft gradient-colored coat", imageUrl: "/images/companions/patterns/gradient.png" },
+  { value: "plain", label: "むじ", emoji: "⬜", en: "", imageUrl: "/images/companions/patterns/plain.webp" },
+  { value: "spotted", label: "水玉", emoji: "🔵", en: "with playful round polka-dot spots", imageUrl: "/images/companions/patterns/spotted.webp" },
+  { value: "striped", label: "しま", emoji: "🦓", en: "with soft stripes", imageUrl: "/images/companions/patterns/striped.webp" },
+  { value: "patched", label: "ぶち", emoji: "🐄", en: "with patches of two-tone color", imageUrl: "/images/companions/patterns/patched.webp" },
+  { value: "star", label: "星", emoji: "⭐", en: "with little star-shaped markings", imageUrl: "/images/companions/patterns/star.webp" },
+  { value: "heart", label: "ハート", emoji: "💖", en: "with small heart-shaped markings", imageUrl: "/images/companions/patterns/heart.webp" },
+  { value: "swirl", label: "うずまき", emoji: "🌀", en: "with gentle swirl patterns", imageUrl: "/images/companions/patterns/swirl.webp" },
+  { value: "gradient", label: "グラデ", emoji: "🌈", en: "with a soft gradient-colored coat", imageUrl: "/images/companions/patterns/gradient.webp" },
 ];
 
 /** 身につけるアクセサリ（複数選択・最大2つ）。 */

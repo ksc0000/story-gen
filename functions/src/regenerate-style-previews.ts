@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions/v2";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
-import { OpenAIImageClient, OPENAI_GPT_IMAGE_2_PROFILE } from "./lib/openai-image";
+import { createImageAdapter } from "./lib/image-adapter-factory";
 import { ILLUSTRATION_STYLE_PROFILES } from "./lib/illustration-styles";
 import type { IllustrationStyle } from "./lib/types";
 
@@ -62,7 +62,6 @@ export const regenerateStylePreviews = onCall(
     );
 
     const bucket = admin.storage().bucket(BUCKET);
-    const client = new OpenAIImageClient(openaiApiKey.value(), OPENAI_GPT_IMAGE_2_PROFILE);
 
     const results: Array<{ styleId: string; url?: string; error?: string }> = [];
 
@@ -85,13 +84,26 @@ export const regenerateStylePreviews = onCall(
           "no text, no letters, no Japanese characters, no signage, no logo, no watermark.",
         ].join(" ");
 
-        const buffer = await client.generateImage(prompt, { purpose: "book_page" });
-        const filename = `${STORAGE_DIR}/${target.id}.png`;
-        await bucket.file(filename).save(buffer, {
-          contentType: "image/png",
-          metadata: { metadata: { firebaseStorageDownloadTokens: STYLE_PREVIEW_TOKEN } },
+        const adapter = createImageAdapter({
+          imageModelProfile: "openai_gpt_image_2",
+          replicateApiToken: "",
+          openaiApiKey: openaiApiKey.value(),
+          openaiUploader: async (buffer) => {
+            const filename = `${STORAGE_DIR}/${target.id}.png`;
+            await bucket.file(filename).save(buffer, {
+              contentType: "image/png",
+              metadata: { metadata: { firebaseStorageDownloadTokens: STYLE_PREVIEW_TOKEN } },
+            });
+            return stylePreviewPublicUrl(target.id);
+          },
         });
-        results.push({ styleId: target.id, url: stylePreviewPublicUrl(target.id) });
+
+        const result = await adapter.generateImage({
+          prompt,
+          imageModelProfile: "openai_gpt_image_2",
+        });
+
+        results.push({ styleId: target.id, url: result.imageUrl });
         logger.info("regenerateStylePreviews: generated", { styleId: target.id });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
