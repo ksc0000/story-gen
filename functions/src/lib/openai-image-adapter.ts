@@ -105,7 +105,8 @@ export class OpenAIImageAdapter implements ImageProvider {
   readonly capabilities: ImageProviderCapabilities = OPENAI_CAPABILITIES;
 
   private readonly apiKey: string;
-  private readonly uploader: OpenAIStorageUploader;
+  private uploader: OpenAIStorageUploader;
+  private clients = new Map<ImageModelProfile, OpenAIImageClient>();
 
   constructor(
     apiKey: string,
@@ -117,6 +118,10 @@ export class OpenAIImageAdapter implements ImageProvider {
     }
   ) {
     this.apiKey = apiKey;
+    this.uploader = uploader;
+  }
+
+  setUploader(uploader: OpenAIStorageUploader): void {
     this.uploader = uploader;
   }
 
@@ -164,7 +169,11 @@ export class OpenAIImageAdapter implements ImageProvider {
     }
 
     const startMs = Date.now();
-    const client = new OpenAIImageClient(this.apiKey, opts);
+    let client = this.clients.get(profile);
+    if (!client) {
+      client = new OpenAIImageClient(this.apiKey, opts);
+      this.clients.set(profile, client);
+    }
 
     const buffer = await client.generateImage(request.prompt, {
       inputImageUrls,

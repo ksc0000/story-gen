@@ -3,8 +3,8 @@ import {
   ImageModelProfile,
   CoverStatus,
   ImageQualityTier,
-  ImageClient,
 } from "../lib/types";
+import { ImageProvider } from "../lib/image-provider";
 import {
   resolveImageModelProfile,
   resolveImageFallbackProfiles,
@@ -59,8 +59,8 @@ export async function generateCoverImageWithFallback(params: {
   inputImageUrls?: string[];
   replicateApiToken?: string;
   openaiApiKey?: string;
-  imageClient?: ImageClient;
   uploadCoverImage?: CoverImageUploadFn;
+  adapterCache?: Map<ImageModelProfile, ImageProvider>;
   /**
    * P5-3f: Option C Step b config for cover.
    * When provided and Step a fails on the primary profile, retry with this prompt and
@@ -114,116 +114,66 @@ export async function generateCoverImageWithFallback(params: {
 
       try {
         const pid = resolveImageProviderId(profile);
-        const hasToken = pid === "replicate" ? !!params.replicateApiToken : !!params.openaiApiKey;
+        const uploader = params.uploadCoverImage
+          ? makeCoverUploader({
+              bookId: params.bookId,
+              uploadCoverImage: params.uploadCoverImage,
+            })
+          : async () => "https://storage.example.com/placeholder-cover.png";
 
-        if (hasToken && params.uploadCoverImage) {
-          const uploader = makeCoverUploader({
-            bookId: params.bookId,
-            uploadCoverImage: params.uploadCoverImage,
-          });
+        const adapter = createImageAdapter({
+          imageModelProfile: profile,
+          replicateApiToken: params.replicateApiToken || "",
+          openaiApiKey: params.openaiApiKey || "",
+          replicateUploader: uploader,
+          openaiUploader: uploader,
+          cacheMap: params.adapterCache,
+        });
 
-          const adapter = createImageAdapter({
+        const result = await withImageTimeout(
+          adapter.generateImage({
+            prompt: effectivePrompt,
             imageModelProfile: profile,
-            replicateApiToken: params.replicateApiToken || "",
-            openaiApiKey: params.openaiApiKey || "",
-            replicateUploader: uploader,
-            openaiUploader: uploader,
-          });
+            inputImageUrls: effectiveInputImageUrls,
+            metadata: {
+              bookId: params.bookId,
+            },
+          }),
+          IMAGE_GENERATION_TIMEOUT_MS
+        );
 
-          const result = await withImageTimeout(
-            adapter.generateImage({
-              prompt: effectivePrompt,
-              imageModelProfile: profile,
-              inputImageUrls: effectiveInputImageUrls,
-              metadata: {
-                bookId: params.bookId,
-              },
-            }),
-            IMAGE_GENERATION_TIMEOUT_MS
-          );
-
-          const durationMs = Date.now() - startMs;
-          const currentImageModel = pid === "replicate"
-            ? resolveReplicateModel({
-                purpose: "book_cover",
-                imageQualityTier: params.imageQualityTier,
-                imageModelProfile: profile,
-              })
-            : resolveOpenAIModelLabelForProfile(profile, effectiveInputImageUrls.length > 0);
-
-          logGenerationEvent({
-            eventName: "page_image_succeeded",
-            bookId: params.bookId,
-            pageIndex: -1, // -1 for cover
-            imageModelProfile: profile,
-            imageModel: currentImageModel,
-            provider: pid as "replicate" | "openai",
-            durationMs,
-            attemptCount: totalAttempts,
-            fallbackUsed: profile !== primaryProfile,
-          });
-
-          return {
-            success: true,
-            coverStatus: "completed",
-            imageUrl: result.imageUrl,
-            usedProfile: profile,
-            imageModel: currentImageModel,
-            primaryProfile,
-            fallbackUsed: profile !== primaryProfile,
-            attemptCount: totalAttempts,
-            durationMs,
-          };
-        }
-
-        // Legacy path fallback (primarily for test environments without adapter tokens)
-        if (params.imageClient) {
-          const buffer = await withImageTimeout(
-            params.imageClient.generateImage(effectivePrompt, {
+        const durationMs = Date.now() - startMs;
+        const currentImageModel = result.modelLabel || (pid === "replicate"
+          ? resolveReplicateModel({
               purpose: "book_cover",
               imageQualityTier: params.imageQualityTier,
               imageModelProfile: profile,
-              inputImageUrls: effectiveInputImageUrls,
-            }),
-            IMAGE_GENERATION_TIMEOUT_MS
-          );
+            })
+          : resolveOpenAIModelLabelForProfile(profile, effectiveInputImageUrls.length > 0));
 
-          const durationMs = Date.now() - startMs;
-          const currentProvider = resolveProviderFromProfile(profile);
-          const currentImageModel = currentProvider === "replicate"
-            ? resolveReplicateModel({
-                purpose: "book_cover",
-                imageQualityTier: params.imageQualityTier,
-                imageModelProfile: profile,
-              })
-            : resolveOpenAIModelLabelForProfile(profile, effectiveInputImageUrls.length > 0);
+        logGenerationEvent({
+          eventName: "page_image_succeeded",
+          bookId: params.bookId,
+          pageIndex: -1, // -1 for cover
+          imageModelProfile: profile,
+          imageModel: currentImageModel,
+          provider: pid as "replicate" | "openai",
+          durationMs,
+          attemptCount: totalAttempts,
+          fallbackUsed: profile !== primaryProfile,
+        });
 
-          logGenerationEvent({
-            eventName: "page_image_succeeded",
-            bookId: params.bookId,
-            pageIndex: -1, // -1 for cover
-            imageModelProfile: profile,
-            imageModel: currentImageModel,
-            provider: currentProvider,
-            durationMs,
-            attemptCount: totalAttempts,
-            fallbackUsed: profile !== primaryProfile,
-          });
-
-          return {
-            success: true,
-            coverStatus: "completed",
-            imageBuffer: buffer,
-            usedProfile: profile,
-            imageModel: currentImageModel,
-            primaryProfile,
-            fallbackUsed: profile !== primaryProfile,
-            attemptCount: totalAttempts,
-            durationMs,
-          };
-        }
-
-        throw new Error(`No adapter token or imageClient available for profile ${profile}`);
+        return {
+          success: true,
+          coverStatus: "completed",
+          imageUrl: result.imageUrl,
+          usedProfile: profile,
+          imageModel: currentImageModel,
+          primaryProfile,
+          fallbackUsed: profile !== primaryProfile,
+          attemptCount: totalAttempts,
+          durationMs,
+        };
       } catch (err) {
         if (err instanceof ImageTimeoutError) {
           lastFailureReason = "image_timeout";

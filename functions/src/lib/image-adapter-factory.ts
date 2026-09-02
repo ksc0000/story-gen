@@ -66,6 +66,10 @@ export interface ImageAdapterFactoryParams {
    * If omitted, the adapter's default stub uploader is used (throws at generateImage time).
    */
   openaiUploader?: OpenAIStorageUploader;
+  /**
+   * Optional Map cache to memoize adapter instances by profile.
+   */
+  cacheMap?: Map<ImageModelProfile, ImageProvider>;
 }
 
 // -------------------------------------------------------------------------
@@ -110,20 +114,42 @@ export function resolveImageProviderId(profile: ImageModelProfile): ImageProvide
  * NOT called from production code in P3-10.
  */
 export function createImageAdapter(params: ImageAdapterFactoryParams): ImageProvider {
-  const providerId = resolveImageProviderId(params.imageModelProfile);
+  const profile = params.imageModelProfile;
+  const providerId = resolveImageProviderId(profile);
 
+  if (params.cacheMap?.has(profile)) {
+    const cachedAdapter = params.cacheMap.get(profile)!;
+    if (providerId === "replicate" && cachedAdapter instanceof ReplicateImageAdapter) {
+      if (params.replicateUploader) {
+        cachedAdapter.setUploader(params.replicateUploader);
+      }
+      return cachedAdapter;
+    }
+    if (providerId === "openai" && cachedAdapter instanceof OpenAIImageAdapter) {
+      if (params.openaiUploader) {
+        cachedAdapter.setUploader(params.openaiUploader);
+      }
+      return cachedAdapter;
+    }
+  }
+
+  let adapter: ImageProvider;
   if (providerId === "replicate") {
-    return new ReplicateImageAdapter(params.replicateApiToken, params.replicateUploader);
+    adapter = new ReplicateImageAdapter(params.replicateApiToken, params.replicateUploader);
+  } else if (providerId === "openai") {
+    adapter = new OpenAIImageAdapter(params.openaiApiKey, params.openaiUploader);
+  } else {
+    // TypeScript exhaustiveness guard — should never be reached at runtime
+    // because PROFILE_PROVIDER_MAP only contains "replicate" | "openai".
+    throw new Error(
+      `createImageAdapter: unhandled providerId "${providerId as string}" ` +
+        `for profile "${profile}".`
+    );
   }
 
-  if (providerId === "openai") {
-    return new OpenAIImageAdapter(params.openaiApiKey, params.openaiUploader);
+  if (params.cacheMap) {
+    params.cacheMap.set(profile, adapter);
   }
 
-  // TypeScript exhaustiveness guard — should never be reached at runtime
-  // because PROFILE_PROVIDER_MAP only contains "replicate" | "openai".
-  throw new Error(
-    `createImageAdapter: unhandled providerId "${providerId as string}" ` +
-      `for profile "${params.imageModelProfile}".`
-  );
+  return adapter;
 }

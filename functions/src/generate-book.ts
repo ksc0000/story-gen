@@ -751,16 +751,16 @@ async function generatePageImageWithFallback(params: {
   inputImageUrls: string[];
   imageQualityTier: import("./lib/types").ImageQualityTier;
   imagePurpose: ImagePurpose;
-  imageClient: ImageClient;
   bookId: string;
   pageIndex: number;
   skip: boolean;
-  /** API token for ReplicateImageAdapter. When present, adapter path is used for Replicate profiles. */
+  /** API token for ReplicateImageAdapter. */
   replicateApiToken?: string;
-  /** Upload function injected into the adapter via makePageUploader. Required when adapter tokens are present. */
+  /** Upload function injected into the adapter via makePageUploader. */
   uploadFn?: PageImageUploadFn;
-  /** OpenAI API key for OpenAIImageAdapter. When present, adapter path is used for OpenAI profiles. */
+  /** OpenAI API key for OpenAIImageAdapter. */
   openaiApiKey?: string;
+  adapterCache?: Map<ImageModelProfile, ImageProvider>;
   /**
    * P5-3f: Option C Step b config.
    * When provided and Step a fails on the primary profile, retry with this prompt and
@@ -826,135 +826,40 @@ async function generatePageImageWithFallback(params: {
       }
 
       try {
-        // P3-15: Adapter path for Replicate profiles.
-        // useReplicateAdapter() flag removed — adapter is now the canonical page generation path.
-        // Upload happens inside the adapter via makePageUploader; imageBuffer is not returned.
-        // Falls through to legacy imageClient path below only when replicateApiToken is absent
-        // (test environments that mock imageClient directly without providing adapter tokens).
-        if (
-          params.replicateApiToken != null &&
-          params.uploadFn != null &&
-          PROFILE_PROVIDER_MAP[profile] === "replicate"
-        ) {
-          const uploader = makePageUploader({
-            bookId: params.bookId,
-            pageNumber: params.pageIndex,
-            uploadImage: params.uploadFn,
-          });
-          const adapter = new ReplicateImageAdapter(params.replicateApiToken, uploader);
-          const adapterResult = await withImageTimeout(
-            adapter.generateImage({
-              prompt: effectivePrompt,
-              imageModelProfile: profile,
-              inputImageUrls: effectiveInputImageUrls,
-            }),
-            IMAGE_GENERATION_TIMEOUT_MS
-          );
-          const durationMs = Date.now() - startMs;
-          const currentImageModel = resolveReplicateModel({
-            purpose: params.imagePurpose,
-            imageQualityTier: params.imageQualityTier,
-            imageModelProfile: profile,
-          });
+        const uploader = params.uploadFn
+          ? makePageUploader({
+              bookId: params.bookId,
+              pageNumber: params.pageIndex,
+              uploadImage: params.uploadFn,
+            })
+          : async () => `https://storage.example.com/placeholder-page-${params.pageIndex}.png`;
 
-          logGenerationEvent({
-            eventName: "page_image_succeeded",
-            bookId: params.bookId,
-            pageIndex: params.pageIndex,
-            imageModelProfile: profile,
-            imageModel: currentImageModel,
-            provider: "replicate",
-            durationMs,
-            attemptCount: totalAttempts,
-            fallbackUsed: profile !== primaryProfile,
-          });
+        const adapter = createImageAdapter({
+          imageModelProfile: profile,
+          replicateApiToken: params.replicateApiToken || "",
+          openaiApiKey: params.openaiApiKey || "",
+          replicateUploader: uploader,
+          openaiUploader: uploader,
+          cacheMap: params.adapterCache,
+        });
 
-          return {
-            ...base,
-            success: true,
-            imageUrl: adapterResult.imageUrl,
-            usedProfile: profile,
-            imageModel: currentImageModel,
-            fallbackUsed: profile !== primaryProfile,
-            attemptCount: totalAttempts,
-            timeoutCount,
-            durationMs,
-          };
-        }
-        // P3-15: Adapter path for OpenAI profiles.
-        // useOpenAIAdapter() flag removed — adapter is now the canonical page generation path.
-        // Upload happens inside the adapter via makePageUploader; imageBuffer is not returned.
-        if (
-          params.openaiApiKey != null &&
-          params.uploadFn != null &&
-          PROFILE_PROVIDER_MAP[profile] === "openai"
-        ) {
-          const uploader = makePageUploader({
-            bookId: params.bookId,
-            pageNumber: params.pageIndex,
-            uploadImage: params.uploadFn,
-          });
-          const adapter = new OpenAIImageAdapter(params.openaiApiKey, uploader);
-          const adapterResult = await withImageTimeout(
-            adapter.generateImage({
-              prompt: effectivePrompt,
-              imageModelProfile: profile,
-              inputImageUrls: effectiveInputImageUrls,
-            }),
-            IMAGE_GENERATION_TIMEOUT_MS
-          );
-          const durationMs = Date.now() - startMs;
-          // アダプタが解決した正しいラベル（プロファイル別: openai/gpt-image-2 等）を使う。
-          // resolveOpenAIModelLabel を opts 無しで呼ぶと既定の candidate(gpt-image-1-mini)に
-          // なってしまい、gpt-image-2 生成が mini と誤記録される。
-          const currentImageModel =
-            adapterResult.modelLabel ?? resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
-
-          logGenerationEvent({
-            eventName: "page_image_succeeded",
-            bookId: params.bookId,
-            pageIndex: params.pageIndex,
-            imageModelProfile: profile,
-            imageModel: currentImageModel,
-            provider: "openai",
-            durationMs,
-            attemptCount: totalAttempts,
-            fallbackUsed: profile !== primaryProfile,
-          });
-
-          return {
-            ...base,
-            success: true,
-            imageUrl: adapterResult.imageUrl,
-            usedProfile: profile,
-            imageModel: currentImageModel,
-            fallbackUsed: profile !== primaryProfile,
-            attemptCount: totalAttempts,
-            timeoutCount,
-            durationMs,
-          };
-        }
-        // Legacy imageClient path — reached only when adapter tokens are absent
-        // (test environments that mock imageClient directly without providing adapter tokens).
-        // In production, replicateApiToken and openaiApiKey are always present via Firebase secrets.
-        const buffer = await withImageTimeout(
-          params.imageClient.generateImage(effectivePrompt, {
-            purpose: params.imagePurpose,
-            imageQualityTier: params.imageQualityTier,
+        const adapterResult = await withImageTimeout(
+          adapter.generateImage({
+            prompt: effectivePrompt,
             imageModelProfile: profile,
             inputImageUrls: effectiveInputImageUrls,
           }),
           IMAGE_GENERATION_TIMEOUT_MS
         );
         const durationMs = Date.now() - startMs;
-        const currentProvider = resolveProviderFromProfile(profile);
-        const currentImageModel = currentProvider === "replicate"
+        const providerId = resolveImageProviderId(profile);
+        const currentImageModel = adapterResult.modelLabel || (providerId === "replicate"
           ? resolveReplicateModel({
               purpose: params.imagePurpose,
               imageQualityTier: params.imageQualityTier,
               imageModelProfile: profile,
             })
-          : resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0);
+          : resolveOpenAIModelLabel(effectiveInputImageUrls.length > 0));
 
         logGenerationEvent({
           eventName: "page_image_succeeded",
@@ -962,7 +867,7 @@ async function generatePageImageWithFallback(params: {
           pageIndex: params.pageIndex,
           imageModelProfile: profile,
           imageModel: currentImageModel,
-          provider: currentProvider,
+          provider: providerId,
           durationMs,
           attemptCount: totalAttempts,
           fallbackUsed: profile !== primaryProfile,
@@ -1383,6 +1288,8 @@ export async function processBookGeneration(
     // P4-2: Capture story generation wall time for SLO fields on success path.
     const storyDurationMs = Date.now() - storyStartMs;
 
+    const adapterCache = new Map<ImageModelProfile, ImageProvider>();
+
     // Step 6: Ensure recurring character references (premium + quality mode only)
     const enableRecurringRef = resolveEnableRecurringCharacterReference(generationMode);
     let story = enableRecurringRef
@@ -1391,6 +1298,7 @@ export async function processBookGeneration(
           story: storyResult.story,
           normalizedBookData,
           deps,
+          adapterCache,
         })
       : storyResult.story;
 
@@ -1696,14 +1604,13 @@ export async function processBookGeneration(
         inputImageUrls: finalInputImageUrls,
         imageQualityTier,
         imagePurpose,
-        imageClient: deps.imageClient,
         bookId,
         pageIndex: i,
         skip: isDev,
-        // Adapter tokens: present in production (always), absent in test environments that mock imageClient directly.
         replicateApiToken: deps.replicateApiToken,
         uploadFn: deps.uploadImage,
         openaiApiKey: deps.openaiApiKey,
+        adapterCache,
         stepBConfig,
       });
 
@@ -1883,8 +1790,8 @@ export async function processBookGeneration(
           inputImageUrls: coverInputImageUrls,
           replicateApiToken: deps.replicateApiToken,
           openaiApiKey: deps.openaiApiKey,
-          imageClient: deps.imageClient,
           uploadCoverImage: deps.uploadCoverImage,
+          adapterCache,
           stepBConfig: coverStepBConfig,
         });
 
@@ -2496,7 +2403,8 @@ async function ensureRecurringCharacterReferences(params: {
   bookId: string;
   story: GeneratedStory;
   normalizedBookData: BookData;
-  deps: Pick<GenerationDeps, "db" | "imageClient" | "uploadImage" | "replicateApiToken" | "openaiApiKey">;
+  deps: Pick<GenerationDeps, "db" | "uploadImage" | "replicateApiToken" | "openaiApiKey">;
+  adapterCache?: Map<ImageModelProfile, ImageProvider>;
 }): Promise<GeneratedStory> {
   if (!params.story.cast?.length) {
     return params.story;
@@ -2534,91 +2442,51 @@ async function ensureRecurringCharacterReferences(params: {
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
           const pid = resolveImageProviderId(profile);
-          const hasToken = pid === "replicate" ? !!params.deps.replicateApiToken : !!params.deps.openaiApiKey;
+          const uploader = makeCharacterReferenceUploader({
+            bookId: params.bookId,
+            characterIndex: index,
+            uploadImage: params.deps.uploadImage,
+          });
 
-          if (hasToken) {
-            const uploader = makeCharacterReferenceUploader({
-              bookId: params.bookId,
-              characterIndex: index,
-              uploadImage: params.deps.uploadImage,
-            });
+          const adapter = createImageAdapter({
+            imageModelProfile: profile,
+            replicateApiToken: params.deps.replicateApiToken || "",
+            openaiApiKey: params.deps.openaiApiKey || "",
+            replicateUploader: uploader,
+            openaiUploader: uploader,
+            cacheMap: params.adapterCache,
+          });
 
-            const adapter = createImageAdapter({
-              imageModelProfile: profile,
-              replicateApiToken: params.deps.replicateApiToken || "",
-              openaiApiKey: params.deps.openaiApiKey || "",
-              replicateUploader: uploader,
-              openaiUploader: uploader,
-            });
-
-            const result = await withImageTimeout(
-              adapter.generateCharacterReferenceImage({
-                prompt: referencePrompt,
-                imageModelProfile: profile,
-                inputImageUrls: [],
-                metadata: {
-                  bookId: params.bookId,
-                  characterId: character.characterId,
-                },
-              }),
-              IMAGE_GENERATION_TIMEOUT_MS
-            );
-
-            logGenerationEvent({
-              eventName: "page_image_succeeded",
-              bookId: params.bookId,
-              pageIndex: -100 - index, // Conventional negative index for character references
-              imageModelProfile: profile,
-              imageModel: result.modelLabel || resolveReplicateModel({
-                purpose: imagePurpose,
-                imageQualityTier: params.normalizedBookData.imageQualityTier,
-                imageModelProfile: profile,
-              }),
-              provider: pid as "replicate" | "openai",
-              durationMs: result.durationMs ?? 0,
-              attemptCount: (profile === primaryProfile ? attempt + 1 : 2 + attempt + 1), // best effort attempt count
-              fallbackUsed: profile !== primaryProfile,
-            });
-
-            url = result.imageUrl;
-            success = true;
-            break search_loop;
-          }
-
-          // Legacy path fallback (primarily for test environments without adapter tokens)
-          const refStartMs = Date.now();
-          const buffer = await withImageTimeout(
-            params.deps.imageClient.generateImage(referencePrompt, {
-              purpose: imagePurpose,
-              imageQualityTier: params.normalizedBookData.imageQualityTier,
+          const result = await withImageTimeout(
+            adapter.generateCharacterReferenceImage({
+              prompt: referencePrompt,
               imageModelProfile: profile,
               inputImageUrls: [],
+              metadata: {
+                bookId: params.bookId,
+                characterId: character.characterId,
+              },
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
-          const durationMs = Date.now() - refStartMs;
-          const currentProvider = resolveProviderFromProfile(profile);
-          const currentImageModel = currentProvider === "replicate"
-            ? resolveReplicateModel({
-                purpose: imagePurpose,
-                imageQualityTier: params.normalizedBookData.imageQualityTier,
-                imageModelProfile: profile,
-              })
-            : resolveOpenAIModelLabelForProfile(profile, false);
 
           logGenerationEvent({
             eventName: "page_image_succeeded",
             bookId: params.bookId,
-            pageIndex: -100 - index,
+            pageIndex: -100 - index, // Conventional negative index for character references
             imageModelProfile: profile,
-            imageModel: currentImageModel,
-            provider: currentProvider,
-            durationMs,
-            attemptCount: (profile === primaryProfile ? attempt + 1 : 2 + attempt + 1),
+            imageModel: result.modelLabel || resolveReplicateModel({
+              purpose: imagePurpose,
+              imageQualityTier: params.normalizedBookData.imageQualityTier,
+              imageModelProfile: profile,
+            }),
+            provider: pid as "replicate" | "openai",
+            durationMs: result.durationMs ?? 0,
+            attemptCount: (profile === primaryProfile ? attempt + 1 : 2 + attempt + 1), // best effort attempt count
             fallbackUsed: profile !== primaryProfile,
           });
 
-          url = await params.deps.uploadImage(params.bookId, -100 - index, buffer);
+          url = result.imageUrl;
           success = true;
           break search_loop;
         } catch (err) {
