@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import * as logger from "firebase-functions/logger";
 import {
+  resolveBookTemplate,
   processBookGeneration,
   shouldUseCharacterReferenceForPage,
   classifyFallbackReasonClass,
@@ -2545,9 +2546,16 @@ describe("photo_story mode", () => {
     await processBookGeneration("book_photo_fail", bookData, deps);
 
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book_photo_fail", "failed");
+    // 保護者には定型の日本語メッセージ、技術的な原因は failureMetadata 側に残す
     expect(deps.updateBookFailure).toHaveBeenCalledWith(
       "book_photo_fail",
-      expect.stringContaining("Vision analysis failed: Photo download error")
+      expect.stringMatching(/写真を読み込めませんでした/)
+    );
+    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
+      "book_photo_fail",
+      expect.objectContaining({
+        technicalErrorMessage: expect.stringContaining("Vision analysis failed: Photo download error"),
+      })
     );
 
     vi.unstubAllGlobals();
@@ -2590,4 +2598,72 @@ describe("photo_story mode", () => {
 
     vi.unstubAllGlobals();
   });
+
+describe("resolveBookTemplate（AI系モードはテーマ無しでも生成できる・回帰 #631）", () => {
+  it("guided_ai で theme が空なら Firestore を引かずに既定テンプレートを返す", async () => {
+    const getTemplate = vi.fn().mockRejectedValue(new Error("must not be called"));
+    const t = await resolveBookTemplate({ theme: "", creationMode: "guided_ai", categoryGroupId: "imagination" }, getTemplate);
+    expect(getTemplate).not.toHaveBeenCalled();
+    expect(t.creationMode).toBe("guided_ai");
+    expect(t.categoryGroupId).toBe("imagination");
+    expect(t.systemPrompt).toContain("絵本");
+  });
+
+  it("photo_story で theme のテンプレートが存在しなくても既定テンプレートに倒す", async () => {
+    const getTemplate = vi.fn().mockRejectedValue(new Error("Template not found: photo_story"));
+    const t = await resolveBookTemplate({ theme: "photo_story", creationMode: "photo_story" }, getTemplate);
+    expect(getTemplate).toHaveBeenCalledWith("photo_story");
+    expect(t.creationMode).toBe("photo_story");
+  });
+
+  it("theme があり取得できればそのテンプレートを使う", async () => {
+    const getTemplate = vi.fn().mockResolvedValue(mockTemplate);
+    const t = await resolveBookTemplate({ theme: "fantasy", creationMode: "guided_ai" }, getTemplate);
+    expect(t).toBe(mockTemplate);
+  });
+
+  it("fixed_template は theme が空なら失敗（テンプレートが本体のため）", async () => {
+    const getTemplate = vi.fn();
+    await expect(
+      resolveBookTemplate({ theme: "", creationMode: "fixed_template" }, getTemplate)
+    ).rejects.toThrow(/Template not found/);
+    expect(getTemplate).not.toHaveBeenCalled();
+  });
+
+  it("fixed_template の取得失敗はそのまま伝播する", async () => {
+    const getTemplate = vi.fn().mockRejectedValue(new Error("Template not found: zoo"));
+    await expect(
+      resolveBookTemplate({ theme: "zoo", creationMode: "fixed_template" }, getTemplate)
+    ).rejects.toThrow("Template not found: zoo");
+  });
+
+  it("processBookGeneration: guided_ai + theme 空 でも絵本が完成する（本番で失敗していた形）", async () => {
+    const deps = createMockDeps();
+    deps.getTemplate.mockRejectedValue(
+      new Error('Value for argument "documentPath" is not a valid resource path. Path must be a non-empty string.')
+    );
+    await processBookGeneration("book-empty-theme", {
+      ...baseBookData,
+      theme: "",
+      templateId: "",
+      creationMode: "guided_ai",
+      categoryGroupId: "favorite-worlds",
+    }, deps);
+    expect(deps.getTemplate).not.toHaveBeenCalled();
+    expect(deps.updateBookFailure).not.toHaveBeenCalled();
+    expect(deps.llmClient.generateStory).toHaveBeenCalledOnce();
+    expect(deps.updateBookStatus).toHaveBeenLastCalledWith("book-empty-theme", expect.stringMatching(/completed/));
+  });
+
+  it("想定外エラーの生メッセージ（英語のSDKエラー等）は保護者に見せない", async () => {
+    const deps = createMockDeps();
+    deps.getTemplate.mockRejectedValue(new Error("Template not found: zoo"));
+    await processBookGeneration("book-raw-error", { ...baseBookData, theme: "zoo", creationMode: "fixed_template" }, deps);
+    expect(deps.updateBookFailure).toHaveBeenCalledWith("book-raw-error", expect.stringMatching(/絵本の生成中に問題が発生しました/));
+    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
+      "book-raw-error",
+      expect.objectContaining({ technicalErrorMessage: "Template not found: zoo" })
+    );
+  });
+});
 });
