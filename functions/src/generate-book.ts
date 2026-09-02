@@ -1,6 +1,12 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
+import {
+  buildDefaultAiTemplate,
+  DEFAULT_AI_TEMPLATE_ID,
+  isTemplateFreeCreationMode,
+  type TemplateFreeCreationMode,
+} from "./lib/default-ai-template";
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
 import { isRateLimited } from "./lib/rate-limit";
@@ -1122,8 +1128,8 @@ export async function processBookGeneration(
     }
 
     // Step 2: Get template and normalize plan settings
-    const template = await deps.getTemplate(bookData.theme);
-    const resolvedTemplateId = bookData.templateId ?? bookData.theme;
+    const template = await resolveBookTemplate(bookData, deps.getTemplate);
+    const resolvedTemplateId = bookData.templateId || bookData.theme || DEFAULT_AI_TEMPLATE_ID;
     const resolvedCreationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
     if (resolvedCreationMode === "fixed_template") {
       const exposure = getStyleTemplateExposure(resolvedTemplateId, bookData.style);
@@ -1226,7 +1232,10 @@ export async function processBookGeneration(
       } catch (err) {
         const message = `Vision analysis failed: Photo download error. ${err instanceof Error ? err.message : String(err)}`;
         logger.error(message, { bookId });
-        await deps.updateBookFailure(bookId, message);
+        await deps.updateBookFailure(
+          bookId,
+          "写真を読み込めませんでした。写真を選び直して、もう一度お試しください。"
+        );
         await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
           failureStage: "story_generation",
           failureProvider: "gemini",
@@ -2080,7 +2089,7 @@ export async function processBookGeneration(
   } catch (err) {
     console.error(`Book generation failed for ${bookId}:`, err);
     const message = err instanceof Error ? err.message : "Unknown generation error";
-    await deps.updateBookFailure(bookId, message);
+    await deps.updateBookFailure(bookId, toUserFacingFailureMessage(message));
     await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
       failureStage: "validation",
       failureProvider: "system",
@@ -2101,6 +2110,52 @@ export async function processBookGeneration(
       retryable: false,
     });
   }
+}
+
+/**
+ * 絵本が使うテンプレートを解決する。
+ * AI系モード（guided_ai / original_ai / photo_story）は作成導線がテーマを選ばないため theme が
+ * 空で届く（#631 以降）。空IDで Firestore を引くと firebase-admin が例外を投げて絵本が必ず失敗する
+ * ので、組み込みの既定テンプレートで補う。テンプレートが本体である fixed_template は従来どおり失敗。
+ */
+/**
+ * 想定外エラーを保護者向けの文言に変換する。
+ * 生成処理が意図して投げる日本語メッセージ（混雑・内容調整など）はそのまま通し、
+ * SDK/HTTP 由来の英語メッセージ（例: firebase-admin の documentPath エラー）は定型文に置き換える。
+ * 技術的な原因は failureMetadata.technicalErrorMessage 側に残る。
+ */
+const GENERIC_FAILURE_MESSAGE =
+  "絵本の生成中に問題が発生しました。もう一度お試しください。何度も続く場合はお問い合わせください。";
+export function toUserFacingFailureMessage(message: string): string {
+  const hasJapanese = /[\u3040-\u30ff\u3400-\u9fff]/.test(message);
+  return hasJapanese ? message : GENERIC_FAILURE_MESSAGE;
+}
+
+export async function resolveBookTemplate(
+  bookData: Pick<BookData, "theme" | "creationMode" | "categoryGroupId">,
+  getTemplate: GenerationDeps["getTemplate"]
+): Promise<TemplateData> {
+  const theme = typeof bookData.theme === "string" ? bookData.theme.trim() : "";
+  const templateFree = isTemplateFreeCreationMode(bookData.creationMode);
+
+  if (theme) {
+    try {
+      return await getTemplate(theme);
+    } catch (err) {
+      if (!templateFree) throw err;
+      logger.warn("template_lookup_failed_using_default_ai_template", {
+        theme,
+        creationMode: bookData.creationMode,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  } else if (!templateFree) {
+    throw new Error("Template not found: theme is empty");
+  }
+
+  return buildDefaultAiTemplate(bookData.creationMode as TemplateFreeCreationMode, {
+    categoryGroupId: bookData.categoryGroupId,
+  });
 }
 
 function resolveEnableRecurringCharacterReference(generationMode: string): boolean {
