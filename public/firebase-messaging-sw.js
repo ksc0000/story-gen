@@ -47,7 +47,17 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    (async () => {
+      // キャッシュ名を更新(v2など)した際に旧世代を確実に回収する
+      const keep = new Set([DATA_CACHE_NAME, IMAGE_CACHE_NAME]);
+      const names = await caches.keys();
+      await Promise.all(
+        names.filter((n) => n.startsWith("ehoria-offline-") && !keep.has(n)).map((n) => caches.delete(n))
+      );
+      await clients.claim();
+    })()
+  );
 });
 
 // Cache Storage からのオフライン応答（画像 & オフラインブックメタデータ）
@@ -67,24 +77,14 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 1. オフラインデータ JSON リクエスト (/offline-books/*.json)
-  if (url.pathname.startsWith("/offline-books/")) {
-    event.respondWith(
-      caches.match(request, { cacheName: DATA_CACHE_NAME }).then((cachedResponse) => {
-        if (cachedResponse) return cachedResponse;
-        return fetch(request);
-      })
-    );
-    return;
-  }
+  // 1. 絵本画像 (Firebase Storage)。
+  //    オフライン保存(downloadBookForOffline)が書き込むのは Storage の画像だけなので、
+  //    傍受もこのホストに限定する。アプリ内アイコン等まで SW を経由させると
+  //    空キャッシュへの無駄な照会が全画像リクエストに乗るため。
+  //    (オフライン絵本の JSON は offline-book-storage.ts が caches API を直接読むため fetch は来ない)
+  const isBookImage = url.hostname === "firebasestorage.googleapis.com";
 
-  // 2. 画像ファイル (Storage URL または拡張子が jpg/png/webp)
-  const isImage =
-    request.destination === "image" ||
-    url.pathname.match(/\.(png|jpg|jpeg|webp|gif|svg)$/i) ||
-    url.hostname.includes("firebasestorage.googleapis.com");
-
-  if (isImage) {
+  if (isBookImage) {
     // キャッシュへの書き込みはここでは行わない。
     // 「明示的にオフライン保存した絵本のみ」をキャッシュする方針(#739)のため、
     // 書き込みは offline-book-storage.ts の downloadBookForOffline() だけが行う。
@@ -100,15 +100,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 3. HTML / App Shell ページ遷移ナビゲーションのリクエスト
+  // 2. HTML / ページ遷移ナビゲーション。
+  //    現状はアプリシェル(HTML/_next/static)をキャッシュしていないため、オフラインの
+  //    コールドスタートは成立しない（ダウンロード済み絵本はタブが開いている間のみ読める）。
+  //    シェルの事前キャッシュは別issueで扱う。ここでは簡易オフライン応答のみ返す。
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(async () => {
-        // オフライン時: キャッシュ済みHTMLがあれば返す。無ければ簡易オフライン応答
-        // （再fetchはオフラインでは必ず失敗し respondWith が reject するため行わない）
-        const cache = await caches.open(DATA_CACHE_NAME);
-        const cachedHtml = await cache.match(request);
-        if (cachedHtml) return cachedHtml;
+      fetch(request).catch(() => {
         return new Response(
           "<!doctype html><meta charset=utf-8><title>オフライン</title><p style='font-family:sans-serif;padding:2rem'>オフラインです。接続を確認してください。</p>",
           { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }

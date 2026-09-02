@@ -3,7 +3,6 @@ import type {
   ChildProfileDoc,
   ChildProfileSnapshot,
   TemplateDoc, IllustrationStyle } from "@/lib/types";
-import { getAgeReadingDisplayProfile } from "@/lib/age-reading-profile";
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import { getDefaultProductPlanForCreationMode, PLAN_CONFIGS } from "@/lib/plans";
 
@@ -51,10 +50,6 @@ export function getRecommendedTemplates(
   const fixedTemplates = templates.filter(
     (t) => (t.creationMode ?? "guided_ai") === "fixed_template"
   );
-
-  // 子どもの年齢帯を取得
-  const displayProfile = getAgeReadingDisplayProfile(childAge);
-  const ageBand = displayProfile.ageBand;
 
   // 年齢帯が適合するテンプレを優先（指定がなければ全体）
   let matching = fixedTemplates.filter((t) => {
@@ -172,7 +167,7 @@ export function buildFirstRunBookPayload({
     progress: 0,
     input: {
       childName,
-      ...(child?.age ? { childAge: child.age } : {}),
+      ...(child?.age != null ? { childAge: child.age } : {}),
       ...(child?.personality?.favoriteThings?.length
         ? { favorites: child.personality.favoriteThings.join("、") }
         : {}),

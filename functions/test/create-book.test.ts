@@ -3,12 +3,21 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const addMock = vi.fn();
 const collectionMock = vi.fn(() => ({ add: addMock }));
 
+// 実SDKと同様に「クラスインスタンス」でモックする。
+// plain object でモックすると stripUndefined による平坦化バグ（createdAt: {} 等）を検出できない。
+class MockFieldValue {
+  constructor(public readonly kind: string) {}
+}
+class MockTimestamp {
+  constructor(public readonly ms: number) {}
+  toMillis() { return this.ms; }
+}
 vi.mock("firebase-admin", () => ({
   firestore: Object.assign(
     () => ({ collection: collectionMock }),
     {
-      FieldValue: { serverTimestamp: () => "__serverTimestamp__" },
-      Timestamp: { fromMillis: (ms: number) => ({ __ts: ms }) },
+      FieldValue: { serverTimestamp: () => new MockFieldValue("serverTimestamp") },
+      Timestamp: { fromMillis: (ms: number) => new MockTimestamp(ms) },
     }
   ),
 }));
@@ -76,7 +85,7 @@ describe("createBook callable", () => {
         favorite: true,
         title: "偽のタイトル",
         createdAtSource: "client_create",
-        expiresAt: { __ts: 0 },
+        expiresAt: new MockTimestamp(0),
         orgId: "someone-elses-org",
       },
     });
@@ -88,7 +97,7 @@ describe("createBook callable", () => {
     expect(w.public).toBeUndefined();
     expect(w.favorite).toBeUndefined();
     expect(w.orgId).toBeUndefined();
-    expect(w.expiresAt).not.toEqual({ __ts: 0 });
+    expect((w.expiresAt as MockTimestamp).ms).not.toBe(0);
   });
 
   it("undefined を含むネストは除去される（Firestoreが受け付けないため）", async () => {
@@ -111,5 +120,22 @@ describe("createBook callable", () => {
   it("Firestore 書き込み失敗は internal に変換する", async () => {
     addMock.mockRejectedValue(new Error("boom"));
     await expect(call({ auth: { uid: "u1" }, data: validPayload })).rejects.toMatchObject({ code: "internal" });
+  });
+
+  it("Timestamp / FieldValue のセンチネルは平坦化されずクラスインスタンスのまま書き込まれる（回帰）", async () => {
+    await call({ auth: { uid: "u1" }, data: validPayload });
+    const w = addMock.mock.calls[0][0];
+    expect(w.createdAt).toBeInstanceOf(MockFieldValue);
+    expect(w.updatedAt).toBeInstanceOf(MockFieldValue);
+    expect(w.expiresAt).toBeInstanceOf(MockTimestamp);
+  });
+
+  it("保持期間はクライアント実装と同じ30日", async () => {
+    const before = Date.now();
+    await call({ auth: { uid: "u1" }, data: validPayload });
+    const w = addMock.mock.calls[0][0];
+    const days = ((w.expiresAt as MockTimestamp).ms - before) / (24 * 60 * 60 * 1000);
+    expect(days).toBeGreaterThan(29.9);
+    expect(days).toBeLessThan(30.1);
   });
 });

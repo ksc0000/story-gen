@@ -138,4 +138,20 @@ describe("first-run logic", () => {
       expect(payload.input.childAge).toBe(4);
     });
   });
+
+  describe("buildFirstRunBookPayload: 年齢0歳（回帰）", () => {
+    it("age が 0 でも childAge を落とさない", () => {
+      const template = {
+        id: "t", name: "T", description: "", icon: "📕", creationMode: "fixed_template", systemPrompt: "", active: true,
+        categoryGroupId: "favorite-worlds", order: 1,
+        fixedStory: { titleTemplate: "x", pages: [{ textTemplate: "a", imagePromptTemplate: "b" }] },
+      } as unknown as TemplateDoc & { id: string };
+      const payload = buildFirstRunBookPayload({
+        userId: "u",
+        child: { id: "c", displayName: "あか", age: 0, personality: {} } as unknown as ChildProfileDoc & { id: string },
+        template,
+      }) as { input?: { childAge?: number } };
+      expect(payload.input?.childAge).toBe(0);
+    });
+  });
 });

@@ -102,4 +102,19 @@ describe("share-ogp-html", () => {
       ).toBe(broken);
     });
   });
+
+  describe("String.replace の特殊パターンに対する耐性（回帰）", () => {
+    it.each(["$'", "$&", "$`", "$1", "$$"])("タイトルに %s が含まれてもシェルを複製しない", (bad) => {
+      const html = injectOgpIntoShell(SHELL, {
+        title: `おはなし ${bad} ここまで`,
+        coverImageUrl: null,
+        shareUrl: "https://ehoria.app/share?id=abc12",
+      });
+      // <title> は1つ、</head> は1つ、__next は1つのまま
+      expect(html.match(/<title>/g)?.length).toBe(1);
+      expect(html.match(/<\/head>/g)?.length).toBe(1);
+      expect(html.match(/id="__next"/g)?.length).toBe(1);
+      expect(html.length).toBeLessThan(SHELL.length + 2000);
+    });
+  });
 });

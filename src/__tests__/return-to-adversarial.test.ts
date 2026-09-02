@@ -10,4 +10,12 @@ describe("validateReturnTo 攻撃的入力(レビュー時の追加検証)", () 
     (input, expected) => { expect(validateReturnTo(input)).toBe(expected); }
   );
   it("正常な内部パスは通す", () => { expect(validateReturnTo("/create/input?mode=x#y")).toBe("/create/input?mode=x#y"); });
+
+  it.each(["/login", "/login/", "/login?returnTo=%2Fhome", "/login#x"])(
+    "ログイン画面自身は戻り先にしない（固着防止・回帰）: %s",
+    (a) => { expect(validateReturnTo(a)).toBe("/home"); }
+  );
+  it("/loginで始まる別ページ(/login-help等)は通す", () => {
+    expect(validateReturnTo("/login-help")).toBe("/login-help");
+  });
 });

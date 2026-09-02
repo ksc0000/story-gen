@@ -117,17 +117,37 @@ export async function downloadBookForOffline(
     }
   };
 
-  // Cache images using cors / no-cors fallback if needed
-  for (const url of imageUrls) {
-    try {
-      const response = await fetch(url, { mode: "cors" }).catch(() => fetch(url, { mode: "no-cors" }));
-      if (response && (response.ok || response.type === "opaque")) {
-        await imageCache.put(url, response);
+  // 画像を並列（最大4本）で取得してキャッシュする。
+  // 1枚でも取得できなければ「保存完了」とは見なさない: 部分保存を成功扱いにすると、
+  // オフライン時に壊れた画像が表示されるのにユーザーには原因が分からないため。
+  const failedUrls: string[] = [];
+  const CONCURRENCY = 4;
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < imageUrls.length) {
+      const url = imageUrls[cursor++];
+      try {
+        const response = await fetch(url, { mode: "cors" }).catch(() => fetch(url, { mode: "no-cors" }));
+        if (response && (response.ok || response.type === "opaque")) {
+          await imageCache.put(url, response);
+        } else {
+          failedUrls.push(url);
+        }
+      } catch (err) {
+        console.warn(`Failed to cache image for offline: ${url}`, err);
+        failedUrls.push(url);
       }
-    } catch (err) {
-      console.warn(`Failed to cache image for offline: ${url}`, err);
+      updateProg("画像を取得中...");
     }
-    updateProg("画像を取得中...");
+  };
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, imageUrls.length) }, worker));
+
+  if (failedUrls.length > 0) {
+    // 取得できた分も残さない（中途半端なキャッシュを残すと容量だけ消費する）
+    await Promise.all(imageUrls.filter((u) => !failedUrls.includes(u)).map((u) => imageCache.delete(u)));
+    throw new Error(
+      `画像${failedUrls.length}枚の取得に失敗したため、オフライン保存を中止しました。通信状態を確認してもう一度お試しください。`
+    );
   }
 
   // Save book record JSON

@@ -24,12 +24,25 @@ const SERVER_AUTHORITATIVE_KEYS = [
   "title",
 ] as const;
 
-/** ネストを含めて undefined を落とす（Firestore は undefined を受け付けない） */
+/** 素の {} リテラル由来のオブジェクトか（Timestamp / FieldValue 等のクラスインスタンスは除外） */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object") return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+/**
+ * ネストを含めて undefined を落とす（Firestore は undefined を受け付けない）。
+ * **plain object と配列だけを再帰する**。admin SDK の Timestamp や
+ * FieldValue.serverTimestamp() のセンチネルを再構築すると、書き込み時に
+ * 平坦な map（createdAt: {} 等）へ壊れてしまうため、クラスインスタンスは
+ * そのまま通す。
+ */
 function stripUndefined<T>(value: T): T {
   if (Array.isArray(value)) {
     return value.map((v) => stripUndefined(v)) as unknown as T;
   }
-  if (value && typeof value === "object" && !(value instanceof Date)) {
+  if (isPlainObject(value)) {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
       if (v !== undefined) out[k] = stripUndefined(v);
@@ -39,8 +52,8 @@ function stripUndefined<T>(value: T): T {
   return value;
 }
 
-/** 絵本の保持期間（既存のクライアント実装と同じ 180 日） */
-const RETENTION_DAYS = 180;
+/** 絵本の保持期間。既存のクライアント実装（create/style, first-run）と同じ 30 日に揃える */
+const RETENTION_DAYS = 30;
 
 export interface CreateBookResult {
   bookId: string;

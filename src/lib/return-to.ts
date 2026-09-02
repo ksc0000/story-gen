@@ -25,6 +25,11 @@ export function validateReturnTo(url?: string | null, fallback = "/home"): strin
     return fallback;
   }
 
+  // ログイン画面自身を戻り先にすると、ログイン後に同一ルートへ replace して固着する
+  if (/^\/login(?:[/?#]|$)/.test(trimmed)) {
+    return fallback;
+  }
+
   // Reject scheme-relative URLs '//' or backslash tricks '/\' or '/\\'
   if (trimmed.startsWith("//") || trimmed.startsWith("/\\") || trimmed.startsWith("/\\")) {
     return fallback;

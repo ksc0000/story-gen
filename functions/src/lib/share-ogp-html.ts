@@ -84,9 +84,12 @@ export function injectOgpIntoShell(shellHtml: string, input: ShareOgpInput): str
   const { pageTitle, tags } = buildOgpTags(input);
   let html = shellHtml;
 
-  html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(pageTitle)}</title>`);
+  // 置換文字列に $& や $' が含まれると String.replace の特殊パターン扱いになるため、関数形式で挿入する
+  const titleTag = `<title>${escapeHtml(pageTitle)}</title>`;
+  html = html.replace(/<title>[\s\S]*?<\/title>/i, () => titleTag);
   html = html.replace(/<meta\s+(?:name="(?:description|twitter:[^"]*)"|property="og:[^"]*")[^>]*>/gi, "");
 
   if (!/<\/head>/i.test(html)) return shellHtml;
-  return html.replace(/<\/head>/i, `${tags}\n</head>`);
+  const injected = `${tags}\n</head>`;
+  return html.replace(/<\/head>/i, () => injected);
 }
