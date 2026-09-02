@@ -166,11 +166,9 @@ describe("offline-book-storage", () => {
 
   it("画像が1枚でも取得できなければ throw し、取得済み画像もキャッシュから消す（部分保存を完了扱いにしない・回帰）", async () => {
     const imageCache = mockCachesMap.get(OFFLINE_IMAGE_CACHE)!;
-    let n = 0;
-    global.fetch = vi.fn(async () => {
-      n++;
-      // 2回目の画像だけ 403
-      return n === 2 ? new Response("", { status: 403 }) : new Response("img", { status: 200 });
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      // p1 だけは cors / no-cors どちらでも取得できない
+      return String(input).endsWith("/p1.png") ? new Response("", { status: 403 }) : new Response("img", { status: 200 });
     }) as unknown as typeof fetch;
     const pages = [
       { pageNumber: 0, text: "a", imageUrl: "https://firebasestorage.googleapis.com/p0.png", imagePrompt: "x", status: "completed" },
@@ -179,5 +177,44 @@ describe("offline-book-storage", () => {
     await expect(downloadBookForOffline(sampleBook, pages)).rejects.toThrow(/取得に失敗/);
     // 成功した分も削除されている
     expect(imageCache.delete).toHaveBeenCalled();
+  });
+
+  // no-cors の opaque レスポンス（jsdom は type を "default" 固定にするため上書き）
+  const opaqueResponse = () => {
+    const r = new Response("", { status: 200 });
+    Object.defineProperty(r, "type", { value: "opaque" });
+    Object.defineProperty(r, "ok", { value: false });
+    Object.defineProperty(r, "status", { value: 0 });
+    return r;
+  };
+
+  it("CORS失敗がSW経由で404レスポンスになっても no-cors に切り替えて opaque を保存する（本番回帰）", async () => {
+    const imageCache = mockCachesMap.get(OFFLINE_IMAGE_CACHE)!;
+    const calls: Array<{ url: string; mode?: RequestMode }> = [];
+    global.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      calls.push({ url, mode: init?.mode });
+      if (init?.mode === "cors") {
+        // firebase-messaging-sw.js が CORS 失敗を変換していた形
+        return new Response("", { status: 404, statusText: "Offline Image Not Found" });
+      }
+      return opaqueResponse();
+    }) as unknown as typeof fetch;
+    const pages = [
+      { pageNumber: 0, text: "a", imageUrl: "https://firebasestorage.googleapis.com/p0.png", imagePrompt: "x", status: "completed" },
+    ] as unknown as (PageDoc & { id: string })[];
+    await expect(downloadBookForOffline(sampleBook, pages)).resolves.toBeDefined();
+    expect(calls.filter((c) => c.mode === "no-cors").length).toBeGreaterThan(0);
+    expect(imageCache.put).toHaveBeenCalled();
+  });
+
+  it("CORS が例外で失敗した場合も no-cors にフォールバックする", async () => {
+    const imageCache = mockCachesMap.get(OFFLINE_IMAGE_CACHE)!;
+    global.fetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.mode === "cors") throw new TypeError("Failed to fetch");
+      return opaqueResponse();
+    }) as unknown as typeof fetch;
+    await expect(downloadBookForOffline(sampleBook, [])).resolves.toBeDefined();
+    expect(imageCache.put).toHaveBeenCalled();
   });
 });

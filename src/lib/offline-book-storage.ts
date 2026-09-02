@@ -74,6 +74,29 @@ function getBookDataUrl(bookId: string): string {
  * 1. Book metadata JSON in OFFLINE_DATA_CACHE.
  * 2. Cover image and all page images in OFFLINE_IMAGE_CACHE.
  */
+/**
+ * 絵本画像をキャッシュ用に取得する。
+ * Firebase Storage のバケットには CORS 設定が無いため、`mode: "cors"` は失敗する。
+ * さらに Service Worker 経由だと CORS 失敗が例外ではなく 404 レスポンスとして返る
+ * （firebase-messaging-sw.js の画像ハンドラ）ので、「例外」だけでなく「非 ok レスポンス」でも
+ * `no-cors` に切り替える。opaque レスポンスは <img> 表示には使えるのでキャッシュ対象にする。
+ */
+async function fetchImageForCache(url: string): Promise<Response | null> {
+  try {
+    const corsResponse = await fetch(url, { mode: "cors" });
+    if (corsResponse.ok) return corsResponse;
+  } catch {
+    // CORS 失敗 → no-cors へ
+  }
+  try {
+    const opaqueResponse = await fetch(url, { mode: "no-cors" });
+    if (opaqueResponse.ok || opaqueResponse.type === "opaque") return opaqueResponse;
+  } catch (err) {
+    console.warn(`Failed to fetch image for offline cache: ${url}`, err);
+  }
+  return null;
+}
+
 export async function downloadBookForOffline(
   book: BookDoc & { id: string },
   pages: (PageDoc & { id: string })[],
@@ -127,8 +150,8 @@ export async function downloadBookForOffline(
     while (cursor < imageUrls.length) {
       const url = imageUrls[cursor++];
       try {
-        const response = await fetch(url, { mode: "cors" }).catch(() => fetch(url, { mode: "no-cors" }));
-        if (response && (response.ok || response.type === "opaque")) {
+        const response = await fetchImageForCache(url);
+        if (response) {
           await imageCache.put(url, response);
         } else {
           failedUrls.push(url);

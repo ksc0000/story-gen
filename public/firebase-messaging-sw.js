@@ -92,9 +92,14 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       caches.match(request, { cacheName: IMAGE_CACHE_NAME }).then((cachedResponse) => {
         if (cachedResponse) return cachedResponse;
-        return fetch(request).catch(
-          () => new Response("", { status: 404, statusText: "Offline Image Not Found" })
-        );
+        return fetch(request).catch((err) => {
+          // ページ側の明示的な fetch(mode:"cors") は失敗を「例外」として受け取り、
+          // no-cors へフォールバックする設計（offline-book-storage.ts）。ここで 404 に
+          // 変換すると CORS 失敗が隠れてフォールバックが働かないため、そのまま伝播させる。
+          if (request.mode === "cors") throw err;
+          // <img> 等の no-cors リクエストは、オフライン時に壊れたまま待たせず 404 で即応答する。
+          return new Response("", { status: 404, statusText: "Offline Image Not Found" });
+        });
       })
     );
     return;
