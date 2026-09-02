@@ -2026,6 +2026,33 @@ export async function processBookGeneration(
     await deps.updateBookStatus(bookId, bookStatus);
 
     if (bookStatus !== "failed") {
+      // Set firstBookCreatedAt and onboardingCompletedAt on user document if not already present
+      try {
+        const userRef = deps.db.collection("users").doc(bookData.userId);
+        const userSnap = await userRef.get();
+        if (userSnap.exists) {
+          const userData = userSnap.data();
+          if (!userData?.firstBookCreatedAt || !userData?.onboardingCompletedAt) {
+            const now = admin.firestore.FieldValue.serverTimestamp();
+            const nowMs = Date.now();
+            await userRef.set(
+              {
+                firstBookCreatedAt: userData?.firstBookCreatedAt ?? now,
+                firstBookCreatedAtMs: userData?.firstBookCreatedAtMs ?? nowMs,
+                onboardingCompletedAt: userData?.onboardingCompletedAt ?? now,
+                onboardingCompletedAtMs: userData?.onboardingCompletedAtMs ?? nowMs,
+              },
+              { merge: true }
+            );
+          }
+        }
+      } catch (userErr) {
+        logger.warn("Failed to set firstBookCreatedAt/onboardingCompletedAt on user doc", {
+          userId: bookData.userId,
+          error: userErr instanceof Error ? userErr.message : String(userErr),
+        });
+      }
+
       // Consumption logic: Prefer monthly quota, then single credits.
       if (isAdminUser || isOrgSponsored) {
         // 管理者のテスト生成・組織スポンサーの一括生成は個人の月次カウント/クレジットを消費しない。

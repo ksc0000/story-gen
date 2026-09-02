@@ -375,6 +375,10 @@ export interface UserDoc {
   orgId?: string;
   orgRole?: OrgRole;
   createdAt: Timestamp;
+  firstBookCreatedAt?: Timestamp | null;
+  firstBookCreatedAtMs?: number | null;
+  onboardingCompletedAt?: Timestamp | null;
+  onboardingCompletedAtMs?: number | null;
   monthlyGenerationCount: number;
   generationOverride?: {
     allowCandidateProfile?: boolean;

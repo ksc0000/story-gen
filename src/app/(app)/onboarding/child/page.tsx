@@ -11,18 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChildProfileForm, type ChildProfileFormValues } from "@/components/child-profile-form";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { useBooks } from "@/lib/hooks/use-books";
 import { useChildren } from "@/lib/hooks/use-children";
+import { useFirstRun } from "@/lib/hooks/use-first-run";
 import { db, storage } from "@/lib/firebase";
 import { buildChildProfilePayload } from "@/lib/child-profile";
 import { useAvatarGenerationJob } from "@/lib/hooks/use-avatar-generation-job";
-import { isFirstRun } from "@/lib/first-run";
 
 export default function ChildOnboardingPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const { books } = useBooks(user?.uid);
   const { children } = useChildren(user?.uid);
+  const { isFirstRun: checkIsFirstRun } = useFirstRun(user?.uid);
   const [saving, setSaving] = useState(false);
   const [registeredChildId, setRegisteredChildId] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
@@ -82,7 +81,7 @@ export default function ChildOnboardingPage() {
       }
 
       // 初回判定: 0冊かつ子どもの数が登録前時点で1人以下（今回登録が1人目）の場合、おすすめテンプレへ直行
-      if (isFirstRun(books.length, children.length)) {
+      if (checkIsFirstRun) {
         router.push(`/create/select-template?recommended=1&childId=${childRef.id}`);
       } else {
         setRegisteredChildId(childRef.id);

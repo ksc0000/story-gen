@@ -6,11 +6,36 @@ import type {
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import { getDefaultProductPlanForCreationMode, PLAN_CONFIGS } from "@/lib/plans";
 
+export interface IsFirstRunOptions {
+  isOffline?: boolean;
+  loading?: boolean;
+  userProfile?: {
+    firstBookCreatedAt?: Timestamp | number | null;
+    onboardingCompletedAt?: Timestamp | number | null;
+  } | null;
+}
+
 /**
  * 初回判定ロジック
- * 仕様要点: books 0冊 && children <= 1
+ * 仕様要点:
+ * 1. loading 中またはオフライン時は初回扱いしない (false)
+ * 2. ユーザープロファイルに firstBookCreatedAt または onboardingCompletedAt が存在する場合は初回扱いしない (false)
+ * 3. 上記に該当しない場合、books 0冊 && children <= 1 の場合のみ初回扱い (true)
  */
-export function isFirstRun(booksCount: number, childrenCount: number): boolean {
+export function isFirstRun(
+  booksCount: number,
+  childrenCount: number,
+  options?: IsFirstRunOptions
+): boolean {
+  if (options?.loading || options?.isOffline) {
+    return false;
+  }
+  if (
+    options?.userProfile?.firstBookCreatedAt ||
+    options?.userProfile?.onboardingCompletedAt
+  ) {
+    return false;
+  }
   return booksCount === 0 && childrenCount <= 1;
 }
 

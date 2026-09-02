@@ -14,6 +14,26 @@ describe("first-run logic", () => {
       expect(isFirstRun(1, 1)).toBe(false);
       expect(isFirstRun(0, 2)).toBe(false);
     });
+
+    it("returns false when loading or offline", () => {
+      expect(isFirstRun(0, 0, { loading: true })).toBe(false);
+      expect(isFirstRun(0, 0, { isOffline: true })).toBe(false);
+      expect(isFirstRun(0, 0, { loading: true, isOffline: true })).toBe(false);
+    });
+
+    it("returns false when userProfile has firstBookCreatedAt or onboardingCompletedAt", () => {
+      expect(
+        isFirstRun(0, 0, {
+          userProfile: { firstBookCreatedAt: 1700000000000 },
+        })
+      ).toBe(false);
+
+      expect(
+        isFirstRun(0, 0, {
+          userProfile: { onboardingCompletedAt: 1700000000000 },
+        })
+      ).toBe(false);
+    });
   });
 
   describe("getRecommendedTemplates", () => {

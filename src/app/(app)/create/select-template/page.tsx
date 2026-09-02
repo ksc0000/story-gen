@@ -17,19 +17,19 @@ import { useCategoryGroups } from "@/lib/hooks/use-category-groups";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
-import { useBooks } from "@/lib/hooks/use-books";
+import { useFirstRun } from "@/lib/hooks/use-first-run";
 import { db } from "@/lib/firebase";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
-import { getRecommendedTemplates, buildFirstRunBookPayload, isFirstRun } from "@/lib/first-run";
+import { getRecommendedTemplates, buildFirstRunBookPayload } from "@/lib/first-run";
 import { cn } from "@/lib/utils";
 import { getUserFriendlyError } from "@/lib/user-error-mapping";
 
 function SelectTemplateContent() {
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
-  const { children, loading: childrenLoading } = useChildren(user?.uid);
-  const { books, loading: booksLoading } = useBooks(user?.uid);
+  const { children } = useChildren(user?.uid);
+  const { isFirstRun: isFirstRunUser, loading: firstRunLoading } = useFirstRun(user?.uid);
   const { templates, loading, error } = useTemplates();
   const { categoryGroups, loading: categoryLoading } = useCategoryGroups();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -50,10 +50,10 @@ function SelectTemplateContent() {
       setIsTrackA(true);
       return;
     }
-    if (!booksLoading && !childrenLoading && !hasUserSwitchedTrack) {
-      setIsTrackA(isFirstRun(books.length, children.length));
+    if (!firstRunLoading && !hasUserSwitchedTrack) {
+      setIsTrackA(isFirstRunUser);
     }
-  }, [booksLoading, childrenLoading, books.length, children.length, isRecommendedQuery, hasUserSwitchedTrack]);
+  }, [firstRunLoading, isFirstRunUser, isRecommendedQuery, hasUserSwitchedTrack]);
 
   const selectedCategoryGroupId = searchParams.get("category") ?? "all";
   const categoryGroupMap = useMemo(

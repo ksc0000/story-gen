@@ -25,6 +25,16 @@ vi.mock("@/lib/hooks/use-children", () => ({
   useChildren: () => ({ children: [], loading: false, error: null }),
 }));
 
+vi.mock("@/lib/hooks/use-first-run", () => ({
+  useFirstRun: () => ({
+    isFirstRun: true,
+    loading: false,
+    isOffline: false,
+    booksCount: 0,
+    childrenCount: 0,
+  }),
+}));
+
 vi.mock("@/lib/hooks/use-avatar-generation-job", () => ({
   useAvatarGenerationJob: () => ({
     startJob: vi.fn(),
