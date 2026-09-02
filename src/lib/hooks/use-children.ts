@@ -35,7 +35,12 @@ const demoChild = {
   active: true,
 } as ChildProfileWithId;
 
-export function useChildren(userId: string | undefined) {
+export function useChildren(userId: string | undefined): {
+  children: ChildProfileWithId[];
+  activeChild: ChildProfileWithId | null;
+  loading: boolean;
+  error: Error | null;
+} {
   const [children, setChildren] = useState<ChildProfileWithId[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
