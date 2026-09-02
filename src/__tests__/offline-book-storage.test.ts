@@ -163,4 +163,21 @@ describe("offline-book-storage", () => {
       expect(await getOfflineBookIds()).not.toContain("book-123");
     });
   });
+
+  it("画像が1枚でも取得できなければ throw し、取得済み画像もキャッシュから消す（部分保存を完了扱いにしない・回帰）", async () => {
+    const imageCache = mockCachesMap.get(OFFLINE_IMAGE_CACHE)!;
+    let n = 0;
+    global.fetch = vi.fn(async () => {
+      n++;
+      // 2回目の画像だけ 403
+      return n === 2 ? new Response("", { status: 403 }) : new Response("img", { status: 200 });
+    }) as unknown as typeof fetch;
+    const pages = [
+      { pageNumber: 0, text: "a", imageUrl: "https://firebasestorage.googleapis.com/p0.png", imagePrompt: "x", status: "completed" },
+      { pageNumber: 1, text: "b", imageUrl: "https://firebasestorage.googleapis.com/p1.png", imagePrompt: "x", status: "completed" },
+    ] as unknown as (PageDoc & { id: string })[];
+    await expect(downloadBookForOffline(sampleBook, pages)).rejects.toThrow(/取得に失敗/);
+    // 成功した分も削除されている
+    expect(imageCache.delete).toHaveBeenCalled();
+  });
 });

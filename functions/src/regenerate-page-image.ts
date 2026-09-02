@@ -19,6 +19,8 @@ import { logAdminOperation } from "./lib/audit-logger";
 import type { PageData, BookData, ImageModelProfile, PageStatus, GenerationReliabilityStatus } from "./lib/types";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
+// gpt-image-2 系プロファイルで作られたページの再生成は OpenAI 経路を通るため必須
+const openaiApiKey = defineSecret("OPENAI_API_KEY");
 // フォールバック発火までの画像生成タイムアウト。既定 120s → 360s（3倍, 2026-06）。
 const IMAGE_GENERATION_TIMEOUT_MS = Number(process.env.IMAGE_GENERATION_TIMEOUT_MS ?? "360000");
 
@@ -70,7 +72,7 @@ interface RegeneratePageImageResponse {
 
 export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<RegeneratePageImageResponse>>(
   // 画像タイムアウト 360s + フォールバックを関数側で切らないよう timeoutSeconds を拡張（2026-06）。
-  { secrets: [replicateApiToken], consumeAppCheckToken: true, timeoutSeconds: 540 },
+  { secrets: [replicateApiToken, openaiApiKey], consumeAppCheckToken: true, timeoutSeconds: 540 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "ログインが必要です。");
@@ -150,28 +152,40 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
     const storage = admin.storage();
     const bucket = storage.bucket();
 
+    // 生成結果の保存。タイムアウト枠の外で1回だけ行う（下記 capture 参照）。
+    const uploadRegeneratedImage = async (buffer: Buffer): Promise<string> => {
+      const filename = `books/${bookId}/page-${pageData.pageNumber}-regen-${Date.now()}.png`;
+      const file = bucket.file(filename);
+      const downloadToken = randomUUID();
+      await file.save(buffer, {
+        contentType: "image/png",
+        metadata: { metadata: { firebaseStorageDownloadTokens: downloadToken } },
+      });
+      return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
+    };
+
     outer: for (const profile of fallbackProfiles) {
       const maxRetries = 2;
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         attemptCount++;
         try {
+          // adapter は生成後に uploader を呼ぶ設計だが、ここでは buffer を捕捉するだけにして
+          // Storage への保存は withImageTimeout の外で行う。アップロード中にタイムアウトが
+          // 発火して「生成成功なのに失敗扱い → 再生成で二重課金 + 孤児ファイル」になるのを防ぐ。
+          let capturedBuffer: Buffer | undefined;
+          const capture = async (buffer: Buffer) => {
+            capturedBuffer = buffer;
+            return "in-memory-buffer";
+          };
           const adapter = createImageAdapter({
             imageModelProfile: profile,
             replicateApiToken: replicateApiToken.value(),
-            openaiApiKey: "",
-            replicateUploader: async (buffer) => {
-              const filename = `books/${bookId}/page-${pageData.pageNumber}-regen-${Date.now()}.png`;
-              const file = bucket.file(filename);
-              const downloadToken = randomUUID();
-              await file.save(buffer, {
-                contentType: "image/png",
-                metadata: { metadata: { firebaseStorageDownloadTokens: downloadToken } },
-              });
-              return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
-            },
+            openaiApiKey: openaiApiKey.value(),
+            replicateUploader: capture,
+            openaiUploader: capture,
           });
 
-          const result = await withImageTimeout(
+          await withImageTimeout(
             adapter.generateImage({
               prompt: pageData.imagePrompt,
               imageModelProfile: profile,
@@ -183,8 +197,11 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
             }),
             IMAGE_GENERATION_TIMEOUT_MS
           );
+          if (!capturedBuffer) {
+            throw new Error("image adapter did not produce an image buffer");
+          }
 
-          regeneratedImageUrl = result.imageUrl;
+          regeneratedImageUrl = await uploadRegeneratedImage(capturedBuffer);
           usedProfile = profile;
           fallbackUsed = profile !== primaryProfile;
           success = true;

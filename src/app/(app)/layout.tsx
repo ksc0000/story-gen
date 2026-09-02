@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -22,11 +22,20 @@ function AuthRedirectGuard() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // 一度でもログイン状態を観測したら、その後の user→null は「明示的なサインアウト」。
+  // その場合に現在パスを returnTo として保存すると、同じタブで次にログインした
+  // 別アカウントへ前ユーザーのページ（他人の絵本など）が引き継がれてしまう。
+  const hadUserRef = useRef(false);
+  useEffect(() => {
+    if (user) hadUserRef.current = true;
+  }, [user]);
+
   useEffect(() => {
     if (!loading && !user) {
+      const isSignOut = hadUserRef.current;
       const search = searchParams?.toString();
       const fullPath = search ? `${pathname}?${search}` : pathname;
-      if (fullPath && fullPath !== "/" && fullPath !== "/login") {
+      if (!isSignOut && fullPath && fullPath !== "/" && fullPath !== "/login") {
         saveReturnTo(fullPath);
         router.replace(`/login?returnTo=${encodeURIComponent(fullPath)}`);
       } else {

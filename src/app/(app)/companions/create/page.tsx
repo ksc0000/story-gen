@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { validateReturnTo } from "@/lib/return-to";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -182,7 +183,7 @@ function CreateCompanionContent() {
       }
 
       if (returnTo) {
-        router.push(returnTo);
+        router.push(validateReturnTo(returnTo, "/companions"));
       } else {
         router.push(`/companions/profile?id=${companionId}`);
       }
