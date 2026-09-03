@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { httpsCallable } from "firebase/functions";
+import { httpsCallable } from "@/lib/callable";
 import { MessageSquare, Send, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { httpsCallable } from "firebase/functions";
+import { httpsCallable } from "@/lib/callable";
 import { PageTransition } from "@/components/page-transition";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { Button } from "@/components/ui/button";

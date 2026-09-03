@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { httpsCallable } from "firebase/functions";
+import { httpsCallable } from "@/lib/callable";
 import { Check, Loader2, Sparkles, Star, X } from "lucide-react";
 import { functions } from "@/lib/firebase";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";

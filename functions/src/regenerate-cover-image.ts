@@ -15,6 +15,9 @@ import type { ImageModelProfile, CoverStatus, BookData } from "./lib/types";
 import { generateCoverImageWithFallback } from "./controllers/imageGeneration";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
+// gpt-image-2 系プロファイル（openai_gpt_image_2_*）で作られた絵本の表紙再生成に必須。
+// 無いと OpenAI 経路が "No adapter token" で失敗し、FLUX にフォールバックして画風が変わる。
+const openaiApiKey = defineSecret("OPENAI_API_KEY");
 
 
 /* ------------------------------------------------------------------ */
@@ -102,7 +105,7 @@ interface RegenerateCoverImageResponse {
 
 export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<RegenerateCoverImageResponse>>(
   // 画像タイムアウト 360s + フォールバックを関数側で切らないよう timeoutSeconds を拡張（2026-06）。
-  { region: "asia-northeast1", secrets: [replicateApiToken], consumeAppCheckToken: true, timeoutSeconds: 540 },
+  { region: "asia-northeast1", secrets: [replicateApiToken, openaiApiKey], consumeAppCheckToken: true, timeoutSeconds: 540 },
   async (request) => {
     /* ---------- Auth ---------- */
     if (!request.auth) {
@@ -214,6 +217,7 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
         imageQualityTier: bookData.imageQualityTier ?? "light",
         imageModelProfile: bookData.imageModelProfile,
         replicateApiToken: replicateApiToken.value(),
+        openaiApiKey: openaiApiKey.value(),
         uploadCoverImage,
         stepBConfig: coverStepBConfig,
       });

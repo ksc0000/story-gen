@@ -36,7 +36,8 @@ async function getCallable<RequestData, ResponseData>(
     getClientFunctions(),
   ]);
 
-  return httpsCallable<RequestData, ResponseData>(functions, name, options);
+  // consumeAppCheckToken な callable と対にするため、毎回使い切りの App Check トークンを使う（src/lib/callable.ts 参照）
+  return httpsCallable<RequestData, ResponseData>(functions, name, { limitedUseAppCheckTokens: true, ...options });
 }
 
 export type TestImageModelsRequest = {

@@ -16,7 +16,7 @@ import { PLAN_CONFIGS } from "@/lib/plans";
 import { getUserFriendlyError } from "@/lib/user-error-mapping";
 import { useState } from "react";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
-import { httpsCallable } from "firebase/functions";
+import { httpsCallable } from "@/lib/callable";
 import { functions } from "@/lib/firebase";
 
 export default function ChildrenPage() {
