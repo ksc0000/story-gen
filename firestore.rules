@@ -118,7 +118,12 @@ service cloud.firestore {
                || (isAuthenticated() && resource.data.userId == request.auth.uid)
                || resource.data.public == true
                || (resource.data.orgId != null && isOrgMember(resource.data.orgId));
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // 団体スポンサー絵本（orgId/classId/studentId/orgSponsored）は bulkGenerateClassBooks（Admin SDK）だけが作る。
+      // クライアントが orgId を付けるとサーバが「団体負担」と見なして月次クォータ・クレジット消費を
+      // スキップするため、これらのキーはクライアントの create で禁止する。
+      allow create: if isAuthenticated()
+               && request.resource.data.userId == request.auth.uid
+               && !request.resource.data.keys().hasAny(["orgId", "classId", "studentId", "orgSponsored"]);
       allow update: if isAdmin() && onlyAdminReviewFieldsChanged();
       allow update: if isAuthenticated()
                && resource.data.userId == request.auth.uid
