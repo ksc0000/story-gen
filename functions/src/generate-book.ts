@@ -1167,7 +1167,12 @@ export async function processBookGeneration(
     // Step 3: Check quota and credits (skip in development)
     // エンタープライズ一括生成（組織スポンサー）の絵本は、個人の月次クォータ・クレジットを
     // 消費しない。上限は一括生成 callable 側（1回人数・組織月次）で担保している。
-    const isOrgSponsored = Boolean(bookData.orgId);
+    // 団体負担（クォータ・クレジットを消費しない）は bulkGenerateClassBooks が付ける3点セットが揃う場合のみ。
+    // orgId 単独では認めない（クライアント create で orgId を付けて回避できた。rules 側でも禁止済み）。
+    const isOrgSponsored =
+      Boolean(bookData.orgId) &&
+      bookData.orgSponsored === true &&
+      bookData.createdAtSource === "org_bulk";
     let quotaExceeded = false;
     let hasSingleBookCredits = false;
 

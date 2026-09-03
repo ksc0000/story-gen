@@ -711,6 +711,24 @@ describe("processBookGeneration", () => {
     expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
   });
 
+  it("orgId だけ付いた絵本は団体負担にならず月次クォータで拒否される（回帰: クォータ回避）", async () => {
+    deps.getUserMonthlyCount.mockResolvedValue(3);
+    await processBookGeneration("book-org-spoof", { ...baseBookData, orgId: "org-x" } as BookData, deps);
+    expect(deps.updateBookStatus).toHaveBeenCalledWith("book-org-spoof", "failed");
+    expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
+  });
+
+  it("bulkGenerateClassBooks が付ける3点セット（orgId + orgSponsored + createdAtSource=org_bulk）は団体負担として生成する", async () => {
+    deps.getUserMonthlyCount.mockResolvedValue(3);
+    await processBookGeneration(
+      "book-org-real",
+      { ...baseBookData, orgId: "org-x", orgSponsored: true, createdAtSource: "org_bulk" } as BookData,
+      deps
+    );
+    expect(deps.llmClient.generateStory).toHaveBeenCalledOnce();
+    expect(deps.incrementMonthlyCount).not.toHaveBeenCalled();
+  });
+
   it("retries within a fallback profile then falls back to klein_fast on failure", async () => {
     deps.imageClient.generateImage
       .mockRejectedValueOnce(new Error("Network error"))
