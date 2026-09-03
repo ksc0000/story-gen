@@ -72,7 +72,7 @@ interface RegeneratePageImageResponse {
 
 export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<RegeneratePageImageResponse>>(
   // 画像タイムアウト 360s + フォールバックを関数側で切らないよう timeoutSeconds を拡張（2026-06）。
-  { secrets: [replicateApiToken, openaiApiKey], consumeAppCheckToken: true, timeoutSeconds: 540 },
+  { region: "asia-northeast1", secrets: [replicateApiToken, openaiApiKey], consumeAppCheckToken: true, timeoutSeconds: 540 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "ログインが必要です。");
@@ -475,7 +475,7 @@ async function recalculateBookMetrics(
  * Useful when pages were fixed but book status was not updated.
  */
 export const checkBookCompletion = onCall<{ bookId: string }, Promise<{ bookStatus: string; recovered: boolean }>>(
-  { consumeAppCheckToken: true },
+  { region: "asia-northeast1", consumeAppCheckToken: true },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "ログインが必要です。");
