@@ -318,6 +318,7 @@
     "PR #771: fix(quota): 月の残り冊数の表示をサーバの実カウント（usage/{YYYY-MM}）に揃える (merged)",
     "PR #772: fix(security): orgId を付けるだけで月次クォータ・クレジット消費を回避できた (merged)",
     "PR #773: fix(ui): shadcn v4 記法の部品を Tailwind 3.4 で効く形に書き換え（フォーカス表示・削除ボタン・角丸） (merged)",
+    "PR #774: fix(ux): 失敗した絵本の表示・クォータ誤判定の解消・再生成/PDF のクライアント側タイムアウト (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
