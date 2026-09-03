@@ -25,6 +25,8 @@ export async function processDeleteChildProfile(
     // Path: users/{userId}/children/{childId}/
     const bucket = storage.bucket();
     await bucket.deleteFiles({ prefix: `users/${uid}/children/${childId}/` });
+    // 登録・編集画面がクライアントから直接アップロードする子どもの写真（顔写真）も消す
+    await bucket.deleteFiles({ prefix: `childPhotos/${uid}/${childId}/` });
 
     // 3. Delete associated jobs in childAvatarGenerationJobs
     const jobsSnap = await db

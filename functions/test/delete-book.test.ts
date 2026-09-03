@@ -88,4 +88,13 @@ describe("processDeleteBook", () => {
       new HttpsError("internal", "絵本の削除中にエラーが発生しました")
     );
   });
+
+  it("Storage の生成物（books/{bookId}/）も削除する", async () => {
+    mockBookRef.get.mockResolvedValue({ exists: true, data: () => ({ userId: "user-123" }) });
+    mockDb.recursiveDelete.mockResolvedValue(undefined);
+    const deleteFiles = vi.fn().mockResolvedValue(undefined);
+    const mockStorage = { bucket: () => ({ deleteFiles }) } as unknown as import("firebase-admin").storage.Storage;
+    await processDeleteBook("book-123", mockAuth, mockDb, mockStorage);
+    expect(deleteFiles).toHaveBeenCalledWith({ prefix: "books/book-123/" });
+  });
 });

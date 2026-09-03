@@ -61,6 +61,9 @@ export async function processDeleteUserAccount(
 
       // 3b. Delete the book and its subcollections
       await db.recursiveDelete(bookDoc.ref);
+
+      // 3c. 絵本の生成物（画像・PDF）を Storage から削除
+      await storage.bucket().deleteFiles({ prefix: `books/${bookId}/` });
     }
 
     // 4. Delete all series owned by the user
@@ -93,6 +96,8 @@ export async function processDeleteUserAccount(
     // 8. Delete user assets in Cloud Storage
     const bucket = storage.bucket();
     await bucket.deleteFiles({ prefix: `users/${uid}/` });
+    // 子どもの顔写真はクライアントが childPhotos/{uid}/ に置く（users/ 配下ではない）
+    await bucket.deleteFiles({ prefix: `childPhotos/${uid}/` });
 
     // 9. Recursive deletion of the user document and its subcollections (children, usage)
     await db.recursiveDelete(userRef);

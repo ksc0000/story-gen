@@ -75,6 +75,7 @@ describe("processDeleteUserAccount", () => {
     expect(result).toEqual({ success: true });
     expect(mockStripe.subscriptions.cancel).toHaveBeenCalledWith("sub-123");
     expect(mockStripe.customers.del).toHaveBeenCalledWith("cus-123");
+    expect(mockStorage.bucket().deleteFiles).toHaveBeenCalledWith({ prefix: "childPhotos/user-123/" });
     expect(mockStorage.bucket().deleteFiles).toHaveBeenCalledWith({
       prefix: "users/user-123/",
     });

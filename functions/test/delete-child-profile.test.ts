@@ -58,6 +58,7 @@ describe("processDeleteChildProfile", () => {
     const result = await processDeleteChildProfile("child-123", mockAuth, mockDb, mockStorage);
 
     expect(result).toEqual({ success: true, childId: "child-123" });
+    expect(mockStorage.bucket().deleteFiles).toHaveBeenCalledWith({ prefix: "childPhotos/user-123/child-123/" });
     expect(mockStorage.bucket().deleteFiles).toHaveBeenCalledWith({
       prefix: "users/user-123/children/child-123/",
     });
