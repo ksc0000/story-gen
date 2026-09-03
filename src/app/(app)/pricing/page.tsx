@@ -367,7 +367,7 @@ export default function PricingPage() {
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-destructive/10 text-destructive text-center text-sm font-medium">
+          <div className="p-4 rounded-xl bg-[var(--destructive-soft)] text-destructive text-center text-sm font-medium">
             {error}
           </div>
         )}

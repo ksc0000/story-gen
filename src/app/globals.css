@@ -34,13 +34,32 @@
     --border:                var(--em-glass-border);
     /* 入力欄の枠線。以前は surface(#fff) で白カード上の枠線が消えていた（必須項目が見えない） */
     --input:                 var(--em-glass-border);
-    --ring:                  var(--em-accent-primary);
+    /* フォーカスリング。primary と同色だと primary ボタン上でリングが消えるため一段濃い紫にする */
+    --ring:                  #7c3aed;
+    /* Tailwind 3 は var() 色に不透明度修飾子（ring-ring/50 等）を適用できないため、薄色は明示トークンで持つ */
+    --ring-soft:             rgba(124, 58, 237, 0.35);
+    --destructive-soft:      rgba(239, 68, 68, 0.10);
+    --destructive-soft-strong: rgba(239, 68, 68, 0.20);
+    --destructive-ring:      rgba(239, 68, 68, 0.25);
+    --muted-soft:            rgba(237, 233, 254, 0.5);
+    --input-soft:            rgba(167, 139, 250, 0.08);
     --radius:                var(--em-r-lg);
+    --radius-md:             calc(var(--em-r-lg) - 2px);
+    --radius-sm:             calc(var(--em-r-lg) - 4px);
   }
 
   [data-theme="night"] {
     --primary-foreground:    #06061a;
     --accent-foreground:     #06061a;
+    --ring:                  #d8b4fe;
+    --ring-soft:             rgba(216, 180, 254, 0.45);
+    --muted-soft:            rgba(13, 13, 53, 0.5);
+    --input-soft:            rgba(255, 255, 255, 0.06);
+  }
+
+  /* shadcn 前提の基本ルール: 素の border-* はテーマの枠線色を使う（既定の gray-200 にしない） */
+  *, ::before, ::after {
+    border-color: var(--border);
   }
 }
 

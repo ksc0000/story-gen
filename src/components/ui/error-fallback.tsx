@@ -26,9 +26,9 @@ export function ErrorFallback({
 }: ErrorFallbackProps) {
   return (
     <div className="flex min-h-[400px] w-full items-center justify-center p-4">
-      <Card className="w-full max-w-md border-destructive/20 shadow-lg">
+      <Card className="w-full max-w-md border-[var(--destructive-ring)] shadow-lg">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--destructive-soft)] text-destructive">
             <AlertCircle className="size-6" />
           </div>
           <CardTitle className="text-xl text-foreground font-heading">{title}</CardTitle>
@@ -43,7 +43,7 @@ export function ErrorFallback({
           */}
           {error.digest && (
             <div className="mt-2 text-center">
-              <span className="text-[10px] text-muted-foreground/50 font-mono">
+              <span className="text-[10px] text-muted-foreground opacity-60 font-mono">
                 Error ID: {error.digest}
               </span>
             </div>
