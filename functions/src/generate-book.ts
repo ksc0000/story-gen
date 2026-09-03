@@ -1196,7 +1196,7 @@ export async function processBookGeneration(
           await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
             failureStage: "validation",
             failureProvider: "system",
-            failureReason: "unknown",
+            failureReason: "quota_exceeded",
             retryable: false,
             technicalErrorMessage: `Monthly quota exceeded: ${monthlyCount} and no single credits`,
           }));

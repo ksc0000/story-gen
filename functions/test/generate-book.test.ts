@@ -202,6 +202,10 @@ function createMockDeps() {
     updateBookStoryGenerationMetadata: vi.fn().mockResolvedValue(undefined),
     getUserMonthlyCount: vi.fn().mockResolvedValue(0),
     isUserAdmin: vi.fn().mockResolvedValue(false),
+    // クォータ超過時に単品クレジットを確認する経路。未定義だと catch-all に落ちて
+    // 「クォータ超過」ではなく想定外エラーとして失敗し、テストが本来の経路を通らない。
+    getUserCredits: vi.fn().mockResolvedValue({ singleBookCredits: 0, aiGuidedCredits: 0, photoStoryCredits: 0 }),
+    consumeCredit: vi.fn().mockResolvedValue(undefined),
 
     incrementMonthlyCount: vi.fn().mockResolvedValue(undefined),
   };
@@ -709,12 +713,21 @@ describe("processBookGeneration", () => {
     await processBookGeneration("book123", baseBookData, deps);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book123", "failed");
     expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
+    // クライアントが「クォータ超過」と他の validation 失敗を区別できるよう明示する
+    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
+      "book123",
+      expect.objectContaining({ failureReason: "quota_exceeded" })
+    );
   });
 
   it("orgId だけ付いた絵本は団体負担にならず月次クォータで拒否される（回帰: クォータ回避）", async () => {
     deps.getUserMonthlyCount.mockResolvedValue(3);
     await processBookGeneration("book-org-spoof", { ...baseBookData, orgId: "org-x" } as BookData, deps);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-org-spoof", "failed");
+    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
+      "book-org-spoof",
+      expect.objectContaining({ failureReason: "quota_exceeded" })
+    );
     expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
   });
 
