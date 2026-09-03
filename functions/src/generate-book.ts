@@ -63,7 +63,7 @@ import {
 import { resolveOpenAIModelLabel, resolveOpenAIModelLabelForProfile } from "./lib/openai-image";
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
 import { canUseProductPlan } from "./lib/entitlements";
-import { canGenerateBookThisMonth } from "./lib/usage";
+import { canGenerateBookThisMonth, currentUsageYearMonth } from "./lib/usage";
 import {
   getAgeReadingProfile,
   resolveEffectiveReadingAge,
@@ -3574,8 +3574,7 @@ export const generateBook = onDocumentCreated(
       },
 
       getUserMonthlyCount: async (userId: string) => {
-        const now = new Date();
-        const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        const yearMonth = currentUsageYearMonth();
         const countDoc = await db.collection("users").doc(userId).collection("usage").doc(yearMonth).get();
         return countDoc.exists ? (countDoc.data()?.count || 0) : 0;
       },
@@ -3591,8 +3590,7 @@ export const generateBook = onDocumentCreated(
       },
 
       incrementMonthlyCount: async (userId: string) => {
-        const now = new Date();
-        const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        const yearMonth = currentUsageYearMonth();
         const countRef = db.collection("users").doc(userId).collection("usage").doc(yearMonth);
         await countRef.set({ count: admin.firestore.FieldValue.increment(1) }, { merge: true });
       },
