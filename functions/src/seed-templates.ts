@@ -1,4 +1,4 @@
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import type { CategoryGroupData, TemplateData, FixedStoryPageTemplate, PageVisualRole } from "./lib/types";
@@ -18764,11 +18764,27 @@ async function seed(): Promise<void> {
   console.log(`Seeded ${Object.keys(SEED_TEMPLATES).length} templates.`);
 }
 
+/**
+ * seed 実行を許可する呼び出し元か検証する。
+ * 2026-09-03 まで認証チェックが無く、URL を知っていれば誰でも本番の templates/categoryGroups を
+ * 上書きできる状態だった（未認証プローブで実際に seed が走った）。管理者クレーム必須にする。
+ */
+export function assertSeedCaller(auth: { token?: Record<string, unknown> } | undefined): void {
+  if (!auth) {
+    throw new HttpsError("unauthenticated", "ログインが必要です。");
+  }
+  if (auth.token?.admin !== true) {
+    throw new HttpsError("permission-denied", "管理者のみ実行できます。");
+  }
+}
+
 export const seedTemplates = onCall(
   {
     region: "asia-northeast1",
+    consumeAppCheckToken: true,
   },
-  async () => {
+  async (request) => {
+    assertSeedCaller(request.auth);
     await seed();
     return { message: "Templates seeded successfully" };
   }
