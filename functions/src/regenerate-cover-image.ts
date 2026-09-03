@@ -13,6 +13,7 @@ import { isSaferRetryEnabled } from "./lib/image-model-policy";
 import { logAdminOperation } from "./lib/audit-logger";
 import type { ImageModelProfile, CoverStatus, BookData } from "./lib/types";
 import { generateCoverImageWithFallback } from "./controllers/imageGeneration";
+import { buildInputImageRefs, resolveStyleReferenceUrl } from "./generate-book";
 
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 // gpt-image-2 系プロファイル（openai_gpt_image_2_*）で作られた絵本の表紙再生成に必須。
@@ -101,6 +102,19 @@ interface RegenerateCoverImageResponse {
   success: boolean;
   coverStatus: CoverStatus;
   coverImageUrl?: string;
+}
+
+/** 表紙再生成に渡す参照画像。初回生成の表紙（全キャスト + スタイル見本）と同じ集め方。 */
+export function buildCoverRegenerationRefs(bookData: Pick<BookData, "childProfileSnapshot" | "storyCast" | "style">) {
+  const cast = bookData.storyCast ?? [];
+  return buildInputImageRefs(
+    bookData.childProfileSnapshot,
+    cast,
+    cast.map((character) => character.characterId),
+    undefined,
+    undefined,
+    resolveStyleReferenceUrl(bookData.style)
+  );
 }
 
 export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<RegenerateCoverImageResponse>>(
@@ -211,11 +225,18 @@ export const regenerateCoverImage = onCall<RegenerateCoverImageRequest, Promise<
           }
         : undefined;
 
+      // 初回生成（generate-book.ts の表紙）と同じ参照画像（子どものアバター・相棒・スタイル見本）を渡す。
+      // 渡さないと再生成した表紙だけ本人の似姿が失われ、OpenAI では images.edit ではなく generate になる。
+      const coverInputImageUrls = buildCoverRegenerationRefs(bookData).map((ref) => ref.url);
+
       coverResult = await generateCoverImageWithFallback({
         coverImagePrompt: fullCoverPrompt,
         bookId,
         imageQualityTier: bookData.imageQualityTier ?? "light",
         imageModelProfile: bookData.imageModelProfile,
+        // 単品購入の絵本は初回と同じ高品質ティアで再生成する（未指定だと medium に落ちていた）
+        isSinglePurchase: bookData.isSinglePurchase,
+        inputImageUrls: coverInputImageUrls,
         replicateApiToken: replicateApiToken.value(),
         openaiApiKey: openaiApiKey.value(),
         uploadCoverImage,
