@@ -83,3 +83,13 @@ Firebase Console の v3 登録フォーム（秘密鍵の入力欄）は無効�
 ## 禁止事項
 - Stage 1〜2 の間、Console 側の enforce トグルには触れない
 - 自動化ルーチンはこのランブックの操作を行わない（人間の承認ゲート必須）
+
+## 補足: consumeAppCheckToken と limited-use トークン（2026-09-03）
+
+- サーバ側 callable は `consumeAppCheckToken: true`（1回使い切り・リプレイ拒否）。
+- クライアントが通常トークン（TTL 7日・共有キャッシュ）で呼ぶと、**2回目以降は消費済みとして INVALID** になる。
+  Stage 1 の「検証済み率」が低く見える主因になり得るので、率を判定する前にこの点が入っているか確認する。
+- 対処: `src/lib/callable.ts` の `httpsCallable` ラッパー（`limitedUseAppCheckTokens: true`）を全 callable 呼び出しで使う。
+  直接 `firebase/functions` の `httpsCallable` を import しないこと。
+- 副作用: callable 呼び出しごとに reCAPTCHA Enterprise の assessment が1回発生する（無料枠 1万/月）。
+

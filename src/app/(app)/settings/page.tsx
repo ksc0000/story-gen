@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { httpsCallable } from "firebase/functions";
+import { httpsCallable } from "@/lib/callable";
 import { Settings, UserX, ChevronRight, LogOut, ArrowLeft, Building2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

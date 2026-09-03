@@ -24,7 +24,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { db, functions } from "@/lib/firebase";
-import { httpsCallable } from "firebase/functions";
+import { httpsCallable } from "@/lib/callable";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { PLAN_CONFIGS } from "@/lib/plans";
