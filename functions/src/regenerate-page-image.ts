@@ -70,6 +70,18 @@ interface RegeneratePageImageResponse {
   imageUrl: string;
 }
 
+/**
+ * 再生成の主プロファイル。
+ * ページは fallback 後のプロファイル（例: FLUX）を imageModelProfile に保存し、元のプロファイルを
+ * fallbackFromModelProfile に残す。再生成で保存値をそのまま使うと FLUX で描き直され、
+ * 「フォールバックで画風が変わったページを元に戻す」ことができなかった。元のプロファイルを優先する。
+ */
+export function resolveRegenerationPrimaryProfile(
+  pageData: Pick<PageData, "imageModelProfile" | "fallbackFromModelProfile">
+): ImageModelProfile {
+  return (pageData.fallbackFromModelProfile ?? pageData.imageModelProfile ?? "pro_consistent") as ImageModelProfile;
+}
+
 export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<RegeneratePageImageResponse>>(
   // 画像タイムアウト 360s + フォールバックを関数側で切らないよう timeoutSeconds を拡張（2026-06）。
   { region: "asia-northeast1", secrets: [replicateApiToken, openaiApiKey], consumeAppCheckToken: true, timeoutSeconds: 540 },
@@ -137,7 +149,7 @@ export const regeneratePageImage = onCall<RegeneratePageImageRequest, Promise<Re
       });
     }
 
-    const primaryProfile = (pageData.imageModelProfile ?? "pro_consistent") as ImageModelProfile;
+    const primaryProfile = resolveRegenerationPrimaryProfile(pageData);
     const inputImageUrls = (pageData.inputImageRefs ?? []).map((ref) => ref.url);
 
     const fallbackProfiles = resolveImageFallbackProfiles(primaryProfile);
