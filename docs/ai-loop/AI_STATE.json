@@ -314,6 +314,7 @@
     "PR #767: fix(ui): 入力欄の枠線が見えず必須項目に気づけない（できあがり絵本→はじめての誕生日で「必要な情報を入力してください」） (merged)",
     "PR #768: fix: 表紙再生成の OpenAI 経路 + App Check 消費型トークンのクライアント対応（limited-use） (merged)",
     "PR #769: fix(security): seedTemplates を管理者限定に（無認証で本番テンプレートを上書き可能だった） (merged)",
+    "PR #770: fix(rules): Storage rules が子ども写真/写真絵本のアップロードを全拒否 + 管理者承認 rules + コンパニオンジョブ所有者検証 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
