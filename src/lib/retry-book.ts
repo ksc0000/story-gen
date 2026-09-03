@@ -1,4 +1,4 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { BookDoc } from "@/lib/types";
 
@@ -36,6 +36,8 @@ const CREATION_FIELDS = [
   "generationOverride",
 ] as const;
 
+const RETENTION_DAYS = 30;
+
 export async function createRetryBook(
   book: BookDoc & { id: string },
   userId: string
@@ -57,7 +59,8 @@ export async function createRetryBook(
     createdAtMs: nowMs,
     updatedAt: serverTimestamp(),
     updatedAtMs: nowMs,
-    expiresAt: null,
+    // 他の作成経路と同じ 30 日。null だと期限切れ削除（cleanupExpired）の対象にならず永久に残る
+    expiresAt: Timestamp.fromMillis(nowMs + RETENTION_DAYS * 24 * 60 * 60 * 1000),
     retriedFromBookId: book.id,
   });
   return ref.id;

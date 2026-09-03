@@ -9,7 +9,8 @@ import { logAdminOperation } from "./lib/audit-logger";
 export async function processDeleteBook(
   bookId: string,
   auth: { uid: string; token: admin.auth.DecodedIdToken },
-  db: admin.firestore.Firestore
+  db: admin.firestore.Firestore,
+  storage?: admin.storage.Storage
 ) {
   const uid = auth.uid;
   const isAdmin = auth.token.admin === true;
@@ -35,6 +36,12 @@ export async function processDeleteBook(
   try {
     // 3. Recursive deletion of the book and its subcollections
     await db.recursiveDelete(bookRef);
+
+    // 3b. 生成物（表紙・ページ画像・再生成画像・PDF）を Storage からも削除する。
+    //     これまで Firestore だけ消していたため、削除した絵本の画像が残り続けていた。
+    if (storage) {
+      await storage.bucket().deleteFiles({ prefix: `books/${bookId}/` });
+    }
 
     // 4. Audit logging if performed by an admin
     if (isAdmin) {
@@ -81,6 +88,6 @@ export const deleteBook = onCall(
     }
 
     const db = admin.firestore();
-    return processDeleteBook(bookId, request.auth, db);
+    return processDeleteBook(bookId, request.auth, db, admin.storage());
   }
 );
