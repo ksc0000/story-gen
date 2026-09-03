@@ -22,6 +22,9 @@ export const DEMO_TEMPLATES: (TemplateDoc & { id: string })[] = [
     name: "はじめてのたんじょうび",
     description: "はじめての誕生日の思い出を、やさしく残せる固定テンプレート",
     icon: "🎂",
+    // 本番テンプレートと同じ必須/任意項目（入力画面の検証用）
+    requiredInputs: ["childName", "familyMembers"],
+    optionalInputs: ["parentMessage"],
     categoryGroupId: "seasonal-events",
     creationMode: "fixed_template",
     priceTier: "ume",

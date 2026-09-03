@@ -32,7 +32,8 @@
     --destructive:           #ef4444;
     --destructive-foreground: #ffffff;
     --border:                var(--em-glass-border);
-    --input:                 var(--em-bg-surface);
+    /* 入力欄の枠線。以前は surface(#fff) で白カード上の枠線が消えていた（必須項目が見えない） */
+    --input:                 var(--em-glass-border);
     --ring:                  var(--em-accent-primary);
     --radius:                var(--em-r-lg);
   }

@@ -14,6 +14,7 @@ import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
+import { formatMissingFieldsMessage } from "@/lib/template-input-fields";
 import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { useVisualViewport } from "@/lib/hooks/use-visual-viewport";
@@ -145,6 +146,18 @@ function getMissingTemplateFields(params: {
   };
 
   return params.requiredInputs.filter((field) => field !== "childName" && !(fieldValues[field]?.trim()));
+}
+
+/** 固定テンプレートの入力欄。伝えたいメッセージ(textarea)と同じ見た目に揃える */
+const FIXED_INPUT_CLASS =
+  "mt-1 h-10 rounded-2xl border-violet-200 bg-background px-3 focus-visible:border-purple-400 focus-visible:ring-purple-200 aria-invalid:border-rose-300";
+
+function RequiredBadge() {
+  return (
+    <span className="ml-2 inline-block rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-600 align-middle">
+      必須
+    </span>
+  );
 }
 
 function InputPageContent() {
@@ -361,14 +374,18 @@ function InputPageContent() {
               {/* 必須・任意フィールド */}
               {shouldShowTemplateField("place", requiredInputs, optionalInputs) ? (
                 <div>
-                  <Label htmlFor="place-fixed" className="text-purple-800">どこでの思い出？</Label>
-                  <Input id="place-fixed" value={place} onChange={(e) => setPlace(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder="例：上野動物園、近所の公園" className="mt-1" maxLength={200} />
+                  <Label htmlFor="place-fixed" className="text-purple-800">
+                    どこでの思い出？{requiredInputs.includes("place") && <RequiredBadge />}
+                  </Label>
+                  <Input id="place-fixed" value={place} onChange={(e) => setPlace(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder="例：上野動物園、近所の公園" className={FIXED_INPUT_CLASS} maxLength={200} aria-required={requiredInputs.includes("place")} />
                 </div>
               ) : null}
               {shouldShowTemplateField("familyMembers", requiredInputs, optionalInputs) ? (
                 <div>
-                  <Label htmlFor="familyMembers-fixed" className="text-purple-800">だれと一緒だった？</Label>
-                  <Input id="familyMembers-fixed" value={familyMembers} onChange={(e) => setFamilyMembers(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder="例：ママ、パパ、おばあちゃん" className="mt-1" maxLength={200} />
+                  <Label htmlFor="familyMembers-fixed" className="text-purple-800">
+                    だれと一緒だった？{requiredInputs.includes("familyMembers") && <RequiredBadge />}
+                  </Label>
+                  <Input id="familyMembers-fixed" value={familyMembers} onChange={(e) => setFamilyMembers(e.target.value)} onFocus={(e) => scrollInputIntoView(e.target)} placeholder="例：ママ、パパ、おばあちゃん" className={FIXED_INPUT_CLASS} maxLength={200} aria-required={requiredInputs.includes("familyMembers")} />
                 </div>
               ) : null}
               <div>
@@ -534,7 +551,7 @@ function InputPageContent() {
 
       {creationMode === "fixed_template" && missingTemplateFields.length > 0 && (
         <div className="mt-4 text-center">
-          <p className="text-sm text-rose-600">必要な情報を入力してください</p>
+          <p className="text-sm text-rose-600">{formatMissingFieldsMessage(missingTemplateFields)}</p>
         </div>
       )}
 
