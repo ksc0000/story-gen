@@ -13,6 +13,7 @@ import { PageTransition } from "@/components/page-transition";
 import { useGenerationProgress } from "@/lib/hooks/use-generation-progress";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { createRetryBook } from "@/lib/retry-book";
+import { isQuotaExceededFailure } from "@/lib/generation-failure";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
 import { getGenerationStages } from "@/lib/generation-progress-utils";
@@ -46,7 +47,7 @@ function getGeneratingSummary(book: BookDoc, completedPages: number, totalPages:
 }
 
 function isQuotaExceeded(book: BookDoc): boolean {
-  return book.failureStage === "validation" && book.failureProvider === "system";
+  return isQuotaExceededFailure(book);
 }
 
 function getFailureMessage(book: BookDoc): string {

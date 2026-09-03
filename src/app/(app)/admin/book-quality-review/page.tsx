@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { db, functions } from "@/lib/firebase";
 import { httpsCallable } from "@/lib/callable";
+import { REGENERATE_TIMEOUT_MS } from "@/lib/callable-timeouts";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { PLAN_CONFIGS } from "@/lib/plans";
@@ -1211,7 +1212,7 @@ export default function AdminBookQualityReviewPage() {
     setRegeneratingPageIds((prev) => new Set(prev).add(page.id));
     setRegenerationMessages((prev) => ({ ...prev, [page.id]: "再生成中..." }));
     try {
-      const regenerate = httpsCallable(functions, "regeneratePageImage");
+      const regenerate = httpsCallable(functions, "regeneratePageImage", { timeout: REGENERATE_TIMEOUT_MS });
       await regenerate({ bookId: selectedBookId, pageNumber: page.pageNumber });
       setRegenerationMessages((prev) => ({ ...prev, [page.id]: "再生成完了" }));
     } catch (err) {
@@ -1231,7 +1232,7 @@ export default function AdminBookQualityReviewPage() {
     setRegeneratingCover(true);
     setCoverRegenMessage("カバー再生成中...");
     try {
-      const regenerate = httpsCallable(functions, "regenerateCoverImage");
+      const regenerate = httpsCallable(functions, "regenerateCoverImage", { timeout: REGENERATE_TIMEOUT_MS });
       await regenerate({ bookId: selectedBookId });
       setCoverRegenMessage("カバー再生成完了");
     } catch (err) {
@@ -1413,7 +1414,7 @@ export default function AdminBookQualityReviewPage() {
     setQualityReviewMessage(`${imageFixes.length} ページの再生成を開始します...`);
 
     try {
-      const regenerate = httpsCallable(functions, "regeneratePageImage");
+      const regenerate = httpsCallable(functions, "regeneratePageImage", { timeout: REGENERATE_TIMEOUT_MS });
       // Sequential execution to avoid overwhelming the system
       for (const fix of imageFixes) {
         await regenerate({ bookId: selectedBook.id, pageNumber: fix.pageNumber });

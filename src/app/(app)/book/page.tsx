@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "@/lib/callable";
+import { REGENERATE_TIMEOUT_MS, PDF_TIMEOUT_MS } from "@/lib/callable-timeouts";
 import {
   Share2,
   Check,
@@ -168,6 +169,21 @@ function BookContent() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <p className="text-violet-500">読み込み中...</p>
+      </div>
+    );
+
+  // 生成に失敗した絵本は空のビューアではなく、失敗理由と再試行導線のある生成ページへ
+  if (book && book.status === "failed")
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <p className="text-lg font-bold text-purple-900">この絵本は生成に失敗しました</p>
+        <p className="mt-2 text-sm text-violet-500">
+          {getUserFriendlyErrorMessage(book.errorMessage ?? "", "途中で生成処理に失敗しました。")}
+        </p>
+        <div className="mt-6 flex justify-center gap-3">
+          <Link href={`/generating?id=${bookId}`}><Button>理由を見て、もう一度つくる</Button></Link>
+          <Link href="/home"><Button variant="outline">本棚に戻る</Button></Link>
+        </div>
       </div>
     );
 
@@ -347,7 +363,7 @@ function BookContent() {
     });
     try {
       toast.info(`ページ ${page.pageNumber + 1} のイラスト再生成を開始しました。完了まで1〜2分お待ちください。`);
-      const regenerate = httpsCallable(functions, "regeneratePageImage");
+      const regenerate = httpsCallable(functions, "regeneratePageImage", { timeout: REGENERATE_TIMEOUT_MS });
       await regenerate({ bookId, pageNumber: page.pageNumber });
     } catch (err) {
       console.error("Failed to regenerate page:", err);
@@ -369,7 +385,7 @@ function BookContent() {
     setCoverRegenerationError(null);
     try {
       toast.info("表紙イラストの再生成を開始しました。完了まで1〜2分お待ちください。");
-      const regenerate = httpsCallable(functions, "regenerateCoverImage");
+      const regenerate = httpsCallable(functions, "regenerateCoverImage", { timeout: REGENERATE_TIMEOUT_MS });
       await regenerate({ bookId });
     } catch (err) {
       console.error("Failed to regenerate cover:", err);
@@ -385,7 +401,7 @@ function BookContent() {
     if (!bookId || isGeneratingPdf) return;
     setIsGeneratingPdf(true);
     try {
-      const generatePdf = httpsCallable(functions, "generateBookPdf");
+      const generatePdf = httpsCallable(functions, "generateBookPdf", { timeout: PDF_TIMEOUT_MS });
       await generatePdf({ bookId });
     } catch (err) {
       console.error("Failed to generate PDF:", err);

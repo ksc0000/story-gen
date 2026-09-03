@@ -432,7 +432,7 @@ export interface BookData {
   backfilledAt?: FirebaseFirestore.Timestamp;
   failureStage?: "story_generation" | "schema_validation" | "image_generation" | "validation" | "quality_gate";
   failureProvider?: "gemini" | "replicate" | "system";
-  failureReason?: "service_unavailable" | "rate_limited" | "overloaded" | "unknown";
+  failureReason?: "service_unavailable" | "rate_limited" | "overloaded" | "quota_exceeded" | "unknown";
   retryable?: boolean;
   technicalErrorMessage?: string;
   failedAt?: FirebaseFirestore.Timestamp;
