@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useBooks } from "@/lib/hooks/use-books";
 import { useSeries } from "@/lib/hooks/use-series";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { useMonthlyUsage } from "@/lib/monthly-usage";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { cn } from "@/lib/utils";
@@ -169,7 +170,7 @@ export default function HomePage() {
   const { companions, loading: companionsLoading } = useCompanions(user?.uid);
   const productPlan = resolveProductPlan(profile);
   const quota = PLAN_CONFIGS[productPlan]?.monthlyBookQuota ?? 1;
-  const consumed = profile?.monthlyGenerationCount ?? 0;
+  const { consumed } = useMonthlyUsage(user?.uid);
   const remaining = Math.max(0, quota - consumed);
   // 管理者・bypassMonthlyLimit 保持者は月次上限なしで生成できるため、有限クォータではなく「無制限」を表示する。
   const isUnlimited = isAdmin || profile?.generationOverride?.bypassMonthlyLimit === true;

@@ -18,3 +18,13 @@ export function canGenerateBookThisMonth(params: {
 
   return params.currentCount < getMonthlyBookLimit(params.userPlan);
 }
+
+/**
+ * 月次使用量ドキュメントのキー（UTC の YYYY-MM）。
+ * クライアント side の src/lib/monthly-usage.ts と同じ計算にすること（画面の残り冊数表示が
+ * ここで数えた値を読むため）。
+ */
+export function currentUsageYearMonth(now: Date = new Date()): string {
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+

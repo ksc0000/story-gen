@@ -13,6 +13,7 @@ import { AvatarNudgeBanner } from "@/components/avatar-nudge-banner";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { useMonthlyUsage } from "@/lib/monthly-usage";
 import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import {
   useSavedTemplates,
@@ -61,7 +62,7 @@ function SelectChildContent() {
   const isChildLimitReached = children.length >= planConfig.maxChildren;
 
   const quota = planConfig?.monthlyBookQuota ?? 1;
-  const consumed = profile?.monthlyGenerationCount ?? 0;
+  const { consumed } = useMonthlyUsage(user?.uid);
   const remaining = Math.max(0, quota - consumed);
   const isUnlimited = isAdmin || profile?.generationOverride?.bypassMonthlyLimit === true;
   const isGenerationLimitReached = !isUnlimited && remaining <= 0;

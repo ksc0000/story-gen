@@ -119,3 +119,12 @@ describe("processBookGeneration quota and credits", () => {
     expect(deps.consumeCredit).not.toHaveBeenCalled();
   });
 });
+
+import { currentUsageYearMonth } from "../src/lib/usage";
+describe("currentUsageYearMonth（クライアントの src/lib/monthly-usage.ts と同一キー）", () => {
+  it("UTC の YYYY-MM", () => {
+    expect(currentUsageYearMonth(new Date("2026-09-03T00:59:00Z"))).toBe("2026-09");
+    expect(currentUsageYearMonth(new Date("2026-09-30T20:00:00Z"))).toBe("2026-09");
+    expect(currentUsageYearMonth(new Date("2026-10-01T00:00:00Z"))).toBe("2026-10");
+  });
+});
