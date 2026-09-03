@@ -36,6 +36,19 @@ export const onCompanionImageJobCreated = onDocumentCreated(
     const jobRef = db.collection("companionImageJobs").doc(jobId);
     const companionRef = db.collection("companions").doc(jobData.companionId);
 
+    // ジョブの申請者がそのコンパニオンの所有者でなければ処理しない。
+    // rules 側でも検証するが、他人の companions を上書きできる経路を関数側でも閉じる。
+    const ownerCheck = await companionRef.get();
+    const ownerUid = (ownerCheck.data() as Partial<CompanionData> | undefined)?.userId;
+    if (!ownerCheck.exists || !jobData.userId || ownerUid !== jobData.userId) {
+      await jobRef.update({
+        status: "failed",
+        error: "companion_not_owned_by_requester",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      return;
+    }
+
     try {
       await Promise.all([
         jobRef.update({

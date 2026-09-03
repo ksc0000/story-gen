@@ -1,11 +1,37 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /books/{bookId}/pages/{fileName} {
+    // 画像アップロードの共通制約（10MB以下・画像のみ）
+    function isImageUpload() {
+      return request.resource != null
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // 子どもの写真（登録・編集画面がクライアントから直接アップロードする）
+    // 2026-09-03 までここが deny で、写真付きの子ども登録が storage/unauthorized で失敗していた
+    match /childPhotos/{uid}/{allPaths=**} {
+      allow read: if isOwner(uid);
+      allow write: if isOwner(uid) && isImageUpload();
+    }
+
+    // 本人領域: 写真絵本の元写真（クライアント書き込み）、アバター/コンパニオン画像（関数が書く）
+    match /users/{uid}/{allPaths=**} {
+      allow read: if isOwner(uid);
+      allow write: if isOwner(uid) && isImageUpload();
+    }
+
+    // 絵本の生成物は関数（Admin SDK）だけが書く。配信はダウンロードトークン付きURLで行うため
+    // ルール経由の読み取りは所有者のみ許可しておく
+    match /books/{bookId}/{allPaths=**} {
       allow read: if request.auth != null
         && firestore.get(/databases/(default)/documents/books/$(bookId)).data.userId == request.auth.uid;
       allow write: if false;
     }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }
