@@ -3,6 +3,7 @@
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { isDemoMode } from "@/lib/demo";
+import { buildSwUrl } from "@/lib/offline-book-storage";
 
 /**
  * 生成完了プッシュ通知（FCM Web Push）のクライアント側ユーティリティ。
@@ -13,8 +14,6 @@ import { isDemoMode } from "@/lib/demo";
  *   Firebase プロジェクト既定のキーペアにフォールバックする。
  * - iOS Safari はホーム画面に追加した PWA でのみ通知可（iOS 16.4+）。
  */
-
-const SW_PATH = "/firebase-messaging-sw.js";
 
 export type PushSupportState =
   | "supported"
@@ -50,18 +49,6 @@ export async function getPushSupportState(): Promise<PushSupportState> {
   } catch {
     return "unsupported";
   }
-}
-
-function buildSwUrl(): string {
-  const params = new URLSearchParams({
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "",
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
-  });
-  return `${SW_PATH}?${params.toString()}`;
 }
 
 export interface EnablePushResult {
