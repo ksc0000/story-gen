@@ -373,6 +373,36 @@ export function validateGeneratedStoryQuality(params: {
     });
   }
 
+  // 読み聞かせの pageProgression 版 flat rhythm。flatSentenceRhythm はページ内の
+  // 文の長短、こちらはページ間の文字数の緩急を見る。全ページがほぼ同じ文字数だと
+  // 盛り上がり・静かな場面の対比が失われ、通読テンポが単調になりやすい。
+  // 最終ページは意図的に短い着地ページであることが多いため、allowShortFinalPage の
+  // 設定に合わせて比較対象から除外する。
+  if (readingProfile.ageBand !== "baby_toddler" && pageCount >= 4) {
+    const rhythmChars = (
+      threshold.allowShortFinalPage ? perPageStats.slice(0, -1) : perPageStats
+    ).map((stats) => stats.chars);
+    const maxRhythmChars = Math.max(...rhythmChars);
+    const minRhythmChars = Math.min(...rhythmChars);
+    const avgRhythmChars =
+      rhythmChars.reduce((sum, chars) => sum + chars, 0) / rhythmChars.length;
+
+    if (
+      rhythmChars.length >= 3 &&
+      avgRhythmChars >= threshold.minCharsPerPage &&
+      maxRhythmChars - minRhythmChars <= avgRhythmChars * 0.15
+    ) {
+      issues.push({
+        severity: "warning",
+        code: "page_length.flat_rhythm",
+        message:
+          "ページごとの文字数がほぼ均一で、話の緩急（盛り上がり・静かな場面の対比）が弱い可能性があります。",
+        actual: maxRhythmChars - minRhythmChars,
+        expected: `> ${Math.round(avgRhythmChars * 0.15)}`,
+      });
+    }
+  }
+
   const hasNarrativeDevice = Boolean(story.narrativeDevice);
   const hasRepeatedPhraseOrMotif = Boolean(
     story.narrativeDevice?.repeatedPhrase || story.narrativeDevice?.visualMotif

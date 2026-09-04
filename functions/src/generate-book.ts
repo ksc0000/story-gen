@@ -2791,6 +2791,9 @@ export function shouldRewriteStoryText(
   _bookData: BookData,
   report: StoryQualityReport
 ): boolean {
+  // 注: "flat_sentence_rhythm"（ページ内）と "page_length.flat_rhythm"（ページ間）は
+  // 検出のみに留める。monotonous_sentence_endings がそうだったように、まず実データで
+  // 発火率を計測し、誤検知が少ないと確認できてからリライト誘導へ昇格させる方針。
   return report.issues.some((issue) =>
     [
       "text_too_childish",

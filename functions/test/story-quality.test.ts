@@ -264,6 +264,89 @@ describe("validateGeneratedStoryQuality", () => {
     expect(report.issues.some((issue) => issue.code === "flat_sentence_rhythm")).toBe(false);
   });
 
+  it("flags flat page-length rhythm when every page is nearly the same length", () => {
+    // ページ間の文字数がほぼ均一で、話の緩急（盛り上がり・静かな場面の対比）が無い本。
+    // 最終ページは着地用の短いページとして意図的に比較対象から除外される。
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        narrativeDevice: undefined,
+        pages: [
+          {
+            text: "ゆうたくんは あさに おきて、こうえんへ いくことに しました。とても わくわく している ようすです。",
+            imagePrompt: "wide shot of a child waking up and getting ready to go to the park",
+          },
+          {
+            text: "こうえんで おともだちと おおきな ボールを けって たのしく あそびました。えがおが こぼれます。",
+            imagePrompt: "medium shot of children playing with a ball in a park",
+          },
+          {
+            text: "おひるは みんなで おべんとうを たべて、とても うれしい きもちに なりました。えがおが あふれます。",
+            imagePrompt: "wide shot of children having a picnic lunch in a park",
+          },
+          {
+            text: "いえに かえって ぐっすり ねました。",
+            imagePrompt: "quiet closing shot of a child sleeping peacefully at home",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "page_length.flat_rhythm")).toBe(true);
+  });
+
+  it("does not flag flat page-length rhythm when page lengths vary (some short, some long)", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        narrativeDevice: undefined,
+        pages: [
+          {
+            text: "ゆうたくんは あさに おきて、こうえんへ いくことに しました。とても わくわく している ようすです。",
+            imagePrompt: "wide shot of a child waking up and getting ready to go to the park",
+          },
+          {
+            text: "こうえんで おともだちと おおきな ボールを けって たのしく あそびました。ボールが たかく そらに あがると、みんなで おおきな こえで わらいました。とても たのしい じかんに なりました。",
+            imagePrompt: "medium shot with action, children playing with a ball in a park",
+          },
+          {
+            text: "おひるごはんの じかんです。",
+            imagePrompt: "simple wide shot of a picnic setup in a park",
+          },
+          {
+            text: "いえに かえって ぐっすり ねました。",
+            imagePrompt: "quiet closing shot of a child sleeping peacefully at home",
+          },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(4),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "page_length.flat_rhythm")).toBe(false);
+  });
+
+  it("never flags flat page-length rhythm for baby/toddler books", () => {
+    const report = validateGeneratedStoryQuality({
+      story: {
+        ...baseStory,
+        narrativeDevice: undefined,
+        pages: [
+          { text: "わんわん きたよ。", imagePrompt: "simple animal parade scene with soft pastel colors" },
+          { text: "にゃんにゃん きたよ。", imagePrompt: "simple animal parade scene with soft pastel colors" },
+          { text: "もこもこ きたよ。", imagePrompt: "simple animal parade scene with soft pastel colors" },
+          { text: "ぴょんぴょん きたよ。", imagePrompt: "simple animal parade scene with soft pastel colors" },
+        ],
+      },
+      readingProfile: getAgeReadingProfile(2),
+      creationMode: "guided_ai",
+    });
+
+    expect(report.issues.some((issue) => issue.code === "page_length.flat_rhythm")).toBe(false);
+  });
+
   it("detects story goal drift and forbidden quest objects in weak premium text", () => {
     const report = validateGeneratedStoryQuality({
       story: {
