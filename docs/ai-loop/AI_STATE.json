@@ -307,6 +307,7 @@
     "PR #749: test(quality): quality-snapshot の書き込みペイロード生成にテストカバレッジを追加 (merged)",
     "PR #750: fix(copy): オンボーディング案内の旧名称と重複コピーを修正 (merged)",
     "PR #751: fix(lint): テストの as any を型付きキャストに置換（本番ビルド復旧） (merged)",
+    "PR #752: chore: 未参照のstyles/templates PNG(56MB)を削除しwebpに統一 (merged)",
     "PR #753: feat(quality): ページ間の文字数リズム単調を検出するquality gateを追加 (merged)",
     "PR #754: fix: 新モデルのコードレビュー指摘9件（本番回帰1件を含む） (merged)",
     "PR #762: fix(generate): AI系モード（AIにおまかせ/写真から作る）でテーマ未選択だと必ず生成失敗する回帰を修正 (merged)",
