@@ -30,7 +30,7 @@ const TARGET_PROJECT_ID = "story-gen-8a769";
 
 // Reference image: use the deployed hosting asset as a stable public URL
 const REFERENCE_IMAGE_URL =
-  "https://story-gen-8a769.web.app/images/templates/animals.png";
+  "https://story-gen-8a769.web.app/images/templates/animals.webp";
 
 // T6-45: Enhanced crayon styleBible with explicit texture instructions
 const CRAYON_STYLE_BIBLE_V2 =
@@ -92,7 +92,7 @@ async function main() {
     selectedStyleId: "crayon",
     selectedStyleName: "クレヨンで描いた絵本",
     styleBible: CRAYON_STYLE_BIBLE_V2,
-    stylePreviewImageUrl: "/images/styles/crayon.png",
+    stylePreviewImageUrl: "/images/styles/crayon.webp",
     stylePreviewUsedAsReference: false,
     pageCount: 8,
     creationMode: "guided_ai",

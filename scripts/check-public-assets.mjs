@@ -210,6 +210,13 @@ async function runStalePngGuard() {
     'src/app/(app)/generating/page.tsx',
     'src/components/book-card.tsx',
     'src/components/theme-card.tsx',
+    // scripts/*.js were the source of the stale .png refs cleaned up in #698;
+    // scan them explicitly so a future script doesn't reintroduce refs to the
+    // now-deleted public/images/{styles,templates}/*.png files.
+    ...fs
+      .readdirSync(path.join(ROOT, 'scripts'))
+      .filter((f) => f.endsWith('.js') || f.endsWith('.mjs'))
+      .map((f) => path.join('scripts', f)),
   ];
 
   const stalePngRefs = [];

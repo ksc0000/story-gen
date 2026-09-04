@@ -145,7 +145,7 @@ async function main() {
       selectedStyleId: m.selectedStyleId,
       selectedStyleName: m.selectedStyleName,
       styleBible: m.styleBible,
-      stylePreviewImageUrl: `/images/styles/${m.style}.png`,
+      stylePreviewImageUrl: `/images/styles/${m.style}.webp`,
       stylePreviewUsedAsReference: false,
       pageCount: 8,
       creationMode: "guided_ai",
