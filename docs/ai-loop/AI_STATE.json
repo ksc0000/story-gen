@@ -323,6 +323,7 @@
     "PR #774: fix(ux): 失敗した絵本の表示・クォータ誤判定の解消・再生成/PDF のクライアント側タイムアウト (merged)",
     "PR #775: ci(deploy): 自動デプロイのビルドに VAPID 公開鍵を渡す（Web Push 登録が失敗していた） (merged)",
     "PR #776: fix(cleanup): 削除時に Storage の生成物・子ども写真も消す／再試行絵本にも30日の期限 (merged)",
+    "PR #778: refactor: buildSwUrlの重複実装をoffline-book-storageに統合 (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
