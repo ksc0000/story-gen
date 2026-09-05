@@ -7,6 +7,7 @@ importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-com
 
 const DATA_CACHE_NAME = "ehoria-offline-data-v1";
 const IMAGE_CACHE_NAME = "ehoria-offline-images-v1";
+const APP_SHELL_CACHE_PREFIX = "ehoria-app-shell-v";
 
 const params = new URLSearchParams(self.location.search);
 const firebaseConfig = {
@@ -41,26 +42,84 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId) {
   }
 }
 
+// -----------------------------------------------------------------------------
+// App Shell 事前キャッシュ (Precache)
+// -----------------------------------------------------------------------------
+async function precacheAppShell() {
+  try {
+    const res = await fetch("/app-shell-manifest.json", { cache: "no-store" });
+    if (!res.ok) return;
+    const manifest = await res.json();
+    if (!manifest || !manifest.version || !Array.isArray(manifest.urls)) return;
+
+    const targetCacheName = `${APP_SHELL_CACHE_PREFIX}${manifest.version}`;
+    const cache = await caches.open(targetCacheName);
+
+    // キャッシュをバッチで取得・保管
+    await cache.addAll(manifest.urls);
+  } catch (err) {
+    console.warn("SW precacheAppShell failed:", err);
+  }
+}
+
+async function getActiveAppShellCache() {
+  const names = await caches.keys();
+  const shellCaches = names.filter((n) => n.startsWith(APP_SHELL_CACHE_PREFIX));
+  if (shellCaches.length === 0) return null;
+  // アルファベット順（または最新）の App Shell キャッシュを返す
+  shellCaches.sort().reverse();
+  return shellCaches[0];
+}
+
+async function matchAppShellHtml(targetHtml) {
+  // 1. 完全一致（Cache Storage 全体から検索）
+  let cachedRes = await caches.match(targetHtml);
+  if (cachedRes) return cachedRes;
+
+  // 2. 絵本閲覧ページ (/book/...) のフォールバック -> /book/index.html
+  if (targetHtml.startsWith("/book/")) {
+    cachedRes = await caches.match("/book/index.html");
+    if (cachedRes) return cachedRes;
+  }
+
+  // 3. 全体フォールバック -> /index.html
+  cachedRes = await caches.match("/index.html");
+  if (cachedRes) return cachedRes;
+
+  return null;
+}
+
 // Service Worker ライフサイクル管理
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
+  event.waitUntil(
+    (async () => {
+      await precacheAppShell();
+      await self.skipWaiting();
+    })()
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      // キャッシュ名を更新(v2など)した際に旧世代を確実に回収する
+      // 最新の App Shell キャッシュ以外の旧世代App Shellキャッシュを削除
+      const activeShellCache = await getActiveAppShellCache();
       const keep = new Set([DATA_CACHE_NAME, IMAGE_CACHE_NAME]);
+      if (activeShellCache) {
+        keep.add(activeShellCache);
+      }
       const names = await caches.keys();
       await Promise.all(
-        names.filter((n) => n.startsWith("ehoria-offline-") && !keep.has(n)).map((n) => caches.delete(n))
+        names
+          .filter((n) => (n.startsWith("ehoria-offline-") || n.startsWith(APP_SHELL_CACHE_PREFIX)) && !keep.has(n))
+          .map((n) => caches.delete(n))
       );
       await clients.claim();
     })()
   );
 });
 
-// Cache Storage からのオフライン応答（画像 & オフラインブックメタデータ）
+// Cache Storage からのオフライン応答（画像 & オフラインブックメタデータ & App Shell）
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -79,16 +138,10 @@ self.addEventListener("fetch", (event) => {
 
   // 1. 絵本画像 (Firebase Storage)。
   //    オフライン保存(downloadBookForOffline)が書き込むのは Storage の画像だけなので、
-  //    傍受もこのホストに限定する。アプリ内アイコン等まで SW を経由させると
-  //    空キャッシュへの無駄な照会が全画像リクエストに乗るため。
-  //    (オフライン絵本の JSON は offline-book-storage.ts が caches API を直接読むため fetch は来ない)
+  //    傍受もこのホストに限定する。
   const isBookImage = url.hostname === "firebasestorage.googleapis.com";
 
   if (isBookImage) {
-    // キャッシュへの書き込みはここでは行わない。
-    // 「明示的にオフライン保存した絵本のみ」をキャッシュする方針(#739)のため、
-    // 書き込みは offline-book-storage.ts の downloadBookForOffline() だけが行う。
-    // ここは読み取り専用: キャッシュにあれば返し、無ければネットワークへ。
     event.respondWith(
       caches.match(request, { cacheName: IMAGE_CACHE_NAME }).then((cachedResponse) => {
         if (cachedResponse) return cachedResponse;
@@ -105,18 +158,62 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. HTML / ページ遷移ナビゲーション。
-  //    現状はアプリシェル(HTML/_next/static)をキャッシュしていないため、オフラインの
-  //    コールドスタートは成立しない（ダウンロード済み絵本はタブが開いている間のみ読める）。
-  //    シェルの事前キャッシュは別issueで扱う。ここでは簡易オフライン応答のみ返す。
+  // 2. Next.js ビルド静的アセット (/_next/static/**)
+  //    Cache-First (アセットハッシュが付与されるため不変)
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(request).then(async (networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const activeShellCache = await getActiveAppShellCache();
+            if (activeShellCache) {
+              const copy = networkResponse.clone();
+              const cache = await caches.open(activeShellCache);
+              await cache.put(request, copy);
+            }
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // 3. HTML / ページ遷移ナビゲーション。
+  //    Network-first 戦略: オンライン時は最新のネットワークレスポンスを返しつつ、失敗時（オフラインコールドスタート）は
+  //    事前キャッシュされた該当ルートの HTML (/book/index.html, /bookshelf/index.html, /index.html) を返す。
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() => {
-        return new Response(
-          "<!doctype html><meta charset=utf-8><title>オフライン</title><p style='font-family:sans-serif;padding:2rem'>オフラインです。接続を確認してください。</p>",
-          { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
-        );
-      })
+      fetch(request)
+        .then(async (networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const activeShellCache = await getActiveAppShellCache();
+            if (activeShellCache) {
+              const copy = networkResponse.clone();
+              const cache = await caches.open(activeShellCache);
+              await cache.put(request, copy);
+            }
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          let path = url.pathname;
+          if (!path.endsWith("/") && !path.endsWith(".html")) {
+            path += "/";
+          }
+          const targetHtml = path.endsWith("/") ? `${path}index.html` : path;
+
+          const cachedRes = await matchAppShellHtml(targetHtml);
+          if (cachedRes) {
+            return cachedRes;
+          }
+
+          return new Response(
+            "<!doctype html><meta charset=utf-8><title>オフライン</title><p style='font-family:sans-serif;padding:2rem'>オフラインです。接続を確認してください。</p>",
+            { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
+          );
+        })
     );
   }
 });
