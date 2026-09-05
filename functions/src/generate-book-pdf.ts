@@ -4,6 +4,7 @@ import * as logger from "firebase-functions/logger";
 import puppeteer from "puppeteer";
 import { BookData, PageData, PdfStatus } from "./lib/types";
 import { randomUUID } from "crypto";
+import { escapeHtml } from "./lib/share-ogp-html";
 
 /**
  * Core logic for generating a book PDF.
@@ -99,18 +100,6 @@ export async function processGenerateBookPdf(
 
       throw new HttpsError("internal", "PDFの生成中にエラーが発生しました");
   }
-}
-
-/**
- * Basic HTML escaping to prevent XSS and layout breakage.
- */
-function escapeHtml(text: string): string {
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
 }
 
 /**
