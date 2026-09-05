@@ -85,7 +85,8 @@ export class ReplicateImageAdapter implements ImageProvider {
   readonly capabilities: ImageProviderCapabilities = REPLICATE_CAPABILITIES;
 
   private readonly apiToken: string;
-  private readonly uploader: ReplicateStorageUploader;
+  private uploader: ReplicateStorageUploader;
+  private client?: ReplicateImageClient;
 
   constructor(
     apiToken: string,
@@ -97,6 +98,10 @@ export class ReplicateImageAdapter implements ImageProvider {
     }
   ) {
     this.apiToken = apiToken;
+    this.uploader = uploader;
+  }
+
+  setUploader(uploader: ReplicateStorageUploader): void {
     this.uploader = uploader;
   }
 
@@ -121,8 +126,10 @@ export class ReplicateImageAdapter implements ImageProvider {
    * Unit tests use a mock uploader; live smoke belongs to P3-9.
    */
   async generateImage(request: ImageGenerationRequest): Promise<ImageGenerationResult> {
-    const client = new ReplicateImageClient(this.apiToken);
-    const result = await client.generateImageWithMetadata(request.prompt, {
+    if (!this.client) {
+      this.client = new ReplicateImageClient(this.apiToken);
+    }
+    const result = await this.client.generateImageWithMetadata(request.prompt, {
       inputImageUrls: request.inputImageUrls,
       imageModelProfile: request.imageModelProfile,
     });
