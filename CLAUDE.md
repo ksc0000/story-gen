@@ -191,7 +191,7 @@ Firestore 保存
 | `ENABLE_KLEIN_BASE` | klein_base モデル有効化 |
 | `ENABLE_GPT_IMAGE_2` | `true` で画像生成を gpt-image-2 系に切替（本番 true） |
 | `RESPONSE_SCHEMA_MODE` | `minimal` 等のスキーマ変形 |
-| `ENFORCE_AI_MODE_ENTITLEMENT` | `true` で guided_ai / original_ai の有料エンタイトルメントをサーバー強制（未エンタイトルの無料ユーザーをブロック）。**既定OFF（互換）。実課金開始時に有効化する** |
+| `ENFORCE_AI_MODE_ENTITLEMENT` | `true` で guided_ai / original_ai の有料エンタイトルメントをサーバー強制（未エンタイトルの無料ユーザーをブロック）。**2026-09-08 に本番 ON**（単品クレジット保有者はクレジットで通す） |
 
 ### ユーザードキュメントの `generationOverride` フィールド
 
