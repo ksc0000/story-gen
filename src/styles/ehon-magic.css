@@ -52,7 +52,7 @@
   --em-bg-surface:     #ffffff;
   --em-text-primary:   #4c1d95;
   --em-text-secondary: #6d28d9;
-  --em-text-dim:       #7c3aed;
+  --em-text-dim:       #6d28d9; /* 補助テキスト。白カード上で AA (>=4.5:1) を満たす濃さ（旧 #7c3aed は 4.7:1、pastel 上書きの #8b5cf6 は 4.2:1 で未達） */
   --em-glass-bg:       rgba(255,255,255,.55);
   --em-glass-border:   rgba(167,139,250,.30);
   --em-accent-primary: #a78bfa;
@@ -114,7 +114,7 @@
   --em-bg-surface:     #1a1a4a;
   --em-text-primary:   #f0f4ff;
   --em-text-secondary: rgba(220,210,255,.85);
-  --em-text-dim:       rgba(180,170,230,.60);
+  --em-text-dim:       rgba(196,186,240,.88); /* 夜空: 旧 .60 は 3.6:1 で未達 */
   --em-glass-bg:       rgba(255,255,255,.07);
   --em-glass-border:   rgba(255,255,255,.22);
   --em-accent-primary: #c084fc;
@@ -140,7 +140,7 @@
   --em-bg-surface:     #ffffff;
   --em-text-primary:   #4c1d95;
   --em-text-secondary: #6d28d9;
-  --em-text-dim:       #8b5cf6;
+  --em-text-dim:       #6d28d9;
   --em-glass-bg:       rgba(255,255,255,.55);
   --em-glass-border:   rgba(167,139,250,.30);
   --em-accent-primary: #a78bfa;
