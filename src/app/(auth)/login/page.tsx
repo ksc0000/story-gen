@@ -87,7 +87,7 @@ function LoginContent() {
               {errorMessage && (
                 <div
                   role="alert"
-                  className="rounded-lg bg-red-50 p-3.5 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                  className="rounded-lg bg-red-50 p-3.5 text-xs text-red-700"
                 >
                   <p>{errorMessage}</p>
                   <Button
@@ -95,7 +95,7 @@ function LoginContent() {
                     size="sm"
                     onClick={handleSignIn}
                     disabled={isSigningIn}
-                    className="mt-2.5 w-full border-red-200 bg-white text-red-700 hover:bg-red-50 hover:text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+                    className="mt-2.5 w-full border-red-200 bg-white text-red-700 hover:bg-red-50 hover:text-red-800"
                   >
                     もう一度試す
                   </Button>
@@ -115,7 +115,7 @@ function LoginContent() {
                 </svg>
                 Googleでログイン
               </Button>
-              <p className="text-center text-xs font-medium text-purple-700/80 dark:text-purple-300/80">
+              <p className="text-center text-xs font-medium text-purple-700/80">
                 月3冊まで無料・クレジットカード不要
               </p>
               <p className="text-center text-xs text-gray-400">
