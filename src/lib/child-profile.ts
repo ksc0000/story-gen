@@ -1,5 +1,5 @@
 import { serverTimestamp, type DocumentData } from "firebase/firestore";
-import type { ChildProfileDoc, IllustrationStyle, PageCount } from "@/lib/types";
+import type { ChildProfileDoc, IllustrationStyle, PageCount, ChildProfileSnapshot } from "@/lib/types";
 import type { ChildProfileFormValues } from "@/components/child-profile-form";
 
 function splitJapaneseList(value: string): string[] {
@@ -48,3 +48,31 @@ export function childProfileToSummary(child: ChildProfileDoc): string {
     .filter(Boolean)
     .join(" / ");
 }
+
+/** 登録なし（名前だけ）の主人公スナップショット */
+export function buildLegacyChildProfileSnapshot(params: { childName: string }): ChildProfileSnapshot {
+  return {
+    displayName: params.childName,
+    personality: {},
+    visualProfile: {
+      version: 1,
+    },
+  };
+}
+
+/** 登録済みの子どもから、絵本に埋め込むスナップショットを作る（参照画像は承認済みアバターを優先） */
+export function buildChildProfileSnapshot(child: ChildProfileSnapshot & { id?: string }): ChildProfileSnapshot {
+  return {
+    displayName: child.displayName,
+    nickname: child.nickname,
+    age: child.age,
+    genderExpression: child.genderExpression,
+    personality: child.personality ?? {},
+    visualProfile: {
+      ...(child.visualProfile ?? { version: 1 }),
+      referenceImageUrl: child.visualProfile?.referenceImageUrl || child.visualProfile?.approvedImageUrl,
+      version: child.visualProfile?.version ?? 1,
+    },
+  };
+}
+

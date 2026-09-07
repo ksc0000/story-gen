@@ -10,6 +10,7 @@ import { StylePicker } from "@/components/style-picker";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { buildChildProfileSnapshot, buildLegacyChildProfileSnapshot } from "@/lib/child-profile";
 import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useMonthlyUsage } from "@/lib/monthly-usage";
@@ -30,7 +31,6 @@ import { trackAnalyticsEvent } from "@/lib/analytics";
 import type {
   CharacterUsage,
   CharacterConsistencyMode,
-  ChildProfileSnapshot,
   IllustrationStyle,
   OutfitMode,
   PageCount,
@@ -403,31 +403,6 @@ function stripUndefined<T>(value: T): T {
     ) as T;
   }
   return value;
-}
-
-function buildLegacyChildProfileSnapshot(params: { childName: string }): ChildProfileSnapshot {
-  return {
-    displayName: params.childName,
-    personality: {},
-    visualProfile: {
-      version: 1,
-    },
-  };
-}
-
-function buildChildProfileSnapshot(child: ChildProfileSnapshot & { id?: string }): ChildProfileSnapshot {
-  return {
-    displayName: child.displayName,
-    nickname: child.nickname,
-    age: child.age,
-    genderExpression: child.genderExpression,
-    personality: child.personality ?? {},
-    visualProfile: {
-      ...(child.visualProfile ?? { version: 1 }),
-      referenceImageUrl: child.visualProfile?.referenceImageUrl || child.visualProfile?.approvedImageUrl,
-      version: child.visualProfile?.version ?? 1,
-    },
-  };
 }
 
 export default function StyleSelectionPage() {
