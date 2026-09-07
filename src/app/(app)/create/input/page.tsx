@@ -183,9 +183,13 @@ function InputPageContent() {
   const creationMode = template?.creationMode ?? mode;
 
   // Find all templates with the same name to allow page count selection for fixed templates
+  // ページ数バリアント（-8p / -12p）は名前が「（8ページ）」付きで異なるため、name 比較では見つからなかった。
+  // select-template / first-run と同じく variantOf（無ければ id の末尾 -Np を除いたもの）で束ねる。
   const relatedTemplates = useMemo(() => {
     if (creationMode !== "fixed_template" || !template) return [];
-    return templates.filter((t) => t.name === template.name && t.creationMode === "fixed_template");
+    const baseId = (t: { id: string; variantOf?: string }) => t.variantOf ?? t.id.replace(/-\d+p$/, "");
+    const base = baseId(template);
+    return templates.filter((t) => t.creationMode === "fixed_template" && baseId(t) === base);
   }, [creationMode, template, templates]);
 
   const fixedStoryPages = template?.fixedStory?.pages ?? [];

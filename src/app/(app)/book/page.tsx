@@ -1067,7 +1067,7 @@ function BookContent() {
       {!isOwner && (
         <div className="mt-8 flex justify-center gap-4">
           <Link href="/home"><Button variant="outline">本棚に戻る</Button></Link>
-          <Link href="/create/theme"><Button>もう一冊作る</Button></Link>
+          <Link href="/create/select-child"><Button>もう一冊作る</Button></Link>
         </div>
       )}
     </PageTransition>

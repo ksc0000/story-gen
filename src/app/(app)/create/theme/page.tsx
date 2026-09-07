@@ -81,7 +81,7 @@ const MODE_HELP: Record<CreationMode, HelpContent> = {
       "運動会・旅行・誕生日パーティーなどの思い出に最適",
       "絵本風のタッチで仕上がるので、まるでプロの作品のよう",
     ],
-    note: "✨ プレミアムプラン、またはスタンダードプランで利用できます",
+    note: "✨ プレミアムプランで利用できます",
   },
   original_ai: {
     emoji: "✍️",

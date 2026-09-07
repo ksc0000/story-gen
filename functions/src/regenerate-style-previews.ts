@@ -3,6 +3,9 @@ import { logger } from "firebase-functions/v2";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { createImageAdapter } from "./lib/image-adapter-factory";
+import { withImageTimeout } from "./lib/replicate";
+
+const STYLE_PREVIEW_IMAGE_TIMEOUT_MS = 360_000;
 import { ILLUSTRATION_STYLE_PROFILES } from "./lib/illustration-styles";
 import type { IllustrationStyle } from "./lib/types";
 
@@ -98,10 +101,14 @@ export const regenerateStylePreviews = onCall(
           },
         });
 
-        const result = await adapter.generateImage({
-          prompt,
-          imageModelProfile: "openai_gpt_image_2",
-        });
+        // 1枚ごとに上限を設ける（無いと関数全体の 900s まで1枚に引きずられ、残りのスタイルが未生成で終わる）
+        const result = await withImageTimeout(
+          adapter.generateImage({
+            prompt,
+            imageModelProfile: "openai_gpt_image_2",
+          }),
+          STYLE_PREVIEW_IMAGE_TIMEOUT_MS
+        );
 
         results.push({ styleId: target.id, url: result.imageUrl });
         logger.info("regenerateStylePreviews: generated", { styleId: target.id });
