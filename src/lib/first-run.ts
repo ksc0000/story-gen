@@ -5,6 +5,7 @@ import type {
   TemplateDoc, IllustrationStyle } from "@/lib/types";
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import { getDefaultProductPlanForCreationMode, PLAN_CONFIGS } from "@/lib/plans";
+import { stripUndefined } from "@/lib/strip-undefined";
 
 /**
  * 初回判定ロジック
@@ -12,26 +13,6 @@ import { getDefaultProductPlanForCreationMode, PLAN_CONFIGS } from "@/lib/plans"
  */
 export function isFirstRun(booksCount: number, childrenCount: number): boolean {
   return booksCount === 0 && childrenCount <= 1;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  if (value === null || typeof value !== "object") return false;
-  const proto = Object.getPrototypeOf(value);
-  return proto === Object.prototype || proto === null;
-}
-
-export function stripUndefined<T>(value: T): T {
-  if (Array.isArray(value)) {
-    return value.map((item) => stripUndefined(item)) as T;
-  }
-  if (isPlainObject(value)) {
-    return Object.fromEntries(
-      Object.entries(value)
-        .filter(([, entryValue]) => entryValue !== undefined)
-        .map(([key, entryValue]) => [key, stripUndefined(entryValue)])
-    ) as T;
-  }
-  return value;
 }
 
 function getTemplateBaseId(t: { id: string; variantOf?: string }): string {

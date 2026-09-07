@@ -19,6 +19,7 @@ import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import { validateBookInputLengths } from "@/lib/input-validation";
 import { getStylePickerProfilesForTemplate } from "@/lib/style-exposure";
 import { useVisualViewport } from "@/lib/hooks/use-visual-viewport";
+import { stripUndefined } from "@/lib/strip-undefined";
 import {
   getDefaultProductPlanForCreationMode,
   PLAN_CONFIGS,
@@ -362,30 +363,6 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-sm font-semibold text-purple-900">{value}</p>
     </div>
   );
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  if (value === null || typeof value !== "object") return false;
-  const proto = Object.getPrototypeOf(value);
-  return proto === Object.prototype || proto === null;
-}
-
-function stripUndefined<T>(value: T): T {
-  if (Array.isArray(value)) {
-    return value.map((item) => stripUndefined(item)) as T;
-  }
-  // Only recurse into plain objects. Recursing into class instances such as
-  // Firestore's FieldValue (serverTimestamp) or Timestamp would strip their
-  // prototype and persist a broken plain object like {_methodName:"serverTimestamp"},
-  // which never resolves server-side and breaks date display.
-  if (isPlainObject(value)) {
-    return Object.fromEntries(
-      Object.entries(value)
-        .filter(([, entryValue]) => entryValue !== undefined)
-        .map(([key, entryValue]) => [key, stripUndefined(entryValue)])
-    ) as T;
-  }
-  return value;
 }
 
 function buildLegacyChildProfileSnapshot(params: { childName: string }): ChildProfileSnapshot {
