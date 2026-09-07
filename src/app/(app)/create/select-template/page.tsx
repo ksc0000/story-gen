@@ -51,10 +51,13 @@ function SelectTemplateContent() {
       setIsTrackA(true);
       return;
     }
+    // Track A（初回の直行ルート）は子ども主人公専用。なかよしキャラを主人公に選んだ場合は
+    // 通常ルートへ（以前は children[0] の子ども絵本にすり替わっていた）
+    const companionProtagonist = searchParams.get("protagonistType") === "companion";
     if (!booksLoading && !childrenLoading && !hasUserSwitchedTrack) {
-      setIsTrackA(isFirstRun(books.length, children.length));
+      setIsTrackA(!companionProtagonist && isFirstRun(books.length, children.length));
     }
-  }, [booksLoading, childrenLoading, books.length, children.length, isRecommendedQuery, hasUserSwitchedTrack]);
+  }, [booksLoading, childrenLoading, books.length, children.length, isRecommendedQuery, hasUserSwitchedTrack, searchParams]);
 
   const selectedCategoryGroupId = searchParams.get("category") ?? "all";
   const categoryGroupMap = useMemo(

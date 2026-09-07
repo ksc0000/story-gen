@@ -178,6 +178,11 @@ export function resolveOpenAIModelLabel(
   hasReferenceImages: boolean,
   opts: OpenAIClientOptions = OPENAI_IMAGE_CANDIDATE_PROFILE
 ): string {
+  // gpt-image-2 / 1.5 は参照画像ありでも Images edit エンドポイントを同じモデル名で呼ぶ
+  // （supportsNativeImageEdit）。gpt-4o ラベルにすると SLO のコスト表が過小になる。
+  if (opts.model === "gpt-image-2" || opts.model === "gpt-image-1.5") {
+    return `openai/${opts.model}`;
+  }
   return hasReferenceImages
     ? `openai/${opts.responsesModel ?? "gpt-4o"}`
     : `openai/${opts.model}`;
@@ -276,6 +281,9 @@ export class OpenAIImageClient implements ImageClient {
       prompt: hardenedPrompt,
       size: this.opts.size as any,
       quality: this.opts.quality as any,
+      // 生成(generate)側と同じ moderation を渡す。参照画像あり=ほぼ全ページの経路で
+      // 既定 moderation のまま動き、安全判定による失敗→プロバイダ跨ぎフォールバック（画風変化）を招いていた
+      moderation: this.opts.moderation as any,
     });
 
     const data = response.data?.[0];
