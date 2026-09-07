@@ -174,6 +174,12 @@ export default function HomePage() {
   const remaining = Math.max(0, quota - consumed);
   // 管理者・bypassMonthlyLimit 保持者は月次上限なしで生成できるため、有限クォータではなく「無制限」を表示する。
   const isUnlimited = isAdmin || profile?.generationOverride?.bypassMonthlyLimit === true;
+  // 単品購入クレジットがあれば、月次上限に達していても作成ボタンを閉じない（サーバはクレジットで通す）
+  const hasSingleCredits =
+    (profile?.singleBookCredits ?? 0) +
+      (profile?.singlePurchaseCredits?.ai_guided ?? 0) +
+      (profile?.singlePurchaseCredits?.photo_story ?? 0) >
+    0;
 
   const [selectedStyle, setSelectedStyle] = useState<string>("all");
   const [selectedMode, setSelectedMode] = useState<string>("all");
@@ -319,7 +325,7 @@ export default function HomePage() {
         )}
 
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          {remaining <= 0 && !isUnlimited ? (
+          {remaining <= 0 && !isUnlimited && !hasSingleCredits ? (
             <div className="flex w-full flex-col items-center gap-1 sm:w-auto">
               <Button size="lg" className="w-full text-lg sm:w-auto" disabled>
                 今月の生成上限に達しました

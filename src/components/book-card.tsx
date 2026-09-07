@@ -17,7 +17,9 @@ interface BookCardProps {
 }
 
 export function BookCard({ book, onDelete, isDeleting, onSelect }: BookCardProps) {
-  const href = book.status === "generating" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
+  // 生成中・失敗は生成ページ（進捗／失敗理由と再試行）へ。失敗した絵本を空のビューアで開かせない
+  const href = book.status === "generating" || book.status === "failed" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
+  const fallbackTitle = book.status === "failed" ? "生成に失敗した絵本" : book.status === "generating" ? "生成中..." : "無題の絵本";
   // Prefer createdAtMs (always a clean number); createdAt may be an unresolved
   // serverTimestamp sentinel on legacy books, which toMillisSafe treats as null.
   const createdMillis = toMillisSafe(book.createdAtMs ?? book.createdAt);
@@ -42,11 +44,12 @@ export function BookCard({ book, onDelete, isDeleting, onSelect }: BookCardProps
           )}
         </div>
         <CardContent className="p-3">
-          <h3 className="truncate text-sm font-medium text-purple-900">{book.title || "生成中..."}</h3>
+          <h3 className="truncate text-sm font-medium text-purple-900">{book.title || fallbackTitle}</h3>
           {createdMillis !== null && (
             <p className="text-xs text-violet-400">{formatDateSafe(createdMillis)}</p>
           )}
           {book.status === "generating" && <Badge variant="secondary" className="mt-1 text-xs">生成中</Badge>}
+          {book.status === "failed" && <Badge variant="destructive" className="mt-1 text-xs">生成に失敗</Badge>}
           {book.pdfStatus === "completed" && (
             <Badge variant="outline" className="mt-1 border-purple-100 bg-purple-50/50 text-[10px] text-purple-600">
               <FileText className="mr-1 h-2.5 w-2.5" />

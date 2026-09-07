@@ -21,7 +21,8 @@ interface BookCardProps {
 
 export function BookCard({ book, onToggleFavorite, onSelect, isOffline = false }: BookCardProps) {
   const [isDownloaded, setIsDownloaded] = useState(false);
-  const href = book.status === "generating" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
+  // 生成中・失敗は生成ページ（進捗／失敗理由と再試行）へ。失敗した絵本を空のビューアで開かせない
+  const href = book.status === "generating" || book.status === "failed" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
   const createdMillis = toMillisSafe(book.createdAtMs ?? book.createdAt);
 
   useEffect(() => {
@@ -75,6 +76,9 @@ export function BookCard({ book, onToggleFavorite, onSelect, isOffline = false }
             ) : (
               <div className="flex flex-col items-center gap-2 text-violet-300">
                 <Image src="/images/icons/book.webp" alt="" width={64} height={64} className="opacity-50" />
+                {book.status === "failed" && (
+                  <span className="text-xs font-medium text-rose-500">生成に失敗</span>
+                )}
                 {book.status === "generating" && (
                   <span className="text-xs font-medium text-violet-400 animate-pulse">生成中...</span>
                 )}
@@ -83,7 +87,7 @@ export function BookCard({ book, onToggleFavorite, onSelect, isOffline = false }
           </div>
           <CardContent className="p-3">
             <h3 className="truncate text-sm font-semibold text-purple-900">
-              {book.title || (book.status === "generating" ? "生成中..." : "無題の絵本")}
+              {book.title || (book.status === "generating" ? "生成中..." : book.status === "failed" ? "生成に失敗した絵本" : "無題の絵本")}
             </h3>
             {createdMillis !== null && (
               <p className="mt-1 text-[10px] text-violet-400">
