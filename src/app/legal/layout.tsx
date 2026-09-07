@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-violet-50/40 to-white">
+    <main className="min-h-screen bg-gradient-to-b from-violet-50/40 to-white" data-theme="pastel">
       <div className="mx-auto max-w-3xl px-5 py-12">
         <Link
           href="/"

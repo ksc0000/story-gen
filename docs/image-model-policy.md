@@ -5,7 +5,7 @@
 - そのため、ページ間の人物揺らぎや構図の不安定さは、主に **画像生成側のモデル / prompt / reference image / 構図制御** の影響として扱います。
 - 現時点の通常生成の本番候補は `pro_consistent` / `black-forest-labs/flux-2-pro` です。
 - `free` / `light_paid` / `standard_paid` / `premium_paid` の通常生成では、PlanConfig から `imageModelProfile: "pro_consistent"` を渡し、結果的に `flux-2-pro` を使う方針です。
-- `child_avatar` / `child_avatar_revision` は引き続き `black-forest-labs/flux-2-pro` を使います。
+- `child_avatar` / `child_avatar_revision` は FLUX を使います（写真参照あり: `kontext_max` / `flux-kontext-max`、参照なし・修正: `pro_consistent` / `flux-2-pro`）。2026-09-08 の製品判断で gpt-image-2 化はしないと決定。
 - `klein_fast` / `black-forest-labs/flux-2-klein-9b` は管理者検証用に残しますが、通常生成候補からは一旦外します。
 - `klein_base` / `black-forest-labs/flux-2-klein-9b-base` も比較検証用の候補として残します。
 - `kontext_reference` / `black-forest-labs/flux-kontext-pro` は将来の参照強化検証用です。

@@ -92,14 +92,17 @@ function ShareBookContent() {
 
 export default function SharePage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <p className="text-violet-500">読み込み中...</p>
-        </div>
-      }
-    >
-      <ShareBookContent />
-    </Suspense>
+    // 公開ページはパステル固定（夜空テーマは文字色が固定値のため読めなくなる。判断6）
+    <div data-theme="pastel" className="min-h-screen bg-[var(--em-bg-base)] text-[var(--em-text-primary)]">
+      <Suspense
+        fallback={
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <p className="text-violet-500">読み込み中...</p>
+          </div>
+        }
+      >
+        <ShareBookContent />
+      </Suspense>
+    </div>
   );
 }

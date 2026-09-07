@@ -214,6 +214,9 @@ function BookContent() {
   const failedPages = pages
     .filter((p) => p.status === "image_failed")
     .sort((a, b) => a.pageNumber - b.pageNumber);
+  // 別の画像AIにフォールバックして描かれたページ（画風が揃わないことがある）。#777 以降は元のモデルで描き直せる
+  const fallbackPages = pages.filter((p) => p.status === "fallback_completed" || p.imageFallbackUsed === true);
+  const hasProviderFallback = fallbackPages.length > 0 || book.coverImageFallbackUsed === true;
 
   const generatingPages = pages.filter((p) => p.status === "generating");
 
@@ -387,6 +390,22 @@ function BookContent() {
       setPageTextError(getUserFriendlyErrorMessage(err, "本文の更新に失敗しました。"));
     } finally {
       setIsSavingPageText(false);
+    }
+  }
+
+  async function handleRegenerateFallbackPages() {
+    if (!bookId) return;
+    if (isOffline) {
+      toast.info("オンラインに戻ると描き直せます。");
+      return;
+    }
+    if (book?.coverImageFallbackUsed) {
+      await handleRegenerateCover();
+    }
+    for (const page of fallbackPages) {
+      if (!regeneratingPages.has(page.pageNumber)) {
+        await handleRegeneratePage(page);
+      }
     }
   }
 
@@ -678,6 +697,35 @@ function BookContent() {
 
       {isOwner && user && (book.status === "completed" || book.status === "partial_completed") && (
         <BookSettingsPanel book={book} userId={user.uid} />
+      )}
+
+      {hasProviderFallback && !isPartial && (
+        <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-violet-200 bg-violet-50/60 p-4 sm:flex-row">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-semibold text-purple-900">一部のページは別の画像AIで描かれました</p>
+              <p className="text-sm text-violet-600">
+                混み合っていたため、{fallbackPages.length > 0 ? `${fallbackPages.length}ページ` : "表紙"}
+                {fallbackPages.length > 0 && book.coverImageFallbackUsed ? "と表紙" : ""}
+                を予備の画像AIで仕上げました。画風が揃っていない場合は描き直せます。
+              </p>
+            </div>
+          </div>
+          {isOwner && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={handleRegenerateFallbackPages}
+              disabled={regeneratingPages.size > 0 || isRegeneratingCover}
+            >
+              {regeneratingPages.size > 0 || isRegeneratingCover ? "描き直し中..." : "元の画風で描き直す"}
+            </Button>
+          )}
+        </div>
       )}
 
       {isPartial && (
