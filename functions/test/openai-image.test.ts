@@ -173,6 +173,21 @@ describe("OpenAIImageClient", () => {
     });
   });
 
+  describe("gpt-image-2: moderation とモデルラベル（回帰）", () => {
+    it("images.edit にも generate と同じ moderation を渡す", async () => {
+      mockEdit.mockResolvedValue({ data: [{ b64_json: Buffer.alloc(200 * 1024, "c").toString("base64") }] });
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) }));
+      const client = new OpenAIImageClient("sk-test-key", OPENAI_GPT_IMAGE_2_PROFILE);
+      await client.generateImage("a child", { inputImageUrls: ["https://example.com/ref.png"] });
+      expect(mockEdit.mock.calls[0][0].moderation).toBe("low");
+      vi.unstubAllGlobals();
+    });
+    it("参照画像ありでも gpt-image-2 のラベルは openai/gpt-image-2", () => {
+      expect(resolveOpenAIModelLabel(true, OPENAI_GPT_IMAGE_2_PROFILE)).toBe("openai/gpt-image-2");
+      expect(resolveOpenAIModelLabel(false, OPENAI_GPT_IMAGE_2_PROFILE)).toBe("openai/gpt-image-2");
+    });
+  });
+
   describe("generateImage (with reference images)", () => {
     it("calls responses.create when inputImageUrls are provided", async () => {
       const fakeB64 = Buffer.alloc(200 * 1024, "d").toString("base64");
