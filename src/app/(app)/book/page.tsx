@@ -165,7 +165,17 @@ function BookContent() {
     );
   }
 
-  if (!bookId || loading)
+  if (!bookId)
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <p className="text-violet-500">絵本が指定されていません</p>
+        <Link href="/home" className="mt-4 inline-block">
+          <Button variant="outline">本棚に戻る</Button>
+        </Link>
+      </div>
+    );
+
+  if (loading)
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <p className="text-violet-500">読み込み中...</p>
@@ -236,11 +246,16 @@ function BookContent() {
       toast.info("オフライン保存を解除しました。");
     } catch (err) {
       console.error("Failed to remove offline book:", err);
+      toast.error("オフライン保存を解除できませんでした。もう一度お試しください。");
     }
   }
 
   async function handleToggleShare() {
     if (!book || !isOwner) return;
+    if (isOffline) {
+      toast.info("オンラインに戻ると公開設定を変更できます。");
+      return;
+    }
     setIsSharing(true);
     try {
       const isPublic = !book.public;
@@ -249,7 +264,8 @@ function BookContent() {
         updatedAt: serverTimestamp(),
       });
       if (isPublic) {
-        toast.success("公開設定に変更しました。共有リンクをコピーしました。");
+        // コピーの成否は handleCopyLink 側が通知する（以前は成功を先に告げていた）
+        toast.success("公開設定に変更しました。");
         handleCopyLink();
       } else {
         toast.info("非公開に設定しました。");
@@ -273,21 +289,37 @@ function BookContent() {
     });
   }
 
-  async function handleSaveGiftMessage() {
-    if (!bookId || !isOwner) return;
-    const value = (giftMessage ?? "").trim().slice(0, 200);
+  // 表示中のギフト文（未編集なら保存済みの値）。保存にも共有にもこれを使う
+  const displayedGiftMessage = (giftMessage ?? book?.giftMessage ?? "").trim().slice(0, 200);
+  const giftMessageDirty = displayedGiftMessage !== (book?.giftMessage ?? "").trim();
+
+  async function handleSaveGiftMessage(): Promise<boolean> {
+    if (!bookId || !isOwner) return false;
+    if (isOffline) {
+      toast.info("オンラインに戻ると保存できます。");
+      return false;
+    }
+    // 以前は state だけを見ていたため、保存済みの文を表示したまま「保存」を押すと空文字で上書きしていた
+    const value = displayedGiftMessage;
     try {
       await updateDoc(doc(db, "books", bookId), { giftMessage: value, updatedAt: serverTimestamp() });
       setGiftSaved(true);
       toast.success("メッセージを保存しました。");
       setTimeout(() => setGiftSaved(false), 2000);
+      return true;
     } catch (err) {
       console.error("Failed to save gift message:", err);
       toast.error(getUserFriendlyErrorMessage(err, "メッセージの保存に失敗しました。"));
+      return false;
     }
   }
 
   async function handleShareGift() {
+    // 未保存のギフト文があれば先に保存する（以前は入力したまま「贈る」と保存されずに共有が始まった）
+    if (isOwner && giftMessageDirty) {
+      const saved = await handleSaveGiftMessage();
+      if (!saved) return;
+    }
     const url = `${window.location.origin}/share?id=${bookId}`;
     const shareData = {
       title: book?.title ? `${book.title}｜Ehoriaの絵本` : "Ehoriaの絵本",
@@ -298,8 +330,9 @@ function BookContent() {
       try {
         await navigator.share(shareData);
         return;
-      } catch {
-        // キャンセル時などはコピーにフォールバック。
+      } catch (err) {
+        // ユーザーが共有シートを閉じただけならクリップボードを触らない
+        if (err instanceof Error && err.name === "AbortError") return;
       }
     }
     handleCopyLink();
@@ -307,6 +340,10 @@ function BookContent() {
 
   async function handleRegenerateAll() {
     if (!bookId || failedPages.length === 0) return;
+    if (isOffline) {
+      toast.info("オンラインに戻ると再生成できます。");
+      return;
+    }
     for (const page of failedPages) {
       if (!regeneratingPages.has(page.pageNumber)) {
         await handleRegeneratePage(page);
@@ -355,6 +392,10 @@ function BookContent() {
 
   async function handleRegeneratePage(page: PageDoc) {
     if (!bookId || regeneratingPages.has(page.pageNumber)) return;
+    if (isOffline) {
+      toast.info("オンラインに戻ると再生成できます。");
+      return;
+    }
     setRegeneratingPages((prev) => new Set(prev).add(page.pageNumber));
     setRegenerationErrors((prev) => {
       const next = { ...prev };
@@ -381,6 +422,10 @@ function BookContent() {
 
   async function handleRegenerateCover() {
     if (!bookId || isRegeneratingCover) return;
+    if (isOffline) {
+      toast.info("オンラインに戻ると再生成できます。");
+      return;
+    }
     setIsRegeneratingCover(true);
     setCoverRegenerationError(null);
     try {
@@ -612,7 +657,7 @@ function BookContent() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleSaveGiftMessage}
+                disabled={!giftMessageDirty} onClick={handleSaveGiftMessage}
                 className="rounded-full border-purple-200 text-purple-700"
               >
                 {giftSaved ? (

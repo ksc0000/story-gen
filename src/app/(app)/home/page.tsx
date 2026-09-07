@@ -389,8 +389,9 @@ export default function HomePage() {
           <div className="mt-8">
             <div className="mb-6 flex flex-wrap gap-3 items-end justify-center sm:justify-start">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-violet-400 uppercase tracking-wider ml-1">スタイル</label>
+                <label htmlFor="bookshelf-filter-style" className="text-xs font-bold text-violet-500 tracking-wider ml-1">スタイル</label>
                 <select
+                  id="bookshelf-filter-style"
                   value={selectedStyle}
                   onChange={(e) => setSelectedStyle(e.target.value)}
                   className="block w-full rounded-xl border border-violet-100 bg-white/80 px-3 py-2 text-xs text-purple-900 shadow-sm backdrop-blur-sm focus:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500/10"
@@ -405,8 +406,9 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-violet-400 uppercase tracking-wider ml-1">作成モード</label>
+                <label htmlFor="bookshelf-filter-mode" className="text-xs font-bold text-violet-500 tracking-wider ml-1">作成モード</label>
                 <select
+                  id="bookshelf-filter-mode"
                   value={selectedMode}
                   onChange={(e) => setSelectedMode(e.target.value)}
                   className="block w-full rounded-xl border border-violet-100 bg-white/80 px-3 py-2 text-xs text-purple-900 shadow-sm backdrop-blur-sm focus:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500/10"

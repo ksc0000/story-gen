@@ -392,7 +392,10 @@ function SelectChildContent() {
 
       <div className="mt-5 text-center">
         {isChildLimitReached ? (
-          <p className="text-sm text-violet-300">プランをアップグレードすると子どもを追加できます</p>
+          <p className="text-sm text-violet-500">
+            プランをアップグレードすると子どもを追加できます。
+            <Link href="/pricing" className="ml-1 font-semibold text-purple-600 hover:underline">プランを見る</Link>
+          </p>
         ) : (
           <Link href="/onboarding/child" className="text-sm text-violet-400 hover:text-purple-600 hover:underline">
             ＋ 新しい子を登録する
