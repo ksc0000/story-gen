@@ -41,7 +41,7 @@ describe("processBookGeneration - Single Purchase High Quality", () => {
   beforeEach(() => {
     deps = {
       getTemplate: vi.fn().mockResolvedValue(mockTemplate),
-      getUserPlan: vi.fn().mockResolvedValue("free"),
+      getUserProductPlan: vi.fn().mockResolvedValue("free" as const),
       llmClient: {
         generateStory: vi.fn().mockResolvedValue(mockStory),
       },
@@ -73,6 +73,9 @@ describe("processBookGeneration - Single Purchase High Quality", () => {
   });
 
   it("should force kontext_max and premium quality when isSinglePurchase is true", async () => {
+    // 2026-09-08 以降、単品扱いはサーバが「クレジット保有 かつ（月次超過 or プラン外モード）」で決める。
+    // free × guided_ai はプラン外なので、クレジットがあれば単品扱いになる
+    deps.getUserCredits.mockResolvedValue({ singleBookCredits: 1, aiGuidedCredits: 0, photoStoryCredits: 0 });
     const bookData: BookData = {
       userId: mockUserId,
       theme: "birthday",

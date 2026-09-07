@@ -180,7 +180,7 @@ function createMockDeps() {
   return {
     db: mockDb as any,
     getTemplate: vi.fn().mockResolvedValue(mockTemplate),
-    getUserPlan: vi.fn().mockResolvedValue("free" as const),
+    getUserProductPlan: vi.fn().mockResolvedValue("free" as const),
     llmClient: {
       generateStory: vi.fn().mockResolvedValue(mockStory),
       rewriteStoryText: vi.fn().mockResolvedValue({
@@ -993,7 +993,7 @@ describe("processBookGeneration", () => {
       })
     );
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book-fixed-blocked", "failed");
-    expect(deps.getUserPlan).not.toHaveBeenCalled();
+    expect(deps.getUserProductPlan).not.toHaveBeenCalled();
     expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
     expect(deps.imageClient.generateImage).not.toHaveBeenCalled();
     expect(deps.writePage).not.toHaveBeenCalled();
@@ -2345,8 +2345,8 @@ describe("Page 0 purpose and reference logic (E2E-QA fix)", () => {
 });
 
 describe("normalizeBookForGeneration (Phase 3-C)", () => {
-  const freeUserPlan = "free";
-  const premiumUserPlan = "premium";
+  const freeUserPlan = "free" as const;
+  const premiumUserPlan = "premium_paid" as const;
 
   const fourPageFixedTemplate: TemplateData = {
     ...fixedTemplate,
@@ -2607,7 +2607,7 @@ describe("photo_story mode", () => {
     const deps = createMockDeps();
     deps.getTemplate = vi.fn().mockResolvedValue({ ...mockTemplate, creationMode: undefined });
     deps.llmClient.generateStory = vi.fn().mockResolvedValue(photoStory);
-    deps.getUserPlan = vi.fn().mockResolvedValue("premium");
+    deps.getUserProductPlan = vi.fn().mockResolvedValue("premium_paid");
 
     // Stub fetch for story generation step
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
@@ -2695,6 +2695,48 @@ describe("resolveBookTemplate（AI系モードはテーマ無しでも生成で�
       "book-raw-error",
       expect.objectContaining({ technicalErrorMessage: "Template not found: zoo" })
     );
+  });
+});
+
+describe("productPlan とクレジットの消費順（2026-09-08 製品判断）", () => {
+  it("月次枠が残っていればクレジットを持っていても月次を消費する（fixed_template / free）", async () => {
+    const deps = createMockDeps();
+    deps.getTemplate.mockResolvedValue(fixedTemplate);
+    deps.getUserMonthlyCount.mockResolvedValue(1);
+    deps.getUserCredits.mockResolvedValue({ singleBookCredits: 2, aiGuidedCredits: 0, photoStoryCredits: 0 });
+    await processBookGeneration(
+      "book-credit-order",
+      { ...baseBookData, creationMode: "fixed_template", productPlan: "free", isSinglePurchase: true } as BookData,
+      deps
+    );
+    expect(deps.incrementMonthlyCount).toHaveBeenCalledWith("user123");
+    expect(deps.consumeCredit).not.toHaveBeenCalled();
+  });
+
+  it("free ユーザーがプラン外の guided_ai を作るときは月次が残っていてもクレジットを使う", async () => {
+    const deps = createMockDeps();
+    deps.getTemplate.mockResolvedValue({ ...mockTemplate, creationMode: "guided_ai" });
+    deps.getUserMonthlyCount.mockResolvedValue(0);
+    deps.getUserCredits.mockResolvedValue({ singleBookCredits: 0, aiGuidedCredits: 1, photoStoryCredits: 0 });
+    await processBookGeneration(
+      "book-credit-mode",
+      { ...baseBookData, creationMode: "guided_ai", productPlan: "standard_paid", isSinglePurchase: false } as BookData,
+      deps
+    );
+    expect(deps.consumeCredit).toHaveBeenCalledWith("user123", "ai_guided");
+    expect(deps.incrementMonthlyCount).not.toHaveBeenCalled();
+  });
+
+  it("standard_paid は 8 冊で上限（旧サーバは premium 扱いで 20 冊だった）", async () => {
+    const deps = createMockDeps();
+    deps.getUserProductPlan.mockResolvedValue("standard_paid");
+    deps.getUserMonthlyCount.mockResolvedValue(8);
+    await processBookGeneration("book-standard-limit", baseBookData, deps);
+    expect(deps.updateBookFailureMetadata).toHaveBeenCalledWith(
+      "book-standard-limit",
+      expect.objectContaining({ failureReason: "quota_exceeded" })
+    );
+    expect(deps.updateBookFailure).toHaveBeenCalledWith("book-standard-limit", expect.stringContaining("8冊"));
   });
 });
 });

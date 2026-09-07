@@ -1,6 +1,7 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
+import type { ProductPlan } from "./lib/types";
 import {
   buildDefaultAiTemplate,
   DEFAULT_AI_TEMPLATE_ID,
@@ -62,8 +63,14 @@ import {
 } from "./lib/replicate";
 import { resolveOpenAIModelLabel, resolveOpenAIModelLabelForProfile } from "./lib/openai-image";
 import { getDefaultProductPlanForCreationMode, getPlanConfig } from "./lib/plans";
-import { canUseProductPlan } from "./lib/entitlements";
-import { canGenerateBookThisMonth, currentUsageYearMonth } from "./lib/usage";
+import { currentUsageYearMonth } from "./lib/usage";
+import {
+  resolveUserProductPlan,
+  canGenerateThisMonth,
+  canUseRequestedPlan,
+  isCreationModeAllowedForPlan,
+  getMonthlyBookLimitForPlan,
+} from "./lib/product-plans";
 import {
   getAgeReadingProfile,
   resolveEffectiveReadingAge,
@@ -684,7 +691,8 @@ function isRetryableGeminiFailure(err: unknown): boolean {
 export interface GenerationDeps {
   db: admin.firestore.Firestore;
   getTemplate: (theme: string) => Promise<TemplateData>;
-  getUserPlan: (userId: string) => Promise<"free" | "premium">;
+  /** ユーザーの productPlan（free / standard_paid / premium_paid）。lib/product-plans.ts の規則で解決する */
+  getUserProductPlan: (userId: string) => Promise<ProductPlan>;
   llmClient: LLMClient;
   imageClient: ImageClient;
   uploadImage: (bookId: string, pageNumber: number, buffer: Buffer) => Promise<string>;
@@ -1150,8 +1158,35 @@ export async function processBookGeneration(
         return;
       }
     }
-    const userPlan = await deps.getUserPlan(bookData.userId);
-    const normalizedBookData = normalizeBookForGeneration(bookData, template, userPlan, isAdminUser);
+    const userProductPlan = await deps.getUserProductPlan(bookData.userId);
+
+    // クレジットを使うかはサーバが決める（クライアントの isSinglePurchase は参考値）。
+    // 規則: 月次クォータを先に使い切る。クレジットを消費するのは
+    //   (a) 月次上限に達している、または (b) 自分のプランでは使えない作成モード（例: free の guided_ai）
+    // のときだけ。以前はクレジットを持っているだけで月次が残っていても消費していた。
+    const isOrgSponsored =
+      Boolean(bookData.orgId) &&
+      bookData.orgSponsored === true &&
+      bookData.createdAtSource === "org_bulk";
+    const creationModeForEntitlement = template.creationMode ?? bookData.creationMode ?? "guided_ai";
+    let monthlyCount = 0;
+    let quotaExceeded = false;
+    let hasSingleBookCredits = false;
+    let useSingleCredit = false;
+    if (!isOrgSponsored && !isAdminUser && process.env.NODE_ENV !== "development") {
+      monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
+      quotaExceeded = !canGenerateThisMonth({ userProductPlan, currentCount: monthlyCount, isAdmin: isAdminUser });
+      const modeAllowedByPlan = isCreationModeAllowedForPlan(userProductPlan, creationModeForEntitlement);
+      if (quotaExceeded || !modeAllowedByPlan) {
+        const credits = await deps.getUserCredits(bookData.userId);
+        const purchaseType = bookData.singlePurchaseType || (creationModeForEntitlement === "photo_story" ? "photo_story" : "ai_guided");
+        const hasSpecificCredit = purchaseType === "photo_story" ? credits.photoStoryCredits > 0 : credits.aiGuidedCredits > 0;
+        hasSingleBookCredits = hasSpecificCredit || credits.singleBookCredits > 0;
+        useSingleCredit = hasSingleBookCredits;
+      }
+    }
+    const bookDataForNormalize: BookData = { ...bookData, isSinglePurchase: useSingleCredit };
+    const normalizedBookData = normalizeBookForGeneration(bookDataForNormalize, template, userProductPlan, isAdminUser);
     const readingProfile = getAgeReadingProfile(resolveEffectiveReadingAge(mergedInput));
     const generationMode = normalizedBookData.generationMode ?? "reliable_fast";
 
@@ -1164,46 +1199,24 @@ export async function processBookGeneration(
       ...createGenerationStartedPatch(),
     });
 
-    // Step 3: Check quota and credits (skip in development)
-    // エンタープライズ一括生成（組織スポンサー）の絵本は、個人の月次クォータ・クレジットを
-    // 消費しない。上限は一括生成 callable 側（1回人数・組織月次）で担保している。
-    // 団体負担（クォータ・クレジットを消費しない）は bulkGenerateClassBooks が付ける3点セットが揃う場合のみ。
-    // orgId 単独では認めない（クライアント create で orgId を付けて回避できた。rules 側でも禁止済み）。
-    const isOrgSponsored =
-      Boolean(bookData.orgId) &&
-      bookData.orgSponsored === true &&
-      bookData.createdAtSource === "org_bulk";
-    let quotaExceeded = false;
-    let hasSingleBookCredits = false;
-
-    if (!isOrgSponsored && process.env.NODE_ENV !== "development") {
-      const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
-      quotaExceeded = !canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount, isAdmin: isAdminUser });
-
-      if (quotaExceeded || normalizedBookData.isSinglePurchase) {
-        const credits = await deps.getUserCredits(bookData.userId);
-        const purchaseType = normalizedBookData.singlePurchaseType || (normalizedBookData.creationMode === "photo_story" ? "photo_story" : "ai_guided");
-        const hasSpecificCredit = purchaseType === "photo_story" ? (credits.photoStoryCredits > 0) : (credits.aiGuidedCredits > 0);
-        hasSingleBookCredits = hasSpecificCredit || credits.singleBookCredits > 0;
-
-        if (!hasSingleBookCredits) {
-          const message =
-            userPlan === "premium"
-              ? "今月の生成回数に達しました。来月またご利用ください。"
-              : "今月の無料生成回数に達しました。来月またお試しください。";
-          console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount}) and has no credits`);
-          await deps.updateBookFailure(bookId, message);
-          await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
-            failureStage: "validation",
-            failureProvider: "system",
-            failureReason: "quota_exceeded",
-            retryable: false,
-            technicalErrorMessage: `Monthly quota exceeded: ${monthlyCount} and no single credits`,
-          }));
-          await deps.updateBookStatus(bookId, "failed");
-          return;
-        }
-      }
+    // Step 3: 月次上限に達していてクレジットも無ければ失敗（判定は上で済んでいる）
+    if (quotaExceeded && !hasSingleBookCredits) {
+      const limit = getMonthlyBookLimitForPlan(userProductPlan);
+      const message =
+        userProductPlan === "free"
+          ? `今月の無料生成回数（${limit}冊）に達しました。来月またお試しください。`
+          : `今月の生成回数（${limit}冊）に達しました。来月またご利用ください。`;
+      console.error(`User ${bookData.userId} exceeded monthly quota (${monthlyCount}/${limit}) and has no credits`);
+      await deps.updateBookFailure(bookId, message);
+      await deps.updateBookFailureMetadata(bookId, buildFailureMetadata({
+        failureStage: "validation",
+        failureProvider: "system",
+        failureReason: "quota_exceeded",
+        retryable: false,
+        technicalErrorMessage: `Monthly quota exceeded: ${monthlyCount}/${limit} (${userProductPlan}) and no single credits`,
+      }));
+      await deps.updateBookStatus(bookId, "failed");
+      return;
     }
 
     // Step 4: Build reference assets
@@ -2045,7 +2058,7 @@ export async function processBookGeneration(
         // 管理者のテスト生成・組織スポンサーの一括生成は個人の月次カウント/クレジットを消費しない。
       } else if (process.env.NODE_ENV !== "development") {
         const monthlyCount = await deps.getUserMonthlyCount(bookData.userId);
-        const canUseMonthly = canGenerateBookThisMonth({ userPlan, currentCount: monthlyCount });
+        const canUseMonthly = canGenerateThisMonth({ userProductPlan, currentCount: monthlyCount });
 
         if (canUseMonthly && !normalizedBookData.isSinglePurchase) {
           await deps.incrementMonthlyCount(bookData.userId);
@@ -2181,7 +2194,7 @@ function resolveEnableRecurringCharacterReference(generationMode: string): boole
 export function normalizeBookForGeneration(
   bookData: BookData,
   template: TemplateData,
-  userPlan: "free" | "premium",
+  userProductPlan: ProductPlan,
   isAdmin = false
 ): BookData {
   const creationMode = template.creationMode ?? bookData.creationMode ?? "guided_ai";
@@ -2196,13 +2209,15 @@ export function normalizeBookForGeneration(
   let normalizedPlan = requestedProductPlan;
 
   // 2. Entitlement check (only for non-single-purchase).
-  // 正規の有料ユーザー（userPlan=premium）・単品購入・管理者は本分岐に到達しない。
-  if (!isSinglePurchase && !canUseProductPlan({ userPlan, productPlan: requestedProductPlan, isAdmin })) {
+  // 自分のプラン以下の設定・許可されたモード・単品購入・管理者は本分岐に到達しない。
+  const requestedPlanAllowed = canUseRequestedPlan({ userProductPlan, requestedPlan: requestedProductPlan, isAdmin });
+  const modeAllowed = isAdmin || isCreationModeAllowedForPlan(userProductPlan, creationMode);
+  if (!isSinglePurchase && (!requestedPlanAllowed || !modeAllowed)) {
     if (creationMode === "fixed_template") {
       // 固定テンプレは free でも作れるため、無料相当に正規化して継続する。
       normalizedPlan = "free";
       console.log(
-        `Paid plan normalized to free for book generation. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
+        `Paid plan normalized to free for book generation. requested=${requestedProductPlan}, userProductPlan=${userProductPlan}, creationMode=${creationMode}`
       );
     } else if (process.env.ENFORCE_AI_MODE_ENTITLEMENT === "true") {
       // guided_ai / original_ai は有料プラン限定モード（free の allowedCreationModes は
@@ -2212,7 +2227,7 @@ export function normalizeBookForGeneration(
       // 既存の互換挙動を壊さないようフラグでgate。実課金開始（billing rollout）時に
       // ENFORCE_AI_MODE_ENTITLEMENT=true を設定して有効化する。
       console.error(
-        `Blocked paid-only creation mode for un-entitled user. requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
+        `Blocked paid-only creation mode for un-entitled user. requested=${requestedProductPlan}, userProductPlan=${userProductPlan}, creationMode=${creationMode}`
       );
       throw new Error(
         "このAIおまかせ作成は有料プラン限定です。プランをご確認のうえ、もう一度お試しください。"
@@ -2220,7 +2235,7 @@ export function normalizeBookForGeneration(
     } else {
       // フラグ無効時（rollout 前）は従来どおり互換のため許可するが、監査用に記録する。
       console.warn(
-        `Paid plan requested without entitlement, kept for compatibility (enforcement disabled). requested=${requestedProductPlan}, userPlan=${userPlan}, creationMode=${creationMode}`
+        `Paid plan requested without entitlement, kept for compatibility (enforcement disabled). requested=${requestedProductPlan}, userProductPlan=${userProductPlan}, creationMode=${creationMode}`
       );
     }
   }
@@ -3463,16 +3478,13 @@ export const generateBook = onDocumentCreated(
         return templateDoc.data() as TemplateData;
       },
 
-      getUserPlan: async (userId: string) => {
+      getUserProductPlan: async (userId: string) => {
         // Re-use pre-fetched gateUserData for the generating user to avoid a duplicate read.
         const userData =
           userId === bookData.userId
             ? gateUserData
             : (await db.collection("users").doc(userId).get()).data();
-        if (userData?.generationOverride?.bypassMonthlyLimit === true) {
-          return "premium";
-        }
-        return (userData?.plan as "free" | "premium" | undefined) ?? "free";
+        return resolveUserProductPlan(userData as Parameters<typeof resolveUserProductPlan>[0]);
       },
 
       llmClient: new GeminiClient(geminiApiKey.value()),
