@@ -210,7 +210,8 @@ function StyleSelectionPageContent() {
           theme,
           templateId: theme,
           categoryGroupId: template?.categoryGroupId ?? "favorite-worlds",
-          creationMode: template?.creationMode ?? "guided_ai",
+          // テンプレが無い AI 系（guided_ai / original_ai）は URL の mode を使う。以前は常に guided_ai になっていた
+          creationMode: template?.creationMode ?? mode,
           isSinglePurchase: useSinglePurchase,
           singlePurchaseType: (useSinglePurchase && purchaseTypeToUse !== "legacy") ? purchaseTypeToUse : mode === "photo_story" ? "photo_story" : "ai_guided",
           priceTier: template?.priceTier ?? "take",

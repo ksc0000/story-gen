@@ -15,6 +15,7 @@ import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { useCompanions } from "@/app/(app)/companions/use-companions-hook";
 import { formatMissingFieldsMessage } from "@/lib/template-input-fields";
+import { readOutfitParams } from "@/lib/create-flow-params";
 import { getSpeciesEmoji } from "@/app/(app)/companions/companions-utils";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { useVisualViewport } from "@/lib/hooks/use-visual-viewport";
@@ -211,9 +212,11 @@ function InputPageContent() {
   const [familyMembers, setFamilyMembers] = useState("");
   const [place, setPlace] = useState("");
   const [parentMessage, setParentMessage] = useState("");
-  const [outfitMode, setOutfitMode] = useState<OutfitMode>("theme_auto");
-  const [customOutfit, setCustomOutfit] = useState("");
-  const [keepSignatureItem, setKeepSignatureItem] = useState(true);
+  // 保存テンプレ（tpl=1）由来の服装設定を初期値にする。以前は常に既定値に戻っていた
+  const initialOutfit = readOutfitParams(searchParams);
+  const [outfitMode, setOutfitMode] = useState<OutfitMode>(initialOutfit.outfitMode ?? "theme_auto");
+  const [customOutfit, setCustomOutfit] = useState(initialOutfit.customOutfit ?? "");
+  const [keepSignatureItem, setKeepSignatureItem] = useState(initialOutfit.keepSignatureItem ?? true);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const selectedPlanConfig = PLAN_CONFIGS[productPlan] ?? PLAN_CONFIGS.free;
