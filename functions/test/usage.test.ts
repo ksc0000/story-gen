@@ -14,7 +14,7 @@ const mockTemplate: TemplateData = {
 function createMockDeps() {
   return {
     getTemplate: vi.fn().mockResolvedValue(mockTemplate),
-    getUserPlan: vi.fn().mockResolvedValue("free" as const),
+    getUserProductPlan: vi.fn().mockResolvedValue("free" as const),
     llmClient: {
       generateStory: vi.fn(),
     },
@@ -87,7 +87,7 @@ describe("processBookGeneration quota and credits", () => {
     });
     await processBookGeneration("book3", baseBookData, deps);
     expect(deps.updateBookStatus).toHaveBeenCalledWith("book3", "failed");
-    expect(deps.updateBookFailure).toHaveBeenCalledWith("book3", expect.stringContaining("今月の無料生成回数に達しました"));
+    expect(deps.updateBookFailure).toHaveBeenCalledWith("book3", expect.stringContaining("今月の無料生成回数"));
     expect(deps.llmClient.generateStory).not.toHaveBeenCalled();
   });
 

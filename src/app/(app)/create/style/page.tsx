@@ -12,6 +12,7 @@ import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { useMonthlyUsage } from "@/lib/monthly-usage";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
@@ -23,6 +24,7 @@ import { useVisualViewport } from "@/lib/hooks/use-visual-viewport";
 import {
   getDefaultProductPlanForCreationMode,
   PLAN_CONFIGS,
+  resolveProductPlan,
 } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import type {
@@ -41,6 +43,8 @@ function StyleSelectionPageContent() {
   const router = useRouter();
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
+  const { consumed: monthlyConsumed } = useMonthlyUsage(user?.uid);
+  const monthlyRemaining = Math.max(0, (PLAN_CONFIGS[resolveProductPlan(profile)]?.monthlyBookQuota ?? 1) - monthlyConsumed);
   const { children } = useChildren(user?.uid);
   const { templates } = useTemplates();
   // 保存テンプレからの再利用時は selectedStyleId をプリフィル（可視なスタイルなら維持される）。
@@ -172,7 +176,9 @@ function StyleSelectionPageContent() {
         ? (hasPhotoStoryCredit ? "photo_story" : (hasAiGuidedCredit ? "ai_guided" : (legacyCredits > 0 ? "legacy" : null)))
         : (hasAiGuidedCredit ? "ai_guided" : (hasPhotoStoryCredit ? "photo_story" : (legacyCredits > 0 ? "legacy" : null)));
 
-      const useSinglePurchase = purchaseTypeToUse !== null;
+      // 規則（サーバと同じ）: 月次を先に使い切る。クレジットは上限到達時か、プラン外のモードのときだけ
+      const modeAllowedByPlan = PLAN_CONFIGS[resolveProductPlan(profile)]?.allowedCreationModes.includes(mode) ?? false;
+      const useSinglePurchase = purchaseTypeToUse !== null && (monthlyRemaining <= 0 || !modeAllowedByPlan);
 
       if (isDemoMode) {
         bookId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -336,8 +342,8 @@ function StyleSelectionPageContent() {
         </div>
         {(profile?.singleBookCredits || (profile?.singlePurchaseCredits?.ai_guided || 0) > 0 || (profile?.singlePurchaseCredits?.photo_story || 0) > 0) ? (
           <div className="mt-4 rounded-2xl bg-amber-50 p-3 text-xs text-amber-700">
-            <p className="font-semibold">💡 保有中の単品クレジットを1つ使用して作成します</p>
-            <p className="mt-0.5">月間の作成上限に達していても、このまま作成を完了できます。</p>
+            <p className="font-semibold">💡 単品クレジットをお持ちです</p>
+            <p className="mt-0.5">今月の作成枠が残っている間は枠を使い、使い切ったあと（またはプラン外の作り方）でクレジットを1つ使います。</p>
           </div>
         ) : null}
       </motion.div>
