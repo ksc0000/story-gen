@@ -10,6 +10,7 @@ import { StylePicker } from "@/components/style-picker";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
@@ -70,6 +71,8 @@ function StyleSelectionPageContent() {
     | "guided_ai"
     | "original_ai"
     | "photo_story";
+  // AI 系モードはテンプレが無いので、最終確認には入力したリクエストの先頭を出す（以前は「未設定」）
+  const storyRequestSummary = (searchParams.get("storyRequest") ?? "").split("\n")[0].trim().slice(0, 40);
   const productPlanParam = (searchParams.get("productPlan") as ProductPlan | null)
     ?? getDefaultProductPlanForCreationMode(mode);
   const selectedPlanConfig = PLAN_CONFIGS[productPlanParam] ?? PLAN_CONFIGS.free;
@@ -284,8 +287,7 @@ function StyleSelectionPageContent() {
       router.push(`/generating?id=${bookId}`);
     } catch (err) {
       console.error("Failed to create book:", err);
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setCreateError(`絵本の作成を開始できませんでした: ${message}`);
+      setCreateError(getUserFriendlyErrorMessage(err, "絵本の作成を開始できませんでした。少し時間をおいてもう一度お試しください。"));
       setCreating(false);
     }
   };
@@ -319,7 +321,15 @@ function StyleSelectionPageContent() {
         <h2 className="text-base font-semibold text-purple-900">この内容で作ります ✅</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <SummaryItem label="主人公" value={childName || "未設定"} />
-          <SummaryItem label="テーマ" value={template?.name ?? "未設定"} />
+          <SummaryItem
+            label="テーマ"
+            value={
+              template?.name ??
+              (mode === "photo_story"
+                ? "写真から作る"
+                : storyRequestSummary || (mode === "original_ai" ? "自由リクエスト" : "AIにおまかせ"))
+            }
+          />
           <SummaryItem label="ページ数" value={`${pageCount}ページ`} />
           <SummaryItem label="スタイル" value={selected ? getIllustrationStyleProfile(selected).name : "未選択"} />
           {companionName ? <SummaryItem label="なかよしキャラ" value={companionName} /> : null}
