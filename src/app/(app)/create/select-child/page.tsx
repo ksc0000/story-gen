@@ -11,6 +11,7 @@ import { BackButton } from "@/components/back-button";
 import { StepIndicator } from "@/components/step-indicator";
 import { AvatarNudgeBanner } from "@/components/avatar-nudge-banner";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { forwardParams, COMPANION_PARAM_KEYS } from "@/lib/create-flow-params";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useMonthlyUsage } from "@/lib/monthly-usage";
@@ -100,7 +101,11 @@ function SelectChildContent() {
     }
 
     if (choice.type === "child") {
-      router.push(`/create/theme?childId=${choice.childId}`);
+      // なかよしキャラのプロフィール「絵本に登場させる」から来た場合、相棒指定を落とさない
+      const childParams = new URLSearchParams();
+      childParams.set("childId", choice.childId);
+      forwardParams(searchParams, childParams, COMPANION_PARAM_KEYS);
+      router.push(`/create/theme?${childParams.toString()}`);
       return;
     }
 

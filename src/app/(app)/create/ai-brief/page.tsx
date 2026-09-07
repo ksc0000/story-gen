@@ -9,6 +9,7 @@ import { StepIndicator } from "@/components/step-indicator";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { forwardParams, OUTFIT_PARAM_KEYS } from "@/lib/create-flow-params";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useVisualViewport } from "@/lib/hooks/use-visual-viewport";
 import { trackAnalyticsEvent } from "@/lib/analytics";
@@ -573,6 +574,8 @@ function AiBriefPageContent() {
       params.set("protagonistName", effectiveName);
       params.set("outfitMode", "theme_auto");
     }
+    // 保存テンプレ由来の服装設定（outfitMode / customOutfit / keepSignatureItem）を落とさない
+    forwardParams(searchParams, params, OUTFIT_PARAM_KEYS);
 
     const companionId = searchParams.get("companionId");
     const companionName = searchParams.get("companionName");
