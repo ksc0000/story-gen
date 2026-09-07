@@ -2,6 +2,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import * as logger from "firebase-functions/logger";
 import { SERVER_PLAN_CONFIGS, SINGLE_PURCHASE_PRICES } from "./plans";
 import type { ProductPlan } from "./types";
+import { isInternalAccount, isPayingUser } from "./internal-accounts";
 
 /**
  * 日次メトリクス・スナップショット
@@ -49,12 +50,19 @@ export interface DailyMetricsDoc {
   paidUsersStandard?: number;
   paidUsersPremium?: number;
   estimatedMrrJpy?: number;
+  // ── 透明性（内部アカウント = スモーク/管理者検証/Stripe テスト。上の各値からは除外済み）──
+  internalUsers?: number;
+  internalBooksCreated?: number;
+  booksFailed?: number;
   source: string;
 }
 
 interface UserRow {
+  uid: string;
   createdAtMs: number;
   productPlan: ProductPlan;
+  internal: boolean;
+  paying: boolean;
 }
 
 function toMs(value: unknown): number {
@@ -85,18 +93,34 @@ export async function computeAndSaveDailyMetrics(params: {
 
   // 1. 全ユーザーを取得（累積・新規・有料内訳・MRR）
   const usersSnap = await db.collection("users").get();
-  const users: UserRow[] = usersSnap.docs.map((d) => {
-    const data = d.data() as { createdAt?: unknown; createdAtMs?: number; productPlan?: ProductPlan; plan?: string };
+  const allUsers: UserRow[] = usersSnap.docs.map((d) => {
+    const data = d.data() as {
+      createdAt?: unknown;
+      createdAtMs?: number;
+      productPlan?: ProductPlan;
+      plan?: string;
+      internal?: boolean;
+      generationOverride?: { bypassMonthlyLimit?: boolean } | null;
+      stripeSubscriptionId?: string | null;
+    };
     const createdAtMs = typeof data.createdAtMs === "number" ? data.createdAtMs : toMs(data.createdAt);
-    // 後方互換: productPlan 未設定で legacy plan==="premium" は standard_paid 相当
-    const productPlan: ProductPlan =
-      data.productPlan ?? (data.plan === "premium" ? "standard_paid" : "free");
-    return { createdAtMs, productPlan };
+    const productPlan: ProductPlan = data.productPlan ?? "free";
+    return {
+      uid: d.id,
+      createdAtMs,
+      productPlan,
+      internal: isInternalAccount(d.id, data),
+      paying: isPayingUser(d.id, data),
+    };
   });
+  // 内部アカウント（スモーク/管理者検証/Stripe テスト）は全指標から除外する。
+  // 以前は legacy plan==="premium" を有料扱いしていたため、スモーク 11 件が「有料 12 人・MRR ¥17,760」になっていた。
+  const internalUids = new Set(allUsers.filter((u) => u.internal).map((u) => u.uid));
+  const users = allUsers.filter((u) => !u.internal);
 
-  // 現在の有料内訳・MRR（最新日のみに付与）
-  const paidStandard = users.filter((u) => u.productPlan === "standard_paid").length;
-  const paidPremium = users.filter((u) => u.productPlan === "premium_paid").length;
+  // 現在の有料内訳・MRR（最新日のみに付与）。有料 = Stripe 契約あり かつ productPlan 有料 かつ 非内部
+  const paidStandard = users.filter((u) => u.paying && u.productPlan === "standard_paid").length;
+  const paidPremium = users.filter((u) => u.paying && u.productPlan === "premium_paid").length;
   const estimatedMrrJpy =
     paidStandard * (SERVER_PLAN_CONFIGS.standard_paid.priceJpy ?? 0) +
     paidPremium * (SERVER_PLAN_CONFIGS.premium_paid.priceJpy ?? 0);
@@ -107,7 +131,7 @@ export async function computeAndSaveDailyMetrics(params: {
     .where("createdAtMs", ">=", rangeStartMs)
     .where("createdAtMs", "<", rangeEndMs)
     .get();
-  const books = booksSnap.docs.map((d) => {
+  const allBooks = booksSnap.docs.map((d) => {
     const data = d.data() as { userId?: string; createdAtMs?: number; createdAt?: unknown; status?: string };
     return {
       userId: data.userId ?? "",
@@ -115,6 +139,8 @@ export async function computeAndSaveDailyMetrics(params: {
       status: data.status ?? "",
     };
   });
+  const isInternalBook = (b: { userId: string }) => !b.userId || internalUids.has(b.userId);
+  const books = allBooks.filter((b) => !isInternalBook(b));
 
   // 3. 範囲内の単品購入（売上）
   const sessionsSnap = await db
@@ -150,7 +176,11 @@ export async function computeAndSaveDailyMetrics(params: {
     const booksCompleted = dayBooks.filter(
       (b) => b.status === "completed" || b.status === "partial_completed"
     ).length;
+    const booksFailed = dayBooks.filter((b) => b.status === "failed").length;
     const activeCreators = new Set(dayBooks.map((b) => b.userId).filter(Boolean)).size;
+    const internalBooksCreated = allBooks.filter(
+      (b) => isInternalBook(b) && b.createdAtMs >= dayStart && b.createdAtMs < dayEnd
+    ).length;
 
     const singlePurchaseRevenueJpy = sessions
       .filter((s) => s.processedAtMs >= dayStart && s.processedAtMs < dayEnd)
@@ -164,6 +194,9 @@ export async function computeAndSaveDailyMetrics(params: {
       activeCreators,
       booksCreated,
       booksCompleted,
+      booksFailed,
+      internalBooksCreated,
+      internalUsers: internalUids.size,
       singlePurchaseRevenueJpy,
       // 有料内訳・MRR は「現在値」しか取れないため、最新日のみ書き込む。
       // 過去日はフィールドごと省略し、merge:true でその日に記録された値を保持する。

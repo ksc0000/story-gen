@@ -19,9 +19,12 @@ function mockDb(written: Written[], existing: Record<string, unknown> = {}) {
   const usersSnap = {
     empty: false,
     docs: [
-      { data: () => ({ createdAtMs: NOW - 30 * DAY_MS, productPlan: "standard_paid" }) },
-      { data: () => ({ createdAtMs: NOW - 30 * DAY_MS, productPlan: "premium_paid" }) },
-      { data: () => ({ createdAtMs: NOW - 30 * DAY_MS, productPlan: "free" }) },
+      // 有料 = Stripe 契約 ID あり かつ productPlan 有料 かつ 非内部（2026-09-08）
+      { id: "u-std", data: () => ({ createdAtMs: NOW - 30 * DAY_MS, productPlan: "standard_paid", stripeSubscriptionId: "sub_std" }) },
+      { id: "u-prem", data: () => ({ createdAtMs: NOW - 30 * DAY_MS, productPlan: "premium_paid", stripeSubscriptionId: "sub_prem" }) },
+      { id: "u-free", data: () => ({ createdAtMs: NOW - 30 * DAY_MS, productPlan: "free" }) },
+      // 内部アカウントは有料・累積のどちらにも入らない
+      { id: "smoke-test-1", data: () => ({ createdAtMs: NOW - 30 * DAY_MS, plan: "premium", generationOverride: { bypassMonthlyLimit: true } }) },
     ],
   };
 
