@@ -328,6 +328,7 @@
     "PR #781: fix(create): 作成導線で落ちていたパラメータを引き継ぐ（original_ai / 服装設定 / なかよしキャラ） (merged)",
     "PR #782: fix(image): gpt-image-2 edit 経路の moderation・モデルラベル・Track A のなかよしキャラ主人公・モデル表更新 (merged)",
     "PR #783: fix(ui): ログイン画面の OS ダーク連動を外し、補助テキスト色を AA 準拠に (merged)",
+    "PR #784: fix: P2 まとめ（導線・ページ数セレクタ・プラン文言・companions rules 統合・監査ログ・管理者ツール） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
