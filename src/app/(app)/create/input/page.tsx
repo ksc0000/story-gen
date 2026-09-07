@@ -210,12 +210,14 @@ function InputPageContent() {
       setPageCount(getFixedTemplatePageCount(template));
     }
   }, [template, creationMode]);
-  const [storyRequest, setStoryRequest] = useState("");
-  const [lessonToTeach, setLessonToTeach] = useState("");
-  const [memoryToRecreate, setMemoryToRecreate] = useState("");
-  const [familyMembers, setFamilyMembers] = useState("");
-  const [place, setPlace] = useState("");
-  const [parentMessage, setParentMessage] = useState("");
+  // 「次へ」の直前に現在の URL を入力値付きに差し替えるため（下記 handleNext）、
+  // スタイル画面から戻ってきたときはここで復元される。以前は戻ると全部消えていた。
+  const [storyRequest, setStoryRequest] = useState(searchParams.get("storyRequest") ?? "");
+  const [lessonToTeach, setLessonToTeach] = useState(searchParams.get("lessonToTeach") ?? "");
+  const [memoryToRecreate, setMemoryToRecreate] = useState(searchParams.get("memoryToRecreate") ?? "");
+  const [familyMembers, setFamilyMembers] = useState(searchParams.get("familyMembers") ?? "");
+  const [place, setPlace] = useState(searchParams.get("place") ?? "");
+  const [parentMessage, setParentMessage] = useState(searchParams.get("parentMessage") ?? "");
   // 保存テンプレ（tpl=1）由来の服装設定を初期値にする。以前は常に既定値に戻っていた
   const initialOutfit = readOutfitParams(searchParams);
   const [outfitMode, setOutfitMode] = useState<OutfitMode>(initialOutfit.outfitMode ?? "theme_auto");
@@ -279,6 +281,10 @@ function InputPageContent() {
     if (companionName) params.set("companionName", companionName);
     if (companionVisualDescription) params.set("companionVisualDescription", companionVisualDescription);
 
+    // 戻る操作で入力を復元できるよう、この画面の履歴エントリを入力値付き URL に差し替えてから進む
+    if (typeof window !== "undefined") {
+      window.history.replaceState(window.history.state, "", `/create/input?${params.toString()}`);
+    }
     router.push(`/create/style?${params.toString()}`);
   };
 

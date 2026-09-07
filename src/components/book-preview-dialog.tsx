@@ -36,9 +36,11 @@ export function BookPreviewDialog({
 
   if (!book) return null;
 
-  const href = book.status === "generating" ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
-  const title = book.title || (book.status === "generating" ? "生成中の絵本" : "無題の絵本");
-  const ctaLabel = book.status === "generating" ? "生成状況を見る" : "絵本を読む";
+  const isPending = book.status === "generating";
+  const isFailed = book.status === "failed";
+  const href = isPending || isFailed ? `/generating?id=${book.id}` : `/book?id=${book.id}`;
+  const title = book.title || (isPending ? "生成中の絵本" : isFailed ? "生成に失敗した絵本" : "無題の絵本");
+  const ctaLabel = isPending ? "生成状況を見る" : isFailed ? "理由を見て、もう一度つくる" : "絵本を読む";
 
   return (
     <div

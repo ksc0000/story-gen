@@ -66,7 +66,13 @@ function SelectChildContent() {
   const { consumed } = useMonthlyUsage(user?.uid);
   const remaining = Math.max(0, quota - consumed);
   const isUnlimited = isAdmin || profile?.generationOverride?.bypassMonthlyLimit === true;
-  const isGenerationLimitReached = !isUnlimited && remaining <= 0;
+  // 単品購入クレジットがあれば月次上限に達していても作成できる（サーバはクレジットで通す）
+  const hasSingleCredits =
+    (profile?.singleBookCredits ?? 0) +
+      (profile?.singlePurchaseCredits?.ai_guided ?? 0) +
+      (profile?.singlePurchaseCredits?.photo_story ?? 0) >
+    0;
+  const isGenerationLimitReached = !isUnlimited && remaining <= 0 && !hasSingleCredits;
 
   // テンプレ起点のとき、選んだ作り方に応じたプリフィル先ステップを返す。
   const prefilledStepPath = (mode: CreationMode): string => {

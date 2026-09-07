@@ -105,4 +105,11 @@ describe("BookCard", () => {
     expect(onSelect).toHaveBeenCalledWith(mockBook);
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
+
+  it("失敗した絵本は生成ページへリンクし、失敗バッジと代替タイトルを出す（回帰）", () => {
+    const failedBook = { ...mockBook, title: "", status: "failed" as const };
+    render(<BookCard book={failedBook} />);
+    expect(screen.getByText("生成に失敗した絵本")).toBeInTheDocument();
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/generating?id=book-1");
+  });
 });
