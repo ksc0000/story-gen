@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FloatingParticles } from "@/components/floating-particles";
 import { StaggerContainer } from "@/components/stagger-container";
 import { StaggerItem } from "@/components/stagger-item";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { CtaButton } from "@/components/lp/cta-button";
 import { PLAN_CONFIGS } from "@/lib/plans";
 import {
@@ -132,7 +131,8 @@ function Check() {
 
 export default function LandingPage() {
   return (
-    <main className="app-shell overflow-x-hidden">
+    // 公開ページはパステル固定。夜空テーマは文字色が固定値のため読めなくなる（判断6: アプリ内のみ夜空対応）
+    <main className="app-shell overflow-x-hidden" data-theme="pastel">
       <ScrollProgressBar />
 
       {/* ───────────── Hero ───────────── */}
@@ -141,7 +141,6 @@ export default function LandingPage() {
         <StaggerContainer className="relative z-10 flex w-full flex-col items-center">
           <StaggerItem>
             <div className="mb-4">
-              <ThemeToggle />
             </div>
           </StaggerItem>
           <StaggerItem>
