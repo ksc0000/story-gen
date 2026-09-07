@@ -215,18 +215,22 @@ export const testImageModels = onCall(
     for (const tier of qualityTiers) {
       const modelProfile = resolveImageModelProfile({ purpose, imageQualityTier: tier });
       const filename = `internal-tests/image-models/${batchId}/${tier}.png`;
+      // ENABLE_GPT_IMAGE_2 下ではティア既定が OpenAI プロファイルになるため、両プロバイダの uploader を渡す
+      // （以前は replicateUploader だけで、OpenAI 側が "storage uploader not configured" で必ず失敗した）
+      const uploadTierImage = async (buffer: Buffer) => {
+        const token = randomUUID();
+        await bucket.file(filename).save(buffer, {
+          contentType: "image/png",
+          metadata: { metadata: { firebaseStorageDownloadTokens: token } },
+        });
+        return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${token}`;
+      };
       const adapter = createImageAdapter({
         imageModelProfile: modelProfile,
         replicateApiToken: replicateApiToken.value(),
         openaiApiKey: openaiApiKey.value(),
-        replicateUploader: async (buffer) => {
-          const token = randomUUID();
-          await bucket.file(filename).save(buffer, {
-            contentType: "image/png",
-            metadata: { metadata: { firebaseStorageDownloadTokens: token } },
-          });
-          return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${token}`;
-        },
+        replicateUploader: uploadTierImage,
+        openaiUploader: uploadTierImage,
       });
 
       const result = await adapter.generateImage({
