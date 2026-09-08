@@ -136,10 +136,29 @@ Firestore 保存
 - リトライ: 3回、指数バックオフ (1s + 500ms ジッター)
 - **注意**: Gemini structured output (`ENABLE_RESPONSE_SCHEMA`) は本番非推奨 (P4-14決定: トークン切断の恐れ)
 
-### 画像生成（Replicate / FLUX）
+### 画像生成（Replicate / OpenAI）
 
-| プロファイル | モデル |
-|---|---|
+プロバイダ抽象は `functions/src/lib/image-provider.ts`（`PROFILE_PROVIDER_MAP`）。`ENABLE_GPT_IMAGE_2=true`（本番設定済み）のとき、プラン既定の `pro_consistent` / `kontext_max` は `resolveImageModelProfile` が gpt-image-2 系に置き換える。
+
+| プロファイル | プロバイダ / モデル | 用途 |
+|---|---|---|
+| `openai_gpt_image_2` | OpenAI gpt-image-2 (quality high) | 単品購入・premium |
+| `openai_gpt_image_2_medium` | OpenAI gpt-image-2 (medium) | standard |
+| `openai_gpt_image_2_low` | OpenAI gpt-image-2 (low) | light |
+| `pro_consistent` | Replicate flux-2-pro | gpt-image-2 のフォールバック先／アバター・コンパニオン生成 |
+| `kontext_max` | Replicate flux-kontext-max | 単品購入（フラグ OFF 時） |
+| `kontext_reference` | Replicate flux-kontext-pro | 参照画像用 |
+| `klein_fast` | Replicate flux-2-klein-9b | 最終フォールバック |
+| `klein_base` | Replicate flux-2-klein-9b-base | `ENABLE_KLEIN_BASE=true` のときのみ |
+| `openai_standard` / `openai_mini` | OpenAI gpt-image-1 / gpt-image-1-mini | 旧候補 |
+| `flux11_pro_candidate` / `openai_image_candidate` | flux-1.1-pro / gpt-image-1-mini | 管理者の比較用 |
+
+- 参照画像あり: gpt-image-2 / 1.5 は Images edit エンドポイントを同モデルで呼ぶ。gpt-image-1 系は Responses API + gpt-4o
+- タイムアウト: `IMAGE_GENERATION_TIMEOUT_MS`（デフォルト **360s**）
+- フォールバック（`resolveImageFallbackProfiles`）: `openai_gpt_image_2[_medium]` → `pro_consistent` → `klein_fast`、`openai_gpt_image_2_low` → `klein_fast`、`pro_consistent` → `klein_fast`。**プロバイダを跨ぐと画風が変わる**（ユーザー通知は未実装・製品判断待ち）
+- `partial_completed` ステータス: 一部ページ失敗でも完了扱い（個別再生成可）
+
+---|---|
 | `klein_fast` | flux-2-klein-9b |
 | `klein_base` | flux-2-klein-9b-base |
 | `pro_consistent` | flux-2-pro |
@@ -166,12 +185,13 @@ Firestore 保存
 | 変数 | 説明 |
 |---|---|
 | `IMAGE_CONCURRENCY` | 並列画像生成数（デフォルト 2） |
-| `IMAGE_GENERATION_TIMEOUT_MS` | 画像生成タイムアウト（デフォルト 120000） |
+| `IMAGE_GENERATION_TIMEOUT_MS` | 画像生成タイムアウト（デフォルト 360000） |
 | `ENABLE_SCHEMA_REPAIR_RETRY` | JSON スキーマ修復リトライ実験 |
 | `ENABLE_RESPONSE_SCHEMA` | Gemini structured output（本番非推奨） |
 | `ENABLE_KLEIN_BASE` | klein_base モデル有効化 |
+| `ENABLE_GPT_IMAGE_2` | `true` で画像生成を gpt-image-2 系に切替（本番 true） |
 | `RESPONSE_SCHEMA_MODE` | `minimal` 等のスキーマ変形 |
-| `ENFORCE_AI_MODE_ENTITLEMENT` | `true` で guided_ai / original_ai の有料エンタイトルメントをサーバー強制（未エンタイトルの無料ユーザーをブロック）。**既定OFF（互換）。実課金開始時に有効化する** |
+| `ENFORCE_AI_MODE_ENTITLEMENT` | `true` で guided_ai / original_ai の有料エンタイトルメントをサーバー強制（未エンタイトルの無料ユーザーをブロック）。**2026-09-08 に本番 ON**（単品クレジット保有者はクレジットで通す） |
 
 ### ユーザードキュメントの `generationOverride` フィールド
 

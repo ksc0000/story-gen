@@ -14,12 +14,19 @@ import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { db, storage } from "@/lib/firebase";
 import { PLAN_CONFIGS } from "@/lib/plans";
+import { useChildren } from "@/lib/hooks/use-children";
+import { buildChildProfileSnapshot, buildLegacyChildProfileSnapshot } from "@/lib/child-profile";
+import type { CharacterUsage, PageCount } from "@/lib/types";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
 function PhotoUploadPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  // 主人公は URL の childId で運ばれてくる
+  const childId = searchParams.get("childId");
+  const { children } = useChildren(user?.uid);
+  const child = children.find((c) => c.id === childId) ?? null;
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [hasConsented, setHasConsented] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -108,9 +115,29 @@ function PhotoUploadPageContent() {
       const companionId = searchParams.get("companionId") || undefined;
       const companionName = searchParams.get("companionName") || undefined;
       const companionVisualDescription = searchParams.get("companionVisualDescription") || undefined;
+      // 主人公・スタイル・ページ数は選択画面から URL で運ばれてくる（以前は全部捨てて固定設定で作っていた）
+      const protagonistTypeParam = searchParams.get("protagonistType");
+      const protagonistName = searchParams.get("protagonistName") || undefined;
+      const selectedStyleId = searchParams.get("selectedStyleId") || "soft_watercolor";
+      const requestedPageCount = Number(searchParams.get("pageCount") ?? "8");
+      const pageCount = ([4, 8, 12] as number[]).includes(requestedPageCount) ? (requestedPageCount as PageCount) : (8 as PageCount);
+      const isCompanionProtagonist = protagonistTypeParam === "companion" && Boolean(companionName);
+      const childName = isCompanionProtagonist ? (companionName as string) : child?.displayName ?? protagonistName ?? "主人公";
+      const childProfileSnapshot = child ? buildChildProfileSnapshot(child) : buildLegacyChildProfileSnapshot({ childName });
+      const characterUsage: CharacterUsage = {
+        useRegisteredCharacter: Boolean(child),
+        faceSource: "child_profile",
+        outfitMode: "theme_auto",
+        customOutfit: null,
+        keepSignatureItem: true,
+      };
 
       const bookPayload = {
         userId: user.uid,
+        childId: child?.id ?? null,
+        childProfileSnapshot,
+        characterUsage,
+        protagonistType: isCompanionProtagonist ? "companion" : child ? "child" : "original_character",
         title: "作成中...",
         theme: "photo_story",
         creationMode: "photo_story",
@@ -119,12 +146,15 @@ function PhotoUploadPageContent() {
         imageQualityTier: planConfig.imageQualityTier,
         imageModelProfile: planConfig.imageModelProfile,
         characterConsistencyMode: planConfig.characterConsistencyMode,
-        style: "soft_watercolor", // Default style for photo story if not selected
-        pageCount: 8, // Default page count
+        style: selectedStyleId,
+        selectedStyleId,
+        pageCount,
         status: "generating",
         progress: 0,
         input: {
-          childName: "主人公", // Placeholder
+          childName,
+          ...(child?.age != null ? { childAge: child.age } : {}),
+          ...(isCompanionProtagonist ? { protagonistType: "companion" as const } : {}),
           companionId,
           companionName,
           companionVisualDescription,

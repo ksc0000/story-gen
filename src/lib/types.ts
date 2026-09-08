@@ -357,6 +357,12 @@ export interface UserDoc {
   email: string;
   plan: UserPlan;
   productPlan?: ProductPlan;
+  /** 内部アカウント（スモーク/検証/Stripe テスト）。集計から除外する。判定は src/lib/internal-accounts.ts */
+  internal?: boolean;
+  /** KPI: 最終アクティブ（6 時間に 1 回更新） */
+  lastActiveAtMs?: number;
+  /** 登録時刻（ms）。旧ユーザーは createdAt のみ */
+  createdAtMs?: number;
   /**
    * 管理者専用のプラン上書き。設定画面の開発パネルから設定し、
    * resolveProductPlan() が productPlan より優先して採用する。
@@ -714,6 +720,10 @@ export interface BookDoc {
   input: BookInput;
   createdAt: Timestamp;
   expiresAt: Timestamp | null;
+  /** KPI: 所有者が最後に開いた / 最終ページまで読んだ記録（src/lib/reading-record.ts） */
+  lastReadAtMs?: number;
+  readCompletedAtMs?: number;
+  readCompletedCount?: number;
   public?: boolean;
   /** ギフト共有: 贈り主から受け取る人への短いメッセージ（共有ページに表示）。 */
   giftMessage?: string;

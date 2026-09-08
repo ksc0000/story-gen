@@ -16,7 +16,7 @@ admin 比較ツールでの視覚A/B（参照画像あり・複数シーン）�
 | Premium ページ | flux-2-pro | **gpt-image-2 high** |
 | Standard ページ | klein_fast/base | **gpt-image-2 medium** |
 | Free ページ | klein_fast | **gpt-image-2 low**（または据置 klein）※要判断 |
-| child_avatar（基準像） | flux-2-pro | **gpt-image-2 high** |
+| child_avatar（基準像） | flux-2-pro | **据え置き（FLUX: 写真参照あり kontext_max / なし flux-2-pro）** ※2026-09-08 製品判断7 |
 | recurring キャラ参照 | flux系 | **gpt-image-2** |
 | photo_story（写真参照） | flux | **gpt-image-2 edit**（reference bleed 解消の主目的） |
 
@@ -55,7 +55,7 @@ gpt-image-2 単価（1024×1024）: **low $0.006 / medium $0.053 / high $0.211**
 - **Phase 0（完了）**: gpt-image-2 配線・edit経路・Premium フラグgate・比較ツール。
 - **Phase 1**: Premium を gpt-image-2 high に（`ENABLE_GPT_IMAGE_2_PREMIUM=true`）。premium 実績0のため低リスク。
 - **Phase 2**: Standard を gpt-image-2 medium に。SLO（成功率/レイテンシ/フォールバック率）監視。
-- **Phase 3**: child_avatar / recurring 参照 / photo_story を gpt-image-2 に。
+- **Phase 3**: recurring 参照 / photo_story を gpt-image-2 に。child_avatar は FLUX 据え置き（2026-09-08 判断: 実装 `avatar-generation.ts` を正とする）。
 - **Phase 4**: Free を gpt-image-2 low に（or 据置判断）。
 - 各段階で `report:generation-slo` と quality-report で before/after を確認。
 

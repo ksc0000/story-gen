@@ -18,6 +18,8 @@ import { useAdminClaim } from "@/lib/hooks/use-admin-claim";
 import { backfillDailyMetricsCallable } from "@/lib/functions";
 import { getPlanDisplayLabel, CREATION_MODE_LABELS, PLAN_CONFIGS } from "@/lib/plans";
 import { computeSloMetrics, SLO_TARGETS, EMPTY_SLO } from "@/lib/admin-slo-metrics";
+import { isInternalAccount, isPayingUser } from "@/lib/internal-accounts";
+import { computeKgiMetrics, type KgiUser, type KgiBook, type KgiMetrics } from "@/lib/admin-kgi-metrics";
 import { computeProviderCostMetrics } from "@/lib/admin-cost-metrics";
 import { computeQualityTrend } from "@/lib/admin-quality-trend";
 import { AdminNav } from "@/components/admin/AdminNav";
@@ -33,7 +35,7 @@ import {
 } from "@/components/admin/dashboard-widgets";
 import { cn } from "@/lib/utils";
 import { isDemoMode } from "@/lib/demo";
-import type { BookDoc, CreationMode, PageDoc, ProductPlan } from "@/lib/types";
+import type { BookDoc, CreationMode, PageDoc, ProductPlan, UserDoc } from "@/lib/types";
 
 /** チャート用カラーパレット */
 const CHART_COLORS = ["#7c3aed", "#22c55e", "#f59e0b", "#06b6d4", "#ec4899", "#6366f1", "#94a3b8"];
@@ -134,11 +136,26 @@ const PERIOD_OPTIONS = [7, 30, 90] as const;
  * ダッシュボードの見出し（利用者数・MRR など）を実績に一致させるために使う。
  */
 interface LiveCounts {
+  /** 内部アカウントを除いた利用者数 */
   totalUsers: number;
+  /** 内部アカウント数（スモーク/検証/Stripe テスト） */
+  internalUsers: number;
   paidStandard: number;
   paidPremium: number;
+  /** books の総件数（内部含む） */
   totalBooks: number;
+  /** 内部アカウントの uid（SLO/品質の絞り込みに使う） */
+  internalUids: Set<string>;
   loadedAtMs: number;
+}
+
+/** スナップショットが昨日分より古ければ true（毎日 03:05 JST に前日・当日分を書く想定） */
+function isSnapshotStale(latestDate: string | undefined): boolean {
+  if (!latestDate) return true;
+  const jstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const yesterday = new Date(jstNow.getTime() - 24 * 60 * 60 * 1000);
+  const key = `${yesterday.getUTCFullYear()}-${String(yesterday.getUTCMonth() + 1).padStart(2, "0")}-${String(yesterday.getUTCDate()).padStart(2, "0")}`;
+  return latestDate < key;
 }
 
 /** 円（JPY）を「¥1,480」形式に整形 */
@@ -196,11 +213,16 @@ export default function AdminDashboardPage() {
 
   const [lens, setLens] = useState<Lens>("analytics");
   const [sampleSize, setSampleSize] = useState<(typeof SAMPLE_SIZES)[number]>(200);
+  // SLO/品質/コストの母数から内部アカウントの絵本を除くか（既定: 除く）。直近 200 冊の 9 割が検証生成だった
+  const [excludeInternal, setExcludeInternal] = useState(true);
   const [books, setBooks] = useState<BookWithId[]>([]);
   const [pagesMap, setPagesMap] = useState<Map<string, PageWithId[]>>(new Map());
   const [sloHistory, setSloHistory] = useState<number[]>([]);
   const [dailyMetrics, setDailyMetrics] = useState<DailyMetricsRow[]>([]);
   const [liveCounts, setLiveCounts] = useState<LiveCounts | null>(null);
+  // KGI 用: 内部除外済みの users と、直近 3 か月の books
+  const [kgiUsers, setKgiUsers] = useState<KgiUser[]>([]);
+  const [kgiBooks, setKgiBooks] = useState<KgiBook[]>([]);
   const [period, setPeriod] = useState<(typeof PERIOD_OPTIONS)[number]>(30);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -344,19 +366,41 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (!isAdmin || isDemoMode) return;
     let cancelled = false;
-    Promise.all([
-      getCountFromServer(collection(db, "users")),
-      getCountFromServer(query(collection(db, "users"), where("productPlan", "==", "standard_paid"))),
-      getCountFromServer(query(collection(db, "users"), where("productPlan", "==", "premium_paid"))),
-      getCountFromServer(collection(db, "books")),
-    ])
-      .then(([usersC, stdC, premC, booksC]) => {
+    // users は件数が小さいので全件読み、内部アカウント（スモーク/検証/Stripe テスト）を除外して数える。
+    // 以前は getCountFromServer の生件数で、18 人のうち本物 5 人という表示になっていた。
+    Promise.all([getDocs(collection(db, "users")), getCountFromServer(collection(db, "books"))])
+      .then(([usersSnap, booksC]) => {
         if (cancelled) return;
+        const internalUids = new Set<string>();
+        let totalUsers = 0;
+        let paidStandard = 0;
+        let paidPremium = 0;
+        const kgiRows: KgiUser[] = [];
+        usersSnap.docs.forEach((d) => {
+          const data = d.data() as UserDoc;
+          if (isInternalAccount(d.id, data)) {
+            internalUids.add(d.id);
+            return;
+          }
+          totalUsers += 1;
+          kgiRows.push({
+            uid: d.id,
+            createdAtMs: data.createdAtMs ?? data.createdAt?.toMillis?.() ?? 0,
+            lastActiveAtMs: data.lastActiveAtMs,
+          });
+          if (isPayingUser(d.id, data)) {
+            if (data.productPlan === "standard_paid") paidStandard += 1;
+            if (data.productPlan === "premium_paid") paidPremium += 1;
+          }
+        });
+        setKgiUsers(kgiRows);
         setLiveCounts({
-          totalUsers: usersC.data().count,
-          paidStandard: stdC.data().count,
-          paidPremium: premC.data().count,
+          totalUsers,
+          internalUsers: internalUids.size,
+          paidStandard,
+          paidPremium,
           totalBooks: booksC.data().count,
+          internalUids,
           loadedAtMs: Date.now(),
         });
       })
@@ -368,15 +412,48 @@ export default function AdminDashboardPage() {
     };
   }, [isAdmin]);
 
+  // KGI 用に直近 3 か月の books を読む（サンプル数の上限に依存しない）
+  useEffect(() => {
+    if (!isAdmin || isDemoMode) return;
+    const since = Date.now() - 92 * 24 * 60 * 60 * 1000;
+    const q = query(collection(db, "books"), where("createdAtMs", ">=", since), orderBy("createdAtMs", "desc"), limit(3000));
+    getDocs(q)
+      .then((snap) => {
+        setKgiBooks(
+          snap.docs.map((d) => {
+            const b = d.data() as BookDoc;
+            return {
+              userId: b.userId,
+              createdAtMs: b.createdAtMs ?? 0,
+              status: b.status,
+              readCompletedAtMs: b.readCompletedAtMs,
+              readCompletedCount: b.readCompletedCount,
+            };
+          })
+        );
+      })
+      .catch(() => setKgiBooks([]));
+  }, [isAdmin]);
+  const internalUidSet = liveCounts?.internalUids;
+  const kgi = useMemo<KgiMetrics | null>(() => {
+    if (!kgiUsers.length) return null;
+    const books = internalUidSet ? kgiBooks.filter((b) => !internalUidSet.has(b.userId)) : kgiBooks;
+    return computeKgiMetrics({ users: kgiUsers, books });
+  }, [kgiUsers, kgiBooks, internalUidSet]);
+
+  const sampleBooks = useMemo(() => {
+    if (!excludeInternal || !liveCounts) return books;
+    return books.filter((b) => !b.userId || !liveCounts.internalUids.has(b.userId));
+  }, [books, excludeInternal, liveCounts]);
   const slo = useMemo(
-    () => (books.length ? computeSloMetrics(books, pagesMap) : EMPTY_SLO),
-    [books, pagesMap]
+    () => (sampleBooks.length ? computeSloMetrics(sampleBooks, pagesMap) : EMPTY_SLO),
+    [sampleBooks, pagesMap]
   );
   const cost = useMemo(
-    () => computeProviderCostMetrics(books, pagesMap),
-    [books, pagesMap]
+    () => computeProviderCostMetrics(sampleBooks, pagesMap),
+    [sampleBooks, pagesMap]
   );
-  const quality = useMemo(() => computeQualityTrend(books), [books]);
+  const quality = useMemo(() => computeQualityTrend(sampleBooks), [sampleBooks]);
 
   // Business aggregations.
   const business = useMemo(() => {
@@ -458,6 +535,7 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
             ) : (
+              <>
               <select
                 value={sampleSize}
                 onChange={(e) => setSampleSize(Number(e.target.value) as (typeof SAMPLE_SIZES)[number])}
@@ -469,6 +547,11 @@ export default function AdminDashboardPage() {
                   </option>
                 ))}
               </select>
+                <label className="ml-2 inline-flex items-center gap-1 text-xs text-purple-800">
+                  <input type="checkbox" checked={excludeInternal} onChange={(e) => setExcludeInternal(e.target.checked)} />
+                  内部アカウントを除く（n={sampleBooks.length}）
+                </label>
+              </>
             )}
           </div>
         </div>
@@ -504,7 +587,7 @@ export default function AdminDashboardPage() {
 
         {lens === "analytics" ? (
           <div className="mt-6">
-            <AnalyticsLens rows={dailyMetrics} period={period} isAdmin={isAdmin} live={liveCounts} />
+            <AnalyticsLens rows={dailyMetrics} period={period} isAdmin={isAdmin} live={liveCounts} kgi={kgi} />
           </div>
         ) : loading && !books.length ? (
           <div className="mt-10 flex items-center gap-2 text-violet-400">
@@ -536,10 +619,12 @@ function AnalyticsLens({
   period,
   isAdmin,
   live,
+  kgi,
 }: {
   rows: DailyMetricsRow[];
   period: number;
   isAdmin: boolean;
+  kgi: KgiMetrics | null;
   live: LiveCounts | null;
 }) {
   const [backfilling, setBackfilling] = useState(false);
@@ -603,6 +688,18 @@ function AnalyticsLens({
 
   return (
     <>
+      <SectionTitle title="KGI（今月）" description={`定着家庭 = 当月 2 冊以上かつ 1 冊読了。内部アカウント除外。${kgi ? kgi.monthKey : ""}`} />
+      {kgi ? (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard label="定着家庭数" value={kgi.retainedHouseholds.toLocaleString()} unit="家庭" tone="good" hint={`当月に作った家庭 ${kgi.activeHouseholds}`} />
+          <StatCard label="初回 24h 完成率" value={kgi.firstBookWithin24hRate == null ? "—" : kgi.firstBookWithin24hRate.toFixed(1)} unit="%" hint={`当月の新規 ${kgi.newHouseholds} 家庭`} />
+          <StatCard label="完読率（所有者）" value={kgi.readThroughRate == null ? "—" : kgi.readThroughRate.toFixed(1)} unit="%" hint="当月完成の本のうち最後まで読まれた割合（2026-09-08 以降計測）" />
+          <StatCard label="2 冊目率 / 翌月再訪率" value={`${kgi.secondBookRate == null ? "—" : kgi.secondBookRate.toFixed(0)} / ${kgi.returnRate == null ? "—" : kgi.returnRate.toFixed(0)}`} unit="%" hint="作った家庭のうち 2 冊以上 / 前月に作った家庭のうち当月アクティブ" />
+        </div>
+      ) : (
+        <p className="text-xs text-violet-400">users / books の読み込み後に表示されます。</p>
+      )}
+
       <div className="flex items-center justify-between gap-2">
         <SectionTitle title="サマリー" description={`直近 ${period} 日間（前期間比）`} />
         <span
@@ -615,13 +712,18 @@ function AnalyticsLens({
           {usesLive ? "● 実数（リアルタイム集計）" : "○ スナップショット値"}
         </span>
       </div>
+      {isSnapshotStale(snapshotDate) && (
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          日次スナップショットの最新が {snapshotDate ?? "なし"} です（毎日 03:05 JST に更新される想定）。集計ジョブが失敗している可能性があります。
+        </p>
+      )}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label="利用者数（実数）"
           value={totalUsers.toLocaleString()}
           unit="人"
           tone="good"
-          hint={usesLive ? "users コレクション実件数" : `スナップショット ${snapshotDate ?? "—"} 時点`}
+          hint={usesLive ? `内部 ${live?.internalUsers ?? 0} 人を除く実件数` : `スナップショット ${snapshotDate ?? "—"} 時点（内部除外）`}
         />
         <StatCard
           label="新規ユーザー"
@@ -640,13 +742,13 @@ function AnalyticsLens({
           label="推定MRR（現在）"
           value={formatJpy(estimatedMrr)}
           tone="good"
-          hint={`有料 ${paidTotal}人（標準${paidStandard}/プレ${paidPremium}）`}
+          hint={`有料 ${paidTotal}人（標準${paidStandard}/プレ${paidPremium}）= Stripe 契約あり・内部除外`}
         />
       </div>
       {live ? (
         <p className="mt-2 text-[11px] text-violet-400">
           実数は users / books コレクションの集計値（{new Date(live.loadedAtMs).toLocaleString("ja-JP", { hour: "2-digit", minute: "2-digit" })} 時点）。
-          絵本累計 {live.totalBooks.toLocaleString()}冊。グラフの時系列は日次スナップショット由来です。
+          絵本累計 {live.totalBooks.toLocaleString()}冊（内部アカウント分を含む生件数）。グラフの時系列は日次スナップショット由来です。
         </p>
       ) : null}
 
@@ -808,11 +910,11 @@ function BusinessLens({
           hint="standard / premium の割合"
         />
         <StatCard
-          label="完読率"
+          label="読める状態率"
           value={slo.bookReadableRate.toFixed(1)}
           unit="%"
           tone={slo.bookReadableRate >= SLO_TARGETS.bookReadableRate ? "good" : "warning"}
-          hint="完成して読める絵本の割合"
+          hint="完成/部分完了 ÷ 全件。読了率ではない（読了は未計測）"
         />
       </div>
 
@@ -884,7 +986,7 @@ function SystemLens({
       <SectionTitle title="信頼性 SLO" description="目標値との比較（緑=達成 / 赤=未達）" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label="完読率"
+          label="読める状態率"
           value={slo.bookReadableRate.toFixed(1)}
           unit="%"
           badge={`目標 ${SLO_TARGETS.bookReadableRate}%`}
@@ -934,12 +1036,12 @@ function SystemLens({
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-          <h3 className="mb-1 text-sm font-bold text-purple-900">完読率の推移</h3>
+          <h3 className="mb-1 text-sm font-bold text-purple-900">読める状態率の推移</h3>
           <p className="mb-3 text-xs text-violet-400">日次SLOスナップショット（直近{sloHistory.length}回）</p>
           {sloHistory.length >= 2 ? (
             <LineChart
               labels={sloLabels}
-              series={[{ label: "完読率", color: "#6366f1", points: sloHistory }]}
+              series={[{ label: "読める状態率", color: "#6366f1", points: sloHistory }]}
               unit="%"
               height={200}
               yMin={Math.max(0, Math.min(...sloHistory) - 3)}

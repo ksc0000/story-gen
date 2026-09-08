@@ -10,7 +10,10 @@ import { StylePicker } from "@/components/style-picker";
 import { PageTransition } from "@/components/page-transition";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { buildChildProfileSnapshot, buildLegacyChildProfileSnapshot } from "@/lib/child-profile";
+import { getUserFriendlyErrorMessage } from "@/lib/user-error-mapping";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
+import { useMonthlyUsage } from "@/lib/monthly-usage";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { db } from "@/lib/firebase";
@@ -23,12 +26,12 @@ import { stripUndefined } from "@/lib/strip-undefined";
 import {
   getDefaultProductPlanForCreationMode,
   PLAN_CONFIGS,
+  resolveProductPlan,
 } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import type {
   CharacterUsage,
   CharacterConsistencyMode,
-  ChildProfileSnapshot,
   IllustrationStyle,
   OutfitMode,
   PageCount,
@@ -41,6 +44,8 @@ function StyleSelectionPageContent() {
   const router = useRouter();
   const { user } = useAuth();
   const { profile } = useUserProfile(user?.uid);
+  const { consumed: monthlyConsumed } = useMonthlyUsage(user?.uid);
+  const monthlyRemaining = Math.max(0, (PLAN_CONFIGS[resolveProductPlan(profile)]?.monthlyBookQuota ?? 1) - monthlyConsumed);
   const { children } = useChildren(user?.uid);
   const { templates } = useTemplates();
   // 保存テンプレからの再利用時は selectedStyleId をプリフィル（可視なスタイルなら維持される）。
@@ -71,6 +76,8 @@ function StyleSelectionPageContent() {
     | "guided_ai"
     | "original_ai"
     | "photo_story";
+  // AI 系モードはテンプレが無いので、最終確認には入力したリクエストの先頭を出す（以前は「未設定」）
+  const storyRequestSummary = (searchParams.get("storyRequest") ?? "").split("\n")[0].trim().slice(0, 40);
   const productPlanParam = (searchParams.get("productPlan") as ProductPlan | null)
     ?? getDefaultProductPlanForCreationMode(mode);
   const selectedPlanConfig = PLAN_CONFIGS[productPlanParam] ?? PLAN_CONFIGS.free;
@@ -170,7 +177,9 @@ function StyleSelectionPageContent() {
         ? (hasPhotoStoryCredit ? "photo_story" : (hasAiGuidedCredit ? "ai_guided" : (legacyCredits > 0 ? "legacy" : null)))
         : (hasAiGuidedCredit ? "ai_guided" : (hasPhotoStoryCredit ? "photo_story" : (legacyCredits > 0 ? "legacy" : null)));
 
-      const useSinglePurchase = purchaseTypeToUse !== null;
+      // 規則（サーバと同じ）: 月次を先に使い切る。クレジットは上限到達時か、プラン外のモードのときだけ
+      const modeAllowedByPlan = PLAN_CONFIGS[resolveProductPlan(profile)]?.allowedCreationModes.includes(mode) ?? false;
+      const useSinglePurchase = purchaseTypeToUse !== null && (monthlyRemaining <= 0 || !modeAllowedByPlan);
 
       if (isDemoMode) {
         bookId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -211,7 +220,8 @@ function StyleSelectionPageContent() {
           theme,
           templateId: theme,
           categoryGroupId: template?.categoryGroupId ?? "favorite-worlds",
-          creationMode: template?.creationMode ?? "guided_ai",
+          // テンプレが無い AI 系（guided_ai / original_ai）は URL の mode を使う。以前は常に guided_ai になっていた
+          creationMode: template?.creationMode ?? mode,
           isSinglePurchase: useSinglePurchase,
           singlePurchaseType: (useSinglePurchase && purchaseTypeToUse !== "legacy") ? purchaseTypeToUse : mode === "photo_story" ? "photo_story" : "ai_guided",
           priceTier: template?.priceTier ?? "take",
@@ -284,8 +294,7 @@ function StyleSelectionPageContent() {
       router.push(`/generating?id=${bookId}`);
     } catch (err) {
       console.error("Failed to create book:", err);
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setCreateError(`絵本の作成を開始できませんでした: ${message}`);
+      setCreateError(getUserFriendlyErrorMessage(err, "絵本の作成を開始できませんでした。少し時間をおいてもう一度お試しください。"));
       setCreating(false);
     }
   };
@@ -319,15 +328,23 @@ function StyleSelectionPageContent() {
         <h2 className="text-base font-semibold text-purple-900">この内容で作ります ✅</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <SummaryItem label="主人公" value={childName || "未設定"} />
-          <SummaryItem label="テーマ" value={template?.name ?? "未設定"} />
+          <SummaryItem
+            label="テーマ"
+            value={
+              template?.name ??
+              (mode === "photo_story"
+                ? "写真から作る"
+                : storyRequestSummary || (mode === "original_ai" ? "自由リクエスト" : "AIにおまかせ"))
+            }
+          />
           <SummaryItem label="ページ数" value={`${pageCount}ページ`} />
           <SummaryItem label="スタイル" value={selected ? getIllustrationStyleProfile(selected).name : "未選択"} />
           {companionName ? <SummaryItem label="なかよしキャラ" value={companionName} /> : null}
         </div>
         {(profile?.singleBookCredits || (profile?.singlePurchaseCredits?.ai_guided || 0) > 0 || (profile?.singlePurchaseCredits?.photo_story || 0) > 0) ? (
           <div className="mt-4 rounded-2xl bg-amber-50 p-3 text-xs text-amber-700">
-            <p className="font-semibold">💡 保有中の単品クレジットを1つ使用して作成します</p>
-            <p className="mt-0.5">月間の作成上限に達していても、このまま作成を完了できます。</p>
+            <p className="font-semibold">💡 単品クレジットをお持ちです</p>
+            <p className="mt-0.5">今月の作成枠が残っている間は枠を使い、使い切ったあと（またはプラン外の作り方）でクレジットを1つ使います。</p>
           </div>
         ) : null}
       </motion.div>
@@ -363,31 +380,6 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-sm font-semibold text-purple-900">{value}</p>
     </div>
   );
-}
-
-function buildLegacyChildProfileSnapshot(params: { childName: string }): ChildProfileSnapshot {
-  return {
-    displayName: params.childName,
-    personality: {},
-    visualProfile: {
-      version: 1,
-    },
-  };
-}
-
-function buildChildProfileSnapshot(child: ChildProfileSnapshot & { id?: string }): ChildProfileSnapshot {
-  return {
-    displayName: child.displayName,
-    nickname: child.nickname,
-    age: child.age,
-    genderExpression: child.genderExpression,
-    personality: child.personality ?? {},
-    visualProfile: {
-      ...(child.visualProfile ?? { version: 1 }),
-      referenceImageUrl: child.visualProfile?.referenceImageUrl || child.visualProfile?.approvedImageUrl,
-      version: child.visualProfile?.version ?? 1,
-    },
-  };
 }
 
 export default function StyleSelectionPage() {

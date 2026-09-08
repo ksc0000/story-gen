@@ -191,7 +191,14 @@ function GeneratingContent() {
     }
   }, [book]);
 
-  if (!bookId || loading) return (
+  if (!bookId) return (
+    <div className="mx-auto max-w-lg px-4 py-16 text-center">
+      <p className="text-violet-500">絵本が指定されていません</p>
+      <Link href="/home" className="mt-4 inline-block"><Button variant="outline">本棚に戻る</Button></Link>
+    </div>
+  );
+
+  if (loading) return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <p className="text-violet-500">読み込み中...</p>
     </div>

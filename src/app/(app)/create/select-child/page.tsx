@@ -11,6 +11,7 @@ import { BackButton } from "@/components/back-button";
 import { StepIndicator } from "@/components/step-indicator";
 import { AvatarNudgeBanner } from "@/components/avatar-nudge-banner";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { forwardParams, COMPANION_PARAM_KEYS } from "@/lib/create-flow-params";
 import { useChildren } from "@/lib/hooks/use-children";
 import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { useMonthlyUsage } from "@/lib/monthly-usage";
@@ -65,7 +66,13 @@ function SelectChildContent() {
   const { consumed } = useMonthlyUsage(user?.uid);
   const remaining = Math.max(0, quota - consumed);
   const isUnlimited = isAdmin || profile?.generationOverride?.bypassMonthlyLimit === true;
-  const isGenerationLimitReached = !isUnlimited && remaining <= 0;
+  // 単品購入クレジットがあれば月次上限に達していても作成できる（サーバはクレジットで通す）
+  const hasSingleCredits =
+    (profile?.singleBookCredits ?? 0) +
+      (profile?.singlePurchaseCredits?.ai_guided ?? 0) +
+      (profile?.singlePurchaseCredits?.photo_story ?? 0) >
+    0;
+  const isGenerationLimitReached = !isUnlimited && remaining <= 0 && !hasSingleCredits;
 
   // テンプレ起点のとき、選んだ作り方に応じたプリフィル先ステップを返す。
   const prefilledStepPath = (mode: CreationMode): string => {
@@ -100,7 +107,11 @@ function SelectChildContent() {
     }
 
     if (choice.type === "child") {
-      router.push(`/create/theme?childId=${choice.childId}`);
+      // なかよしキャラのプロフィール「絵本に登場させる」から来た場合、相棒指定を落とさない
+      const childParams = new URLSearchParams();
+      childParams.set("childId", choice.childId);
+      forwardParams(searchParams, childParams, COMPANION_PARAM_KEYS);
+      router.push(`/create/theme?${childParams.toString()}`);
       return;
     }
 
@@ -381,7 +392,10 @@ function SelectChildContent() {
 
       <div className="mt-5 text-center">
         {isChildLimitReached ? (
-          <p className="text-sm text-violet-300">プランをアップグレードすると子どもを追加できます</p>
+          <p className="text-sm text-violet-500">
+            プランをアップグレードすると子どもを追加できます。
+            <Link href="/pricing" className="ml-1 font-semibold text-purple-600 hover:underline">プランを見る</Link>
+          </p>
         ) : (
           <Link href="/onboarding/child" className="text-sm text-violet-400 hover:text-purple-600 hover:underline">
             ＋ 新しい子を登録する

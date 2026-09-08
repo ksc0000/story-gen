@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "@/lib/callable";
+import { recordBookOpened, recordReadingCompleted } from "@/lib/reading-record";
 import { REGENERATE_TIMEOUT_MS, PDF_TIMEOUT_MS } from "@/lib/callable-timeouts";
 import {
   Share2,
@@ -98,6 +99,24 @@ function BookContent() {
   const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
   const isOwner = Boolean(user && book && book.userId === user.uid);
 
+  // KPI: 絵本を開いた（1 回の閲覧につき 1 回）。所有者なら lastReadAt も記録する
+  const openedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!bookId || !book || isDemoMode) return;
+    if (book.status !== "completed" && book.status !== "partial_completed") return;
+    if (openedRef.current === bookId) return;
+    openedRef.current = bookId;
+    trackAnalyticsEvent("open_book", { creationMode: book.creationMode ?? "unknown", isOwner });
+    if (isOwner) recordBookOpened(bookId).catch(() => {});
+  }, [bookId, book, isOwner]);
+
+  // KPI: 最終ページ到達 = 読了（KGI「定着家庭数」の条件）
+  const handleReachEnd = useCallback(() => {
+    if (!bookId || !book || isDemoMode) return;
+    trackAnalyticsEvent("complete_reading", { creationMode: book.creationMode ?? "unknown", isOwner });
+    if (isOwner) recordReadingCompleted(bookId).catch(() => {});
+  }, [bookId, book, isOwner]);
+
   useEffect(() => {
     if (!bookId) return;
     let active = true;
@@ -165,7 +184,17 @@ function BookContent() {
     );
   }
 
-  if (!bookId || loading)
+  if (!bookId)
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <p className="text-violet-500">絵本が指定されていません</p>
+        <Link href="/home" className="mt-4 inline-block">
+          <Button variant="outline">本棚に戻る</Button>
+        </Link>
+      </div>
+    );
+
+  if (loading)
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <p className="text-violet-500">読み込み中...</p>
@@ -204,6 +233,9 @@ function BookContent() {
   const failedPages = pages
     .filter((p) => p.status === "image_failed")
     .sort((a, b) => a.pageNumber - b.pageNumber);
+  // 別の画像AIにフォールバックして描かれたページ（画風が揃わないことがある）。#777 以降は元のモデルで描き直せる
+  const fallbackPages = pages.filter((p) => p.status === "fallback_completed" || p.imageFallbackUsed === true);
+  const hasProviderFallback = fallbackPages.length > 0 || book.coverImageFallbackUsed === true;
 
   const generatingPages = pages.filter((p) => p.status === "generating");
 
@@ -218,6 +250,7 @@ function BookContent() {
       const rec = await downloadBookForOffline(book, viewablePages, (prog) => {
         setDownloadProgress(prog);
       });
+      trackAnalyticsEvent("download_offline", { pages: viewablePages.length });
       setOfflineRecord(rec);
       toast.success("オフライン保存が完了しました！");
     } catch (err) {
@@ -236,11 +269,16 @@ function BookContent() {
       toast.info("オフライン保存を解除しました。");
     } catch (err) {
       console.error("Failed to remove offline book:", err);
+      toast.error("オフライン保存を解除できませんでした。もう一度お試しください。");
     }
   }
 
   async function handleToggleShare() {
     if (!book || !isOwner) return;
+    if (isOffline) {
+      toast.info("オンラインに戻ると公開設定を変更できます。");
+      return;
+    }
     setIsSharing(true);
     try {
       const isPublic = !book.public;
@@ -248,8 +286,10 @@ function BookContent() {
         public: isPublic,
         updatedAt: serverTimestamp(),
       });
+      trackAnalyticsEvent("toggle_public", { isPublic });
       if (isPublic) {
-        toast.success("公開設定に変更しました。共有リンクをコピーしました。");
+        // コピーの成否は handleCopyLink 側が通知する（以前は成功を先に告げていた）
+        toast.success("公開設定に変更しました。");
         handleCopyLink();
       } else {
         toast.info("非公開に設定しました。");
@@ -264,6 +304,7 @@ function BookContent() {
 
   function handleCopyLink() {
     const url = `${window.location.origin}/share?id=${bookId}`;
+    trackAnalyticsEvent("copy_share_link", {});
     navigator.clipboard.writeText(url).then(() => {
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
@@ -273,21 +314,37 @@ function BookContent() {
     });
   }
 
-  async function handleSaveGiftMessage() {
-    if (!bookId || !isOwner) return;
-    const value = (giftMessage ?? "").trim().slice(0, 200);
+  // 表示中のギフト文（未編集なら保存済みの値）。保存にも共有にもこれを使う
+  const displayedGiftMessage = (giftMessage ?? book?.giftMessage ?? "").trim().slice(0, 200);
+  const giftMessageDirty = displayedGiftMessage !== (book?.giftMessage ?? "").trim();
+
+  async function handleSaveGiftMessage(): Promise<boolean> {
+    if (!bookId || !isOwner) return false;
+    if (isOffline) {
+      toast.info("オンラインに戻ると保存できます。");
+      return false;
+    }
+    // 以前は state だけを見ていたため、保存済みの文を表示したまま「保存」を押すと空文字で上書きしていた
+    const value = displayedGiftMessage;
     try {
       await updateDoc(doc(db, "books", bookId), { giftMessage: value, updatedAt: serverTimestamp() });
       setGiftSaved(true);
       toast.success("メッセージを保存しました。");
       setTimeout(() => setGiftSaved(false), 2000);
+      return true;
     } catch (err) {
       console.error("Failed to save gift message:", err);
       toast.error(getUserFriendlyErrorMessage(err, "メッセージの保存に失敗しました。"));
+      return false;
     }
   }
 
   async function handleShareGift() {
+    // 未保存のギフト文があれば先に保存する（以前は入力したまま「贈る」と保存されずに共有が始まった）
+    if (isOwner && giftMessageDirty) {
+      const saved = await handleSaveGiftMessage();
+      if (!saved) return;
+    }
     const url = `${window.location.origin}/share?id=${bookId}`;
     const shareData = {
       title: book?.title ? `${book.title}｜Ehoriaの絵本` : "Ehoriaの絵本",
@@ -296,10 +353,12 @@ function BookContent() {
     };
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
+        trackAnalyticsEvent("share_book", { method: "web_share" });
         await navigator.share(shareData);
         return;
-      } catch {
-        // キャンセル時などはコピーにフォールバック。
+      } catch (err) {
+        // ユーザーが共有シートを閉じただけならクリップボードを触らない
+        if (err instanceof Error && err.name === "AbortError") return;
       }
     }
     handleCopyLink();
@@ -307,6 +366,10 @@ function BookContent() {
 
   async function handleRegenerateAll() {
     if (!bookId || failedPages.length === 0) return;
+    if (isOffline) {
+      toast.info("オンラインに戻ると再生成できます。");
+      return;
+    }
     for (const page of failedPages) {
       if (!regeneratingPages.has(page.pageNumber)) {
         await handleRegeneratePage(page);
@@ -353,8 +416,28 @@ function BookContent() {
     }
   }
 
+  async function handleRegenerateFallbackPages() {
+    if (!bookId) return;
+    if (isOffline) {
+      toast.info("オンラインに戻ると描き直せます。");
+      return;
+    }
+    if (book?.coverImageFallbackUsed) {
+      await handleRegenerateCover();
+    }
+    for (const page of fallbackPages) {
+      if (!regeneratingPages.has(page.pageNumber)) {
+        await handleRegeneratePage(page);
+      }
+    }
+  }
+
   async function handleRegeneratePage(page: PageDoc) {
     if (!bookId || regeneratingPages.has(page.pageNumber)) return;
+    if (isOffline) {
+      toast.info("オンラインに戻ると再生成できます。");
+      return;
+    }
     setRegeneratingPages((prev) => new Set(prev).add(page.pageNumber));
     setRegenerationErrors((prev) => {
       const next = { ...prev };
@@ -381,6 +464,10 @@ function BookContent() {
 
   async function handleRegenerateCover() {
     if (!bookId || isRegeneratingCover) return;
+    if (isOffline) {
+      toast.info("オンラインに戻ると再生成できます。");
+      return;
+    }
     setIsRegeneratingCover(true);
     setCoverRegenerationError(null);
     try {
@@ -403,6 +490,7 @@ function BookContent() {
     try {
       const generatePdf = httpsCallable(functions, "generateBookPdf", { timeout: PDF_TIMEOUT_MS });
       await generatePdf({ bookId });
+      trackAnalyticsEvent("download_pdf", {});
     } catch (err) {
       console.error("Failed to generate PDF:", err);
       toast.error("PDFの作成に失敗しました。しばらく時間をおいて再度お試しください。");
@@ -612,7 +700,7 @@ function BookContent() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleSaveGiftMessage}
+                disabled={!giftMessageDirty} onClick={handleSaveGiftMessage}
                 className="rounded-full border-purple-200 text-purple-700"
               >
                 {giftSaved ? (
@@ -633,6 +721,35 @@ function BookContent() {
 
       {isOwner && user && (book.status === "completed" || book.status === "partial_completed") && (
         <BookSettingsPanel book={book} userId={user.uid} />
+      )}
+
+      {hasProviderFallback && !isPartial && (
+        <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-violet-200 bg-violet-50/60 p-4 sm:flex-row">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-semibold text-purple-900">一部のページは別の画像AIで描かれました</p>
+              <p className="text-sm text-violet-600">
+                混み合っていたため、{fallbackPages.length > 0 ? `${fallbackPages.length}ページ` : "表紙"}
+                {fallbackPages.length > 0 && book.coverImageFallbackUsed ? "と表紙" : ""}
+                を予備の画像AIで仕上げました。画風が揃っていない場合は描き直せます。
+              </p>
+            </div>
+          </div>
+          {isOwner && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={handleRegenerateFallbackPages}
+              disabled={regeneratingPages.size > 0 || isRegeneratingCover}
+            >
+              {regeneratingPages.size > 0 || isRegeneratingCover ? "描き直し中..." : "元の画風で描き直す"}
+            </Button>
+          )}
+        </div>
       )}
 
       {isPartial && (
@@ -673,6 +790,7 @@ function BookContent() {
           </div>
         )}
         <BookViewer
+          onReachEnd={handleReachEnd}
           pages={viewablePages}
           title={book.title}
           coverImageUrl={book.coverImageUrl}
@@ -1067,7 +1185,7 @@ function BookContent() {
       {!isOwner && (
         <div className="mt-8 flex justify-center gap-4">
           <Link href="/home"><Button variant="outline">本棚に戻る</Button></Link>
-          <Link href="/create/theme"><Button>もう一冊作る</Button></Link>
+          <Link href="/create/select-child"><Button>もう一冊作る</Button></Link>
         </div>
       )}
     </PageTransition>

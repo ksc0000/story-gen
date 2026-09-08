@@ -95,7 +95,10 @@ const baseBookData: BookData = {
 function createMockDeps() {
   return {
     getTemplate: vi.fn().mockResolvedValue(mockTemplate),
-    getUserPlan: vi.fn().mockResolvedValue("free" as const),
+    getUserProductPlan: vi.fn().mockResolvedValue("free" as const),
+    // 上限判定でクレジット照会が走る経路（プラン外モード等）用。無いと catch-all に落ちる
+    getUserCredits: vi.fn().mockResolvedValue({ singleBookCredits: 0, aiGuidedCredits: 0, photoStoryCredits: 0 }),
+    consumeCredit: vi.fn().mockResolvedValue(undefined),
     llmClient: {
       generateStory: vi.fn().mockResolvedValue(mockStory),
       rewriteStoryText: vi.fn().mockResolvedValue({

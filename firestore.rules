@@ -127,7 +127,7 @@ service cloud.firestore {
       allow update: if isAdmin() && onlyAdminReviewFieldsChanged();
       allow update: if isAuthenticated()
                && resource.data.userId == request.auth.uid
-               && request.resource.data.diff(resource.data).changedKeys().hasOnly(["seriesId", "updatedAt", "updatedAtMs", "public", "favorite", "giftMessage"]);
+               && request.resource.data.diff(resource.data).changedKeys().hasOnly(["seriesId", "updatedAt", "updatedAtMs", "public", "favorite", "giftMessage", "lastReadAt", "lastReadAtMs", "readCompletedAt", "readCompletedAtMs", "readCompletedCount"]);
       allow delete: if false;
 
       match /pages/{pageId} {
@@ -184,8 +184,10 @@ service cloud.firestore {
     match /companions/{companionId} {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow delete: if false;
+      // 所有者は更新できるが userId の付け替えは不可（旧: 下方の重複 match が write 全許可で userId 変更も通っていた）
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
     match /series/{seriesId} {
@@ -229,12 +231,6 @@ service cloud.firestore {
       }
     }
 
-    match /companions/{companionId} {
-      allow read, write: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-    }
-
     match /categoryGroups/{groupId} {
       allow read: if isAuthenticated();
       allow write: if false;
@@ -242,7 +238,8 @@ service cloud.firestore {
 
     match /adminAuditLogs/{logId} {
       allow read: if isAdmin();
-      allow create: if isAdmin();
+      // 誰が操作したかを偽れないよう adminUid は本人固定
+      allow create: if isAdmin() && request.resource.data.adminUid == request.auth.uid;
       allow update, delete: if false;
     }
 

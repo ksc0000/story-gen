@@ -38,6 +38,10 @@ interface BookViewerProps {
   onRegenerateCover?: () => void;
   isRegeneratingCover?: boolean;
   onEditPageText?: (index: number, currentText: string) => void;
+  /** 表示ページが変わったとき（0 始まり、total は表紙等を含む見開き数） */
+  onPageChange?: (page: number, total: number) => void;
+  /** 最終ページに到達したとき（1 回の閲覧につき 1 回だけ呼ぶ） */
+  onReachEnd?: () => void;
 }
 
 /** Build reading items: cover+title spread (single sheet) → story pages (when v2 is active). */
@@ -305,6 +309,17 @@ export function BookViewer(props: BookViewerProps) {
     directionRef.current = 1;
     setCurrentPage((p) => Math.min(p + 1, totalPages - 1));
   }, [totalPages]);
+
+  // KPI 計測: ページ変更通知と、最終ページ到達（読了）の 1 回だけの通知
+  const { onPageChange, onReachEnd } = props;
+  const reachedEndRef = useRef(false);
+  useEffect(() => {
+    onPageChange?.(currentPage, totalPages);
+    if (totalPages > 1 && currentPage === totalPages - 1 && !reachedEndRef.current) {
+      reachedEndRef.current = true;
+      onReachEnd?.();
+    }
+  }, [currentPage, totalPages, onPageChange, onReachEnd]);
 
   const goPrev = useCallback(() => {
     directionRef.current = -1;

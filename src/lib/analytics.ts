@@ -18,7 +18,19 @@ type AnalyticsEventName =
   | "submit_app_feedback"
   | "lp_cta_click"
   | "first_run_track_selected"
-  | "first_run_completed";
+  | "first_run_completed"
+  // KPI 計測（2026-09-08 追加）: 獲得・読了・共有・収益の各ステップ
+  | "signup_completed"
+  | "child_registered"
+  | "open_book"
+  | "complete_reading"
+  | "toggle_public"
+  | "copy_share_link"
+  | "share_book"
+  | "download_pdf"
+  | "download_offline"
+  | "view_pricing"
+  | "start_checkout";
 
 type AnalyticsPayload = Record<string, string | number | boolean | undefined>;
 
