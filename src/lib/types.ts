@@ -361,6 +361,8 @@ export interface UserDoc {
   internal?: boolean;
   /** KPI: 最終アクティブ（6 時間に 1 回更新） */
   lastActiveAtMs?: number;
+  /** 登録時刻（ms）。旧ユーザーは createdAt のみ */
+  createdAtMs?: number;
   /**
    * 管理者専用のプラン上書き。設定画面の開発パネルから設定し、
    * resolveProductPlan() が productPlan より優先して採用する。
