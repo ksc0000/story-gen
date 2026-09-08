@@ -336,6 +336,7 @@
     "PR #789: feat(photo-story): 選んだ主人公・スタイル・ページ数を写真絵本に反映 (merged)",
     "PR #790: feat: 製品判断5〜7（フォールバック表示と描き直し／公開ページのパステル固定／アバター方針書） (merged)",
     "PR #792: feat(admin): ダッシュボードから内部アカウントを除外し、有料の定義を統一（監査 1〜4） (merged)",
+    "PR #793: feat(kpi): 読了・アクティブの記録と獲得〜収益の分析イベント（KGI 計測の土台） (merged)",
     "REF-001: Character Reference Strategy docs (PR #197, merged)",
     "Stripe Checkout subscription flow (PR #198, merged)",
     "T6-37: flux11_pro_candidate diagnostic profile",
