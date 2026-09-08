@@ -10,6 +10,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  where,
 } from "firebase/firestore";
 import { Briefcase, Cpu, Sparkles, RefreshCw, TrendingUp } from "lucide-react";
 import { db } from "@/lib/firebase";
@@ -18,6 +19,7 @@ import { backfillDailyMetricsCallable } from "@/lib/functions";
 import { getPlanDisplayLabel, CREATION_MODE_LABELS, PLAN_CONFIGS } from "@/lib/plans";
 import { computeSloMetrics, SLO_TARGETS, EMPTY_SLO } from "@/lib/admin-slo-metrics";
 import { isInternalAccount, isPayingUser } from "@/lib/internal-accounts";
+import { computeKgiMetrics, type KgiUser, type KgiBook, type KgiMetrics } from "@/lib/admin-kgi-metrics";
 import { computeProviderCostMetrics } from "@/lib/admin-cost-metrics";
 import { computeQualityTrend } from "@/lib/admin-quality-trend";
 import { AdminNav } from "@/components/admin/AdminNav";
@@ -218,6 +220,9 @@ export default function AdminDashboardPage() {
   const [sloHistory, setSloHistory] = useState<number[]>([]);
   const [dailyMetrics, setDailyMetrics] = useState<DailyMetricsRow[]>([]);
   const [liveCounts, setLiveCounts] = useState<LiveCounts | null>(null);
+  // KGI 用: 内部除外済みの users と、直近 3 か月の books
+  const [kgiUsers, setKgiUsers] = useState<KgiUser[]>([]);
+  const [kgiBooks, setKgiBooks] = useState<KgiBook[]>([]);
   const [period, setPeriod] = useState<(typeof PERIOD_OPTIONS)[number]>(30);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -370,6 +375,7 @@ export default function AdminDashboardPage() {
         let totalUsers = 0;
         let paidStandard = 0;
         let paidPremium = 0;
+        const kgiRows: KgiUser[] = [];
         usersSnap.docs.forEach((d) => {
           const data = d.data() as UserDoc;
           if (isInternalAccount(d.id, data)) {
@@ -377,11 +383,17 @@ export default function AdminDashboardPage() {
             return;
           }
           totalUsers += 1;
+          kgiRows.push({
+            uid: d.id,
+            createdAtMs: data.createdAtMs ?? data.createdAt?.toMillis?.() ?? 0,
+            lastActiveAtMs: data.lastActiveAtMs,
+          });
           if (isPayingUser(d.id, data)) {
             if (data.productPlan === "standard_paid") paidStandard += 1;
             if (data.productPlan === "premium_paid") paidPremium += 1;
           }
         });
+        setKgiUsers(kgiRows);
         setLiveCounts({
           totalUsers,
           internalUsers: internalUids.size,
@@ -399,6 +411,35 @@ export default function AdminDashboardPage() {
       cancelled = true;
     };
   }, [isAdmin]);
+
+  // KGI 用に直近 3 か月の books を読む（サンプル数の上限に依存しない）
+  useEffect(() => {
+    if (!isAdmin || isDemoMode) return;
+    const since = Date.now() - 92 * 24 * 60 * 60 * 1000;
+    const q = query(collection(db, "books"), where("createdAtMs", ">=", since), orderBy("createdAtMs", "desc"), limit(3000));
+    getDocs(q)
+      .then((snap) => {
+        setKgiBooks(
+          snap.docs.map((d) => {
+            const b = d.data() as BookDoc;
+            return {
+              userId: b.userId,
+              createdAtMs: b.createdAtMs ?? 0,
+              status: b.status,
+              readCompletedAtMs: b.readCompletedAtMs,
+              readCompletedCount: b.readCompletedCount,
+            };
+          })
+        );
+      })
+      .catch(() => setKgiBooks([]));
+  }, [isAdmin]);
+  const internalUidSet = liveCounts?.internalUids;
+  const kgi = useMemo<KgiMetrics | null>(() => {
+    if (!kgiUsers.length) return null;
+    const books = internalUidSet ? kgiBooks.filter((b) => !internalUidSet.has(b.userId)) : kgiBooks;
+    return computeKgiMetrics({ users: kgiUsers, books });
+  }, [kgiUsers, kgiBooks, internalUidSet]);
 
   const sampleBooks = useMemo(() => {
     if (!excludeInternal || !liveCounts) return books;
@@ -546,7 +587,7 @@ export default function AdminDashboardPage() {
 
         {lens === "analytics" ? (
           <div className="mt-6">
-            <AnalyticsLens rows={dailyMetrics} period={period} isAdmin={isAdmin} live={liveCounts} />
+            <AnalyticsLens rows={dailyMetrics} period={period} isAdmin={isAdmin} live={liveCounts} kgi={kgi} />
           </div>
         ) : loading && !books.length ? (
           <div className="mt-10 flex items-center gap-2 text-violet-400">
@@ -578,10 +619,12 @@ function AnalyticsLens({
   period,
   isAdmin,
   live,
+  kgi,
 }: {
   rows: DailyMetricsRow[];
   period: number;
   isAdmin: boolean;
+  kgi: KgiMetrics | null;
   live: LiveCounts | null;
 }) {
   const [backfilling, setBackfilling] = useState(false);
@@ -645,6 +688,18 @@ function AnalyticsLens({
 
   return (
     <>
+      <SectionTitle title="KGI（今月）" description={`定着家庭 = 当月 2 冊以上かつ 1 冊読了。内部アカウント除外。${kgi ? kgi.monthKey : ""}`} />
+      {kgi ? (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard label="定着家庭数" value={kgi.retainedHouseholds.toLocaleString()} unit="家庭" tone="good" hint={`当月に作った家庭 ${kgi.activeHouseholds}`} />
+          <StatCard label="初回 24h 完成率" value={kgi.firstBookWithin24hRate == null ? "—" : kgi.firstBookWithin24hRate.toFixed(1)} unit="%" hint={`当月の新規 ${kgi.newHouseholds} 家庭`} />
+          <StatCard label="完読率（所有者）" value={kgi.readThroughRate == null ? "—" : kgi.readThroughRate.toFixed(1)} unit="%" hint="当月完成の本のうち最後まで読まれた割合（2026-09-08 以降計測）" />
+          <StatCard label="2 冊目率 / 翌月再訪率" value={`${kgi.secondBookRate == null ? "—" : kgi.secondBookRate.toFixed(0)} / ${kgi.returnRate == null ? "—" : kgi.returnRate.toFixed(0)}`} unit="%" hint="作った家庭のうち 2 冊以上 / 前月に作った家庭のうち当月アクティブ" />
+        </div>
+      ) : (
+        <p className="text-xs text-violet-400">users / books の読み込み後に表示されます。</p>
+      )}
+
       <div className="flex items-center justify-between gap-2">
         <SectionTitle title="サマリー" description={`直近 ${period} 日間（前期間比）`} />
         <span
