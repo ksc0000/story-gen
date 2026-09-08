@@ -127,7 +127,7 @@ service cloud.firestore {
       allow update: if isAdmin() && onlyAdminReviewFieldsChanged();
       allow update: if isAuthenticated()
                && resource.data.userId == request.auth.uid
-               && request.resource.data.diff(resource.data).changedKeys().hasOnly(["seriesId", "updatedAt", "updatedAtMs", "public", "favorite", "giftMessage"]);
+               && request.resource.data.diff(resource.data).changedKeys().hasOnly(["seriesId", "updatedAt", "updatedAtMs", "public", "favorite", "giftMessage", "lastReadAt", "lastReadAtMs", "readCompletedAt", "readCompletedAtMs", "readCompletedCount"]);
       allow delete: if false;
 
       match /pages/{pageId} {

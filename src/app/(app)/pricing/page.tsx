@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { httpsCallable } from "@/lib/callable";
 import { Check, Loader2, Sparkles, Star, X } from "lucide-react";
@@ -11,6 +11,7 @@ import { useUserProfile } from "@/lib/hooks/use-user-profile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import type { ProductPlan } from "@/lib/types";
 
 const PLAN_ORDER: Record<ProductPlan, number> = {
@@ -111,6 +112,11 @@ export default function PricingPage() {
 
   const currentPlan = resolveProductPlan(profile);
 
+  // KPI: 料金ページ閲覧
+  useEffect(() => {
+    trackAnalyticsEvent("view_pricing", {});
+  }, []);
+
   async function handleUpgrade(productPlan: ProductPlan) {
     if (!user) { router.push("/login"); return; }
     setLoading(productPlan);
@@ -119,6 +125,7 @@ export default function PricingPage() {
       const createCheckoutSession = httpsCallable<{ productPlan: ProductPlan }, { url: string }>(
         functions, "createCheckoutSession"
       );
+      trackAnalyticsEvent("start_checkout", { kind: "subscription", productPlan });
       const result = await createCheckoutSession({ productPlan });
       if (result.data.url) window.location.href = result.data.url;
     } catch (e) {
@@ -137,6 +144,7 @@ export default function PricingPage() {
       const createSinglePurchaseCheckout = httpsCallable<{ purchaseType: string }, { url: string }>(
         functions, "createSinglePurchaseCheckout"
       );
+      trackAnalyticsEvent("start_checkout", { kind: "single", purchaseType });
       const result = await createSinglePurchaseCheckout({ purchaseType });
       if (result.data.url) window.location.href = result.data.url;
     } catch (e) {

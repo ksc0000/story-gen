@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "@/lib/callable";
+import { recordBookOpened, recordReadingCompleted } from "@/lib/reading-record";
 import { REGENERATE_TIMEOUT_MS, PDF_TIMEOUT_MS } from "@/lib/callable-timeouts";
 import {
   Share2,
@@ -97,6 +98,24 @@ function BookContent() {
   const [templateDisplayName, setTemplateDisplayName] = useState<string | undefined>();
   const canSubmitFeedback = Boolean(user && book && book.userId === user.uid && !isDemoMode);
   const isOwner = Boolean(user && book && book.userId === user.uid);
+
+  // KPI: 絵本を開いた（1 回の閲覧につき 1 回）。所有者なら lastReadAt も記録する
+  const openedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!bookId || !book || isDemoMode) return;
+    if (book.status !== "completed" && book.status !== "partial_completed") return;
+    if (openedRef.current === bookId) return;
+    openedRef.current = bookId;
+    trackAnalyticsEvent("open_book", { creationMode: book.creationMode ?? "unknown", isOwner });
+    if (isOwner) recordBookOpened(bookId).catch(() => {});
+  }, [bookId, book, isOwner]);
+
+  // KPI: 最終ページ到達 = 読了（KGI「定着家庭数」の条件）
+  const handleReachEnd = useCallback(() => {
+    if (!bookId || !book || isDemoMode) return;
+    trackAnalyticsEvent("complete_reading", { creationMode: book.creationMode ?? "unknown", isOwner });
+    if (isOwner) recordReadingCompleted(bookId).catch(() => {});
+  }, [bookId, book, isOwner]);
 
   useEffect(() => {
     if (!bookId) return;
@@ -231,6 +250,7 @@ function BookContent() {
       const rec = await downloadBookForOffline(book, viewablePages, (prog) => {
         setDownloadProgress(prog);
       });
+      trackAnalyticsEvent("download_offline", { pages: viewablePages.length });
       setOfflineRecord(rec);
       toast.success("オフライン保存が完了しました！");
     } catch (err) {
@@ -266,6 +286,7 @@ function BookContent() {
         public: isPublic,
         updatedAt: serverTimestamp(),
       });
+      trackAnalyticsEvent("toggle_public", { isPublic });
       if (isPublic) {
         // コピーの成否は handleCopyLink 側が通知する（以前は成功を先に告げていた）
         toast.success("公開設定に変更しました。");
@@ -283,6 +304,7 @@ function BookContent() {
 
   function handleCopyLink() {
     const url = `${window.location.origin}/share?id=${bookId}`;
+    trackAnalyticsEvent("copy_share_link", {});
     navigator.clipboard.writeText(url).then(() => {
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
@@ -331,6 +353,7 @@ function BookContent() {
     };
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
+        trackAnalyticsEvent("share_book", { method: "web_share" });
         await navigator.share(shareData);
         return;
       } catch (err) {
@@ -467,6 +490,7 @@ function BookContent() {
     try {
       const generatePdf = httpsCallable(functions, "generateBookPdf", { timeout: PDF_TIMEOUT_MS });
       await generatePdf({ bookId });
+      trackAnalyticsEvent("download_pdf", {});
     } catch (err) {
       console.error("Failed to generate PDF:", err);
       toast.error("PDFの作成に失敗しました。しばらく時間をおいて再度お試しください。");
@@ -766,6 +790,7 @@ function BookContent() {
           </div>
         )}
         <BookViewer
+          onReachEnd={handleReachEnd}
           pages={viewablePages}
           title={book.title}
           coverImageUrl={book.coverImageUrl}

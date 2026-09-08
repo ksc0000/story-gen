@@ -10,6 +10,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 export interface AuthContextValue {
   user: User | null;
@@ -79,8 +80,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         plan: "free",
         activeChildId: null,
         createdAt: serverTimestamp(),
+        createdAtMs: Date.now(),
         monthlyGenerationCount: 0,
       });
+      trackAnalyticsEvent("signup_completed", { method: "google" });
     }
   };
 
