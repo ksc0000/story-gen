@@ -8,6 +8,7 @@ import { DreamyBackground } from "@/components/dreamy-background";
 import { AppNav } from "@/components/app-nav";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { saveReturnTo } from "@/lib/return-to";
+import { recordUserActivity } from "@/lib/reading-record";
 
 /**
  * 未ログイン時にログインへ退避し、戻り先(returnTo)を保存する。
@@ -49,6 +50,11 @@ function AuthRedirectGuard() {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
+  // KPI: アクティブ記録（users.lastActiveAtMs、6 時間に 1 回）。翌月再訪率の分子に使う
+  useEffect(() => {
+    if (!user) return;
+    recordUserActivity(user.uid).catch(() => {});
+  }, [user]);
 
   // AuthRedirectGuard は未ログイン時にこそ動く必要があるため、
   // loading / !user の早期 return より前に、常に描画されるよう外側へ置く。

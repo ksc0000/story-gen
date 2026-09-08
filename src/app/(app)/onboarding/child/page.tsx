@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChildProfileForm, type ChildProfileFormValues } from "@/components/child-profile-form";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import { useBooks } from "@/lib/hooks/use-books";
 import { useChildren } from "@/lib/hooks/use-children";
 import { db, storage } from "@/lib/firebase";
@@ -50,6 +51,7 @@ export default function ChildOnboardingPage() {
         ...buildChildProfilePayload(values),
         createdAt: serverTimestamp(),
       });
+      trackAnalyticsEvent("child_registered", { withPhoto: Boolean(values.photoFile) });
       await updateDoc(doc(db, "users", user.uid), { activeChildId: childRef.id });
 
       // 追加の参考写真（Phase 4）をアップロード。
