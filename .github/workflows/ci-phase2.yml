@@ -5,8 +5,11 @@ name: Phase 2 Generation Guards
 #
 # Included checks (always-on, deterministic):
 #   1. guard:hygiene   — forbidden paths, docs encoding, no staged secrets
-#   2. SLO report self-test — 49 unit tests covering parse, rate, percentile, privacy
-#   3. test:generation-guards — 102 tests:
+#   2. guard:function-regions — every functions/src v2 trigger (onCall/onRequest/
+#        onDocumentCreated/onSchedule/...) must declare region: "asia-northeast1",
+#        matching the region every client calls getFunctions() with (#765, #766)
+#   3. SLO report self-test — 49 unit tests covering parse, rate, percentile, privacy
+#   4. test:generation-guards — 102 tests:
 #        candidate-gate.test.ts (48 tests)   — candidate profile gating regression
 #        generation-event-logger.test.ts (54 tests) — error taxonomy, event shapes
 #
@@ -67,6 +70,9 @@ jobs:
 
       - name: Run hygiene guard
         run: npm run guard:hygiene
+
+      - name: Run function region guard
+        run: npm run guard:function-regions
 
       - name: Run SLO report self-test
         run: npm run report:generation-slo:self-test
