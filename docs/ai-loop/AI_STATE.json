@@ -325,6 +325,7 @@
     "PR #776: fix(cleanup): 削除時に Storage の生成物・子ども写真も消す／再試行絵本にも30日の期限 (merged)",
     "PR #778: refactor: buildSwUrlの重複実装をoffline-book-storageに統合 (merged)",
     "PR #779: refactor: escapeHtmlの重複実装をshare-ogp-htmlに統合 (merged)",
+    "PR #780: refactor: stripUndefined/isPlainObject の重複実装を共有モジュールに統合 (merged)",
     "PR #781: fix(create): 作成導線で落ちていたパラメータを引き継ぐ（original_ai / 服装設定 / なかよしキャラ） (merged)",
     "PR #782: fix(image): gpt-image-2 edit 経路の moderation・モデルラベル・Track A のなかよしキャラ主人公・モデル表更新 (merged)",
     "PR #783: fix(ui): ログイン画面の OS ダーク連動を外し、補助テキスト色を AA 準拠に (merged)",
