@@ -6,6 +6,7 @@ import type {
 import { getIllustrationStyleProfile } from "@/lib/illustration-styles";
 import { getDefaultProductPlanForCreationMode, PLAN_CONFIGS } from "@/lib/plans";
 import { stripUndefined } from "@/lib/strip-undefined";
+import { getTemplateBaseId } from "@/lib/template-base-id";
 
 /**
  * 初回判定ロジック
@@ -13,10 +14,6 @@ import { stripUndefined } from "@/lib/strip-undefined";
  */
 export function isFirstRun(booksCount: number, childrenCount: number): boolean {
   return booksCount === 0 && childrenCount <= 1;
-}
-
-function getTemplateBaseId(t: { id: string; variantOf?: string }): string {
-  return t.variantOf ?? t.id.replace(/-\d+p$/, "");
 }
 
 /**

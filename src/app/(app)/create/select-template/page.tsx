@@ -23,6 +23,7 @@ import { db } from "@/lib/firebase";
 import { PLAN_CONFIGS, resolveProductPlan } from "@/lib/plans";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { getRecommendedTemplates, buildFirstRunBookPayload, isFirstRun } from "@/lib/first-run";
+import { getTemplateBaseId } from "@/lib/template-base-id";
 import { cn } from "@/lib/utils";
 import { getUserFriendlyError } from "@/lib/user-error-mapping";
 
@@ -64,9 +65,6 @@ function SelectTemplateContent() {
     () => new Map(categoryGroups.map((group) => [group.id, group])),
     [categoryGroups]
   );
-
-  const getTemplateBaseId = (t: { id: string; variantOf?: string }) =>
-    t.variantOf ?? t.id.replace(/-\d+p$/, "");
 
   const templateVariantsMap = useMemo(() => {
     const map = new Map<string, (typeof templates)[0][]>();

@@ -29,11 +29,8 @@ import { useTemplates } from "@/lib/hooks/use-templates";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { useToast } from "@/components/ui/toast";
 import { bulkGenerateClassBooksCallable } from "@/lib/functions";
+import { getTemplateBaseId } from "@/lib/template-base-id";
 import type { OrgClass, OrgStudent } from "@/lib/types";
-
-function getTemplateBaseId(t: { id: string; variantOf?: string }) {
-  return t.variantOf ?? t.id.replace(/-\d+p$/, "");
-}
 
 function ClassRosterContent() {
   const params = useSearchParams();
